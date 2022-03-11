@@ -68,7 +68,7 @@ use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_cache::GlyphCache;
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer, SharedFontInstanceMap};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer, SharedFontResources};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance, CopyInstance};
@@ -1212,7 +1212,7 @@ impl Renderer {
         let sampler = options.sampler;
         let namespace_alloc_by_client = options.namespace_alloc_by_client;
 
-        let font_instances = SharedFontInstanceMap::new();
+        let fonts = SharedFontResources::new();
 
         let blob_image_handler = options.blob_image_handler.take();
         let scene_builder_hooks = options.scene_builder_hooks;
@@ -1224,7 +1224,7 @@ impl Renderer {
         let (scene_builder_channels, scene_tx) =
             SceneBuilderThreadChannels::new(api_tx.clone());
 
-        let sb_font_instances = font_instances.clone();
+        let sb_fonts = fonts.clone();
 
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
@@ -1232,7 +1232,7 @@ impl Renderer {
 
             let mut scene_builder = SceneBuilderThread::new(
                 config,
-                sb_font_instances,
+                sb_fonts,
                 make_size_of_ops(),
                 scene_builder_hooks,
                 scene_builder_channels,
@@ -1264,7 +1264,7 @@ impl Renderer {
             scene_tx.clone()
         };
 
-        let backend_blob_handler = blob_image_handler
+        let rb_blob_handler = blob_image_handler
             .as_ref()
             .map(|handler| handler.create_similar());
 
@@ -1281,7 +1281,7 @@ impl Renderer {
         };
 
         let rb_scene_tx = scene_tx.clone();
-        let rb_font_instances = font_instances.clone();
+        let rb_fonts = fonts.clone();
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
@@ -1307,7 +1307,8 @@ impl Renderer {
                 picture_textures,
                 glyph_rasterizer,
                 glyph_cache,
-                rb_font_instances,
+                rb_fonts,
+                rb_blob_handler,
             );
 
             resource_cache.enable_multithreading(enable_multithreading);
@@ -1318,7 +1319,6 @@ impl Renderer {
                 rb_scene_tx,
                 resource_cache,
                 backend_notifier,
-                backend_blob_handler,
                 config,
                 sampler,
                 make_size_of_ops(),
@@ -1423,7 +1423,7 @@ impl Renderer {
             scene_tx,
             low_priority_scene_tx,
             blob_image_handler,
-            font_instances,
+            fonts,
         );
         Ok((renderer, sender))
     }

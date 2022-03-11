@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{DebugFlags, BlobImageHandler, Parameter, BoolParameter};
+use api::{DebugFlags, Parameter, BoolParameter};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, SampledScrollOffset};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
@@ -681,11 +681,6 @@ pub struct RenderBackend {
     debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
 
-    // We keep one around to be able to call clear_namespace
-    // after the api object is deleted. For most purposes the
-    // api object's blob handler should be used instead.
-    blob_image_handler: Option<Box<dyn BlobImageHandler>>,
-
     recycler: Recycler,
 
     #[cfg(feature = "capture")]
@@ -709,7 +704,6 @@ impl RenderBackend {
         scene_tx: Sender<SceneBuilderRequest>,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
-        blob_image_handler: Option<Box<dyn BlobImageHandler>>,
         frame_config: FrameBuilderConfig,
         sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
         size_of_ops: Option<MallocSizeOfOps>,
@@ -731,7 +725,6 @@ impl RenderBackend {
             debug_flags,
             namespace_alloc_by_client,
             recycler: Recycler::new(),
-            blob_image_handler,
             #[cfg(feature = "capture")]
             capture_config: None,
             #[cfg(feature = "replay")]
@@ -1144,7 +1137,8 @@ impl RenderBackend {
             }
             SceneBuilderResult::GetGlyphDimensions(request) => {
                 let mut glyph_dimensions = Vec::with_capacity(request.glyph_indices.len());
-                if let Some(base) = self.resource_cache.get_font_instance(request.key) {
+                let instance_key = self.resource_cache.map_font_instance_key(request.key);
+                if let Some(base) = self.resource_cache.get_font_instance(instance_key) {
                     let font = FontInstance::from_base(Arc::clone(&base));
                     for glyph_index in &request.glyph_indices {
                         let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
@@ -1155,8 +1149,9 @@ impl RenderBackend {
             }
             SceneBuilderResult::GetGlyphIndices(request) => {
                 let mut glyph_indices = Vec::with_capacity(request.text.len());
+                let font_key = self.resource_cache.map_font_key(request.key);
                 for ch in request.text.chars() {
-                    let index = self.resource_cache.get_glyph_index(request.key, ch);
+                    let index = self.resource_cache.get_glyph_index(font_key, ch);
                     glyph_indices.push(index);
                 }
                 request.sender.send(glyph_indices).unwrap();
@@ -1170,9 +1165,6 @@ impl RenderBackend {
             SceneBuilderResult::ClearNamespace(id) => {
                 self.resource_cache.clear_namespace(id);
                 self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
-                if let Some(handler) = &mut self.blob_image_handler {
-                    handler.clear_namespace(id);
-                }
             }
             SceneBuilderResult::DeleteDocument(document_id) => {
                 self.documents.remove(&document_id);
@@ -1878,7 +1870,7 @@ impl RenderBackend {
                 scene,
                 view: view.scene.clone(),
                 config: self.frame_config.clone(),
-                font_instances: self.resource_cache.get_font_instances(),
+                fonts: self.resource_cache.get_fonts(),
                 build_frame,
                 interners,
                 spatial_tree: scene_spatial_tree,

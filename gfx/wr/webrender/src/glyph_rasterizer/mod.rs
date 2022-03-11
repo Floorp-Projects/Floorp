@@ -5,7 +5,8 @@
 use api::{FontInstanceData, FontInstanceFlags, FontInstanceKey};
 use api::{FontInstanceOptions, FontInstancePlatformOptions};
 use api::{FontKey, FontRenderMode, FontSize, FontTemplate, FontVariation};
-use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics, IdNamespace};
+use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
+use api::{IdNamespace, BlobImageResources};
 use api::channel::crossbeam::{unbounded, Receiver, Sender};
 use api::units::*;
 use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
@@ -14,7 +15,7 @@ use crate::platform::font::FontContext;
 use crate::device::TextureFilter;
 use crate::gpu_types::UvRectKind;
 use crate::glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
-use crate::internal_types::FastHashMap;
+use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::resource_cache::CachedImageData;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::gpu_cache::GpuCache;
@@ -30,7 +31,8 @@ use std::cell::Cell;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::Deref;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub static GLYPH_FLASHING: AtomicBool = AtomicBool::new(false);
@@ -68,11 +70,7 @@ impl GlyphRasterizer {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
     ) {
-        assert!(
-            self.font_contexts
-                .lock_shared_context()
-                .has_font(&font.font_key)
-        );
+        assert!(self.has_font(font.font_key));
 
         let glyph_key_cache = glyph_cache.insert_glyph_key_cache_for_font(&font);
 
@@ -476,7 +474,7 @@ pub const FONT_SIZE_LIMIT: f32 = 320.0;
 /// Immutable description of a font instance's shared state.
 ///
 /// `BaseFontInstance` can be identified by a `FontInstanceKey` to avoid hashing it.
-#[derive(Clone, PartialEq, Eq, Debug, Ord, PartialOrd, MallocSizeOf)]
+#[derive(Clone, Debug, Ord, PartialOrd, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BaseFontInstance {
@@ -487,13 +485,7 @@ pub struct BaseFontInstance {
     ///
     pub size: FontSize,
     ///
-    pub bg_color: ColorU,
-    ///
-    pub render_mode: FontRenderMode,
-    ///
-    pub flags: FontInstanceFlags,
-    ///
-    pub synthetic_italics: SyntheticItalics,
+    pub options: FontInstanceOptions,
     ///
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
     pub platform_options: Option<FontInstancePlatformOptions>,
@@ -501,31 +493,353 @@ pub struct BaseFontInstance {
     pub variations: Vec<FontVariation>,
 }
 
-pub type FontInstanceMap = FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>;
-/// A map of font instance data accessed concurrently from multiple threads.
-#[derive(Clone)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub struct SharedFontInstanceMap {
-    map: Arc<RwLock<FontInstanceMap>>,
+impl BaseFontInstance {
+    pub fn new(
+        instance_key: FontInstanceKey,
+        font_key: FontKey,
+        size: f32,
+        options: Option<FontInstanceOptions>,
+        platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
+    ) -> Self {
+        BaseFontInstance {
+            instance_key,
+            font_key,
+            size: size.into(),
+            options: options.unwrap_or_default(),
+            platform_options,
+            variations,
+        }
+    }
 }
 
-impl SharedFontInstanceMap {
-    /// Creates an empty shared map.
+impl Deref for BaseFontInstance {
+    type Target = FontInstanceOptions;
+    fn deref(&self) -> &FontInstanceOptions {
+        &self.options
+    }
+}
+
+impl Hash for BaseFontInstance {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Skip the instance key.
+        self.font_key.hash(state);
+        self.size.hash(state);
+        self.options.hash(state);
+        self.platform_options.hash(state);
+        self.variations.hash(state);
+    }
+}
+
+impl PartialEq for BaseFontInstance {
+    fn eq(&self, other: &BaseFontInstance) -> bool {
+        // Skip the instance key.
+        self.font_key == other.font_key &&
+            self.size == other.size &&
+            self.options == other.options &&
+            self.platform_options == other.platform_options &&
+            self.variations == other.variations
+    }
+}
+impl Eq for BaseFontInstance {}
+
+struct MappedFontKey {
+    font_key: FontKey,
+    template: FontTemplate,
+}
+
+struct FontKeyMapLocked {
+    next_id: u32,
+    template_map: FastHashMap<FontTemplate, Arc<MappedFontKey>>,
+    key_map: FastHashMap<FontKey, Arc<MappedFontKey>>,
+}
+
+/// A shared map from fonts key local to a namespace to shared font keys that
+/// can be shared across many namespaces. Local keys are tracked in a hashmap
+/// that stores a strong reference per mapping so that their count can be
+/// tracked. A map of font templates is used to hash font templates to their
+/// final shared key. The shared key will stay alive so long as there are
+/// any strong references to the mapping entry. Care must be taken when
+/// clearing namespaces of shared keys as this may trigger shared font keys
+/// to expire which require individual processing.
+#[derive(Clone)]
+pub struct FontKeyMap(Arc<RwLock<FontKeyMapLocked>>);
+
+impl FontKeyMap {
+    const SHARED_NAMESPACE: IdNamespace = IdNamespace(0);
+
     pub fn new() -> Self {
-        SharedFontInstanceMap {
-            map: Arc::new(RwLock::new(FastHashMap::default()))
+        FontKeyMap(Arc::new(RwLock::new(FontKeyMapLocked {
+            next_id: 1,
+            template_map: FastHashMap::default(),
+            key_map: FastHashMap::default(),
+        })))
+    }
+
+    fn lock(&self) -> RwLockReadGuard<FontKeyMapLocked> {
+        self.0.read().unwrap()
+    }
+
+    fn lock_mut(&mut self) -> RwLockWriteGuard<FontKeyMapLocked> {
+        self.0.write().unwrap()
+    }
+
+    pub fn map_key(&self, font_key: &FontKey) -> FontKey {
+        match self.lock().key_map.get(font_key) {
+            Some(mapped) => mapped.font_key,
+            None => *font_key,
         }
     }
 
-    /// Acquires a write lock on the shared map.
-    pub fn lock(&mut self) -> Option<RwLockReadGuard<FontInstanceMap>> {
-        self.map.read().ok()
+    pub fn add_key(&mut self, font_key: &FontKey, template: &FontTemplate) -> Option<FontKey> {
+        let mut locked = self.lock_mut();
+        if locked.key_map.contains_key(font_key) {
+            return None;
+        }
+        if let Some(mapped) = locked.template_map.get(template).cloned() {
+            locked.key_map.insert(*font_key, mapped);
+            return None;
+        }
+        let shared_key = FontKey::new(Self::SHARED_NAMESPACE, locked.next_id);
+        locked.next_id += 1;
+        let mapped = Arc::new(MappedFontKey {
+            font_key: shared_key,
+            template: template.clone(),
+        });
+        locked.template_map.insert(template.clone(), mapped.clone());
+        locked.key_map.insert(*font_key, mapped);
+        Some(shared_key)
+    }
+
+    pub fn delete_key(&mut self, font_key: &FontKey) -> Option<FontKey> {
+        let mut locked = self.lock_mut();
+        let mapped = match locked.key_map.remove(font_key) {
+            Some(mapped) => mapped,
+            None => return Some(*font_key),
+        };
+        if Arc::strong_count(&mapped) <= 2 {
+            // Only the last mapped key and template map point to it.
+            locked.template_map.remove(&mapped.template);
+            Some(mapped.font_key)
+        } else {
+            None
+        }
+    }
+
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) -> Vec<FontKey> {
+        let mut locked = self.lock_mut();
+        locked.key_map.retain(|key, _| {
+            if key.0 == namespace {
+                false
+            } else {
+                true
+            }
+        });
+        let mut deleted_keys = Vec::new();
+        locked.template_map.retain(|_, mapped| {
+            if Arc::strong_count(mapped) <= 1 {
+                // Only the template map points to it.
+                deleted_keys.push(mapped.font_key);
+                false
+            } else {
+                true
+            }
+        });
+        deleted_keys
+    }
+}
+
+type FontTemplateMapLocked = FastHashMap<FontKey, FontTemplate>;
+
+/// A map of font keys to font templates that might hold both namespace-local
+/// font templates as well as shared templates.
+#[derive(Clone)]
+pub struct FontTemplateMap(Arc<RwLock<FontTemplateMapLocked>>);
+
+impl FontTemplateMap {
+    pub fn new() -> Self {
+        FontTemplateMap(Arc::new(RwLock::new(FastHashMap::default())))
+    }
+
+    pub fn lock(&self) -> RwLockReadGuard<FontTemplateMapLocked> {
+        self.0.read().unwrap()
+    }
+
+    fn lock_mut(&mut self) -> RwLockWriteGuard<FontTemplateMapLocked> {
+        self.0.write().unwrap()
+    }
+
+    pub fn clear(&mut self) {
+        self.lock_mut().clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.lock().len()
+    }
+
+    pub fn has_font(&self, key: &FontKey) -> bool {
+        self.lock().contains_key(key)
+    }
+
+    pub fn get_font(&self, key: &FontKey) -> Option<FontTemplate> {
+        self.lock().get(key).cloned()
+    }
+
+    pub fn add_font(&mut self, key: FontKey, template: FontTemplate) -> bool {
+        self.lock_mut().insert(key, template).is_none()
+    }
+
+    pub fn delete_font(&mut self, key: &FontKey) -> Option<FontTemplate> {
+        self.lock_mut().remove(key)
+    }
+
+    pub fn delete_fonts(&mut self, keys: &[FontKey]) {
+        if !keys.is_empty() {
+            let mut map = self.lock_mut();
+            for key in keys {
+                map.remove(key);
+            }
+        }
+    }
+
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) -> Vec<FontKey> {
+        let mut deleted_keys = Vec::new();
+        self.lock_mut().retain(|key, _| {
+            if key.0 == namespace {
+                deleted_keys.push(*key);
+                false
+            } else {
+                true
+            }
+        });
+        deleted_keys
+    }
+}
+
+struct FontInstanceKeyMapLocked {
+    next_id: u32,
+    instances: FastHashSet<Arc<BaseFontInstance>>,
+    key_map: FastHashMap<FontInstanceKey, Weak<BaseFontInstance>>,
+}
+
+/// A map of namespace-local font instance keys to shared keys. Weak references
+/// are used to track the liveness of each key mapping as other consumers of
+/// BaseFontInstance might hold strong references to the entry. A mapping from
+/// BaseFontInstance to the shared key is then used to determine which shared
+/// key to assign to that instance. When the weak count of the mapping is zero,
+/// the entry is allowed to expire. Again, care must be taken when clearing
+/// a namespace within the key map as it may cause shared key expirations that
+/// require individual processing.
+#[derive(Clone)]
+pub struct FontInstanceKeyMap(Arc<RwLock<FontInstanceKeyMapLocked>>);
+
+impl FontInstanceKeyMap {
+    const SHARED_NAMESPACE: IdNamespace = IdNamespace(0);
+
+    pub fn new() -> Self {
+        FontInstanceKeyMap(Arc::new(RwLock::new(FontInstanceKeyMapLocked {
+            next_id: 1,
+            instances: FastHashSet::default(),
+            key_map: FastHashMap::default(),
+        })))
+    }
+
+    fn lock(&self) -> RwLockReadGuard<FontInstanceKeyMapLocked> {
+        self.0.read().unwrap()
+    }
+
+    fn lock_mut(&mut self) -> RwLockWriteGuard<FontInstanceKeyMapLocked> {
+        self.0.write().unwrap()
+    }
+
+    pub fn map_key(&self, key: &FontInstanceKey) -> FontInstanceKey {
+        match self.lock().key_map.get(key).and_then(|weak| weak.upgrade()) {
+            Some(mapped) => mapped.instance_key,
+            None => *key,
+        }
+    }
+
+    pub fn add_key(&mut self, mut instance: BaseFontInstance) -> Option<Arc<BaseFontInstance>> {
+        let mut locked = self.lock_mut();
+        if locked.key_map.contains_key(&instance.instance_key) {
+            return None;
+        }
+        if let Some(weak) = locked.instances.get(&instance).map(|mapped| Arc::downgrade(mapped)) {
+            locked.key_map.insert(instance.instance_key, weak);
+            return None;
+        }
+        let unmapped_key = instance.instance_key;
+        instance.instance_key = FontInstanceKey::new(Self::SHARED_NAMESPACE, locked.next_id);
+        locked.next_id += 1;
+        let shared_instance = Arc::new(instance);
+        locked.instances.insert(shared_instance.clone());
+        locked.key_map.insert(unmapped_key, Arc::downgrade(&shared_instance));
+        Some(shared_instance)
+    }
+
+    pub fn delete_key(&mut self, key: &FontInstanceKey) -> Option<FontInstanceKey> {
+        let mut locked = self.lock_mut();
+        let mapped = match locked.key_map.remove(key).and_then(|weak| weak.upgrade()) {
+            Some(mapped) => mapped,
+            None => return Some(*key),
+        };
+        if Arc::weak_count(&mapped) == 0 {
+            // Only the instance set points to it.
+            locked.instances.remove(&mapped);
+            Some(mapped.instance_key)
+        } else {
+            None
+        }
+    }
+
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) -> Vec<FontInstanceKey> {
+        let mut locked = self.lock_mut();
+        locked.key_map.retain(|key, _| {
+            if key.0 == namespace {
+                false
+            } else {
+                true
+            }
+        });
+        let mut deleted_keys = Vec::new();
+        locked.instances.retain(|mapped| {
+            if Arc::weak_count(mapped) == 0 {
+                // Only the instance set points to it.
+                deleted_keys.push(mapped.instance_key);
+                false
+            } else {
+                true
+            }
+        });
+        deleted_keys
+    }
+}
+
+type FontInstanceMapLocked = FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>;
+
+/// A map of font instance data accessed concurrently from multiple threads.
+#[derive(Clone)]
+pub struct FontInstanceMap(Arc<RwLock<FontInstanceMapLocked>>);
+
+impl FontInstanceMap {
+    /// Creates an empty shared map.
+    pub fn new() -> Self {
+        FontInstanceMap(Arc::new(RwLock::new(FastHashMap::default())))
+    }
+
+    /// Acquires a read lock on the shared map.
+    pub fn lock(&self) -> RwLockReadGuard<FontInstanceMapLocked> {
+        self.0.read().unwrap()
+    }
+
+    /// Acquires a read lock on the shared map.
+    fn lock_mut(&mut self) -> RwLockWriteGuard<FontInstanceMapLocked> {
+        self.0.write().unwrap()
     }
 
     ///
     pub fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
-        match self.map.read().unwrap().get(&key) {
+        match self.lock().get(&key) {
             Some(instance) => Some(FontInstanceData {
                 font_key: instance.font_key,
                 size: instance.size.into(),
@@ -543,68 +857,79 @@ impl SharedFontInstanceMap {
     }
 
     /// Replace the shared map with the provided map.
-    pub fn set(&mut self, map: FontInstanceMap) {
-        *self.map.write().unwrap() = map;
+    pub fn set_map(&mut self, map: FontInstanceMapLocked) {
+        *self.lock_mut() = map;
     }
 
     ///
     pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
-        let instance_map = self.map.read().unwrap();
-        instance_map.get(&instance_key).map(|instance| { Arc::clone(instance) })
+        let instance_map = self.lock();
+        instance_map.get(&instance_key).cloned()
     }
 
     ///
-    pub fn add_font_instance(
-        &mut self,
-        instance_key: FontInstanceKey,
-        font_key: FontKey,
-        size: f32,
-        options: Option<FontInstanceOptions>,
-        platform_options: Option<FontInstancePlatformOptions>,
-        variations: Vec<FontVariation>,
+    pub fn add_font_instance(&mut self, instance: Arc<BaseFontInstance>,
     ) {
-        let FontInstanceOptions {
-            render_mode,
-            flags,
-            bg_color,
-            synthetic_italics,
-            ..
-        } = options.unwrap_or_default();
-
-        let instance = Arc::new(BaseFontInstance {
-            instance_key,
-            font_key,
-            size: size.into(),
-            bg_color,
-            render_mode,
-            flags,
-            synthetic_italics,
-            platform_options,
-            variations,
-        });
-
-        self.map
-            .write()
-            .unwrap()
-            .insert(instance_key, instance);
+        self.lock_mut().insert(instance.instance_key, instance);
     }
 
     ///
     pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
-        self.map.write().unwrap().remove(&instance_key);
+        self.lock_mut().remove(&instance_key);
+    }
+
+    ///
+    pub fn delete_font_instances(&mut self, keys: &[FontInstanceKey]) {
+        if !keys.is_empty() {
+            let mut map = self.lock_mut();
+            for key in keys {
+                map.remove(key);
+            }
+        }
     }
 
     ///
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
-        self.map
-            .write()
-            .unwrap()
-            .retain(|key, _| key.0 != namespace);
+        self.lock_mut().retain(|key, _| key.0 != namespace);
     }
 
     ///
-    pub fn clone_map(&self) -> FontInstanceMap {
-        self.map.read().unwrap().clone()
+    pub fn clone_map(&self) -> FontInstanceMapLocked {
+        self.lock().clone()
+    }
+}
+
+/// Shared font resources that may need to be passed between multiple threads
+/// such as font templates and font instances. They are individually protected
+/// by locks to ensure safety.
+#[derive(Clone)]
+pub struct SharedFontResources {
+    pub templates: FontTemplateMap,
+    pub instances: FontInstanceMap,
+    pub font_keys: FontKeyMap,
+    pub instance_keys: FontInstanceKeyMap,
+}
+
+impl SharedFontResources {
+    pub fn new() -> Self {
+        SharedFontResources {
+            templates: FontTemplateMap::new(),
+            instances: FontInstanceMap::new(),
+            font_keys: FontKeyMap::new(),
+            instance_keys: FontInstanceKeyMap::new(),
+        }
+    }
+}
+
+impl BlobImageResources for SharedFontResources {
+    fn get_font_data(&self, key: FontKey) -> Option<FontTemplate> {
+        let shared_key = self.font_keys.map_key(&key);
+        self.templates.get_font(&shared_key)
+    }
+
+    fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
+        let shared_key = self.instance_keys.map_key(&key);
+        self.instances.get_font_instance_data(shared_key)
     }
 }
 
@@ -612,7 +937,7 @@ impl SharedFontInstanceMap {
 ///
 /// Performance is sensitive to the size of this structure, so it should only contain
 /// the fields that we need to modify from the original base font instance.
-#[derive(Clone, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[derive(Clone, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FontInstance {
@@ -638,6 +963,19 @@ impl Hash for FontInstance {
         self.size.hash(state);
     }
 }
+
+impl PartialEq for FontInstance {
+    fn eq(&self, other: &FontInstance) -> bool {
+        // Compare only the base instance's key.
+        self.base.instance_key == other.base.instance_key &&
+            self.transform == other.transform &&
+            self.render_mode == other.render_mode &&
+            self.flags == other.flags &&
+            self.color == other.color &&
+            self.size == other.size
+    }
+}
+impl Eq for FontInstance {}
 
 impl Deref for FontInstance {
     type Target = BaseFontInstance;
@@ -670,14 +1008,10 @@ impl FontInstance {
     pub fn from_base(
         base: Arc<BaseFontInstance>,
     ) -> Self {
-        FontInstance {
-            transform: FontTransform::identity(),
-            color: ColorU::new(0, 0, 0, 255),
-            size: base.size,
-            render_mode: base.render_mode,
-            flags: base.flags,
-            base,
-        }
+        let color = ColorU::new(0, 0, 0, 255);
+        let render_mode = base.render_mode;
+        let flags = base.flags;
+        Self::new(base, color, render_mode, flags)
     }
 
     pub fn use_texture_padding(&self) -> bool {
@@ -1276,6 +1610,10 @@ impl GlyphRasterizer {
         self.fonts_to_remove.push(font_key);
     }
 
+    pub fn delete_fonts(&mut self, font_keys: &[FontKey]) {
+        self.fonts_to_remove.extend_from_slice(font_keys);
+    }
+
     pub fn delete_font_instance(&mut self, instance: &FontInstance) {
         self.font_instances_to_remove.push(instance.clone());
     }
@@ -1289,6 +1627,10 @@ impl GlyphRasterizer {
         // this, can still use the precise transform which is required to match
         // the subpixel positions computed for glyphs in the text run shader.
         font.transform = font.transform.quantize();
+    }
+
+    pub fn has_font(&self, font_key: FontKey) -> bool {
+        self.font_contexts.lock_shared_context().has_font(&font_key)
     }
 
     pub fn get_glyph_dimensions(
@@ -1395,8 +1737,7 @@ mod test_glyph_rasterizer {
         use crate::glyph_cache::GlyphCache;
         use crate::gpu_cache::GpuCache;
         use crate::profiler::TransactionProfile;
-        use api::{FontKey, FontInstanceKey, FontSize, FontTemplate, FontRenderMode,
-                  IdNamespace, ColorU};
+        use api::{FontKey, FontInstanceKey, FontTemplate, IdNamespace};
         use api::units::DevicePoint;
         use std::sync::Arc;
         use crate::glyph_rasterizer::{FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
@@ -1419,17 +1760,14 @@ mod test_glyph_rasterizer {
         let font_key = FontKey::new(IdNamespace(0), 0);
         glyph_rasterizer.add_font(font_key, FontTemplate::Raw(Arc::new(font_data), 0));
 
-        let font = FontInstance::from_base(Arc::new(BaseFontInstance {
-            instance_key: FontInstanceKey(IdNamespace(0), 0),
+        let font = FontInstance::from_base(Arc::new(BaseFontInstance::new(
+            FontInstanceKey::new(IdNamespace(0), 0),
             font_key,
-            size: FontSize::from_f32_px(32.0),
-            bg_color: ColorU::new(0, 0, 0, 0),
-            render_mode: FontRenderMode::Subpixel,
-            flags: Default::default(),
-            synthetic_italics: Default::default(),
-            platform_options: None,
-            variations: Vec::new(),
-        }));
+            32.0,
+            None,
+            None,
+            Vec::new(),
+        )));
 
         let subpx_dir = font.get_subpx_dir();
 
@@ -1473,8 +1811,7 @@ mod test_glyph_rasterizer {
         use crate::glyph_cache::GlyphCache;
         use crate::gpu_cache::GpuCache;
         use crate::profiler::TransactionProfile;
-        use api::{FontKey, FontInstanceKey, FontSize, FontTemplate, FontRenderMode,
-                  IdNamespace, ColorU};
+        use api::{FontKey, FontInstanceKey, FontTemplate, IdNamespace};
         use api::units::DevicePoint;
         use std::sync::Arc;
         use crate::glyph_rasterizer::{FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
@@ -1497,17 +1834,14 @@ mod test_glyph_rasterizer {
         let font_key = FontKey::new(IdNamespace(0), 0);
         glyph_rasterizer.add_font(font_key, FontTemplate::Raw(Arc::new(font_data), 0));
 
-        let font = FontInstance::from_base(Arc::new(BaseFontInstance {
-            instance_key: FontInstanceKey(IdNamespace(0), 0),
+        let font = FontInstance::from_base(Arc::new(BaseFontInstance::new(
+            FontInstanceKey::new(IdNamespace(0), 0),
             font_key,
-            size: FontSize::from_f32_px(200.0),
-            bg_color: ColorU::new(0, 0, 0, 0),
-            render_mode: FontRenderMode::Subpixel,
-            flags: Default::default(),
-            synthetic_italics: Default::default(),
-            platform_options: None,
-            variations: Vec::new(),
-        }));
+            200.0,
+            None,
+            None,
+            Vec::new(),
+        )));
 
         let subpx_dir = font.get_subpx_dir();
 
