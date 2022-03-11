@@ -2768,7 +2768,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   mozilla::ipc::IPCResult RecvCommit(IProtocol* aActor,
                                      const Maybe<int64_t> aLastRequest);
 
-  bool RecvAbort(nsresult aResultCode);
+  mozilla::ipc::IPCResult RecvAbort(IProtocol* aActor, nsresult aResultCode);
 
   void MaybeCommitOrAbort() {
     AssertIsOnBackgroundThread();
@@ -10289,29 +10289,28 @@ mozilla::ipc::IPCResult TransactionBase::RecvCommit(
   return IPC_OK();
 }
 
-bool TransactionBase::RecvAbort(nsresult aResultCode) {
+mozilla::ipc::IPCResult TransactionBase::RecvAbort(IProtocol* aActor,
+                                                   nsresult aResultCode) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(NS_SUCCEEDED(aResultCode))) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(aActor, "aResultCode must not be a success code!");
   }
 
   if (NS_WARN_IF(NS_ERROR_GET_MODULE(aResultCode) !=
                  NS_ERROR_MODULE_DOM_INDEXEDDB)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(aActor, "aResultCode does not refer to IndexedDB!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(
+        aActor, "Attempt to abort an already comitted/aborted transaction!");
   }
 
   mCommitOrAbortReceived.Flip();
-
   Abort(aResultCode, /* aForce */ false);
-  return true;
+
+  return IPC_OK();
 }
 
 void TransactionBase::CommitOrAbort() {
@@ -11142,10 +11141,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvAbort(
     const nsresult& aResultCode) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvAbort(aResultCode)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvAbort(this, aResultCode);
 }
 
 PBackgroundIDBRequestParent*
@@ -11386,10 +11382,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvAbort(
     const nsresult& aResultCode) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvAbort(aResultCode)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvAbort(this, aResultCode);
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
