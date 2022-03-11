@@ -19,8 +19,22 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mSubmissionValue,
-                                      mState, mValidity, mValidationAnchor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ElementInternals)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ElementInternals)
+  tmp->Unlink();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTarget, mSubmissionValue, mState, mValidity,
+                                  mValidationAnchor);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ElementInternals)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTarget, mSubmissionValue, mState,
+                                    mValidity, mValidationAnchor);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ElementInternals)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
@@ -59,12 +73,14 @@ void ElementInternals::SetFormValue(
     const Nullable<FileOrUSVStringOrFormData>& aValue,
     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
     ErrorResult& aRv) {
+  MOZ_ASSERT(mTarget);
+
   /**
    * 1. Let element be this's target element.
    * 2. If element is not a form-associated custom element, then throw a
    *    "NotSupportedError" DOMException.
    */
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return;
@@ -118,7 +134,9 @@ void ElementInternals::SetFormValue(
 
 // https://html.spec.whatwg.org/#dom-elementinternals-form
 HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return nullptr;
@@ -130,12 +148,14 @@ HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
 void ElementInternals::SetValidity(
     const ValidityStateFlags& aFlags, const Optional<nsAString>& aMessage,
     const Optional<NonNull<nsGenericHTMLElement>>& aAnchor, ErrorResult& aRv) {
+  MOZ_ASSERT(mTarget);
+
   /**
    * 1. Let element be this's target element.
    * 2. If element is not a form-associated custom element, then throw a
    *    "NotSupportedError" DOMException.
    */
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return;
@@ -204,7 +224,9 @@ void ElementInternals::SetValidity(
 
 // https://html.spec.whatwg.org/#dom-elementinternals-willvalidate
 bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return false;
@@ -214,7 +236,9 @@ bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
 
 // https://html.spec.whatwg.org/#dom-elementinternals-validity
 ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return nullptr;
@@ -225,7 +249,9 @@ ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
 // https://html.spec.whatwg.org/#dom-elementinternals-validationmessage
 void ElementInternals::GetValidationMessage(nsAString& aValidationMessage,
                                             ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return;
@@ -235,7 +261,9 @@ void ElementInternals::GetValidationMessage(nsAString& aValidationMessage,
 
 // https://html.spec.whatwg.org/#dom-elementinternals-checkvalidity
 bool ElementInternals::CheckValidity(ErrorResult& aRv) {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return false;
@@ -245,7 +273,9 @@ bool ElementInternals::CheckValidity(ErrorResult& aRv) {
 
 // https://html.spec.whatwg.org/#dom-elementinternals-reportvalidity
 bool ElementInternals::ReportValidity(ErrorResult& aRv) {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return false;
@@ -289,7 +319,9 @@ bool ElementInternals::ReportValidity(ErrorResult& aRv) {
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
 already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return nullptr;
@@ -299,7 +331,9 @@ already_AddRefed<nsINodeList> ElementInternals::GetLabels(
 
 nsGenericHTMLElement* ElementInternals::GetValidationAnchor(
     ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+  MOZ_ASSERT(mTarget);
+
+  if (!mTarget->IsFormAssociatedElement()) {
     aRv.ThrowNotSupportedError(
         "Target element is not a form-associated custom element");
     return nullptr;
@@ -379,7 +413,6 @@ void ElementInternals::Unlink() {
   if (mFieldSet) {
     mFieldSet->RemoveElement(mTarget);
   }
-  mTarget = nullptr;
 }
 
 }  // namespace mozilla::dom
