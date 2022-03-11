@@ -932,11 +932,8 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
   masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry,
                                  ExitFrameType::WasmGenericJitEntry);
 
-  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfInstance()),
+  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfJSJitExceptionHandler()),
                ScratchIonEntry);
-  masm.loadPtr(
-      Address(ScratchIonEntry, Instance::offsetOfJSJitExceptionHandler()),
-      ScratchIonEntry);
   masm.jump(ScratchIonEntry);
 }
 
@@ -2129,12 +2126,10 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   ABIArgMIRTypeIter i(invokeArgTypes);
 
   // argument 0: Instance*
-  Address instancePtr(WasmTlsReg, Instance::offsetOfInstance());
   if (i->kind() == ABIArg::GPR) {
-    masm.loadPtr(instancePtr, i->gpr());
+    masm.movePtr(WasmTlsReg, i->gpr());
   } else {
-    masm.loadPtr(instancePtr, scratch);
-    masm.storePtr(scratch,
+    masm.storePtr(WasmTlsReg,
                   Address(masm.getStackPointer(), i->offsetFromArgBase()));
   }
   i++;
@@ -2485,8 +2480,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   {
     // Call the arguments rectifier.
     masm.bind(&rectify);
-    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfInstance()), callee);
-    masm.loadPtr(Address(callee, Instance::offsetOfJSJitArgsRectifier()),
+    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfJSJitArgsRectifier()),
                  callee);
     masm.jump(&rejoinBeforeCall);
   }

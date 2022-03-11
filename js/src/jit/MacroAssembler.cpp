@@ -3844,13 +3844,9 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
            Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   if (instanceArg.kind() == ABIArg::GPR) {
-    loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfInstance()),
-            instanceArg.gpr());
+    movePtr(WasmTlsReg, instanceArg.gpr());
   } else if (instanceArg.kind() == ABIArg::Stack) {
-    // Safe to use ABINonArgReg0 since it's the last thing before the call.
-    Register scratch = ABINonArgReg0;
-    loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfInstance()), scratch);
-    storePtr(scratch,
+    storePtr(WasmTlsReg,
              Address(getStackPointer(), instanceArg.offsetFromArgBase()));
   } else {
     MOZ_CRASH("Unknown abi passing style for pointer");
