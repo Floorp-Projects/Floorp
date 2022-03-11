@@ -520,19 +520,13 @@ class FieldScanner {
       FormAutofillUtils.ccHeuristicsMode == FormAutofillUtils.CC_FATHOM_NATIVE
     ) {
       let confidences = ChromeUtils.getFormAutofillConfidences(elements);
-      // Transform the field name to
-      const fieldNameMap = {
-        ccNumber: "cc-number",
-        ccName: "cc-name",
-        ccType: "cc-type",
-        ccExp: "cc-exp",
-        ccExpMonth: "cc-exp-month",
-        ccExpYear: "cc-exp-year",
-      };
       return confidences.map(c => {
         let result = {};
         for (let [fieldName, confidence] of Object.entries(c)) {
-          result[fieldNameMap[fieldName]] = confidence;
+          let type = FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
+            fieldName
+          );
+          result[type] = confidence;
         }
         return result;
       });
