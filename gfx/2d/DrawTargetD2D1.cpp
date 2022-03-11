@@ -312,8 +312,6 @@ void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
     return;
   }
   MarkChanged();
-  mDC->SetTransform(D2D1::IdentityMatrix());
-  mTransformDirty = true;
 
   Matrix mat;
   RefPtr<ID2D1Image> image =
@@ -331,35 +329,44 @@ void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
     return;
   }
 
-  // Step 1, create the shadow effect.
+  if (!PrepareForDrawing(aOperator, ColorPattern(aColor))) {
+    return;
+  }
+
+  mDC->SetTransform(D2D1::IdentityMatrix());
+  mTransformDirty = true;
+
   RefPtr<ID2D1Effect> shadowEffect;
   HRESULT hr = mDC->CreateEffect(
       mFormat == SurfaceFormat::A8 ? CLSID_D2D1GaussianBlur : CLSID_D2D1Shadow,
       getter_AddRefs(shadowEffect));
-  if (FAILED(hr) || !shadowEffect) {
-    gfxWarning() << "Failed to create shadow effect. Code: " << hexa(hr);
-    return;
-  }
-  shadowEffect->SetInput(0, image);
-  if (mFormat == SurfaceFormat::A8) {
-    shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, aSigma);
-    shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_BORDER_MODE,
-                           D2D1_BORDER_MODE_HARD);
-  } else {
-    shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, aSigma);
-    D2D1_VECTOR_4F color = {aColor.r, aColor.g, aColor.b, aColor.a};
-    shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, color);
-  }
+  if (SUCCEEDED(hr) && shadowEffect) {
+    shadowEffect->SetInput(0, image);
+    if (mFormat == SurfaceFormat::A8) {
+      shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, aSigma);
+      shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_BORDER_MODE,
+                             D2D1_BORDER_MODE_HARD);
+    } else {
+      shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, aSigma);
+      D2D1_VECTOR_4F color = {aColor.r, aColor.g, aColor.b, aColor.a};
+      shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, color);
+    }
 
-  D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aOffset);
-  mDC->DrawImage(shadowEffect, &shadowPoint, nullptr,
-                 D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
+    D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aOffset);
+    mDC->DrawImage(shadowEffect, &shadowPoint, nullptr,
+                   D2D1_INTERPOLATION_MODE_LINEAR,
+                   D2D1_COMPOSITE_MODE_SOURCE_OVER);
+  } else {
+    gfxWarning() << "Failed to create shadow effect. Code: " << hexa(hr);
+  }
 
   if (aSurface->GetFormat() != SurfaceFormat::A8) {
     D2D1_POINT_2F imgPoint = D2DPoint(aDest);
     mDC->DrawImage(image, &imgPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR,
-                   D2DCompositionMode(aOperator));
+                   D2D1_COMPOSITE_MODE_SOURCE_OVER);
   }
+
+  FinalizeDrawing(aOperator, ColorPattern(aColor));
 }
 
 void DrawTargetD2D1::ClearRect(const Rect& aRect) {
