@@ -5740,17 +5740,23 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
       Result<RefPtr<Element>, nsresult> maybeNewElement =
           CreateAndInsertElementWithTransaction(
               MOZ_KnownLive(*tagName), EditorDOMPoint(newBlock, 0),
-              [](Element& aNewElement) -> nsresult { return NS_OK; });
+              // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+              [&](Element& aNewElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                // Clone all attributes.  Note that despite the method name,
+                // CloneAttributesWithTransaction does not create
+                // transactions in this case because aNewElement has not
+                // been connected yet.
+                // XXX Looks like that this clones id attribute too.
+                CloneAttributesWithTransaction(aNewElement,
+                                               *elementInPreviousBlock);
+                return NS_OK;
+              });
       if (maybeNewElement.isErr()) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return maybeNewElement.unwrapErr();
       }
       firstClonedElement = lastClonedElement = maybeNewElement.unwrap();
-      // Clone all attributes.
-      // XXX Looks like that this clones id attribute too.
-      CloneAttributesWithTransaction(*lastClonedElement,
-                                     *elementInPreviousBlock);
       continue;
     }
     // Otherwise, inserts new parent inline container to the previous inserted
