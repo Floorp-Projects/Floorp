@@ -17,6 +17,7 @@
 #include "nsGlobalWindowInner.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "ScopedNSSTypes.h"
@@ -158,6 +159,13 @@ bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
     return true;
   }
   LOG("OriginTrials::IsEnabled(%d)\n", int(aTrial));
+
+  if (dom::WorkletThread::IsOnWorkletThread()) {
+    // TODO: Worklet support, clean up the assumption below than not main thread
+    // means worker.
+    return false;
+  }
+
   const OriginTrials trials =
       NS_IsMainThread()
           ? FromWindow(xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject)))
