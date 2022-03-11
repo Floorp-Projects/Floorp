@@ -11387,29 +11387,25 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aMetadata.id())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No metadata ID!");
   }
 
   const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
       GetDatabase().MetadataPtr();
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested metadata ID does not match next ID!");
   }
 
   if (NS_WARN_IF(
           MatchMetadataNameOrId(dbMetadata->mObjectStores, aMetadata.id(),
                                 SomeRef<const nsAString&>(aMetadata.name()))
               .isSome())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "MatchMetadataNameOrId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   const int64_t initialAutoIncrementId = aMetadata.autoIncrement() ? 1 : 0;
@@ -11419,7 +11415,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.InsertOrUpdate(
           aMetadata.id(), std::move(newMetadata), fallible))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mObjectStores.InsertOrUpdate failed!");
   }
 
   dbMetadata->mNextObjectStoreId++;
@@ -11429,7 +11425,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
