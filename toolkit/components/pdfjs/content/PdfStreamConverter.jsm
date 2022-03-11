@@ -465,17 +465,15 @@ class ChromeActions {
     return Services.locale.requestedLocale || "en-US";
   }
 
-  getStrings(data) {
+  getStrings() {
     try {
       // Lazy initialization of localizedStrings
-      if (!("localizedStrings" in this)) {
-        this.localizedStrings = getLocalizedStrings("viewer.properties");
-      }
-      var result = this.localizedStrings[data];
-      return JSON.stringify(result || null);
+      this.localizedStrings ||= getLocalizedStrings("viewer.properties");
+
+      return this.localizedStrings;
     } catch (e) {
       log("Unable to retrieve localized strings: " + e);
-      return "null";
+      return null;
     }
   }
 
