@@ -259,7 +259,6 @@ class alignas(16) Instance {
     return offsetof(Instance, globalArea_);
   }
 
-  Instance* instance() const { return const_cast<Instance*>(this); }
   JSContext* cx() const { return cx_; }
   JS::Realm* realm() const { return realm_; }
   bool debugEnabled() const { return !!maybeDebug_; }
