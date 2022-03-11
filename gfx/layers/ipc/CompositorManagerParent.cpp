@@ -79,7 +79,8 @@ bool CompositorManagerParent::Create(
 already_AddRefed<CompositorBridgeParent>
 CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
     CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
-    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize) {
+    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
+    uint64_t aInnerWindowId) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -108,9 +109,9 @@ CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
                                ->GetGlobalDisplay()
                                .GetVsyncRate();
 
-  RefPtr<CompositorBridgeParent> bridge =
-      new CompositorBridgeParent(sInstance, aScale, vsyncRate, aOptions,
-                                 aUseExternalSurfaceSize, aSurfaceSize);
+  RefPtr<CompositorBridgeParent> bridge = new CompositorBridgeParent(
+      sInstance, aScale, vsyncRate, aOptions, aUseExternalSurfaceSize,
+      aSurfaceSize, aInnerWindowId);
 
   sInstance->mPendingCompositorBridges.AppendElement(bridge);
   return bridge.forget();
@@ -231,7 +232,7 @@ CompositorManagerParent::AllocPCompositorBridgeParent(
       const WidgetCompositorOptions& opt = aOpt.get_WidgetCompositorOptions();
       RefPtr<CompositorBridgeParent> bridge = new CompositorBridgeParent(
           this, opt.scale(), opt.vsyncRate(), opt.options(),
-          opt.useExternalSurfaceSize(), opt.surfaceSize());
+          opt.useExternalSurfaceSize(), opt.surfaceSize(), opt.innerWindowId());
       return bridge.forget();
     }
     case CompositorBridgeOptions::TSameProcessWidgetCompositorOptions: {

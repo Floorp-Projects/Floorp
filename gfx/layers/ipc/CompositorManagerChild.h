@@ -39,7 +39,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
       uint64_t aProcessToken, WebRenderLayerManager* aLayerManager,
       uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
       const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
-      const gfx::IntSize& aSurfaceSize);
+      const gfx::IntSize& aSurfaceSize, uint64_t aInnerWindowId);
 
   static already_AddRefed<CompositorBridgeChild>
   CreateSameProcessWidgetCompositorBridge(WebRenderLayerManager* aLayerManager,
