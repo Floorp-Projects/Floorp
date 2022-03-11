@@ -220,6 +220,7 @@ enum class ErrorType(
     ),
     ERROR_HTTPS_ONLY(
         R.string.mozac_browser_errorpages_httpsonly_title,
-        R.string.mozac_browser_errorpages_httpsonly_message
+        R.string.mozac_browser_errorpages_httpsonly_message,
+        imageNameRes = R.string.mozac_error_lock
     )
 }

@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-errorpages**
+  * 🌟 The https-only error page will now show also an image.
+
 * **service-pocket**
   * 🚒 Bug fixed [issue #11905](https://github.com/mozilla-mobile/android-components/issues/11905) - Delete existing stories when their `imageUrl` is updated allowing those stories to be replaced.
 
