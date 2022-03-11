@@ -36,8 +36,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   const { ConsoleAPI } = ChromeUtils.import(
-    "resource://gre/modules/Console.jsm",
-    {}
+    "resource://gre/modules/Console.jsm"
   );
   return new ConsoleAPI({
     maxLogLevel: "warn",

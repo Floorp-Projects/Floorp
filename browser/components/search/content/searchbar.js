@@ -102,12 +102,10 @@
       window.addEventListener("unload", this.destroy);
 
       this.FormHistory = ChromeUtils.import(
-        "resource://gre/modules/FormHistory.jsm",
-        {}
+        "resource://gre/modules/FormHistory.jsm"
       ).FormHistory;
       this.SearchSuggestionController = ChromeUtils.import(
-        "resource://gre/modules/SearchSuggestionController.jsm",
-        {}
+        "resource://gre/modules/SearchSuggestionController.jsm"
       ).SearchSuggestionController;
 
       Services.obs.addObserver(this.observer, "browser-search-engine-modified");

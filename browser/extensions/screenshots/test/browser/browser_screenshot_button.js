@@ -4,8 +4,6 @@
  */
 "use strict";
 
-ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
-
 add_task(async function testScreenshotButtonDisabled() {
   info("Test the Screenshots button in the panel");
 
