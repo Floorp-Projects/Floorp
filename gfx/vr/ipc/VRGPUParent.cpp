@@ -9,6 +9,7 @@
 
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 namespace gfx {
@@ -43,6 +44,10 @@ void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
 /* static */
 RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
     Endpoint<PVRGPUParent>&& aEndpoint) {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    return nullptr;
+  }
+
   RefPtr<VRGPUParent> vcp = new VRGPUParent(aEndpoint.OtherPid());
   GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod<Endpoint<PVRGPUParent>&&>("gfx::VRGPUParent::Bind", vcp,
