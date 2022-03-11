@@ -130,9 +130,6 @@ function update(state = initialSourcesState(), action) {
   let location = null;
 
   switch (action.type) {
-    case "ADD_SOURCE":
-      return addSources(state, [action.source]);
-
     case "ADD_SOURCES":
       return addSources(state, action.sources);
 

@@ -64,9 +64,9 @@ describe("sources reducer", () => {
   it("should work", () => {
     let state = initialSourcesState();
     state = update(state, {
-      type: "ADD_SOURCE",
+      type: "ADD_SOURCES",
       cx: mockcx,
-      source: makeMockSource(),
+      sources: [makeMockSource()],
     });
     expect(getResourceIds(state.sources)).toHaveLength(1);
   });
