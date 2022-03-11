@@ -5093,9 +5093,9 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
   }
 
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      InsertBRElementWithTransaction(atEmptyMailCiteElement);
+      InsertBRElement(WithTransaction::Yes, atEmptyMailCiteElement);
   if (resultOfInsertingBRElement.isErr()) {
-    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
     return resultOfInsertingBRElement.unwrapErr();
   }
   MOZ_ASSERT(resultOfInsertingBRElement.inspect());
@@ -5257,9 +5257,11 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     return RefPtr<Element>();
   }
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      aHTMLEditor.InsertBRElementWithTransaction(atParentOfEmptyListItem);
-  NS_WARNING_ASSERTION(resultOfInsertingBRElement.isOk(),
-                       "HTMLEditor::InsertBRElementWithTransaction() failed");
+      aHTMLEditor.InsertBRElement(WithTransaction::Yes,
+                                  atParentOfEmptyListItem);
+  NS_WARNING_ASSERTION(
+      resultOfInsertingBRElement.isOk(),
+      "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
   MOZ_ASSERT_IF(resultOfInsertingBRElement.isOk(),
                 resultOfInsertingBRElement.inspect());
   return resultOfInsertingBRElement;
