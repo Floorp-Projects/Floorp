@@ -319,7 +319,7 @@
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
-      "pattern": "^[a-zA-Z0-9-]{0,100}$",
+      "pattern": "^[a-zA-Z0-9-$_]{0,100}$",
       "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
     },
     "webExtension": {
@@ -335,7 +335,7 @@
         "locale": {
           "type": "string",
           "title": "WebExtension Locale",
-          "pattern": "^[a-zA-Z0-9-]{0,100}$",
+          "pattern": "^[a-zA-Z0-9-$_]{0,100}$",
           "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."
         }
       }
