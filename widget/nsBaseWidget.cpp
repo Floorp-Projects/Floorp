@@ -1230,10 +1230,15 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
 
     RefPtr<WebRenderLayerManager> lm = new WebRenderLayerManager(this);
 
+    uint64_t innerWindowId = 0;
+    if (Document* doc = GetDocument()) {
+      innerWindowId = doc->InnerWindowID();
+    }
+
     bool retry = false;
     mCompositorSession = gpu->CreateTopLevelCompositor(
         this, lm, GetDefaultScale(), options, UseExternalCompositingSurface(),
-        gfx::IntSize(aWidth, aHeight), &retry);
+        gfx::IntSize(aWidth, aHeight), innerWindowId, &retry);
 
     if (mCompositorSession) {
       TextureFactoryIdentifier textureFactoryIdentifier;

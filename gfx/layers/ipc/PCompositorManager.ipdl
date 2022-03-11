@@ -31,6 +31,7 @@ struct WidgetCompositorOptions {
   CompositorOptions options;
   bool useExternalSurfaceSize;
   IntSize surfaceSize;
+  uint64_t innerWindowId;
 };
 
 struct ContentCompositorOptions {
