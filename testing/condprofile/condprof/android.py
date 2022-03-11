@@ -20,7 +20,13 @@ from condprof.util import write_yml_file, logger, DEFAULT_PREFS, BaseEnv
 
 # XXX most of this code should migrate into mozdevice - see Bug 1574849
 class AndroidDevice:
-    def __init__(self, app_name, marionette_port=2828, verbose=False):
+    def __init__(
+        self,
+        app_name,
+        marionette_port=2828,
+        verbose=False,
+        remote_test_root="/sdcard/test_root/",
+    ):
         self.app_name = app_name
 
         # XXX make that an option
@@ -34,6 +40,7 @@ class AndroidDevice:
         self.profile = None
         self.remote_profile = None
         self.log_file = None
+        self.remote_test_root = remote_test_root
         self._adb_fh = None
 
     def _set_adb_logger(self, log_file):
@@ -78,7 +85,7 @@ class AndroidDevice:
             # details on why test_root must be /sdcard/test_root
             # for android pgo due to Android 4.3.
             self.device = ADBDeviceFactory(
-                verbose=self.verbose, logger_name="adb", test_root="/sdcard/test_root"
+                verbose=self.verbose, logger_name="adb", test_root=self.remote_test_root
             )
         except Exception:
             logger.error("Cannot initialize device")
@@ -99,11 +106,9 @@ class AndroidDevice:
 
         # creating the profile on the device
         logger.info("Creating the profile on the device")
-        remote_test_root = posixpath.join(device.test_root, "condprof")
-        remote_profile = posixpath.join(remote_test_root, "profile")
+
+        remote_profile = posixpath.join(self.remote_test_root, "profile")
         logger.info("The profile on the phone will be at %s" % remote_profile)
-        device.rm(remote_test_root, force=True, recursive=True)
-        device.mkdir(remote_test_root)
 
         device.rm(remote_profile, force=True, recursive=True)
         logger.info("Pushing %s on the phone" % self.profile)
@@ -191,8 +196,12 @@ class AndroidDevice:
 
 # XXX redundant, remove
 @contextlib.contextmanager
-def device(app_name, marionette_port=2828, verbose=True):
-    device_ = AndroidDevice(app_name, marionette_port, verbose)
+def device(
+    app_name, marionette_port=2828, verbose=True, remote_test_root="/sdcard/test_root/"
+):
+    device_ = AndroidDevice(
+        app_name, marionette_port, verbose, remote_test_root=remote_test_root
+    )
     try:
         yield device_
     finally:
