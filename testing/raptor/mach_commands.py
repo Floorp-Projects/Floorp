@@ -28,7 +28,7 @@ from mozbuild.base import MachCommandConditions as Conditions
 HERE = os.path.dirname(os.path.realpath(__file__))
 
 BENCHMARK_REPOSITORY = "https://github.com/mozilla/perf-automation"
-BENCHMARK_REVISION = "7eef4a5eb4bd2d7558967e947b57cda33e287133"
+BENCHMARK_REVISION = "c51ca3fc73cd9a866c99357005cf1e21342a6a50"
 
 ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m"]
 

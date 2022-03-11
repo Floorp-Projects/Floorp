@@ -55,6 +55,6 @@ matrix-react-bench:
     description: Matrix-React Benchmark
     fetch:
         type: static-url
-        url: https://github.com/mozilla/perf-automation/releases/download/matrix-react-bench-v1/matrix-react-bench-7eef4a5eb4bd.zip
-        sha256: 785b8053466b4de089f9fda69f367e508b8bd50baf8a01cda0ee9f18be662dca
-        size: 57514580
+        url: https://github.com/mozilla/perf-automation/releases/download/matrix-react-bench-v1.1/matrix-react-bench-c51ca3fc73cd.zip
+        sha256: eef4503db50ee7e156225124b50b4e2af471ac76467078d17a7cdd24359e3d0c
+        size: 57514835
