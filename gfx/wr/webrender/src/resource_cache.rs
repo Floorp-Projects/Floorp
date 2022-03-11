@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BlobImageResources, BlobImageRequest, RasterizedBlobImage, ImageFormat};
+use api::{BlobImageRequest, RasterizedBlobImage, ImageFormat};
 use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
-use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult, FontInstanceData};
+use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
-use api::{BlobImageKey, VoidPtrToSizeFn};
+use api::{BlobImageHandler, BlobImageKey, VoidPtrToSizeFn};
 use api::units::*;
 use crate::{render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}, util::WeakTable};
 use crate::image_tiling::{compute_tile_size, compute_tile_range};
@@ -22,7 +22,7 @@ use crate::device::TextureFilter;
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
-use crate::glyph_rasterizer::{SharedFontInstanceMap, BaseFontInstance};
+use crate::glyph_rasterizer::{SharedFontResources, BaseFontInstance};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{
@@ -398,22 +398,12 @@ impl ImageResult {
 type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
 
 struct Resources {
-    font_templates: FastHashMap<FontKey, FontTemplate>,
-    font_instances: SharedFontInstanceMap,
+    fonts: SharedFontResources,
     image_templates: ImageTemplates,
     // We keep a set of Weak references to the fonts so that we're able to include them in memory
     // reports even if only the OS is holding on to the Vec<u8>. PtrWeakHashSet will periodically
     // drop any references that have gone dead.
     weak_fonts: WeakTable
-}
-
-impl BlobImageResources for Resources {
-    fn get_font_data(&self, key: FontKey) -> &FontTemplate {
-        self.font_templates.get(&key).unwrap()
-    }
-    fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
-        self.font_instances.get_font_instance_data(key)
-    }
 }
 
 // We only use this to report glyph dimensions to the user of the API, so using
@@ -485,6 +475,11 @@ pub struct ResourceCache {
     /// for debugging purposes.
     deleted_blob_keys: VecDeque<Vec<BlobImageKey>>,
 
+    /// We keep one around to be able to call clear_namespace
+    /// after the api object is deleted. For most purposes the
+    /// api object's blob handler should be used instead.
+    blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+
     /// A list of queued compositor surface updates to apply next frame.
     pending_native_surface_updates: Vec<NativeSurfaceOperation>,
 
@@ -501,15 +496,15 @@ impl ResourceCache {
         picture_textures: PictureTextures,
         glyph_rasterizer: GlyphRasterizer,
         cached_glyphs: GlyphCache,
-        font_instances: SharedFontInstanceMap,
+        fonts: SharedFontResources,
+        blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     ) -> Self {
         ResourceCache {
             cached_glyphs,
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
             resources: Resources {
-                font_instances,
-                font_templates: FastHashMap::default(),
+                fonts,
                 image_templates: ImageTemplates::default(),
                 weak_fonts: WeakTable::new(),
             },
@@ -523,6 +518,7 @@ impl ResourceCache {
             rasterized_blob_images: FastHashMap::default(),
             // We want to keep three frames worth of delete blob keys
             deleted_blob_keys: vec![Vec::new(), Vec::new(), Vec::new()].into(),
+            blob_image_handler,
             pending_native_surface_updates: Vec::new(),
             #[cfg(feature = "capture")]
             capture_dirty: true,
@@ -544,7 +540,7 @@ impl ResourceCache {
         let workers = Arc::new(ThreadPoolBuilder::new().build().unwrap());
         let glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
         let cached_glyphs = GlyphCache::new();
-        let font_instances = SharedFontInstanceMap::new();
+        let fonts = SharedFontResources::new();
         let picture_textures = PictureTextures::new(
             crate::picture::TILE_SIZE_DEFAULT,
             TextureFilter::Nearest,
@@ -555,7 +551,8 @@ impl ResourceCache {
             picture_textures,
             glyph_rasterizer,
             cached_glyphs,
-            font_instances,
+            fonts,
+            None,
         )
     }
 
@@ -680,29 +677,44 @@ impl ResourceCache {
                     self.delete_image_template(img.as_image());
                 }
                 ResourceUpdate::DeleteFont(font) => {
-                    self.delete_font_template(font);
-                    profile.set(profiler::FONT_TEMPLATES, self.resources.font_templates.len());
-                    profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
+                    if let Some(shared_key) = self.resources.fonts.font_keys.delete_key(&font) {
+                        self.delete_font_template(shared_key);
+                        if let Some(ref mut handler) = &mut self.blob_image_handler {
+                            handler.delete_font(shared_key);
+                        }
+                        profile.set(profiler::FONT_TEMPLATES, self.resources.fonts.templates.len());
+                        profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
+                    }
                 }
                 ResourceUpdate::DeleteFontInstance(font) => {
-                    self.delete_font_instance(font);
+                    if let Some(shared_key) = self.resources.fonts.instance_keys.delete_key(&font) {
+                        self.delete_font_instance(shared_key);
+                    }
+                    if let Some(ref mut handler) = &mut self.blob_image_handler {
+                        handler.delete_font_instance(font);
+                    }
                 }
                 ResourceUpdate::SetBlobImageVisibleArea(key, area) => {
                     self.discard_tiles_outside_visible_area(key, &area);
                     self.set_image_visible_rect(key.as_image(), &area);
                 }
                 ResourceUpdate::AddFont(font) => {
-                    match font {
-                        AddFont::Raw(id, bytes, index) => {
-                            self.font_templates_memory += bytes.len();
-                            profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
-                            self.add_font_template(id, FontTemplate::Raw(bytes, index));
+                    // The shared key was already added in ApiResources, but the first time it is
+                    // seen on the backend we still need to do some extra initialization here.
+                    let (key, template) = match font {
+                        AddFont::Raw(key, bytes, index) => {
+                            (key, FontTemplate::Raw(bytes, index))
                         }
-                        AddFont::Native(id, native_font_handle) => {
-                            self.add_font_template(id, FontTemplate::Native(native_font_handle));
+                        AddFont::Native(key, native_font_handle) => {
+                            (key, FontTemplate::Native(native_font_handle))
                         }
+                    };
+                    let shared_key = self.resources.fonts.font_keys.map_key(&key);
+                    if !self.glyph_rasterizer.has_font(shared_key) {
+                        self.add_font_template(shared_key, template);
+                        profile.set(profiler::FONT_TEMPLATES, self.resources.fonts.templates.len());
+                        profile.set(profiler::FONT_TEMPLATES_MEM, bytes_to_mb(self.font_templates_memory));
                     }
-                    profile.set(profiler::FONT_TEMPLATES, self.resources.font_templates.len());
                 }
                 ResourceUpdate::AddFontInstance(..) => {
                     // Already added in ApiResources.
@@ -753,32 +765,32 @@ impl ResourceCache {
     pub fn add_font_template(&mut self, font_key: FontKey, template: FontTemplate) {
         // Push the new font to the font renderer, and also store
         // it locally for glyph metric requests.
-        if let FontTemplate::Raw(ref font, _) = template {
-            self.resources.weak_fonts.insert(Arc::downgrade(font));
+        if let FontTemplate::Raw(ref data, _) = template {
+            self.resources.weak_fonts.insert(Arc::downgrade(data));
+            self.font_templates_memory += data.len();
         }
         self.glyph_rasterizer.add_font(font_key, template.clone());
-        self.resources.font_templates.insert(font_key, template);
+        self.resources.fonts.templates.add_font(font_key, template);
     }
 
     pub fn delete_font_template(&mut self, font_key: FontKey) {
         self.glyph_rasterizer.delete_font(font_key);
-        if let Some(FontTemplate::Raw(data, _)) = self.resources.font_templates.remove(&font_key) {
+        if let Some(FontTemplate::Raw(data, _)) = self.resources.fonts.templates.delete_font(&font_key) {
             self.font_templates_memory -= data.len();
         }
-        self.cached_glyphs
-            .clear_fonts(|font| font.font_key == font_key);
+        self.cached_glyphs.delete_fonts(&[font_key]);
     }
 
     pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
-        self.resources.font_instances.delete_font_instance(instance_key);
-    }
-
-    pub fn get_font_instances(&self) -> SharedFontInstanceMap {
-        self.resources.font_instances.clone()
+        self.resources.fonts.instances.delete_font_instance(instance_key);
     }
 
     pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
-        self.resources.font_instances.get_font_instance(instance_key)
+        self.resources.fonts.instances.get_font_instance(instance_key)
+    }
+
+    pub fn get_fonts(&self) -> SharedFontResources {
+        self.resources.fonts.clone()
     }
 
     pub fn add_image_template(
@@ -1154,6 +1166,14 @@ impl ResourceCache {
             f(current_texture_id, current_glyph_format, fetch_buffer);
             fetch_buffer.clear();
         }
+    }
+
+    pub fn map_font_key(&self, key: FontKey) -> FontKey {
+        self.resources.fonts.font_keys.map_key(&key)
+    }
+
+    pub fn map_font_instance_key(&self, key: FontInstanceKey) -> FontInstanceKey {
+        self.resources.fonts.instance_keys.map_key(&key)
     }
 
     pub fn get_glyph_dimensions(
@@ -1549,16 +1569,36 @@ impl ResourceCache {
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
         self.clear_images(|k| k.0 == namespace);
 
-        self.resources.font_instances.clear_namespace(namespace);
-
-        for &key in self.resources.font_templates.keys().filter(|key| key.0 == namespace) {
-            self.glyph_rasterizer.delete_font(key);
+        // First clear out any non-shared resources associated with the namespace.
+        self.resources.fonts.instances.clear_namespace(namespace);
+        let deleted_keys = self.resources.fonts.templates.clear_namespace(namespace);
+        self.glyph_rasterizer.delete_fonts(&deleted_keys);
+        self.cached_glyphs.clear_namespace(namespace);
+        if let Some(handler) = &mut self.blob_image_handler {
+            handler.clear_namespace(namespace);
         }
-        self.resources
-            .font_templates
-            .retain(|key, _| key.0 != namespace);
-        self.cached_glyphs
-            .clear_fonts(|font| font.font_key.0 == namespace);
+
+        // Check for any shared instance keys that were remapped from the namespace.
+        let shared_instance_keys = self.resources.fonts.instance_keys.clear_namespace(namespace);
+        if !shared_instance_keys.is_empty() {
+            self.resources.fonts.instances.delete_font_instances(&shared_instance_keys);
+            self.cached_glyphs.delete_font_instances(&shared_instance_keys, &mut self.glyph_rasterizer);
+            // Blob font instances are not shared across namespaces, so there is no
+            // need to call the handler for them individually.
+        }
+
+        // Finally check for any shared font keys that were remapped from the namespace.
+        let shared_keys = self.resources.fonts.font_keys.clear_namespace(namespace);
+        if !shared_keys.is_empty() {
+            self.glyph_rasterizer.delete_fonts(&shared_keys);
+            self.resources.fonts.templates.delete_fonts(&shared_keys);
+            self.cached_glyphs.delete_fonts(&shared_keys);
+            if let Some(handler) = &mut self.blob_image_handler {
+                for &key in &shared_keys {
+                    handler.delete_font(key);
+                }
+            }
+        }
     }
 
     /// Reports the CPU heap usage of this ResourceCache.
@@ -1575,7 +1615,7 @@ impl ResourceCache {
         let mut seen_fonts = std::collections::HashSet::new();
         // Measure fonts. We only need the templates here, because the instances
         // don't have big buffers.
-        for (_, font) in self.resources.font_templates.iter() {
+        for (_, font) in self.resources.fonts.templates.lock().iter() {
             if let FontTemplate::Raw(ref raw, _) = font {
                 report.fonts += unsafe { op(raw.as_ptr() as *const c_void) };
                 seen_fonts.insert(raw.as_ptr());
@@ -1583,7 +1623,7 @@ impl ResourceCache {
         }
 
         for font in self.resources.weak_fonts.iter() {
-            if !seen_fonts.contains(&font.as_ptr()) { 
+            if !seen_fonts.contains(&font.as_ptr()) {
                 report.weak_fonts += unsafe { op(font.as_ptr() as *const c_void) };
             }
         }
@@ -1857,12 +1897,12 @@ impl ResourceCache {
 
         info!("\tfont templates");
         let mut font_paths = FastHashMap::default();
-        for template in res.font_templates.values() {
+        for template in res.fonts.templates.lock().values() {
             let data: &[u8] = match *template {
                 FontTemplate::Raw(ref arc, _) => arc,
                 FontTemplate::Native(_) => continue,
             };
-            let font_id = res.font_templates.len() + 1;
+            let font_id = res.fonts.templates.len() + 1;
             let entry = match font_paths.entry(data.as_ptr()) {
                 Entry::Occupied(_) => continue,
                 Entry::Vacant(e) => e,
@@ -1948,7 +1988,8 @@ impl ResourceCache {
         }
 
         let resources = PlainResources {
-            font_templates: res.font_templates
+            font_templates: res.fonts.templates
+                .lock()
                 .iter()
                 .map(|(key, template)| {
                     (*key, match *template {
@@ -1975,7 +2016,7 @@ impl ResourceCache {
                     })
                 })
                 .collect(),
-            font_instances: res.font_instances.clone_map(),
+            font_instances: res.fonts.instances.clone_map(),
             image_templates: res.image_templates.images
                 .iter()
                 .map(|(key, template)| {
@@ -2055,8 +2096,8 @@ impl ResourceCache {
 
         self.glyph_rasterizer.reset();
         let res = &mut self.resources;
-        res.font_templates.clear();
-        res.font_instances.set(resources.font_instances);
+        res.fonts.templates.clear();
+        res.fonts.instances.set_map(resources.font_instances);
         res.image_templates.images.clear();
 
         info!("\tfont templates...");
@@ -2086,7 +2127,7 @@ impl ResourceCache {
 
             let template = FontTemplate::Raw(arc, plain_template.index);
             self.glyph_rasterizer.add_font(key, template.clone());
-            res.font_templates.insert(key, template);
+            res.fonts.templates.add_font(key, template);
         }
 
         info!("\timage templates...");
