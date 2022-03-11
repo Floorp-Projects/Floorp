@@ -205,10 +205,10 @@ var AddressDataLoader, FormAutofillUtils;
 
 async function runHeuristicsTest(patterns, fixturePathPrefix) {
   add_task(async function setup() {
-    ({ FormAutofillHeuristics, LabelUtils } = ChromeUtils.import(
+    ({ FormAutofillHeuristics } = ChromeUtils.import(
       "resource://autofill/FormAutofillHeuristics.jsm"
     ));
-    ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.import(
+    ({ AddressDataLoader, FormAutofillUtils, LabelUtils } = ChromeUtils.import(
       "resource://autofill/FormAutofillUtils.jsm"
     ));
   });
