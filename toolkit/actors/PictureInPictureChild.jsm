@@ -159,27 +159,28 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
 
   //
   /**
-   * The keyboard was used to attempt to open Picture-in-Picture. In this case,
-   * find the focused window, and open Picture-in-Picture for the first
-   * playing video, or if none, the largest dimension video. We suspect this
-   * heuristic will handle most cases, though we might refine this later on.
+   * The keyboard was used to attempt to open Picture-in-Picture. If a video is focused,
+   * select that video. Otherwise find the first playing video, or if none, the largest
+   * dimension video. We suspect this heuristic will handle most cases, though we
+   * might refine this later on. Note that we assume that this method will only be
+   * called for the focused document.
    */
   keyToggle() {
-    let focusedWindow = Services.focus.focusedWindow;
-    if (focusedWindow) {
-      let doc = focusedWindow.document;
-      if (doc) {
+    let doc = this.document;
+    if (doc) {
+      let video = doc.activeElement;
+      if (!(video instanceof HTMLVideoElement)) {
         let listOfVideos = [...doc.querySelectorAll("video")].filter(
           video => !isNaN(video.duration)
         );
         // Get the first non-paused video, otherwise the longest video. This
         // fallback is designed to skip over "preview"-style videos on sidebars.
-        let video =
+        video =
           listOfVideos.filter(v => !v.paused)[0] ||
           listOfVideos.sort((a, b) => b.duration - a.duration)[0];
-        if (video) {
-          this.togglePictureInPicture(video);
-        }
+      }
+      if (video) {
+        this.togglePictureInPicture(video);
       }
     }
   }

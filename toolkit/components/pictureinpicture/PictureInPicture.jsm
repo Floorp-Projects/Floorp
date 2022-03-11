@@ -227,11 +227,11 @@ var PictureInPicture = {
     }
 
     let win = event.target.ownerGlobal;
-    let browser = win.gBrowser.selectedBrowser;
-    let actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "PictureInPictureLauncher"
-    );
-    actor.sendAsyncMessage("PictureInPicture:KeyToggle");
+    let bc = Services.focus.focusedContentBrowsingContext;
+    if (bc.top == win.gBrowser.selectedBrowser.browsingContext) {
+      let actor = bc.currentWindowGlobal.getActor("PictureInPictureLauncher");
+      actor.sendAsyncMessage("PictureInPicture:KeyToggle");
+    }
   },
 
   async focusTabAndClosePip(window, pipActor) {
