@@ -213,6 +213,28 @@ class nsPtrHashKey;
 #  define IDB_MOBILE
 #endif
 
+// Helper macros to reduce assertion verbosity
+// AUUF == ASSERT_UNREACHABLE_UNLESS_FUZZING
+#ifdef DEBUG
+#  ifdef FUZZING
+#    define NS_AUUF_OR_WARN(...) NS_WARNING(__VA_ARGS__)
+#  else
+#    define NS_AUUF_OR_WARN(...) MOZ_ASSERT(false, __VA_ARGS__)
+#  endif
+#  define NS_AUUF_OR_WARN_IF(cond) \
+    [](bool aCond) {               \
+      if (MOZ_UNLIKELY(aCond)) {   \
+        NS_AUUF_OR_WARN(#cond);    \
+      }                            \
+      return aCond;                \
+    }((cond))
+#else
+#  define NS_AUUF_OR_WARN(...) \
+    do {                       \
+    } while (false)
+#  define NS_AUUF_OR_WARN_IF(cond) static_cast<bool>(cond)
+#endif
+
 namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
@@ -2765,9 +2787,10 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   void FakeActorDestroyed() { mActorDestroyed.EnsureFlipped(); }
 #endif
 
-  bool RecvCommit(Maybe<int64_t> aLastRequest);
+  mozilla::ipc::IPCResult RecvCommit(IProtocol* aActor,
+                                     const Maybe<int64_t> aLastRequest);
 
-  bool RecvAbort(nsresult aResultCode);
+  mozilla::ipc::IPCResult RecvAbort(IProtocol* aActor, nsresult aResultCode);
 
   void MaybeCommitOrAbort() {
     AssertIsOnBackgroundThread();
@@ -6781,10 +6804,10 @@ already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
     return nullptr;
   }
 
-  if (NS_WARN_IF(!aLoggingInfo.nextTransactionSerialNumber()) ||
-      NS_WARN_IF(!aLoggingInfo.nextVersionChangeTransactionSerialNumber()) ||
-      NS_WARN_IF(!aLoggingInfo.nextRequestSerialNumber())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aLoggingInfo.nextTransactionSerialNumber()) ||
+      NS_AUUF_OR_WARN_IF(
+          !aLoggingInfo.nextVersionChangeTransactionSerialNumber()) ||
+      NS_AUUF_OR_WARN_IF(!aLoggingInfo.nextRequestSerialNumber())) {
     return nullptr;
   }
 
@@ -9260,10 +9283,8 @@ mozilla::ipc::IPCResult Factory::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBFactoryParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -9301,25 +9322,23 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   MOZ_ASSERT(commonParams);
 
   const DatabaseMetadata& metadata = commonParams->metadata();
-  if (NS_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!IsValidPersistenceType(metadata.persistenceType()))) {
     return nullptr;
   }
 
   const PrincipalInfo& principalInfo = commonParams->principalInfo();
-  if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(principalInfo.type() ==
+                         PrincipalInfo::TNullPrincipalInfo)) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
-                 metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(
+          principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
+          metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
     return nullptr;
   }
 
@@ -9770,7 +9789,7 @@ bool Database::CloseInternal() {
 
   if (mClosed) {
     if (NS_WARN_IF(!IsInvalidated())) {
-      // Kill misbehaving child for sending the close message twice.
+      // Signal misbehaving child for sending the close message twice.
       return false;
     }
 
@@ -9864,15 +9883,13 @@ bool Database::VerifyRequestParams(const DatabaseRequestParams& aParams) const {
 
   switch (aParams.type()) {
     case DatabaseRequestParams::TCreateFileParams: {
-      if (NS_WARN_IF(mFileHandleDisabled)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mFileHandleDisabled)) {
         return false;
       }
 
       const CreateFileParams& params = aParams.get_CreateFileParams();
 
-      if (NS_WARN_IF(params.name().IsEmpty())) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(params.name().IsEmpty())) {
         return false;
       }
 
@@ -9948,8 +9965,7 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   bool trustParams = !BackgroundParent::IsOtherProcessActor(backgroundActor);
 #endif
 
-  if (NS_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
     return nullptr;
   }
 
@@ -10008,21 +10024,20 @@ Database::AllocPBackgroundIDBTransactionParent(
     return nullptr;
   }
 
-  if (NS_WARN_IF(aObjectStoreNames.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(aObjectStoreNames.IsEmpty())) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(aMode != IDBTransaction::Mode::ReadOnly &&
-                 aMode != IDBTransaction::Mode::ReadWrite &&
-                 aMode != IDBTransaction::Mode::ReadWriteFlush &&
-                 aMode != IDBTransaction::Mode::Cleanup)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(aMode != IDBTransaction::Mode::ReadOnly &&
+                         aMode != IDBTransaction::Mode::ReadWrite &&
+                         aMode != IDBTransaction::Mode::ReadWriteFlush &&
+                         aMode != IDBTransaction::Mode::Cleanup)) {
     return nullptr;
   }
 
   // If this is a readwrite transaction to a chrome database make sure the child
   // has write access.
+  // XXX: Maybe add NS_AUUF_OR_WARN_IF also here, see bug 1758875
   if (NS_WARN_IF((aMode == IDBTransaction::Mode::ReadWrite ||
                   aMode == IDBTransaction::Mode::ReadWriteFlush ||
                   aMode == IDBTransaction::Mode::Cleanup) &&
@@ -10034,8 +10049,7 @@ Database::AllocPBackgroundIDBTransactionParent(
   const ObjectStoreTable& objectStores = mMetadata->mObjectStores;
   const uint32_t nameCount = aObjectStoreNames.Length();
 
-  if (NS_WARN_IF(nameCount > objectStores.Count())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(nameCount > objectStores.Count())) {
     return nullptr;
   }
 
@@ -10049,8 +10063,7 @@ Database::AllocPBackgroundIDBTransactionParent(
             if (lastName) {
               // Make sure that this name is sorted properly and not a
               // duplicate.
-              if (NS_WARN_IF(name <= lastName.ref())) {
-                MOZ_CRASH_UNLESS_FUZZING();
+              if (NS_AUUF_OR_WARN_IF(name <= lastName.ref())) {
                 return Err(NS_ERROR_FAILURE);
               }
             }
@@ -10065,7 +10078,7 @@ Database::AllocPBackgroundIDBTransactionParent(
                                       !value->mDeleted;
                              });
             if (foundIt == objectStores.cend()) {
-              MOZ_CRASH_UNLESS_FUZZING();
+              MOZ_ASSERT_UNLESS_FUZZING(false, "ObjectStore not found.");
               return Err(NS_ERROR_FAILURE);
             }
 
@@ -10145,10 +10158,8 @@ mozilla::ipc::IPCResult Database::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIDBDatabaseParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBDatabaseParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -10156,7 +10167,7 @@ mozilla::ipc::IPCResult Database::RecvBlocked() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mClosed)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Database already closed!");
   }
 
   DatabaseActorInfo* info;
@@ -10174,8 +10185,7 @@ mozilla::ipc::IPCResult Database::RecvClose() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!CloseInternal())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "CloseInternal failed!");
   }
 
   return IPC_OK();
@@ -10275,44 +10285,44 @@ void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
   MaybeCommitOrAbort();
 }
 
-bool TransactionBase::RecvCommit(const Maybe<int64_t> aLastRequest) {
+mozilla::ipc::IPCResult TransactionBase::RecvCommit(
+    IProtocol* aActor, const Maybe<int64_t> aLastRequest) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(
+        aActor, "Attempt to commit an already comitted/aborted transaction!");
   }
 
   mCommitOrAbortReceived.Flip();
   mLastRequestBeforeCommit.init(aLastRequest);
-
   MaybeCommitOrAbort();
-  return true;
+
+  return IPC_OK();
 }
 
-bool TransactionBase::RecvAbort(nsresult aResultCode) {
+mozilla::ipc::IPCResult TransactionBase::RecvAbort(IProtocol* aActor,
+                                                   nsresult aResultCode) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(NS_SUCCEEDED(aResultCode))) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(aActor, "aResultCode must not be a success code!");
   }
 
   if (NS_WARN_IF(NS_ERROR_GET_MODULE(aResultCode) !=
                  NS_ERROR_MODULE_DOM_INDEXEDDB)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(aActor, "aResultCode does not refer to IndexedDB!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL(
+        aActor, "Attempt to abort an already comitted/aborted transaction!");
   }
 
   mCommitOrAbortReceived.Flip();
-
   Abort(aResultCode, /* aForce */ false);
-  return true;
+
+  return IPC_OK();
 }
 
 void TransactionBase::CommitOrAbort() {
@@ -10406,8 +10416,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreAddParams: {
       const ObjectStoreAddPutParams& params =
           aParams.get_ObjectStoreAddParams().commonParams();
-      if (NS_WARN_IF(!VerifyRequestParams(params))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params))) {
         return false;
       }
       break;
@@ -10416,8 +10425,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStorePutParams: {
       const ObjectStoreAddPutParams& params =
           aParams.get_ObjectStorePutParams().commonParams();
-      if (NS_WARN_IF(!VerifyRequestParams(params))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params))) {
         return false;
       }
       break;
@@ -10427,12 +10435,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const ObjectStoreGetParams& params = aParams.get_ObjectStoreGetParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10443,12 +10449,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetKeyParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10459,12 +10463,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetAllParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10475,23 +10477,20 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreGetAllKeysParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
     }
 
     case RequestParams::TObjectStoreDeleteParams: {
-      if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                     mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                     mMode != IDBTransaction::Mode::Cleanup &&
-                     mMode != IDBTransaction::Mode::VersionChange)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                             mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                             mMode != IDBTransaction::Mode::Cleanup &&
+                             mMode != IDBTransaction::Mode::VersionChange)) {
         return false;
       }
 
@@ -10499,23 +10498,20 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreDeleteParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
     }
 
     case RequestParams::TObjectStoreClearParams: {
-      if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                     mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                     mMode != IDBTransaction::Mode::Cleanup &&
-                     mMode != IDBTransaction::Mode::VersionChange)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                             mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                             mMode != IDBTransaction::Mode::Cleanup &&
+                             mMode != IDBTransaction::Mode::VersionChange)) {
         return false;
       }
 
@@ -10523,8 +10519,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreClearParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       break;
@@ -10535,12 +10530,10 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_ObjectStoreCountParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10550,18 +10543,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetParams& params = aParams.get_IndexGetParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10571,18 +10561,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetKeyParams& params = aParams.get_IndexGetKeyParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
         return false;
       }
       break;
@@ -10592,18 +10579,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetAllParams& params = aParams.get_IndexGetAllParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10613,18 +10597,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexGetAllKeysParams& params = aParams.get_IndexGetAllKeysParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10634,18 +10615,15 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
       const IndexCountParams& params = aParams.get_IndexCountParams();
       const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
         return false;
       }
       const SafeRefPtr<FullIndexMetadata> indexMetadata =
           GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
         return false;
       }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
         return false;
       }
       break;
@@ -10665,25 +10643,20 @@ bool TransactionBase::VerifyRequestParams(
   // XXX Check more here?
 
   if (aParams.isOnly()) {
-    if (NS_WARN_IF(aParams.lower().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.lower().IsUnset())) {
       return false;
     }
-    if (NS_WARN_IF(!aParams.upper().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!aParams.upper().IsUnset())) {
       return false;
     }
-    if (NS_WARN_IF(aParams.lowerOpen())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.lowerOpen())) {
       return false;
     }
-    if (NS_WARN_IF(aParams.upperOpen())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(aParams.upperOpen())) {
       return false;
     }
-  } else if (NS_WARN_IF(aParams.lower().IsUnset() &&
-                        aParams.upper().IsUnset())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  } else if (NS_AUUF_OR_WARN_IF(aParams.lower().IsUnset() &&
+                                aParams.upper().IsUnset())) {
     return false;
   }
 
@@ -10694,22 +10667,19 @@ bool TransactionBase::VerifyRequestParams(
     const ObjectStoreAddPutParams& aParams) const {
   AssertIsOnBackgroundThread();
 
-  if (NS_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
-                 mMode != IDBTransaction::Mode::ReadWriteFlush &&
-                 mMode != IDBTransaction::Mode::VersionChange)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mMode != IDBTransaction::Mode::ReadWrite &&
+                         mMode != IDBTransaction::Mode::ReadWriteFlush &&
+                         mMode != IDBTransaction::Mode::VersionChange)) {
     return false;
   }
 
   SafeRefPtr<FullObjectStoreMetadata> objMetadata =
       GetMetadataForObjectStoreId(aParams.objectStoreId());
-  if (NS_WARN_IF(!objMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!objMetadata)) {
     return false;
   }
 
-  if (NS_WARN_IF(!aParams.cloneInfo().data().data.Size())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aParams.cloneInfo().data().data.Size())) {
     return false;
   }
 
@@ -10718,36 +10688,30 @@ bool TransactionBase::VerifyRequestParams(
       aParams.key().IsUnset()) {
     const SerializedStructuredCloneWriteInfo& cloneInfo = aParams.cloneInfo();
 
-    if (NS_WARN_IF(!cloneInfo.offsetToKeyProp())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!cloneInfo.offsetToKeyProp())) {
       return false;
     }
 
-    if (NS_WARN_IF(cloneInfo.data().data.Size() < sizeof(uint64_t))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(cloneInfo.data().data.Size() < sizeof(uint64_t))) {
       return false;
     }
 
-    if (NS_WARN_IF(cloneInfo.offsetToKeyProp() >
-                   (cloneInfo.data().data.Size() - sizeof(uint64_t)))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(cloneInfo.offsetToKeyProp() >
+                           (cloneInfo.data().data.Size() - sizeof(uint64_t)))) {
       return false;
     }
-  } else if (NS_WARN_IF(aParams.cloneInfo().offsetToKeyProp())) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  } else if (NS_AUUF_OR_WARN_IF(aParams.cloneInfo().offsetToKeyProp())) {
     return false;
   }
 
   for (const auto& updateInfo : aParams.indexUpdateInfos()) {
     SafeRefPtr<FullIndexMetadata> indexMetadata =
         GetMetadataForIndexId(*objMetadata, updateInfo.indexId());
-    if (NS_WARN_IF(!indexMetadata)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
       return false;
     }
 
-    if (NS_WARN_IF(updateInfo.value().IsUnset())) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(updateInfo.value().IsUnset())) {
       return false;
     }
 
@@ -10760,41 +10724,36 @@ bool TransactionBase::VerifyRequestParams(
 
     switch (fileAddInfo.type()) {
       case StructuredCloneFileBase::eBlob:
-        if (NS_WARN_IF(
+        if (NS_AUUF_OR_WARN_IF(
                 file.type() !=
                 DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
-          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
-        if (NS_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
           return false;
         }
         break;
 
       case StructuredCloneFileBase::eMutableFile: {
-        if (NS_WARN_IF(file.type() !=
-                       DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(
+                file.type() !=
+                DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
           return false;
         }
 
-        if (NS_WARN_IF(mDatabase->IsFileHandleDisabled())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(mDatabase->IsFileHandleDisabled())) {
           return false;
         }
 
         auto mutableFile =
             static_cast<MutableFile*>(file.get_PBackgroundMutableFileParent());
 
-        if (NS_WARN_IF(!mutableFile)) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(!mutableFile)) {
           return false;
         }
 
         const Database& database = mutableFile->GetDatabase();
-        if (NS_WARN_IF(database.Id() != mDatabase->Id())) {
-          MOZ_CRASH_UNLESS_FUZZING();
+        if (NS_AUUF_OR_WARN_IF(database.Id() != mDatabase->Id())) {
           return false;
         }
 
@@ -10805,7 +10764,7 @@ bool TransactionBase::VerifyRequestParams(
       case StructuredCloneFileBase::eWasmBytecode:
       case StructuredCloneFileBase::eWasmCompiled:
       case StructuredCloneFileBase::eEndGuard:
-        MOZ_CRASH_UNLESS_FUZZING();
+        MOZ_ASSERT_UNLESS_FUZZING(false, "Unsupported.");
         return false;
 
       default:
@@ -10821,8 +10780,7 @@ bool TransactionBase::VerifyRequestParams(
   AssertIsOnBackgroundThread();
 
   if (aParams.isSome()) {
-    if (NS_WARN_IF(!VerifyRequestParams(aParams.ref()))) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!VerifyRequestParams(aParams.ref()))) {
       return false;
     }
   }
@@ -10873,13 +10831,11 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   aTrustParams = false;
 #endif
 
-  if (!aTrustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!aTrustParams && !VerifyRequestParams(aParams))) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCommitOrAbortReceived)) {
     return nullptr;
   }
 
@@ -11006,13 +10962,11 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
   const auto& commonParams = GetCommonOpenCursorParams(aParams);
   objectStoreMetadata =
       GetMetadataForObjectStoreId(commonParams.objectStoreId());
-  if (NS_WARN_IF(!objectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(!objectStoreMetadata)) {
     return nullptr;
   }
-  if (aTrustParams &&
-      NS_WARN_IF(!VerifyRequestParams(commonParams.optionalKeyRange()))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (aTrustParams && NS_AUUF_OR_WARN_IF(!VerifyRequestParams(
+                          commonParams.optionalKeyRange()))) {
     return nullptr;
   }
   direction = commonParams.direction();
@@ -11023,14 +10977,12 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
     const auto& commonIndexParams = GetCommonIndexOpenCursorParams(aParams);
     indexMetadata = GetMetadataForIndexId(*objectStoreMetadata,
                                           commonIndexParams.indexId());
-    if (NS_WARN_IF(!indexMetadata)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(!indexMetadata)) {
       return nullptr;
     }
   }
 
-  if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCommitOrAbortReceived)) {
     return nullptr;
   }
 
@@ -11127,10 +11079,8 @@ mozilla::ipc::IPCResult NormalTransaction::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  IProtocol* const mgr = Manager();
-  if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBTransactionParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -11138,20 +11088,14 @@ mozilla::ipc::IPCResult NormalTransaction::RecvCommit(
     const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit(aLastRequest)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvCommit(this, aLastRequest);
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvAbort(
     const nsresult& aResultCode) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvAbort(aResultCode)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvAbort(this, aResultCode);
 }
 
 PBackgroundIDBRequestParent*
@@ -11171,7 +11115,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   if (!StartRequest(aActor)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartRequest failed!");
   }
   return IPC_OK();
 }
@@ -11199,7 +11143,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
   if (!StartCursor(aActor, aParams)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartCursor failed!");
   }
   return IPC_OK();
 }
@@ -11374,10 +11318,9 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(
+      OkIf(PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -11385,20 +11328,14 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCommit(
     const Maybe<int64_t>& aLastRequest) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvCommit(aLastRequest)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvCommit(this, aLastRequest);
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvAbort(
     const nsresult& aResultCode) {
   AssertIsOnBackgroundThread();
 
-  if (!TransactionBase::RecvAbort(aResultCode)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return TransactionBase::RecvAbort(this, aResultCode);
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
@@ -11406,29 +11343,25 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aMetadata.id())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No metadata ID!");
   }
 
   const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
       GetDatabase().MetadataPtr();
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested metadata ID does not match next ID!");
   }
 
   if (NS_WARN_IF(
           MatchMetadataNameOrId(dbMetadata->mObjectStores, aMetadata.id(),
                                 SomeRef<const nsAString&>(aMetadata.name()))
               .isSome())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "MatchMetadataNameOrId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   const int64_t initialAutoIncrementId = aMetadata.autoIncrement() ? 1 : 0;
@@ -11438,7 +11371,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.InsertOrUpdate(
           aMetadata.id(), std::move(newMetadata), fallible))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mObjectStores.InsertOrUpdate failed!");
   }
 
   dbMetadata->mNextObjectStoreId++;
@@ -11448,7 +11381,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
@@ -11461,29 +11394,25 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   const auto& dbMetadata = GetDatabase().Metadata();
   MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Invalid ObjectStoreId!");
   }
 
   SafeRefPtr<FullObjectStoreMetadata> foundMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No metadata found for ObjectStoreId!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundMetadata->mDeleted.Flip();
@@ -11507,7 +11436,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
@@ -11520,8 +11449,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   {
@@ -11529,8 +11457,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
     MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
 
     if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Invalid ObjectStoreId!");
     }
   }
 
@@ -11538,13 +11465,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No metadata found for ObjectStoreId!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundMetadata->mCommonMetadata.name() = aName;
@@ -11555,7 +11480,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   renameOp->DispatchToConnectionPool();
@@ -11569,41 +11494,35 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   if (NS_WARN_IF(!aMetadata.id())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No Metadata id!");
   }
 
   const auto dbMetadata = GetDatabase().MetadataPtr();
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested metadata ID does not match next ID!");
   }
 
   SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForObjectStoreId failed!");
   }
 
   if (NS_WARN_IF(MatchMetadataNameOrId(
                      foundObjectStoreMetadata->mIndexes, aMetadata.id(),
                      SomeRef<const nsAString&>(aMetadata.name()))
                      .isSome())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "MatchMetadataNameOrId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   auto newMetadata = MakeSafeRefPtr<FullIndexMetadata>();
@@ -11611,7 +11530,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
 
   if (NS_WARN_IF(!foundObjectStoreMetadata->mIndexes.InsertOrUpdate(
           aMetadata.id(), std::move(newMetadata), fallible))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "mIndexes.InsertOrUpdate failed!");
   }
 
   dbMetadata->mNextIndexId++;
@@ -11622,7 +11541,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
@@ -11636,13 +11555,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   if (NS_WARN_IF(!aIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No Index id!");
   }
   {
     const auto& dbMetadata = GetDatabase().Metadata();
@@ -11650,13 +11567,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     MOZ_ASSERT(dbMetadata.mNextIndexId > 0);
 
     if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Requested ObjectStoreId does not match next ID!");
     }
 
     if (NS_WARN_IF(aIndexId >= dbMetadata.mNextIndexId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Requested IndexId does not match next ID!");
     }
   }
 
@@ -11664,21 +11579,18 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForObjectStoreId failed!");
   }
 
   SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
       GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForIndexId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundIndexMetadata->mDeleted.Flip();
@@ -11703,7 +11615,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   op->DispatchToConnectionPool();
@@ -11717,13 +11629,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   if (NS_WARN_IF(!aIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No Index id!");
   }
 
   const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
@@ -11733,34 +11643,29 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
   MOZ_ASSERT(dbMetadata->mNextIndexId > 0);
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested ObjectStoreId does not match next ID!");
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Requested IndexId does not match next ID!");
   }
 
   SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForObjectStoreId failed!");
   }
 
   SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
       GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GetMetadataForIndexId failed!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundIndexMetadata->mCommonMetadata.name() = aName;
@@ -11771,7 +11676,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   renameOp->DispatchToConnectionPool();
@@ -11797,7 +11702,7 @@ VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   if (!StartRequest(aActor)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartRequest failed!");
   }
   return IPC_OK();
 }
@@ -11826,7 +11731,7 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
   if (!StartCursor(aActor, aParams)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartCursor failed!");
   }
   return IPC_OK();
 }
@@ -11890,14 +11795,13 @@ bool Cursor<CursorType>::VerifyRequestParams(
   }
 #endif
 
-  if (NS_WARN_IF((*this->mObjectStoreMetadata)->mDeleted)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF((*this->mObjectStoreMetadata)->mDeleted)) {
     return false;
   }
 
   if constexpr (IsIndexCursor) {
-    if (this->mIndexMetadata && NS_WARN_IF((*this->mIndexMetadata)->mDeleted)) {
-      MOZ_CRASH_UNLESS_FUZZING();
+    if (NS_AUUF_OR_WARN_IF(this->mIndexMetadata &&
+                           (*this->mIndexMetadata)->mDeleted)) {
       return false;
     }
   }
@@ -11911,16 +11815,14 @@ bool Cursor<CursorType>::VerifyRequestParams(
         switch (mDirection) {
           case IDBCursorDirection::Next:
           case IDBCursorDirection::Nextunique:
-            if (NS_WARN_IF(key <= sortKey)) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key <= sortKey)) {
               return false;
             }
             break;
 
           case IDBCursorDirection::Prev:
           case IDBCursorDirection::Prevunique:
-            if (NS_WARN_IF(key >= sortKey)) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key >= sortKey)) {
               return false;
             }
             break;
@@ -11941,19 +11843,17 @@ bool Cursor<CursorType>::VerifyRequestParams(
         MOZ_ASSERT(!primaryKey.IsUnset());
         switch (mDirection) {
           case IDBCursorDirection::Next:
-            if (NS_WARN_IF(key < sortKey ||
-                           (key == sortKey &&
-                            primaryKey <= aPosition.mObjectStoreKey))) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key < sortKey ||
+                                   (key == sortKey &&
+                                    primaryKey <= aPosition.mObjectStoreKey))) {
               return false;
             }
             break;
 
           case IDBCursorDirection::Prev:
-            if (NS_WARN_IF(key > sortKey ||
-                           (key == sortKey &&
-                            primaryKey >= aPosition.mObjectStoreKey))) {
-              MOZ_CRASH_UNLESS_FUZZING();
+            if (NS_AUUF_OR_WARN_IF(key > sortKey ||
+                                   (key == sortKey &&
+                                    primaryKey >= aPosition.mObjectStoreKey))) {
               return false;
             }
             break;
@@ -11966,8 +11866,7 @@ bool Cursor<CursorType>::VerifyRequestParams(
     }
 
     case CursorRequestParams::TAdvanceParams:
-      if (NS_WARN_IF(!aParams.get_AdvanceParams().count())) {
-        MOZ_CRASH_UNLESS_FUZZING();
+      if (NS_AUUF_OR_WARN_IF(!aParams.get_AdvanceParams().count())) {
         return false;
       }
       break;
@@ -11985,8 +11884,7 @@ bool Cursor<CursorType>::Start(const OpenCursorParams& aParams) {
   MOZ_ASSERT(aParams.type() == ToOpenCursorParamsType(CursorType));
   MOZ_ASSERT(this->mObjectStoreMetadata);
 
-  if (NS_WARN_IF(mCurrentlyRunningOp)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+  if (NS_AUUF_OR_WARN_IF(mCurrentlyRunningOp)) {
     return false;
   }
 
@@ -12106,14 +12004,13 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvDeleteMe() {
   MOZ_ASSERT(this->mObjectStoreMetadata);
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(
+        this,
+        "Attempt to delete a cursor with a non-null mCurrentlyRunningOp!");
   }
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIDBCursorParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBCursorParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -12145,10 +12042,10 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
         if constexpr (IsIndexCursor) {
           auto localeAwarePosition = Key{};
           if (this->IsLocaleAware()) {
-            QM_TRY_UNWRAP(localeAwarePosition,
-                          aCurrentKey.ToLocaleAwareKey(this->mLocale),
-                          Err(IPC_FAIL_NO_REASON(this)),
-                          [](const auto&) { MOZ_CRASH_UNLESS_FUZZING(); });
+            QM_TRY_UNWRAP(
+                localeAwarePosition,
+                aCurrentKey.ToLocaleAwareKey(this->mLocale),
+                Err(IPC_FAIL(this, "aCurrentKey.ToLocaleAwareKey failed!")));
           }
           return CursorPosition<CursorType>{aCurrentKey, localeAwarePosition,
                                             aCurrentObjectStoreKey};
@@ -12158,25 +12055,22 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
       }()));
 
   if (!trustParams && !VerifyRequestParams(aParams, position)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "VerifyRequestParams failed!");
   }
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Cursor is CurrentlyRunningOp!");
   }
 
   if (NS_WARN_IF(mTransaction->mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   const RefPtr<ContinueOp> continueOp =
       new ContinueOp(this, aParams, std::move(position));
   if (NS_WARN_IF(!continueOp->Init(*mTransaction))) {
     continueOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ContinueOp initialization failed!");
   }
 
   continueOp->DispatchToConnectionPool();
@@ -15135,8 +15029,7 @@ mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
   MOZ_ASSERT(mFileInfo);
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "IndexedDB must be in testing mode!");
   }
 
   *aFileId = mFileInfo->Id();
@@ -21539,10 +21432,8 @@ mozilla::ipc::IPCResult Utils::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIndexedDBUtilsParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIndexedDBUtilsParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
@@ -21556,41 +21447,39 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mActorDestroyed);
 
-  if (NS_WARN_IF(!IndexedDatabaseManager::Get() || !QuotaManager::Get())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+  if (NS_WARN_IF(!IndexedDatabaseManager::Get())) {
+    return IPC_FAIL(this, "No IndexedDatabaseManager active!");
+  }
+
+  if (NS_WARN_IF(!QuotaManager::Get())) {
+    return IPC_FAIL(this, "No QuotaManager active!");
   }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "IndexedDatabaseManager is not InTestingMode!");
   }
 
   if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "PersistenceType is not valid!");
   }
 
   if (NS_WARN_IF(aOrigin.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Origin is empty!");
   }
 
   if (NS_WARN_IF(aDatabaseName.IsEmpty())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "DatabaseName is empty!");
   }
 
   if (NS_WARN_IF(aFileId == 0)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No FileId!");
   }
 
   nsresult rv =
       DispatchAndReturnFileReferences(aPersistenceType, aOrigin, aDatabaseName,
                                       aFileId, aRefCnt, aDBRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "DispatchAndReturnFileReferences failed!");
   }
 
   return IPC_OK();

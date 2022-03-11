@@ -241,9 +241,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: shouldEnableAllWatchers,
           [Resources.TYPES.WEBSOCKET]: shouldEnableAllWatchers,
         },
-        // @backward-compat { version 98 } Introduced the Blackboxing actor
-        //                  The traits can be removed when removing 97 support.
-        blackboxing: true,
       },
     };
   },

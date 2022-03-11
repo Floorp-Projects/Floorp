@@ -19,9 +19,11 @@
 #include "wasm/WasmRealm.h"
 
 #include "vm/Realm.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 
 #include "debugger/DebugAPI-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace wasm;
@@ -136,13 +138,13 @@ void wasm::Realm::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf,
 void wasm::InterruptRunningCode(JSContext* cx) {
   auto runtimeInstances = cx->runtime()->wasmInstances.lock();
   for (Instance* instance : runtimeInstances.get()) {
-    instance->tlsData()->setInterrupt();
+    instance->setInterrupt();
   }
 }
 
 void wasm::ResetInterruptState(JSContext* cx) {
   auto runtimeInstances = cx->runtime()->wasmInstances.lock();
   for (Instance* instance : runtimeInstances.get()) {
-    instance->tlsData()->resetInterrupt(cx);
+    instance->resetInterrupt(cx);
   }
 }

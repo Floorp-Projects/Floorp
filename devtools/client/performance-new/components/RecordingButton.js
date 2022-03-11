@@ -165,18 +165,6 @@ class RecordingButton extends PureComponent {
           },
         });
 
-      case "locked-by-private-browsing":
-        return renderButton({
-          label: startRecordingLabel(),
-          isPrimary: true,
-          disabled: true,
-          additionalMessage: Localized(
-            { id: "perftools-status-private-browsing-notice" },
-            `The profiler is disabled when Private Browsing is enabled.
-             Close all Private Windows to re-enable the profiler`
-          ),
-        });
-
       default:
         throw new Error("Unhandled recording state");
     }

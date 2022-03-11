@@ -204,10 +204,7 @@ describe("Frames", () => {
         source2: [],
       };
 
-      const sources = insertResources(createInitial(), [
-        { ...source1, content: null },
-        { ...source2, content: null },
-      ]);
+      const sources = insertResources(createInitial(), [source1, source2]);
 
       const processedFrames = formatCallStackFrames(
         frames,

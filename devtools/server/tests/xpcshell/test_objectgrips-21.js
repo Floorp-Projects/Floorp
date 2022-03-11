@@ -183,6 +183,7 @@ const nullPrincipalTests = [
     hasOwnPropertyNames: true,
     hasOwnPropertySymbols: true,
     property: descriptor({ value: "SecurityError" }),
+    previewUrl: "about:blank",
   },
   {
     // Cross-origin Location objects do expose some properties and have a preview.
@@ -208,15 +209,15 @@ function descriptor(descr) {
 }
 
 async function test_unsafe_grips(
-  { threadFront, debuggee, client },
-  tests,
-  principal
+  { threadFront, debuggee, isWorkerServer },
+  tests
 ) {
   debuggee.eval(
     function stopMe(arg1, arg2) {
       debugger;
     }.toString()
   );
+
   for (let data of tests) {
     data = { ...defaults, ...data };
 
@@ -243,7 +244,7 @@ async function test_unsafe_grips(
       // Otherwise, the grip will refer to `inherits`, an ordinary object which
       // inherits from `obj`. Then all checks are hardcoded because in every test
       // all methods are expected to work the same on `inheritsGrip`.
-      check_grip(grip, data, isUnsafe);
+      check_grip(grip, data, isUnsafe, isWorkerServer);
 
       let objClient = threadFront.pauseGrip(grip);
       let response, slice;
@@ -251,7 +252,7 @@ async function test_unsafe_grips(
       response = await objClient.getPrototypeAndProperties();
       check_properties(response.ownProperties, data, isUnsafe);
       check_symbols(response.ownSymbols, data, isUnsafe);
-      check_prototype(response.prototype, data, isUnsafe);
+      check_prototype(response.prototype, data, isUnsafe, isWorkerServer);
 
       response = await objClient.enumProperties({
         ignoreIndexedProperties: true,
@@ -277,7 +278,7 @@ async function test_unsafe_grips(
       check_symbol(response.descriptor, data, isUnsafe);
 
       response = await objClient.getPrototype();
-      check_prototype(response.prototype, data, isUnsafe);
+      check_prototype(response.prototype, data, isUnsafe, isWorkerServer);
 
       response = await objClient.getDisplayString();
       check_display_string(response.displayString, data, isUnsafe);
@@ -315,10 +316,19 @@ async function test_unsafe_grips(
   }
 }
 
-function check_grip(grip, data, isUnsafe) {
+function check_grip(grip, data, isUnsafe, isWorkerServer) {
   if (isUnsafe) {
     strictEqual(grip.class, data.class, "The grip has the proper class.");
     strictEqual("preview" in grip, data.hasPreview, "Check preview presence.");
+    // preview.url isn't populated on worker server.
+    if (data.previewUrl && !isWorkerServer) {
+      console.trace();
+      strictEqual(
+        grip.preview.url,
+        data.previewUrl,
+        `Check preview.url for "${data.code}".`
+      );
+    }
   } else {
     strictEqual(grip.class, "Object", "The grip has 'Object' class.");
     ok("preview" in grip, "The grip has a preview.");
@@ -388,12 +398,12 @@ function check_symbol(descr, data, isUnsafe) {
   }
 }
 
-function check_prototype(proto, data, isUnsafe) {
+function check_prototype(proto, data, isUnsafe, isWorkerServer) {
   const protoGrip = proto && proto.getGrip ? proto.getGrip() : proto;
   if (isUnsafe) {
     deepEqual(protoGrip.type, data.protoType, "Got the right prototype type.");
   } else {
-    check_grip(protoGrip, data, true);
+    check_grip(protoGrip, data, true, isWorkerServer);
   }
 }
 

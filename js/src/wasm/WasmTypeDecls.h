@@ -27,6 +27,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "wasm/WasmSerialize.h"  // SerializableRefPtr
 
 namespace js {
 
@@ -69,17 +70,51 @@ using HandleWasmTagObject = Handle<WasmTagObject*>;
 class WasmExceptionObject;
 using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
 
+class RttValue;
+using HandleRttValue = Handle<RttValue*>;
+using MutableHandleRttValue = MutableHandle<RttValue*>;
+
 namespace wasm {
 
 struct ModuleEnvironment;
-class Code;
 class CodeRange;
-class DebugState;
+class CodeTier;
+class ModuleSegment;
+struct Metadata;
+struct MetadataTier;
 class Decoder;
 class GeneratedSourceMap;
 class Instance;
 class Module;
+
+class Code;
+using SharedCode = RefPtr<const Code>;
+using MutableCode = RefPtr<Code>;
+
 class Table;
+using SharedTable = RefPtr<Table>;
+using SharedTableVector = Vector<SharedTable, 0, SystemAllocPolicy>;
+
+class DebugState;
+using UniqueDebugState = UniquePtr<DebugState>;
+
+struct DataSegment;
+using MutableDataSegment = RefPtr<DataSegment>;
+using SharedDataSegment = SerializableRefPtr<const DataSegment>;
+using DataSegmentVector = Vector<SharedDataSegment, 0, SystemAllocPolicy>;
+
+struct ElemSegment;
+using MutableElemSegment = RefPtr<ElemSegment>;
+using SharedElemSegment = SerializableRefPtr<const ElemSegment>;
+using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
+
+struct ExceptionTag;
+using SharedExceptionTag = RefPtr<ExceptionTag>;
+using SharedExceptionTagVector =
+    Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
+
+class Val;
+using ValVector = GCVector<Val, 0, SystemAllocPolicy>;
 
 // Uint32Vector has initial size 8 on the basis that the dominant use cases
 // (line numbers and control stacks) tend to have a small but nonzero number

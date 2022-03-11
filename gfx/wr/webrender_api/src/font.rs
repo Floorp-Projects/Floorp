@@ -54,14 +54,14 @@ impl FontSize {
 }
 
 #[cfg(not(target_os = "macos"))]
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct NativeFontHandle {
     pub path: PathBuf,
     pub index: u32,
 }
 
 #[cfg(target_os = "macos")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct NativeFontHandle {
     pub name: String,
 }
@@ -105,7 +105,7 @@ impl FontKey {
 /// Note that fonts need to be instantiated before being used, which involves
 /// assigning size and various other options. The word 'template' here is
 /// intended to distinguish this data from instance-specific data.
-#[derive(Clone)]
+#[derive(Clone, Hash, Eq, PartialEq)]
 pub enum FontTemplate {
     Raw(Arc<Vec<u8>>, u32),
     Native(NativeFontHandle),
@@ -283,7 +283,7 @@ impl Default for SyntheticItalics {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, MallocSizeOf, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstanceOptions {
     pub render_mode: FontRenderMode,
     pub flags: FontInstanceFlags,

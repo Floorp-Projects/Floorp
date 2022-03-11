@@ -1,13 +1,11 @@
 /* eslint max-len: ["error", 80] */
 
 const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm",
-  {}
+  "resource://testing-common/AddonTestUtils.jsm"
 );
 
 const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm",
-  {}
+  "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
 const SUPPORT_URL = Services.urlFormatter.formatURL(

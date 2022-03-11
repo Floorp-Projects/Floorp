@@ -58,6 +58,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
@@ -70,6 +71,7 @@
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 /*
  * [SMDOC] WebAssembly code rules (evolving)
@@ -78,8 +80,8 @@
  *   _directly_ by generated code as cold(!) Builtin calls, from code that is
  *   only used by signal handlers, or from helper functions that have been
  *   called _directly_ from a simulator.  All other code shall pass in a
- *   JSContext* to functions that need it, or an Instance* or TlsData* since the
- *   context is available through them.
+ *   JSContext* to functions that need it, or an Instance* or Instance* since
+ * the context is available through them.
  *
  *   Code that uses TlsContext.get() shall annotate each such call with the
  *   reason why the call is OK.
@@ -1950,7 +1952,9 @@ void WasmInstanceObject::finalize(JS::GCContext* gcx, JSObject* obj) {
     if (instance.instance().debugEnabled()) {
       instance.instance().debug().finalize(gcx);
     }
-    gcx->delete_(obj, &instance.instance(), MemoryUse::WasmInstanceInstance);
+    Instance::destroy(&instance.instance());
+    gcx->removeCellMemory(obj, sizeof(Instance),
+                          MemoryUse::WasmInstanceInstance);
   }
 }
 
@@ -2046,15 +2050,9 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(obj->isNewborn());
 
     // Create this just before constructing Instance to avoid rooting hazards.
-    UniqueTlsData tlsData = CreateTlsData(globalDataLength);
-    if (!tlsData) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    // Root the Instance via WasmInstanceObject before any possible GC.
-    instance = cx->new_<Instance>(cx, obj, code, std::move(tlsData), memory,
-                                  std::move(tables), std::move(maybeDebug));
+    instance = Instance::create(cx, obj, code, globalDataLength, memory,
+                                std::move(tables),
+                                std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
@@ -2485,7 +2483,7 @@ bool WasmInstanceObject::getExportedFunction(
   fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
                        ObjectValue(*instanceObj));
 
-  void* tlsData = instanceObj->instance().tlsData();
+  void* tlsData = &instanceObj->instance();
   fun->setExtendedSlot(FunctionExtended::WASM_TLSDATA_SLOT,
                        PrivateValue(tlsData));
 

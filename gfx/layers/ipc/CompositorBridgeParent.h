@@ -279,7 +279,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
                                   const TimeDuration& aVsyncRate,
                                   const CompositorOptions& aOptions,
                                   bool aUseExternalSurfaceSize,
-                                  const gfx::IntSize& aSurfaceSize);
+                                  const gfx::IntSize& aSurfaceSize,
+                                  uint64_t aInnerWindowId);
 
   void InitSameProcess(widget::CompositorWidget* aWidget,
                        const LayersId& aLayerTreeId);
@@ -533,6 +534,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   RefPtr<APZUpdater> GetAPZUpdater() const;
   RefPtr<OMTASampler> GetOMTASampler() const;
 
+  uint64_t GetInnerWindowId() const { return mInnerWindowId; }
+
   CompositorOptions GetOptions() const { return mOptions; }
 
   TimeDuration GetVsyncInterval() const {
@@ -706,6 +709,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   RefPtr<APZSampler> mApzSampler;
   RefPtr<APZUpdater> mApzUpdater;
   RefPtr<OMTASampler> mOMTASampler;
+
+  // Store the inner window id of the browser window, to use it in
+  // profiler markers.
+  uint64_t mInnerWindowId;
 
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // This makes sure the compositorParent is not destroyed before receiving

@@ -232,8 +232,6 @@ class GlobalHelperThreadState {
                                size_t threadCount, size_t stackSize,
                                const AutoLockHelperThreadState& lock);
 
-  [[nodiscard]] bool ensureContextList(size_t count,
-                                       const AutoLockHelperThreadState& lock);
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 

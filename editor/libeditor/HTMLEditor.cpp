@@ -473,21 +473,29 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
       CreateAndInsertElement(
           WithTransaction::Yes, *nsGkAtoms::meta,
           EditorDOMPoint(primaryHeadElement, 0), [&](Element& aMetaElement) {
-            DebugOnly<nsresult> rvIgnored =
-                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                                     u"Content-Type"_ns, false);
+            DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
+                aMetaElement.IsInComposedDoc());
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
-                "failed, but ignored");
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
+                    "%s) failed, but ignored",
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             rvIgnored =
                 aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::content,
                                      u"text/html;charset="_ns +
                                          NS_ConvertASCIItoUTF16(aCharacterSet),
-                                     false);
+                                     aMetaElement.IsInComposedDoc());
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                "Element::SetAttr(nsGkAtoms::content) failed, but ignored");
+                nsPrintfCString(
+                    "Element::SetAttr(nsGkAtoms::content, "
+                    "\"text/html;charset=%s\", %s) failed, but ignored",
+                    nsPromiseFlatCString(aCharacterSet).get(),
+                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    .get());
             return NS_OK;
           });
   if (maybeNewMetaElement.isErr()) {
@@ -2975,9 +2983,8 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
   //       CreatElementTransaction since we can use InsertNodeTransaction
   //       instead.
 
-  RefPtr<Element> newElement;
   nsresult rv;
-  newElement = CreateHTMLContent(&aTagName);
+  RefPtr<Element> newElement = CreateHTMLContent(&aTagName);
   NS_WARNING_ASSERTION(newElement, "EditorBase::CreateHTMLContent() failed");
   if (MOZ_LIKELY(newElement)) {
     rv = MarkElementDirty(*newElement);
@@ -2988,11 +2995,13 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "EditorBase::MarkElementDirty() failed, but ignored");
-      rv = aInitializer(*newElement);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
-      if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
-                       NS_WARN_IF(Destroyed()))) {
-        rv = NS_ERROR_EDITOR_DESTROYED;
+      if (StaticPrefs::editor_initialize_element_before_connect()) {
+        rv = aInitializer(*newElement);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+        if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
+                         NS_WARN_IF(Destroyed()))) {
+          rv = NS_ERROR_EDITOR_DESTROYED;
+        }
       }
       if (NS_SUCCEEDED(rv)) {
         RefPtr<InsertNodeTransaction> transaction =
@@ -3044,6 +3053,18 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
 
   if (NS_FAILED(rv)) {
     return Err(rv);
+  }
+
+  if (!StaticPrefs::editor_initialize_element_before_connect() && newElement) {
+    rv = aInitializer(*newElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+    if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
+                     NS_WARN_IF(Destroyed()))) {
+      rv = NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_FAILED(rv)) {
+      return Err(rv);
+    }
   }
 
   return newElement;
@@ -3647,8 +3668,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
   MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
   Result<RefPtr<Element>, nsresult> maybeNewBRElement = CreateAndInsertElement(
-      aWithTransaction, *nsGkAtoms::br, maybePointToInsert.inspect(),
-      [](Element& aBRElement) -> nsresult { return NS_OK; });
+      aWithTransaction, *nsGkAtoms::br, maybePointToInsert.inspect());
   if (maybeNewBRElement.isErr()) {
     NS_WARNING(nsPrintfCString("HTMLEditor::CreateAndInsertElement(%s) failed",
                                ToString(aWithTransaction).c_str())
@@ -5052,33 +5072,32 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
   return rv;
 }
 
-already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
-    nsAtom& aTag) {
+Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
+    nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsresult rv = DeleteSelectionAndPrepareToCreateNode();
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
-    return nullptr;
+    return Err(rv);
   }
 
   EditorDOMPoint pointToInsert(SelectionRef().AnchorRef());
   if (!pointToInsert.IsSet()) {
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
-  Result<RefPtr<Element>, nsresult> maybeNewElement = CreateAndInsertElement(
-      WithTransaction::Yes, aTag, pointToInsert,
-      [](Element& aNewElement) -> nsresult { return NS_OK; });
-  if (maybeNewElement.isErr()) {
+  Result<RefPtr<Element>, nsresult> newElementOrError = CreateAndInsertElement(
+      WithTransaction::Yes, aTag, pointToInsert, aInitializer);
+  if (newElementOrError.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return nullptr;
+    return newElementOrError;
   }
-  MOZ_ASSERT(maybeNewElement.inspect());
+  MOZ_ASSERT(newElementOrError.inspect());
 
   // We want the selection to be just after the new node
   EditorRawDOMPoint afterNewElement(
-      EditorRawDOMPoint::After(maybeNewElement.inspect()));
+      EditorRawDOMPoint::After(newElementOrError.inspect()));
   MOZ_ASSERT(afterNewElement.IsSetAndValid());
   IgnoredErrorResult ignoredError;
   SelectionRef().CollapseInLimiter(afterNewElement, ignoredError);
@@ -5087,9 +5106,9 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
     // XXX Even if it succeeded to create new element, this returns error
     //     when Selection.Collapse() fails something.  This could occur with
     //     mutation observer or mutation event listener.
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
-  return maybeNewElement.unwrap().forget();
+  return newElementOrError;
 }
 
 nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {

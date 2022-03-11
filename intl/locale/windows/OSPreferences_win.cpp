@@ -35,55 +35,42 @@ bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
     // Try to get language list from GlobalizationPreferences; if this fails,
     // we'll fall back to GetUserPreferredUILanguages.
     // Per MSDN, these APIs are not available prior to Win8.
-
-    // RoInitialize may fail with "cannot change thread mode after it is set",
-    // if the runtime was already initialized on this thread.
-    // This appears to be harmless, and we can proceed to attempt the following
-    // runtime calls.
-    HRESULT inited = RoInitialize(RO_INIT_MULTITHREADED);
-    if (SUCCEEDED(inited) || inited == RPC_E_CHANGED_MODE) {
-      ComPtr<IGlobalizationPreferencesStatics> globalizationPrefs;
-      ComPtr<IVectorView<HSTRING>> languages;
-      uint32_t count;
-      if (SUCCEEDED(RoGetActivationFactory(
-              HStringReference(
-                  RuntimeClass_Windows_System_UserProfile_GlobalizationPreferences)
-                  .Get(),
-              IID_PPV_ARGS(&globalizationPrefs))) &&
-          SUCCEEDED(globalizationPrefs->get_Languages(&languages)) &&
-          SUCCEEDED(languages->get_Size(&count))) {
-        for (uint32_t i = 0; i < count; ++i) {
-          HString lang;
-          if (SUCCEEDED(languages->GetAt(i, lang.GetAddressOf()))) {
-            unsigned int length;
-            const wchar_t* text = lang.GetRawBuffer(&length);
-            NS_LossyConvertUTF16toASCII loc(text, length);
-            if (CanonicalizeLanguageTag(loc)) {
-              if (!loc.Contains('-')) {
-                // DirectWrite font-name code doesn't like to be given a bare
-                // language code with no region subtag, but the
-                // GlobalizationPreferences API may give us one (e.g. "ja").
-                // So if there's no hyphen in the string at this point, we use
-                // AddLikelySubtags to get a suitable region code to
-                // go with it.
-                Locale locale;
-                auto result = LocaleParser::TryParse(loc, locale);
-                if (result.isOk() && locale.AddLikelySubtags().isOk() &&
-                    locale.Region().Present()) {
-                  loc.Append('-');
-                  loc.Append(locale.Region().Span());
-                }
+    ComPtr<IGlobalizationPreferencesStatics> globalizationPrefs;
+    ComPtr<IVectorView<HSTRING>> languages;
+    uint32_t count;
+    if (SUCCEEDED(RoGetActivationFactory(
+            HStringReference(
+                RuntimeClass_Windows_System_UserProfile_GlobalizationPreferences)
+                .Get(),
+            IID_PPV_ARGS(&globalizationPrefs))) &&
+        SUCCEEDED(globalizationPrefs->get_Languages(&languages)) &&
+        SUCCEEDED(languages->get_Size(&count))) {
+      for (uint32_t i = 0; i < count; ++i) {
+        HString lang;
+        if (SUCCEEDED(languages->GetAt(i, lang.GetAddressOf()))) {
+          unsigned int length;
+          const wchar_t* text = lang.GetRawBuffer(&length);
+          NS_LossyConvertUTF16toASCII loc(text, length);
+          if (CanonicalizeLanguageTag(loc)) {
+            if (!loc.Contains('-')) {
+              // DirectWrite font-name code doesn't like to be given a bare
+              // language code with no region subtag, but the
+              // GlobalizationPreferences API may give us one (e.g. "ja").
+              // So if there's no hyphen in the string at this point, we use
+              // AddLikelySubtags to get a suitable region code to
+              // go with it.
+              Locale locale;
+              auto result = LocaleParser::TryParse(loc, locale);
+              if (result.isOk() && locale.AddLikelySubtags().isOk() &&
+                  locale.Region().Present()) {
+                loc.Append('-');
+                loc.Append(locale.Region().Span());
               }
-              aLocaleList.AppendElement(loc);
             }
+            aLocaleList.AppendElement(loc);
           }
         }
       }
-    }
-    // Only close the runtime if we successfully initialized it above,
-    // otherwise we assume it was already in use and should be left as is.
-    if (SUCCEEDED(inited)) {
-      RoUninitialize();
     }
   }
 #endif

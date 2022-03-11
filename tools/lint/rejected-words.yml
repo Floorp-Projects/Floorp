@@ -65,6 +65,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/urlbar/tests/unit/test_providerHeuristicFallback.js
         - browser/components/urlbar/tests/unit/test_search_suggestions.js
         - browser/components/urlbar/tests/unit/test_tokenizer.js
+        - browser/extensions/formautofill/test/browser/fathom/testing/EN_A17.html
         - browser/extensions/screenshots/background/main.js
         - browser/modules/SitePermissions.jsm
         - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.jsm

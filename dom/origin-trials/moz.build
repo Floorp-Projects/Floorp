@@ -21,10 +21,13 @@ MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
 EXPORTS.mozilla += [
     "OriginTrials.h",
+    "OriginTrialsIPCUtils.h",
 ]
 
 UNIFIED_SOURCES += [
     "OriginTrials.cpp",
 ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

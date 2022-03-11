@@ -177,7 +177,6 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
       NSString* pString = [cocoaPasteboard stringForType:pboardType];
       if (!pString) {
-        [pboardType release];
         continue;
       }
 
@@ -190,7 +189,6 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
       unsigned int dataLength = [stringData length];
       void* clipboardDataPtr = malloc(dataLength);
       if (!clipboardDataPtr) {
-        [pboardType release];
         return NS_ERROR_OUT_OF_MEMORY;
       }
       [stringData getBytes:clipboardDataPtr length:dataLength];
@@ -214,7 +212,6 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
                                                  getter_AddRefs(genericDataWrapper));
       aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
-      [pboardType release];
       break;
     } else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
       NSString* type = [cocoaPasteboard
@@ -397,11 +394,9 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
       NSString* availableType =
           [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
-        [pboardType release];
         *outResult = true;
         break;
       }
-      [pboardType release];
     } else if (mimeType.EqualsLiteral(kCustomTypesMime)) {
       NSString* availableType = [generalPBoard
           availableTypeFromArray:
@@ -484,7 +479,6 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper));
       if (NS_FAILED(rv)) {
-        [pboardType release];
         continue;
       }
 
@@ -506,7 +500,6 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
       if (nativeString) {
         [pasteboardOutputDict setObject:nativeString forKey:pboardType];
       }
-      [pboardType release];
     } else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper));
@@ -660,16 +653,15 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-// aPasteboardType is being retained and needs to be released by the caller.
-bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType) {
+bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPboardType) {
   if (aMIMEType.EqualsLiteral(kUnicodeMime)) {
-    *aPasteboardType = [[UTIHelper stringFromPboardType:NSPasteboardTypeString] retain];
+    *aPboardType = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
     return true;
   } else if (aMIMEType.EqualsLiteral(kRTFMime)) {
-    *aPasteboardType = [[UTIHelper stringFromPboardType:NSPasteboardTypeRTF] retain];
+    *aPboardType = [UTIHelper stringFromPboardType:NSPasteboardTypeRTF];
     return true;
   } else if (aMIMEType.EqualsLiteral(kHTMLMime)) {
-    *aPasteboardType = [[UTIHelper stringFromPboardType:NSPasteboardTypeHTML] retain];
+    *aPboardType = [UTIHelper stringFromPboardType:NSPasteboardTypeHTML];
     return true;
   } else {
     return false;

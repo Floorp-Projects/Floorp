@@ -8093,9 +8093,9 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     // WasmCall's WasmTryNote entryPoint below. To make exceptional control flow
     // easier to track, we set the entry point in this very call. The exception
     // handling mechanism takes care of reloading the WasmTlsData, leaving a
-    // thrown exception in TlsData::pendingException. After the call instruction
-    // is finished we check TlsData::pendingException to see if we returned
-    // normally or exceptionally, and branch accordingly.
+    // thrown exception in Instance::pendingException. After the call
+    // instruction is finished we check Instance::pendingException to see if we
+    // returned normally or exceptionally, and branch accordingly.
 
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];

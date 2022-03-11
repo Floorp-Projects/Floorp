@@ -34,6 +34,8 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 
+#include "wasm/WasmInstance-inl.h"
+
 using mozilla::MallocSizeOf;
 using mozilla::PodCopy;
 

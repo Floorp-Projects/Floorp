@@ -272,10 +272,9 @@ TalosPowersService.prototype = {
       // We can wait for various startup items here to complete during
       // the getInfo.html step for Talos so that subsequent runs don't
       // have to do things like re-request the SafeBrowsing list.
-      let SafeBrowsing = ChromeUtils.import(
-        "resource://gre/modules/SafeBrowsing.jsm",
-        {}
-      ).SafeBrowsing;
+      let { SafeBrowsing } = ChromeUtils.import(
+        "resource://gre/modules/SafeBrowsing.jsm"
+      );
 
       // Speed things up in case nobody else called this:
       SafeBrowsing.init();

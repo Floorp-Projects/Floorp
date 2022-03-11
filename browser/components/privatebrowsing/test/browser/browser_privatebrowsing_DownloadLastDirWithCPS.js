@@ -41,12 +41,12 @@ function clearHistoryAndWait() {
  */
 
 async function runTest() {
-  let FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {})
-    .FileUtils;
-  let DownloadLastDir = ChromeUtils.import(
-    "resource://gre/modules/DownloadLastDir.jsm",
-    {}
-  ).DownloadLastDir;
+  let { FileUtils } = ChromeUtils.import(
+    "resource://gre/modules/FileUtils.jsm"
+  );
+  let { DownloadLastDir } = ChromeUtils.import(
+    "resource://gre/modules/DownloadLastDir.jsm"
+  );
 
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir1 = newDirectory();

@@ -225,7 +225,7 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
     return remoteType.unwrapErr();
   }
 
-  // Determind if the service worker is registered under a third-party context
+  // Determine if the service worker is registered under a third-party context
   // by checking if it's running under a partitioned principal.
   bool isThirdPartyContextToTopWindow =
       !principal->OriginAttributesRef().mPartitionKey.IsEmpty();
@@ -249,7 +249,9 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
       /* referrerInfo */ nullptr,
 
       storageAccess, isThirdPartyContextToTopWindow,
-      std::move(serviceWorkerData), regInfo->AgentClusterId(),
+      // Origin trials are associated to a window, so it doesn't make sense on
+      // service workers.
+      OriginTrials(), std::move(serviceWorkerData), regInfo->AgentClusterId(),
       remoteType.unwrap());
 
   mRemoteWorkerData.referrerInfo() = MakeAndAddRef<ReferrerInfo>();

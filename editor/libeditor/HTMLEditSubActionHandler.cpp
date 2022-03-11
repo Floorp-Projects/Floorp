@@ -3051,16 +3051,19 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
             [&](Element& aListElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
               Result<RefPtr<Element>, nsresult> listItemElementOrError =
-                  CreateAndInsertElement(
-                      WithTransaction::No, aListItemElementTagName,
-                      EditorDOMPoint(&aListElement, 0u),
-                      [](Element& aListItemElement) -> nsresult {
-                        return NS_OK;
-                      });
+                  CreateAndInsertElement(aListElement.IsInComposedDoc()
+                                             ? WithTransaction::Yes
+                                             : WithTransaction::No,
+                                         aListItemElementTagName,
+                                         EditorDOMPoint(&aListElement, 0u));
               if (listItemElementOrError.isErr()) {
-                NS_WARNING(
-                    "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
-                    "failed");
+                NS_WARNING(nsPrintfCString(
+                               "HTMLEditor::CreateAndInsertElement(%s) failed",
+                               ToString(aListElement.IsInComposedDoc()
+                                            ? WithTransaction::Yes
+                                            : WithTransaction::No)
+                                   .c_str())
+                               .get());
                 return listItemElementOrError.unwrapErr();
               }
               MOZ_ASSERT(listItemElementOrError.inspect());
@@ -3221,8 +3224,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           Result<RefPtr<Element>, nsresult> maybeNewListElement =
               CreateAndInsertElement(
                   WithTransaction::Yes, aListElementTagName,
-                  splitListItemParentResult.AtNextContent<EditorDOMPoint>(),
-                  [](Element& aListElement) -> nsresult { return NS_OK; });
+                  splitListItemParentResult.AtNextContent<EditorDOMPoint>());
           if (maybeNewListElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -3360,8 +3362,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       prevListItem = nullptr;
       Result<RefPtr<Element>, nsresult> newListElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              aListElementTagName, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aListElement) -> nsresult { return NS_OK; });
+              aListElementTagName, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -3683,8 +3684,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     // Make sure we can put a block here.
     Result<RefPtr<Element>, nsresult> newBlockElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
-            blockType, pointToInsertBlock, BRElementNextToSplitPoint::Keep,
-            [](Element& aBlockElement) -> nsresult { return NS_OK; });
+            blockType, pointToInsertBlock, BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -3889,8 +3889,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
     Result<RefPtr<Element>, nsresult> newListElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
             MOZ_KnownLive(*containerName), aCurPoint,
-            BRElementNextToSplitPoint::Keep,
-            [](Element& aListElement) -> nsresult { return NS_OK; });
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -4052,8 +4051,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     Result<RefPtr<Element>, nsresult> newDivElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
             *nsGkAtoms::div, atStartOfSelection,
-            BRElementNextToSplitPoint::Keep,
-            [](Element& aDivElement) -> nsresult { return NS_OK; });
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4149,8 +4147,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
 
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aDivElement) -> nsresult { return NS_OK; });
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4261,8 +4258,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
             *nsGkAtoms::blockquote, atStartOfSelection,
-            BRElementNextToSplitPoint::Keep,
-            [](Element& aBlockquoteElement) -> nsresult { return NS_OK; });
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4366,8 +4362,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         Result<RefPtr<Element>, nsresult> newListElementOrError =
             InsertElementWithSplittingAncestorsWithTransaction(
                 MOZ_KnownLive(*containerName), atListItem,
-                BRElementNextToSplitPoint::Keep,
-                [](Element& aListElement) -> nsresult { return NS_OK; });
+                BRElementNextToSplitPoint::Keep);
         if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
           NS_WARNING(nsPrintfCString("HTMLEditor::"
                                      "InsertElementWithSplittingAncestorsWithTr"
@@ -4415,8 +4410,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::blockquote, atContent,
-              BRElementNextToSplitPoint::Keep,
-              [](Element& aBlockquoteElement) -> nsresult { return NS_OK; });
+              BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -5420,8 +5414,7 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   Result<RefPtr<Element>, nsresult> newDivElementOrError =
       InsertElementWithSplittingAncestorsWithTransaction(
           *nsGkAtoms::div, atStartOfSelection,
-          BRElementNextToSplitPoint::Delete,
-          [](Element& aDivElement) -> nsresult { return NS_OK; });
+          BRElementNextToSplitPoint::Delete);
   if (newDivElementOrError.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -5597,8 +5590,7 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
 
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aDivElement) -> nsresult { return NS_OK; });
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -5707,13 +5699,17 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
       WithTransaction::Yes, *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0u),
       // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
       [&](Element& aDivElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-        // aDivElement has not been connected yet so that we do not need
-        // transaction of setting align attribute here.
-        nsresult rv = SetAttributeOrEquivalent(&aDivElement, nsGkAtoms::align,
-                                               aAlignType, false);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "EditorBase::SetAttributeOrEquivalent("
-                             "nsGkAtoms::align) failed");
+        // If aDivElement has not been connected yet, we do not need transaction
+        // of setting align attribute here.
+        nsresult rv =
+            SetAttributeOrEquivalent(&aDivElement, nsGkAtoms::align, aAlignType,
+                                     !aDivElement.IsInComposedDoc());
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            nsPrintfCString("EditorBase::SetAttributeOrEquivalent(nsGkAtoms:: "
+                            "align, \"...\", %s) failed",
+                            !aDivElement.IsInComposedDoc() ? "true" : "false")
+                .get());
         return rv;
       });
   if (maybeNewDivElement.isErr()) {
@@ -6953,15 +6949,23 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
               [&](Element& aDivOrParagraphElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                 // We don't make inserting new <br> element undoable
                 // because removing the new element from the DOM tree
-                // gets same result for the user.
+                // gets same result for the user if aDivOrParagraphElement
+                // has not been connected yet.
                 Result<RefPtr<Element>, nsresult> brElementOrError =
                     InsertBRElement(
-                        WithTransaction::No,
+                        aDivOrParagraphElement.IsInComposedDoc()
+                            ? WithTransaction::Yes
+                            : WithTransaction::No,
                         EditorDOMPoint(&aDivOrParagraphElement, 0u));
                 if (brElementOrError.isErr()) {
                   NS_WARNING(
-                      "HTMLEditor::InsertBRElement(WithTransaction::No) "
-                      "failed");
+                      nsPrintfCString(
+                          "HTMLEditor::InsertBRElement(%s) failed",
+                          ToString(aDivOrParagraphElement.IsInComposedDoc()
+                                       ? WithTransaction::Yes
+                                       : WithTransaction::No)
+                              .c_str())
+                          .get());
                   return brElementOrError.unwrapErr();
                 }
                 return NS_OK;
@@ -7392,13 +7396,20 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
             [&](Element& aDivOrParagraphElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
               // We don't make inserting new <br> element undoable because
               // removing the new element from the DOM tree gets same result for
-              // the user.
+              // the user if aDivOrParagraphElement has not been connected yet.
               Result<RefPtr<Element>, nsresult> brElementOrError =
-                  InsertBRElement(WithTransaction::No,
+                  InsertBRElement(aDivOrParagraphElement.IsInComposedDoc()
+                                      ? WithTransaction::Yes
+                                      : WithTransaction::No,
                                   EditorDOMPoint(&aDivOrParagraphElement, 0u));
               if (brElementOrError.isErr()) {
-                NS_WARNING(
-                    "HTMLEditor::InsertBRElement(WithTransaction::No) failed");
+                NS_WARNING(nsPrintfCString(
+                               "HTMLEditor::InsertBRElement(%s) failed",
+                               ToString(aDivOrParagraphElement.IsInComposedDoc()
+                                            ? WithTransaction::Yes
+                                            : WithTransaction::No)
+                                   .c_str())
+                               .get());
                 return brElementOrError.unwrapErr();
               }
               return NS_OK;
@@ -7477,8 +7488,8 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
           Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
               CreateAndInsertElement(
                   WithTransaction::Yes,
-                  MOZ_KnownLive(*nextDefinitionListItemTagName), atNextListItem,
-                  [](Element& aListItemElement) -> nsresult { return NS_OK; });
+                  MOZ_KnownLive(*nextDefinitionListItemTagName),
+                  atNextListItem);
           if (maybeNewListItemElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -7609,8 +7620,7 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::blockquote, EditorDOMPoint(content),
-              BRElementNextToSplitPoint::Keep,
-              [](Element& aBlockquoteElement) -> nsresult { return NS_OK; });
+              BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -7860,8 +7870,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       // Make sure we can put a block here
       Result<RefPtr<Element>, nsresult> newBlockElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              aBlockTag, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aBlockElement) -> nsresult { return NS_OK; });
+              aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -7901,8 +7910,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       // block for it.
       Result<RefPtr<Element>, nsresult> newBlockElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              aBlockTag, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aBlockElement) -> nsresult { return NS_OK; });
+              aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -7950,8 +7958,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       if (!curBlock) {
         Result<RefPtr<Element>, nsresult> newBlockElementOrError =
             InsertElementWithSplittingAncestorsWithTransaction(
-                aBlockTag, atContent, BRElementNextToSplitPoint::Keep,
-                [](Element& aBlockElement) -> nsresult { return NS_OK; });
+                aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
         if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
           NS_WARNING(nsPrintfCString("HTMLEditor::"
                                      "InsertElementWithSplittingAncestorsWithTr"
@@ -9716,8 +9723,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // Make sure we can put a block here.
     Result<RefPtr<Element>, nsresult> newDivElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
-            *nsGkAtoms::div, atCaret, BRElementNextToSplitPoint::Keep,
-            [](Element& aDivElement) -> nsresult { return NS_OK; });
+            *nsGkAtoms::div, atCaret, BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -9808,8 +9814,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           // element with splitting the ancestors.
           Result<RefPtr<Element>, nsresult> newDivElementOrError =
               InsertElementWithSplittingAncestorsWithTransaction(
-                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-                  [](Element& aDivElement) -> nsresult { return NS_OK; });
+                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
           if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -9821,10 +9826,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           targetDivElement = newDivElementOrError.unwrap();
         }
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateAndInsertElement(
-                WithTransaction::Yes, MOZ_KnownLive(*ULOrOLOrDLTagName),
-                EditorDOMPoint::AtEndOf(targetDivElement),
-                [](Element& aListElement) -> nsresult { return NS_OK; });
+            CreateAndInsertElement(WithTransaction::Yes,
+                                   MOZ_KnownLive(*ULOrOLOrDLTagName),
+                                   EditorDOMPoint::AtEndOf(targetDivElement));
         if (maybeNewListElement.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -9891,8 +9895,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           // element with splitting the ancestors.
           Result<RefPtr<Element>, nsresult> newDivElementOrError =
               InsertElementWithSplittingAncestorsWithTransaction(
-                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-                  [](Element& aDivElement) -> nsresult { return NS_OK; });
+                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
           if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -9905,10 +9908,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         }
         // XXX So, createdListElement may be set to a non-list element.
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateAndInsertElement(
-                WithTransaction::Yes, MOZ_KnownLive(*containerName),
-                EditorDOMPoint::AtEndOf(targetDivElement),
-                [](Element& aListElement) -> nsresult { return NS_OK; });
+            CreateAndInsertElement(WithTransaction::Yes,
+                                   MOZ_KnownLive(*containerName),
+                                   EditorDOMPoint::AtEndOf(targetDivElement));
         if (maybeNewListElement.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -9950,8 +9952,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // and to contain all selected nodes.
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-              [](Element& aDivElement) -> nsresult { return NS_OK; });
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (newDivElementOrError.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("

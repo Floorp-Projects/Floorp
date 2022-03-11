@@ -15,7 +15,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::scene_building::SceneBuilder;
 use crate::clip::{ClipIntern, PolygonIntern};
 use crate::filterdata::FilterDataIntern;
-use crate::glyph_rasterizer::SharedFontInstanceMap;
+use crate::glyph_rasterizer::SharedFontResources;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -75,7 +75,7 @@ pub struct BuiltTransaction {
 pub struct LoadScene {
     pub document_id: DocumentId,
     pub scene: Scene,
-    pub font_instances: SharedFontInstanceMap,
+    pub fonts: SharedFontResources,
     pub view: SceneView,
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
@@ -231,7 +231,7 @@ pub struct SceneBuilderThread {
     rx: Receiver<SceneBuilderRequest>,
     tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
-    font_instances: SharedFontInstanceMap,
+    fonts: SharedFontResources,
     size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
@@ -263,7 +263,7 @@ impl SceneBuilderThreadChannels {
 impl SceneBuilderThread {
     pub fn new(
         config: FrameBuilderConfig,
-        font_instances: SharedFontInstanceMap,
+        fonts: SharedFontResources,
         size_of_ops: Option<MallocSizeOfOps>,
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
@@ -275,7 +275,7 @@ impl SceneBuilderThread {
             rx,
             tx,
             config,
-            font_instances,
+            fonts,
             size_of_ops,
             hooks,
             simulate_slow_ms: 0,
@@ -426,7 +426,7 @@ impl SceneBuilderThread {
             if item.scene.has_root_pipeline() {
                 built_scene = Some(SceneBuilder::build(
                     &item.scene,
-                    item.font_instances,
+                    item.fonts,
                     &item.view,
                     &self.config,
                     &mut item.interners,
@@ -594,7 +594,7 @@ impl SceneBuilderThread {
 
             let built = SceneBuilder::build(
                 &scene,
-                self.font_instances.clone(),
+                self.fonts.clone(),
                 &doc.view,
                 &self.config,
                 &mut doc.interners,

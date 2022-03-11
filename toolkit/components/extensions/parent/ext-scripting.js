@@ -123,6 +123,7 @@ const makeInternalContentScript = details => {
       matches: details.matches,
       originAttributesPatterns: null,
       runAt: details.runAt,
+      persistAcrossSessions: details.persistAcrossSessions,
     },
   };
 };
@@ -251,6 +252,7 @@ this.scripting = class extends ExtensionAPI {
                 ),
                 matches: options.matches,
                 runAt: options.runAt,
+                persistAcrossSessions: options.persistAcrossSessions,
               };
             });
         },

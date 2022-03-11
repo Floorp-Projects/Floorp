@@ -12,7 +12,7 @@ describe("function", () => {
     it("finds function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
-      const text = findFunctionText(14, source, symbols);
+      const text = findFunctionText(14, source, source.content, symbols);
       expect(text).toMatchSnapshot();
     });
 
@@ -20,7 +20,7 @@ describe("function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
-      const text = findFunctionText(13, source, symbols);
+      const text = findFunctionText(13, source, source.content, symbols);
       expect(text).toMatchSnapshot();
     });
 
@@ -28,7 +28,7 @@ describe("function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
-      const text = findFunctionText(15, source, symbols);
+      const text = findFunctionText(15, source, source.content, symbols);
 
       // TODO: we should try and match the closing bracket.
       expect(text).toEqual(null);
@@ -38,7 +38,7 @@ describe("function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
-      const text = findFunctionText(29, source, symbols);
+      const text = findFunctionText(29, source, source.content, symbols);
       expect(text).toMatchSnapshot();
     });
 
@@ -46,7 +46,7 @@ describe("function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
-      const text = findFunctionText(33, source, symbols);
+      const text = findFunctionText(33, source, source.content, symbols);
       expect(text).toMatchSnapshot();
     });
 
@@ -54,7 +54,7 @@ describe("function", () => {
       const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
-      const text = findFunctionText(20, source, symbols);
+      const text = findFunctionText(20, source, source.content, symbols);
       expect(text).toEqual(null);
     });
   });
