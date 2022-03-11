@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.activity.robots
 
+import android.os.Build
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
@@ -18,6 +19,7 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 class NotificationRobot {
 
     private val NOTIFICATION_SHADE = "com.android.systemui:id/notification_stack_scroller"
+    private val QS_PANEL = "com.android.systemui:id/quick_qs_panel"
 
     fun clearNotifications() {
         if (clearButton.exists()) {
@@ -47,6 +49,38 @@ class NotificationRobot {
         )
 
         assertTrue(notificationInTray)
+    }
+
+    fun verifyMediaNotificationExists(notificationMessage: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val notificationInTray = mDevice.wait(
+                Until.hasObject(
+                    By.res(QS_PANEL).hasDescendant(
+                        By.text(notificationMessage)
+                    )
+                ),
+                waitingTime
+            )
+
+            assertTrue(notificationInTray)
+        } else {
+            verifySystemNotificationExists(notificationMessage)
+        }
+    }
+
+    fun verifyNotificationGone(notificationMessage: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text(notificationMessage))
+                .waitUntilGone(waitingTime)
+        )
+    }
+
+    fun clickMediaNotificationControlButton(action: String) {
+        mediaNotificationControlButton(action).click()
+    }
+
+    fun verifyMediaNotificationButtonState(action: String) {
+        mediaNotificationControlButton(action).waitForExists(waitingTime)
     }
 
     fun verifyDownloadNotification(notificationMessage: String, fileName: String) {
@@ -119,4 +153,8 @@ private val notificationHeader = mDevice.findObject(
         .textContains(appName)
 )
 
-private val clearButton = mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/btn_clear_all"))
+private val clearButton =
+    mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/btn_clear_all"))
+
+private fun mediaNotificationControlButton(action: String) =
+    mDevice.findObject(UiSelector().description(action))

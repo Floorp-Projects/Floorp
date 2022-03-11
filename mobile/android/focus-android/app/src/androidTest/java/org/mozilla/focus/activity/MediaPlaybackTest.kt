@@ -8,10 +8,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.focus.activity.robots.browserScreen
+import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 class MediaPlaybackTest {
@@ -72,6 +75,37 @@ class MediaPlaybackTest {
             clickPauseButton()
             verifyPlaybackStopped()
             dismissMediaPlayingAlert()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun testMediaContentNotification() {
+        webServer.enqueue(createMockResponseFromAsset("audioPage.html"))
+        webServer.enqueue(createMockResponseFromAsset("resources/audioSample.mp3"))
+        val audioPageUrl = webServer.url("audioPage.html").toString()
+        val notificationMessage = "A site is playing media"
+
+        searchScreen {
+        }.loadPage(audioPageUrl) {
+            clickPlayButton()
+            waitForPlaybackToStart()
+            dismissMediaPlayingAlert()
+        }
+        mDevice.openNotification()
+        notificationTray {
+            verifyMediaNotificationExists("A site is playing media")
+            clickMediaNotificationControlButton("Pause")
+            verifyMediaNotificationButtonState("Play")
+        }
+        mDevice.pressBack()
+        browserScreen {
+            verifyPlaybackStopped()
+            dismissMediaPlayingAlert()
+        }.clearBrowsingData {}
+        mDevice.openNotification()
+        notificationTray {
+            verifyNotificationGone(notificationMessage)
         }
     }
 }
