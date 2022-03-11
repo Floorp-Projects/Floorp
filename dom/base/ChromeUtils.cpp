@@ -18,6 +18,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/FormAutofillNative.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/PerfStats.h"
@@ -1517,4 +1518,11 @@ already_AddRefed<Promise> ChromeUtils::CollectScrollingData(
   return promise.forget();
 }
 
+/* static */
+void ChromeUtils::GetFormAutofillConfidences(
+    GlobalObject& aGlobal, const Sequence<OwningNonNull<Element>>& aElements,
+    nsTArray<FormAutofillConfidences>& aResults, ErrorResult& aRv) {
+  FormAutofillNative::GetFormAutofillConfidences(aGlobal, aElements, aResults,
+                                                 aRv);
+}
 }  // namespace mozilla::dom
