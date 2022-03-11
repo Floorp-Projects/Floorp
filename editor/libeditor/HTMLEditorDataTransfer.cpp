@@ -2889,8 +2889,35 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // container element, the width-restricted body.
   Result<RefPtr<Element>, nsresult> spanElementOrError =
       DeleteSelectionAndCreateElement(
-          *nsGkAtoms::span,
-          [](Element& aSpanElement) -> nsresult { return NS_OK; });
+          *nsGkAtoms::span, [](Element& aSpanElement) {
+            // Add an attribute on the pre node so we'll know it's a quotation.
+            DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
+                kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns, false);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                                 "Element::SetAttr(nsGkAtoms::mozquote, "
+                                 "\"true\", false) failed");
+            // Allow wrapping on spans so long lines get wrapped to the screen.
+            if (aSpanElement.GetParent() &&
+                aSpanElement.GetParent()->IsHTMLElement(nsGkAtoms::body)) {
+              DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
+                  kNameSpaceID_None, nsGkAtoms::style,
+                  nsLiteralString(u"white-space: pre-wrap; display: block; "
+                                  u"width: 98vw;"),
+                  false);
+              NS_WARNING_ASSERTION(
+                  NS_SUCCEEDED(rvIgnored),
+                  "Element::SetAttr(nsGkAtoms::style, \"pre-wrap, block\", "
+                  "false) failed, but ignored");
+            } else {
+              DebugOnly<nsresult> rvIgnored =
+                  aSpanElement.SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+                                       u"white-space: pre-wrap;"_ns, false);
+              NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                                   "Element::SetAttr(nsGkAtoms::style, "
+                                   "\"pre-wrap\", false) failed, but ignored");
+            }
+            return NS_OK;
+          });
   NS_WARNING_ASSERTION(spanElementOrError.isOk(),
                        "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::"
                        "span) failed, but ignored");
@@ -2901,33 +2928,6 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // but we'll fall through and try to insert the text anyway.
   if (spanElementOrError.isOk()) {
     MOZ_ASSERT(spanElementOrError.inspect());
-    // Add an attribute on the pre node so we'll know it's a quotation.
-    DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
-        kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns, true);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Element::SetAttr(nsGkAtoms::mozquote, true) failed");
-    // Allow wrapping on spans so long lines get wrapped to the screen.
-    nsCOMPtr<nsINode> parentNode =
-        spanElementOrError.inspect()->GetParentNode();
-    if (parentNode && parentNode->IsHTMLElement(nsGkAtoms::body)) {
-      DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
-          kNameSpaceID_None, nsGkAtoms::style,
-          nsLiteralString(
-              u"white-space: pre-wrap; display: block; width: 98vw;"),
-          true);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "Element::SetAttr(nsGkAtoms::style) failed, but ignored");
-    } else {
-      DebugOnly<nsresult> rvIgnored = spanElementOrError.inspect()->SetAttr(
-          kNameSpaceID_None, nsGkAtoms::style, u"white-space: pre-wrap;"_ns,
-          true);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "Element::SetAttr(nsGkAtoms::style) failed, but ignored");
-    }
-
-    // and set the selection inside it:
     rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*spanElementOrError.inspect()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -2938,6 +2938,8 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
         "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
   }
 
+  // TODO: We should insert text at specific point rather than at selection.
+  //       Then, we can do this before inserting the <span> element.
   if (aAddCites) {
     rv = InsertWithQuotationsAsSubAction(aQuotedText);
     if (NS_FAILED(rv)) {
