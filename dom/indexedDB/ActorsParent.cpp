@@ -11493,8 +11493,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No ObjectStoreId!");
   }
 
   {
@@ -11502,8 +11501,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
     MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
 
     if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
-      MOZ_CRASH_UNLESS_FUZZING();
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Invalid ObjectStoreId!");
     }
   }
 
@@ -11511,13 +11509,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundMetadata)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No metadata found for ObjectStoreId!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   foundMetadata->mCommonMetadata.name() = aName;
@@ -11528,7 +11524,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ObjectStoreOp initialization failed!");
   }
 
   renameOp->DispatchToConnectionPool();
