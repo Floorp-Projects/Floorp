@@ -16,7 +16,6 @@ import {
   getResource,
   getResourceIds,
 } from "../utils/resource";
-import { pending, fulfilled, rejected } from "../utils/async-value";
 import { prefs } from "../utils/prefs";
 
 export function initialSourcesState(state) {
@@ -25,7 +24,6 @@ export function initialSourcesState(state) {
      * All currently available sources.
      *
      * See create.js: `createSourceObject` method for the description of stored objects.
-     * This reducers will add an extra `content` attribute which is the source text for each source.
      */
     sources: createInitial(),
 
@@ -67,14 +65,6 @@ export function initialSourcesState(state) {
 
     breakpointPositions: {},
     breakableLines: {},
-
-    /**
-     * Incremental number that is bumped each time we navigate to a new page.
-     *
-     * This is used to better handle async race condition where we mix previous page data
-     * with the new page. As sources are keyed by URL we may easily conflate the two page loads data.
-     */
-    epoch: 1,
 
     /**
      * The actual currently selected location.
@@ -178,9 +168,6 @@ function update(state = initialSourcesState(), action) {
       prefs.pendingSelectedLocation = location;
       return { ...state, pendingSelectedLocation: location };
 
-    case "LOAD_SOURCE_TEXT":
-      return updateLoadedState(state, action);
-
     case "BLACKBOX":
       if (action.status === "done") {
         const { blackboxSources } = action.value;
@@ -218,11 +205,9 @@ function update(state = initialSourcesState(), action) {
         },
       };
     }
+
     case "NAVIGATE":
-      return {
-        ...initialSourcesState(state),
-        epoch: state.epoch + 1,
-      };
+      return initialSourcesState(state);
   }
 
   return state;
@@ -242,13 +227,7 @@ function addSources(state, sources) {
     plainUrls: { ...state.plainUrls },
   };
 
-  state.sources = insertResources(
-    state.sources,
-    sources.map(source => ({
-      ...source,
-      content: null,
-    }))
-  );
+  state.sources = insertResources(state.sources, sources);
 
   for (const source of sources) {
     // 1. Update the source url map
@@ -389,47 +368,6 @@ function updateRootRelativeValues(
 }
 
 /*
- * Update a source's loaded text content.
- */
-function updateLoadedState(state, action) {
-  const { sourceId } = action;
-
-  // If there was a navigation between the time the action was started and
-  // completed, we don't want to update the store.
-  if (action.epoch !== state.epoch || !hasResource(state.sources, sourceId)) {
-    return state;
-  }
-
-  let content;
-  if (action.status === "start") {
-    content = pending();
-  } else if (action.status === "error") {
-    content = rejected(action.error);
-  } else if (typeof action.value.text === "string") {
-    content = fulfilled({
-      type: "text",
-      value: action.value.text,
-      contentType: action.value.contentType,
-    });
-  } else {
-    content = fulfilled({
-      type: "wasm",
-      value: action.value.text,
-    });
-  }
-
-  return {
-    ...state,
-    sources: updateResources(state.sources, [
-      {
-        id: sourceId,
-        content,
-      },
-    ]),
-  };
-}
-
-/*
  * Update the "isBlackBoxed" property on the source objects
  */
 function updateSourcesBlackboxState(state, blackboxSources) {
@@ -463,7 +401,7 @@ function updateBlackboxRangesForSourceUrl(
 ) {
   if (shouldBlackBox) {
     // If newRanges is an empty array, it would mean we are blackboxing the whole
-    // source. To do that lets reset the contentto an empty array.
+    // source. To do that lets reset the content to an empty array.
     if (!newRanges.length) {
       currentRanges[url] = [];
     } else {

@@ -10,20 +10,20 @@ const INDENT_COUNT_THRESHOLD = 5;
 const CHARACTER_LIMIT = 250;
 const _minifiedCache = new Map();
 
-export function isMinified(source) {
+export function isMinified(source, sourceTextContent) {
   if (_minifiedCache.has(source.id)) {
     return _minifiedCache.get(source.id);
   }
 
   if (
-    !source.content ||
-    !isFulfilled(source.content) ||
-    source.content.value.type !== "text"
+    !sourceTextContent ||
+    !isFulfilled(sourceTextContent) ||
+    sourceTextContent.value.type !== "text"
   ) {
     return false;
   }
 
-  let text = source.content.value.value;
+  let text = sourceTextContent.value.value;
 
   let lineEndIndex = 0;
   let lineStartIndex = 0;

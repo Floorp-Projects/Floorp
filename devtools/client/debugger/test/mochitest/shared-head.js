@@ -197,7 +197,8 @@ function waitForSelectedLocation(dbg, line, column) {
  */
 function waitForSelectedSource(dbg, sourceOrUrl) {
   const {
-    getSelectedSourceWithContent,
+    getSelectedSource,
+    getSelectedSourceTextContent,
     hasSymbols,
     getBreakableLines,
   } = dbg.selectors;
@@ -205,8 +206,9 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
   return waitForState(
     dbg,
     state => {
-      const source = getSelectedSourceWithContent() || {};
-      if (!source.content) {
+      const source = getSelectedSource() || {};
+      const sourceTextContent = getSelectedSourceTextContent();
+      if (!sourceTextContent) {
         return false;
       }
 
@@ -259,8 +261,9 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line, column) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const source = dbg.selectors.getSelectedSourceWithContent() || {};
-  if (source && !source.content) {
+  const source = dbg.selectors.getSelectedSource();
+  const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
+  if (source && !sourceTextContent) {
     const url = source.url;
     ok(
       false,
@@ -538,9 +541,10 @@ function isSelectedFrameSelected(dbg, state) {
   // Make sure the source text is completely loaded for the
   // source we are paused in.
   const sourceId = frame.location.sourceId;
-  const source = dbg.selectors.getSelectedSourceWithContent() || {};
+  const source = dbg.selectors.getSelectedSource();
+  const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
 
-  if (!source || !source.content) {
+  if (!source || !sourceTextContent) {
     return false;
   }
 
@@ -1475,7 +1479,6 @@ const selectors = {
   replayNext: ".replay-next.active",
   toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".source-footer .prettyPrint",
-  prettyPrintLoader: ".source-footer .spin",
   sourceMapLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
   editorFooter: ".editor-pane .source-footer",

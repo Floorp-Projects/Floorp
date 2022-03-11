@@ -33,7 +33,7 @@ import {
   canPrettyPrintSource,
   getIsCurrentThreadPaused,
   getSourceFromId,
-  getSourceWithContent,
+  getSourceTextContent,
   tabExists,
 } from "../../selectors";
 
@@ -145,14 +145,14 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       return;
     }
 
-    const sourceWithContent = getSourceWithContent(getState(), source.id);
+    const sourceTextContent = getSourceTextContent(getState(), source.id);
 
     if (
       keepContext &&
       prefs.autoPrettyPrint &&
       !getPrettySource(getState(), loadedSource.id) &&
       canPrettyPrintSource(getState(), loadedSource.id) &&
-      isMinified(sourceWithContent)
+      isMinified(source, sourceTextContent)
     ) {
       await dispatch(togglePrettyPrint(cx, loadedSource.id));
       dispatch(closeTab(cx, loadedSource));

@@ -11,7 +11,7 @@ import {
   getSpecificSourceByURL,
   getSources,
   resourceAsSourceBase,
-} from "../selectors/sources";
+} from "./sources";
 import { isOriginalId } from "devtools-source-map";
 import { isSimilarTab } from "../utils/tabs";
 
