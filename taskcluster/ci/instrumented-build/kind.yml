@@ -24,6 +24,7 @@ job-defaults:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: instrumented
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     run:
         using: mozharness
         actions: [get-secrets, build]
