@@ -39,6 +39,7 @@
 #include "vm/ErrorObject.h"
 #include "wasm/TypedObject.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
@@ -46,6 +47,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ErrorObject-inl.h"
 #include "vm/Stack-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace jit;

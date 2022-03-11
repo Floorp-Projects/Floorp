@@ -19,19 +19,26 @@
 #ifndef wasm_instance_h
 #define wasm_instance_h
 
+#include "mozilla/Maybe.h"
+
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
+#include "js/TypeDecls.h"
 #include "vm/SharedMem.h"
-#include "wasm/TypedObject.h"
-#include "wasm/WasmCode.h"
-#include "wasm/WasmDebug.h"
-#include "wasm/WasmFrameIter.h"  // js::wasm::WasmFrameIter
-#include "wasm/WasmLog.h"
-#include "wasm/WasmProcess.h"
-#include "wasm/WasmTable.h"
+#include "wasm/WasmExprType.h"   // for ResultType
+#include "wasm/WasmLog.h"        // for PrintCallback
+#include "wasm/WasmShareable.h"  // for SeenSet
+#include "wasm/WasmTlsData.h"    // for UniqueTlsData
+#include "wasm/WasmTypeDecls.h"
 
 namespace js {
+
+class WasmBreakpointSite;
+
 namespace wasm {
+
+class FuncImport;
+class WasmFrameIter;
 
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
@@ -101,23 +108,23 @@ class Instance {
                        uintptr_t highestByteVisitedInPrevFrame);
 
   JS::Realm* realm() const { return realm_; }
-  const Code& code() const { return *code_; }
-  const CodeTier& code(Tier t) const { return code_->codeTier(t); }
   bool debugEnabled() const { return !!maybeDebug_; }
   DebugState& debug() { return *maybeDebug_; }
-  const ModuleSegment& moduleSegment(Tier t) const { return code_->segment(t); }
   TlsData* tlsData() const { return tlsData_.get(); }
   uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
-  uint8_t* codeBase(Tier t) const { return code_->segment(t).base(); }
-  const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
-  const Metadata& metadata() const { return code_->metadata(); }
-  bool isAsmJS() const { return metadata().isAsmJS(); }
   const SharedTableVector& tables() const { return tables_; }
   SharedMem<uint8_t*> memoryBase() const;
   WasmMemoryObject* memory() const;
   size_t memoryMappedSize() const;
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
   bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
+
+  const Code& code() const { return *code_; }
+  inline const CodeTier& code(Tier t) const;
+  inline uint8_t* codeBase(Tier t) const;
+  inline const MetadataTier& metadata(Tier t) const;
+  inline const Metadata& metadata() const;
+  inline bool isAsmJS() const;
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -186,8 +193,8 @@ class Instance {
 
   // about:memory reporting:
 
-  void addSizeOfMisc(MallocSizeOf mallocSizeOf, Metadata::SeenSet* seenMetadata,
-                     Code::SeenSet* seenCode, Table::SeenSet* seenTables,
+  void addSizeOfMisc(MallocSizeOf mallocSizeOf, SeenSet<Metadata>* seenMetadata,
+                     SeenSet<Code>* seenCode, SeenSet<Table>* seenTables,
                      size_t* code, size_t* data) const;
 
   // Wasm disassembly support

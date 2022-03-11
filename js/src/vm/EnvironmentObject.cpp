@@ -27,6 +27,7 @@
 #include "vm/Realm.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 

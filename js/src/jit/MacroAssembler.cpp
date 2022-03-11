@@ -3802,6 +3802,12 @@ void MacroAssembler::loadWasmGlobalPtr(uint32_t globalDataOffset,
           dest);
 }
 
+void MacroAssembler::loadWasmPinnedRegsFromTls() {
+#ifdef WASM_HAS_HEAPREG
+  loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
+#endif
+}
+
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                                           const wasm::CalleeDesc& callee) {
   storePtr(WasmTlsReg,

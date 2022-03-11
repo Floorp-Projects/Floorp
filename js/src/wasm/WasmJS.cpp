@@ -58,6 +58,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
+#include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
@@ -70,6 +71,7 @@
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 /*
  * [SMDOC] WebAssembly code rules (evolving)

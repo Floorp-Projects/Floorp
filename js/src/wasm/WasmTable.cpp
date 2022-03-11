@@ -26,6 +26,8 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
 
+#include "wasm/WasmInstance-inl.h"
+
 using namespace js;
 using namespace js::wasm;
 using mozilla::CheckedInt;

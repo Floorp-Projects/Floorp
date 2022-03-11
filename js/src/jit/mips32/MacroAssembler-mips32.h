@@ -13,7 +13,6 @@
 #include "jit/MoveResolver.h"
 #include "vm/BytecodeUtil.h"
 #include "wasm/WasmBuiltins.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
 namespace jit {
@@ -820,6 +819,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void moveFloat32(FloatRegister src, FloatRegister dest) {
     as_movs(dest, src);
   }
+
   // Instrumentation for entering and leaving the profiler.
   void profilerEnterFrame(Register framePtr, Register scratch);
   void profilerExitFrame();
