@@ -135,8 +135,6 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       return Object.assign(form, {
         iconURL: this.addon.iconURL,
         id: this.addon.id,
-        // Set the isOOP attribute on the connected child actor form.
-        isOOP: this.isOOP,
         name: this.addon.name,
       });
     },
@@ -241,11 +239,6 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         console.warn(`Failed to create data url from [${this.addon.iconURL}]`);
         return null;
       }
-    },
-
-    // TODO: check if we need this, as it is only used in a test
-    get isOOP() {
-      return this._browser ? this._browser.isRemoteBrowser : undefined;
     },
 
     // Private Methods
