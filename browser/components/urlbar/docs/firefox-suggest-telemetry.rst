@@ -109,6 +109,7 @@ Changelog
     Introduced firefoxSuggestDataCollectionToggle,
     firefoxSuggestNonsponsoredToggle and firefoxSuggestSponsoredToggle.
     [Bug 1735976_]
+
   Firefox 99.0
     Introduced firefoxSuggestBestMatch. [Bug 1755100_]
     Introduced firefoxSuggestBestMatchLearnMore. [Bug 1756917_]
@@ -130,6 +131,32 @@ Changelog
 
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
 
+contextual.services.quicksuggest.click_nonsponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks a non-sponsored best
+match. Each key is the index at which a suggestion appeared in the results
+(1-based), and the corresponding value is the number of clicks at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.click_sponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks a sponsored best
+match. Each key is the index at which a suggestion appeared in the results
+(1-based), and the corresponding value is the number of clicks at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
 contextual.services.quicksuggest.help
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -143,6 +170,34 @@ Changelog
     Introduced. [Bug 1693927_]
 
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
+
+contextual.services.quicksuggest.help_nonsponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks the help button in a
+non-sponsored best match. Each key is the index at which a suggestion appeared
+in the results (1-based), and the corresponding value is the number of help
+button clicks at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.help_sponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks the help button in a
+sponsored best match. Each key is the index at which a suggestion appeared in
+the results (1-based), and the corresponding value is the number of help button
+clicks at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
 
 contextual.services.quicksuggest.impression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,6 +218,48 @@ Changelog
     Introduced. [Bug 1693927_]
 
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
+
+contextual.services.quicksuggest.impression_nonsponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar records non-sponsored best match impressions. It is
+incremented each time the user is shown a non-sponsored best match and the
+following two conditions hold:
+
+- The user has completed an engagement with the address bar by picking a result
+  in it or by pressing the Enter key.
+- At the time the user completed the engagement, a non-sponsored best match was
+  present in the results.
+
+Each key is the index at which a suggestion appeared in the results (1-based),
+and the corresponding value is the number of impressions at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.impression_sponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar records sponsored best match impressions. It is incremented
+each time the user is shown a sponsored best match and the following two
+conditions hold:
+
+- The user has completed an engagement with the address bar by picking a result
+  in it or by pressing the Enter key.
+- At the time the user completed the engagement, a sponsored best match was
+  present in the results.
+
+Each key is the index at which a suggestion appeared in the results (1-based),
+and the corresponding value is the number of impressions at that index.
+
+Changelog
+  Firefox 99.0
+    Introduced. [Bug 1752953_]
+
+.. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
 
 Events
 ------
