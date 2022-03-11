@@ -93,7 +93,7 @@ class Table : public ShareableBase<Table> {
   const FunctionTableElem& getFuncRef(uint32_t index) const;
   [[nodiscard]] bool getFuncRef(JSContext* cx, uint32_t index,
                                 MutableHandleFunction fun) const;
-  void setFuncRef(uint32_t index, void* code, const Instance* instance);
+  void setFuncRef(uint32_t index, void* code, Instance* instance);
   void fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref, JSContext* cx);
 
   AnyRef getAnyRef(uint32_t index) const;
