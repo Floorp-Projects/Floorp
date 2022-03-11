@@ -1,0 +1,13 @@
+<div style="width: 100px; height: 100px;"><canvas id="canvas" width="100" height="50"></canvas></div>
+<script>
+  var can = document.getElementById('canvas');
+  var ctx = can.getContext('2d');
+
+  ctx.shadowOffsetX = 24;
+  ctx.shadowOffsetY = 24;
+  ctx.shadowColor = 'blue';
+  ctx.shadowBlur = 20;
+
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0,0,40,40);
+</script>
