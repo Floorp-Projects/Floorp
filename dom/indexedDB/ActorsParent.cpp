@@ -9260,10 +9260,8 @@ mozilla::ipc::IPCResult Factory::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  IProtocol* mgr = Manager();
-  if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
+  QM_WARNONLY_TRY(OkIf(PBackgroundIDBFactoryParent::Send__delete__(this)));
+
   return IPC_OK();
 }
 
