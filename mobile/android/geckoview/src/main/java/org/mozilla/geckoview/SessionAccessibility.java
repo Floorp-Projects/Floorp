@@ -176,7 +176,7 @@ public class SessionAccessibility {
       AccessibilityNodeInfo node = null;
       if (mAttached) {
         node =
-            mSession.getSettings().getFullAccessibilityTree()
+            mSession.getSettings().getFullAccessibilityTree() || nativeProvider.isCacheEnabled()
                 ? getNodeFromGecko(virtualDescendantId)
                 : getNodeFromCache(virtualDescendantId);
       }
