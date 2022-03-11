@@ -30,7 +30,6 @@ forbid-mscom-init:
         - browser/components/shell/nsWindowsShellService.cpp
         - gfx/thebes/gfxWindowsPlatform.cpp
         - image/DecodePool.cpp
-        - intl/locale/windows/OSPreferences_win.cpp
         - ipc/glue/BrowserProcessSubThread.cpp
         - netwerk/system/win32/nsNotifyAddrListener.cpp
         - toolkit/components/parentalcontrols/nsParentalControlsServiceWin.cpp
