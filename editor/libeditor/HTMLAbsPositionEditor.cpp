@@ -567,8 +567,8 @@ nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
   y.AppendInt(newY);
 
   // we want one transaction only from a user's point of view
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
 
   if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
@@ -647,8 +647,8 @@ nsresult HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
 nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
 
   int32_t x, y;
   DebugOnly<nsresult> rvIgnored = GetElementOrigin(aElement, x, y);
@@ -708,8 +708,8 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
 
   nsresult rv;
   // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
@@ -854,8 +854,8 @@ NS_IMETHODIMP HTMLEditor::GetGridSize(uint32_t* aSize) {
 
 nsresult HTMLEditor::SetTopAndLeftWithTransaction(
     nsStyledElement& aStyledElement, int32_t aX, int32_t aY) {
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
   nsresult rv;
   rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(aStyledElement,
                                                           *nsGkAtoms::left, aX);

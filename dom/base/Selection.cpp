@@ -97,11 +97,11 @@ static constexpr nsLiteralCString kNoDocumentTypeNodeError =
 static constexpr nsLiteralCString kNoRangeExistsError =
     "No selection range exists"_ns;
 
+namespace mozilla {
+
 /******************************************************************************
  * Utility methods defined in nsISelectionController.idl
  ******************************************************************************/
-
-namespace mozilla {
 
 const char* ToChar(SelectionType aSelectionType) {
   switch (aSelectionType) {
@@ -132,6 +132,48 @@ const char* ToChar(SelectionType aSelectionType) {
     default:
       return "Invalid SelectionType";
   }
+}
+
+/******************************************************************************
+ * Utility methods defined in nsISelectionListener.idl
+ ******************************************************************************/
+
+nsCString SelectionChangeReasonsToCString(int16_t aReasons) {
+  nsCString reasons;
+  if (!aReasons) {
+    reasons.AssignLiteral("NO_REASON");
+    return reasons;
+  }
+  auto EnsureSeparator = [](nsCString& aString) -> void {
+    if (!aString.IsEmpty()) {
+      aString.AppendLiteral(" | ");
+    }
+  };
+  struct ReasonData {
+    int16_t mReason;
+    const char* mReasonStr;
+
+    ReasonData(int16_t aReason, const char* aReasonStr)
+        : mReason(aReason), mReasonStr(aReasonStr) {}
+  };
+  for (const ReasonData& reason :
+       {ReasonData(nsISelectionListener::DRAG_REASON, "DRAG_REASON"),
+        ReasonData(nsISelectionListener::MOUSEDOWN_REASON, "MOUSEDOWN_REASON"),
+        ReasonData(nsISelectionListener::MOUSEUP_REASON, "MOUSEUP_REASON"),
+        ReasonData(nsISelectionListener::KEYPRESS_REASON, "KEYPRESS_REASON"),
+        ReasonData(nsISelectionListener::SELECTALL_REASON, "SELECTALL_REASON"),
+        ReasonData(nsISelectionListener::COLLAPSETOSTART_REASON,
+                   "COLLAPSETOSTART_REASON"),
+        ReasonData(nsISelectionListener::COLLAPSETOEND_REASON,
+                   "COLLAPSETOEND_REASON"),
+        ReasonData(nsISelectionListener::IME_REASON, "IME_REASON"),
+        ReasonData(nsISelectionListener::JS_REASON, "JS_REASON")}) {
+    if (aReasons & reason.mReason) {
+      EnsureSeparator(reasons);
+      reasons.Append(reason.mReasonStr);
+    }
+  }
+  return reasons;
 }
 
 }  // namespace mozilla
@@ -3180,17 +3222,17 @@ void Selection::NotifySelectionListeners() {
   }
 }
 
-void Selection::StartBatchChanges() {
+void Selection::StartBatchChanges(const char* aDetails) {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-    frameSelection->StartBatchChanges();
+    frameSelection->StartBatchChanges(aDetails);
   }
 }
 
-void Selection::EndBatchChanges(int16_t aReason) {
+void Selection::EndBatchChanges(const char* aDetails, int16_t aReasons) {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-    frameSelection->EndBatchChanges(aReason);
+    frameSelection->EndBatchChanges(aDetails, aReasons);
   }
 }
 
@@ -3403,7 +3445,7 @@ void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
   // after we set the direction.
   // XXX If they are disconnected, shouldn't we return error before allocating
   //     new nsRange instance?
-  SelectionBatcher batch(this);
+  SelectionBatcher batch(this, __FUNCTION__);
   const Maybe<int32_t> order =
       nsContentUtils::ComparePoints(aAnchorRef, aFocusRef);
   if (order && (*order <= 0)) {
@@ -3442,7 +3484,7 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   }
 
   // Don't fire "selectionchange" event until everything done.
-  SelectionBatcher batch(this);
+  SelectionBatcher batch(this, __FUNCTION__);
 
   if (aInLimiter == InLimiter::eYes) {
     if (!mFrameSelection ||

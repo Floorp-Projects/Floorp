@@ -288,7 +288,7 @@ nsresult CompositionTransaction::SetIMESelection(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  SelectionBatcher selectionBatcher(selection);
+  SelectionBatcher selectionBatcher(selection, __FUNCTION__);
 
   // First, remove all selections of IME composition.
   static const RawSelectionType kIMESelections[] = {

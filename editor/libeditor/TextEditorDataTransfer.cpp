@@ -76,8 +76,8 @@ nsresult TextEditor::InsertTextFromTransferable(
       // Sanitize possible carriage returns in the string to be inserted
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
 
-      AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                                 ScrollSelectionIntoView::Yes);
+      AutoPlaceholderBatch treatAsOneTransaction(
+          *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
       nsresult rv =
           InsertTextAsSubAction(stuffToPaste, SelectionHandling::Delete);
       if (NS_FAILED(rv)) {

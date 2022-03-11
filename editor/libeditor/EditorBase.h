@@ -2116,13 +2116,14 @@ class EditorBase : public nsIEditor,
    * manager batches.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void BeginPlaceholderTransaction(
-      nsStaticAtom& aTransactionName);
+      nsStaticAtom& aTransactionName, const char* aRequesterFuncName);
   enum class ScrollSelectionIntoView { No, Yes };
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void EndPlaceholderTransaction(
-      ScrollSelectionIntoView aScrollSelectionIntoView);
+      ScrollSelectionIntoView aScrollSelectionIntoView,
+      const char* aRequesterFuncName);
 
-  void BeginUpdateViewBatch();
-  MOZ_CAN_RUN_SCRIPT void EndUpdateViewBatch();
+  void BeginUpdateViewBatch(const char* aRequesterFuncName);
+  MOZ_CAN_RUN_SCRIPT void EndUpdateViewBatch(const char* aRequesterFuncName);
 
   /**
    * Used by HTMLEditor::AutoTransactionBatch, nsIEditor::BeginTransaction
@@ -2132,8 +2133,10 @@ class EditorBase : public nsIEditor,
    * XXX What's the difference with PlaceholderTransaction? Should we always
    *     use it instead?
    */
-  MOZ_CAN_RUN_SCRIPT void BeginTransactionInternal();
-  MOZ_CAN_RUN_SCRIPT void EndTransactionInternal();
+  MOZ_CAN_RUN_SCRIPT void BeginTransactionInternal(
+      const char* aRequesterFuncName);
+  MOZ_CAN_RUN_SCRIPT void EndTransactionInternal(
+      const char* aRequesterFuncName);
 
  protected:  // Shouldn't be used by friend classes
   /**
@@ -2575,28 +2578,41 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoPlaceholderBatch final {
    public:
+    /**
+     * @param aRequesterFuncName function name which wants to end the batch.
+     * This won't be stored nor exposed to selection listeners etc, used only
+     * for logging. This MUST be alive when the destructor runs.
+     */
     AutoPlaceholderBatch(EditorBase& aEditorBase,
-                         ScrollSelectionIntoView aScrollSelectionIntoView)
+                         ScrollSelectionIntoView aScrollSelectionIntoView,
+                         const char* aRequesterFuncName)
         : mEditorBase(aEditorBase),
-          mScrollSelectionIntoView(aScrollSelectionIntoView) {
-      mEditorBase->BeginPlaceholderTransaction(*nsGkAtoms::_empty);
+          mScrollSelectionIntoView(aScrollSelectionIntoView),
+          mRequesterFuncName(aRequesterFuncName) {
+      mEditorBase->BeginPlaceholderTransaction(*nsGkAtoms::_empty,
+                                               mRequesterFuncName);
     }
 
     AutoPlaceholderBatch(EditorBase& aEditorBase,
                          nsStaticAtom& aTransactionName,
-                         ScrollSelectionIntoView aScrollSelectionIntoView)
+                         ScrollSelectionIntoView aScrollSelectionIntoView,
+                         const char* aRequesterFuncName)
         : mEditorBase(aEditorBase),
-          mScrollSelectionIntoView(aScrollSelectionIntoView) {
-      mEditorBase->BeginPlaceholderTransaction(aTransactionName);
+          mScrollSelectionIntoView(aScrollSelectionIntoView),
+          mRequesterFuncName(aRequesterFuncName) {
+      mEditorBase->BeginPlaceholderTransaction(aTransactionName,
+                                               mRequesterFuncName);
     }
 
     ~AutoPlaceholderBatch() {
-      mEditorBase->EndPlaceholderTransaction(mScrollSelectionIntoView);
+      mEditorBase->EndPlaceholderTransaction(mScrollSelectionIntoView,
+                                             mRequesterFuncName);
     }
 
    protected:
-    OwningNonNull<EditorBase> mEditorBase;
-    ScrollSelectionIntoView mScrollSelectionIntoView;
+    const OwningNonNull<EditorBase> mEditorBase;
+    const ScrollSelectionIntoView mScrollSelectionIntoView;
+    const char* const mRequesterFuncName;
   };
 
   /**
@@ -2663,17 +2679,24 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoUpdateViewBatch final {
    public:
-    MOZ_CAN_RUN_SCRIPT explicit AutoUpdateViewBatch(EditorBase& aEditorBase)
-        : mEditorBase(aEditorBase) {
-      mEditorBase.BeginUpdateViewBatch();
+    /**
+     * @param aRequesterFuncName function name which wants to end the batch.
+     * This won't be stored nor exposed to selection listeners etc, used only
+     * for logging. This MUST be alive when the destructor runs.
+     */
+    MOZ_CAN_RUN_SCRIPT explicit AutoUpdateViewBatch(
+        EditorBase& aEditorBase, const char* aRequesterFuncName)
+        : mEditorBase(aEditorBase), mRequesterFuncName(aRequesterFuncName) {
+      mEditorBase.BeginUpdateViewBatch(mRequesterFuncName);
     }
 
     MOZ_CAN_RUN_SCRIPT ~AutoUpdateViewBatch() {
-      MOZ_KnownLive(mEditorBase).EndUpdateViewBatch();
+      MOZ_KnownLive(mEditorBase).EndUpdateViewBatch(mRequesterFuncName);
     }
 
    protected:
     EditorBase& mEditorBase;
+    const char* const mRequesterFuncName;
   };
 
  protected:
