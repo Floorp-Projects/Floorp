@@ -67,12 +67,23 @@ using CheckedU32 = CheckedInt<uint32_t>;
 // Instance must be aligned at least as much as any of the integer, float,
 // or SIMD values that we'd like to store in it.
 static_assert(alignof(Instance) >=
-  std::max(sizeof(Registers::RegisterContent), sizeof(FloatRegisters::RegisterContent)));
+              std::max(sizeof(Registers::RegisterContent),
+                       sizeof(FloatRegisters::RegisterContent)));
 
 // The globalArea must be aligned at least as much as an instance. This is
 // guaranteed to be sufficient for all data types we care about, including
 // SIMD values. See the above assertion.
 static_assert(Instance::offsetOfGlobalArea() % alignof(Instance) == 0);
+
+// We want the memory base to be the first field, and accessible with no
+// offset. This incidentally is also an assertion that there is no superclass
+// with fields.
+static_assert(Instance::offsetOfMemoryBase() == 0);
+
+// We want instance fields that are commonly accessed by the JIT to have
+// compact encodings. A limit of less than 128 bytes is chosen to fit within
+// the signed 8-bit mod r/m x86 encoding.
+static_assert(Instance::offsetOfLastCommonJitField() < 128);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1307,13 +1318,13 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    HandleWasmMemoryObject memory, SharedTableVector&& tables,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
-      object_(object),
       jsJitArgsRectifier_(
           cx->runtime()->jitRuntime()->getArgumentsRectifier().value),
       jsJitExceptionHandler_(
           cx->runtime()->jitRuntime()->getExceptionTail().value),
       preBarrierCode_(
           cx->runtime()->jitRuntime()->preBarrier(MIRType::Object).value),
+      object_(object),
       code_(std::move(code)),
       memory_(memory),
       tables_(std::move(tables)),
