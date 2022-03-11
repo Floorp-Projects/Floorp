@@ -12093,10 +12093,10 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
         if constexpr (IsIndexCursor) {
           auto localeAwarePosition = Key{};
           if (this->IsLocaleAware()) {
-            QM_TRY_UNWRAP(localeAwarePosition,
-                          aCurrentKey.ToLocaleAwareKey(this->mLocale),
-                          Err(IPC_FAIL_NO_REASON(this)),
-                          [](const auto&) { MOZ_CRASH_UNLESS_FUZZING(); });
+            QM_TRY_UNWRAP(
+                localeAwarePosition,
+                aCurrentKey.ToLocaleAwareKey(this->mLocale),
+                Err(IPC_FAIL(this, "aCurrentKey.ToLocaleAwareKey failed!")));
           }
           return CursorPosition<CursorType>{aCurrentKey, localeAwarePosition,
                                             aCurrentObjectStoreKey};
@@ -12106,25 +12106,22 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
       }()));
 
   if (!trustParams && !VerifyRequestParams(aParams, position)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "VerifyRequestParams failed!");
   }
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Cursor is CurrentlyRunningOp!");
   }
 
   if (NS_WARN_IF(mTransaction->mCommitOrAbortReceived)) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Transaction is already committed/aborted!");
   }
 
   const RefPtr<ContinueOp> continueOp =
       new ContinueOp(this, aParams, std::move(position));
   if (NS_WARN_IF(!continueOp->Init(*mTransaction))) {
     continueOp->Cleanup();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ContinueOp initialization failed!");
   }
 
   continueOp->DispatchToConnectionPool();
