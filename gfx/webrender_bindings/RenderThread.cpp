@@ -500,9 +500,6 @@ void RenderThread::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
     const Maybe<Range<uint8_t>>& aReadbackBuffer, bool* aNeedsYFlip) {
-  std::string markerName = "Composite #" + std::to_string(AsUint64(aWindowId));
-
-  AUTO_PROFILER_TRACING_MARKER("Paint", markerName.c_str(), GRAPHICS);
   AUTO_PROFILER_LABEL("RenderThread::UpdateAndRender", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
@@ -516,6 +513,11 @@ void RenderThread::UpdateAndRender(
   TimeStamp start = TimeStamp::Now();
 
   auto& renderer = it->second;
+
+  std::string markerName = "Composite #" + std::to_string(AsUint64(aWindowId));
+  AutoProfilerTracing tracingCompositeMarker(
+      "Paint", markerName.c_str(), geckoprofiler::category::GRAPHICS,
+      Some(renderer->GetCompositorBridge()->GetInnerWindowId()));
 
   if (renderer->IsPaused()) {
     aRender = false;
