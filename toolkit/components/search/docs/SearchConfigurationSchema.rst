@@ -114,6 +114,16 @@ configuration object with the users locale. For example:
 Will report either ``[us]`` or ``[gb]`` as the ``webExtension.locales``
 depending on the user's locale.
 
+From Firefox 98.0.1 and 97.7.1esr, ``"$USER_LOCALE"`` may also be used in the
+``telemetryId`` field.
+
+$USER_REGION
+------------
+
+This can be used in the same situations as ``"$USER_LOCALE"``.
+
+It was added in the Firefox 98.0.1 and 97.7.1esr releases.
+
 "default"
 ---------
 
