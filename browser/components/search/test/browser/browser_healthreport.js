@@ -3,10 +3,9 @@
 
 "use strict";
 
-var Preferences = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm",
-  {}
-).Preferences;
+var { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 function test() {
   waitForExplicitFinish();

@@ -11,8 +11,7 @@ registerCleanupFunction(() => {
 });
 
 const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm",
-  {}
+  "resource://testing-common/AddonTestUtils.jsm"
 );
 
 const PREF_UPDATE_ENABLED = "extensions.update.enabled";

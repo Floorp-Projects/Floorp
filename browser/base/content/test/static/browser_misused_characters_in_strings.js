@@ -265,8 +265,7 @@ add_task(async function checkAllTheDTDs() {
 add_task(async function checkAllTheFluents() {
   let uris = await getAllTheFiles(".ftl");
   let { FluentParser, Visitor } = ChromeUtils.import(
-    "resource://testing-common/FluentSyntax.jsm",
-    {}
+    "resource://testing-common/FluentSyntax.jsm"
   );
 
   class TextElementVisitor extends Visitor {
