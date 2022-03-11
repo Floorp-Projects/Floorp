@@ -51,7 +51,8 @@ import mozpack.path as mozpath
 
 AUTOMATION = "MOZ_AUTOMATION" in os.environ
 BROWSERTIME_ROOT = os.path.dirname(__file__)
-PILLOW_VERSION = "6.0.0"
+
+PILLOW_VERSION = "8.4.0"  # version 8.4.0 currently supports python 3.6 to 3.10
 PYSSIM_VERSION = "0.4"
 
 
@@ -122,6 +123,12 @@ host_fetches = {
             # An extension to `fetch` syntax.
             "path": "ffmpeg-4.1.1-macos64-static",
         },
+        # For now it is easier to use something like Homebrew on macOS which
+        # already has pre-built ImageMagick binaries.
+        # See also for future reference/ known issues:
+        # https://imagemagick.org/script/download.php#macosx
+        # https://github.com/ImageMagick/ImageMagick/issues/3129
+        # https://github.com/ImageMagick/ImageMagick/issues/4676
     },
     "linux64": {
         "ffmpeg": {
@@ -249,6 +256,36 @@ def setup_prerequisites(command_context):
                 os.chdir(cwd)
 
 
+def setup_imagemagick(command_context):
+    """Setup and install imagemagick on the developer's OS.
+
+    For OSX we use homebrew as it is the reccomended default package manager
+    and comes with pre-built binaries.
+    """
+
+    if host_platform() == "darwin":
+        command_context.log(
+            logging.INFO, "browsertime", {}, "Installing ImageMagick..."
+        )
+        cmd = [
+            "brew",
+            "install",
+            "imagemagick@7",
+        ]  # Lock to major 7 only, minor version not available in Homebrew
+        subprocess.check_call(cmd)
+        command_context.log(
+            logging.INFO, "browsertime", {}, "... ImageMagick installed."
+        )
+    else:  # TODO: add solutions for Windows (Bug 1746206) and Linux (Bug 1746208)
+        command_context.log(
+            logging.WARNING,
+            "browsertime",
+            {},
+            "Automated ImageMagick setup is currently not supported for %s"
+            % host_platform(),
+        )
+
+
 def setup_browsertime(
     command_context,
     should_clobber=False,
@@ -313,6 +350,7 @@ def setup_browsertime(
             logging.INFO, "browsertime", {}, "Installing python requirements"
         )
         activate_browsertime_virtualenv(command_context)
+        setup_imagemagick(command_context)
 
     command_context.log(
         logging.INFO,
@@ -459,6 +497,8 @@ def activate_browsertime_virtualenv(command_context, *args, **kwargs):
     This function will also install Pillow and pyssim if needed.
     It will raise an error in case the install failed.
     """
+    # TODO: (Bug 1758990) Have packages be pulled from the Mozilla pypi mirror
+    # for consistency in user environments
     MachCommandBase.activate_virtualenv(command_context, *args, **kwargs)
 
     # installing Python deps on the fly
