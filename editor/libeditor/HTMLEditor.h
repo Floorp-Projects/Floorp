@@ -731,11 +731,23 @@ class HTMLEditor final : public EditorBase,
    * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
 
+  enum class WithTransaction { No, Yes };
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  WithTransaction aWithTransaction) {
+    aStream << "WithTransaction::"
+            << (aWithTransaction == WithTransaction::Yes ? "Yes" : "No");
+    return aStream;
+  }
+
   /**
-   * InsertBRElementWithTransaction() creates a <br> element and inserts it
+   * InsertBRElement() creates a <br> element and inserts it
    * before aPointToInsert.  Then, tries to collapse selection at or after the
    * new <br> node if aSelect is not eNone.
    *
+   * @param aWithTransaction    Whether the inserting is new element is undoable
+   *                            or not.  WithTransaction::No is useful only when
+   *                            the new element is inserted into a new element
+   *                            which has not been connected yet.
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
    * @param aSelect             If eNone, this won't change selection.
@@ -746,9 +758,9 @@ class HTMLEditor final : public EditorBase,
    * @return                    The new <br> node.  If failed to create new
    *                            <br> node, returns error.
    */
-  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  InsertBRElementWithTransaction(const EditorDOMPoint& aPointToInsert,
-                                 EDirection aSelect = eNone);
+  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult> InsertBRElement(
+      WithTransaction aWithTransaction, const EditorDOMPoint& aPointToInsert,
+      EDirection aSelect = eNone);
 
   /**
    * DeleteNodeWithTransaction() removes aContent from the DOM tree if it's
@@ -1472,6 +1484,10 @@ class HTMLEditor final : public EditorBase,
    * this succeed to create an element node, this inserts the element to
    * aPointToInsert.
    *
+   * @param aWithTransaction    Whether the inserting is new element is undoable
+   *                            or not.  WithTransaction::No is useful only when
+   *                            the new element is inserted into a new element
+   *                            which has not been connected yet.
    * @param aTagName            The element name to create.
    * @param aPointToInsert      The insertion point of new element.
    *                            If this refers end of the container or after,
@@ -1481,11 +1497,17 @@ class HTMLEditor final : public EditorBase,
    *                            child node referred by this.
    *                            Note that this point will be invalid once this
    *                            method inserts the new element.
+   * @param aInitializer        A function to initialize the new element before
+   *                            connecting the element into the DOM tree.
+   *                            Note that this should not touch outside given
+   *                            element because doing it would break range
+   *                            updater's result.
    * @return                    The created new element node or an error.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateAndInsertElementWithTransaction(nsAtom& aTagName,
-                                        const EditorDOMPoint& aPointToInsert);
+  CreateAndInsertElement(WithTransaction aWithTransaction, nsAtom& aTagName,
+                         const EditorDOMPoint& aPointToInsert,
+                         const std::function<nsresult(Element&)>& aInitializer);
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
@@ -1510,10 +1532,9 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * InsertElementWithSplittingAncestorsWithTransaction() is a wrapper of
-   * MaybeSplitAncestorsForInsertWithTransaction() and
-   * CreateAndInsertElementWithTransaction().  I.e., will create an element
-   * whose tag name is aTagName and split ancestors if it's necessary, then,
-   * insert it.
+   * MaybeSplitAncestorsForInsertWithTransaction() and CreateAndInsertElement().
+   * I.e., will create an element whose tag name is aTagName and split ancestors
+   * if it's necessary, then, insert it.
    *
    * @param aTagName            The tag name which you want to insert new
    *                            element at aPointToInsert.
@@ -1523,12 +1544,18 @@ class HTMLEditor final : public EditorBase,
    *                            Whether <br> element should be deleted or
    *                            kept if and only if a <br> element follows
    *                            split point.
+   * @param aInitializer        A function to initialize the new element before
+   *                            connecting the element into the DOM tree.
+   *                            Note that this should not touch outside given
+   *                            element because doing it would break range
+   *                            updater's result.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
-      BRElementNextToSplitPoint aBRElementNextToSplitPoint);
+      BRElementNextToSplitPoint aBRElementNextToSplitPoint,
+      const std::function<nsresult(Element&)>& aInitializer);
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before

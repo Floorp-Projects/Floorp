@@ -693,9 +693,9 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
     return NS_OK;
   }
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      InsertBRElementWithTransaction(EditorDOMPoint(parentNode, 0));
+      InsertBRElement(WithTransaction::Yes, EditorDOMPoint(parentNode, 0u));
   if (resultOfInsertingBRElement.isErr()) {
-    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
     return resultOfInsertingBRElement.unwrapErr();
   }
   MOZ_ASSERT(resultOfInsertingBRElement.inspect());

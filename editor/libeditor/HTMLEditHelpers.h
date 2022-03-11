@@ -344,8 +344,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
 
   /**
    * AtSplitPoint() returns the split point in the container.
-   * HTMLEditor::CreateAndInsertElementWithTransaction() or something similar
-   * methods.
+   * HTMLEditor::CreateAndInsertElement() or something similar methods.
    */
   template <typename EditorDOMPointType>
   EditorDOMPointType AtSplitPoint() const {
