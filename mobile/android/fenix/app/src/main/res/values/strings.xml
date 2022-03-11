@@ -1114,31 +1114,31 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview is now Firefox Nightly</string>
+    <string name="tip_firefox_preview_moved_header" moz:RemovedIn="100" tools:ignore="UnusedResources">Firefox Preview is now Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">
+    <string name="tip_firefox_preview_moved_description" moz:RemovedIn="100" tools:ignore="UnusedResources">
         Firefox Nightly gets updated every night and has experimental new features.
         However, it may be less stable. Download our beta browser for a more stable experience.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Get Firefox for Android Beta</string>
+    <string name="tip_firefox_preview_moved_button_2" moz:RemovedIn="100" tools:ignore="UnusedResources">Get Firefox for Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly has moved</string>
+    <string name="tip_firefox_preview_moved_header_preview_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">Firefox Nightly has moved</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">
+    <string name="tip_firefox_preview_moved_description_preview_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">
         This app will no longer receive security updates. Stop using this app and switch to the new Nightly.
         \n\nTo transfer your bookmarks, logins, and history to another app, create a Firefox account.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Switch to the new Nightly</string>
+    <string name="tip_firefox_preview_moved_button_preview_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">Switch to the new Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly has moved</string>
+    <string name="tip_firefox_preview_moved_header_preview_not_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">Firefox Nightly has moved</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">
+    <string name="tip_firefox_preview_moved_description_preview_not_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">
         This app will no longer receive security updates. Get the new Nightly and stop using this app.
         \n\nTo transfer your bookmarks, logins, and history to another app, create a Firefox account.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Get the new Nightly</string>
+    <string name="tip_firefox_preview_moved_button_preview_not_installed" moz:RemovedIn="100" tools:ignore="UnusedResources">Get the new Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

@@ -24,8 +24,6 @@ object SupportUtils {
     const val POCKET_TRENDING_URL = "https://getpocket.com/fenix-top-articles"
     const val WIKIPEDIA_URL = "https://www.wikipedia.org/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
-    const val FIREFOX_BETA_PLAY_STORE_URL = "market://details?id=org.mozilla.firefox_beta"
-    const val FIREFOX_NIGHTLY_PLAY_STORE_URL = "market://details?id=org.mozilla.fenix"
     const val GOOGLE_URL = "https://www.google.com/"
     const val BAIDU_URL = "https://m.baidu.com/?from=1000969a"
     const val JD_URL = "https://union-click.jd.com/jdc" +
@@ -40,7 +38,6 @@ object SupportUtils {
     const val GOOGLE_XX_URL = "https://www.google.com/webhp?client=firefox-b-m&channel=ts"
 
     enum class SumoTopic(internal val topicStr: String) {
-        FENIX_MOVING("sync-delist"),
         HELP("faq-android"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),
