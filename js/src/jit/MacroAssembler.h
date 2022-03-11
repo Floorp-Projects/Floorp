@@ -2393,26 +2393,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Integer Add
 
-  inline void addInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addInt8x16(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void addInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addInt16x8(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
-
-  inline void addInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void addInt32x4(FloatRegister lhs, FloatRegister rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared, arm64);
@@ -2420,37 +2411,25 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void addInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void addInt64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addInt64x2(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addInt64x2(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Integer Subtract
 
-  inline void subInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subInt8x16(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void subInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subInt16x8(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
-
-  inline void subInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void subInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
@@ -2458,28 +2437,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void subInt32x4(FloatRegister lhs, FloatRegister rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
-  inline void subInt64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subInt64x2(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void subInt64x2(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   // Integer Multiply
 
-  inline void mulInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void mulInt16x8(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void mulInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
-
-  inline void mulInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void mulInt32x4(FloatRegister lhs, FloatRegister rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared, arm64);
@@ -2595,205 +2565,151 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Saturating integer add
 
-  inline void addSatInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addSatInt8x16(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addSatInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedAddSatInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedAddSatInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedAddSatInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void addSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addSatInt16x8(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addSatInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedAddSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedAddSatInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedAddSatInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Saturating integer subtract
 
-  inline void subSatInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subSatInt8x16(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subSatInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedSubSatInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedSubSatInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedSubSatInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void subSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subSatInt16x8(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subSatInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedSubSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedSubSatInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedSubSatInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Lane-wise integer minimum
 
-  inline void minInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void minInt8x16(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void minInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMinInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMinInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMinInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void minInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void minInt16x8(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void minInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMinInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMinInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMinInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void minInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void minInt32x4(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void minInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMinInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMinInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMinInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Lane-wise integer maximum
 
-  inline void maxInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void maxInt8x16(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void maxInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMaxInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMaxInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMaxInt8x16(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void maxInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void maxInt16x8(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void maxInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMaxInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMaxInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMaxInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void maxInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void maxInt32x4(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void maxInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                          FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void unsignedMaxInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedMaxInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedMaxInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                                  FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Lane-wise integer rounding average
 
-  inline void unsignedAverageInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void unsignedAverageInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                     FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedAverageInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+                                     FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedAverageInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                     FloatRegister dest) DEFINED_ON(arm64);
+                                     FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   // Lane-wise integer absolute value
 
@@ -3230,28 +3146,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Floating add
 
-  inline void addFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addFloat32x4(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void addFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void addFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addFloat64x2(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Floating subtract
-
-  inline void subFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void subFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
@@ -3259,19 +3166,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void subFloat32x4(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void subFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void subFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subFloat64x2(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Floating division
-
-  inline void divFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void divFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
@@ -3279,19 +3180,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void divFloat32x4(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void divFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void divFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void divFloat64x2(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
   // Floating Multiply
-
-  inline void mulFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
 
   inline void mulFloat32x4(FloatRegister lhs, FloatRegister rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
@@ -3299,11 +3194,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void mulFloat32x4(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
 
-  inline void mulFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void mulFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void mulFloat64x2(FloatRegister lhs, const SimdConstant& rhs,
                            FloatRegister dest) DEFINED_ON(x86_shared);
@@ -3399,41 +3291,31 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Integer to integer narrowing
 
-  inline void narrowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void narrowInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void narrowInt16x8(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedNarrowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedNarrowInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void unsignedNarrowInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+                                    FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void narrowInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                             FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void narrowInt32x4(FloatRegister lhs, FloatRegister rhs,
-                            FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedNarrowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
+                            FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedNarrowInt32x4(FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) DEFINED_ON(x86_shared);
 
   inline void unsignedNarrowInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   // Integer to integer widening
 
@@ -3511,11 +3393,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Widening/pairwise integer dot product
 
-  inline void widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void widenDotInt16x8(FloatRegister lhs, FloatRegister rhs,
-                              FloatRegister dest) DEFINED_ON(arm64);
+                              FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void widenDotInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                               FloatRegister dest) DEFINED_ON(x86_shared);
