@@ -3668,8 +3668,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
   MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
   Result<RefPtr<Element>, nsresult> maybeNewBRElement = CreateAndInsertElement(
-      aWithTransaction, *nsGkAtoms::br, maybePointToInsert.inspect(),
-      [](Element& aBRElement) -> nsresult { return NS_OK; });
+      aWithTransaction, *nsGkAtoms::br, maybePointToInsert.inspect());
   if (maybeNewBRElement.isErr()) {
     NS_WARNING(nsPrintfCString("HTMLEditor::CreateAndInsertElement(%s) failed",
                                ToString(aWithTransaction).c_str())
