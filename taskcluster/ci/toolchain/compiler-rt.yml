@@ -183,7 +183,6 @@ win32-compiler-rt-13:
             - clang-13
         toolchain:
             - linux64-clang-13-stage1
-            - linux64-liblowercase
 
 win64-compiler-rt-13:
     description: "win64 x64 Compiler-rt for Clang 13 toolchain build"
@@ -205,7 +204,6 @@ win64-compiler-rt-13:
             - clang-13
         toolchain:
             - linux64-clang-13-stage1
-            - linux64-liblowercase
 
 wasm32-wasi-compiler-rt-13:
     description: "wasm32-wasi Compiler-rt for Clang 13 toolchain build"
