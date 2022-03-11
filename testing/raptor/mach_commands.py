@@ -177,6 +177,7 @@ class RaptorRunner(MozbuildObject):
             "device_name": self.device_name,
             "enable_marionette_trace": self.enable_marionette_trace,
             "browsertime_visualmetrics": self.browsertime_visualmetrics,
+            "mozbuild_path": get_state_dir(),
         }
 
         sys.path.insert(0, os.path.join(self.topsrcdir, "tools", "browsertime"))
