@@ -1011,7 +1011,7 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
     case Trap::IndirectCallToNull:
       // Null pointer plus the appropriate offset.
       if (addr !=
-          reinterpret_cast<uint8_t*>(wasm::TlsData::offsetOfMemoryBase())) {
+          reinterpret_cast<uint8_t*>(wasm::Instance::offsetOfMemoryBase())) {
         return false;
       }
       break;
