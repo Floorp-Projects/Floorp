@@ -447,10 +447,10 @@ class MacroAssemblerX86Shared : public Assembler {
   void extractLaneInt8x16(FloatRegister input, Register output, unsigned lane,
                           SimdSign sign);
 
-  void replaceLaneFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                            unsigned lane);
-  void replaceLaneFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                            unsigned lane);
+  void replaceLaneFloat32x4(unsigned lane, FloatRegister lhs, FloatRegister rhs,
+                            FloatRegister dest);
+  void replaceLaneFloat64x2(unsigned lane, FloatRegister lhs, FloatRegister rhs,
+                            FloatRegister dest);
 
   void shuffleInt8x16(FloatRegister lhs, FloatRegister rhs,
                       FloatRegister output, const uint8_t lanes[16]);
