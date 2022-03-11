@@ -9768,7 +9768,7 @@ bool Database::CloseInternal() {
 
   if (mClosed) {
     if (NS_WARN_IF(!IsInvalidated())) {
-      // Kill misbehaving child for sending the close message twice.
+      // Signal misbehaving child for sending the close message twice.
       return false;
     }
 
@@ -10172,8 +10172,7 @@ mozilla::ipc::IPCResult Database::RecvClose() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!CloseInternal())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "CloseInternal failed!");
   }
 
   return IPC_OK();
