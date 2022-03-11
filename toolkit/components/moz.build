@@ -134,3 +134,13 @@ if CONFIG["MOZ_BACKGROUNDTASKS"]:
 # This is only packaged for browser since corrupt JAR and XPI files tend to be a desktop-OS problem.
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     DIRS += ["corroborator"]
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    CbindgenHeader(
+        "regex_ffi_generated.h",
+        inputs=["/toolkit/components/regex-ffi"],
+    )
+
+    EXPORTS.mozilla += [
+        "!regex_ffi_generated.h",
+    ]

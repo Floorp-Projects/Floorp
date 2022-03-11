@@ -28,6 +28,7 @@ namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 class BrowsingContext;
+class Element;
 class IdleRequestCallback;
 struct IdleRequestOptions;
 struct MediaMetadataInit;
@@ -256,6 +257,10 @@ class ChromeUtils {
 
   static already_AddRefed<Promise> CollectScrollingData(GlobalObject& aGlobal,
                                                         ErrorResult& aRv);
+
+  static void GetFormAutofillConfidences(
+      GlobalObject& aGlobal, const Sequence<OwningNonNull<Element>>& aElements,
+      nsTArray<FormAutofillConfidences>& aResults, ErrorResult& aRv);
 };
 
 }  // namespace dom
