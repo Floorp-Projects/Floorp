@@ -1323,9 +1323,19 @@ void MacroAssembler::extractLaneFloat64x2(uint32_t lane, FloatRegister src,
 
 // Replace lane value
 
+void MacroAssembler::replaceLaneInt8x16(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  vpinsrb(lane, Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::replaceLaneInt8x16(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
   vpinsrb(lane, Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::replaceLaneInt16x8(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  vpinsrw(lane, Operand(rhs), lhs, dest);
 }
 
 void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
@@ -1333,19 +1343,36 @@ void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
   vpinsrw(lane, Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::replaceLaneInt32x4(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  vpinsrd(lane, rhs, lhs, dest);
+}
+
 void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
   vpinsrd(lane, rhs, lhsDest, lhsDest);
 }
 
+void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister lhs,
+                                          FloatRegister rhs,
+                                          FloatRegister dest) {
+  MacroAssemblerX86Shared::replaceLaneFloat32x4(lane, lhs, rhs, dest);
+}
+
 void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::replaceLaneFloat32x4(rhs, lhsDest, lane);
+  MacroAssemblerX86Shared::replaceLaneFloat32x4(lane, lhsDest, rhs, lhsDest);
+}
+
+void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister lhs,
+                                          FloatRegister rhs,
+                                          FloatRegister dest) {
+  MacroAssemblerX86Shared::replaceLaneFloat64x2(lane, lhs, rhs, dest);
 }
 
 void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::replaceLaneFloat64x2(rhs, lhsDest, lane);
+  MacroAssemblerX86Shared::replaceLaneFloat64x2(lane, lhsDest, rhs, lhsDest);
 }
 
 // Shuffle - permute with immediate indices

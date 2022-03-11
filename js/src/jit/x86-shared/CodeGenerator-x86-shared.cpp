@@ -3384,25 +3384,26 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
 
 void CodeGenerator::visitWasmReplaceLaneSimd128(LWasmReplaceLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
+  FloatRegister lhs = ToFloatRegister(ins->lhsDest());
+  FloatRegister dest = ToFloatRegister(ins->output());
   const LAllocation* rhs = ins->rhs();
   uint32_t laneIndex = ins->laneIndex();
 
   switch (ins->simdOp()) {
     case wasm::SimdOp::I8x16ReplaceLane:
-      masm.replaceLaneInt8x16(laneIndex, ToRegister(rhs), lhsDest);
+      masm.replaceLaneInt8x16(laneIndex, lhs, ToRegister(rhs), dest);
       break;
     case wasm::SimdOp::I16x8ReplaceLane:
-      masm.replaceLaneInt16x8(laneIndex, ToRegister(rhs), lhsDest);
+      masm.replaceLaneInt16x8(laneIndex, lhs, ToRegister(rhs), dest);
       break;
     case wasm::SimdOp::I32x4ReplaceLane:
-      masm.replaceLaneInt32x4(laneIndex, ToRegister(rhs), lhsDest);
+      masm.replaceLaneInt32x4(laneIndex, lhs, ToRegister(rhs), dest);
       break;
     case wasm::SimdOp::F32x4ReplaceLane:
-      masm.replaceLaneFloat32x4(laneIndex, ToFloatRegister(rhs), lhsDest);
+      masm.replaceLaneFloat32x4(laneIndex, lhs, ToFloatRegister(rhs), dest);
       break;
     case wasm::SimdOp::F64x2ReplaceLane:
-      masm.replaceLaneFloat64x2(laneIndex, ToFloatRegister(rhs), lhsDest);
+      masm.replaceLaneFloat64x2(laneIndex, lhs, ToFloatRegister(rhs), dest);
       break;
     default:
       MOZ_CRASH("ReplaceLane SimdOp not implemented");

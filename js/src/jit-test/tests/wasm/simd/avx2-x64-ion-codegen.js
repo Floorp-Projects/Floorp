@@ -63,6 +63,10 @@ function codegenTestX64_T_v128_avxhack(inputs, options = {}) {
      }
 }
 
+// Machers for any 64- and 32-bit registers.
+var GPR_I64 = "%r\\w+";
+var GPR_I32 = "%(?:e\\w+|r\\d+d)";
+
 // Simple binary ops: e.g. add, sub, mul
 codegenTestX64_v128xv128_v128_avxhack(
      [['i8x16.avgr_u',    `c5 f1 e0 c2               vpavgb %xmm2, %xmm1, %xmm0`],
@@ -139,27 +143,40 @@ codegenTestX64_v128xv128_v128_avxhack(
       ['v128.xor', `c5 f1 ef c2               vpxor %xmm2, %xmm1, %xmm0`]]);
 
 
+// Replace lane ops.
+codegenTestX64_adhoc(`(module
+     (func (export "f") (param v128 v128 i32) (result v128)
+          (i8x16.replace_lane 7 (local.get 1) (local.get 2))))`, 'f', `
+c4 .. 71 20 .. 07         vpinsrb \\$0x07, ${GPR_I32}, %xmm1, %xmm0`);
+codegenTestX64_adhoc(`(module
+     (func (export "f") (param v128 v128 i32) (result v128)
+          (i16x8.replace_lane 3 (local.get 1) (local.get 2))))`, 'f', `
+(?:c4 .. 71|c5 f1) c4 .. 03            vpinsrw \\$0x03, ${GPR_I32}, %xmm1, %xmm0`);
+codegenTestX64_adhoc(`(module
+     (func (export "f") (param v128 v128 i32) (result v128)
+          (i32x4.replace_lane 2 (local.get 1) (local.get 2))))`, 'f', `
+c4 .. 71 22 .. 02         vpinsrd \\$0x02, ${GPR_I32}, %xmm1, %xmm0`);
 codegenTestX64_adhoc(`(module
      (func (export "f") (param v128 v128 i64) (result v128)
-          (i64x2.replace_lane 1 (local.get 1) (local.get 2))))`,
-                              'f',
-                              `
-c4 .. f1 22 .. 01         vpinsrq \\$0x01, %r\\w+, %xmm1, %xmm0` ); // rdi (Linux) or r8 (Win)
+          (i64x2.replace_lane 1 (local.get 1) (local.get 2))))`, 'f', `
+c4 .. f1 22 .. 01         vpinsrq \\$0x01, ${GPR_I64}, %xmm1, %xmm0`);
      
                              
 if (isAvxPresent(2)) {
-     // First i32 arg is: edi on Linux, and ecx on Windows.
      codegenTestX64_T_v128_avxhack(
           [['i32', 'i8x16.splat', `
-c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c5 f9 6e ..               vmovd ${GPR_I32}, %xmm0
 c4 e2 79 78 c0            vpbroadcastb %xmm0, %xmm0`],
            ['i32', 'i16x8.splat', `
-c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c5 f9 6e ..               vmovd ${GPR_I32}, %xmm0
 c4 e2 79 79 c0            vpbroadcastw %xmm0, %xmm0`],
            ['i32', 'i32x4.splat', `
-c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c5 f9 6e ..               vmovd ${GPR_I32}, %xmm0
 c4 e2 79 58 c0            vpbroadcastd %xmm0, %xmm0`],
-           ['f32', 'f32x4.splat', `c4 e2 79 18 c0            vbroadcastss %xmm0, %xmm0`]]);
+           ['i64', 'i64x2.splat', `
+c4 e1 f9 6e ..            vmovq ${GPR_I64}, %xmm0
+c4 e2 79 59 c0            vpbroadcastq %xmm0, %xmm0`],
+           ['f32', 'f32x4.splat', `c4 e2 79 18 c0            vbroadcastss %xmm0, %xmm0`]], {log:true});
 
      codegenTestX64_T_v128_avxhack(
           [['i32', 'v128.load8_splat',

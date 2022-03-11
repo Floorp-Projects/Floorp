@@ -1501,9 +1501,15 @@ void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
       defineReuseInput(lir, ins, LWasmReplaceInt64LaneSimd128::LhsDest);
     }
   } else {
-    auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
-        useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()));
-    defineReuseInput(lir, ins, LWasmReplaceLaneSimd128::LhsDest);
+    if (isThreeOpAllowed()) {
+      auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
+          useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()));
+      define(lir, ins);
+    } else {
+      auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
+          useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()));
+      defineReuseInput(lir, ins, LWasmReplaceLaneSimd128::LhsDest);
+    }
   }
 #else
   MOZ_CRASH("No SIMD");
