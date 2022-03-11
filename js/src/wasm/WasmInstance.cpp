@@ -1373,7 +1373,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   MOZ_ASSERT(limit <= UINT32_MAX);
 #endif
   boundsCheckLimit_ = limit;
-  instance_ = this;
   cx_ = cx;
   valueBoxClass_ = &WasmValueBox::class_;
   resetInterrupt(cx);

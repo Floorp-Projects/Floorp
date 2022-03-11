@@ -226,8 +226,7 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register tls,
                                   Register scratch, Register valueAddr) {
   MOZ_ASSERT(valueAddr == PreBarrierReg);
 
-  masm.loadPtr(Address(tls, Instance::offsetOfInstance()), scratch);
-  masm.loadPtr(Address(scratch, Instance::offsetOfPreBarrierCode()), scratch);
+  masm.loadPtr(Address(tls, Instance::offsetOfPreBarrierCode()), scratch);
 #if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
   // The prebarrier assumes that x28 == sp.
   Label ok;
