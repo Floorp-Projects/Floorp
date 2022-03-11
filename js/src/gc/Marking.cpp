@@ -3041,9 +3041,11 @@ bool js::gc::UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing) {
   MOZ_ASSERT(thing);
   MOZ_ASSERT(thing.asCell()->isMarkedGray());
 
-  AutoGeckoProfilerEntry profilingStackFrame(
-      TlsContext.get(), "UnmarkGrayGCThing",
-      JS::ProfilingCategoryPair::GCCC_UnmarkGray);
+  mozilla::Maybe<AutoGeckoProfilerEntry> profilingStackFrame;
+  if (JSContext* cx = TlsContext.get()) {
+    profilingStackFrame.emplace(cx, "UnmarkGrayGCThing",
+                                JS::ProfilingCategoryPair::GCCC_UnmarkGray);
+  }
 
   UnmarkGrayTracer unmarker(rt);
   unmarker.unmark(thing);
