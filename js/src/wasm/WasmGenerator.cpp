@@ -243,7 +243,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   (void)metadataTier_->trapSites[Trap::OutOfBounds].reserve(
       codeSectionSize / ByteCodesPerOOBTrap);
 
-  // Allocate space in TlsData for declarations that need it.
+  // Allocate space in Instance for declarations that need it.
 
   MOZ_ASSERT(metadata_->globalDataLength == 0);
 

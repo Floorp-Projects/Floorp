@@ -212,7 +212,7 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register tls,
                                    Label* skipBarrier) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
-      Address(tls, TlsData::offsetOfAddressOfNeedsIncrementalBarrier()),
+      Address(tls, Instance::offsetOfAddressOfNeedsIncrementalBarrier()),
       scratch);
   masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
                     skipBarrier);
@@ -226,7 +226,7 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register tls,
                                   Register scratch, Register valueAddr) {
   MOZ_ASSERT(valueAddr == PreBarrierReg);
 
-  masm.loadPtr(Address(tls, TlsData::offsetOfInstance()), scratch);
+  masm.loadPtr(Address(tls, Instance::offsetOfInstance()), scratch);
   masm.loadPtr(Address(scratch, Instance::offsetOfPreBarrierCode()), scratch);
 #if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
   // The prebarrier assumes that x28 == sp.

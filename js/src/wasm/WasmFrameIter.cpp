@@ -37,13 +37,13 @@ using namespace js::wasm;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-static TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
-  return *reinterpret_cast<TlsData**>(reinterpret_cast<uint8_t*>(fp) +
-                                      FrameWithTls::callerTlsOffset());
+static Instance* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
+  return *reinterpret_cast<Instance**>(reinterpret_cast<uint8_t*>(fp) +
+                                       FrameWithTls::callerTlsOffset());
 }
 
-static const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp) {
-  return *reinterpret_cast<TlsData* const*>(
+static const Instance* ExtractCalleeTlsFromFrameWithTls(const Frame* fp) {
+  return *reinterpret_cast<Instance* const*>(
       reinterpret_cast<const uint8_t*>(fp) + FrameWithTls::calleeTlsOffset());
 }
 
@@ -394,7 +394,7 @@ static constexpr unsigned SetJitEntryFP = PushedRetAddr + SetFP - PushedFP;
 
 static void LoadActivation(MacroAssembler& masm, const Register& dest) {
   // WasmCall pushes a JitActivation.
-  masm.loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfCx()), dest);
+  masm.loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfCx()), dest);
   masm.loadPtr(Address(dest, JSContext::offsetOfActivation()), dest);
 }
 
@@ -723,7 +723,7 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   // See comment block in WasmCompile.cpp for an explanation tiering.
   if (tier1FuncIndex) {
     Register scratch = ABINonArgReg0;
-    masm.loadPtr(Address(WasmTlsReg, TlsData::offsetOfJumpTable()), scratch);
+    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfJumpTable()), scratch);
     masm.jump(Address(scratch, *tier1FuncIndex * sizeof(uintptr_t)));
   }
 
@@ -991,7 +991,7 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
          (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
 }
 
-const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
+const Instance* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   while (true) {
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
@@ -1019,8 +1019,8 @@ const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   }
 }
 
-TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
-  return const_cast<TlsData*>(
+Instance* js::wasm::GetNearestEffectiveTls(Frame* fp) {
+  return const_cast<Instance*>(
       GetNearestEffectiveTls(const_cast<const Frame*>(fp)));
 }
 

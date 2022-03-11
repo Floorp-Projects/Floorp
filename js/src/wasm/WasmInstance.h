@@ -59,9 +59,10 @@ struct TagDesc;
 // The instance's code may be shared among multiple instances provided none of
 // those instances are being debugged. Instances that are being debugged own
 // their code.
-
-struct TlsData;
-
+//
+// An Instance is also known as a 'TlsData'. They used to be separate objects,
+// but have now been unified. Extant references to 'TlsData' will be cleaned
+// up over time.
 class alignas(16) Instance {
   // Pointer to the base of the default memory (or null if there is none).
   uint8_t* memoryBase_;
@@ -108,7 +109,7 @@ class alignas(16) Instance {
 
   const JS::shadow::Zone::BarrierState* addressOfNeedsIncrementalBarrier_;
 
-  // Pointer that should be freed (due to padding before the TlsData).
+  // Pointer that should be freed (due to padding before the Instance).
   void* allocatedBase_;
 
   // When compiling with tiering, the jumpTable has one entry for each
@@ -263,8 +264,8 @@ class alignas(16) Instance {
   JS::Realm* realm() const { return realm_; }
   bool debugEnabled() const { return !!maybeDebug_; }
   DebugState& debug() { return *maybeDebug_; }
-  TlsData* tlsData() const {
-    return reinterpret_cast<TlsData*>(const_cast<Instance*>(this));
+  Instance* tlsData() const {
+    return reinterpret_cast<Instance*>(const_cast<Instance*>(this));
   }
   uint8_t* globalData() const { return (uint8_t*)&globalArea_; }
   const SharedTableVector& tables() const { return tables_; }
@@ -435,19 +436,6 @@ class alignas(16) Instance {
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 };
-
-// TLS data for a single module instance.
-//
-// Every WebAssembly function expects to be passed a hidden TLS pointer argument
-// in WasmTlsReg. The TLS pointer argument points to a TlsData struct.
-// Compiled functions expect that the TLS pointer does not change for the
-// lifetime of the thread.
-//
-// There is a TlsData per module instance per thread, so inter-module calls need
-// to pass the TLS pointer appropriate for the callee module.
-//
-// After the TlsData struct follows the module's declared TLS variables.
-struct TlsData : public Instance {};
 
 bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
                       Maybe<char*> stackResultsLoc, MutableHandleValue rval,

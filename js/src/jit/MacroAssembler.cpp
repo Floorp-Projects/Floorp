@@ -1784,8 +1784,8 @@ void MacroAssembler::switchToBaselineFrameRealm(Register scratch) {
 
 void MacroAssembler::switchToWasmTlsRealm(Register scratch1,
                                           Register scratch2) {
-  loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfCx()), scratch1);
-  loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfRealm()), scratch2);
+  loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfCx()), scratch1);
+  loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfRealm()), scratch2);
   storePtr(scratch2, Address(scratch1, JSContext::offsetOfRealm()));
 }
 
@@ -3746,7 +3746,7 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
 void MacroAssembler::wasmInterruptCheck(Register tls,
                                         wasm::BytecodeOffset bytecodeOffset) {
   Label ok;
-  branch32(Assembler::Equal, Address(tls, wasm::TlsData::offsetOfInterrupt()),
+  branch32(Assembler::Equal, Address(tls, wasm::Instance::offsetOfInterrupt()),
            Imm32(0), &ok);
   wasmTrap(wasm::Trap::CheckInterrupt, bytecodeOffset);
   bind(&ok);
@@ -3772,8 +3772,8 @@ std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
     branchPtr(Assembler::Below, scratch, Imm32(amount), &trap);
     subPtr(Imm32(amount), scratch);
     branchPtr(Assembler::Below,
-              Address(WasmTlsReg, wasm::TlsData::offsetOfStackLimit()), scratch,
-              &ok);
+              Address(WasmTlsReg, wasm::Instance::offsetOfStackLimit()),
+              scratch, &ok);
 
     bind(&trap);
     wasmTrap(wasm::Trap::StackOverflow, trapOffset);
@@ -3787,7 +3787,7 @@ std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
   reserveStack(amount);
   Label ok;
   branchStackPtrRhs(Assembler::Below,
-                    Address(WasmTlsReg, wasm::TlsData::offsetOfStackLimit()),
+                    Address(WasmTlsReg, wasm::Instance::offsetOfStackLimit()),
                     &ok);
   wasmTrap(wasm::Trap::StackOverflow, trapOffset);
   CodeOffset trapInsnOffset = CodeOffset(currentOffset());
@@ -3798,7 +3798,7 @@ std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
 void MacroAssembler::loadWasmGlobalPtr(uint32_t globalDataOffset,
                                        Register dest) {
   loadPtr(Address(WasmTlsReg,
-                  wasm::TlsData::offsetOfGlobalArea() + globalDataOffset),
+                  wasm::Instance::offsetOfGlobalArea() + globalDataOffset),
           dest);
 }
 
@@ -3819,7 +3819,7 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
   // Switch to the callee's realm.
   loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, realm),
                     ABINonArgReg1);
-  loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfCx()), ABINonArgReg2);
+  loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfCx()), ABINonArgReg2);
   storePtr(ABINonArgReg1, Address(ABINonArgReg2, JSContext::offsetOfRealm()));
 
   // Switch to the callee's TLS and pinned registers and make the call.
@@ -3844,12 +3844,12 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
            Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   if (instanceArg.kind() == ABIArg::GPR) {
-    loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfInstance()),
+    loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfInstance()),
             instanceArg.gpr());
   } else if (instanceArg.kind() == ABIArg::Stack) {
     // Safe to use ABINonArgReg0 since it's the last thing before the call.
     Register scratch = ABINonArgReg0;
-    loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfInstance()), scratch);
+    loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfInstance()), scratch);
     storePtr(scratch,
              Address(getStackPointer(), instanceArg.offsetFromArgBase()));
   } else {
@@ -3954,7 +3954,7 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
       branch32(Assembler::Condition::Below, index, Imm32(*tableSize), &ok);
     } else {
       branch32(Assembler::Condition::Above,
-               Address(WasmTlsReg, wasm::TlsData::offsetOfGlobalArea() +
+               Address(WasmTlsReg, wasm::Instance::offsetOfGlobalArea() +
                                        callee.tableLengthGlobalDataOffset()),
                index, &ok);
     }
@@ -4247,13 +4247,13 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
 void MacroAssembler::loadWasmPinnedRegsFromTls(
     mozilla::Maybe<wasm::BytecodeOffset> trapOffset) {
 #ifdef WASM_HAS_HEAPREG
-  static_assert(wasm::TlsData::offsetOfMemoryBase() < 4096,
+  static_assert(wasm::Instance::offsetOfMemoryBase() < 4096,
                 "We count only on the low page being inaccessible");
   if (trapOffset) {
     append(wasm::Trap::IndirectCallToNull,
            wasm::TrapSite(currentOffset(), *trapOffset));
   }
-  loadPtr(Address(WasmTlsReg, wasm::TlsData::offsetOfMemoryBase()), HeapReg);
+  loadPtr(Address(WasmTlsReg, wasm::Instance::offsetOfMemoryBase()), HeapReg);
 #else
   MOZ_ASSERT(!trapOffset);
 #endif

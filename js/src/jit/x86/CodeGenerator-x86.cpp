@@ -481,7 +481,7 @@ void CodeGenerator::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir) {
 
 void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
   masm.loadPtr(
-      Address(ToRegister(ins->tlsPtr()), wasm::TlsData::offsetOfMemoryBase()),
+      Address(ToRegister(ins->tlsPtr()), wasm::Instance::offsetOfMemoryBase()),
       ToRegister(ins->output()));
 }
 

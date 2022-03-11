@@ -817,7 +817,7 @@ class FunctionExtended : public JSFunction {
   // first slot.
   static const uint32_t WASM_INSTANCE_SLOT = 0;
 
-  // wasm/asm.js exported functions store the wasm::TlsData pointer of their
+  // wasm/asm.js exported functions store the wasm::Instance pointer of their
   // instance.
   static const uint32_t WASM_TLSDATA_SLOT = 1;
 

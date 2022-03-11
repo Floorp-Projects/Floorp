@@ -49,7 +49,7 @@ pub const REF_TYPE: ir::Type = ir::types::R64;
 #[cfg(target_pointer_width = "32")]
 pub const REF_TYPE: ir::Type = ir::types::R32;
 
-/// Convert a TlsData offset into a `Offset32` for a global decl.
+/// Convert a Instance offset into a `Offset32` for a global decl.
 fn offset32(offset: usize) -> ir::immediates::Offset32 {
     assert!(offset <= i32::max_value() as usize);
     (offset as i32).into()
@@ -338,11 +338,11 @@ pub struct TransEnv<'static_env, 'module_env> {
     /// The `vmctx` global value.
     vmctx_gv: PackedOption<ir::GlobalValue>,
 
-    /// Global variable representing the `TlsData::instance` field which points to the current
+    /// Global variable representing the `Instance::instance` field which points to the current
     /// instance.
     instance_gv: PackedOption<ir::GlobalValue>,
 
-    /// Global variable representing the `TlsData::interrupt` field which points to the current
+    /// Global variable representing the `Instance::interrupt` field which points to the current
     /// interrupt flag.
     interrupt_gv: PackedOption<ir::GlobalValue>,
 
@@ -350,10 +350,10 @@ pub struct TransEnv<'static_env, 'module_env> {
     /// See the `SymbolicAddress` enum in `baldrapi.h`.
     symbolic: [PackedOption<ir::FuncRef>; bindings::SymbolicAddress::Limit as usize],
 
-    /// The address of the `cx` field in the `wasm::TlsData` struct.
+    /// The address of the `cx` field in the `wasm::Instance` struct.
     cx_addr: PackedOption<ir::GlobalValue>,
 
-    /// The address of the `realm` field in the `wasm::TlsData` struct.
+    /// The address of the `realm` field in the `wasm::Instance` struct.
     realm_addr: PackedOption<ir::GlobalValue>,
 }
 
@@ -784,7 +784,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         let bound = self.static_env.static_memory_bound as u64;
         let is_static = bound > 0;
 
-        // Get the `TlsData::memoryBase` field.
+        // Get the `Instance::memoryBase` field.
         let base = func.create_global_value(ir::GlobalValueData::Load {
             base: vcmtx,
             offset: offset32(0),
@@ -797,7 +797,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
             let bound = bound.into();
             ir::HeapStyle::Static { bound }
         } else {
-            // Get the `TlsData::boundsCheckLimit` field.  An assertion in the C++ code
+            // Get the `Instance::boundsCheckLimit` field.  An assertion in the C++ code
             // ensures that the offset of this field is POINTER_SIZE bytes away from the
             // start of the Tls.  The size of the field is the size of a pointer: on
             // 32-bit systems, heaps are <= 2GB, while on 64-bit systems even 32-bit heaps

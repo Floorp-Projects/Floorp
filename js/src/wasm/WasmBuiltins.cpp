@@ -692,8 +692,8 @@ static void* WasmHandleTrap() {
     case Trap::CheckInterrupt:
       return CheckInterrupt(cx, activation);
     case Trap::StackOverflow: {
-      // TlsData::setInterrupt() causes a fake stack overflow. Since
-      // TlsData::setInterrupt() is called racily, it's possible for a real
+      // Instance::setInterrupt() causes a fake stack overflow. Since
+      // Instance::setInterrupt() is called racily, it's possible for a real
       // stack overflow to trap, followed by a racy call to setInterrupt().
       // Thus, we must check for a real stack overflow first before we
       // CheckInterrupt() and possibly resume execution.
@@ -775,7 +775,7 @@ static void* BoxValue_Anyref(Value* rawVal) {
   return result.get().forCompiledCode();
 }
 
-static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
+static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* tlsData,
                                       Value* argv) {
   JSContext* cx = TlsContext.get();  // Cold code
 
