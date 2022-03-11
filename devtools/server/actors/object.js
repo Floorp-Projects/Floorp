@@ -233,9 +233,12 @@ const proto = {
    * Populate the `preview` property on `grip` given its type.
    */
   _populateGripPreview: function(grip, raw) {
-    for (const previewer of previewers[this.obj.class] || previewers.Object) {
+    // Cache obj.class as it can be costly if this is in a hot path (e.g. logging objects
+    // within a for loop).
+    const className = this.obj.class;
+    for (const previewer of previewers[className] || previewers.Object) {
       try {
-        const previewerResult = previewer(this, grip, raw);
+        const previewerResult = previewer(this, grip, raw, className);
         if (previewerResult) {
           return;
         }
