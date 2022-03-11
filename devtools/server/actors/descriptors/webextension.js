@@ -93,7 +93,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         temporarilyInstalled: this.addon.temporarilyInstalled,
         traits: {
           supportsReloadDescriptor: true,
-          // @backward-compat { added in 95 } Support has been added to WebExtension descriptors
+          // Supports the Watcher actor. Can be removed as part of Bug 1680280.
           watcher: true,
         },
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
