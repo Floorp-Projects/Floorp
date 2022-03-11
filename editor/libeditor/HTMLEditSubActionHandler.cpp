@@ -5682,7 +5682,17 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   Result<RefPtr<Element>, nsresult> maybeNewDivElement =
       CreateAndInsertElementWithTransaction(
           *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0),
-          [](Element& aDivElement) -> nsresult { return NS_OK; });
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          [&](Element& aDivElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            // aDivElement has not been connected yet so that we do not need
+            // transaction of setting align attribute here.
+            nsresult rv = SetAttributeOrEquivalent(
+                &aDivElement, nsGkAtoms::align, aAlignType, false);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                 "EditorBase::SetAttributeOrEquivalent("
+                                 "nsGkAtoms::align) failed");
+            return rv;
+          });
   if (maybeNewDivElement.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
@@ -5690,13 +5700,6 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
     return maybeNewDivElement.unwrapErr();
   }
   MOZ_ASSERT(maybeNewDivElement.inspect());
-  nsresult rv =
-      SetAttributeOrEquivalent(MOZ_KnownLive(maybeNewDivElement.inspect()),
-                               nsGkAtoms::align, aAlignType, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
-    return rv;
-  }
   // XXX This is tricky and does not work with mutation event listeners.
   //     But I'm not sure what we should do if new content is inserted.
   //     Anyway, I don't think that we should move editable contents
