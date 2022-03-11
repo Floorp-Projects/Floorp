@@ -11,33 +11,22 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUserIdleService"
 );
 
+var { DefaultWeakMap } = ExtensionUtils;
+
 // WeakMap[Extension -> Object]
-let observersMap = new WeakMap();
+const idleObserversMap = new DefaultWeakMap(() => {
+  return {
+    observer: null,
+    detectionInterval: 60,
+  };
+});
 
-const getIdleObserverInfo = (extension, context) => {
-  let observerInfo = observersMap.get(extension);
-  if (!observerInfo) {
-    observerInfo = {
-      observer: null,
-      detectionInterval: 60,
-    };
-    observersMap.set(extension, observerInfo);
-    context.callOnClose({
-      close: () => {
-        let { observer, detectionInterval } = observersMap.get(extension);
-        if (observer) {
-          idleService.removeIdleObserver(observer, detectionInterval);
-        }
-        observersMap.delete(extension);
-      },
-    });
-  }
-  return observerInfo;
-};
-
-const getIdleObserver = (extension, context) => {
-  let observerInfo = getIdleObserverInfo(extension, context);
+const getIdleObserver = extension => {
+  let observerInfo = idleObserversMap.get(extension);
   let { observer, detectionInterval } = observerInfo;
+  let interval =
+    extension.startupData?.idleDetectionInterval || detectionInterval;
+
   if (!observer) {
     observer = new (class extends ExtensionCommon.EventEmitter {
       observe(subject, topic, data) {
@@ -46,50 +35,76 @@ const getIdleObserver = (extension, context) => {
         }
       }
     })();
-    idleService.addIdleObserver(observer, detectionInterval);
+    idleService.addIdleObserver(observer, interval);
     observerInfo.observer = observer;
-    observerInfo.detectionInterval = detectionInterval;
+    observerInfo.detectionInterval = interval;
   }
   return observer;
 };
 
-const setDetectionInterval = (extension, context, newInterval) => {
-  let observerInfo = getIdleObserverInfo(extension, context);
-  let { observer, detectionInterval } = observerInfo;
-  if (observer) {
-    idleService.removeIdleObserver(observer, detectionInterval);
-    idleService.addIdleObserver(observer, newInterval);
-  }
-  observerInfo.detectionInterval = newInterval;
-};
+this.idle = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onStateChanged({ fire }) {
+      let { extension } = this;
+      let listener = (event, data) => {
+        fire.sync(data);
+      };
 
-this.idle = class extends ExtensionAPI {
+      getIdleObserver(extension).on("stateChanged", listener);
+      return {
+        async unregister() {
+          let observerInfo = idleObserversMap.get(extension);
+          let { observer, detectionInterval } = observerInfo;
+          if (observer) {
+            observer.off("stateChanged", listener);
+            if (!observer.has("stateChanged")) {
+              idleService.removeIdleObserver(observer, detectionInterval);
+              observerInfo.observer = null;
+            }
+          }
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     let { extension } = context;
+    let self = this;
+
     return {
       idle: {
-        queryState: function(detectionIntervalInSeconds) {
+        queryState(detectionIntervalInSeconds) {
           if (idleService.idleTime < detectionIntervalInSeconds * 1000) {
-            return Promise.resolve("active");
+            return "active";
           }
-          return Promise.resolve("idle");
+          return "idle";
         },
-        setDetectionInterval: function(detectionIntervalInSeconds) {
-          setDetectionInterval(extension, context, detectionIntervalInSeconds);
+        setDetectionInterval(detectionIntervalInSeconds) {
+          let observerInfo = idleObserversMap.get(extension);
+          let { observer, detectionInterval } = observerInfo;
+          if (detectionInterval == detectionIntervalInSeconds) {
+            return;
+          }
+          if (observer) {
+            idleService.removeIdleObserver(observer, detectionInterval);
+            idleService.addIdleObserver(observer, detectionIntervalInSeconds);
+          }
+          observerInfo.detectionInterval = detectionIntervalInSeconds;
+          // There is no great way to modify a persistent listener param, but we
+          // need to keep this for the startup listener.
+          if (!extension.persistentBackground) {
+            extension.startupData.idleDetectionInterval = detectionIntervalInSeconds;
+            extension.saveStartupData();
+          }
         },
         onStateChanged: new EventManager({
           context,
-          name: "idle.onStateChanged",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.sync(data);
-            };
-
-            getIdleObserver(extension, context).on("stateChanged", listener);
-            return () => {
-              getIdleObserver(extension, context).off("stateChanged", listener);
-            };
-          },
+          module: "idle",
+          event: "onStateChanged",
+          extensionApi: self,
         }).api(),
       },
     };
