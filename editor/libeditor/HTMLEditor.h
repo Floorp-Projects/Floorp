@@ -1481,11 +1481,17 @@ class HTMLEditor final : public EditorBase,
    *                            child node referred by this.
    *                            Note that this point will be invalid once this
    *                            method inserts the new element.
+   * @param aInitializer        A function to initialize the new element before
+   *                            connecting the element into the DOM tree.
+   *                            Note that this should not touch outside given
+   *                            element because doing it would break range
+   *                            updater's result.
    * @return                    The created new element node or an error.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateAndInsertElementWithTransaction(nsAtom& aTagName,
-                                        const EditorDOMPoint& aPointToInsert);
+  CreateAndInsertElementWithTransaction(
+      nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
+      std::function<nsresult(Element&)>&& aInitializer);
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of

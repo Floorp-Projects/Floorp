@@ -469,28 +469,31 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
   // Create a new meta charset tag
   Result<RefPtr<Element>, nsresult> maybeNewMetaElement =
       CreateAndInsertElementWithTransaction(
-          *nsGkAtoms::meta, EditorDOMPoint(primaryHeadElement, 0));
+          *nsGkAtoms::meta, EditorDOMPoint(primaryHeadElement, 0),
+          [&](Element& aMetaElement) {
+            DebugOnly<nsresult> rvIgnored =
+                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
+                                     u"Content-Type"_ns, false);
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
+                "failed, but ignored");
+            rvIgnored =
+                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::content,
+                                     u"text/html;charset="_ns +
+                                         NS_ConvertASCIItoUTF16(aCharacterSet),
+                                     false);
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored),
+                "Element::SetAttr(nsGkAtoms::content) failed, but ignored");
+            return NS_OK;
+          });
   if (maybeNewMetaElement.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::meta) "
         "failed, but ignored");
     return NS_OK;
   }
-  MOZ_ASSERT(maybeNewMetaElement.inspect());
-
-  // not undoable, undo should undo CreateAndInsertElementWithTransaction().
-  DebugOnly<nsresult> rvIgnored = NS_OK;
-  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "Element::SetAttr(nsGkAtoms::httpEquiv, Content-Type) "
-                       "failed, but ignored");
-  rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::content,
-      u"text/html;charset="_ns + NS_ConvertASCIItoUTF16(aCharacterSet), true);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "Element::SetAttr(nsGkAtoms::content) failed, but ignored");
   return NS_OK;
 }
 
@@ -2941,7 +2944,8 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 
 Result<RefPtr<Element>, nsresult>
 HTMLEditor::CreateAndInsertElementWithTransaction(
-    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert) {
+    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
+    std::function<nsresult(Element&)>&& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
@@ -2981,9 +2985,17 @@ HTMLEditor::CreateAndInsertElementWithTransaction(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "EditorBase::MarkElementDirty() failed, but ignored");
-      RefPtr<InsertNodeTransaction> transaction =
-          InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
-      rv = DoTransactionInternal(transaction);
+      rv = aInitializer(*newElement);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+      if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
+                       NS_WARN_IF(Destroyed()))) {
+        rv = NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_SUCCEEDED(rv)) {
+        RefPtr<InsertNodeTransaction> transaction =
+            InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
+        rv = DoTransactionInternal(transaction);
+      }
     }
     if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       newElement = nullptr;
@@ -3626,8 +3638,9 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElementWithTransaction(
   MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
   Result<RefPtr<Element>, nsresult> maybeNewBRElement =
-      CreateAndInsertElementWithTransaction(*nsGkAtoms::br,
-                                            maybePointToInsert.inspect());
+      CreateAndInsertElementWithTransaction(
+          *nsGkAtoms::br, maybePointToInsert.inspect(),
+          [](Element& aBRElement) -> nsresult { return NS_OK; });
   if (maybeNewBRElement.isErr()) {
     NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
     return maybeNewBRElement;
@@ -5039,7 +5052,9 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
     return nullptr;
   }
   Result<RefPtr<Element>, nsresult> maybeNewElement =
-      CreateAndInsertElementWithTransaction(aTag, pointToInsert);
+      CreateAndInsertElementWithTransaction(
+          aTag, pointToInsert,
+          [](Element& aNewElement) -> nsresult { return NS_OK; });
   if (maybeNewElement.isErr()) {
     NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
     return nullptr;
@@ -5723,8 +5738,9 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     // element.
     if (!firstClonedElement) {
       Result<RefPtr<Element>, nsresult> maybeNewElement =
-          CreateAndInsertElementWithTransaction(MOZ_KnownLive(*tagName),
-                                                EditorDOMPoint(newBlock, 0));
+          CreateAndInsertElementWithTransaction(
+              MOZ_KnownLive(*tagName), EditorDOMPoint(newBlock, 0),
+              [](Element& aNewElement) -> nsresult { return NS_OK; });
       if (maybeNewElement.isErr()) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
