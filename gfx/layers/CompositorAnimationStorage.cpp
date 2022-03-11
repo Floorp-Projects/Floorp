@@ -58,10 +58,13 @@ void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MutexAutoLock lock(mLock);
 
-  PROFILER_MARKER("ClearAnimation", GRAPHICS,
-                  MarkerInnerWindowId(mCompositorBridge->GetInnerWindowId()),
-                  CompositorAnimationMarker, aId,
-                  mAnimations[aId]->mAnimation.LastElement().mProperty);
+  const auto& animationStorageData = mAnimations[aId];
+  if (animationStorageData) {
+    PROFILER_MARKER("ClearAnimation", GRAPHICS,
+                    MarkerInnerWindowId(mCompositorBridge->GetInnerWindowId()),
+                    CompositorAnimationMarker, aId,
+                    animationStorageData->mAnimation.LastElement().mProperty);
+  }
 
   mAnimatedValues.Remove(aId);
   mAnimations.erase(aId);
