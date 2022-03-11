@@ -16,12 +16,93 @@
 #include "mozilla/Variant.h"
 #include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsCSSProps.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPresContext.h"
 
 class nsRefreshDriver;
+
+namespace geckoprofiler::markers {
+
+using namespace mozilla;
+
+struct CSSAnimationMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("CSSAnimation");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const nsCString& aName,
+                                   const nsCString& aTarget,
+                                   nsCSSPropertyIDSet aPropertySet) {
+    aWriter.StringProperty("Name", aName);
+    aWriter.StringProperty("Target", aTarget);
+    nsAutoCString properties;
+    nsAutoCString oncompositor;
+    for (nsCSSPropertyID property : aPropertySet) {
+      if (!properties.IsEmpty()) {
+        properties.AppendLiteral(", ");
+        oncompositor.AppendLiteral(", ");
+      }
+      properties.Append(nsCSSProps::GetStringValue(property));
+      oncompositor.Append(nsCSSProps::PropHasFlags(
+                              property, CSSPropFlags::CanAnimateOnCompositor)
+                              ? "true"
+                              : "false");
+    }
+
+    aWriter.StringProperty("properties", properties);
+    aWriter.StringProperty("oncompositor", oncompositor);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyFormat("Name", MS::Format::String);
+    schema.AddKeyLabelFormat("properties", "Animated Properties",
+                             MS::Format::String);
+    schema.AddKeyLabelFormat("oncompositor", "Can Run on Compositor",
+                             MS::Format::String);
+    schema.AddKeyFormat("Target", MS::Format::String);
+    schema.SetChartLabel("{marker.data.Name}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.Name}: {marker.data.properties}");
+    return schema;
+  }
+};
+
+struct CSSTransitionMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("CSSTransition");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const nsCString& aTarget,
+                                   nsCSSPropertyID aProperty, bool aCanceled) {
+    aWriter.StringProperty("Target", aTarget);
+    aWriter.StringProperty("property", nsCSSProps::GetStringValue(aProperty));
+    aWriter.BoolProperty("oncompositor",
+                         nsCSSProps::PropHasFlags(
+                             aProperty, CSSPropFlags::CanAnimateOnCompositor));
+    if (aCanceled) {
+      aWriter.BoolProperty("Canceled", aCanceled);
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("property", "Animated Property",
+                             MS::Format::String);
+    schema.AddKeyLabelFormat("oncompositor", "Can Run on Compositor",
+                             MS::Format::String);
+    schema.AddKeyFormat("Canceled", MS::Format::String);
+    schema.AddKeyFormat("Target", MS::Format::String);
+    schema.SetChartLabel("{marker.data.property}");
+    schema.SetTableLabel("{marker.name} - {marker.data.property}");
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
 
 namespace mozilla {
 
@@ -56,8 +137,8 @@ struct AnimationEventInfo {
     if ((aMessage == eAnimationCancel || aMessage == eAnimationEnd ||
          aMessage == eAnimationIteration) &&
         profiler_thread_is_being_profiled_for_markers()) {
-      nsAutoCString markerText;
-      aAnimationName->ToUTF8String(markerText);
+      nsAutoCString name;
+      aAnimationName->ToUTF8String(name);
 
       const TimeStamp startTime = [&] {
         if (aMessage == eAnimationIteration) {
@@ -70,7 +151,19 @@ struct AnimationEventInfo {
                TimeDuration::FromSeconds(aElapsedTime);
       }();
 
-      PROFILER_MARKER_TEXT(
+      nsCSSPropertyIDSet propertySet;
+      nsAutoString target;
+      if (dom::AnimationEffect* effect = aAnimation->GetEffect()) {
+        if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
+          keyFrameEffect->GetTarget()->Describe(target, true);
+          for (const AnimationProperty& property :
+               keyFrameEffect->Properties()) {
+            propertySet.AddProperty(property.mProperty);
+          }
+        }
+      }
+
+      PROFILER_MARKER(
           aMessage == eAnimationIteration
               ? ProfilerString8View("CSS animation iteration")
               : ProfilerString8View("CSS animation"),
@@ -80,7 +173,7 @@ struct AnimationEventInfo {
               aAnimation->GetOwner()
                   ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
                   : MarkerInnerWindowId::NoId()),
-          markerText);
+          CSSAnimationMarker, name, NS_ConvertUTF16toUTF8(target), propertySet);
     }
   }
 
@@ -105,13 +198,13 @@ struct AnimationEventInfo {
 
     if ((aMessage == eTransitionEnd || aMessage == eTransitionCancel) &&
         profiler_thread_is_being_profiled_for_markers()) {
-      nsAutoCString markerText;
-      markerText.Assign(nsCSSProps::GetStringValue(aProperty));
-      if (aMessage == eTransitionCancel) {
-        markerText.AppendLiteral(" (canceled)");
+      nsAutoString target;
+      if (dom::AnimationEffect* effect = aAnimation->GetEffect()) {
+        if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
+          keyFrameEffect->GetTarget()->Describe(target, true);
+        }
       }
-
-      PROFILER_MARKER_TEXT(
+      PROFILER_MARKER(
           "CSS transition", DOM,
           MarkerOptions(
               MarkerTiming::Interval(
@@ -121,7 +214,8 @@ struct AnimationEventInfo {
               aAnimation->GetOwner()
                   ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
                   : MarkerInnerWindowId::NoId()),
-          markerText);
+          CSSTransitionMarker, NS_ConvertUTF16toUTF8(target), aProperty,
+          aMessage == eTransitionCancel);
     }
   }
 
