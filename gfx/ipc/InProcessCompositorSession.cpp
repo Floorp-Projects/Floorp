@@ -34,7 +34,8 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
     nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize, uint32_t aNamespace) {
+    const gfx::IntSize& aSurfaceSize, uint32_t aNamespace,
+    uint64_t aInnerWindowId) {
   widget::CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
@@ -42,7 +43,8 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
       CompositorWidget::CreateLocal(initData, aOptions, aWidget);
   RefPtr<CompositorBridgeParent> parent =
       CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
-          aScale, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
+          aScale, aOptions, aUseExternalSurfaceSize, aSurfaceSize,
+          aInnerWindowId);
   MOZ_ASSERT(parent);
   parent->InitSameProcess(widget, aRootLayerTreeId);
 

@@ -267,7 +267,8 @@ static int32_t CalculateCompositionFrameRate() {
 CompositorBridgeParent::CompositorBridgeParent(
     CompositorManagerParent* aManager, CSSToLayoutDeviceScale aScale,
     const TimeDuration& aVsyncRate, const CompositorOptions& aOptions,
-    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize)
+    bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
+    uint64_t aInnerWindowId)
     : CompositorBridgeParentBase(aManager),
       mWidget(nullptr),
       mScale(aScale),
@@ -284,6 +285,7 @@ CompositorBridgeParent::CompositorBridgeParent(
       mRootLayerTreeID{0},
       mOverrideComposeReadiness(false),
       mForceCompositionTask(nullptr),
+      mInnerWindowId(aInnerWindowId),
       mCompositorScheduler(nullptr),
       mAnimationStorage(nullptr),
       mPaintTime(TimeDuration::Forever()) {}
