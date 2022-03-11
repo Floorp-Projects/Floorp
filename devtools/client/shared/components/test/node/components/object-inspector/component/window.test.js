@@ -14,7 +14,7 @@ const gripWindowStubs = require("devtools/client/shared/components/test/node/stu
 const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
 const windowNode = createNode({
   name: "window",
-  contents: { value: gripWindowStubs.get("Window") },
+  contents: { value: gripWindowStubs.get("Window")._grip },
 });
 
 const client = {
