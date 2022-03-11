@@ -11746,7 +11746,7 @@ VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   if (!StartRequest(aActor)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "StartRequest failed!");
   }
   return IPC_OK();
 }
