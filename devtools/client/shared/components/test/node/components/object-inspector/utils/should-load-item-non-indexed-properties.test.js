@@ -117,7 +117,7 @@ describe("shouldLoadItemNonIndexedProperties", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window")._grip,
+        value: windowStubs.get("Window"),
       },
     });
     expect(shouldLoadItemNonIndexedProperties(node)).toBeTruthy();
@@ -127,7 +127,7 @@ describe("shouldLoadItemNonIndexedProperties", () => {
     const windowNode = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window")._grip,
+        value: windowStubs.get("Window"),
       },
     });
     const loadedProperties = new Map([
