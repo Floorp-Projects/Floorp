@@ -16,10 +16,7 @@ add_task(async function test_first_time_save() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     let tabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       "about:preferences#privacy"
@@ -102,10 +99,7 @@ add_task(async function test_first_time_save_with_sync_account() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     let tabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       "about:preferences#privacy-address-autofill"

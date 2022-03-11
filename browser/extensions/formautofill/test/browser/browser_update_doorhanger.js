@@ -9,10 +9,7 @@ add_task(async function test_update_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     await openPopupOn(browser, "form #organization");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -44,10 +41,7 @@ add_task(async function test_create_new_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -79,10 +73,7 @@ add_task(async function test_create_new_address_merge() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -113,10 +104,7 @@ add_task(async function test_submit_untouched_fields() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     await openPopupOn(browser, "form #organization");
     info("before down");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -157,10 +145,7 @@ add_task(async function test_submit_reduced_fields() {
 
   let url = BASE_URL + "autocomplete_simple_basic.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+    let promiseShown = promiseNotificationShown();
     await openPopupOn(browser, "form#simple input[name=tel]");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
