@@ -15080,8 +15080,7 @@ mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
   MOZ_ASSERT(mFileInfo);
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "IndexedDB must be in testing mode!");
   }
 
   *aFileId = mFileInfo->Id();
