@@ -54,6 +54,7 @@ extensions = [
 js_source_path = [
     "../browser/components/extensions",
     "../browser/components/uitour",
+    "../browser/components/urlbar",
     "../remote/marionette",
     "../toolkit/components/extensions",
     "../toolkit/components/extensions/parent",
