@@ -1714,7 +1714,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                    IDBTransaction::Mode::VersionChange);
     Unused << IDBRequest::NextSerialNumber();
 
-    // If we return IPC_FAIL_NO_REASON(this) here, we crash...
+    // No reason to IPC_FAIL here.
     return IPC_OK();
   }
 
