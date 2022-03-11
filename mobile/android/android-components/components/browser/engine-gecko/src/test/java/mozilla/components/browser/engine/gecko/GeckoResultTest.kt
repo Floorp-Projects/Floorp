@@ -16,9 +16,12 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
+import org.robolectric.annotation.LooperMode
 
+@Suppress("DEPRECATION") // Suppress deprecation for LooperMode.Mode.LEGACY
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
+@LooperMode(LooperMode.Mode.LEGACY)
 class GeckoResultTest {
 
     @Test

@@ -45,10 +45,13 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.annotation.LooperMode
 import java.lang.reflect.Modifier
 import org.mockito.ArgumentMatchers.any as mockitoAny
 
+@Suppress("DEPRECATION") // Suppress deprecation for LooperMode.Mode.LEGACY
 @RunWith(AndroidJUnit4::class)
+@LooperMode(LooperMode.Mode.LEGACY)
 class SystemEngineSessionTest {
 
     @Test
