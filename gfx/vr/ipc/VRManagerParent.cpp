@@ -10,6 +10,7 @@
 #include "mozilla/gfx/PVRManagerParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolTypes.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/Unused.h"
@@ -45,6 +46,10 @@ VRManagerParent::~VRManagerParent() {
 
 PVRLayerParent* VRManagerParent::AllocPVRLayerParent(const uint32_t& aDisplayID,
                                                      const uint32_t& aGroup) {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    return nullptr;
+  }
+
   RefPtr<VRLayerParent> layer;
   layer = new VRLayerParent(aDisplayID, aGroup);
   VRManager* vm = VRManager::Get();
