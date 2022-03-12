@@ -10,6 +10,7 @@
 #include "mozilla/GeckoArgs.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -29,6 +30,11 @@ VRParent* VRProcessChild::GetVRParent() {
 }
 
 bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    NS_WARNING("VR is not enabled when trying to create a VRParent");
+    return false;
+  }
+
   Maybe<const char*> parentBuildID =
       geckoargs::sParentBuildID.Get(aArgc, aArgv);
   if (parentBuildID.isNothing()) {
