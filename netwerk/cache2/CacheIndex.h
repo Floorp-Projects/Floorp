@@ -116,7 +116,7 @@ class CacheIndexRecordWrapper final {
   CacheIndexRecord* Get() { return mRec.get(); }
 
  private:
-  ~CacheIndexRecordWrapper() = default;
+  ~CacheIndexRecordWrapper();
   UniquePtr<CacheIndexRecord> mRec;
 };
 
@@ -812,7 +812,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   friend class CacheIndexEntryAutoManage;
   friend class FileOpenHelper;
   friend class CacheIndexIterator;
-  friend struct CacheIndexRecord;
+  friend class CacheIndexRecordWrapper;
 
   virtual ~CacheIndex();
 
@@ -1196,6 +1196,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                        CacheIndexRecordWrapper* aNewRecord,
                        const StaticMutexAutoLock& aProofOfLock);
     void SortIfNeeded(const StaticMutexAutoLock& aProofOfLock);
+    bool RecordExistedUnlocked(CacheIndexRecordWrapper* aRecord);
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
     void Clear(const StaticMutexAutoLock& aProofOfLock) { mRecs.Clear(); }

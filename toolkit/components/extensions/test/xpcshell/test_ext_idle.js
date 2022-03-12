@@ -6,6 +6,15 @@ const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
+
 let idleService = {
   _observers: new Set(),
   _activity: {
@@ -268,3 +277,85 @@ add_task(async function testOnlyAddingListener() {
   await new Promise(resolve => setTimeout(resolve, 0));
   await extension.unload();
 });
+
+add_task(
+  { pref_set: [["extensions.eventPages.enabled", true]] },
+  async function test_idle_event_page() {
+    await AddonTestUtils.promiseStartupManager();
+
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        permissions: ["idle"],
+        background: { persistent: false },
+      },
+      background() {
+        browser.idle.setDetectionInterval(99);
+        browser.idle.onStateChanged.addListener(newState => {
+          browser.test.assertEq(
+            "active",
+            newState,
+            "listener fired with the expected state"
+          );
+          browser.test.sendMessage("listenerFired");
+        });
+      },
+    });
+
+    idleService._reset();
+    await extension.startup();
+    assertPersistentListeners(extension, "idle", "onStateChanged", {
+      primed: false,
+    });
+    checkActivity({
+      expectedAdd: [99],
+      expectedRemove: [],
+      expectedFires: [],
+    });
+
+    idleService._reset();
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "idle", "onStateChanged", {
+      primed: true,
+    });
+    checkActivity({
+      expectedAdd: [99],
+      expectedRemove: [99],
+      expectedFires: [],
+    });
+
+    // Fire an idle notification to wake up the background.
+    idleService._fireObservers("active");
+    await extension.awaitMessage("listenerFired");
+    checkActivity({
+      expectedAdd: [99],
+      expectedRemove: [99],
+      expectedFires: ["active"],
+    });
+
+    // Verify the set idle time is used with the persisted listener.
+    idleService._reset();
+    await AddonTestUtils.promiseRestartManager();
+    await extension.awaitStartup();
+
+    assertPersistentListeners(extension, "idle", "onStateChanged", {
+      primed: true,
+    });
+    checkActivity({
+      expectedAdd: [99], // 99 should have been persisted
+      expectedRemove: [99], // remove is from AOM shutdown
+      expectedFires: [],
+    });
+
+    // Fire an idle notification to wake up the background.
+    idleService._fireObservers("active");
+    await extension.awaitMessage("listenerFired");
+    checkActivity({
+      expectedAdd: [99],
+      expectedRemove: [99],
+      expectedFires: ["active"],
+    });
+
+    await extension.unload();
+  }
+);
