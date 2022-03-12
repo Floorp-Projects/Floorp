@@ -9,6 +9,7 @@
 
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "VRManager.h"
 
 namespace mozilla {
@@ -20,6 +21,10 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
 bool VRGPUChild::InitForGPUProcess(Endpoint<PVRGPUChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRGPUChildSingleton);
+
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    return false;
+  }
 
   RefPtr<VRGPUChild> child(new VRGPUChild());
   if (!aEndpoint.Bind(child)) {
