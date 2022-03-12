@@ -10,6 +10,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for TimedTexture
 #include "mozilla/layers/SyncObject.h"      // for SyncObjectClient
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_webgl.h"
 
 #include "ClientWebGLContext.h"
@@ -122,6 +123,10 @@ void VRLayerChild::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
 
 // static
 PVRLayerChild* VRLayerChild::CreateIPDLActor() {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    return nullptr;
+  }
+
   VRLayerChild* c = new VRLayerChild();
   c->AddIPDLReference();
   return c;
