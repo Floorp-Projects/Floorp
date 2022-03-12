@@ -18,10 +18,6 @@
     <string name="no_open_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù digoret.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez.</string>
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 ivinell digor. Stokit evit mont dʼun ivinell all.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ivinell digor. Stokit evit mont dʼun ivinell all.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d diuzet</string>
@@ -35,22 +31,10 @@
     <string name="tab_tray_close_multiselect_content_description">Kuitaat ar mod lies-diuzañ</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Enrollañ an ivinelloù diuzet en dastumad</string>
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">%1$s diuzet</string>
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s diziuzet</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Kuitaet ar mod lies-diuzañ</string>
-    <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Aet er mod lies-diuzañ, diuzit ivinelloù evit o enrollañ en un dastumad</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Diuzet</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Enrollet nevez ’zo</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Merket evel sined nevez ’zo</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Sinedoù nevez</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -59,14 +43,14 @@
     <string name="recently_saved_show_all">Diskouez pep tra</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Afell Diskouez an holl sinedoù enrollet</string>
+    <string name="recently_saved_show_all_content_description_2">Diskouez an holl sinedoù enrollet</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Dilemel</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Gant Mozilla eo produet %1$s.</string>
 
     <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string name="private_browsing_title">En un estez prevez emaocʼh</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
@@ -74,8 +58,6 @@
     <string name="private_browsing_common_myths">
        Mojennoù a vez alies diwar-benn ar merdeiñ prevez
     </string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Dilemel an estez</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -87,7 +69,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Gallout a rit lakaat Firefox da zigeriñ an ereoù ent emgefreek en arloadoù all.</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Gallout a rit lakaat Firefox da zigeriñ an ereoù ent emgefreek en arloadoù all.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Gallout a rit lakaat %1$s da zigeriñ an ereoù ent emgefreek en arloadoù all.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Mont en arventennoù</string>
     <!-- Text for the negative action button -->
@@ -115,11 +99,12 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Em-serriñ goude ur miz?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox a c’hall serriñ ivinelloù n’ho peus ket gwelet er miz diwezhañ.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox a c’hall serriñ ivinelloù n’ho peus ket gwelet er miz diwezhañ.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s a c’hall serriñ ivinelloù n’ho peus ket gwelet er miz diwezhañ.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Serriñ</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Enaouiñ an em serriñ</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Enaouiñ an em-serriñ</string>
@@ -130,8 +115,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Ivinell nevez</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ivinell prevez nevez</string>
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Lecʼhiennoù gwellañ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -140,36 +123,30 @@
     <string name="recent_tabs_show_all">Diskouez pep tra</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Diskouez an holl afelloù ivinelloù nevez</string>
+    <string name="recent_tabs_show_all_content_description_2">Diskouez an holl afelloù ivinelloù nevez</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Ho klask evit \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count">Lec’hiennoù: %1$s</string>
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">Lec’hiennoù %d</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Dilemel</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Merdeadurioù tremenet</string>
-
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">Gweladennet nevez ’zo</string>
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header_3">Klaskoù nevesañ</string>
+    <string name="history_metadata_header_2">Gweladennet nevez ’zo</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Dilemel</string>
+
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Diskouez afelloù an holl verdeadennoù kent</string>
+    <string name="past_explorations_show_all_content_description_2">Diskouez an holl verdeadennoù kent</string>
 
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Ivinelloù digor</string>
-
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Distreiñ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -178,14 +155,8 @@
     <string name="browser_menu_refresh">Azbevaat</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Paouez</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Sined</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Embann ar sined</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Askouezhioù</string>
-    <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Askouezhioù</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nʼeus tamm askouezh ebet amañ</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -203,19 +174,15 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Staliañ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Ivinelloù goubredet</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Ivinelloù goubredet</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Adgoubredañ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Kavout er bajennad</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Roadennoù prevez</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Rannañ</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Rannañ gant…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Digeriñ e %1$s</string>
@@ -231,8 +198,6 @@
     <string name="browser_menu_read_close">Serriñ ar mod lenn</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Digeriñ en arload</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Neuz</string>
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Personelaat ar mod lenn</string>
     <!-- Browser menu label for adding a bookmark -->
@@ -241,22 +206,16 @@
     <string name="browser_menu_edit">Embann</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Personelaat an degemer</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Personelaat an degemer</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personelaat an degemer</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Skramm degemer</string>
 
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Ne cʼhaller ket kennaskañ. Steuñv URL dianav.</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Yezh dibabet</string>
-    <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Klask</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Ober gant yezh ar benveg</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -269,8 +228,6 @@
     <string name="search_engine_button">Lusker enklask</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Arventennoù al lusker klask</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Ar wech-mañ, klask gant:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Leuniañ diwar ar golver</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -292,11 +249,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Petra zo nevez e Firefox</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Petra zo nevez e Firefox</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Petra zo nevez e %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Aesoc’h eo adstagañ lec’h m’ho peus paouezet.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Pajenn degemer Firefox personelaet</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Pajenn degemer Firefox personelaet</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Pajenn degemer %1$s personelaet</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Mont d’hoc’h ivinelloù digor, sinedoù ha roll istor merdeiñ. </string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -314,7 +275,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Digeriñ un ivinell Firefox nevez</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Digeriñ un ivinell Firefox nevez</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Digeriñ en un ivinell %1$s nevez</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Klask</string>
     <!-- Text preview for larger sized widgets -->
@@ -325,8 +288,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Arventennoù</string>
-    <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Diazez</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Hollek</string>
     <!-- Preference category for all links about Fenix -->
@@ -337,27 +298,15 @@
     <string name="preferences_search">Klask</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Barrenn chomlecʼhioù</string>
-    <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Skoazell</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Notennit war Google Play</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Reiñ evezhiadennoù</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">A-zivout %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Ho kwirioù</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Gerioù-tremen</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kartennoù kred ha chomlecʼhioù</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Lakaat evel merdeer dre ziouer</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Kempleshocʼh</string>
-    <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Buhez prevez</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Buhez prevez ha diogelroez</string>
     <!-- Preference for advanced site permissions -->
@@ -382,14 +331,10 @@
     <string name="toast_override_fxa_sync_server_done">Dafariad kont Firefox/Sync kemmet. Kuitaet e vo an arload evit arloañ ar cʼhemmoù…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Kont</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Kennaskañ</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Barrenn ostilhoù</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Neuz</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Degemer</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Degemer</string>
     <!-- Preference for gestures based actions -->
@@ -408,10 +353,6 @@
     <string name="preferences_data_choices">Dibaboù roadennoù</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Dastum roadennoù</string>
-    <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Evezhiadennoù a-fet buhez prevez</string>
-    <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Ostilhoù an diorroer</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Diveugañ a-bell dre USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -462,21 +403,36 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Distreiñ</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Enrollet nevez ’zo</string>
 
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Merket evel sined nevez ’zo</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Ivinelloù nevez</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
-    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">Gweladennet nevez ’zo</string>
-    <!-- Title for the customize home screen settings section for recent searches. Recent searches
-     is a section where users see a list of groups of tabs that they have visited in the past few days -->
-    <string name="customize_toggle_recent_searches">Klaskoù nevesañ</string>
+    <string name="customize_toggle_recently_visited">Gweladennet nevez ’zo</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Drekleurioù</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Berradennoù paeroniet</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Elfenn drekleur: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Drekleur hizivaet!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Gwelout</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Stokit war an arlun evit kemmañ an drekleur</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Kemmit an drekleur en ur stekiñ ouzh arlun pajenn degemer Firefox</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Sellit hag hizivait ar skeudenn hep kuitaat ar bajenn degemer.</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Arlun Firefox - kemmañ an drekleur, afell</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -533,22 +489,12 @@
     <string name="fxa_received_tab_channel_description">Rebuzadur evit an ivinelloù degemeret eus trevnadoù Firefox all.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Ivinell degemeret</string>
-    <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Ivinelloù degemeret</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Ivinell eus %s</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Gwarez heuliañ</string>
-    <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Gwarez heuliañ</string>
-    <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Stankañ endalcʼhadoù ha skriptoù a heuilh acʼhanocʼh enlinenn</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Nemedennoù</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Diweredekaet eo bet ar gwarez heuliañ evit al lecʼhiennoù-mañ</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Gweredekaat evit an holl lecʼhiennoù</string>
     <!-- Text displayed when there are no exceptions -->
@@ -556,40 +502,22 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Gouzout hirocʼh</string>
 
-    <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Roadennoù teknikel hag arver</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Rann ar roadennoù digonusted, arver, periant ha personeladur a-zivout ho merdeer gant Mozilla evit sikour acʼhanomp da wellaat %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Roadennoù Marketing</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Rann ar roadennoù diwar-benn ar cʼheweriusterioù arveret ganeocʼh e %1$s gant Leanplim, hor cʼheveler marketing hezoug.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Rannañ titouroù implijoù diazez gant Adjust, hor cʼheveler marketing hezoug</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studioù</string>
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Aotren Mozilla da staliañ ha da luskañ studioù</string>
-    <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Arnodoù</string>
-    <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Aotren Mozilla da staliañ ha da zastum roadennoù evit keweriusterioù arnodel</string>
-    <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Daneveller sacʼhadennoù</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Gwazerezh Lecʼhiadur Mozilla</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Danevell yecʼhed %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Gweredekaat Sync</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Cʼhwilervit ar boneg koublañ e Firefox war an urzhiataer</string>
-    <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Kennaskañ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Kennaskit en-dro</string>
     <!-- Preference for removing FxA account -->
@@ -598,10 +526,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Cʼhwilervit ar boneg QR diskouezet e <b>firefox.com/pair</b>]]></string>
-    <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Digeriñ ar cʼhamera</string>
-    <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Nullañ</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -630,10 +554,6 @@
     <string name="preference_gestures_swipe_toolbar_show_tabs">Rikli ar ar varrenn-ostilhoù war-zu an nec’h evit digeriñ ivinelloù</string>
 
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Estezioù</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Tapadennoù-skramm</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Pellgargadurioù</string>
     <!-- Option in library to open Bookmarks page -->
@@ -650,16 +570,8 @@
     <string name="library_history">Roll istor</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Ivinell nevez</string>
-    <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Kavout er bajenn</string>
-    <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Roll Lennadurioù</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Klask</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Arventennoù</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Elfenn lañser ar roll istor</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Serriñ</string>
 
@@ -711,20 +623,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Serriñ an ivinelloù digor ent emgefreek</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Kregiñ gant ar skramm degemer</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Skramm digeriñ</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Goude peder eurvezh</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Degemer</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Atav</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Ivinell ziwezhañ</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Morse</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Pajenn degemer goude peder eurvezh dioberiantiz</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -748,7 +652,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Oberiant</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Firefox a c’hall staliañ ha kas studiadennoù bep an amzer.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox a c’hall staliañ ha kas studiadennoù bep an amzer.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s a c’hall staliañ hag erounit studiadennoù ur wech an amzer.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Gouzout hiroc’h</string>
     <!-- Dialog message shown after removing a study -->
@@ -765,8 +671,6 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Ivinelloù digor</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Estez prevez</string>
-    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Ivinelloù prevez</string>
     <!-- Title for the list of tabs in the synced tabs -->
     <string name="tabs_header_synced_tabs_title">Ivinelloù goubredet</string>
@@ -778,12 +682,6 @@
     <string name="tab_drawer_fab_content">Prevez</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Goubredañ</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Ivinelloù digor</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Enrollañ en dastumad</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Diuzañ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Rannañ an holl ivinelloù</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -796,12 +694,6 @@
     <string name="tab_tray_menu_tab_settings">Arventennoù an ivinelloù</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Serriñ an holl ivinelloù</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Ivinell nevez</string>
-    <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Dʼar gêr</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Kemmañ ar mod ivinelloù</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Sined</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -820,27 +712,11 @@
     <string name="close_tab_title">Serriñ an ivinell %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Digeriñ lañser an ivinelloù</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Serriñ an holl ivinelloù</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Rannañ an ivinelloù</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Enrollañ an ivinelloù en un dastumad</string>
 
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Lañser an ivinell</string>
-    <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Rannañ an ivinell</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Dilemel</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Enrollañ</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Rannañ</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Skeudenn an estez bremanel</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Enrollañ en dastumad</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Dilemel an dastumad</string>
     <!-- Text for the menu button to rename a collection -->
@@ -858,48 +734,29 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mod prevez)</string>
 
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Enrollañ</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">All</string>
-
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Ivinelloù all</string>
 
     <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Enankit gerioù da glask</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Enankit gerioù da glask</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Dilemel ar roll istor</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Ha sur ocʼh e fell deocʼh skarzhañ ho roll istor?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Roll istor dilamet</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Dilamet %1$s</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Skarzhañ</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Eilañ</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Rannañ</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Digeriñ en un ivinell nevez</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Digeriñ war un ivinell brevez</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Dilemel</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Dilemel</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d diuzet</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Dilemel %1$d elfenn</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Hiziv</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Dec’h</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Ar 24 eurvezh diwezhañ</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Ar 7 deiz diwezhañ</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -921,10 +778,6 @@
     <string name="download_multi_select_title">%1$d diuzet</string>
 
 
-    <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Digeriñ</string>
-
-
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Dilemel</string>
 
@@ -932,8 +785,6 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Digarezit. %1$s ne cʼhall ket kargañ ar bajenn.</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Gallout a rit klask assav pe serriñ an ivinell dindan.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Kas an danevell sacʼhadenn da vMozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -941,25 +792,11 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Assav an ivinell</string>
 
-    <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Dibarzhioù an estez</string>
-
-    <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Rannañ an estez</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Lañser ar sinedoù</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Embann ar sined</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Dibab un teuliad</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ha fellout a ra deocʼh dilemel an teuliad-mañ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s a zilamo an elfennoù diuzet.</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Dilamet %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ouzhnenañ an teuliad</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -968,8 +805,6 @@
     <string name="edit_bookmark_snackbar_action">EMBANN</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Embann</string>
-    <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Diuzañ</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Eilañ</string>
     <!-- Bookmark overflow menu share button -->
@@ -1018,8 +853,6 @@
     <string name="bookmark_undo_deletion">DIZOBER</string>
 
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string name="permissions_header">Aotreoù</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Mont dʼan arventennoù</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1028,8 +861,6 @@
     <string name="quick_settings_sheet">Panell mont buan dʼan arventennoù</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Erbedet</string>
-    <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Merañ aotreoù al lecʼhienn</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Skarzhañ an aotreoù</string>
     <!-- Button label for clearing a site permission-->
@@ -1048,6 +879,8 @@
     <string name="preference_phone_feature_notification">Rebuzadur</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Stokadur padus</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Toupinoù etrelec’hienn</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Endalc’had reoliet gant DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1136,14 +969,10 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Kas ha rannañ</string>
-    <!-- Share screen header -->
     <string name="share_header_2">Rannañ</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Rannañ</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Rannañ un ere</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kas dʼun trevnad</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1178,18 +1007,8 @@
     <string name="sync_add_new_device_connect_button">Kennaskañ un trevnad all…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Estez merdeiñ prevez</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Dilemel an ivinelloù prevez</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Serriñ an ivinelloù prevez</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Digeriñ</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Dilemel ha digeriñ</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Lusket gant</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1204,36 +1023,22 @@
     <string name="snackbar_collection_deleted">Dastumad dilamet</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Dastumad adanvet</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Ivinell dilamet</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Ivinelloù dilamet</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Ivinell serret</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Ivinelloù serret</string>
-    <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Ivinelloù serret!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Sined enrollet!</string>
-    <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Gwelout</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Ouzhpennet dʼal lecʼhiennoù pennañ</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Ivinell prevez serret</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Ivinelloù prevez serret</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Ivinelloù prevez dilamet</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DIZOBER</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Lecʼhienn dilamet</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Dizober</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Kadarnat</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Aotren %1$s da zigeriñ %2$s</string>
@@ -1241,6 +1046,10 @@
     <string name="qr_scanner_dialog_positive">AOTREN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">NACʼHAÑ</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">N’eo ket talvoudek ar chomlec’h web.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Mat</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Sur ocʼh e fell deocʼh dilemel %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1249,8 +1058,6 @@
     <string name="delete_tab_and_collection_dialog_title">Dilemel %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Dilemel</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Nullañ</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Mod skramm a-bezh kroget</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1280,11 +1087,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d chomlec’h</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Roll istor</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d a bajennoù</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Toupinoù</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1302,8 +1104,6 @@
     <string name="preferences_delete_browsing_data_button">Dilemel ar roadennoù merdeiñ</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Dilemel ar roadennoù merdeiñ pa vez kuitaet</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Dilemel a raio ar roadennoù merdeiñ ent emgefreek pa zibabot &quot;Kuitaat&quot; el lañser pennañ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Dilemel a raio ar roadennoù merdeiñ ent emgefreek pa zibabot \&quot;Kuitaat\&quot; el lañser pennañ</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1355,45 +1155,27 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Donemat war %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Ur gont hoc’h eus dija?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Gwelout pezh a zo nevez</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Goulennoù hoc’h eus a-zivout ar %s nevez? Fellout a ra deoc’h gouzout pezh a zo bet cheñchet?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Amañ emañ ar respontoù</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Goubredañ Firefox etre an trevnadoù</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Goubredañ Firefox etre an trevnadoù</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Goubredañ %1$s etre an trevnadoù</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit Firefox war an trevnad-mañ.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Kennasket oc’h evel %s war ur merdeer Firefox all war an trevnad-mañ. Fellout a ra deoc’h kennaskañ gant ar gont-mañ?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Ya, kennaskit ac’hanon</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">O kennaskañ…</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit %1$s war an trevnad-mañ.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">En em rollañ</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Chom kennasket</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Enaouet eo Sync</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">C’hwitadenn war ar c’hennaskañ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Prevezded gweredekaet bepred</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefox a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Skoueriek (dre ziouer)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Kempouezet evit prevezded hag efedusted. Ar pajennoù a garg en un doare ordinal.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Strizh (erbedet)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strizh</string>
     <!-- text for strict blocking option button description -->
@@ -1402,15 +1184,6 @@
     <string name="onboarding_toolbar_placement_header_1">Dibabit e pelec’h lakaat ho parrenn ostilhoù</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Lakait ar varrenn ostilhoù en ul lec’h aes da dizhout. Dalc’hit hi en traoñ pe diblasit anezhi e-krec’h.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Merdeiñ prevez</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Digorit un ivinell prevez hepken: stokit an arlun %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Digeriñ ivinelloù prevez bewech: kemmit an arventennoù merdeiñ prevez.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Digeriñ an arventennoù</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ho puhez prevez</string>
     <!-- text for the privacy notice onboarding card description
@@ -1418,8 +1191,6 @@
     <string name="onboarding_privacy_notice_description2">Savet hon eus %s evit ma c’hallfec’h reoliñ ar pezh a rannit enlinenn hag ar pezh a rannit ganeomp.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lennit hon evezhiadenn a-get buhez prevez</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Serriñ</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Kregiñ da verdeiñ</string>
@@ -1459,8 +1230,6 @@
     <string name="sign_in_with_email">Ober gant ur chomlec’h postel kentoc’h</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Kont ebet? <u>Krouit unan</u> evit goubredañ Firefox etre an trevnadoù.]]></string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox a baouezo da c’houbredañ gant ho kont, met ne vo ket dilamet ho roadennoù merdeiñ war an trevnad-mañ.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">Paouezet e vo goubredañ gant ho kont, met ne vo ket dilamet ho roadennoù merdeiñ war an trevnad-mañ.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1516,8 +1285,6 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">En holl ivinelloù</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">En ivinelloù prevez hepken</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">En ivinelloù personelaet hepken</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptogleuzerien</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1549,8 +1316,6 @@
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Harzañ a ra ar bruderezh diavaez hag an endalc’hadoù all da gargañ a endalc’h ur boneg heuliañ. Gallout a ra kaout un efed war mont-en-dro lec’hiennoù ’zo.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Bewech mard eo mouk ar skoed eo bet stanket heulierien gant %s. Stokit da gaout muioc’h a ditouroù.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">GWEREDEKAET eo ar gwarez war al lec’hienn-mañ.</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1560,10 +1325,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Kent</string>
-    <!-- About page Your rights link text -->
-    <string name="about_your_rights">Ho kwirioù</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Levraouegoù digor o zarzh a arveromp</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Petra zo nevez e %s</string>
     <!-- Open source licenses page title
@@ -1598,11 +1359,6 @@
     <string name="about_debug_menu_toast_progress">Lañser diveugañ: %1$d a glikoù a chom evit gweredekaat</string>
     <string name="about_debug_menu_toast_done">Lañser diveugañ gweredekaet</string>
 
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 ivinell</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d ivinell</string>
-
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Eilañ</string>
@@ -1635,8 +1391,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Goulenn a-raok enrollañ</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Na enrollañ biken</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Leuniañ ent emgefreek</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Leuniañ emgefreek e %1$s</string>
@@ -1654,10 +1408,6 @@
     <string name="preferences_passwords_sync_logins">Goubredañ an titouroù kennaskañ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Goubredañ an titouroù kennaskañ dre an trevnadoù</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Adkennaskañ</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Kennaskañ ouzh Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Titouroù kennaskañ enrollet</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1674,37 +1424,17 @@
     <string name="preferences_passwords_exceptions_remove_all">Dilemel an holl nemedennoù</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Klask titouroù kennaskañ</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Dre urzh al lizherenneg</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Arveret da ziwezhañ</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Lec’hienn</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Anv arveriad</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Ger-tremen</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Adlakait ho PIN</string>
 
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Dibrenit evit gwelet ho titouroù kennaskañ enrollet</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">N’eo ket diogel ar c’hennask. An titouroù enanket amañ a c’hallfe bezañ laeret.</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Gouzout hiroc’h</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Fellout a ra deoc’h e vefe enrollet an titouroù kennaskañ-mañ gant %s?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Enrollañ</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Na enrollañ</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Eilet eo bet ar ger-tremen er golver</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Eilet eo bet an anv arveriad er golver</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Eilet eo bet al lec’hienn er golver</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Eilañ ar ger-tremen</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1715,8 +1445,6 @@
     <string name="saved_login_clear_username">Skarzhañ an anv arveriad</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Skarzhañ anv an ostiz</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Eilañ al lec’hienn</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Digeriñ al lec’hienn er merdeer</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1776,17 +1504,19 @@
     <string name="credit_cards_expiration_date_year">Deiziad termen Bloaz</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Anv war ar gartenn</string>
-    <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Lesanv ar gartenn</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Dilemel ar gartenn</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Dilemel ar gartenn</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Ha fellout a ra deocʼh dilemel ar gartenn gred-mañ?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Dilemel</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Enrollañ</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Enrollañ</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Nullañ</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Kartennoù enrollet</string>
@@ -1834,17 +1564,11 @@
     <string name="search_add_custom_engine_search_string_hint">Testenn glask da implij</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Amsaviñ ar gerioù klasket gant “%s”. Da skouer: \nhttps://www.google.com/search?q= %s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Gouzout hiroc’h</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Munudoù al lusker klask personelaet</string>
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Ere evit gouzout hiroc’h</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Enankit anv al lusker klask</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Ul lusker klask gant an anv “%s” a zo dioutañ endeo.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Enankit un destenn da glask</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1885,10 +1609,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Kennask suraet</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">N’eo ket diarvar ar c’hennask</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Kennask diogel</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Kennask arvarus</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Skarzhañ an toupinoù ha roadennoù lec’hienn</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Sur oc’h e fell deoc’h skarzhañ an holl doupinoù ha roadennoù war al lec’hienn <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Sur oc’h e fell deoc’h skarzhañ an holl aotreoù war an holl lec’hiennoù?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1897,12 +1621,12 @@
     <string name="confirm_clear_permission_site">Sur oc’h e fell deoc’h skarzhañ an aotre-mañ war al lec’hienn-mañ?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Nemedenn lec’hienn ebet</string>
-    <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Pennadoù pennañ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ha fellout a ra deocʼh dilemel ar sined-mañ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Lakaat el lecʼhiennoù gwellañ</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Dilamet diwar al lec’hiennoù gwellañ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Gwiriet gant:%1$s</string>
@@ -1924,8 +1648,6 @@
     <string name="saved_login_password_description">Ar vaezienn destenn kemmus evit ger-tremen an titour kennaskañ.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Enrollañ ar c’hemmoù d’an titouroù kennaskañ.</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Dilezel ar c’hemmoù</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Embann</string>
     <!--  The page title for adding new login. -->
@@ -1946,8 +1668,6 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Ar chomlec’h web a rank kaout &quot;https://&quot; pe &quot;http://&quot; enni</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Ar chomlec’h web a rank kaout &quot;https://&quot; pe &quot;http://&quot; enni</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Un anv ostiz reizh a zo rekis</string>
@@ -1961,7 +1681,9 @@
     <string name="synced_tabs_enable_tab_syncing">Gweredekait goubredañ an ivinelloù mar plij.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">N’ho peus ivinell digor ebet e Firefox war ho trevnadoù all.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">N’ho peus ivinell digor ebet e Firefox war ho trevnadoù all.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">N’ho peus ivinell digor ebet e %1$s war ho trevnadoù all.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Gwelout ur roll ivinelloù eus ho trevnadoù all.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1969,6 +1691,11 @@
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ivinell digor ebet</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Kreskiñ ar strollad ivinelloù goubredet</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Krennañ ar strollad ivinelloù goubredet</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
@@ -1978,14 +1705,12 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Mat, komprenet am eus</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Lec’hiennoù gweladennet ar muiañ</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Diskouez al lec’hiennoù gweladennet ar muiañ</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Diskouez al lec’hiennoù gweladennet ar muiañ</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Lec’hiennoù gweladennet ar muiañ</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Berradennoù</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Anv</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Anv al lec’hienn pennañ</string>
@@ -1994,17 +1719,18 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Nullañ</string>
 
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Arventennoù</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Hor c’hevelerien hag ho puhez prevez</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Paeroniet</string>
+
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Ivinelloù dioberiant</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Serriñ an holl ivinelloù dioberiant</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">An ivinelloù a zo hegerz amañ e-pad %s. Goude e vo serret an ivinelloù ent emgefreek.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 devezh</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 sizhun</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2019,19 +1745,21 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Skoazellit ac’hanomp da welaat</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Sikourit da wellaat Firefox</string>
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Perak ho peus diweredekaet an ivinelloù dioberiant?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Perak ho peus diweredekaet an ivinelloù dioberiant?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">N’on ket dedennet er c’heweriuster</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ne gomprenan ket penaos ec’h a en-dro</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Re hir eo ar padelezh dioberiantiz</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Fellout a ra din skarzhañ an ivinelloù kozh ma-unan</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Re verr eo ar padelezh dioberiantiz</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Ar padelezh div sizhun a zo re hir</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Ar padelezh div sizhun a zo re verr</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Kas</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Kas</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Serriñ</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Serriñ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Digeriñ liammoù al lec’hiennoù, posteloù ha kemennadennoù e Firefox en un doare emgefreek.</string>
@@ -2049,8 +1777,6 @@
     <string name="privacy_content_close_button_content_description">Serriñ</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Boued spered</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Boued spered</string>
     <!-- Header text for a section on the home screen. -->
