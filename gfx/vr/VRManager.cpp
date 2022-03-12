@@ -858,6 +858,9 @@ void VRManager::DispatchRuntimeCapabilitiesUpdate() {
 }
 
 void VRManager::StopAllHaptics() {
+  if (mState != VRManagerState::Active) {
+    return;
+  }
   for (size_t i = 0; i < mozilla::ArrayLength(mBrowserState.hapticState); i++) {
     ClearHapticSlot(i);
   }
@@ -1015,6 +1018,10 @@ bool VRManager::RunPuppet(const nsTArray<uint64_t>& aBuffer,
 }
 
 void VRManager::ResetPuppet(VRManagerParent* aManagerParent) {
+  if (!StaticPrefs::dom_vr_puppet_enabled()) {
+    return;
+  }
+
   mManagerParentsWaitingForPuppetReset.Insert(aManagerParent);
   if (mManagerParentRunningPuppet != nullptr) {
     Unused << mManagerParentRunningPuppet
@@ -1516,6 +1523,10 @@ void VRManager::CancelCurrentSubmitTask() {
 NS_IMETHODIMP
 VRManager::Observe(nsISupports* subject, const char* topic,
                    const char16_t* data) {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
+    return NS_OK;
+  }
+
   if (!strcmp(topic, "application-background")) {
     // StopTasks() is called later in the timer thread based on this flag to
     // avoid threading issues.

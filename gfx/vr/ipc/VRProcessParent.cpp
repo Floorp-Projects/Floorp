@@ -154,6 +154,12 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
       return false;
     }
 
+    if (!StaticPrefs::dom_vr_enabled() &&
+        !StaticPrefs::dom_vr_webxr_enabled()) {
+      NS_WARNING("VR is not enabled when trying to create a VRChild");
+      return false;
+    }
+
     mVRChild = MakeUnique<VRChild>(this);
 
     DebugOnly<bool> rv = mVRChild->Open(
