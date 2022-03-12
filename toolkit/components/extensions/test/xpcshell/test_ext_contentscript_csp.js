@@ -405,10 +405,8 @@ async function runCSPTest(test) {
       ],
       permissions: ["webRequest", "webRequestBlocking"],
       host_permissions: ["<all_urls>"],
-      granted_host_permissions: true,
       background: { scripts: ["background.js"] },
     },
-    temporarilyInstalled: true,
     files: {
       "content_script.js": `
       (${contentScript})(${JSON.stringify(test.report)}).then(() => {

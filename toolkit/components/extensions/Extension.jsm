@@ -801,7 +801,10 @@ class ExtensionData {
       return null;
     }
 
-    let { permissions } = this.permissionsObject(this.manifest.permissions);
+    let { permissions, origins } = this.permissionsObject(
+      this.manifest.permissions,
+      this.manifest.host_permissions
+    );
 
     if (
       this.manifest.devtools_page &&
@@ -810,39 +813,18 @@ class ExtensionData {
       permissions.add("devtools");
     }
 
-    return {
-      permissions: Array.from(permissions),
-      origins: this.originControls ? [] : this.getManifestOrigins(),
-    };
-  }
-
-  /**
-   * @returns {string[]} all origins that are referenced in manifest via
-   * permissions, host_permissions, or content_scripts keys.
-   */
-  getManifestOrigins() {
-    if (this.type !== "extension") {
-      return null;
-    }
-
-    let { origins } = this.permissionsObject(
-      this.manifest.permissions,
-      this.manifest.host_permissions
-    );
-
     for (let entry of this.manifest.content_scripts || []) {
       for (let origin of entry.matches) {
         origins.add(origin);
       }
     }
 
-    return Array.from(origins);
+    return {
+      permissions: Array.from(permissions),
+      origins: Array.from(origins),
+    };
   }
 
-  /**
-   * Returns optional permissions from the manifest, including host permissions
-   * if originControls is true.
-   */
   get manifestOptionalPermissions() {
     if (this.type !== "extension") {
       return null;
@@ -851,12 +833,6 @@ class ExtensionData {
     let { permissions, origins } = this.permissionsObject(
       this.manifest.optional_permissions
     );
-    if (this.originControls) {
-      for (let origin of this.getManifestOrigins()) {
-        origins.add(origin);
-      }
-    }
-
     return {
       permissions: Array.from(permissions),
       origins: Array.from(origins),
@@ -1173,9 +1149,6 @@ class ExtensionData {
       id: this.id,
       manifest,
       modules: null,
-      // Whether to treat all origin permissions (including content scripts)
-      // from the manifestas as optional, and enable users to control them.
-      originControls: this.manifestVersion >= 3,
       originPermissions,
       permissions,
       schemaURLs: null,
@@ -1188,14 +1161,6 @@ class ExtensionData {
       let restrictSchemes = !(
         isPrivileged && manifest.permissions.includes("mozillaAddons")
       );
-
-      // Privileged and temporary extensions can opt out of originControls.
-      if (
-        (isPrivileged || this.temporarilyInstalled) &&
-        manifest.granted_host_permissions
-      ) {
-        result.originControls = false;
-      }
 
       let host_permissions = manifest.host_permissions ?? [];
 
@@ -1216,9 +1181,7 @@ class ExtensionData {
         let type = classifyPermission(perm, restrictSchemes, isPrivileged);
         if (type.origin) {
           perm = type.origin;
-          if (!result.originControls) {
-            originPermissions.add(perm);
-          }
+          originPermissions.add(perm);
         } else if (type.api) {
           apiNames.add(type.api);
         } else if (type.invalid) {
@@ -1459,7 +1422,6 @@ class ExtensionData {
 
     this.webAccessibleResources = manifestData.webAccessibleResources;
 
-    this.originControls = manifestData.originControls;
     this.allowedOrigins = new MatchPatternSet(manifestData.originPermissions, {
       restrictSchemes: this.restrictSchemes,
     });
@@ -3109,9 +3071,12 @@ class Extension extends ExtensionData {
 
   get optionalOrigins() {
     if (this._optionalOrigins == null) {
-      let { origins } = this.manifestOptionalPermissions;
+      let { restrictSchemes, isPrivileged } = this;
+      let origins = this.manifest.optional_permissions.filter(
+        perm => classifyPermission(perm, restrictSchemes, isPrivileged).origin
+      );
       this._optionalOrigins = new MatchPatternSet(origins, {
-        restrictSchemes: this.restrictSchemes,
+        restrictSchemes,
         ignorePath: true,
       });
     }

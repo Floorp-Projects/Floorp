@@ -36,18 +36,9 @@ async function getManifestPermissions(extensionData) {
   ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.loadManifest();
   ExtensionTestUtils.failOnSchemaWarnings(true);
-  let result = extension.manifestPermissions;
-
-  if (extension.manifest.manifest_version >= 3) {
-    // In MV3, host permissions are optional by default.
-    deepEqual(result.origins, [], "No origins by default in MV3");
-    let optional = extension.manifestOptionalPermissions;
-    deepEqual(optional.permissions, [], "No tests use optional_permissions");
-    result.origins = optional.origins;
-  }
-
+  const { manifestPermissions } = extension;
   await extension.cleanupGeneratedFile();
-  return result;
+  return manifestPermissions;
 }
 
 function getPermissionWarnings(
