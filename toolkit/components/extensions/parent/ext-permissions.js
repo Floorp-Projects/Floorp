@@ -33,10 +33,9 @@ this.permissions = class extends ExtensionAPI {
         async request(perms) {
           let { permissions, origins } = perms;
 
-          let manifestPermissions =
-            context.extension.manifest.optional_permissions;
+          let { optionalPermissions } = context.extension;
           for (let perm of permissions) {
-            if (!manifestPermissions.includes(perm)) {
+            if (!optionalPermissions.includes(perm)) {
               throw new ExtensionError(
                 `Cannot request permission ${perm} since it was not declared in optional_permissions`
               );
@@ -47,7 +46,7 @@ this.permissions = class extends ExtensionAPI {
           for (let origin of origins) {
             if (!optionalOrigins.subsumes(new MatchPattern(origin))) {
               throw new ExtensionError(
-                `Cannot request origin permission for ${origin} since it was not declared in optional_permissions`
+                `Cannot request origin permission for ${origin} since it was not declared in the manifest`
               );
             }
           }
