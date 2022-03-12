@@ -323,7 +323,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   void SetParent(Derived* aParent);
   Maybe<nsRect> RetrieveCachedBounds() const;
   bool ApplyTransform(nsRect& aBounds) const;
-  void ApplyScrollOffset(nsRect& aBounds) const;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;
@@ -342,7 +341,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   friend Derived;
   friend DocAccessibleParent;
-  friend class xpcAccessible;
 
   nsTArray<Derived*> mChildren;
   DocAccessibleParent* mDoc;
