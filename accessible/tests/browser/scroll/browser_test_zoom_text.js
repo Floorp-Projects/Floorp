@@ -7,14 +7,6 @@
 /* import-globals-from ../../mochitest/layout.js */
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
-async function waitForContentPaint(browser) {
-  await SpecialPowers.spawn(browser, [], () => {
-    return new Promise(function(r) {
-      content.requestAnimationFrame(() => content.setTimeout(r));
-    });
-  });
-}
-
 async function runTests(browser, accDoc) {
   await loadContentScripts(browser, "Layout.jsm");
 
