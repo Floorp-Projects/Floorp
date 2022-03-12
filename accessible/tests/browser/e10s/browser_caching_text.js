@@ -11,14 +11,6 @@ loadScripts(
   { name: "attributes.js", dir: MOCHITESTS_DIR }
 );
 
-const isCacheEnabled = Services.prefs.getBoolPref(
-  "accessibility.cache.enabled",
-  false
-);
-// Some RemoteAccessible methods aren't supported on Windows when the cache is
-// disabled.
-const isWinNoCache = !isCacheEnabled && AppConstants.platform == "win";
-
 /**
  * Test line and word offsets for various cases for both local and remote
  * Accessibles. There is more extensive coverage in ../../mochitest/text. These

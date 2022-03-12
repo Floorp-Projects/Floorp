@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported testMultiSelectable, isCacheEnabled, isWinNoCache */
+/* exported testMultiSelectable */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -24,14 +24,6 @@ loadScripts(
   { name: "states.js", dir: MOCHITESTS_DIR },
   { name: "role.js", dir: MOCHITESTS_DIR }
 );
-
-const isCacheEnabled = Services.prefs.getBoolPref(
-  "accessibility.cache.enabled",
-  false
-);
-// Some RemoteAccessible methods aren't supported on Windows when the cache is
-// disabled.
-const isWinNoCache = !isCacheEnabled && AppConstants.platform == "win";
 
 // Handle case where multiple selection change events are coalesced into
 // a SELECTION_WITHIN event. Promise resolves to true in that case.

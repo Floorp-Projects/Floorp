@@ -8,7 +8,7 @@
 /* import-globals-from ../mochitest/layout.js */
 /* import-globals-from ../mochitest/promisified-events.js */
 
-/* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
+/* exported Logger, MOCHITESTS_DIR, isCacheEnabled, isWinNoCache, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
@@ -42,6 +42,15 @@ const DEFAULT_IFRAME_DOC_BODY_ID = "default-iframe-body-id";
 
 const HTML_MIME_TYPE = "text/html";
 const XHTML_MIME_TYPE = "application/xhtml+xml";
+
+const isCacheEnabled = Services.prefs.getBoolPref(
+  "accessibility.cache.enabled",
+  false
+);
+
+// Some RemoteAccessible methods aren't supported on Windows when the cache is
+// disabled.
+const isWinNoCache = !isCacheEnabled && AppConstants.platform == "win";
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.

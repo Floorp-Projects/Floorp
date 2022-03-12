@@ -54,6 +54,8 @@ class xpcAccessible : public nsIAccessible {
 
   NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes) final;
 
+  NS_IMETHOD GetCache(nsIPersistentProperties** aCachedFields) final;
+
   NS_IMETHOD GetNativeInterface(nsISupports** aNativeInterface) final;
 
   NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
