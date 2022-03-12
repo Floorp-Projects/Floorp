@@ -342,26 +342,6 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
 }
 
 template <class Derived>
-void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
-  Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::scrollPosition);
-
-  if (!maybeScrollPosition || maybeScrollPosition->Length() != 2) {
-    return;
-  }
-  // Our retrieved value is in app units, so we don't need to do any
-  // unit conversion here.
-  const nsTArray<int32_t>& scrollPosition = *maybeScrollPosition;
-
-  // Scroll position is an inverse representation of scroll offset (since the
-  // further the scroll bar moves down the page, the further the page content
-  // moves up/closer to the origin).
-  nsPoint scrollOffset(-scrollPosition[0], -scrollPosition[1]);
-
-  aBounds.MoveBy(scrollOffset.x, scrollOffset.y);
-}
-
-template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
@@ -378,7 +358,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
       Unused << ApplyTransform(bounds);
 
       LayoutDeviceIntRect devPxBounds;
-      const Accessible* acc = Parent();
+      const Accessible* acc = this;
 
       while (acc) {
         if (LocalAccessible* localAcc =
@@ -404,9 +384,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
         }
 
         RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
+        // Verify that remoteAcc is not `this`, since `bounds` was
+        // initialised to include this->RetrieveCachedBounds()
+        Maybe<nsRect> maybeRemoteBounds =
+            (remoteAcc == this) ? Nothing() : remoteAcc->RetrieveCachedBounds();
 
-        if (Maybe<nsRect> maybeRemoteBounds =
-                remoteAcc->RetrieveCachedBounds()) {
+        if (maybeRemoteBounds) {
           nsRect remoteBounds = *maybeRemoteBounds;
           // We need to take into account a non-1 resolution set on the
           // presshell. This happens with async pinch zooming, among other
@@ -426,15 +409,8 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             bounds.ScaleRoundOut(res.valueOr(1.0f));
           }
 
-          // Apply scroll offset, if applicable. Only the contents of an
-          // element are affected by its scroll offset, which is why this call
-          // happens in this loop instead of both inside and outside of
-          // the loop (like ApplyTransform).
-          remoteAcc->ApplyScrollOffset(remoteBounds);
-
-          // Regardless of whether this is a doc, we should offset `bounds`
-          // by the bounds retrieved here. This is how we build screen
-          // coordinates from relative coordinates.
+          // We should offset `bounds` by the bounds retrieved above.
+          // This is how we build screen coordinates from relative coordinates.
           bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
           Unused << remoteAcc->ApplyTransform(bounds);
         }

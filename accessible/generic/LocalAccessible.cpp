@@ -3263,18 +3263,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  if (aCacheDomain & CacheDomain::ScrollPosition) {
-    if (nsIFrame* frame = GetFrame()) {
-      nsPoint scrollPosition;
-      std::tie(scrollPosition, std::ignore) = mDoc->ComputeScrollData(this);
-
-      nsTArray<int32_t> positionArr(2);
-      positionArr.AppendElement(scrollPosition.x);
-      positionArr.AppendElement(scrollPosition.y);
-      fields->SetAttribute(nsGkAtoms::scrollPosition, std::move(positionArr));
-    }
-  }
-
   if (aCacheDomain & CacheDomain::DOMNodeID && mContent) {
     nsAtom* id = mContent->GetID();
     if (id) {
