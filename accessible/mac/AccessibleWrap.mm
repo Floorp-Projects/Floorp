@@ -145,6 +145,11 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (IsDefunct()) {
+    // The accessible can become defunct after their events are handled.
+    return NS_OK;
+  }
+
   uint32_t eventType = aEvent->GetEventType();
 
   if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
