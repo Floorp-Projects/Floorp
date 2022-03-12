@@ -449,10 +449,6 @@ void DocAccessible::Shutdown() {
   }
 
   mChildDocuments.Clear();
-  // mQueuedCacheUpdates can contain a reference to this document (ex. if the
-  // doc is scrollable and we're sending a scroll position update). Clear the
-  // map here to avoid creating ref cycles.
-  mQueuedCacheUpdates.Clear();
 
   // XXX thinking about ordering?
   if (mIPCDoc) {
@@ -620,13 +616,6 @@ void DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 void DocAccessible::HandleScroll(nsINode* aTarget) {
-  // Regardless of our scroll timer, we need to send a cache update
-  // to ensure the next Bounds() query accurately reflects our position
-  // after scrolling.
-  if (LocalAccessible* scrollTarget = GetAccessible(aTarget)) {
-    QueueCacheUpdate(scrollTarget, CacheDomain::ScrollPosition);
-  }
-
   const uint32_t kScrollEventInterval = 100;
   // If we haven't dispatched a scrolling event for a target in at least
   // kScrollEventInterval milliseconds, dispatch one now.
@@ -657,28 +646,6 @@ void DocAccessible::HandleScroll(nsINode* aTarget) {
       NS_ADDREF_THIS();  // Kung fu death grip
     }
   }
-}
-
-std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
-    LocalAccessible* aAcc) {
-  nsPoint scrollPoint;
-  nsRect scrollRange;
-  nsIFrame* frame = aAcc->GetFrame();
-  nsIScrollableFrame* sf = aAcc == this
-                               ? mPresShell->GetRootScrollFrameAsScrollable()
-                               : frame->GetScrollTargetFrame();
-
-  // If there is no scrollable frame, it's likely a scroll in a popup, like
-  // <select>. Return a scroll offset and range of 0. The scroll info
-  // is currently only used on Android, and popups are rendered natively
-  // there.
-  if (sf) {
-    scrollPoint = sf->GetScrollPosition() * mPresShell->GetResolution();
-    scrollRange = sf->GetScrollRange();
-    scrollRange.ScaleRoundOut(mPresShell->GetResolution());
-  }
-
-  return {scrollPoint, scrollRange};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2574,19 +2541,31 @@ void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
     return;
   }
 
-  auto [scrollPoint, scrollRange] = ComputeScrollData(acc);
+  LayoutDevicePoint scrollPoint;
+  LayoutDeviceRect scrollRange;
+  nsIScrollableFrame* sf = acc == this
+                               ? mPresShell->GetRootScrollFrameAsScrollable()
+                               : frame->GetScrollTargetFrame();
 
-  int32_t appUnitsPerDevPixel =
-      mPresShell->GetPresContext()->AppUnitsPerDevPixel();
+  // If there is no scrollable frame, it's likely a scroll in a popup, like
+  // <select>. Just send an event with no scroll info. The scroll info
+  // is currently only used on Android, and popups are rendered natively
+  // there.
+  if (sf) {
+    int32_t appUnitsPerDevPixel =
+        mPresShell->GetPresContext()->AppUnitsPerDevPixel();
+    scrollPoint = LayoutDevicePoint::FromAppUnits(sf->GetScrollPosition(),
+                                                  appUnitsPerDevPixel) *
+                  mPresShell->GetResolution();
 
-  LayoutDeviceIntPoint scrollPointDP = LayoutDevicePoint::FromAppUnitsToNearest(
-      scrollPoint, appUnitsPerDevPixel);
-  LayoutDeviceIntRect scrollRangeDP =
-      LayoutDeviceRect::FromAppUnitsToNearest(scrollRange, appUnitsPerDevPixel);
+    scrollRange = LayoutDeviceRect::FromAppUnits(sf->GetScrollRange(),
+                                                 appUnitsPerDevPixel);
+    scrollRange.ScaleRoundOut(mPresShell->GetResolution());
+  }
 
   RefPtr<AccEvent> event =
-      new AccScrollingEvent(aEventType, acc, scrollPointDP.x, scrollPointDP.y,
-                            scrollRangeDP.width, scrollRangeDP.height);
+      new AccScrollingEvent(aEventType, acc, scrollPoint.x, scrollPoint.y,
+                            scrollRange.width, scrollRange.height);
   nsEventShell::FireEvent(event);
 }
 
