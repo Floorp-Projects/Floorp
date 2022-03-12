@@ -9,7 +9,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
@@ -167,13 +166,6 @@ interface OnboardingInteractor {
     fun showOnboardingDialog()
 }
 
-interface TipInteractor {
-    /**
-     * Dismisses the tip view adapter
-     */
-    fun onCloseTip(tip: Tip)
-}
-
 interface CustomizeHomeIteractor {
     /**
      * Opens the customize home settings page.
@@ -247,8 +239,8 @@ interface ExperimentCardInteractor {
 
 /**
  * Interactor for the Home screen. Provides implementations for the CollectionInteractor,
- * OnboardingInteractor, TopSiteInteractor, TipInteractor, TabSessionInteractor,
- * ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor
+ * OnboardingInteractor, TopSiteInteractor, TabSessionInteractor, ToolbarInteractor,
+ * ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor
  * and others.
  */
 @SuppressWarnings("TooManyFunctions")
@@ -261,7 +253,6 @@ class SessionControlInteractor(
 ) : CollectionInteractor,
     OnboardingInteractor,
     TopSiteInteractor,
-    TipInteractor,
     TabSessionInteractor,
     ToolbarInteractor,
     ExperimentCardInteractor,
@@ -341,10 +332,6 @@ class SessionControlInteractor(
 
     override fun onAddTabsToCollectionTapped() {
         controller.handleCreateCollection()
-    }
-
-    override fun onCloseTip(tip: Tip) {
-        controller.handleCloseTip(tip)
     }
 
     override fun onPrivateBrowsingLearnMoreClicked() {

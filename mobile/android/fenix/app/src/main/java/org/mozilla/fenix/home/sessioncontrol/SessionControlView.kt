@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentState
@@ -34,7 +33,6 @@ internal fun normalModeAdapterItems(
     topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
-    tip: Tip?,
     recentBookmarks: List<RecentBookmark>,
     showCollectionsPlaceholder: Boolean,
     showSetAsDefaultBrowserCard: Boolean,
@@ -47,8 +45,6 @@ internal fun normalModeAdapterItems(
 
     // Add a synchronous, unconditional and invisible placeholder so home is anchored to the top when created.
     items.add(AdapterItem.TopPlaceholderItem)
-
-    tip?.let { items.add(AdapterItem.TipItem(it)) }
 
     if (showSetAsDefaultBrowserCard) {
         items.add(AdapterItem.ExperimentDefaultBrowserCard)
@@ -157,7 +153,6 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
         topSites,
         collections,
         expandedCollections,
-        tip,
         recentBookmarks,
         showCollectionPlaceholder,
         showSetAsDefaultBrowserCard,

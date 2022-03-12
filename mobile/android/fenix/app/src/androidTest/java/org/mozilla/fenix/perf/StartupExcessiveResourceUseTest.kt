@@ -21,7 +21,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 
 // BEFORE INCREASING THESE VALUES, PLEASE CONSULT WITH THE PERF TEAM.
-private const val EXPECTED_SUPPRESSION_COUNT = 21
+private const val EXPECTED_SUPPRESSION_COUNT = 19
 @Suppress("TopLevelPropertyNaming") // it's silly this would have a different naming convention b/c no const
 private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to local runs: increment these together
 private const val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN = 4

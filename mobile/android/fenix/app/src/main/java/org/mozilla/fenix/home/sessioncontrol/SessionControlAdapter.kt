@@ -17,7 +17,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
@@ -45,15 +44,11 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSe
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingThemePickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingToolbarPositionPickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
-import org.mozilla.fenix.home.tips.ButtonTipViewHolder
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object TopPlaceholderItem : AdapterItem(TopPlaceholderViewHolder.LAYOUT_ID)
-    data class TipItem(val tip: Tip) : AdapterItem(
-        ButtonTipViewHolder.LAYOUT_ID
-    )
 
     /**
      * Contains a set of [Pair]s where [Pair.first] is the index of the changed [TopSite] and
@@ -260,7 +255,6 @@ class SessionControlAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             TopPlaceholderViewHolder.LAYOUT_ID -> TopPlaceholderViewHolder(view)
-            ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
             TopSitePagerViewHolder.LAYOUT_ID -> TopSitePagerViewHolder(view, viewLifecycleOwner, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
                 view,
@@ -350,10 +344,6 @@ class SessionControlAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
-            is ButtonTipViewHolder -> {
-                val tipItem = item as AdapterItem.TipItem
-                holder.bind(tipItem.tip)
-            }
             is TopPlaceholderViewHolder -> {
                 holder.bind()
             }

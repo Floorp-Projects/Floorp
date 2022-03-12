@@ -92,7 +92,6 @@ class BlocklistMiddleware(
                 topSites = topSites,
                 mode = mode,
                 collections = collections,
-                tip = tip,
                 showCollectionPlaceholder = showCollectionPlaceholder
             )
         }

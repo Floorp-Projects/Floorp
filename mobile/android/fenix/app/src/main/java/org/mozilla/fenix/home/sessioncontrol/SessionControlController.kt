@@ -40,7 +40,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -147,11 +146,6 @@ interface SessionControlController {
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
-
-    /**
-     * @see [TipInteractor.onCloseTip]
-     */
-    fun handleCloseTip(tip: Tip)
 
     /**
      * @see [ToolbarInteractor.onPasteAndGo]
@@ -528,10 +522,6 @@ class DefaultSessionControlController(
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
         fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, expand))
-    }
-
-    override fun handleCloseTip(tip: Tip) {
-        fragmentStore.dispatch(HomeFragmentAction.RemoveTip(tip))
     }
 
     private fun showTabTrayCollectionCreation() {

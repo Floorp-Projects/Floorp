@@ -54,7 +54,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EngineSource
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -773,13 +772,6 @@ class DefaultSessionControlControllerTest {
         val collection = mockk<TabCollection>()
         createController().handleToggleCollectionExpanded(collection, true)
         verify { fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)) }
-    }
-
-    @Test
-    fun handleCloseTip() {
-        val tip = mockk<Tip>()
-        createController().handleCloseTip(tip)
-        verify { fragmentStore.dispatch(HomeFragmentAction.RemoveTip(tip)) }
     }
 
     @Test
