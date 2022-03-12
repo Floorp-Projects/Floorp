@@ -146,6 +146,17 @@ class HTTPCustomRequestPanel extends Component {
     this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
     this.getStateFromPref = this.getStateFromPref.bind(this);
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    // This is when the query params change in the url params input map
+    if (
+      prevState.urlQueryParams !== this.state.urlQueryParams &&
+      prevState.url === this.state.url
+    ) {
+      this.onUpdateQueryParams();
+    }
+  }
+
   updateStateAndPref(nextState, cb) {
     this.setState(nextState, cb);
 
@@ -213,21 +224,18 @@ class HTTPCustomRequestPanel extends Component {
     });
   }
 
-  checkInputMapItem(stateName, index, checked, cb) {
-    this.updateStateAndPref(
-      {
-        [stateName]: this.state[stateName].map((item, i) => {
-          if (index === i) {
-            return {
-              ...item,
-              checked: checked,
-            };
-          }
-          return item;
-        }),
-      },
-      cb
-    );
+  checkInputMapItem(stateName, index, checked) {
+    this.updateStateAndPref({
+      [stateName]: this.state[stateName].map((item, i) => {
+        if (index === i) {
+          return {
+            ...item,
+            checked: checked,
+          };
+        }
+        return item;
+      }),
+    });
   }
 
   onUpdateQueryParams() {
@@ -235,7 +243,9 @@ class HTTPCustomRequestPanel extends Component {
     let queryString = "";
     for (const { name, value, checked } of urlQueryParams) {
       if (checked) {
-        queryString += `${name}=${value}&`;
+        queryString += `${encodeURIComponent(name)}=${encodeURIComponent(
+          value
+        )}&`;
       }
     }
 
@@ -249,8 +259,9 @@ class HTTPCustomRequestPanel extends Component {
     });
   }
 
-  createQueryParamsListFromURL(url) {
-    const queryArray = (url ? parseQueryString(getUrlQuery(url)) : []) || [];
+  createQueryParamsListFromURL(url = "") {
+    const parsedQuery = parseQueryString(getUrlQuery(url) || url.split("?")[1]);
+    const queryArray = parsedQuery || [];
     return queryArray.map(({ name, value }) => {
       return {
         checked: true,
@@ -352,8 +363,29 @@ class HTTPCustomRequestPanel extends Component {
             },
             CUSTOM_QUERY
           ),
+          // This is the input map for the Url Parameters Component
           InputMap({
             list: urlQueryParams,
+            onUpdate: event => {
+              this.updateInputMapItem(
+                "urlQueryParams",
+                event,
+                this.onUpdateQueryParams
+              );
+            },
+            onAdd: (name, value) =>
+              this.addInputMapItem(
+                "urlQueryParams",
+                name,
+                value,
+                this.onUpdateQueryParams
+              ),
+            onDelete: index =>
+              this.deleteInputMapItem(
+                "urlQueryParams",
+                index,
+                this.onUpdateQueryParams
+              ),
             onChecked: (index, checked) => {
               this.checkInputMapItem(
                 "urlQueryParams",
@@ -376,9 +408,9 @@ class HTTPCustomRequestPanel extends Component {
             },
             CUSTOM_HEADERS
           ),
+          // This is the input map for the Headers Component
           InputMap({
             ref: this.headersListRef,
-            resizeable: true,
             list: headers,
             onUpdate: event => {
               this.updateInputMapItem("headers", event);
