@@ -28,7 +28,6 @@ async function test_webSocket(version) {
       manifest_version: version,
       permissions: ["webRequest", "webRequestBlocking"],
       host_permissions: ["<all_urls>"],
-      granted_host_permissions: true,
       content_scripts: [
         {
           matches: ["http://*/plain.html"],
@@ -37,7 +36,6 @@ async function test_webSocket(version) {
         },
       ],
     },
-    temporarilyInstalled: true,
     background() {
       browser.webRequest.onBeforeRequest.addListener(
         details => {
