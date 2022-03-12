@@ -90,8 +90,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
-import org.mozilla.fenix.components.tips.Tip
-import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
@@ -248,13 +246,7 @@ class HomeFragment : Fragment() {
                     topSites = getTopSites(components),
                     tip = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                         FenixTipManager(
-                            listOf(
-                                MasterPasswordTipProvider(
-                                    requireContext(),
-                                    ::navToSavedLogins,
-                                    ::dismissTip
-                                )
-                            )
+                            listOf()
                         ).getTip()
                     },
                     recentBookmarks = emptyList(),
@@ -422,10 +414,6 @@ class HomeFragment : Fragment() {
 
         getMenuButton()?.dismissMenu()
         displayWallpaperIfEnabled()
-    }
-
-    private fun dismissTip(tip: Tip) {
-        sessionControlInteractor.onCloseTip(tip)
     }
 
     /**
@@ -710,13 +698,7 @@ class HomeFragment : Fragment() {
                 topSites = getTopSites(components),
                 tip = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                     FenixTipManager(
-                        listOf(
-                            MasterPasswordTipProvider(
-                                requireContext(),
-                                ::navToSavedLogins,
-                                ::dismissTip
-                            )
-                        )
+                        listOf()
                     ).getTip()
                 },
                 showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
@@ -788,12 +770,6 @@ class HomeFragment : Fragment() {
                 )
             }
         }
-    }
-
-    private fun navToSavedLogins() {
-        findNavController().navigate(
-            HomeFragmentDirections.actionGlobalSavedLoginsAuthFragment()
-        )
     }
 
     private fun dispatchModeChanges(mode: Mode) {

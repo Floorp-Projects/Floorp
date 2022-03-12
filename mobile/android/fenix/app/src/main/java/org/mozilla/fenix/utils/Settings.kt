@@ -204,11 +204,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    var shouldDisplayMasterPasswordMigrationTip by booleanPreference(
-        appContext.getString(R.string.pref_key_master_password_tip),
-        true
-    )
-
     var shouldReturnToBrowser by booleanPreference(
         appContext.getString(R.string.pref_key_return_to_browser),
         false
