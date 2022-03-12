@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="32dp"
-            android:backgroundTint="?neutral"
+            android:backgroundTint="?borderPrimary"
             android:hint="@string/add_to_homescreen_text_placeholder"
             android:importantForAutofill="no"
             android:inputType="text"
