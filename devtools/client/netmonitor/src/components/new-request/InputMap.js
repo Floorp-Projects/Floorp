@@ -20,6 +20,9 @@ const CUSTOM_NEW_REQUEST_INPUT_VALUE = L10N.getStr(
 
 const REMOVE_ITEM = L10N.getStr("netmonitor.custom.removeItem");
 
+/**
+ * Editable name and value list component with optional form to add new items
+ **/
 class InputMap extends Component {
   static get propTypes() {
     return {
@@ -35,7 +38,6 @@ class InputMap extends Component {
       onDelete: PropTypes.func,
       onChange: PropTypes.func,
       onChecked: PropTypes.func,
-      resizeable: PropTypes.bool,
     };
   }
 
@@ -54,17 +56,19 @@ class InputMap extends Component {
     const { list, onUpdate, onAdd, onDelete, onChecked } = this.props;
     const { name, value } = this.state;
 
-    const onKeyDown = e => {
-      if (e.key === "Enter") {
-        e.stopPropagation();
-        e.preventDefault();
-
-        if (name !== "" && value !== "") {
-          onAdd(name, value);
-          this.setState({ name: "", value: "" });
-          this.refs.addInputName.focus();
-        }
-      }
+    // Adds a new item with name and value when the user starts typing on the form
+    const onKeyDown = event => {
+      const { target } = event;
+      onAdd(name, value);
+      this.setState({ name: "", value: "" }, () => {
+        // Get next to last child on the list,
+        // because that was the item that was just added and
+        // we need to focous on it, so the user can keep editing it.
+        const targetParentNode = this.listRef.current.childNodes?.[
+          this.listRef.current.childElementCount - 2
+        ];
+        targetParentNode?.querySelector(`.${target.className}`).focus();
+      });
     };
 
     return div(
@@ -99,7 +103,7 @@ class InputMap extends Component {
                 "data-replicated-value": item.name,
               },
               textarea({
-                id: "http-custom-input-name",
+                className: "http-custom-input-name",
                 name: `name-${index}`,
                 value: item.name,
                 disabled: !!item.disabled,
@@ -118,7 +122,7 @@ class InputMap extends Component {
                 "data-replicated-value": item.value,
               },
               textarea({
-                id: "http-custom-input-value",
+                className: "http-custom-input-value",
                 name: `value-${index}`,
                 placeholder: "value",
                 disabled: !!item.disabled,
@@ -160,7 +164,7 @@ class InputMap extends Component {
                 "data-replicated-value": name,
               },
               textarea({
-                id: "http-custom-input-name",
+                className: "http-custom-input-name",
                 type: "text",
                 ref: "addInputName",
                 checked: true,
@@ -180,7 +184,7 @@ class InputMap extends Component {
                 "data-replicated-value": value,
               },
               textarea({
-                id: "http-custom-input-value",
+                className: "http-custom-input-value",
                 type: "text",
                 ref: "addInputValue",
                 value: value,
