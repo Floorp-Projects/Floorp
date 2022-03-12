@@ -236,8 +236,8 @@
 
 :root.theme-dark .network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value),
 :root.theme-dark .network-monitor .tabpanel-summary-container .tabpanel-summary-input,
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-name,
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-value {
+:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name,
+:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value {
   background-color: var(--grey-85);
   color: white;
 }
@@ -258,12 +258,12 @@
   width: calc(100% - 5px);
 }
 
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-name:focus {
+:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
   outline: 2px solid var(--blue-50);
   margin-inline-end: 1px;
 }
 
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-value:focus {
+:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
   outline: 2px solid var(--blue-50);
   width: calc(100% - 20px);
 }
@@ -328,12 +328,12 @@
   width: calc(100% - 5px);
 }
 
-:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-name:focus {
+:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
   outline: 2px solid var(--blue-50);
   margin-inline-end: 1px;
 }
 
-:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-value:focus {
+:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
   outline: 2px solid var(--blue-50);
   width: calc(100% - 20px);
 }

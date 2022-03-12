@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1646966924057,
+      "derHash": "AYGythcxeVYudWMjRAN8pSMBhhin9xaCaaPrhTZ/91w=",
+      "subject": "CN=DigiCert Assured ID Grid TLS RSA2048 SHA256 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGUxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE9MDsGA1UEAxM0RGlnaUNlcnQgQXNzdXJlZCBJRCBHcmlkIFRMUyBSU0EyMDQ4IFNIQTI1NiAyMDIyIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7f8f0eacf04c02686bfe08a2ccff1727606d8cbdee3d30408f7ee475b68600a3",
+        "size": 1804,
+        "filename": "_SfSGxeP1MQb2mpICOc8KzfYSH77KMzIMbCgylDKpPc=.pem",
+        "location": "security-state-staging/intermediates/4e91bcaa-5473-4b40-8c61-3bb878424076.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "/SfSGxeP1MQb2mpICOc8KzfYSH77KMzIMbCgylDKpPc=",
+      "crlite_enrolled": false,
+      "id": "a5acb099-b5f7-485c-a851-34cf19a7efc6",
+      "last_modified": 1646967480339
+    },
+    {
       "schema": 1646751472958,
       "derHash": "G095TXcNxuBdx6QVhFD4JZVy621Z3mZ6PD++CNoBJIE=",
       "subject": "CN=Global Trust CA - OV (RSA),O=Global Digital Inc.,C=TW",
