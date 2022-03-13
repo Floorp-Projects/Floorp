@@ -16886,5 +16886,17 @@
     "high": 3000,
     "n_buckets": 100,
     "description": "Collect the time elapsed between receiving a 103 response and the final response for a page load."
+  },
+  "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "bug_numbers": [1560590, 1683100, 1756703],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a Picture-in-Picture window was open.",
+    "releaseChannelCollection": "opt-out"
   }
 }
