@@ -1164,12 +1164,7 @@ class gfxFontUtils {
   static void ParseFontList(const nsACString& aFamilyList,
                             nsTArray<nsCString>& aFontList);
 
-  // for a given font list pref name, append list of font names
-  static void AppendPrefsFontList(const char* aPrefName,
-                                  nsTArray<nsCString>& aFontList,
-                                  bool aLocalized = false);
-
-  // for a given font list pref name, initialize a list of font names
+  // for a given pref name, initialize a list of font names
   static void GetPrefsFontList(const char* aPrefName,
                                nsTArray<nsCString>& aFontList,
                                bool aLocalized = false);
