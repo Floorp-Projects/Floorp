@@ -85,8 +85,9 @@ class BundledSearchEnginesStorageTest {
             val searchEngines = engines.list
 
             println("searchEngines = $searchEngines")
-            assertEquals(6, searchEngines.size)
-            assertContainsSearchEngine("yandex-en", searchEngines)
+            assertEquals(5, searchEngines.size)
+            assertContainsSearchEngine("google-com-nocodes", searchEngines)
+            assertContainsNotSearchEngine("yandex-en", searchEngines)
         }
     }
 
@@ -116,18 +117,15 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState("RU", "RU"), Locale("ru", "RU"))
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["google-b-m", "ddg", "yandex-ru", "wikipedia-ru"]
-        // searchOrder (default): ["Google", "Bing"]
-
         assertEquals(
-            listOf("google-b-m", "ddg", "yandex-ru", "wikipedia-ru"),
+            listOf("google-com-nocodes", "ddg", "wikipedia-ru"),
             searchEngines.map { it.id }
         )
 
-        // searchDefault: "Яндекс"
+        // searchDefault: "Google"
         val default = searchEngines.find { it.id == engines.defaultSearchEngineId }
         assertNotNull(default)
-        assertEquals("yandex-ru", default!!.id)
+        assertEquals("google-com-nocodes", default!!.id)
     }
 
     @Test
