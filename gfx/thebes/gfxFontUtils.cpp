@@ -876,10 +876,11 @@ void gfxFontUtils::ParseFontList(const nsACString& aFamilyList,
   }
 }
 
-void gfxFontUtils::AppendPrefsFontList(const char* aPrefName,
-                                       nsTArray<nsCString>& aFontList,
-                                       bool aLocalized) {
-  // get the list of single-face font families
+void gfxFontUtils::GetPrefsFontList(const char* aPrefName,
+                                    nsTArray<nsCString>& aFontList,
+                                    bool aLocalized) {
+  aFontList.Clear();
+
   nsAutoCString fontlistValue;
   nsresult rv = aLocalized
                     ? Preferences::GetLocalizedCString(aPrefName, fontlistValue)
@@ -889,13 +890,6 @@ void gfxFontUtils::AppendPrefsFontList(const char* aPrefName,
   }
 
   ParseFontList(fontlistValue, aFontList);
-}
-
-void gfxFontUtils::GetPrefsFontList(const char* aPrefName,
-                                    nsTArray<nsCString>& aFontList,
-                                    bool aLocalized) {
-  aFontList.Clear();
-  AppendPrefsFontList(aPrefName, aFontList, aLocalized);
 }
 
 // produce a unique font name that is (1) a valid Postscript name and (2) less

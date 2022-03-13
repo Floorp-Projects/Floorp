@@ -276,6 +276,8 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 
   LoadBadUnderlineList();
 
+  mFontPrefs = MakeUnique<FontPrefs>();
+
   gfxFontUtils::GetPrefsFontList(kFontSystemWhitelistPref, mEnabledFontsList);
 
   // pref changes notification setup
@@ -304,6 +306,7 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 gfxPlatformFontList::~gfxPlatformFontList() {
   mSharedCmaps.Clear();
   ClearLangGroupPrefFonts();
+
   NS_ASSERTION(gFontListPrefObserver, "There is no font list pref observer");
 
   Preferences::UnregisterPrefixCallbacks(FontListPrefChanged, kObservedPrefs);
@@ -1782,9 +1785,11 @@ FamilyAndGeneric gfxPlatformFontList::GetDefaultFontFamily(
     return FamilyAndGeneric();
   }
 
+  nsAutoCString value;
   AutoTArray<nsCString, 4> names;
-  gfxFontUtils::AppendPrefsFontList(
-      NameListPref(aGenericFamily, aLangGroup).get(), names);
+  if (mFontPrefs->LookupNameList(PrefName(aGenericFamily, aLangGroup), value)) {
+    gfxFontUtils::ParseFontList(value, names);
+  }
 
   for (const nsCString& name : names) {
     FontFamily family = FindFamily(nullptr, name);
@@ -1870,12 +1875,16 @@ void gfxPlatformFontList::ResolveGenericFontNames(
   AutoTArray<nsCString, 4> genericFamilies;
 
   // load family for "font.name.generic.lang"
-  gfxFontUtils::AppendPrefsFontList(NamePref(generic, langGroupStr).get(),
-                                    genericFamilies);
+  PrefName prefName(generic, langGroupStr);
+  nsAutoCString value;
+  if (mFontPrefs->LookupName(prefName, value)) {
+    gfxFontUtils::ParseFontList(value, genericFamilies);
+  }
 
   // load fonts for "font.name-list.generic.lang"
-  gfxFontUtils::AppendPrefsFontList(NameListPref(generic, langGroupStr).get(),
-                                    genericFamilies);
+  if (mFontPrefs->LookupNameList(prefName, value)) {
+    gfxFontUtils::ParseFontList(value, genericFamilies);
+  }
 
   nsAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
   MOZ_ASSERT(langGroup, "null lang group for pref lang");
@@ -1904,8 +1913,10 @@ void gfxPlatformFontList::ResolveEmojiFontNames(
   // emoji preference has no lang name
   AutoTArray<nsCString, 4> genericFamilies;
 
-  nsAutoCString prefFontListName("font.name-list.emoji");
-  gfxFontUtils::AppendPrefsFontList(prefFontListName.get(), genericFamilies);
+  nsAutoCString value;
+  if (mFontPrefs->LookupNameList(PrefName("emoji", ""), value)) {
+    gfxFontUtils::ParseFontList(value, genericFamilies);
+  }
 
   GetFontFamiliesFromGenericFamilies(
       aPresContext, StyleGenericFontFamily::MozEmoji, genericFamilies, nullptr,
@@ -2584,6 +2595,9 @@ void gfxPlatformFontList::ClearLangGroupPrefFonts() {
   }
   mCJKPrefLangs.Clear();
   mEmojiPrefFont = nullptr;
+
+  // Create a new FontPrefs and replace the existing one.
+  mFontPrefs = MakeUnique<FontPrefs>();
 }
 
 // Support for memory reporting
@@ -2939,6 +2953,58 @@ bool gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
 
 uint32_t gfxPlatformFontList::GetGeneration() const {
   return SharedFontList() ? SharedFontList()->GetGeneration() : 0;
+}
+
+gfxPlatformFontList::FontPrefs::FontPrefs() {
+  // This must be created on the main thread, so that we can safely use the
+  // Preferences service. Once created, it can be read from any thread.
+  MOZ_ASSERT(NS_IsMainThread());
+  Init();
+}
+
+void gfxPlatformFontList::FontPrefs::Init() {
+  nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
+  if (!prefRootBranch) {
+    return;
+  }
+  nsTArray<nsCString> prefNames;
+  if (NS_SUCCEEDED(prefRootBranch->GetChildList(kNamePrefix, prefNames))) {
+    for (auto& prefName : prefNames) {
+      nsAutoCString value;
+      if (NS_SUCCEEDED(Preferences::GetCString(prefName.get(), value))) {
+        nsAutoCString pref(Substring(prefName, sizeof(kNamePrefix) - 1));
+        mFontName.InsertOrUpdate(pref, value);
+      }
+    }
+  }
+  if (NS_SUCCEEDED(prefRootBranch->GetChildList(kNameListPrefix, prefNames))) {
+    for (auto& prefName : prefNames) {
+      nsAutoCString value;
+      if (NS_SUCCEEDED(Preferences::GetCString(prefName.get(), value))) {
+        nsAutoCString pref(Substring(prefName, sizeof(kNameListPrefix) - 1));
+        mFontNameList.InsertOrUpdate(pref, value);
+      }
+    }
+  }
+  mEmojiHasUserValue = Preferences::HasUserValue("font.name-list.emoji");
+}
+
+bool gfxPlatformFontList::FontPrefs::LookupName(const nsACString& aPref,
+                                                nsACString& aValue) const {
+  if (const auto& value = mFontName.Lookup(aPref)) {
+    aValue = *value;
+    return true;
+  }
+  return false;
+}
+
+bool gfxPlatformFontList::FontPrefs::LookupNameList(const nsACString& aPref,
+                                                    nsACString& aValue) const {
+  if (const auto& value = mFontNameList.Lookup(aPref)) {
+    aValue = *value;
+    return true;
+  }
+  return false;
 }
 
 #undef LOG

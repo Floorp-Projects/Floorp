@@ -2502,6 +2502,8 @@ pictureinpicture:
       height: The height that the window was created at
       screenX: The screen X coordinate that the window was created at
       screenY: The screen Y coordinate that the window was created at
+      ccEnabled: Are subtitles enabled for PiP
+      webVTTSubtitles: Are the subtitles WebVTT
     notification_emails:
       - mconley@mozilla.com
     products:
@@ -2512,6 +2514,7 @@ pictureinpicture:
       - 1560590
       - 1678202
       - 1730039
+      - 1756703
     expiry_version: "never"
     release_channel_collection: opt-out
   resize:
@@ -2581,6 +2584,24 @@ pictureinpicture:
     record_in_processes: ["main", "content"]
     bug_numbers:
       - 1749585
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  closed_method:
+    objects: ["method"]
+    description: >
+      Records the method for closing the Picture-in-Picture window.
+    extra_keys:
+      reason: Will be "close-button", "unpip", "pagehide", "fullscreen", "setup-failure", "close-player-shortcut", "context-menu", or "video-el-remove"
+    notification_emails:
+      - mconley@mozilla.com
+      - mtigley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1756703
     expiry_version: "never"
     release_channel_collection: opt-out
 
