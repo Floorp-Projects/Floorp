@@ -64,7 +64,7 @@
         android:layout_gravity="bottom|center"
         android:alpha="0"
         android:autofillHints="false"
-        android:background="?foundation"
+        android:background="?attr/layer1"
         android:focusedByDefault="true"
         android:hint="@string/collection_name_hint"
         android:imeOptions="actionDone"

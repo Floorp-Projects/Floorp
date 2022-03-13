@@ -79,7 +79,7 @@ class ToolbarView(
             }
 
             background = AppCompatResources.getDrawable(
-                context, context.theme.resolveAttribute(R.attr.foundation)
+                context, context.theme.resolveAttribute(R.attr.layer1)
             )
 
             edit.hint = context.getString(R.string.search_hint)

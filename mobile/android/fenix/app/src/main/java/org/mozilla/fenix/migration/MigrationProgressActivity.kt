@@ -40,7 +40,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
     }
 
     fun init() {
-        window.navigationBarColor = getColorFromAttr(R.attr.foundation)
+        window.navigationBarColor = getColorFromAttr(R.attr.layer1)
 
         val appName = binding.migrationDescription.context.getString(R.string.app_name)
 

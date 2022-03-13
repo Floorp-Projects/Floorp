@@ -166,7 +166,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         val toolbar = activity.findViewById<Toolbar>(R.id.navigationToolbar)
         toolbar?.setToolbarColors(
             foreground = activity.getColorFromAttr(R.attr.textPrimary),
-            background = activity.getColorFromAttr(R.attr.foundation)
+            background = activity.getColorFromAttr(R.attr.layer1)
         )
         actionBar.show()
     }

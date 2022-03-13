@@ -34,6 +34,8 @@
         <!-- Design system color attributes -->
 
         <!-- Layers -->
+        <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
+        <item name="layer1">@color/fx_mobile_layer_color_1</item>
         <!-- Card background, Menu background, Dialog, Banner -->
         <item name="layer2">@color/fx_mobile_layer_color_2</item>
         <!-- Search -->
@@ -82,7 +84,6 @@
         <item name="accent">@color/accent_normal_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
-        <item name="foundation">@color/fx_mobile_layer_color_1</item>
         <item name="above">@color/fx_mobile_layer_color_2</item>
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
@@ -228,6 +229,8 @@
         <!-- Design system color attributes -->
 
         <!-- Layers -->
+        <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
+        <item name="layer1">@color/fx_mobile_private_layer_color_1</item>
         <!-- Card background, Menu background, Dialog, Banner -->
         <item name="layer2">@color/fx_mobile_private_layer_color_2</item>
         <!-- Search -->
@@ -274,7 +277,6 @@
         <item name="accent">@color/accent_private_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_private_theme</item>
-        <item name="foundation">@color/fx_mobile_private_layer_color_1</item>
         <item name="above">@color/fx_mobile_private_layer_color_1</item>
         <item name="neutral">@color/neutral_private_theme</item>
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>

@@ -14,7 +14,7 @@
         android:id="@+id/quick_action_sheet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?foundation">
+        android:background="?attr/layer1">
 
         <FrameLayout
             android:id="@+id/websiteInfoLayout"

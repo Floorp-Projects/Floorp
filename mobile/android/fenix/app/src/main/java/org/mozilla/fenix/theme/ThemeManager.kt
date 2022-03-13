@@ -109,7 +109,7 @@ abstract class ThemeManager {
         }
 
         private fun updateNavigationBar(window: Window, context: Context) {
-            window.navigationBarColor = context.getColorFromAttr(R.attr.foundation)
+            window.navigationBarColor = context.getColorFromAttr(R.attr.layer1)
         }
     }
 }

@@ -10,7 +10,7 @@
     android:id="@+id/panel_wrapper"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?foundation">
+    android:background="?attr/layer1">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/normal_mode"

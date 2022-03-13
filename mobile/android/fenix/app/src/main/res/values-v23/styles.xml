@@ -11,13 +11,13 @@
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">?foundation</item>
+        <item name="android:navigationBarColor">?attr/layer1</item>
     </style>
 
     <style name="BottomSheetPrivate" parent="BottomSheetBasePrivate">
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">?foundation</item>
+        <item name="android:navigationBarColor">?attr/layer1</item>
     </style>
 </resources>

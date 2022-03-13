@@ -11,7 +11,7 @@
     app:titleMarginStart="16dp"
     app:titleMarginEnd="16dp"
     app:titleTextAppearance="@style/ToolbarTitleTextStyle"
-    android:background="?foundation"
+    android:background="?attr/layer1"
     android:elevation="8dp">
 
     <FrameLayout

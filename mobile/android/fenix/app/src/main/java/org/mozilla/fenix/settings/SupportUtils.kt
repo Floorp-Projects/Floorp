@@ -103,7 +103,7 @@ object SupportUtils {
     fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
         .setInstantAppsEnabled(false)
         .setDefaultColorSchemeParams(
-            CustomTabColorSchemeParams.Builder().setToolbarColor(context.getColorFromAttr(R.attr.foundation)).build()
+            CustomTabColorSchemeParams.Builder().setToolbarColor(context.getColorFromAttr(R.attr.layer1)).build()
         )
         .build()
         .intent

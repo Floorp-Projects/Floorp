@@ -52,7 +52,7 @@ class ToolbarView(
             editMode()
 
             background = AppCompatResources.getDrawable(
-                context, context.theme.resolveAttribute(R.attr.foundation)
+                context, context.theme.resolveAttribute(R.attr.layer1)
             )
 
             edit.hint = context.getString(R.string.history_search_1)
