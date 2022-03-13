@@ -157,6 +157,8 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
       videoHeight: video.videoHeight,
       videoWidth: video.videoWidth,
       videoRef,
+      ccEnabled: DISPLAY_TEXT_TRACKS_PREF,
+      webVTTSubtitles: !!video.textTracks?.length,
     });
   }
 

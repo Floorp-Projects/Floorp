@@ -1491,9 +1491,14 @@ nsresult nsMathMLChar::StretchInternal(
     // really shouldn't be doing things this way but for now
     // insert fallbacks into the list
     AutoTArray<nsCString, 16> mathFallbacks;
-    gfxFontUtils::GetPrefsFontList("font.name.serif.x-math", mathFallbacks);
-    gfxFontUtils::AppendPrefsFontList("font.name-list.serif.x-math",
-                                      mathFallbacks);
+    nsAutoCString value;
+    gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+    if (pfl->GetFontPrefs()->LookupName("serif.x-math"_ns, value)) {
+      gfxFontUtils::ParseFontList(value, mathFallbacks);
+    }
+    if (pfl->GetFontPrefs()->LookupNameList("serif.x-math"_ns, value)) {
+      gfxFontUtils::ParseFontList(value, mathFallbacks);
+    }
     InsertMathFallbacks(font.family.families, mathFallbacks);
 
 #ifdef NOISY_SEARCH
