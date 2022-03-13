@@ -10,7 +10,6 @@
 use api::{DebugFlags};
 use api::units::*;
 use std::{usize};
-use crate::batch::BatchFilter;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
@@ -18,7 +17,7 @@ use crate::clip::{ClipInstance, ClipChainInstance};
 use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::GpuCache;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
-use crate::picture::{SurfaceIndex, RasterConfig};
+use crate::picture::{SurfaceIndex, RasterConfig, TileRect, SubSliceIndex};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
 use crate::prim_store::{PrimitiveStore, PrimitiveInstance};
 use crate::render_backend::{DataStores, ScratchBuffer};
@@ -97,26 +96,17 @@ pub enum VisibilityState {
     /// A picture that doesn't have a surface - primitives are composed into the
     /// parent picture with a surface.
     PassThrough,
-    /// During picture cache dependency update, was found to be intersecting with one
-    /// or more visible tiles. The rect in picture cache space is stored here to allow
-    /// the detailed calculations below.
-    Coarse {
-        /// Information about which tile batchers this prim should be added to
-        filter: BatchFilter,
-
+    /// A primitive that has been found to be visible
+    Visible {
         /// A set of flags that define how this primitive should be handled
         /// during batching of visible primitives.
         vis_flags: PrimitiveVisibilityFlags,
-    },
-    /// Once coarse visibility is resolved, this will be set if the primitive
-    /// intersected any dirty rects, otherwise prim will be culled.
-    Detailed {
-        /// Information about which tile batchers this prim should be added to
-        filter: BatchFilter,
 
-        /// A set of flags that define how this primitive should be handled
-        /// during batching of visible primitives.
-        vis_flags: PrimitiveVisibilityFlags,
+        /// Tiles that this primitive intersects with
+        tile_rect: TileRect,
+
+        /// Sub-slice within the picture cache that this prim exists on
+        sub_slice_index: SubSliceIndex,
     },
 }
 
