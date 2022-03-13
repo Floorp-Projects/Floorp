@@ -104,47 +104,93 @@ function registerEvent(
   };
 }
 
-function makeWebRequestEvent(context, event) {
+function makeWebRequestEventAPI(context, event, extensionApi) {
   return new EventManager({
     context,
     module: "webRequest",
     event,
-    register: (fire, filter, info) => {
-      return registerEvent(
-        context.extension,
-        event,
-        fire,
-        filter,
-        info,
-        context.xulBrowser.frameLoader.remoteTab
-      ).unregister;
-    },
+    extensionApi,
   }).api();
 }
 
-this.webRequest = class extends ExtensionAPI {
+function makeWebRequestEventRegistrar(event) {
+  return function({ fire, context }, params) {
+    // ExtensionAPIPersistent makes sure this function will be bound
+    // to the ExtensionAPIPersistent instance.
+    const { extension } = this;
+
+    const [filter, info] = params;
+
+    // When we are registering the real listener coming from the extension context,
+    // we should get the additional remoteTab parameter value from the extension context
+    // (which is then used by the registerTraceableChannel helper to register stream
+    // filters to the channel and associate them to the extension context that has
+    // created it and will be handling the filter onstart/ondata/onend events).
+    let remoteTab;
+    if (context) {
+      remoteTab = context.xulBrowser.frameLoader.remoteTab;
+    }
+
+    return registerEvent(extension, event, fire, filter, info, remoteTab);
+  };
+}
+
+this.webRequest = class extends ExtensionAPIPersistent {
   primeListener(event, fire, params, isInStartup) {
     // During early startup if the listener does not use blocking we do not prime it.
     if (!isInStartup || params[1]?.includes("blocking")) {
-      return registerEvent(this.extension, event, fire, ...params);
+      return super.primeListener(event, fire, params, isInStartup);
     }
   }
+
+  PERSISTENT_EVENTS = {
+    onBeforeRequest: makeWebRequestEventRegistrar("onBeforeRequest"),
+    onBeforeSendHeaders: makeWebRequestEventRegistrar("onBeforeSendHeaders"),
+    onSendHeaders: makeWebRequestEventRegistrar("onSendHeaders"),
+    onHeadersReceived: makeWebRequestEventRegistrar("onHeadersReceived"),
+    onAuthRequired: makeWebRequestEventRegistrar("onAuthRequired"),
+    onBeforeRedirect: makeWebRequestEventRegistrar("onBeforeRedirect"),
+    onResponseStarted: makeWebRequestEventRegistrar("onResponseStarted"),
+    onErrorOccurred: makeWebRequestEventRegistrar("onErrorOccurred"),
+    onCompleted: makeWebRequestEventRegistrar("onCompleted"),
+  };
 
   getAPI(context) {
     return {
       webRequest: {
-        onBeforeRequest: makeWebRequestEvent(context, "onBeforeRequest"),
-        onBeforeSendHeaders: makeWebRequestEvent(
+        onBeforeRequest: makeWebRequestEventAPI(
           context,
-          "onBeforeSendHeaders"
+          "onBeforeRequest",
+          this
         ),
-        onSendHeaders: makeWebRequestEvent(context, "onSendHeaders"),
-        onHeadersReceived: makeWebRequestEvent(context, "onHeadersReceived"),
-        onAuthRequired: makeWebRequestEvent(context, "onAuthRequired"),
-        onBeforeRedirect: makeWebRequestEvent(context, "onBeforeRedirect"),
-        onResponseStarted: makeWebRequestEvent(context, "onResponseStarted"),
-        onErrorOccurred: makeWebRequestEvent(context, "onErrorOccurred"),
-        onCompleted: makeWebRequestEvent(context, "onCompleted"),
+        onBeforeSendHeaders: makeWebRequestEventAPI(
+          context,
+          "onBeforeSendHeaders",
+          this
+        ),
+        onSendHeaders: makeWebRequestEventAPI(context, "onSendHeaders", this),
+        onHeadersReceived: makeWebRequestEventAPI(
+          context,
+          "onHeadersReceived",
+          this
+        ),
+        onAuthRequired: makeWebRequestEventAPI(context, "onAuthRequired", this),
+        onBeforeRedirect: makeWebRequestEventAPI(
+          context,
+          "onBeforeRedirect",
+          this
+        ),
+        onResponseStarted: makeWebRequestEventAPI(
+          context,
+          "onResponseStarted",
+          this
+        ),
+        onErrorOccurred: makeWebRequestEventAPI(
+          context,
+          "onErrorOccurred",
+          this
+        ),
+        onCompleted: makeWebRequestEventAPI(context, "onCompleted", this),
         getSecurityInfo: function(requestId, options = {}) {
           return WebRequest.getSecurityInfo({
             id: requestId,
