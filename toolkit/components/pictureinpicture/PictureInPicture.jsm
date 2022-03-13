@@ -362,7 +362,8 @@ var PictureInPicture = {
 
     tab.addEventListener("TabSwapPictureInPicture", this);
 
-    win.setupPlayer(gNextWindowID.toString(), wgp, videoData.videoRef);
+    let pipId = gNextWindowID.toString();
+    win.setupPlayer(pipId, wgp, videoData.videoRef);
     gNextWindowID++;
 
     this.weakWinToBrowser.set(win, browser);
@@ -371,6 +372,23 @@ var PictureInPicture = {
     Services.prefs.setBoolPref(
       "media.videocontrols.picture-in-picture.video-toggle.has-used",
       true
+    );
+
+    let args = {
+      width: win.innerWidth.toString(),
+      height: win.innerHeight.toString(),
+      screenX: win.screenX.toString(),
+      screenY: win.screenY.toString(),
+      ccEnabled: videoData.ccEnabled.toString(),
+      webVTTSubtitles: videoData.webVTTSubtitles.toString(),
+    };
+
+    Services.telemetry.recordEvent(
+      "pictureinpicture",
+      "create",
+      "player",
+      pipId,
+      args
     );
   },
 
