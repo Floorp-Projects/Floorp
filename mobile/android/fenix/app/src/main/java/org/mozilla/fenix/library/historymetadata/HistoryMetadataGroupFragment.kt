@@ -109,7 +109,7 @@ class HistoryMetadataGroupFragment :
 
             menu.findItem(R.id.delete_history_multi_select)?.let { deleteItem ->
                 deleteItem.title = SpannableString(deleteItem.title).apply {
-                    setTextColor(requireContext(), R.attr.destructive)
+                    setTextColor(requireContext(), R.attr.textWarning)
                 }
             }
         } else {

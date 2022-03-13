@@ -62,12 +62,12 @@ class CreditCardEditorView(
 
         binding.cardNumberLayout.setErrorTextColor(
             ColorStateList.valueOf(
-                binding.root.context.getColorFromAttr(R.attr.destructive)
+                binding.root.context.getColorFromAttr(R.attr.textWarning)
             )
         )
         binding.nameOnCardLayout.setErrorTextColor(
             ColorStateList.valueOf(
-                binding.root.context.getColorFromAttr(R.attr.destructive)
+                binding.root.context.getColorFromAttr(R.attr.textWarning)
             )
         )
 
@@ -128,7 +128,7 @@ class CreditCardEditorView(
 
             binding.cardNumberLayout.error =
                 binding.root.context.getString(R.string.credit_cards_number_validation_error_message)
-            binding.cardNumberTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.destructive))
+            binding.cardNumberTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.textWarning))
         }
 
         if (binding.nameOnCardInput.text.toString().isNotBlank()) {
@@ -139,7 +139,7 @@ class CreditCardEditorView(
 
             binding.nameOnCardLayout.error =
                 binding.root.context.getString(R.string.credit_cards_name_on_card_validation_error_message)
-            binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.destructive))
+            binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.textWarning))
         }
 
         return isValid

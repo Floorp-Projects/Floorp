@@ -34,7 +34,7 @@ class DownloadItemMenu(
             TextMenuCandidate(
                 text = context.getString(R.string.history_delete_item),
                 textStyle = TextStyle(
-                    color = context.getColorFromAttr(R.attr.destructive)
+                    color = context.getColorFromAttr(R.attr.textWarning)
                 )
             ) {
                 onItemTapped.invoke(Item.Delete)

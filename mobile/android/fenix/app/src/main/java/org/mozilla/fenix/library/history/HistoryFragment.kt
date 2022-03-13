@@ -177,7 +177,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             menu.findItem(R.id.share_history_multi_select)?.isVisible = true
             menu.findItem(R.id.delete_history_multi_select)?.title =
                 SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
-                    setTextColor(requireContext(), R.attr.destructive)
+                    setTextColor(requireContext(), R.attr.textWarning)
                 }
         } else {
             inflater.inflate(R.menu.history_menu, menu)

@@ -162,7 +162,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
 
         menu.findItem(R.id.delete_downloads_multi_select)?.title =
             SpannableString(getString(R.string.download_delete_item_1)).apply {
-                setTextColor(requireContext(), R.attr.destructive)
+                setTextColor(requireContext(), R.attr.textWarning)
             }
     }
 

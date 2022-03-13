@@ -80,7 +80,7 @@ class BookmarkItemMenu(
             },
             TextMenuCandidate(
                 text = context.getString(R.string.bookmark_menu_delete_button),
-                textStyle = TextStyle(color = context.getColorFromAttr(R.attr.destructive))
+                textStyle = TextStyle(color = context.getColorFromAttr(R.attr.textWarning))
             ) {
                 onItemTapped.invoke(Item.Delete)
             }

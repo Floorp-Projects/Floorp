@@ -146,7 +146,7 @@ class CollectionItemMenu(
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.collection_delete),
-                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
+                textColorResource = ThemeManager.resolveAttribute(R.attr.textWarning, context)
             ) {
                 onItemTapped.invoke(Item.DeleteCollection)
             }

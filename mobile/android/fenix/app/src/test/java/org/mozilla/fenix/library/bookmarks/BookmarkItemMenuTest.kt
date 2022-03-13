@@ -38,7 +38,7 @@ class BookmarkItemMenuTest {
         val deleteItem = menu.menuItems(BookmarkNodeType.SEPARATOR).last()
         assertEquals("Delete", deleteItem.text)
         assertEquals(
-            TextStyle(color = context.getColorFromAttr(R.attr.destructive)),
+            TextStyle(color = context.getColorFromAttr(R.attr.textWarning)),
             deleteItem.textStyle
         )
 
