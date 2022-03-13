@@ -18,7 +18,7 @@
         android:id="@+id/spinner"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:popupBackground="?above"
+        android:popupBackground="?attr/layer2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

@@ -8,7 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?above">
+    android:background="?attr/layer2">
 
     <ImageView
         android:id="@+id/crash_tab_image"

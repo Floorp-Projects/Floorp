@@ -78,7 +78,7 @@ class TabInCollectionViewHolder(
         if (isLastItem) {
             view.background = AppCompatResources.getDrawable(context, R.drawable.rounded_bottom_corners)
         } else {
-            view.setBackgroundColor(context.getColorFromAttr(R.attr.above))
+            view.setBackgroundColor(context.getColorFromAttr(R.attr.layer2))
         }
     }
 

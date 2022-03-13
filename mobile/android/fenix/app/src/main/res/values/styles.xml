@@ -84,7 +84,6 @@
         <item name="accent">@color/accent_normal_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
-        <item name="above">@color/fx_mobile_layer_color_2</item>
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/fx_mobile_text_color_warning</item>
@@ -160,7 +159,7 @@
         <item name="android:titleTextStyle">@style/HeaderTextStyle</item>
         <item name="android:windowTitleStyle">@style/HeaderTextStyle</item>
         <item name="dialogCornerRadius">@dimen/tab_corner_radius</item>
-        <item name="android:colorBackground">?above</item>
+        <item name="android:colorBackground">?attr/layer2</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?attr/textPrimary</item>
     </style>
@@ -277,7 +276,6 @@
         <item name="accent">@color/accent_private_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_private_theme</item>
-        <item name="above">@color/fx_mobile_private_layer_color_1</item>
         <item name="neutral">@color/neutral_private_theme</item>
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
         <item name="destructive">@color/fx_mobile_private_text_color_warning</item>
@@ -317,10 +315,10 @@
     </style>
 
     <style name="Mozac.Browser.Menu" parent="" tools:ignore="UnusedResources">
-        <item name="cardBackgroundColor">?above</item>
+        <item name="cardBackgroundColor">?attr/layer2</item>
     </style>
     <style name="Mozac.Browser.Menu2" parent="" tools:ignore="UnusedResources">
-        <item name="cardBackgroundColor">?above</item>
+        <item name="cardBackgroundColor">?attr/layer2</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase" />

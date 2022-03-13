@@ -16,7 +16,7 @@
         android:id="@+id/site_list_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?above"
+        android:background="?attr/layer2"
         android:foreground="?android:attr/selectableItemBackground"
         android:minHeight="@dimen/mozac_widget_site_item_height" />
 </FrameLayout>

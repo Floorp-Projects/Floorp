@@ -132,7 +132,7 @@
     <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_private_layer_color_1">@color/photonInk50</color>
     <!-- Card background, Menu background, Dialog, Banner -->
-    <color name="fx_mobile_private_layer_color_2" tools:ignore="UnusedResources">@color/photonInk50</color>
+    <color name="fx_mobile_private_layer_color_2">@color/photonInk50</color>
     <!-- Search -->
     <color name="fx_mobile_private_layer_color_3">@color/photonInk50</color>
     <!-- Homescreen background, Toolbar -->

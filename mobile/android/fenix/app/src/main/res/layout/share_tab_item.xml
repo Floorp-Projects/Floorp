@@ -15,7 +15,7 @@
         android:layout_height="40dp"
         android:padding="8dp"
         android:background="@drawable/favicon_background"
-        android:backgroundTint="?above"
+        android:backgroundTint="?attr/layer2"
         android:importantForAccessibility="no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

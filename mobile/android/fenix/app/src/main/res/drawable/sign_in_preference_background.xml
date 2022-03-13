@@ -12,7 +12,7 @@
     </item>
     <item>
         <shape>
-            <solid android:color="?above" />
+            <solid android:color="?attr/layer2" />
             <corners android:radius="8dp" />
         </shape>
     </item>

@@ -10,5 +10,5 @@
 
     <corners android:radius="8dp" />
 
-    <solid android:color="?above" />
+    <solid android:color="?attr/layer2" />
 </shape>

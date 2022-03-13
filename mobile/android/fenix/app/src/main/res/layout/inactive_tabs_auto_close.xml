@@ -13,7 +13,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?above"
+        android:background="?attr/layer2"
         android:clickable="false"
         android:clipToPadding="false"
         android:focusable="true"
