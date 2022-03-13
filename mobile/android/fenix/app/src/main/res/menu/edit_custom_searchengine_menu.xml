@@ -7,7 +7,7 @@
     <item
         android:id="@+id/save_button"
         android:icon="@drawable/mozac_ic_check"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         android:title="@string/search_engine_add_custom_search_engine_edit_button_content_description"
         app:showAsAction="always" />
 </menu>

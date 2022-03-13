@@ -47,6 +47,8 @@
         <item name="actionPrimary">@color/fx_mobile_action_color_primary</item>
 
         <!-- Text -->
+        <!-- Primary text -->
+        <item name="textPrimary">@color/fx_mobile_text_color_primary</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
         <!-- Action Primary text -->
@@ -74,7 +76,6 @@
         <item name="colorControlNormal">@color/fx_mobile_text_color_primary</item>
 
         <!-- Updated color attributes -->
-        <item name="primaryText">@color/fx_mobile_text_color_primary</item>
         <item name="secondaryText">@color/fx_mobile_text_color_secondary</item>
         <item name="contrastText">@color/fx_mobile_text_color_oncolor_primary</item>
         <item name="accent">@color/accent_normal_theme</item>
@@ -119,7 +120,7 @@
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
         <item name="privateBrowsingButtonAccent">@color/fx_mobile_text_color_primary</item>
 
-        <item name="tabCounterTintColor">?primaryText</item>
+        <item name="tabCounterTintColor">?attr/textPrimary</item>
     </style>
 
     <!-- A theme derived from the normal activity theme, but to look and behave like a dialog -->
@@ -152,14 +153,14 @@
     <style name="NormalTheme" parent="NormalThemeBase" />
 
     <style name="BaseDialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
-        <item name="colorControlNormal">?primaryText</item>
-        <item name="textColorAlertDialogListItem">?primaryText</item>
+        <item name="colorControlNormal">?attr/textPrimary</item>
+        <item name="textColorAlertDialogListItem">?attr/textPrimary</item>
         <item name="android:titleTextStyle">@style/HeaderTextStyle</item>
         <item name="android:windowTitleStyle">@style/HeaderTextStyle</item>
         <item name="dialogCornerRadius">@dimen/tab_corner_radius</item>
         <item name="android:colorBackground">?above</item>
         <item name="colorAccent">?accent</item>
-        <item name="android:textColorPrimary">?primaryText</item>
+        <item name="android:textColorPrimary">?attr/textPrimary</item>
     </style>
 
     <style name="DialogStyleLight" parent="BaseDialogStyle">
@@ -239,6 +240,8 @@
         <item name="actionPrimary">@color/fx_mobile_private_action_color_primary</item>
 
         <!-- Text -->
+        <!-- Primary text -->
+        <item name="textPrimary">@color/fx_mobile_private_text_color_primary</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
         <!-- Action Primary text -->
@@ -264,7 +267,6 @@
         <item name="colorControlNormal">@color/fx_mobile_private_text_color_primary</item>
 
         <!-- Updated color attributes -->
-        <item name="primaryText">@color/fx_mobile_private_text_color_primary</item>
         <item name="secondaryText">@color/fx_mobile_private_text_color_secondary</item>
         <item name="contrastText">@color/fx_mobile_private_text_color_primary</item>
         <item name="accent">@color/accent_private_theme</item>
@@ -347,7 +349,7 @@
     <style name="NeutralOnboardingButton" parent="NeutralButton">
         <item name="android:background">@drawable/onboarding_padded_background</item>
         <item name="backgroundTint">?neutralFaded</item>
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
     </style>
 
     <style name="DestructiveButton" parent="NeutralButton">
@@ -401,39 +403,39 @@
 
     <style name="HeaderTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textSize">18sp</item>
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="Header20TextStyle" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">20sp</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="Header16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">16sp</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="Header14TextStyle" parent="TextAppearance.MaterialComponents.Body2">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">14sp</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="Body14TextStyle" parent="TextAppearance.MaterialComponents.Body2">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">14sp</item>
     </style>
 
     <style name="Body16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
     </style>
 
     <style name="Body12TextStyle" parent="TextAppearance.MaterialComponents.Body1" tools:ignore="UnusedResources">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textAllCaps">false</item>
     </style>
@@ -456,7 +458,7 @@
     </style>
 
     <style name="ListItemTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
     </style>
 
     <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
@@ -527,7 +529,7 @@
     </style>
 
     <style name="SearchClipboardTitleStyle" parent="SearchClipboardStyle">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">@dimen/search_fragment_clipboard_title_text_size</item>
     </style>
 
@@ -575,7 +577,7 @@
     </style>
 
     <style name="AboutHeaderContentText" parent="TextAppearance.MaterialComponents.Subtitle1">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:lineSpacingExtra">@dimen/about_header_text_line_spacing_extra</item>
     </style>
 

@@ -177,7 +177,7 @@ class CustomTabToolbarMenu(
     )
 
     @ColorRes
-    private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
 
     companion object {
         private const val CAPTION_TEXT_SIZE = 12f

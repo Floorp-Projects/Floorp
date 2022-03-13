@@ -55,7 +55,7 @@ class HomeMenu(
         data class DesktopMode(val checked: Boolean) : Item()
     }
 
-    private val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    private val primaryTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
     private val syncDisconnectedColor =
         ThemeManager.resolveAttribute(R.attr.syncDisconnected, context)
     private val syncDisconnectedBackgroundColor =

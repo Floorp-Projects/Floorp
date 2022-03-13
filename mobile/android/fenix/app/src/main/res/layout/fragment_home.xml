@@ -139,7 +139,7 @@
                 android:importantForAccessibility="no"
                 android:lines="1"
                 android:text="@string/search_hint"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textSize="15sp" />
         </FrameLayout>
 

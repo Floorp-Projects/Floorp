@@ -44,6 +44,6 @@
             android:layout_gravity="center"
             android:scaleType="center"
             app:srcCompat="@drawable/ic_menu"
-            app:tint="?primaryText" />
+            app:tint="?attr/textPrimary" />
     </LinearLayout>
 </merge>

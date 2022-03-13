@@ -21,7 +21,7 @@
         android:fontFamily="@font/metropolis_semibold"
         android:paddingStart="20dp"
         android:paddingEnd="0dp"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textSize="14sp"
         android:visibility="gone"
         tools:text="Header" />

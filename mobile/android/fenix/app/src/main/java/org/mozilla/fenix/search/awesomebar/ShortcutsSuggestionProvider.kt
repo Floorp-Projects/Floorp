@@ -31,7 +31,7 @@ class ShortcutsSuggestionProvider(
     private val settingsIcon by lazy {
         AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings)?.apply {
             colorFilter = createBlendModeColorFilterCompat(
-                context.getColorFromAttr(R.attr.primaryText),
+                context.getColorFromAttr(R.attr.textPrimary),
                 SRC_IN
             )
         }?.toBitmap()

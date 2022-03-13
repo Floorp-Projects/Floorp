@@ -19,7 +19,7 @@
         android:hint="@string/customize_addon_collection_user_hint"
         android:inputType="number"
         android:singleLine="true"
-        android:textColor="?primaryText" />
+        android:textColor="?attr/textPrimary" />
 
     <EditText
         android:id="@+id/custom_amo_collection"
@@ -31,6 +31,6 @@
         android:hint="@string/customize_addon_collection_hint"
         android:inputType="text"
         android:singleLine="true"
-        android:textColor="?primaryText" />
+        android:textColor="?attr/textPrimary" />
 
 </LinearLayout>

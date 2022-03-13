@@ -21,7 +21,7 @@
             android:id="@+id/details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             android:textColorLink="?textAccent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"

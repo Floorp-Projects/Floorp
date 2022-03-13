@@ -31,7 +31,7 @@
                 android:layout_marginStart="54dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_enabled"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textSize="16sp" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
@@ -47,10 +47,10 @@
                 android:text="@string/mozac_feature_addons_settings_run_in_private_browsing"
                 android:padding="16dp"
                 android:textSize="16sp"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:drawablePadding="32dp"
                 android:drawableStart="@drawable/ic_private_browsing"
-                app:drawableTint="?primaryText" />
+                app:drawableTint="?attr/textPrimary" />
 
             <TextView
                 android:id="@+id/settings"
@@ -62,9 +62,9 @@
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_settings"
                 android:textSize="16sp"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 app:drawableStartCompat="@drawable/mozac_ic_settings"
-                app:drawableTint="?primaryText" />
+                app:drawableTint="?attr/textPrimary" />
 
             <TextView
                 android:id="@+id/details"
@@ -74,11 +74,11 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:drawablePadding="32dp"
                 android:padding="16dp"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:text="@string/mozac_feature_addons_details"
                 android:textSize="16sp"
                 app:drawableStartCompat="@drawable/ic_info"
-                app:drawableTint="?primaryText" />
+                app:drawableTint="?attr/textPrimary" />
 
             <TextView
                 android:id="@+id/permissions"
@@ -89,7 +89,7 @@
                 android:drawablePadding="32dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_permissions"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textSize="16sp"
                 app:drawableStartCompat="@drawable/ic_permission" />
 

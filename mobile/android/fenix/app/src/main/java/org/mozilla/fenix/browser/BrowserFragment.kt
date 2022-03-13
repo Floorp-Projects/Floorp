@@ -77,14 +77,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 R.drawable.mozac_ic_home
             )!!,
             contentDescription = context.getString(R.string.browser_toolbar_home),
-            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             listener = browserToolbarInteractor::onHomeButtonClicked
         )
 
         browserToolbarView.view.addNavigationAction(homeAction)
 
         if (resources.getBoolean(R.bool.tablet)) {
-            val enableTint = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            val enableTint = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
             val disableTint = ThemeManager.resolveAttribute(R.attr.disabled, context)
             val backAction = BrowserToolbar.TwoStateButton(
                 primaryImage = AppCompatResources.getDrawable(

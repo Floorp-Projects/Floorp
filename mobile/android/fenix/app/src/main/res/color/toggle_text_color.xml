@@ -5,5 +5,5 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="?contrastText" android:state_checked="true" />
     <!-- Default State -->
-    <item android:color="?primaryText" />
+    <item android:color="?attr/textPrimary" />
 </selector>

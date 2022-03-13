@@ -7,7 +7,7 @@
         android:id="@+id/search"
         android:icon="@drawable/ic_search"
         android:title="@string/locale_search_hint"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         android:contentDescription="@string/locale_search_hint"
         app:showAsAction="ifRoom|collapseActionView" />

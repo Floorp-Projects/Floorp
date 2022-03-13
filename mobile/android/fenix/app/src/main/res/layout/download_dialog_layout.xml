@@ -21,7 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/mozac_feature_download_ic_download_complete"
-        app:tint="?primaryText" />
+        app:tint="?attr/textPrimary" />
 
     <TextView
         android:id="@+id/download_dialog_title"
@@ -34,7 +34,7 @@
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textSize="16sp"
         app:layout_constraintEnd_toStartOf="@id/download_dialog_close_button"
         app:layout_constraintHorizontal_bias="0.0"
@@ -51,7 +51,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_close"
-        app:tint="?primaryText" />
+        app:tint="?attr/textPrimary" />
 
     <TextView
         android:id="@+id/download_dialog_filename"
@@ -63,7 +63,7 @@
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/download_dialog_title"

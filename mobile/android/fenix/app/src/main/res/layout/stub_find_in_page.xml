@@ -12,5 +12,5 @@
     android:clickable="true"
     android:focusable="true"
     app:findInPageNoMatchesTextColor="?attr/destructive"
-    app:findInPageButtonsTint="?primaryText"
-    app:findInPageResultCountTextColor="?primaryText" />
+    app:findInPageButtonsTint="?attr/textPrimary"
+    app:findInPageResultCountTextColor="?attr/textPrimary" />

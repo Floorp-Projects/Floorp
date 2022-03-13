@@ -518,7 +518,7 @@ class HomeFragment : Fragment() {
         binding.menuButton.setColorFilter(
             ContextCompat.getColor(
                 requireContext(),
-                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+                ThemeManager.resolveAttribute(R.attr.textPrimary, requireContext())
             )
         )
 

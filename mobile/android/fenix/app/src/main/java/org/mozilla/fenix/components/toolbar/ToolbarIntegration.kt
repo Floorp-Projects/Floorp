@@ -43,7 +43,7 @@ abstract class ToolbarIntegration(
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
             context.components.publicSuffixList,
-            ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             renderStyle = renderStyle
         )
     )

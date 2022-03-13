@@ -774,7 +774,7 @@ abstract class BaseBrowserFragment :
 
         if (binding.swipeRefresh.isEnabled) {
             val primaryTextColor =
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ThemeManager.resolveAttribute(R.attr.textPrimary, context)
             binding.swipeRefresh.setColorSchemeColors(primaryTextColor)
             swipeRefreshFeature.set(
                 feature = SwipeRefreshFeature(

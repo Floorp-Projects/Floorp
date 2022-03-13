@@ -21,7 +21,7 @@
         android:paddingTop="4dp"
         android:scrollHorizontally="false"
         android:textAlignment="viewStart"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textDirection="locale"
         android:textSize="14sp"
         tools:text="@string/private_browsing_placeholder_description_2" />
@@ -38,6 +38,6 @@
         android:paddingBottom="19dp"
         android:scrollHorizontally="false"
         android:text="@string/private_browsing_common_myths"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textSize="14sp" />
 </LinearLayout>

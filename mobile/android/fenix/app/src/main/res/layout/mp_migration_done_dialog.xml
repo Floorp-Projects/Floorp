@@ -28,7 +28,7 @@
         android:padding="10dp"
         android:text="@string/mp_dialog_close_transfer"
         android:textAllCaps="false"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textStyle="bold"
         app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintEnd_toEndOf="parent"

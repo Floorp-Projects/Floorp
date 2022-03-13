@@ -24,7 +24,7 @@
             android:paddingStart="3dp"
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_card_number"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             android:textSize="12sp"
             android:labelFor="@id/card_number_input"
             app:fontFamily="@font/metropolis_semibold" />
@@ -33,7 +33,7 @@
             android:id="@+id/card_number_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             app:errorEnabled="true"
             app:hintEnabled="false">
 
@@ -50,7 +50,7 @@
                 android:lineSpacingExtra="8sp"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textSize="16sp" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -66,7 +66,7 @@
             android:paddingStart="3dp"
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_name_on_card"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             android:textSize="12sp"
             android:labelFor="@id/name_on_card_input"
             app:fontFamily="@font/metropolis_semibold" />
@@ -76,7 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingBottom="11dp"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             app:hintEnabled="false">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -90,7 +90,7 @@
                 android:lineSpacingExtra="8sp"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textSize="16sp" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -106,7 +106,7 @@
             android:paddingStart="3dp"
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_expiration_date"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             android:textSize="12sp"
             app:fontFamily="@font/metropolis_semibold" />
 
@@ -138,7 +138,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="?primaryText" />
+                    android:background="?attr/textPrimary" />
 
             </LinearLayout>
 
@@ -163,7 +163,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="?primaryText" />
+                    android:background="?attr/textPrimary" />
 
             </LinearLayout>
         </LinearLayout>
@@ -197,7 +197,7 @@
                 android:padding="10dp"
                 android:text="@string/credit_cards_cancel_button"
                 android:textAllCaps="false"
-                android:textColor="?primaryText"
+                android:textColor="?attr/textPrimary"
                 android:textStyle="bold"
                 app:fontFamily="@font/metropolis_semibold"
                 app:layout_constraintBottom_toBottomOf="parent"

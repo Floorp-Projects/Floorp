@@ -55,7 +55,7 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                 orientation = orientation,
                 colors = AwesomeBarDefaults.colors(
                     background = Color.Transparent,
-                    title = ThemeManager.resolveAttributeColor(R.attr.primaryText),
+                    title = ThemeManager.resolveAttributeColor(R.attr.textPrimary),
                     description = ThemeManager.resolveAttributeColor(R.attr.secondaryText),
                     autocompleteIcon = ThemeManager.resolveAttributeColor(R.attr.secondaryText)
                 ),

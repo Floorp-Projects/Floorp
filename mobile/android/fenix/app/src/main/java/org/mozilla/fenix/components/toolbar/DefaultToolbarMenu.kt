@@ -306,7 +306,7 @@ open class DefaultToolbarMenu(
             ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
             primaryTextColor(),
         textColorResource = if (hasAccountProblem)
-            ThemeManager.resolveAttribute(R.attr.primaryText, context) else
+            ThemeManager.resolveAttribute(R.attr.textPrimary, context) else
             primaryTextColor(),
         highlight = BrowserMenuHighlight.HighPriority(
             endImageResource = R.drawable.ic_sync_disconnected,
@@ -399,7 +399,7 @@ open class DefaultToolbarMenu(
 
     @ColorRes
     @VisibleForTesting
-    internal fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    internal fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
 
     @ColorRes
     @VisibleForTesting

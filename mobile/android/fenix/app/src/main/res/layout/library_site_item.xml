@@ -45,7 +45,7 @@
             android:singleLine="true"
             android:textAlignment="viewStart"
             android:textSize="18sp"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             tools:text="Example site"
             app:layout_constraintEnd_toStartOf="@id/overflow_menu"
             app:layout_constraintStart_toEndOf="@id/icon"

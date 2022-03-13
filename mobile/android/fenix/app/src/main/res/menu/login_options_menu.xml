@@ -19,7 +19,7 @@
         android:padding="20dp"
         android:paddingStart="20dp"
         android:title="@string/login_menu_edit_button"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         app:showAsAction="never" />
 
     <item
@@ -30,6 +30,6 @@
         android:padding="20dp"
         android:paddingStart="20dp"
         android:title="@string/login_menu_delete_button"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         app:showAsAction="never" />
 </menu>

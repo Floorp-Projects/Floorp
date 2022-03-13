@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:passwordToggleDrawable="@drawable/mozac_ic_password_reveal_two_state"
         app:passwordToggleEnabled="true"
-        app:passwordToggleTint="?primaryText">
+        app:passwordToggleTint="?attr/textPrimary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/password_field"
@@ -31,7 +31,7 @@
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:singleLine="true"
-            android:textColor="?primaryText"
+            android:textColor="?attr/textPrimary"
             android:textSize="16sp" />
     </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
 
@@ -57,7 +57,7 @@
         android:padding="10dp"
         android:text="@string/mp_dialog_negative_transfer_saved_logins"
         android:textAllCaps="false"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textStyle="bold"
         app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintEnd_toEndOf="parent"

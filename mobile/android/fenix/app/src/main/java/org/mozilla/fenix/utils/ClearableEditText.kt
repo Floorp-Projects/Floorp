@@ -54,7 +54,7 @@ class ClearableEditText @JvmOverloads constructor(
         val textLength = text?.length ?: 0
         val drawable = if (shouldShowClearButton(textLength)) {
             AppCompatResources.getDrawable(context, R.drawable.mozac_ic_clear)?.apply {
-                colorFilter = createBlendModeColorFilterCompat(context.getColorFromAttr(R.attr.primaryText), SRC_IN)
+                colorFilter = createBlendModeColorFilterCompat(context.getColorFromAttr(R.attr.textPrimary), SRC_IN)
             }
         } else {
             null

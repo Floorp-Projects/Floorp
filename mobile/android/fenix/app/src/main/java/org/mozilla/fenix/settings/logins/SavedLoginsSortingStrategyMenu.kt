@@ -36,7 +36,7 @@ class SavedLoginsSortingStrategyMenu(
     @VisibleForTesting
     internal fun menuItems(itemToHighlight: Item): List<TextMenuCandidate> {
         val textStyle = TextStyle(
-            color = context.getColorFromAttr(R.attr.primaryText)
+            color = context.getColorFromAttr(R.attr.textPrimary)
         )
 
         val highlight = HighPriorityHighlightEffect(

@@ -38,7 +38,7 @@
         android:singleLine="true"
         android:text="@string/library_recently_closed_tabs"
         android:textAlignment="viewStart"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/recently_closed_tabs_description"
         app:layout_constraintEnd_toEndOf="parent"

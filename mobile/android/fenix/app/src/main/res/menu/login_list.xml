@@ -8,7 +8,7 @@
         android:icon="@drawable/ic_search"
         android:title="@string/preferences_passwords_saved_logins_search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         android:contentDescription="@string/preferences_passwords_saved_logins_search"
         app:showAsAction="ifRoom|collapseActionView" />
 </menu>

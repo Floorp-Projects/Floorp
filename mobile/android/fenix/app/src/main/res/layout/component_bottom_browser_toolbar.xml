@@ -13,9 +13,9 @@
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    app:browserToolbarClearColor="?primaryText"
-    app:browserToolbarInsecureColor="?primaryText"
-    app:browserToolbarMenuColor="?primaryText"
+    app:browserToolbarClearColor="?attr/textPrimary"
+    app:browserToolbarInsecureColor="?attr/textPrimary"
+    app:browserToolbarMenuColor="?attr/textPrimary"
     app:browserToolbarProgressBarGravity="top"
-    app:browserToolbarSecureColor="?primaryText"
+    app:browserToolbarSecureColor="?attr/textPrimary"
     app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?borderPrimary" />

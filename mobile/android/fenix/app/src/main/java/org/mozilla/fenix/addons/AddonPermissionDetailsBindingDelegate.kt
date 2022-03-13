@@ -41,7 +41,7 @@ class AddonPermissionDetailsBindingDelegate(
             adapter = AddonPermissionsAdapter(
                 sortedPermissions,
                 style = AddonPermissionsAdapter.Style(
-                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
+                    ThemeManager.resolveAttribute(R.attr.textPrimary, context)
                 )
             )
         }

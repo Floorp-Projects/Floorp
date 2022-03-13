@@ -30,7 +30,7 @@
         android:ellipsize="middle"
         android:singleLine="true"
         android:textAppearance="?android:attr/textAppearanceListItem"
-        android:textColor="?primaryText"
+        android:textColor="?attr/textPrimary"
         app:layout_constraintBottom_toTopOf="@id/usernameView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/favicon_image"

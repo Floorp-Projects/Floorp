@@ -101,7 +101,7 @@ class BrowserToolbarView(
 
                 val primaryTextColor = ContextCompat.getColor(
                     context,
-                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
+                    ThemeManager.resolveAttribute(R.attr.textPrimary, context)
                 )
                 val secondaryTextColor = ContextCompat.getColor(
                     context,

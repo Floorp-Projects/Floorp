@@ -8,12 +8,12 @@
         android:id="@+id/history_search"
         android:icon="@drawable/mozac_ic_search"
         android:title="@string/history_search_1"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/history_delete_all"
         android:icon="@drawable/ic_delete"
         android:title="@string/history_delete_all"
-        app:iconTint="?primaryText"
+        app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />
 </menu>
