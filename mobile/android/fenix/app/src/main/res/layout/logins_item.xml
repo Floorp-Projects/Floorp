@@ -46,7 +46,7 @@
         android:layout_marginEnd="@dimen/saved_logins_item_margin_end"
         android:ellipsize="middle"
         android:singleLine="true"
-        android:textColor="?secondaryText"
+        android:textColor="?attr/textSecondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/favicon_image"

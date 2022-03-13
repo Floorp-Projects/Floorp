@@ -20,8 +20,8 @@
         android:id="@+id/custom_search_engine_name_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:hintTextColor="?secondaryText"
-        android:textColorHint="?secondaryText"
+        app:hintTextColor="?attr/textSecondary"
+        android:textColorHint="?attr/textSecondary"
         app:hintTextAppearance="@style/EngineTextField"
         android:paddingBottom="8dp"
         app:errorEnabled="true">
@@ -38,8 +38,8 @@
         android:id="@+id/custom_search_engine_search_string_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:hintTextColor="?secondaryText"
-        android:textColorHint="?secondaryText"
+        app:hintTextColor="?attr/textSecondary"
+        android:textColorHint="?attr/textSecondary"
         app:hintTextAppearance="@style/EngineTextField"
         android:paddingBottom="8dp"
         app:errorEnabled="true">

@@ -186,7 +186,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         return AddonsManagerAdapter.Style(
             sectionsTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             addonNameTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-            addonSummaryTextColor = ThemeManager.resolveAttribute(R.attr.secondaryText, context),
+            addonSummaryTextColor = ThemeManager.resolveAttribute(R.attr.textSecondary, context),
             sectionsTypeFace = ResourcesCompat.getFont(context, R.font.metropolis_semibold),
             addonAllowPrivateBrowsingLabelDrawableRes = R.drawable.ic_add_on_private_browsing_label
         )

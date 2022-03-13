@@ -45,7 +45,7 @@
         android:layout_marginTop="4dp"
         android:text="@string/no_collections_description2"
         android:textAlignment="viewStart"
-        android:textColor="?secondaryText"
+        android:textColor="?attr/textSecondary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

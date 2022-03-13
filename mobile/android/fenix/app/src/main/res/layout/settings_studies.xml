@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:importantForAccessibility="no"
         android:text="@string/preference_experiments_summary_2"
-        android:textColor="?attr/secondaryText"
+        android:textColor="?attr/textSecondary"
         android:textColorLink="?textAccent"
         app:layout_constraintEnd_toEndOf="@id/studiesTitle"
         app:layout_constraintHorizontal_bias="0.5"

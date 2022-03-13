@@ -21,6 +21,8 @@
     <!-- Text -->
     <!-- Primary text -->
     <attr name="textPrimary" format="reference" />
+    <!-- Secondary text -->
+    <attr name="textSecondary" format="reference" />
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
     <!-- Action Primary text -->
@@ -39,7 +41,6 @@
     <attr name="borderPrimary" format="reference" />
 
     <!-- Color palette attributes -->
-    <attr name="secondaryText" format="reference" />
     <attr name="contrastText" format="reference" />
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />

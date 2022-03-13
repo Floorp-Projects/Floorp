@@ -20,7 +20,7 @@
         android:gravity="center_horizontal"
         android:paddingTop="80dp"
         android:text="@string/no_open_tabs_description"
-        android:textColor="?secondaryText"
+        android:textColor="?attr/textSecondary"
         android:textSize="16sp"
         android:visibility="visible" />
 </FrameLayout>

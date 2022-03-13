@@ -62,7 +62,7 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
-            android:textColor="?secondaryText"
+            android:textColor="?attr/textSecondary"
             android:textSize="12sp"
             tools:text="https://example.com/"
             app:layout_constraintEnd_toStartOf="@id/overflow_menu"

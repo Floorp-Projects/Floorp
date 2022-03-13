@@ -246,7 +246,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         val recommendedSpannable = SpannableString(subText)
         val subTextColor = ContextCompat.getColor(
             requireContext(),
-            ThemeManager.resolveAttribute(R.attr.secondaryText, requireContext())
+            ThemeManager.resolveAttribute(R.attr.textSecondary, requireContext())
         )
 
         recommendedSpannable.setSpan(

@@ -105,7 +105,7 @@ class BrowserToolbarView(
                 )
                 val secondaryTextColor = ContextCompat.getColor(
                     context,
-                    ThemeManager.resolveAttribute(R.attr.secondaryText, context)
+                    ThemeManager.resolveAttribute(R.attr.textSecondary, context)
                 )
                 val separatorColor = ContextCompat.getColor(
                     context,

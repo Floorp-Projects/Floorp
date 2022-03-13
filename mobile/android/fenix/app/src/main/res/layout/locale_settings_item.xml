@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/locale_item_text_margin_start"
         android:layout_marginEnd="@dimen/locale_item_text_margin_end"
-        android:textColor="?secondaryText"
+        android:textColor="?attr/textSecondary"
         android:textAlignment="viewStart"
         android:textSize="@dimen/locale_item_subtitle_size"
         android:visibility="visible"

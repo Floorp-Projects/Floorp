@@ -17,7 +17,7 @@
         android:text="@string/tab_tray_add_new_collection_name"
         android:textAllCaps="true"
         android:textAppearance="@style/Body16TextStyle"
-        android:textColor="?secondaryText" />
+        android:textColor="?attr/textSecondary" />
 
     <EditText
         android:id="@+id/collection_name"
