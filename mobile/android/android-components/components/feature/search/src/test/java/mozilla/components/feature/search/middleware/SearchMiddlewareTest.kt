@@ -702,9 +702,8 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertNull(store.state.search.regionSearchEngines.find { it.name == "Yandex" })
         assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Google" })
-        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "DuckDuckGo" })
+        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Yandex" })
     }
 
     @Test

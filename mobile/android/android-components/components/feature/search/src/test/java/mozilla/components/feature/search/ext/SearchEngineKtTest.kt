@@ -57,6 +57,7 @@ class SearchEngineKtTest {
             url = "https://www.ecosia.org/search?q={searchTerms}"
         )
 
+        assertNull(searchEngine.parseSearchTerms(Uri.parse("https://yandex.ru/search/?text=")))
         assertNull(searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?q=")))
         assertNull(searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?attr=moz-test")))
 
@@ -72,17 +73,40 @@ class SearchEngineKtTest {
     }
 
     @Test
+    fun `GIVEN yandex search engine and a set of urls THEN search terms are determined when present`() {
+        val searchEngine = createSearchEngine(
+            name = "Yandex",
+            icon = mock(),
+            url = "https://yandex.ru/search/?text={searchTerms}"
+        )
+
+        assertNull(searchEngine.parseSearchTerms(Uri.parse("https://www.ecosia.org/search?q=")))
+        assertNull(searchEngine.parseSearchTerms(Uri.parse("https://yandex.ru/search/?text=")))
+        assertNull(searchEngine.parseSearchTerms(Uri.parse("https://yandex.ru/search/?attr=moz-test")))
+
+        assertEquals(
+            "фаерфокс",
+            searchEngine.parseSearchTerms(Uri.parse("https://yandex.ru/search/?text=%D1%84%D0%B0%D0%B5%D1%80%D1%84%D0%BE%D0%BA%D1%81&lr=21512"))
+        )
+
+        assertEquals(
+            "the sandbaggers",
+            searchEngine.parseSearchTerms(Uri.parse("https://yandex.ru/search/?lr=21512&text=the%20sandbaggers&redircnt=1623745822.1"))
+        )
+    }
+
+    @Test
     fun `GIVEN empty search state THEN search terms are never determined`() {
         val searchState = SearchState()
-        assertNull(searchState.parseSearchTerms("https://google.com/search/?q=the%20sandbaggers"))
+        assertNull(searchState.parseSearchTerms("https://yandex.ru/search/?lr=21512&text=the%20sandbaggers&redircnt=1623745822.1"))
     }
 
     @Test
     fun `GIVEN a search state and a set of urls THEN search terms are determined when present`() {
-        val google = createSearchEngine(
-            name = "Google",
+        val yandex = createSearchEngine(
+            name = "Yandex",
             icon = mock(),
-            url = "https://google.com/search/?q={searchTerms}"
+            url = "https://yandex.ru/search/?text={searchTerms}"
         )
         val ecosia = createSearchEngine(
             name = "Ecosia",
@@ -95,7 +119,7 @@ class SearchEngineKtTest {
             url = "https://www.baidu.com/s?wd={searchTerms}"
         )
         val searchState = SearchState(
-            regionSearchEngines = listOf(google, baidu),
+            regionSearchEngines = listOf(yandex, baidu),
             additionalSearchEngines = listOf(ecosia),
             customSearchEngines = listOf(baidu, ecosia)
         )
@@ -108,11 +132,11 @@ class SearchEngineKtTest {
         )
         assertEquals(
             "the sandbaggers",
-            searchState.parseSearchTerms("https://google.com/search/?q=the%20sandbaggers")
+            searchState.parseSearchTerms("https://yandex.ru/search/?lr=21512&text=the%20sandbaggers&redircnt=1623745822.1")
         )
         assertEquals(
             "фаерфокс",
-            searchState.parseSearchTerms("https://google.com/search/?q=%D1%84%D0%B0%D0%B5%D1%80%D1%84%D0%BE%D0%BA%D1%81")
+            searchState.parseSearchTerms("https://yandex.ru/search/?text=%D1%84%D0%B0%D0%B5%D1%80%D1%84%D0%BE%D0%BA%D1%81&lr=21512")
         )
         assertEquals(
             "Another test",
