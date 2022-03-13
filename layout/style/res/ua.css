@@ -541,6 +541,7 @@ div:-moz-native-anonymous.moz-accessiblecaret.hidden {
    everything else, not reacting to pointer events. */
 div:-moz-native-anonymous.moz-custom-content-container {
   pointer-events: none;
+  user-select: none;
   -moz-top-layer: top;
   position: absolute;
   top: 0;
