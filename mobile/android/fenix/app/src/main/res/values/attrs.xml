@@ -52,7 +52,6 @@
     <attr name="accentBright" format="reference" />
     <attr name="accentHighContrast" format="reference" />
     <attr name="accentUsedOnDarkBackground" format="reference" />
-    <attr name="snackbar" format="reference" />
     <attr name="neutral" format="reference" />
     <attr name="neutralFaded" format="reference" />
     <attr name="preferenceSectionHeader" format="reference"/>
