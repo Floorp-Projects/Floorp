@@ -399,17 +399,17 @@ class ExtensionAPIPersistent extends ExtensionAPI {
   /**
    * Used when instantiating an EventManager instance to register the listener.
    *
-   * @param {Object} options used for event registration
-   * @param {BaseContext} options.context Passed when creating an EventManager instance.
-   * @param {string} options.event The function passed to the listener to fire the event.
-   * @param {Function} options.fire The function passed to the listener to fire the event.
-   * @returns {Function} the unregister function used in the EventManager.
+   * @param {Object}      options         Options used for event registration
+   * @param {BaseContext} options.context Extension Context passed when creating an EventManager instance.
+   * @param {string}      options.event   The eAPI vent name.
+   * @param {Function}    options.fire    The function passed to the listener to fire the event.
+   * @param {Array<any>}  params          An optional array of parameters received along with the
+   *                                      addListener request.
+   * @returns {Function}                  The unregister function used in the EventManager.
    */
-  registerEventListener(options) {
-    let register = this.getEventRegistrar(options.event);
-    if (register) {
-      return register(options).unregister;
-    }
+  registerEventListener(options, params) {
+    const apiRegistar = this.getEventRegistrar(options.event);
+    return apiRegistar?.(options, params).unregister;
   }
 
   /**
@@ -422,10 +422,8 @@ class ExtensionAPIPersistent extends ExtensionAPI {
    * @returns {Object} the unregister and convert functions used in the EventManager.
    */
   primeListener(event, fire, params, isInStartup) {
-    let register = this.getEventRegistrar(event);
-    if (register) {
-      return register({ fire, isInStartup }, ...params);
-    }
+    const apiRegistar = this.getEventRegistrar(event);
+    return apiRegistar?.({ fire, isInStartup }, params);
   }
 }
 
@@ -2244,8 +2242,11 @@ class EventManager {
     }
 
     if (!this.register && extensionApi instanceof ExtensionAPIPersistent) {
-      this.register = fire => {
-        return extensionApi.registerEventListener({ context, event, fire });
+      this.register = (fire, ...params) => {
+        return extensionApi.registerEventListener(
+          { context, event, fire },
+          params
+        );
       };
     }
     if (!this.register) {
