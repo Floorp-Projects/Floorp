@@ -249,7 +249,7 @@ struct PoolThread {
 class IdleTaskManager : public TaskManager {
  public:
   explicit IdleTaskManager(already_AddRefed<nsIIdlePeriod>&& aIdlePeriod)
-      : mIdlePeriodState(std::move(aIdlePeriod)) {}
+      : mIdlePeriodState(std::move(aIdlePeriod)), mProcessedTaskCount(0) {}
 
   IdlePeriodState& State() { return mIdlePeriodState; }
 
@@ -258,9 +258,18 @@ class IdleTaskManager : public TaskManager {
     return !idleDeadline;
   }
 
+  void DidRunTask() override {
+    TaskManager::DidRunTask();
+    ++mProcessedTaskCount;
+  }
+
+  uint64_t ProcessedTaskCount() { return mProcessedTaskCount; }
+
  private:
   // Tracking of our idle state of various sorts.
   IdlePeriodState mIdlePeriodState;
+
+  std::atomic<uint64_t> mProcessedTaskCount;
 };
 
 // The TaskController is the core class of the scheduler. It is used to
@@ -322,6 +331,8 @@ class TaskController {
   nsIRunnable* GetRunnableForMTTask(bool aReallyWait);
 
   bool HasMainThreadPendingTasks();
+
+  uint64_t PendingMainthreadTaskCountIncludingSuspended();
 
   // Let users know whether the last main thread task runnable did work.
   bool MTTaskRunnableProcessedTask() { return mMTTaskRunnableProcessedTask; }
