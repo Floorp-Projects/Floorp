@@ -6801,13 +6801,13 @@ fn get_surface_rects(
     let task_size_f = clipped.size();
 
     if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
-        let max_dimension = clipped_local.width().max(clipped_local.height());
+        let max_dimension = clipped_local.width().max(clipped_local.height()).ceil();
 
         surface.raster_spatial_node_index = surface.surface_spatial_node_index;
         surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
 
         clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round();
-        unclipped = (unclipped_local.cast_unit() * surface.device_pixel_scale).round();
+        unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
     }
 
     let task_size = clipped.size().to_i32();
@@ -6863,4 +6863,61 @@ fn calculate_uv_rect_kind(
         bottom_left,
         bottom_right,
     }
+}
+
+#[test]
+fn test_large_surface_scale_1() {
+    use crate::spatial_tree::{SceneSpatialTree, SpatialTree};
+
+    let mut cst = SceneSpatialTree::new();
+    let root_reference_frame_index = cst.root_reference_frame_index();
+
+    let mut spatial_tree = SpatialTree::new();
+    spatial_tree.apply_updates(cst.end_frame_and_get_pending_updates());
+    spatial_tree.update_tree(&SceneProperties::new());
+
+    let map_local_to_surface = SpaceMapper::new_with_target(
+        root_reference_frame_index,
+        root_reference_frame_index,
+        PictureRect::max_rect(),
+        &spatial_tree,
+    );
+
+    let mut surfaces = vec![
+        SurfaceInfo {
+            local_rect: PictureRect::max_rect(),
+            is_opaque: true,
+            clipping_rect: PictureRect::max_rect(),
+            map_local_to_surface: map_local_to_surface.clone(),
+            raster_spatial_node_index: root_reference_frame_index,
+            surface_spatial_node_index: root_reference_frame_index,
+            render_tasks: None,
+            device_pixel_scale: DevicePixelScale::new(1.0),
+            world_scale_factors: (1.0, 1.0),
+            local_scale: (1.0, 1.0),
+        },
+        SurfaceInfo {
+            local_rect: PictureRect::new(
+                PicturePoint::new(52.76350021362305, 0.0),
+                PicturePoint::new(159.6738739013672, 35.0),
+            ),
+            is_opaque: true,
+            clipping_rect: PictureRect::max_rect(),
+            map_local_to_surface,
+            raster_spatial_node_index: root_reference_frame_index,
+            surface_spatial_node_index: root_reference_frame_index,
+            render_tasks: None,
+            device_pixel_scale: DevicePixelScale::new(43.82798767089844),
+            world_scale_factors: (1.0, 1.0),
+            local_scale: (1.0, 1.0),
+        },
+    ];
+
+    get_surface_rects(
+        SurfaceIndex(1),
+        &PictureCompositeMode::Blit(BlitReason::ISOLATE),
+        SurfaceIndex(0),
+        &mut surfaces,
+        &spatial_tree,
+    );
 }
