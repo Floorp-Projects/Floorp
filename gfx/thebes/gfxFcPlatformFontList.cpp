@@ -2294,28 +2294,23 @@ void gfxFcPlatformFontList::AddGenericFonts(
   if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
       aLanguage == nsGkAtoms::x_math) {
     nsAtom* langGroup = GetLangGroup(aLanguage);
-    nsAutoString fontlistValue;
-    Preferences::GetString(NamePref(generic, langGroup).get(), fontlistValue);
-    nsresult rv;
+    nsAutoCString fontlistValue;
+    mFontPrefs->LookupName(PrefName(generic, langGroup), fontlistValue);
     if (fontlistValue.IsEmpty()) {
       // The font name list may have two or more family names as comma
       // separated list.  In such case, not matching with generic font
       // name is fine because if the list prefers specific font, we
       // should try to use the pref with complicated path.
-      rv = Preferences::GetString(NameListPref(generic, langGroup).get(),
-                                  fontlistValue);
-    } else {
-      rv = NS_OK;
+      mFontPrefs->LookupNameList(PrefName(generic, langGroup), fontlistValue);
     }
-    if (NS_SUCCEEDED(rv)) {
+    if (!fontlistValue.IsEmpty()) {
       if (!fontlistValue.EqualsLiteral("serif") &&
           !fontlistValue.EqualsLiteral("sans-serif") &&
           !fontlistValue.EqualsLiteral("monospace")) {
         usePrefFontList = true;
       } else {
         // serif, sans-serif or monospace was specified
-        genericToLookup.Truncate();
-        AppendUTF16toUTF8(fontlistValue, genericToLookup);
+        genericToLookup = fontlistValue;
       }
     }
   }
@@ -2435,49 +2430,37 @@ gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
 }
 
 bool gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics() {
-  static const char kFontNamePrefix[] = "font.name.";
+  for (auto iter = mFontPrefs->NameIter(); !iter.Done(); iter.Next()) {
+    // Check whether all font.name prefs map to generic keywords
+    // and that the pref name and keyword match.
+    //   Ex: font.name.serif.ar ==> "serif" (ok)
+    //   Ex: font.name.serif.ar ==> "monospace" (return false)
+    //   Ex: font.name.serif.ar ==> "DejaVu Serif" (return false)
+    //   Ex: font.name.serif.ar ==> "" and
+    //       font.name-list.serif.ar ==> "serif" (ok)
+    //   Ex: font.name.serif.ar ==> "" and
+    //       font.name-list.serif.ar ==> "Something, serif"
+    //                                           (return false)
+    const nsACString* prefValue = &iter.Data();
+    nsAutoCString listValue;
+    if (iter.Data().IsEmpty()) {
+      // The font name list may have two or more family names as comma
+      // separated list.  In such case, not matching with generic font
+      // name is fine because if the list prefers specific font, this
+      // should return false.
+      mFontPrefs->LookupNameList(iter.Key(), listValue);
+      prefValue = &listValue;
+    }
 
-  bool prefFontsUseOnlyGenerics = true;
-  nsTArray<nsCString> names;
-  nsresult rv =
-      Preferences::GetRootBranch()->GetChildList(kFontNamePrefix, names);
-  if (NS_SUCCEEDED(rv)) {
-    for (auto& name : names) {
-      // Check whether all font.name prefs map to generic keywords
-      // and that the pref name and keyword match.
-      //   Ex: font.name.serif.ar ==> "serif" (ok)
-      //   Ex: font.name.serif.ar ==> "monospace" (return false)
-      //   Ex: font.name.serif.ar ==> "DejaVu Serif" (return false)
-      //   Ex: font.name.serif.ar ==> "" and
-      //       font.name-list.serif.ar ==> "serif" (ok)
-      //   Ex: font.name.serif.ar ==> "" and
-      //       font.name-list.serif.ar ==> "Something, serif"
-      //                                           (return false)
+    nsCCharSeparatedTokenizer tokenizer(iter.Key(), '.');
+    const nsDependentCSubstring& generic = tokenizer.nextToken();
+    const nsDependentCSubstring& langGroup = tokenizer.nextToken();
 
-      nsDependentCSubstring prefName =
-          Substring(name, ArrayLength(kFontNamePrefix) - 1);
-      nsCCharSeparatedTokenizer tokenizer(prefName, '.');
-      const nsDependentCSubstring& generic = tokenizer.nextToken();
-      const nsDependentCSubstring& langGroup = tokenizer.nextToken();
-      nsAutoCString fontPrefValue;
-      Preferences::GetCString(name.get(), fontPrefValue);
-      if (fontPrefValue.IsEmpty()) {
-        // The font name list may have two or more family names as comma
-        // separated list.  In such case, not matching with generic font
-        // name is fine because if the list prefers specific font, this
-        // should return false.
-        Preferences::GetCString(NameListPref(generic, langGroup).get(),
-                                fontPrefValue);
-      }
-
-      if (!langGroup.EqualsLiteral("x-math") &&
-          !generic.Equals(fontPrefValue)) {
-        prefFontsUseOnlyGenerics = false;
-        break;
-      }
+    if (!langGroup.EqualsLiteral("x-math") && !generic.Equals(*prefValue)) {
+      return false;
     }
   }
-  return prefFontsUseOnlyGenerics;
+  return true;
 }
 
 /* static */
