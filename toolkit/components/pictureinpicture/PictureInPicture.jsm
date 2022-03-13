@@ -41,14 +41,6 @@ const TOGGLE_POSITION_LEFT = "left";
 const RESIZE_MARGIN_PX = 16;
 
 /**
- * If closing the Picture-in-Picture player window occurred for a reason that
- * we can easily detect (user clicked on the close button, originating tab unloaded,
- * user clicked on the unpip button), that will be stashed in gCloseReasons so that
- * we can note it in Telemetry when the window finally unloads.
- */
-let gCloseReasons = new WeakMap();
-
-/**
  * Tracks the number of currently open player windows for Telemetry tracking
  */
 let gCurrentPlayerCount = 0;
@@ -317,8 +309,15 @@ var PictureInPicture = {
     }
     this.removePiPBrowserFromWeakMap(this.weakWinToBrowser.get(win));
 
+    let args = { reason };
+    Services.telemetry.recordEvent(
+      "pictureinpicture",
+      "closed_method",
+      "method",
+      null,
+      args
+    );
     await this.closePipWindow(win);
-    gCloseReasons.set(win, reason);
   },
 
   /**
@@ -382,12 +381,6 @@ var PictureInPicture = {
    * @param {Window} window
    */
   unload(window) {
-    let reason = gCloseReasons.get(window) || "other";
-    Services.telemetry.keyedScalarAdd(
-      "pictureinpicture.closed_method",
-      reason,
-      1
-    );
     gCurrentPlayerCount -= 1;
     // Saves the location of the Picture in Picture window
     this.savePosition(window);
