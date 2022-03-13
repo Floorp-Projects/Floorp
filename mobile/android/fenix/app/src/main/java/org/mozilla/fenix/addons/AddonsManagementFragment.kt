@@ -218,7 +218,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                         requireContext()
                     ),
                     positiveButtonTextColor = ThemeManager.resolveAttribute(
-                        R.attr.contrastText,
+                        R.attr.textOnColorPrimary,
                         requireContext()
                     ),
                     positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
@@ -253,7 +253,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                         requireContext()
                     ),
                     confirmButtonTextColor = ThemeManager.resolveAttribute(
-                        R.attr.contrastText,
+                        R.attr.textOnColorPrimary,
                         requireContext()
                     ),
                     confirmButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()

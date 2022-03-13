@@ -486,7 +486,7 @@ abstract class BaseBrowserFragment :
                     context
                 ),
                 positiveButtonTextColor = ThemeManager.resolveAttribute(
-                    R.attr.contrastText,
+                    R.attr.textOnColorPrimary,
                     context
                 ),
                 positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()

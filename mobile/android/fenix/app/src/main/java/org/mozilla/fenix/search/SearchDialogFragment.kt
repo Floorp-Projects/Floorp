@@ -711,7 +711,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             binding.searchEnginesShortcutButton.isVisible = areShortcutsAvailable
             binding.searchEnginesShortcutButton.isChecked = showShortcuts
 
-            val color = if (showShortcuts) R.attr.contrastText else R.attr.textPrimary
+            val color = if (showShortcuts) R.attr.textOnColorPrimary else R.attr.textPrimary
             binding.searchEnginesShortcutButton.compoundDrawables[0]?.setTint(
                 requireContext().getColorFromAttr(color)
             )

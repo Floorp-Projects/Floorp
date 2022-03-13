@@ -424,7 +424,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     requireContext()
                 ),
                 positiveButtonTextColor = ThemeManager.resolveAttribute(
-                    R.attr.contrastText,
+                    R.attr.textOnColorPrimary,
                     requireContext()
                 ),
                 positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
