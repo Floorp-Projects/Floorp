@@ -2001,24 +2001,6 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - content
-  closed_method:
-    bug_numbers:
-      - 1560590
-      - 1616045
-    description: >
-      The number of times a Picture-in-Picture window was closed, per trigger
-      mechanism (e.g.: the close button, the unpip button, originating tab going away,
-      process shutdown, etc).
-    expires: "92"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - mconley@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   saw_toggle:
     bug_numbers:
       - 1657155

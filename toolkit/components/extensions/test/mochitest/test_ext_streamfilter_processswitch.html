@@ -30,6 +30,9 @@ add_task(async () => {
       browser.webRequest.onBeforeRequest.addListener(
         ({ requestId }) => {
           const filter = browser.webRequest.filterResponseData(requestId);
+          filter.onerror = () => browser.test.fail(
+            `Unexpected filterResponseData error: ${filter.error}`
+          );
           filter.ondata = event => {
             filter.write(event.data);
           };
