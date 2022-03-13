@@ -85,7 +85,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         if (resources.getBoolean(R.bool.tablet)) {
             val enableTint = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-            val disableTint = ThemeManager.resolveAttribute(R.attr.disabled, context)
+            val disableTint = ThemeManager.resolveAttribute(R.attr.textDisabled, context)
             val backAction = BrowserToolbar.TwoStateButton(
                 primaryImage = AppCompatResources.getDrawable(
                     context,

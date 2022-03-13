@@ -57,7 +57,7 @@
             android:textSize="16sp"
             android:fontFamily="sans-serif"
             android:textStyle="normal"
-            android:textColor="?disabled"
+            android:textColor="?attr/textDisabled"
             android:letterSpacing="0.01"
             android:lineSpacingExtra="8sp"
             android:hint="@string/saved_login_hostname_description"

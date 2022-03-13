@@ -25,6 +25,8 @@
     <attr name="textPrimary" format="reference" />
     <!-- Secondary text -->
     <attr name="textSecondary" format="reference" />
+    <!-- Disabled text -->
+    <attr name="textDisabled" format="reference" />
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
     <!-- Action Primary text -->
@@ -52,7 +54,6 @@
     <attr name="neutral" format="reference" />
     <attr name="neutralFaded" format="reference" />
     <attr name="destructive" format="reference"/>
-    <attr name="disabled" format="reference" />
     <attr name="preferenceSectionHeader" format="reference"/>
 
     <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->

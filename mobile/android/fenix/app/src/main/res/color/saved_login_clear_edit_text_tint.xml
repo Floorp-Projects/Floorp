@@ -6,5 +6,5 @@
     <item android:state_enabled="true"
         android:color="?attr/textPrimary" />
     <item android:state_enabled="false"
-        android:color="?disabled" />
+        android:color="?attr/textDisabled" />
 </selector>

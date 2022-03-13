@@ -53,6 +53,8 @@
         <item name="textPrimary">@color/fx_mobile_text_color_primary</item>
         <!-- Secondary text -->
         <item name="textSecondary">@color/fx_mobile_text_color_secondary</item>
+        <!-- Disabled text -->
+        <item name="textDisabled">@color/fx_mobile_text_color_disabled</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
         <!-- Action Primary text -->
@@ -87,7 +89,6 @@
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/fx_mobile_text_color_warning</item>
-        <item name="disabled">@color/fx_mobile_text_color_disabled</item>
         <item name="accentUsedOnDarkBackground">@color/fx_mobile_text_color_accent</item>
         <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
@@ -247,6 +248,8 @@
         <item name="textPrimary">@color/fx_mobile_private_text_color_primary</item>
         <!-- Secondary text -->
         <item name="textSecondary">@color/fx_mobile_private_text_color_secondary</item>
+        <!-- Disabled text -->
+        <item name="textDisabled">@color/fx_mobile_private_text_color_disabled</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
         <!-- Action Primary text -->
@@ -279,7 +282,6 @@
         <item name="neutral">@color/neutral_private_theme</item>
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
         <item name="destructive">@color/fx_mobile_private_text_color_warning</item>
-        <item name="disabled">@color/fx_mobile_private_text_color_disabled</item>
         <item name="accentUsedOnDarkBackground">@color/accent_high_contrast_private_theme</item>
         <item name="toolbarStartGradient">@color/fx_mobile_private_layer_color_4_start</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_private_layer_color_4_center</item>

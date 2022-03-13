@@ -60,7 +60,7 @@ class CustomTabToolbarMenu(
                 session?.content?.canGoBack ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.disabled,
+                R.attr.textDisabled,
                 context
             ),
             disableInSecondaryState = true,
@@ -77,7 +77,7 @@ class CustomTabToolbarMenu(
                 session?.content?.canGoForward ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.disabled,
+                R.attr.textDisabled,
                 context
             ),
             disableInSecondaryState = true,
