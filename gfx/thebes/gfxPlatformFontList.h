@@ -164,6 +164,44 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   typedef mozilla::WeightRange WeightRange;
   typedef mozilla::intl::Script Script;
 
+  // Class used to hold cached copies of the font-name prefs, so that they can
+  // be accessed from non-main-thread callers who are not allowed to touch the
+  // Preferences service.
+  class FontPrefs final {
+   public:
+    using HashMap = nsTHashMap<nsCStringHashKey, nsCString>;
+
+    FontPrefs();
+    ~FontPrefs() = default;
+
+    FontPrefs(const FontPrefs& aOther) = delete;
+    FontPrefs& operator=(const FontPrefs& aOther) = delete;
+
+    // Lookup the font.name.<foo> or font.name-list.<foo> pref for a given
+    // generic+langgroup pair.
+    bool LookupName(const nsACString& aPref, nsACString& aValue) const;
+    bool LookupNameList(const nsACString& aPref, nsACString& aValue) const;
+
+    // Does the font.name-list.emoji pref have a user-set value?
+    bool EmojiHasUserValue() const { return mEmojiHasUserValue; }
+
+    // Expose iterators over all the defined prefs of each type.
+    HashMap::ConstIterator NameIter() const { return mFontName.ConstIter(); }
+    HashMap::ConstIterator NameListIter() const {
+      return mFontNameList.ConstIter();
+    }
+
+   private:
+    static constexpr char kNamePrefix[] = "font.name.";
+    static constexpr char kNameListPrefix[] = "font.name-list.";
+
+    void Init();
+
+    HashMap mFontName;
+    HashMap mFontNameList;
+    bool mEmojiHasUserValue = false;
+  };
+
   // For font family lists loaded from user preferences (prefs such as
   // font.name-list.<generic>.<langGroup>) that map CSS generics to
   // platform-specific font families.
@@ -460,6 +498,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   gfxFontEntry* GetOrCreateFontEntry(mozilla::fontlist::Face* aFace,
                                      const mozilla::fontlist::Family* aFamily);
 
+  const FontPrefs* GetFontPrefs() const { return mFontPrefs.get(); }
+
+  bool EmojiPrefHasUserValue() const { return mFontPrefs->EmojiHasUserValue(); }
+
   PrefFontList* GetPrefFontsLangGroup(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGenericType,
       eFontPrefLang aPrefLang);
@@ -597,15 +639,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     NS_DECL_NSIMEMORYREPORTER
   };
 
-  template <bool ForNameList>
-  class PrefNameMaker final : public nsAutoCString {
+  class PrefName final : public nsAutoCString {
     void Init(const nsACString& aGeneric, const nsACString& aLangGroup) {
-      if (ForNameList) {
-        AssignLiteral("font.name-list.");
-      } else {
-        AssignLiteral("font.name.");
-      }
-      Append(aGeneric);
+      Assign(aGeneric);
       if (!aLangGroup.IsEmpty()) {
         Append('.');
         Append(aLangGroup);
@@ -613,15 +649,15 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     }
 
    public:
-    PrefNameMaker(const nsACString& aGeneric, const nsACString& aLangGroup) {
+    PrefName(const nsACString& aGeneric, const nsACString& aLangGroup) {
       Init(aGeneric, aLangGroup);
     }
 
-    PrefNameMaker(const char* aGeneric, const char* aLangGroup) {
+    PrefName(const char* aGeneric, const char* aLangGroup) {
       Init(nsDependentCString(aGeneric), nsDependentCString(aLangGroup));
     }
 
-    PrefNameMaker(const char* aGeneric, nsAtom* aLangGroup) {
+    PrefName(const char* aGeneric, nsAtom* aLangGroup) {
       if (aLangGroup) {
         Init(nsDependentCString(aGeneric), nsAtomCString(aLangGroup));
       } else {
@@ -629,9 +665,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       }
     }
   };
-
-  typedef PrefNameMaker<false> NamePref;
-  typedef PrefNameMaker<true> NameListPref;
 
   explicit gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);
 
@@ -924,6 +957,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   nsRefPtrHashtable<nsPtrHashKey<mozilla::fontlist::Face>, gfxFontEntry>
       mFontEntries;
+
+  mozilla::UniquePtr<FontPrefs> mFontPrefs;
 
   RefPtr<gfxFontEntry> mDefaultFontEntry;
 
