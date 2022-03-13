@@ -47,7 +47,7 @@
         android:id="@+id/search_suggestions_hint_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutralFaded"
+        android:background="?borderPrimary"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/search_suggestions_hint"
         app:layout_constraintEnd_toEndOf="parent"
@@ -91,7 +91,7 @@
         android:id="@+id/pill_wrapper_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutralFaded"
+        android:background="?borderPrimary"
         app:layout_constraintBottom_toTopOf="@id/pill_wrapper" />
 
     <View

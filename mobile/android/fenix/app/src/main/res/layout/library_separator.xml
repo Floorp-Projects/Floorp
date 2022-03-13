@@ -14,5 +14,5 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_gravity="center"
-        android:background="?neutralFaded"/>
+        android:background="?borderPrimary"/>
 </FrameLayout>

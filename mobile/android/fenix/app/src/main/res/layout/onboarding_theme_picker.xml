@@ -122,7 +122,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="1dp"
         android:layout_marginBottom="16dp"
-        android:background="?attr/neutralFaded"
+        android:background="?attr/borderPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dark_theme_title" />

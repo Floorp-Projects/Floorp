@@ -182,7 +182,7 @@
             android:id="@+id/line_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?neutralFaded"
+            android:background="?borderPrimary"
             app:layout_constraintTop_toBottomOf="@id/tracking_content_loaded" />
 
         <TextView
@@ -274,7 +274,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
+            android:background="?borderPrimary"
             app:layout_constraintTop_toBottomOf="@id/smartblock_learn_more" />
 
         <androidx.appcompat.widget.LinearLayoutCompat

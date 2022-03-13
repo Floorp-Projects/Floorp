@@ -34,7 +34,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
+            android:background="?borderPrimary"
             app:layout_constraintBottom_toTopOf="@id/websitePermissionsLayout" />
 
         <FrameLayout
@@ -49,7 +49,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
+            android:background="?borderPrimary"
             app:layout_constraintBottom_toTopOf="@id/trackingProtectionLayout" />
 
         <FrameLayout
@@ -64,7 +64,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
+            android:background="?borderPrimary"
             app:layout_constraintBottom_toTopOf="@id/clearSiteDataLayout" />
 
         <androidx.constraintlayout.widget.Group

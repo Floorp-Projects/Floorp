@@ -46,7 +46,7 @@
         android:id="@+id/search_suggestions_hint_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutralFaded"
+        android:background="?borderPrimary"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/search_suggestions_hint"
         app:layout_constraintEnd_toEndOf="parent"
@@ -60,7 +60,6 @@
         app:constraint_referenced_ids="awesome_bar,pill_wrapper"/>
 
     <org.mozilla.fenix.search.awesomebar.AwesomeBarWrapper
-        xmlns:mozac="http://schemas.android.com/apk/res-auto"
         android:id="@+id/awesome_bar"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -146,14 +145,14 @@
         android:id="@+id/fill_link_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutralFaded"
+        android:background="?borderPrimary"
         app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
 
     <View
         android:id="@+id/pill_wrapper_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutralFaded"
+        android:background="?borderPrimary"
         app:layout_constraintBottom_toTopOf="@id/pill_wrapper" />
 
     <View
