@@ -75,7 +75,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           if (gTestWindow) {
             gTestWindow.close();
           }
-          SimpleTest.waitForFocus(runNextTest);
+
+          // Try to stabilize the state before running the next test.
+          SimpleTest.waitForFocus(
+            () => requestAnimationFrame(() => setTimeout(runNextTest)));
         }
 
         function runNextTest() {
