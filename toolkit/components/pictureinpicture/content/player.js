@@ -194,13 +194,6 @@ let Player = {
     this.lastScreenX = window.screenX;
     this.lastScreenY = window.screenY;
 
-    this.recordEvent("create", {
-      width: window.outerWidth.toString(),
-      height: window.outerHeight.toString(),
-      screenX: window.screenX.toString(),
-      screenY: window.screenY.toString(),
-    });
-
     this.computeAndSetMinimumSize(window.outerWidth, window.outerHeight);
 
     // alwaysontop windows are not focused by default, so we have to do it
