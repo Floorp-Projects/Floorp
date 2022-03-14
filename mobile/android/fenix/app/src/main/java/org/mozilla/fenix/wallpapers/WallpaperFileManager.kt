@@ -40,17 +40,17 @@ class WallpaperFileManager(
      * Remove all wallpapers that are not the [currentWallpaper] or in [availableWallpapers].
      */
     fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper.Remote>) {
-        val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.name }
-        cleanChildren(portraitDirectory, wallpapersToKeep)
-        cleanChildren(landscapeDirectory, wallpapersToKeep)
+        scope.launch {
+            val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.name }
+            cleanChildren(portraitDirectory, wallpapersToKeep)
+            cleanChildren(landscapeDirectory, wallpapersToKeep)
+        }
     }
 
     private fun cleanChildren(dir: File, wallpapersToKeep: List<String>) {
         for (file in dir.walkTopDown()) {
             if (file.isDirectory || file.nameWithoutExtension in wallpapersToKeep) continue
-            scope.launch {
-                file.delete()
-            }
+            file.delete()
         }
     }
 }
