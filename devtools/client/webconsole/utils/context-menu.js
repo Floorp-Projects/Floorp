@@ -209,20 +209,6 @@ function createContextMenu(event, message, webConsoleWrapper) {
     })
   );
 
-  // Select all.
-  menu.append(
-    new MenuItem({
-      id: "console-menu-select",
-      label: l10n.getStr("webconsole.menu.selectAll.label"),
-      accesskey: l10n.getStr("webconsole.menu.selectAll.accesskey"),
-      disabled: false,
-      click: () => {
-        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-        selection.selectAllChildren(webconsoleOutput);
-      },
-    })
-  );
-
   const exportSubmenu = new Menu({
     id: "export-submenu",
   });

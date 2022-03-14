@@ -14,7 +14,6 @@ add_task(async function testSelectAll() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await testSelectionWhenMovingBetweenBoxes(hud);
   testBrowserMenuSelectAll(hud);
-  await testContextMenuSelectAll(hud);
 });
 
 async function testSelectionWhenMovingBetweenBoxes(hud) {
@@ -42,29 +41,6 @@ function testBrowserMenuSelectAll(hud) {
   // Test that the global Firefox "Select All" functionality (e.g. Edit >
   // Select All) works properly in the Web Console.
   goDoCommand("cmd_selectAll");
-
-  checkMessagesSelected(outputContainer);
-  hud.iframeWindow.getSelection().removeAllRanges();
-}
-
-// Test the context menu "Select All" (which has a different code path) works
-// properly as well.
-async function testContextMenuSelectAll(hud) {
-  const { ui } = hud;
-  const outputContainer = ui.outputNode.querySelector(".webconsole-output");
-  const contextMenu = await openContextMenu(hud, outputContainer);
-
-  const selectAllItem = contextMenu.querySelector("#console-menu-select");
-  ok(
-    selectAllItem,
-    `the context menu on the output node has a "Select All" item`
-  );
-
-  outputContainer.focus();
-
-  const menuHidden = once(contextMenu, "popuphidden");
-  contextMenu.activateItem(selectAllItem);
-  await menuHidden;
 
   checkMessagesSelected(outputContainer);
   hud.iframeWindow.getSelection().removeAllRanges();
