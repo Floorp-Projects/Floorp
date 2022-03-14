@@ -26,16 +26,19 @@ add_task(async function() {
   );
 
   // Define functions checking if the rule view display the expected property.
-  const divHasDefaultStyling = () =>
-    getPropertiesForRuleIndex(view, 1).has("background-color:yellow");
-  const divHasDarkSchemeStyling = () =>
-    getPropertiesForRuleIndex(view, 1).has("background-color:darkblue");
+  const divHasDefaultStyling = async () =>
+    (await getPropertiesForRuleIndex(view, 1)).has("background-color:yellow");
+  const divHasDarkSchemeStyling = async () =>
+    (await getPropertiesForRuleIndex(view, 1)).has("background-color:darkblue");
 
   info(
     "Select the div that will change according to conditions in prefered color scheme"
   );
   await selectNode("div", inspector);
-  ok(divHasDefaultStyling(), "The rule view shows the expected initial rule");
+  ok(
+    await divHasDefaultStyling(),
+    "The rule view shows the expected initial rule"
+  );
 
   info("Open responsive design mode");
   let { toolWindow } = await ResponsiveUIManager.openIfNeeded(
@@ -65,7 +68,7 @@ add_task(async function() {
   await wait(1000);
   ok(isButtonChecked(darkButton), "button is still checked");
   ok(
-    divHasDarkSchemeStyling(),
+    await divHasDarkSchemeStyling(),
     "dark mode color-scheme simulation is still enabled"
   );
 
