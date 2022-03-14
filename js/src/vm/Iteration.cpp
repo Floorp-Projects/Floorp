@@ -1038,22 +1038,6 @@ bool js::EnumerateProperties(JSContext* cx, HandleObject obj,
   return Snapshot(cx, obj, 0, props);
 }
 
-#ifdef DEBUG
-static bool PrototypeMayHaveIndexedProperties(NativeObject* nobj) {
-  JSObject* proto = nobj->staticPrototype();
-  if (!proto) {
-    return false;
-  }
-
-  if (proto->is<NativeObject>() &&
-      proto->as<NativeObject>().getDenseInitializedLength() > 0) {
-    return true;
-  }
-
-  return ObjectMayHaveExtraIndexedProperties(proto);
-}
-#endif
-
 static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
   MOZ_ASSERT(cx->compartment() == obj->compartment(),
