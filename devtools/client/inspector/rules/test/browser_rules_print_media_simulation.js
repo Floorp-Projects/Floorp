@@ -22,12 +22,15 @@ add_task(async function() {
   // Helper to retrieve the background-color property of the selected element
   // All the test elements are expected to have a single background-color rule
   // for this test.
-  const ruleViewHasColor = color =>
-    getPropertiesForRuleIndex(view, 1).has("background-color:" + color);
+  const ruleViewHasColor = async color =>
+    (await getPropertiesForRuleIndex(view, 1)).has("background-color:" + color);
 
   info("Select a div that will change according to print simulation");
   await selectNode("div", inspector);
-  ok(ruleViewHasColor("#f00"), "The rule view shows the expected initial rule");
+  ok(
+    await ruleViewHasColor("#f00"),
+    "The rule view shows the expected initial rule"
+  );
   is(
     getRuleViewAncestorRulesDataElementByIndex(view, 1),
     null,
@@ -55,7 +58,7 @@ add_task(async function() {
   await selectNodeInFrames(["iframe", "html"], inspector);
 
   ok(
-    ruleViewHasColor("#0ff"),
+    await ruleViewHasColor("#0ff"),
     "The simulation is also applied on the remote iframe"
   );
   is(
