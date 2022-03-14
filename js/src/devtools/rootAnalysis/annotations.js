@@ -447,83 +447,25 @@ function isLimitConstructor(typeInfo, edgeType, varName)
     return attrs;
 }
 
-// nsISupports subclasses' methods may be scriptable (or overridden
-// via binary XPCOM), and so may GC. But some fields just aren't going
-// to get overridden with something that can GC.
-function isOverridableField(staticCSU, csu, field)
+// XPIDL-generated methods may invoke JS code, depending on the IDL
+// attributes. This is not visible in the static callgraph since it
+// goes through generated asm code. We can use the JS_HAZ_CAN_RUN_SCRIPT
+// annotation to tell whether this is possible, which is set programmatically
+// by the code generator when needed (bug 1347999):
+// https://searchfox.org/mozilla-central/rev/81c52abeec336685330af5956c37b4bcf8926476/xpcom/idl-parser/xpidl/header.py#213-219
+//
+// Note that WebIDL callbacks can also invoke JS code, but our code generator
+// produces regular C++ code and so does not need any annotations. (There will
+// be a call to JS::Call() or similar.)
+function virtualCanRunJS(csu, field)
 {
-    // Special-case AddRef/Release for now. This isn't really true.
-    if (field == "AddRef" || field == "Release")
+    const tags = typeInfo.OtherFieldTags;
+    const iface = tags[csu]
+    if (!iface) {
         return false;
-
-    if (csu != 'nsISupports')
-        return false;
-
-    if (field.endsWith(" "))
-        return false; // gcc-synthesized virtual dtor
-
-    // Now that binary XPCOM is dead, all these annotations should be replaced
-    // with something based on bug 1347999.
-    if (field == 'GetCurrentJSContext')
-        return false;
-    if (field == 'IsOnCurrentThread')
-        return false;
-    if (field == 'GetNativeContext')
-        return false;
-    if (field == "GetGlobalJSObject")
-        return false;
-    if (field == "GetGlobalJSObjectPreserveColor")
-        return false;
-    if (field == "GetIsMainThread")
-        return false;
-    if (field == "GetThreadFromPRThread")
-        return false;
-    if (field == "DocAddSizeOfIncludingThis")
-        return false;
-    if (field == "ConstructUbiNode")
-        return false;
-    if (field == "isSystemOrAddonPrincipal")
-        return false;
-    if (field == "GetIsAddonOrExpandedAddonPrincipal")
-        return false;
-
-    // Fields on the [builtinclass] nsIPrincipal
-    if (field == "GetSiteOrigin")
-        return false;
-    if (field == "GetDomain")
-        return false;
-    if (field == "GetBaseDomain")
-        return false;
-    if (field == "GetOriginNoSuffix")
-        return false;
-
-    // Fields on nsIURI
-    if (field == "GetScheme")
-        return false;
-    if (field == "GetAsciiHostPort")
-        return false;
-    if (field == "GetAsciiSpec")
-        return false;
-    if (field == "SchemeIs")
-        return false;
-
-    if (staticCSU == 'nsIXPCScriptable' && field == "GetScriptableFlags")
-        return false;
-    if (staticCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
-        return false;
-    if (staticCSU == 'nsIXPConnect' && field == 'GetSafeJSContext')
-        return false;
-
-    // nsIScriptSecurityManager is not [builtinclass], but smaug says "the
-    // interface definitely should be builtinclass", which is good enough.
-    if (staticCSU == 'nsIScriptSecurityManager' && field == 'IsSystemPrincipal')
-        return false;
-
-    if (staticCSU == 'nsIScriptContext') {
-        if (field == 'GetWindowProxy' || field == 'GetWindowProxyPreserveColor')
-            return false;
     }
-    return true;
+    const virtual_method_tags = iface[field];
+    return virtual_method_tags && virtual_method_tags.includes("Can run script");
 }
 
 function listNonGCPointers() {

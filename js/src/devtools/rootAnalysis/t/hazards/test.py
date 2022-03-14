@@ -84,6 +84,11 @@ assert "safe10" not in hazmap
 assert "safe11" not in hazmap
 assert "safe12" not in hazmap
 assert "unsafe13" in hazmap
+assert "unsafe14" in hazmap
+assert "unsafe15" in hazmap
+assert "safe16" not in hazmap
+assert "safe17" not in hazmap
+assert "safe18" not in hazmap
 
 # method hazard.
 
