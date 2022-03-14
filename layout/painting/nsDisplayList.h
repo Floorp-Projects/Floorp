@@ -3244,6 +3244,25 @@ class nsDisplayList {
     return list;
   }
 
+  nsDisplayItem* RemoveBottom() {
+    if (!mBottom) {
+      return nullptr;
+    }
+
+    nsDisplayItem* bottom = mBottom->mValue;
+    mBottom = mBottom->mNext;
+
+    if (!mBottom) {
+      // No bottom item means no items at all.
+      mTop = nullptr;
+    }
+
+    MOZ_ASSERT(mLength > 0);
+    mLength--;
+
+    return bottom;
+  }
+
   /**
    * Paint the list to the rendering context. We assume that (0,0) in aCtx
    * corresponds to the origin of the reference frame. For best results,
