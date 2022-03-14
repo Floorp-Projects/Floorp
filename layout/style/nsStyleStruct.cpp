@@ -2187,6 +2187,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
+      mContentVisibility(StyleContentVisibility::Visible),
       mAppearance(StyleAppearance::None),
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
@@ -2259,6 +2260,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContain(aSource.mContain),
+      mContentVisibility(aSource.mContentVisibility),
       mAppearance(aSource.mAppearance),
       mDefaultAppearance(aSource.mDefaultAppearance),
       mPosition(aSource.mPosition),
@@ -2463,6 +2465,12 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       // update our overflow areas in that case.
       hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
     }
+  }
+
+  // FIXME(mrobinson): Depending on how this is implemented this may need a
+  // different set of change hints. See bug 1758490.
+  if (mContentVisibility != aNewData.mContentVisibility) {
+    hint |= nsChangeHint_NeedReflow;
   }
 
   if (mScrollbarGutter != aNewData.mScrollbarGutter) {

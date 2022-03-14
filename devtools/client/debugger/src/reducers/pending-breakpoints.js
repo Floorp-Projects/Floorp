@@ -31,7 +31,7 @@ function update(state = {}, action) {
     case "REMOVE_PENDING_BREAKPOINT":
       return removeBreakpoint(state, action);
 
-    case "REMOVE_BREAKPOINTS": {
+    case "CLEAR_BREAKPOINTS": {
       return {};
     }
   }

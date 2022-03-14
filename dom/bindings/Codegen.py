@@ -1390,18 +1390,20 @@ class CGHeaders(CGWrapper):
                 headerSet = bindingHeaders
             # Strip off outer layers and add headers they might require.  (This
             # is conservative: only nullable non-pointer types need Nullable.h;
-            # only sequences outside unions need ForOfIterator.h; only functions
-            # that return, and attributes that are, sequences in interfaces need
-            # Array.h, &c.)
+            # only sequences or observable arrays outside unions need
+            # ForOfIterator.h; only functions that return, and attributes that
+            # are, sequences or observable arrays in interfaces need Array.h, &c.)
             unrolled = t
             while True:
                 if idlTypeNeedsCallContext(unrolled):
                     bindingHeaders.add("mozilla/dom/BindingCallContext.h")
                 if unrolled.nullable():
                     headerSet.add("mozilla/dom/Nullable.h")
-                elif unrolled.isSequence():
+                elif unrolled.isSequence() or unrolled.isObservableArray():
                     bindingHeaders.add("js/Array.h")
                     bindingHeaders.add("js/ForOfIterator.h")
+                    if unrolled.isObservableArray():
+                        bindingHeaders.add("mozilla/dom/ObservableArrayProxyHandler.h")
                 else:
                     break
                 unrolled = unrolled.inner
@@ -1468,8 +1470,6 @@ class CGHeaders(CGWrapper):
                 # Also add headers for the type the record is
                 # parametrized over, if needed.
                 addHeadersForType((t.inner, dictionary))
-            elif unrolled.isObservableArray():
-                bindingHeaders.add("mozilla/dom/ObservableArrayProxyHandler.h")
 
         for t in getAllTypes(
             descriptors + callbackDescriptors, dictionaries, callbacks

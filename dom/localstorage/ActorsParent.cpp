@@ -435,24 +435,33 @@ nsresult UpgradeSchemaFrom4_0To5_0(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  // Rename old data
+  // Recreate data table in new format following steps at
+  // https://www.sqlite.org/lang_altertable.html
+  // section "Making Other Kinds Of Table Schema Changes"
   QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
-      "ALTER TABLE data RENAME TO legacy_data;"_ns)));
-
-  // Recreate data table in new format
-  QM_TRY(MOZ_TO_RESULT(CreateDataTable(aConnection)));
+      "CREATE TABLE migrated_data"
+      "( key TEXT PRIMARY KEY"
+      ", utf16_length INTEGER NOT NULL"
+      ", conversion_type INTEGER NOT NULL"
+      ", compression_type INTEGER NOT NULL"
+      ", last_access_time INTEGER NOT NULL DEFAULT 0"
+      ", value BLOB NOT NULL"
+      ");"_ns)));
 
   // Reinsert old data, all legacy data is UTF8
   static_assert(1u ==
                 static_cast<uint8_t>(LSValue::ConversionType::UTF16_UTF8));
   QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
-      "INSERT INTO data (key, utf16_length, conversion_type, compression_type, "
-      "last_access_time, value) "
+      "INSERT INTO migrated_data (key, utf16_length, conversion_type, "
+      "compression_type, last_access_time, value) "
       "SELECT key, utf16Length, 1, compressed, lastAccessTime, value "
-      "FROM legacy_data;"_ns)));
+      "FROM data;"_ns)));
 
-  QM_TRY(MOZ_TO_RESULT(
-      aConnection->ExecuteSimpleSQL("DROP TABLE legacy_data;"_ns)));
+  QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL("DROP TABLE data;"_ns)));
+
+  // Rename to data
+  QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
+      "ALTER TABLE migrated_data RENAME TO data;"_ns)));
 
   QM_TRY(MOZ_TO_RESULT(aConnection->SetSchemaVersion(MakeSchemaVersion(5, 0))));
 

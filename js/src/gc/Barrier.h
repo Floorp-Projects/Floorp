@@ -305,10 +305,25 @@ class NativeObject;
 
 namespace gc {
 
-void ValueReadBarrier(const Value& v);
-void ValuePreWriteBarrier(const Value& v);
-void IdPreWriteBarrier(jsid id);
-void CellPtrPreWriteBarrier(JS::GCCellPtr thing);
+inline void ValueReadBarrier(const Value& v) {
+  MOZ_ASSERT(v.isGCThing());
+  ReadBarrierImpl(v.toGCThing());
+}
+
+inline void ValuePreWriteBarrier(const Value& v) {
+  MOZ_ASSERT(v.isGCThing());
+  PreWriteBarrierImpl(v.toGCThing());
+}
+
+inline void IdPreWriteBarrier(jsid id) {
+  MOZ_ASSERT(id.isGCThing());
+  PreWriteBarrierImpl(&id.toGCThing()->asTenured());
+}
+
+inline void CellPtrPreWriteBarrier(JS::GCCellPtr thing) {
+  MOZ_ASSERT(thing);
+  PreWriteBarrierImpl(thing.asCell());
+}
 
 }  // namespace gc
 

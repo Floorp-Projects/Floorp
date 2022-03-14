@@ -8,6 +8,7 @@ import {
   updateResources,
   removeResources,
   hasResource,
+  getResourceValues,
 } from "../utils/resource";
 
 import { asyncActionAsValue } from "../actions/utils/middleware/promise";
@@ -38,13 +39,17 @@ export default function update(state = initial, action) {
       );
       break;
     }
-    case "REMOVE_SOURCE_ACTORS": {
-      state = removeResources(state, action.items);
-      break;
-    }
 
     case "NAVIGATE": {
       state = initial;
+      break;
+    }
+
+    case "REMOVE_THREAD": {
+      const sourceActors = Object.values(getResourceValues(state)).filter(
+        sourceActor => sourceActor.thread == action.threadActorID
+      );
+      state = removeResources(state, sourceActors);
       break;
     }
 

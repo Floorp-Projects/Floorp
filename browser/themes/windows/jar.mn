@@ -6,7 +6,6 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
@@ -19,9 +18,8 @@ browser.jar:
   skin/classic/browser/notification-icons/camera.png           (notification-icons/camera.png)
   skin/classic/browser/notification-icons/microphone.png       (notification-icons/microphone.png)
   skin/classic/browser/notification-icons/screen.png           (notification-icons/screen.png)
-* skin/classic/browser/places/sidebar.css                      (places/sidebar.css)
-  skin/classic/browser/places/organizer.css                    (places/organizer.css)
   skin/classic/browser/places/editBookmark.css                 (places/editBookmark.css)
+  skin/classic/browser/places/organizer.css                    (places/organizer.css)
   skin/classic/browser/preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png             (preferences/application.png)
   skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
