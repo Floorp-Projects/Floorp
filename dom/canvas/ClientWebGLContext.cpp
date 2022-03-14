@@ -3015,15 +3015,13 @@ Maybe<webgl::ErrorInfo> CheckBindBufferRange(
         return fnSome(LOCAL_GL_INVALID_VALUE, info);
       }
 
-      if (isBuffer) {
-        if (offset % 4 != 0 || size % 4 != 0) {
-          const auto info =
-              nsPrintfCString("`offset` (%" PRIu64 ") and `size` (%" PRIu64
-                              ") must both be aligned to 4 for"
-                              " TRANSFORM_FEEDBACK_BUFFER.",
-                              offset, size);
-          return fnSome(LOCAL_GL_INVALID_VALUE, info);
-        }
+      if (offset % 4 != 0 || size % 4 != 0) {
+        const auto info =
+            nsPrintfCString("`offset` (%" PRIu64 ") and `size` (%" PRIu64
+                            ") must both be aligned to 4 for"
+                            " TRANSFORM_FEEDBACK_BUFFER.",
+                            offset, size);
+        return fnSome(LOCAL_GL_INVALID_VALUE, info);
       }
       break;
 
@@ -3035,15 +3033,13 @@ Maybe<webgl::ErrorInfo> CheckBindBufferRange(
         return fnSome(LOCAL_GL_INVALID_VALUE, info);
       }
 
-      if (isBuffer) {
-        if (offset % limits.uniformBufferOffsetAlignment != 0) {
-          const auto info =
-              nsPrintfCString("`offset` (%" PRIu64
-                              ") must be aligned to "
-                              "UNIFORM_BUFFER_OFFSET_ALIGNMENT (%u).",
-                              offset, limits.uniformBufferOffsetAlignment);
-          return fnSome(LOCAL_GL_INVALID_VALUE, info);
-        }
+      if (offset % limits.uniformBufferOffsetAlignment != 0) {
+        const auto info =
+            nsPrintfCString("`offset` (%" PRIu64
+                            ") must be aligned to "
+                            "UNIFORM_BUFFER_OFFSET_ALIGNMENT (%u).",
+                            offset, limits.uniformBufferOffsetAlignment);
+        return fnSome(LOCAL_GL_INVALID_VALUE, info);
       }
       break;
 
