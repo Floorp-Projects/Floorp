@@ -2861,13 +2861,13 @@
 # Whether origin trials are enabled.
 - name: dom.origin-trials.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Whether we use the test key to verify tokens.
 - name: dom.origin-trials.test-key.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Is support for Window.paintWorklet enabled?
@@ -7457,6 +7457,13 @@
 - name: layout.css.control-characters.visible
   type: RelaxedAtomicBool
   value: @IS_NOT_RELEASE_OR_BETA@
+  mirror: always
+  rust: true
+
+# Whether the `content-visibility` CSS property is enabled
+- name: layout.css.content-visibility.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
   rust: true
 

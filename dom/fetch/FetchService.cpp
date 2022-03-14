@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsContentUtils.h"
 #include "FetchLog.h"
+#include "nsContentUtils.h"
+#include "nsICookieJarSettings.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
+#include "nsIIOService.h"
+#include "nsIObserverService.h"
 #include "nsIPrincipal.h"
-#include "nsICookieJarSettings.h"
-#include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/BasePrincipal.h"
@@ -212,6 +214,8 @@ void FetchService::FetchInstance::FlushConsoleReport() {}
 
 // FetchService
 
+NS_IMPL_ISUPPORTS(FetchService, nsIObserver)
+
 StaticRefPtr<FetchService> gInstance;
 
 /*static*/
@@ -221,6 +225,11 @@ already_AddRefed<FetchService> FetchService::GetInstance() {
 
   if (!gInstance) {
     gInstance = MakeRefPtr<FetchService>();
+    nsresult rv = gInstance->RegisterNetworkObserver();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      gInstance = nullptr;
+      return nullptr;
+    }
     ClearOnShutdown(&gInstance);
   }
   RefPtr<FetchService> service = gInstance;
@@ -239,15 +248,96 @@ FetchService::FetchService() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-FetchService::~FetchService() = default;
+FetchService::~FetchService() {
+  MOZ_ALWAYS_SUCCEEDS(UnregisterNetworkObserver());
+}
+
+nsresult FetchService::RegisterNetworkObserver() {
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (!observerService) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIIOService> ioService = services::GetIOService();
+  if (!ioService) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv = observerService->AddObserver(
+      this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = observerService->AddObserver(this, "xpcom-shutdown", false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ioService->GetOffline(&mOffline);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mObservingNetwork = true;
+
+  return NS_OK;
+}
+
+nsresult FetchService::UnregisterNetworkObserver() {
+  AssertIsOnMainThread();
+  nsresult rv;
+  if (mObservingNetwork) {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+      rv = observerService->RemoveObserver(this,
+                                           NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = observerService->RemoveObserver(this, "xpcom-shutdown");
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    mObservingNetwork = false;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP FetchService::Observe(nsISupports* aSubject, const char* aTopic,
+                                    const char16_t* aData) {
+  FETCH_LOG(("FetchService::Observe topic: %s", aTopic));
+  AssertIsOnMainThread();
+  MOZ_ASSERT(!strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) ||
+             !strcmp(aTopic, "xpcom-shutdown"));
+
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    // Going to shutdown, unregister the network status observer to avoid
+    // receiving
+    nsresult rv = UnregisterNetworkObserver();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  if (nsDependentString(aData).EqualsLiteral(NS_IOSERVICE_ONLINE)) {
+    mOffline = false;
+  } else {
+    mOffline = true;
+    // Network is offline, cancel running fetchs.
+    for (auto it = mFetchInstanceTable.begin(), end = mFetchInstanceTable.end();
+         it != end; ++it) {
+      it->GetData()->Cancel();
+    }
+    mFetchInstanceTable.Clear();
+  }
+  return NS_OK;
+}
 
 RefPtr<FetchServiceResponsePromise> FetchService::Fetch(
     SafeRefPtr<InternalRequest> aRequest, nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  FETCH_LOG(("FetchService::Fetch aRequest[%p], aChannel[%p]",
-             aRequest.unsafeGetRawPtr(), aChannel));
+  FETCH_LOG(("FetchService::Fetch aRequest[%p], aChannel[%p], mOffline: %s",
+             aRequest.unsafeGetRawPtr(), aChannel,
+             mOffline ? "true" : "false"));
+
+  if (mOffline) {
+    FETCH_LOG(("FetchService::Fetch network offline"));
+    return NetworkErrorResponse(NS_ERROR_OFFLINE);
+  }
 
   // Create FetchInstance
   RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>(aRequest.clonePtr());
@@ -291,7 +381,10 @@ void FetchService::CancelFetch(
 
   auto entry = mFetchInstanceTable.Lookup(aResponsePromise);
   if (entry) {
+    // Notice any modifications here before entry.Remove() probably should be
+    // reflected to Observe() offline case.
     entry.Data()->Cancel();
+
     entry.Remove();
     FETCH_LOG(("FetchService::CancelFetch aResponsePromise[%p] is removed",
                aResponsePromise.get()));

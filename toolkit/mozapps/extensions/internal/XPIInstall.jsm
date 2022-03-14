@@ -493,7 +493,7 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
   addon.id = bss.id;
   addon.version = manifest.version;
   addon.manifestVersion = manifest.manifest_version;
-  addon.type = extension.type === "langpack" ? "locale" : extension.type;
+  addon.type = extension.type;
   addon.loader = null;
   addon.strictCompatibility = true;
   addon.internalName = null;

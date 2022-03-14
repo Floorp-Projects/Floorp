@@ -66,19 +66,26 @@ class ExtensionTest final : public nsISupports,
   MOZ_CAN_RUN_SCRIPT bool AssertMatchInternal(
       JSContext* aCx, const JS::HandleValue aActualValue,
       const JS::HandleValue aExpectedMatchValue, const nsAString& aMessagePre,
-      const dom::Optional<nsAString>& aMessage,
+      const nsAString& aMessage,
       UniquePtr<dom::SerializedStackHolder> aSerializedCallerStack,
       ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void AssertThrows(JSContext* aCx, dom::Function& aFunction,
                                        const JS::HandleValue aExpectedError,
-                                       const dom::Optional<nsAString>& aMessage,
+                                       const nsAString& aMessage,
+                                       ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void AssertThrows(JSContext* aCx, dom::Function& aFunction,
+                                       const JS::HandleValue aExpectedError,
                                        ErrorResult& aRv);
 
   void AssertRejects(
       JSContext* aCx, dom::Promise& aPromise,
+      const JS::HandleValue aExpectedError, const nsAString& aMessage,
+      const dom::Optional<OwningNonNull<dom::Function>>& aCallback,
+      JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
+  void AssertRejects(
+      JSContext* aCx, dom::Promise& aPromise,
       const JS::HandleValue aExpectedError,
-      const dom::Optional<nsAString>& aMessage,
       const dom::Optional<OwningNonNull<dom::Function>>& aCallback,
       JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
 

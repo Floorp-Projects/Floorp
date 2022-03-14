@@ -1798,7 +1798,7 @@ already_AddRefed<nsICycleCollectorListener> nsCycleCollector_createLogger() {
 }
 
 static bool GCThingIsGrayCCThing(JS::GCCellPtr thing) {
-  return JS::IsCCTraceKind(thing.kind()) && JS::GCThingIsMarkedGray(thing);
+  return JS::IsCCTraceKind(thing.kind()) && JS::GCThingIsMarkedGrayInCC(thing);
 }
 
 static bool ValueIsGrayCCThing(const JS::Value& value) {

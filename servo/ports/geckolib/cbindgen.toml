@@ -147,6 +147,7 @@ include = [
   "LineBreak",
   "WordBreak",
   "Contain",
+  "ContentVisibility",
   "Origin",
   "RestyleHint",
   "TouchAction",

@@ -7,6 +7,7 @@ export {
   insertResources,
   removeResources,
   updateResources,
+  getResourceValues,
 } from "./core";
 
 export {
