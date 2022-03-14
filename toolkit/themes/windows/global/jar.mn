@@ -14,7 +14,6 @@ toolkit.jar:
   skin/classic/global/radio.css
   skin/classic/global/tabbox.css
   skin/classic/global/search-textbox.css
-* skin/classic/global/commonDialog.css
 * skin/classic/global/global.css
   skin/classic/global/popup.css
 * skin/classic/global/popupnotification.css

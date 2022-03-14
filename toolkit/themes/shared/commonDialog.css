@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#commonDialog[subdialog] .checkbox-label {
+  color: var(--in-content-deemphasized-text);
+}
+
+@media (-moz-platform: windows) {
+  #infoContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  #infoIcon {
+    margin: 3px 5px 4px;
+  }
+}
+
+@media (-moz-platform: macos) {
+  #commonDialog:not([subdialog]) {
+    line-height: 13px;
+  }
+
+  #commonDialog:not([subdialog]) #infoTitle,
+  #commonDialog:not([subdialog]) #infoBody {
+    font: menu;
+    line-height: 16px;
+    margin-bottom: 6px;
+  }
+
+  #infoContainer {
+    max-width: 33em;
+  }
+
+  #infoIcon {
+    margin: 3px 5px 4px;
+    margin-inline-end: 14px;
+  }
+
+  #commonDialog:not([subdialog]) #infoTitle {
+    font-weight: bold;
+  }
+}
+
+@media (-moz-platform: linux) {
+  #infoContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /*
+   * Since we size the window to content, and the icon load is asynchronous, we
+   * make sure that we take the whole space we could possibly take, regardless of
+   * whether the icon is loaded.
+   */
+  #iconContainer {
+    height: 55px; /* maximum icon height + some margin */
+    width: 58px; /* maximum icon width + some margin */
+  }
+
+  #infoIcon {
+    display: block;
+    max-width: 48px;
+    max-height: 48px;
+    margin: 3px auto 0;
+  }
+}
