@@ -87,11 +87,6 @@ nsresult RemotePrintJobParent::InitializePrintDevice(
     return rv;
   }
 
-  if (!mPrintDeviceContext->IsSyncPagePrinting()) {
-    mPrintDeviceContext->RegisterPageDoneCallback(
-        [self = RefPtr{this}](nsresult aResult) { self->PageDone(aResult); });
-  }
-
   mIsDoingPrinting = true;
 
   return NS_OK;
@@ -147,9 +142,7 @@ void RemotePrintJobParent::FinishProcessingPage(
 
   mCurrentPageStream.Close();
 
-  if (mPrintDeviceContext->IsSyncPagePrinting()) {
-    PageDone(rv);
-  }
+  PageDone(rv);
 }
 
 nsresult RemotePrintJobParent::PrintPage(
@@ -202,11 +195,6 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvFinalizePrint() {
 
     // Too late to abort the child just log.
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EndDocument failed");
-
-    // Since RecvFinalizePrint is called after all page printed, there should
-    // be no more page-done callbacks after that, in theory. Unregistering
-    // page-done callback is not must have, but we still do this for safety.
-    mPrintDeviceContext->UnregisterPageDoneCallback();
   }
 
   mIsDoingPrinting = false;
@@ -219,7 +207,6 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvAbortPrint(
     const nsresult& aRv) {
   if (mPrintDeviceContext) {
     Unused << mPrintDeviceContext->AbortDocument();
-    mPrintDeviceContext->UnregisterPageDoneCallback();
   }
 
   mIsDoingPrinting = false;
@@ -281,10 +268,6 @@ RemotePrintJobParent::~RemotePrintJobParent() {
 }
 
 void RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy) {
-  if (mPrintDeviceContext) {
-    mPrintDeviceContext->UnregisterPageDoneCallback();
-  }
-
   mIsDoingPrinting = false;
 
   // If progress dialog is opened, notify closing it.
