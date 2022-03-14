@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">పేజీని లోడుచేయడంలో సమస్య</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">తిరిగి ప్రయత్నించు</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">వెనక్కి వెళ్ళు</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">అభ్యర్థనను పూర్తి చేయలేము</string>
@@ -247,4 +241,9 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">మోసపూరితమైన సైటు సమస్య</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s వద్ద గల వెబ్ పేజీ మోసపూరితమైన సైటుగా నివేదించబడి ఉంది, మీ భద్రతా అభిరుచుల మేరకు ఆ సైటు నిరోధించబడింది.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">సురక్షితమైన సైటు అందుబాటులో లేదు</string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP సైటుకి కొనసాగు</string>
 </resources>
