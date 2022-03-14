@@ -57,7 +57,7 @@ jobs:
         description: 'UI tests with firebase'
         run:
             commands:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '36']
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
         treeherder:
             symbol: debug(ui-test-x86)
     x86-nightly:
