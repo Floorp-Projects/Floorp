@@ -402,6 +402,15 @@ bool FunctionScriptEmitter::prepareForParameters() {
     }
   }
 
+  if (funbox_->isClassConstructor()) {
+    if (!funbox_->isDerivedClassConstructor()) {
+      if (!bce_->emitInitializeInstanceMembers()) {
+        //          [stack]
+        return false;
+      }
+    }
+  }
+
 #ifdef DEBUG
   state_ = State::Parameters;
 #endif
@@ -427,15 +436,6 @@ bool FunctionScriptEmitter::prepareForBody() {
   if (funbox_->needsPromiseResult()) {
     if (!asyncEmitter_->prepareForBody()) {
       return false;
-    }
-  }
-
-  if (funbox_->isClassConstructor()) {
-    if (!funbox_->isDerivedClassConstructor()) {
-      if (!bce_->emitInitializeInstanceMembers()) {
-        //          [stack]
-        return false;
-      }
     }
   }
 
