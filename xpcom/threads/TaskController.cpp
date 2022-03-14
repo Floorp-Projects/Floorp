@@ -598,11 +598,6 @@ bool TaskController::HasMainThreadPendingTasks() {
   return false;
 }
 
-uint64_t TaskController::PendingMainthreadTaskCountIncludingSuspended() {
-  MutexAutoLock lock(mGraphMutex);
-  return mMainThreadTasks.size();
-}
-
 bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
   // Block to make it easier to jump to our cleanup.
