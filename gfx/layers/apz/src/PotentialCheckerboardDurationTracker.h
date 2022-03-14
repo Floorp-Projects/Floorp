@@ -37,13 +37,13 @@ class PotentialCheckerboardDurationTracker {
    * This should be called when checkerboarding is done. It must have been
    * preceded by one or more calls to CheckerboardSeen().
    */
-  void CheckerboardDone();
+  void CheckerboardDone(bool aRecordTelemetry);
 
   /**
    * This should be called at composition time, to indicate if the APZC is in
    * a transforming state or not.
    */
-  void InTransform(bool aInTransform);
+  void InTransform(bool aInTransform, bool aRecordTelemetry);
 
  private:
   bool Tracking() const;
