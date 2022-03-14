@@ -14,7 +14,7 @@ object Versions {
     const val android_gradle_plugin = "7.0.0"
     const val android_lint_api = "30.0.0"
 
-    const val sentry = "1.7.10"
+    const val sentry = "5.6.2"
     const val leakcanary = "2.8.1"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.17.1"
@@ -156,8 +156,8 @@ object Deps {
     const val mozilla_ui_tabcounter = "org.mozilla.components:ui-tabcounter:${Versions.mozilla_android_components}"
 
     const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${Versions.mozilla_android_components}"
-    const val lib_crash_sentry_legacy =
-        "org.mozilla.components:lib-crash-sentry-legacy:${Versions.mozilla_android_components}"
+    const val lib_crash_sentry =
+        "org.mozilla.components:lib-crash-sentry:${Versions.mozilla_android_components}"
     const val mozilla_lib_push_firebase = "org.mozilla.components:lib-push-firebase:${Versions.mozilla_android_components}"
     const val mozilla_lib_dataprotect = "org.mozilla.components:lib-dataprotect:${Versions.mozilla_android_components}"
     const val mozilla_lib_state = "org.mozilla.components:lib-state:${Versions.mozilla_android_components}"
