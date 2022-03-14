@@ -39,6 +39,10 @@ add_task(async function() {
 
   info("Scroll to bottom");
   outputScroller.scrollTop = outputScroller.scrollHeight;
+  await new Promise(r =>
+    window.requestAnimationFrame(() => TestUtils.executeSoon(r))
+  );
+
   is(
     isScrolledToBottom(outputScroller),
     true,
