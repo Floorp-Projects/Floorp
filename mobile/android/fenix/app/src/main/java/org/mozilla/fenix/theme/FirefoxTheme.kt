@@ -45,7 +45,7 @@ object FirefoxTheme {
 private val darkColorPalette = FirefoxColors(
     layer1 = PhotonColors.DarkGrey60,
     layer2 = PhotonColors.DarkGrey30,
-    layer3 = PhotonColors.DarkGrey30,
+    layer3 = PhotonColors.DarkGrey80,
     layerAccent = PhotonColors.Violet40,
     layerAccentNonOpaque = PhotonColors.Violet50A32,
     layerAccentOpaque = Color(0xFF423262),
