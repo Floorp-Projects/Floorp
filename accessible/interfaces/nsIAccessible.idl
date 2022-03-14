@@ -182,6 +182,11 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIPersistentProperties attributes;
 
   /**
+   * Cached fields from a remote accessible
+   */
+  readonly attribute nsIPersistentProperties cache;
+
+  /**
    * Platform specific interface for accessible
    */
   readonly attribute nsISupports nativeInterface;
