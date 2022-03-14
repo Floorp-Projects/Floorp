@@ -25,7 +25,7 @@ add_task(async function() {
 
   await selectNode("div", inspector);
 
-  checkDeclarationIsActive(view, 1, { gap: "1em" });
+  await checkDeclarationIsActive(view, 1, { gap: "1em" });
   await toggleDeclaration(view, 2, { display: "grid" });
   await checkDeclarationIsInactive(view, 1, { gap: "1em" });
 });
