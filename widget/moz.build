@@ -127,9 +127,14 @@ XPIDL_SOURCES += [
     "nsISharePicker.idl",
     "nsISound.idl",
     "nsISystemStatusBar.idl",
+    "nsITextRecognition.idl",
     "nsITransferable.idl",
     "nsIUserIdleService.idl",
     "nsIUserIdleServiceInternal.idl",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]
 
 XPIDL_MODULE = "widget"
@@ -196,6 +201,7 @@ EXPORTS.mozilla.widget += [
     "RemoteLookAndFeel.h",
     "Screen.h",
     "ScreenManager.h",
+    "TextRecognition.h",
     "ThemeChangeKind.h",
     "WidgetMessageUtils.h",
     "WindowOcclusionState.h",
@@ -242,6 +248,7 @@ UNIFIED_SOURCES += [
     "SharedWidgetUtils.cpp",
     "SwipeTracker.cpp",
     "TextEventDispatcher.cpp",
+    "TextRecognition.cpp",
     "Theme.cpp",
     "ThemeCocoa.cpp",
     "ThemeColors.cpp",
