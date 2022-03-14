@@ -2519,9 +2519,8 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
   // The `GeneratePrototypeHoleGuards` call below will guard on the shapes,
   // as well as ensure that no prototypes contain dense elements, allowing
   // us to perform a pure shape-search for out-of-bounds integer-indexed
-  // properties on the recevier object.
-  if ((nobj->staticPrototype() != nullptr) &&
-      ObjectMayHaveExtraIndexedProperties(nobj->staticPrototype())) {
+  // properties on the receiver object.
+  if (PrototypeMayHaveIndexedProperties(nobj)) {
     return AttachDecision::NoAction;
   }
 
@@ -4179,8 +4178,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   }
 
   // Indexed properties on the prototype chain aren't handled by the helper.
-  if ((aobj->staticPrototype() != nullptr) &&
-      ObjectMayHaveExtraIndexedProperties(aobj->staticPrototype())) {
+  if (PrototypeMayHaveIndexedProperties(aobj)) {
     return AttachDecision::NoAction;
   }
 
