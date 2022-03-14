@@ -96,12 +96,27 @@ export function getTabMenuItems() {
   };
 }
 
+/**
+ * Determines if a tab exists with the following properties
+ *
+ * @param {Object} tab
+ * @param {String} url
+ * @param {Boolean} isOriginal
+ */
 export function isSimilarTab(tab, url, isOriginal) {
   return tab.url === url && tab.isOriginal === isOriginal;
 }
 
+/**
+ * This cleans up some tab info (source id and thread info),
+ * mostly for persiting to pref and for navigation or reload.
+ * This is neccesary because the source and thread are destroyed
+ * and re-created across navigations / reloads.
+ *
+ * @param {Array} tabs
+ */
 export function persistTabs(tabs) {
   return [...tabs]
     .filter(tab => tab.url)
-    .map(tab => ({ ...tab, sourceId: null }));
+    .map(tab => ({ ...tab, sourceId: null, threadActorID: null }));
 }

@@ -11,10 +11,12 @@ import { getRelativeUrl, getPlainUrl } from "../utils/source";
 import {
   createInitial,
   insertResources,
+  removeResources,
   updateResources,
   hasResource,
   getResource,
   getResourceIds,
+  getResourceValues,
 } from "../utils/resource";
 import { prefs } from "../utils/prefs";
 
@@ -126,9 +128,6 @@ function update(state = initialSourcesState(), action) {
     case "INSERT_SOURCE_ACTORS":
       return insertSourceActors(state, action);
 
-    case "REMOVE_SOURCE_ACTORS":
-      return removeSourceActors(state, action);
-
     case "SET_SELECTED_LOCATION":
       location = {
         ...action.location,
@@ -208,6 +207,13 @@ function update(state = initialSourcesState(), action) {
 
     case "NAVIGATE":
       return initialSourcesState(state);
+
+    case "REMOVE_THREAD": {
+      const sources = Object.values(getResourceValues(state.sources)).filter(
+        source => source.thread == action.threadActorID
+      );
+      return removeSourcesAndActors(state, sources);
+    }
   }
 
   return state;
@@ -258,6 +264,53 @@ function addSources(state, sources) {
   return state;
 }
 
+function removeSourcesAndActors(state, sources) {
+  state = {
+    ...state,
+    urls: { ...state.urls },
+    plainUrls: { ...state.plainUrls },
+    sourcesWithUrls: [...state.sourcesWithUrls],
+  };
+
+  state.sources = removeResources(state.sources, sources);
+
+  for (const source of sources) {
+    if (source.url) {
+      // urls
+      if (state.urls[source.url]) {
+        state.urls[source.url] = state.urls[source.url].filter(
+          id => id !== source.id
+        );
+      }
+      if (state.urls[source.url]?.length == 0) {
+        delete state.urls[source.url];
+      }
+
+      // plainUrls
+      const plainUrl = getPlainUrl(source.url);
+      if (state.plainUrls[plainUrl]) {
+        // This also handles multiple sources with same urls, we should remove
+        // only one occurence at each point.
+        const index = state.plainUrls[plainUrl].findIndex(
+          url => url === source.url
+        );
+        state.plainUrls[plainUrl].splice(index, 1);
+      }
+      if (state.plainUrls[plainUrl]?.length == 0) {
+        delete state.plainUrls[plainUrl];
+      }
+
+      // sourcesWithUrls
+      state.sourcesWithUrls = state.sourcesWithUrls.filter(
+        sourceId => sourceId !== source.id
+      );
+    }
+    // actors
+    delete state.actors[source.id];
+  }
+  return state;
+}
+
 function insertSourceActors(state, action) {
   const { items } = action;
   state = {
@@ -287,29 +340,6 @@ function insertSourceActors(state, action) {
     }
 
     state = { ...state, breakpointPositions };
-  }
-
-  return state;
-}
-
-/*
- * Update sources when the worker list changes.
- * - filter source actor lists so that missing threads no longer appear
- * - NOTE: we do not remove sources for destroyed threads
- */
-function removeSourceActors(state, action) {
-  const { items } = action;
-
-  const actors = new Set(items.map(item => item.id));
-  const sources = new Set(items.map(item => item.source));
-
-  state = {
-    ...state,
-    actors: { ...state.actors },
-  };
-
-  for (const source of sources) {
-    state.actors[source] = state.actors[source].filter(id => !actors.has(id));
   }
 
   return state;

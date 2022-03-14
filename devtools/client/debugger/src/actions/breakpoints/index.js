@@ -130,7 +130,7 @@ export function removeAllBreakpoints(cx) {
     await Promise.all(
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
-    dispatch({ type: "REMOVE_BREAKPOINTS" });
+    dispatch({ type: "CLEAR_BREAKPOINTS" });
   };
 }
 

@@ -388,8 +388,8 @@ async function addThread(targetFront) {
   return createThread(threadActorID, targetFront);
 }
 
-function removeThread(thread) {
-  delete targets[thread.actor];
+function removeThread(threadActorID) {
+  delete targets[threadActorID];
 }
 
 function getMainThread() {
