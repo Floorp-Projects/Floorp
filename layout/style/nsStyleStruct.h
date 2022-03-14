@@ -1222,6 +1222,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                            //         otherwise equal to
                                            //         mDisplay
   mozilla::StyleContain mContain;
+  mozilla::StyleContentVisibility mContentVisibility;
 
  private:
   mozilla::StyleAppearance mAppearance;
