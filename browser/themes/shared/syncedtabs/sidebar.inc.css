@@ -1,6 +1,6 @@
-% This Source Code Form is subject to the terms of the Mozilla Public
-% License, v. 2.0. If a copy of the MPL was not distributed with this
-% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
 
@@ -162,7 +162,8 @@ body {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
+  margin: 1px 0 0;
+  margin-inline-end: 6px;
   line-height: 1.3;
   cursor: default;
 }
@@ -314,5 +315,57 @@ body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
 @media (resolution: 2dppx) {
   .tabs-container .item-tabs-list .item-icon-container {
     image-rendering: -moz-crisp-edges;
+  }
+}
+
+/* Platform specific styling */
+@media (-moz-platform: macos) {
+  body {
+     /* let the -moz-appearance of the sidebar shine through */
+    background-color: transparent;
+  }
+
+  .item-title-container {
+    box-sizing: border-box;
+    align-items: center;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .item-title {
+    margin: 0;
+  }
+
+  body:not([lwt-sidebar]) .item.selected:not(:focus) > .item-title-container {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-source-list-selection;
+    -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
+  }
+
+  body:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-active-source-list-selection;
+    -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
+  }
+}
+
+@media (-moz-platform: windows) {
+  .client .item.tab > .item-title-container {
+    padding-inline-start: 26px;
+  }
+
+  .item.tab > .item-title-container {
+    padding-inline-start: 14px;
+  }
+
+  .item-icon-container {
+    min-width: 16px;
+    max-width: 16px;
+    min-height: 16px;
+    max-height: 16px;
+    margin-inline-end: 5px;
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
   }
 }
