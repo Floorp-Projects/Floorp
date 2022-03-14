@@ -263,6 +263,7 @@ bool IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 // A SymbolicAddress that NeedsBuiltinThunk() will call through a thunk to the
 // C++ function. This will be true for all normal calls from normal wasm
 // function code. Only calls to C++ from other exits/thunks do not need a thunk.
+// See "The Wasm-builtin ABIs in WasmFrame.h".
 
 bool NeedsBuiltinThunk(SymbolicAddress sym);
 

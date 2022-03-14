@@ -949,7 +949,7 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
 static void GenerateBigIntInitialization(MacroAssembler& masm,
                                          unsigned bytesPushedByPrologue,
                                          Register64 input, Register scratch,
-                                         const FuncExport* fe, Label* fail) {
+                                         const FuncExport& fe, Label* fail) {
 #if JS_BITS_PER_WORD == 32
   MOZ_ASSERT(input.low != scratch);
   MOZ_ASSERT(input.high != scratch);
@@ -967,13 +967,8 @@ static void GenerateBigIntInitialization(MacroAssembler& masm,
   masm.reserveStack(frameSize);
   masm.assertStackAlignment(ABIStackAlignment);
 
-  // Needs to use a different call type depending on stub it's used from.
-  if (fe) {
-    CallSymbolicAddress(masm, !fe->hasEagerStubs(),
-                        SymbolicAddress::AllocateBigInt);
-  } else {
-    masm.call(SymbolicAddress::AllocateBigInt);
-  }
+  CallSymbolicAddress(masm, !fe.hasEagerStubs(),
+                      SymbolicAddress::AllocateBigInt);
   masm.storeCallPointerResult(scratch);
 
   masm.assertStackAlignment(ABIStackAlignment);
@@ -1334,8 +1329,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
       case ValType::I64: {
         Label fail, done;
         GenPrintI64(DebugChannel::Function, masm, ReturnReg64);
-        GenerateBigIntInitialization(masm, 0, ReturnReg64, scratchG, &fe,
-                                     &fail);
+        GenerateBigIntInitialization(masm, 0, ReturnReg64, scratchG, fe, &fail);
         masm.boxNonDouble(JSVAL_TYPE_BIGINT, scratchG, JSReturnOperand);
         masm.jump(&done);
         masm.bind(&fail);
