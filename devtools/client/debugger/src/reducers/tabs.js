@@ -28,6 +28,7 @@ function update(state = initialTabState(), action) {
 
     case "MOVE_TAB":
       return moveTabInList(state, action);
+
     case "MOVE_TAB_BY_SOURCE_ID":
       return moveTabInListBySourceId(state, action);
 
@@ -46,6 +47,10 @@ function update(state = initialTabState(), action) {
 
     case "NAVIGATE": {
       return resetTabState(state);
+    }
+
+    case "REMOVE_THREAD": {
+      return resetTabsForThread(state, action.threadActorID);
     }
 
     default:
@@ -77,6 +82,7 @@ function addSelectedSource(state, source) {
     isOriginal,
     framework: null,
     sourceId: source.id,
+    threadActorID: source.thread,
   });
 }
 
@@ -88,7 +94,7 @@ function addVisibleTabs(state, sources) {
       if (!source) {
         return tab;
       }
-      return { ...tab, sourceId: source.id };
+      return { ...tab, sourceId: source.id, threadActorID: source.thread };
     })
     .filter(tab => tab.sourceId);
 
@@ -116,6 +122,14 @@ function removeSourcesFromTabList(state, { sources }) {
   return { tabs: newTabs };
 }
 
+function resetTabsForThread(state, threadActorID) {
+  const { tabs } = state;
+  const resetTabs = persistTabs(
+    tabs.filter(tab => tab.threadActorID !== threadActorID)
+  );
+  return { tabs: resetTabs };
+}
+
 /**
  * Adds the new source to the tab list if it is not already there
  * @memberof reducers/tabs
@@ -123,7 +137,7 @@ function removeSourcesFromTabList(state, { sources }) {
  */
 function updateTabList(
   state,
-  { url, framework = null, sourceId, isOriginal = false }
+  { url, framework = null, sourceId, threadActorID, isOriginal = false }
 ) {
   let { tabs } = state;
   // Set currentIndex to -1 for URL-less tabs so that they aren't
@@ -138,6 +152,7 @@ function updateTabList(
       framework,
       sourceId,
       isOriginal,
+      threadActorID,
     };
     tabs = [newTab, ...tabs];
   } else if (framework) {

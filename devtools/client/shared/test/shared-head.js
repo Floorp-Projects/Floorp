@@ -1008,13 +1008,7 @@ async function waitFor(condition, message = "", interval = 10, maxTries = 500) {
     );
     return value;
   } catch (e) {
-    const errorMessage =
-      "Failed waitFor(): " +
-      message +
-      "\n" +
-      "Failed condition: " +
-      condition +
-      "\n";
+    const errorMessage = `Failed waitFor(): ${message} \nFailed condition: ${condition} \nException Message: ${e}`;
     throw new Error(errorMessage);
   }
 }

@@ -18,15 +18,6 @@ export function insertSourceActors(items) {
   };
 }
 
-export function removeSourceActor(item) {
-  return removeSourceActors([item]);
-}
-export function removeSourceActors(items) {
-  return function({ dispatch }) {
-    dispatch({ type: "REMOVE_SOURCE_ACTORS", items });
-  };
-}
-
 export const loadSourceActorBreakableLines = memoizeableAction(
   "loadSourceActorBreakableLines",
   {
