@@ -248,3 +248,12 @@ tr.separate-from-previous-process-group {
   border-top: dotted 1px var(--in-content-box-border-color);
   margin-top: -1px;
 }
+
+/* Graphical view of CPU use. */
+.cpu {
+  --bar-width: 0;
+  background: linear-gradient(to left, var(--blue-40) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+}
+.cpu:dir(rtl) {
+  background: linear-gradient(to right, var(--blue-40) calc(var(--bar-width) * 1%), transparent calc(var(--bar-width) * 1%));
+}
