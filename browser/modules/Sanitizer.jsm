@@ -999,11 +999,10 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     return false;
   }
 
-  for (let perm of Services.perms.all) {
+  for (let perm of Services.perms.getAllWithTypePrefix("cookie")) {
     if (perm.type != "cookie") {
       continue;
     }
-
     // We consider just permissions set for http, https and file URLs.
     if (!isSupportedPrincipal(perm.principal)) {
       continue;
