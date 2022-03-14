@@ -79,10 +79,9 @@ class Theme {
           }
           this.experiment = experiment;
         } else {
-          const { logger } = this.extension;
-          logger.warn("This extension is not allowed to run theme experiments");
-          return;
+          experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
         }
+          this.experiment = experiment;
       }
     }
     this.load();
