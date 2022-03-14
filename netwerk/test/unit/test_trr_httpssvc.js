@@ -6,6 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 let h2Port;
 let trrServer;
@@ -18,7 +21,11 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
 
-function setup() {
+add_setup(async function setup() {
+  if (inChildProcess()) {
+    return;
+  }
+
   trr_test_setup();
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
@@ -27,21 +34,17 @@ function setup() {
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
-  if (!gDNS) {
-    gDNS = Cc["@mozilla.org/network/dns-service;1"].getService(
-      Ci.nsIDNSService
-    );
-  }
-  Services.prefs.setIntPref("network.trr.mode", 3);
-}
-
-if (!inChildProcess()) {
-  setup();
   registerCleanupFunction(async () => {
     trr_clear_prefs();
     await trrServer.stop();
   });
-}
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
+  }
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+});
 
 add_task(async function testHTTPSSVC() {
   // use the h2 server as DOH provider

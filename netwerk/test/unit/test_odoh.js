@@ -32,26 +32,30 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 
-function setup() {
+add_setup(async function setup() {
   h2Port = trr_test_setup();
   runningODoHTests = true;
 
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
   // This is for skiping the security check for the odoh host.
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
   );
-}
 
-setup();
-registerCleanupFunction(() => {
-  trr_clear_prefs();
-  Services.prefs.clearUserPref("network.trr.odoh.enabled");
-  Services.prefs.clearUserPref("network.trr.odoh.target_path");
-  Services.prefs.clearUserPref("network.trr.odoh.configs_uri");
-  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
-    false
-  );
+  registerCleanupFunction(() => {
+    trr_clear_prefs();
+    Services.prefs.clearUserPref("network.trr.odoh.enabled");
+    Services.prefs.clearUserPref("network.trr.odoh.target_path");
+    Services.prefs.clearUserPref("network.trr.odoh.configs_uri");
+    certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+      false
+    );
+  });
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
+  }
+
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 });
 
 add_task(async function testODoHConfig() {

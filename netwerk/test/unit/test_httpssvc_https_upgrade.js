@@ -14,8 +14,11 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
-function setup() {
+add_setup(async function setup() {
   trr_test_setup();
 
   let env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -29,7 +32,6 @@ function setup() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
   );
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
@@ -38,18 +40,23 @@ function setup() {
     "network.dns.use_https_rr_for_speculative_connection",
     true
   );
-}
 
-setup();
-registerCleanupFunction(async () => {
-  trr_clear_prefs();
-  Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
-  Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
-  Services.prefs.clearUserPref(
-    "network.dns.use_https_rr_for_speculative_connection"
-  );
-  Services.prefs.clearUserPref("network.dns.notifyResolution");
-  Services.prefs.clearUserPref("network.dns.disablePrefetch");
+  registerCleanupFunction(async () => {
+    trr_clear_prefs();
+    Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
+    Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
+    Services.prefs.clearUserPref(
+      "network.dns.use_https_rr_for_speculative_connection"
+    );
+    Services.prefs.clearUserPref("network.dns.notifyResolution");
+    Services.prefs.clearUserPref("network.dns.disablePrefetch");
+  });
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
+  }
+
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 });
 
 function makeChan(url) {
