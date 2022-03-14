@@ -814,9 +814,17 @@ let BrowserUsageTelemetry = {
 
     // Find the actual element we're interested in.
     let node = sourceEvent.target;
+    const isAboutPreferences = node.ownerDocument.URL.startsWith(
+      "about:preferences"
+    );
     while (
       !UI_TARGET_ELEMENTS.includes(node.localName) &&
-      !node.classList?.contains("wants-telemetry")
+      !node.classList?.contains("wants-telemetry") &&
+      // We are interested in links on about:preferences as well.
+      !(
+        isAboutPreferences &&
+        (node.getAttribute("is") === "text-link" || node.localName === "a")
+      )
     ) {
       node = node.parentNode;
       if (!node) {
