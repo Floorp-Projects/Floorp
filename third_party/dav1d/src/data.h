@@ -51,5 +51,6 @@ int dav1d_data_wrap_user_data_internal(Dav1dData *buf,
                                                              void *cookie),
                                        void *cookie);
 void dav1d_data_unref_internal(Dav1dData *buf);
+void dav1d_data_props_unref_internal(Dav1dDataProps *props);
 
 #endif /* DAV1D_SRC_DATA_H */

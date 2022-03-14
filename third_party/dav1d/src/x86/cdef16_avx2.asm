@@ -59,14 +59,6 @@ cextern cdef_dir_8bpc_avx2.main
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %macro CDEF_FILTER 2 ; w, h
     DEFINE_ARGS dst, stride, _, dir, pridmp, pri, sec, tmp
     movifnidn     prid, r5m

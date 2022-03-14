@@ -134,9 +134,9 @@ endconst
         vmlsl.s16       \d1, \s3, \c1
 .endm
 
-.macro vrshrn_8h d0, d1, s0, s1, shift
-        vrshrn.i32      \d0, \s0, \shift
-        vrshrn.i32      \d1, \s1, \shift
+.macro vqrshrn_8h d0, d1, s0, s1, shift
+        vqrshrn.s32     \d0, \s0, \shift
+        vqrshrn.s32     \d1, \s1, \shift
 .endm
 
 .macro scale_input c, r0, r1, r2 r3, r4, r5, r6, r7
@@ -418,11 +418,11 @@ endfunc
         vmull_vmlal     q3,  \r1, \r3, d0[3], d0[2]
         vmull_vmlsl     q2,  \r1, \r3, d0[2], d0[3]
         vmull_vmlal     q1,  \r0, \r2, d0[0], d0[0]
-        vrshrn.i32      d6,  q3,  #12
-        vrshrn.i32      d7,  q2,  #12
+        vqrshrn.s32     d6,  q3,  #12
+        vqrshrn.s32     d7,  q2,  #12
         vmull_vmlsl     q2,  \r0, \r2, d0[0], d0[0]
-        vrshrn.i32      d2,  q1,  #12
-        vrshrn.i32      d3,  q2,  #12
+        vqrshrn.s32     d2,  q1,  #12
+        vqrshrn.s32     d3,  q2,  #12
         vqadd.s16       \r0, d2,  d6
         vqsub.s16       \r3, d2,  d6
         vqadd.s16       \r1, d3,  d7
@@ -433,11 +433,11 @@ endfunc
         vmull_vmlal_8h  q6,  q7,  \r2, \r3, \r6, \r7, d0[3], d0[2]
         vmull_vmlsl_8h  q4,  q5,  \r2, \r3, \r6, \r7, d0[2], d0[3]
         vmull_vmlal_8h  q2,  q3,  \r0, \r1, \r4, \r5, d0[0], d0[0]
-        vrshrn_8h       d12, d13, q6,  q7,  #12
-        vrshrn_8h       d14, d15, q4,  q5,  #12
+        vqrshrn_8h      d12, d13, q6,  q7,  #12
+        vqrshrn_8h      d14, d15, q4,  q5,  #12
         vmull_vmlsl_8h  q4,  q5,  \r0, \r1, \r4, \r5, d0[0], d0[0]
-        vrshrn_8h       d4,  d5,  q2,  q3,  #12
-        vrshrn_8h       d6,  d7,  q4,  q5,  #12
+        vqrshrn_8h      d4,  d5,  q2,  q3,  #12
+        vqrshrn_8h      d6,  d7,  q4,  q5,  #12
         vqadd.s16       \q0, q2,  q6
         vqsub.s16       \q3, q2,  q6
         vqadd.s16       \q1, q3,  q7
@@ -478,10 +478,10 @@ endfunc
         vadd.s32        q3,  q3,  q10
         vsub.s32        q11, q11, q10
 
-        vrshrn.i32      \o0, q2,  #12
-        vrshrn.i32      \o2, q1,  #12
-        vrshrn.i32      \o1, q3,  #12
-        vrshrn.i32      \o3, q11, #12
+        vqrshrn.s32     \o0, q2,  #12
+        vqrshrn.s32     \o2, q1,  #12
+        vqrshrn.s32     \o1, q3,  #12
+        vqrshrn.s32     \o3, q11, #12
 .endm
 
 function inv_adst_4h_x4_neon, export=1
@@ -533,21 +533,21 @@ endfunc
         vsub.s32        q4,  q4,  q2 // out3
         vsub.s32        q5,  q5,  q3
 
-        vrshrn.i32      d20, q10, #12
-        vrshrn.i32      d21, q11, #12
+        vqrshrn.s32     d20, q10, #12
+        vqrshrn.s32     d21, q11, #12
 
-        vrshrn.i32      \o0, q8,  #12
-        vrshrn.i32      \o1, q9,  #12
+        vqrshrn.s32     \o0, q8,  #12
+        vqrshrn.s32     \o1, q9,  #12
 
 .ifc \o4, d18
         vmov            q9,  q10
 .endif
 
-        vrshrn.i32      \o2, q6,  #12
-        vrshrn.i32      \o3, q7,  #12
+        vqrshrn.s32     \o2, q6,  #12
+        vqrshrn.s32     \o3, q7,  #12
 
-        vrshrn.i32      \o6, q4,  #12
-        vrshrn.i32      \o7, q5,  #12
+        vqrshrn.s32     \o6, q4,  #12
+        vqrshrn.s32     \o7, q5,  #12
 .endm
 
 function inv_adst_8h_x4_neon, export=1
@@ -702,11 +702,11 @@ def_fn_4x4 identity, flipadst
         vmull_vmlsl_8h  q2,   q3,   \r2,  \r3,  \r14, \r15, d1[0], d1[1] // -> t4a
         vmull_vmlal_8h  q4,   q5,   \r2,  \r3,  \r14, \r15, d1[1], d1[0] // -> t7a
         vmull_vmlsl_8h  q6,   q7,   \r10, \r11, \r6,  \r7,  d1[2], d1[3] // -> t5a
-        vrshrn_8h       \r2,  \r3,  q2,   q3,   #12         // t4a
-        vrshrn_8h       \r14, \r15, q4,   q5,   #12         // t7a
+        vqrshrn_8h      \r2,  \r3,  q2,   q3,   #12         // t4a
+        vqrshrn_8h      \r14, \r15, q4,   q5,   #12         // t7a
         vmull_vmlal_8h  q2,   q3,   \r10, \r11, \r6,  \r7,  d1[3], d1[2] // -> t6a
-        vrshrn_8h       \r6,  \r7,  q6,   q7,   #12         // t5a
-        vrshrn_8h       \r10, \r11, q2,   q3,   #12         // t6a
+        vqrshrn_8h      \r6,  \r7,  q6,   q7,   #12         // t5a
+        vqrshrn_8h      \r10, \r11, q2,   q3,   #12         // t6a
 
         vqadd.s16       q2,   \q1,  \q3 // t4
         vqsub.s16       \q1,  \q1,  \q3 // t5a
@@ -715,8 +715,8 @@ def_fn_4x4 identity, flipadst
 
         vmull_vmlsl_8h  q4,   q5,   \r6,  \r7,  \r2,  \r3,  d0[0], d0[0] // -> t5
         vmull_vmlal_8h  q6,   q7,   \r6,  \r7,  \r2,  \r3,  d0[0], d0[0] // -> t6
-        vrshrn_8h       d8,   d9,   q4,   q5,  #12 // t5
-        vrshrn_8h       d10,  d11,  q6,   q7,  #12 // t6
+        vqrshrn_8h      d8,   d9,   q4,   q5,  #12 // t5
+        vqrshrn_8h      d10,  d11,  q6,   q7,  #12 // t6
 
         vqsub.s16       \q7,  \q0,  q3 // out7
         vqadd.s16       \q0,  \q0,  q3 // out0
@@ -735,11 +735,11 @@ def_fn_4x4 identity, flipadst
         vmull_vmlsl     q1,   \r1,  \r7, d1[0], d1[1] // -> t4a
         vmull_vmlal     q2,   \r1,  \r7, d1[1], d1[0] // -> t7a
         vmull_vmlsl     q3,   \r5,  \r3, d1[2], d1[3] // -> t5a
-        vrshrn.i32      \r1,  q1,   #12               // t4a
+        vqrshrn.s32     \r1,  q1,   #12               // t4a
         vmull_vmlal     q1,   \r5,  \r3, d1[3], d1[2] // -> t6a
-        vrshrn.i32      \r7,  q2,   #12               // t7a
-        vrshrn.i32      \r3,  q3,   #12               // t5a
-        vrshrn.i32      \r5,  q1,   #12               // taa
+        vqrshrn.s32     \r7,  q2,   #12               // t7a
+        vqrshrn.s32     \r3,  q3,   #12               // t5a
+        vqrshrn.s32     \r5,  q1,   #12               // taa
 
         vqadd.s16       d2,   \r1,  \r3 // t4
         vqsub.s16       \r1,  \r1,  \r3 // t5a
@@ -748,8 +748,8 @@ def_fn_4x4 identity, flipadst
 
         vmull_vmlsl     q2,   \r3,  \r1, d0[0], d0[0] // -> t5
         vmull_vmlal     q3,   \r3,  \r1, d0[0], d0[0] // -> t6
-        vrshrn.i32      d4,   q2,   #12               // t5
-        vrshrn.i32      d5,   q3,   #12               // t6
+        vqrshrn.s32     d4,   q2,   #12               // t5
+        vqrshrn.s32     d5,   q3,   #12               // t6
 
         vqsub.s16       \r7,  \r0,  d3 // out7
         vqadd.s16       \r0,  \r0,  d3 // out0
@@ -783,19 +783,19 @@ endfunc
         vmull_vmlal_8h  q2,  q3,  d30, d31, d16, d17, d0[0], d0[1]
         vmull_vmlsl_8h  q4,  q5,  d30, d31, d16, d17, d0[1], d0[0]
         vmull_vmlal_8h  q6,  q7,  d26, d27, d20, d21, d0[2], d0[3]
-        vrshrn_8h       d16, d17, q2,  q3,  #12  // t0a
-        vrshrn_8h       d30, d31, q4,  q5,  #12  // t1a
+        vqrshrn_8h      d16, d17, q2,  q3,  #12  // t0a
+        vqrshrn_8h      d30, d31, q4,  q5,  #12  // t1a
         vmull_vmlsl_8h  q2,  q3,  d26, d27, d20, d21, d0[3], d0[2]
         vmull_vmlal_8h  q4,  q5,  d22, d23, d24, d25, d1[0], d1[1]
-        vrshrn_8h       d20, d21, q6,  q7,  #12  // t2a
-        vrshrn_8h       d26, d27, q2,  q3,  #12  // t3a
+        vqrshrn_8h      d20, d21, q6,  q7,  #12  // t2a
+        vqrshrn_8h      d26, d27, q2,  q3,  #12  // t3a
         vmull_vmlsl_8h  q6,  q7,  d22, d23, d24, d25, d1[1], d1[0]
         vmull_vmlal_8h  q2,  q3,  d18, d19, d28, d29, d1[2], d1[3]
-        vrshrn_8h       d24, d25, q4,  q5,  #12  // t4a
-        vrshrn_8h       d22, d23, q6,  q7,  #12  // t5a
+        vqrshrn_8h      d24, d25, q4,  q5,  #12  // t4a
+        vqrshrn_8h      d22, d23, q6,  q7,  #12  // t5a
         vmull_vmlsl_8h  q4,  q5,  d18, d19, d28, d29, d1[3], d1[2]
-        vrshrn_8h       d28, d29, q2,  q3,  #12  // t6a
-        vrshrn_8h       d18, d19, q4,  q5,  #12  // t7a
+        vqrshrn_8h      d28, d29, q2,  q3,  #12  // t6a
+        vqrshrn_8h      d18, d19, q4,  q5,  #12  // t7a
 
         vqadd.s16       q2,  q8,  q12 // t0
         vqsub.s16       q3,  q8,  q12 // t4
@@ -810,13 +810,13 @@ endfunc
         vmull_vmlsl_8h  q12, q13, d6,  d7,  d10, d11, d2[2], d2[3]
         vmull_vmlsl_8h  q14, q15, d22, d23, d14, d15, d2[3], d2[2]
 
-        vrshrn_8h       d6,  d7,  q8,  q9,  #12  // t4a
-        vrshrn_8h       d10, d11, q12, q13, #12  // t5a
+        vqrshrn_8h      d6,  d7,  q8,  q9,  #12  // t4a
+        vqrshrn_8h      d10, d11, q12, q13, #12  // t5a
 
         vmull_vmlal_8h  q8,  q9,  d22, d23, d14, d15, d2[2], d2[3]
 
-        vrshrn_8h       d14, d15, q14, q15, #12  // t6a
-        vrshrn_8h       d22, d23, q8,  q9,  #12  // t7a
+        vqrshrn_8h      d14, d15, q14, q15, #12  // t6a
+        vqrshrn_8h      d22, d23, q8,  q9,  #12  // t7a
 
         vqadd.s16       \q0, q2,  q6  // out0
         vqsub.s16       q2,  q2,  q6  // t2
@@ -833,11 +833,11 @@ endfunc
         vmull_vmlal_8h  q10, q11, d4,  d5,  d8,  d9,  d2[0], d2[0] // -> out3 (q11 or q12)
         vmull_vmlsl_8h  q6,  q7,  d4,  d5,  d8,  d9,  d2[0], d2[0] // -> out4 (q12 or q11)
         vmull_vmlsl_8h  q12, q13, d6,  d7,  d10, d11, d2[0], d2[0] // -> out5 (q13 or q10)
-        vrshrn_8h       d4,  d5,  q10, q11, #12 // out3
+        vqrshrn_8h      d4,  d5,  q10, q11, #12 // out3
         vmull_vmlal_8h  q10, q11, d6,  d7,  d10, d11, d2[0], d2[0] // -> out2 (q10 or q13)
-        vrshrn_8h       d6,  d7,  q12, q13, #12 // out5
-        vrshrn_8h       \r4, \r5, q10, q11, #12 // out2 (q10 or q13)
-        vrshrn_8h       \r8, \r9, q6,  q7,  #12 // out4 (q12 or q11)
+        vqrshrn_8h      d6,  d7,  q12, q13, #12 // out5
+        vqrshrn_8h      \r4, \r5, q10, q11, #12 // out2 (q10 or q13)
+        vqrshrn_8h      \r8, \r9, q6,  q7,  #12 // out4 (q12 or q11)
 
         vqneg.s16       \q3, q2     // out3
         vqneg.s16       \q5, q3     // out5
@@ -850,19 +850,19 @@ endfunc
         vmull_vmlal     q2,  d23, d16, d0[0], d0[1]
         vmull_vmlsl     q3,  d23, d16, d0[1], d0[0]
         vmull_vmlal     q4,  d21, d18, d0[2], d0[3]
-        vrshrn.i32      d16, q2,  #12 // t0a
-        vrshrn.i32      d23, q3,  #12 // t1a
+        vqrshrn.s32     d16, q2,  #12 // t0a
+        vqrshrn.s32     d23, q3,  #12 // t1a
         vmull_vmlsl     q5,  d21, d18, d0[3], d0[2]
         vmull_vmlal     q6,  d19, d20, d1[0], d1[1]
-        vrshrn.i32      d18, q4,  #12 // t2a
-        vrshrn.i32      d21, q5,  #12 // t3a
+        vqrshrn.s32     d18, q4,  #12 // t2a
+        vqrshrn.s32     d21, q5,  #12 // t3a
         vmull_vmlsl     q7,  d19, d20, d1[1], d1[0]
         vmull_vmlal     q2,  d17, d22, d1[2], d1[3]
-        vrshrn.i32      d20, q6,  #12 // t4a
-        vrshrn.i32      d19, q7,  #12 // t5a
+        vqrshrn.s32     d20, q6,  #12 // t4a
+        vqrshrn.s32     d19, q7,  #12 // t5a
         vmull_vmlsl     q3,  d17, d22, d1[3], d1[2]
-        vrshrn.i32      d22, q2,  #12 // t6a
-        vrshrn.i32      d17, q3,  #12 // t7a
+        vqrshrn.s32     d22, q2,  #12 // t6a
+        vqrshrn.s32     d17, q3,  #12 // t7a
 
         vqadd.s16       d4,  d16, d20 // t0
         vqsub.s16       d5,  d16, d20 // t4
@@ -877,13 +877,13 @@ endfunc
         vmull_vmlsl     q10, d5,  d7,  d2[2], d2[3]
         vmull_vmlsl     q11, d19, d9,  d2[3], d2[2]
 
-        vrshrn.i32      d5,  q8,  #12 // t4a
-        vrshrn.i32      d7,  q10, #12 // t5a
+        vqrshrn.s32     d5,  q8,  #12 // t4a
+        vqrshrn.s32     d7,  q10, #12 // t5a
 
         vmull_vmlal     q8,  d19, d9,  d2[2], d2[3]
 
-        vrshrn.i32      d9,  q11, #12 // t6a
-        vrshrn.i32      d19, q8,  #12 // t7a
+        vqrshrn.s32     d9,  q11, #12 // t6a
+        vqrshrn.s32     d19, q8,  #12 // t7a
 
         vqadd.s16       \r0, d4,  d8  // out0
         vqsub.s16       d4,  d4,  d8  // t2
@@ -900,11 +900,11 @@ endfunc
         vmull_vmlal     q9,  d4,  d6,  d2[0], d2[0] // -> out3 (d19 or d20)
         vmull_vmlsl     q4,  d4,  d6,  d2[0], d2[0] // -> out4 (d20 or d19)
         vmull_vmlsl     q10, d5,  d7,  d2[0], d2[0] // -> out5 (d21 or d18)
-        vrshrn.i32      d4,  q9,  #12 // out3
+        vqrshrn.s32     d4,  q9,  #12 // out3
         vmull_vmlal     q9,  d5,  d7,  d2[0], d2[0] // -> out2 (d18 or d21)
-        vrshrn.i32      d5,  q10, #12 // out5
-        vrshrn.i32      \r2, q9,  #12 // out2 (d18 or d21)
-        vrshrn.i32      \r4, q4,  #12 // out4 (d20 or d19)
+        vqrshrn.s32     d5,  q10, #12 // out5
+        vqrshrn.s32     \r2, q9,  #12 // out2 (d18 or d21)
+        vqrshrn.s32     \r4, q4,  #12 // out4 (d20 or d19)
 
         vqneg.s16       \r3, d4       // out3
         vqneg.s16       \r5, d5       // out5
@@ -1122,19 +1122,19 @@ function inv_dct_4h_x16_neon, export=1
         vmull_vmlsl     q2,  d17, d31, d2[0], d2[1]  // -> t8a
         vmull_vmlal     q3,  d17, d31, d2[1], d2[0]  // -> t15a
         vmull_vmlsl     q4,  d25, d23, d2[2], d2[3]  // -> t9a
-        vrshrn.i32      d17, q2,  #12                // t8a
-        vrshrn.i32      d31, q3,  #12                // t15a
+        vqrshrn.s32     d17, q2,  #12                // t8a
+        vqrshrn.s32     d31, q3,  #12                // t15a
         vmull_vmlal     q2,  d25, d23, d2[3], d2[2]  // -> t14a
         vmull_vmlsl     q3,  d21, d27, d3[0], d3[1]  // -> t10a
-        vrshrn.i32      d23, q4,  #12                // t9a
-        vrshrn.i32      d25, q2,  #12                // t14a
+        vqrshrn.s32     d23, q4,  #12                // t9a
+        vqrshrn.s32     d25, q2,  #12                // t14a
         vmull_vmlal     q4,  d21, d27, d3[1], d3[0]  // -> t13a
         vmull_vmlsl     q2,  d29, d19, d3[2], d3[3]  // -> t11a
-        vrshrn.i32      d21, q3,  #12                // t10a
-        vrshrn.i32      d27, q4,  #12                // t13a
+        vqrshrn.s32     d21, q3,  #12                // t10a
+        vqrshrn.s32     d27, q4,  #12                // t13a
         vmull_vmlal     q3,  d29, d19, d3[3], d3[2]  // -> t12a
-        vrshrn.i32      d19, q2,  #12                // t11a
-        vrshrn.i32      d29, q3,  #12                // t12a
+        vqrshrn.s32     d19, q2,  #12                // t11a
+        vqrshrn.s32     d29, q3,  #12                // t12a
 
         idct_4h_x8      d16, d18, d20, d22, d24, d26, d28, d30
 
@@ -1149,14 +1149,14 @@ function inv_dct_4h_x16_neon, export=1
 
         vmull_vmlsl     q3,  d5,  d4,  d0[2], d0[3]  // -> t9a
         vmull_vmlal     q4,  d5,  d4,  d0[3], d0[2]  // -> t14a
-        vrshrn.i32      d21, q3,  #12                // t9a
-        vrshrn.i32      d27, q4,  #12                // t14a
+        vqrshrn.s32     d21, q3,  #12                // t9a
+        vqrshrn.s32     d27, q4,  #12                // t14a
 
         vmull_vmlsl     q3,  d29, d23, d0[2], d0[3]  // -> t13a
         vmull_vmlal     q4,  d29, d23, d0[3], d0[2]  // -> t10a
-        vrshrn.i32      d29, q3,  #12                // t13a
+        vqrshrn.s32     d29, q3,  #12                // t13a
         vneg.s32        q4,  q4
-        vrshrn.i32      d23, q4,  #12                // t10a
+        vqrshrn.s32     d23, q4,  #12                // t10a
 
         vqsub.s16       d4,  d17, d19  // t11a
         vqadd.s16       d17, d17, d19  // t8a
@@ -1171,11 +1171,11 @@ function inv_dct_4h_x16_neon, export=1
         vmull_vmlal     q4,  d5,  d4,  d0[0], d0[0]  // -> t12
         vmull_vmlsl     q2,  d25, d21, d0[0], d0[0]  // -> t10a
 
-        vrshrn.i32      d6,  q3,  #12  // t11
-        vrshrn.i32      d7,  q4,  #12  // t12
+        vqrshrn.s32     d6,  q3,  #12  // t11
+        vqrshrn.s32     d7,  q4,  #12  // t12
         vmull_vmlal     q4,  d25, d21, d0[0], d0[0]  // -> t13a
-        vrshrn.i32      d4,  q2,  #12  // t10a
-        vrshrn.i32      d5,  q4,  #12  // t13a
+        vqrshrn.s32     d4,  q2,  #12  // t10a
+        vqrshrn.s32     d5,  q4,  #12  // t13a
 
         vqadd.s16       d8,  d16, d31  // out0
         vqsub.s16       d31, d16, d31  // out15
@@ -1208,35 +1208,35 @@ endfunc
         vmull_vmlal     q2,  d31, d16, d0[0], d0[1] // -> t0
         vmull_vmlsl     q3,  d31, d16, d0[1], d0[0] // -> t1
         vmull_vmlal     q4,  d29, d18, d0[2], d0[3] // -> t2
-        vrshrn.i32      d16, q2,  #12               // t0
-        vrshrn.i32      d31, q3,  #12               // t1
+        vqrshrn.s32     d16, q2,  #12               // t0
+        vqrshrn.s32     d31, q3,  #12               // t1
         vmull_vmlsl     q2,  d29, d18, d0[3], d0[2] // -> t3
         vmull_vmlal     q3,  d27, d20, d1[0], d1[1] // -> t4
-        vrshrn.i32      d18, q4,  #12               // t2
-        vrshrn.i32      d29, q2,  #12               // t3
+        vqrshrn.s32     d18, q4,  #12               // t2
+        vqrshrn.s32     d29, q2,  #12               // t3
         vmull_vmlsl     q4,  d27, d20, d1[1], d1[0] // -> t5
         vmull_vmlal     q2,  d25, d22, d1[2], d1[3] // -> t6
-        vrshrn.i32      d20, q3,  #12               // t4
-        vrshrn.i32      d27, q4,  #12               // t5
+        vqrshrn.s32     d20, q3,  #12               // t4
+        vqrshrn.s32     d27, q4,  #12               // t5
         vmull_vmlsl     q3,  d25, d22, d1[3], d1[2] // -> t7
         vmull_vmlal     q4,  d23, d24, d2[0], d2[1] // -> t8
-        vrshrn.i32      d22, q2,  #12               // t6
-        vrshrn.i32      d25, q3,  #12               // t7
+        vqrshrn.s32     d22, q2,  #12               // t6
+        vqrshrn.s32     d25, q3,  #12               // t7
         vmull_vmlsl     q2,  d23, d24, d2[1], d2[0] // -> t9
         vmull_vmlal     q3,  d21, d26, d2[2], d2[3] // -> t10
-        vrshrn.i32      d23, q4,  #12               // t8
-        vrshrn.i32      d24, q2,  #12               // t9
+        vqrshrn.s32     d23, q4,  #12               // t8
+        vqrshrn.s32     d24, q2,  #12               // t9
         vmull_vmlsl     q4,  d21, d26, d2[3], d2[2] // -> t11
         vmull_vmlal     q2,  d19, d28, d3[0], d3[1] // -> t12
-        vrshrn.i32      d21, q3,  #12               // t10
-        vrshrn.i32      d26, q4,  #12               // t11
+        vqrshrn.s32     d21, q3,  #12               // t10
+        vqrshrn.s32     d26, q4,  #12               // t11
         vmull_vmlsl     q3,  d19, d28, d3[1], d3[0] // -> t13
         vmull_vmlal     q4,  d17, d30, d3[2], d3[3] // -> t14
-        vrshrn.i32      d19, q2,  #12               // t12
-        vrshrn.i32      d28, q3,  #12               // t13
+        vqrshrn.s32     d19, q2,  #12               // t12
+        vqrshrn.s32     d28, q3,  #12               // t13
         vmull_vmlsl     q2,  d17, d30, d3[3], d3[2] // -> t15
-        vrshrn.i32      d17, q4,  #12               // t14
-        vrshrn.i32      d30, q2,  #12               // t15
+        vqrshrn.s32     d17, q4,  #12               // t14
+        vqrshrn.s32     d30, q2,  #12               // t15
 
         vld1.16         {q0}, [r12, :128]
 
@@ -1260,19 +1260,19 @@ endfunc
         vmull_vmlal     q2,  d2,  d3,  d1[1], d1[0] // -> t8
         vmull_vmlsl     q3,  d2,  d3,  d1[0], d1[1] // -> t9
         vmull_vmlal     q4,  d18, d29, d1[3], d1[2] // -> t10
-        vrshrn.i32      d17, q2,  #12               // t8
-        vrshrn.i32      d30, q3,  #12               // t9
+        vqrshrn.s32     d17, q2,  #12               // t8
+        vqrshrn.s32     d30, q3,  #12               // t9
         vmull_vmlsl     q2,  d18, d29, d1[2], d1[3] // -> t11
         vmull_vmlsl     q3,  d27, d20, d1[1], d1[0] // -> t12
-        vrshrn.i32      d18, q4,  #12               // t10
-        vrshrn.i32      d29, q2,  #12               // t11
+        vqrshrn.s32     d18, q4,  #12               // t10
+        vqrshrn.s32     d29, q2,  #12               // t11
         vmull_vmlal     q4,  d27, d20, d1[0], d1[1] // -> t13
         vmull_vmlsl     q2,  d25, d22, d1[3], d1[2] // -> t14
-        vrshrn.i32      d27, q3,  #12               // t12
-        vrshrn.i32      d20, q4,  #12               // t13
+        vqrshrn.s32     d27, q3,  #12               // t12
+        vqrshrn.s32     d20, q4,  #12               // t13
         vmull_vmlal     q3,  d25, d22, d1[2], d1[3] // -> t15
-        vrshrn.i32      d25, q2,  #12               // t14
-        vrshrn.i32      d22, q3,  #12               // t15
+        vqrshrn.s32     d25, q2,  #12               // t14
+        vqrshrn.s32     d22, q3,  #12               // t15
 
         vqsub.s16       d2,  d16, d21 // t4
         vqadd.s16       d16, d16, d21 // t0
@@ -1294,19 +1294,19 @@ endfunc
         vmull_vmlal     q2,  d2,  d3,  d0[3], d0[2] // -> t4a
         vmull_vmlsl     q3,  d2,  d3,  d0[2], d0[3] // -> t5a
         vmull_vmlsl     q4,  d24, d23, d0[3], d0[2] // -> t6a
-        vrshrn.i32      d22, q2,  #12               // t4a
-        vrshrn.i32      d25, q3,  #12               // t5a
+        vqrshrn.s32     d22, q2,  #12               // t4a
+        vqrshrn.s32     d25, q3,  #12               // t5a
         vmull_vmlal     q2,  d24, d23, d0[2], d0[3] // -> t7a
         vmull_vmlal     q3,  d17, d30, d0[3], d0[2] // -> t12
-        vrshrn.i32      d24, q4,  #12               // t6a
-        vrshrn.i32      d23, q2,  #12               // t7a
+        vqrshrn.s32     d24, q4,  #12               // t6a
+        vqrshrn.s32     d23, q2,  #12               // t7a
         vmull_vmlsl     q4,  d17, d30, d0[2], d0[3] // -> t13
         vmull_vmlsl     q2,  d29, d18, d0[3], d0[2] // -> t14
-        vrshrn.i32      d17, q3,  #12               // t12
+        vqrshrn.s32     d17, q3,  #12               // t12
         vmull_vmlal     q3,  d29, d18, d0[2], d0[3] // -> t15
-        vrshrn.i32      d29, q4,  #12               // t13
-        vrshrn.i32      d30, q2,  #12               // t14
-        vrshrn.i32      d18, q3,  #12               // t15
+        vqrshrn.s32     d29, q4,  #12               // t13
+        vqrshrn.s32     d30, q2,  #12               // t14
+        vqrshrn.s32     d18, q3,  #12               // t15
 
         vqsub.s16       d2,  d16, d21 // t2a
 .ifc \o0, d16
@@ -1343,21 +1343,21 @@ endfunc
         vmull_vmlal     q2,  d2,  d21, d0[0], d0[0] // -> out7 (d23 or d24)
         vmull_vmlal     q3,  d26, d3,  d0[0], d0[0] // -> out5 (d21 or d26)
 
-        vrshrn.i32      d24, q12, #12 // out8
-        vrshrn.i32      d4,  q2,  #12 // out7
-        vrshrn.i32      d5,  q3,  #12 // out5
+        vqrshrn.s32     d24, q12, #12 // out8
+        vqrshrn.s32     d4,  q2,  #12 // out7
+        vqrshrn.s32     d5,  q3,  #12 // out5
         vmull_vmlsl     q4,  d26, d3,  d0[0], d0[0] // -> out10 (d26 or d21)
         vmull_vmlal     q1,  d22, d23, d0[0], d0[0] // -> out4 (d20 or d27)
-        vrshrn.i32      d26, q4,  #12 // out10
+        vqrshrn.s32     d26, q4,  #12 // out10
 
         vmull_vmlsl     q4,  d22, d23, d0[0], d0[0] // -> out11 (d27 or d20)
         vmull_vmlal     q11, d27, d20, d0[0], d0[0] // -> out6 (d22 or d25)
         vmull_vmlsl     q3,  d27, d20, d0[0], d0[0] // -> out9 (d25 or d22)
 
-        vrshrn.i32      \o4, q1,  #12 // out4
-        vrshrn.i32      d7,  q3,  #12 // out9
-        vrshrn.i32      d6,  q4,  #12 // out11
-        vrshrn.i32      \o6, q11, #12 // out6
+        vqrshrn.s32     \o4, q1,  #12 // out4
+        vqrshrn.s32     d7,  q3,  #12 // out9
+        vqrshrn.s32     d6,  q4,  #12 // out11
+        vqrshrn.s32     \o6, q11, #12 // out6
 
 .ifc \o8, d23
         vmov            \o8, d24
@@ -1927,35 +1927,35 @@ function inv_dct32_odd_4h_x16_neon, export=1
         vmull_vmlsl     q2,  d16, d31, d0[0], d0[1] // -> t16a
         vmull_vmlal     q3,  d16, d31, d0[1], d0[0] // -> t31a
         vmull_vmlsl     q4,  d24, d23, d0[2], d0[3] // -> t17a
-        vrshrn.i32      d16, q2,  #12               // t16a
-        vrshrn.i32      d31, q3,  #12               // t31a
+        vqrshrn.s32     d16, q2,  #12               // t16a
+        vqrshrn.s32     d31, q3,  #12               // t31a
         vmull_vmlal     q2,  d24, d23, d0[3], d0[2] // -> t30a
         vmull_vmlsl     q3,  d20, d27, d1[0], d1[1] // -> t18a
-        vrshrn.i32      d24, q4,  #12               // t17a
-        vrshrn.i32      d23, q2,  #12               // t30a
+        vqrshrn.s32     d24, q4,  #12               // t17a
+        vqrshrn.s32     d23, q2,  #12               // t30a
         vmull_vmlal     q4,  d20, d27, d1[1], d1[0] // -> t29a
         vmull_vmlsl     q2,  d28, d19, d1[2], d1[3] // -> t19a
-        vrshrn.i32      d20, q3,  #12               // t18a
-        vrshrn.i32      d27, q4,  #12               // t29a
+        vqrshrn.s32     d20, q3,  #12               // t18a
+        vqrshrn.s32     d27, q4,  #12               // t29a
         vmull_vmlal     q3,  d28, d19, d1[3], d1[2] // -> t28a
         vmull_vmlsl     q4,  d18, d29, d2[0], d2[1] // -> t20a
-        vrshrn.i32      d28, q2,  #12               // t19a
-        vrshrn.i32      d19, q3,  #12               // t28a
+        vqrshrn.s32     d28, q2,  #12               // t19a
+        vqrshrn.s32     d19, q3,  #12               // t28a
         vmull_vmlal     q2,  d18, d29, d2[1], d2[0] // -> t27a
         vmull_vmlsl     q3,  d26, d21, d2[2], d2[3] // -> t21a
-        vrshrn.i32      d18, q4,  #12               // t20a
-        vrshrn.i32      d29, q2,  #12               // t27a
+        vqrshrn.s32     d18, q4,  #12               // t20a
+        vqrshrn.s32     d29, q2,  #12               // t27a
         vmull_vmlal     q4,  d26, d21, d2[3], d2[2] // -> t26a
         vmull_vmlsl     q2,  d22, d25, d3[0], d3[1] // -> t22a
-        vrshrn.i32      d26, q3,  #12               // t21a
-        vrshrn.i32      d21, q4,  #12               // t26a
+        vqrshrn.s32     d26, q3,  #12               // t21a
+        vqrshrn.s32     d21, q4,  #12               // t26a
         vmull_vmlal     q3,  d22, d25, d3[1], d3[0] // -> t25a
         vmull_vmlsl     q4,  d30, d17, d3[2], d3[3] // -> t23a
-        vrshrn.i32      d22, q2,  #12               // t22a
-        vrshrn.i32      d25, q3,  #12               // t25a
+        vqrshrn.s32     d22, q2,  #12               // t22a
+        vqrshrn.s32     d25, q3,  #12               // t25a
         vmull_vmlal     q2,  d30, d17, d3[3], d3[2] // -> t24a
-        vrshrn.i32      d30, q4,  #12               // t23a
-        vrshrn.i32      d17, q2,  #12               // t24a
+        vqrshrn.s32     d30, q4,  #12               // t23a
+        vqrshrn.s32     d17, q2,  #12               // t24a
 
         vld1.16         {q0}, [r12, :128]
 
@@ -1979,21 +1979,21 @@ function inv_dct32_odd_4h_x16_neon, export=1
         vmull_vmlsl     q2,  d3,  d2,  d1[0], d1[1] // -> t17a
         vmull_vmlal     q3,  d3,  d2,  d1[1], d1[0] // -> t30a
         vmull_vmlal     q4,  d19, d24, d1[1], d1[0] // -> t18a
-        vrshrn.i32      d21, q2,  #12               // t17a
-        vrshrn.i32      d27, q3,  #12               // t30a
+        vqrshrn.s32     d21, q2,  #12               // t17a
+        vqrshrn.s32     d27, q3,  #12               // t30a
         vneg.s32        q4,  q4                     // -> t18a
         vmull_vmlsl     q1,  d19, d24, d1[0], d1[1] // -> t29a
         vmull_vmlsl     q2,  d22, d18, d1[2], d1[3] // -> t21a
-        vrshrn.i32      d19, q4,  #12               // t18a
-        vrshrn.i32      d24, q1,  #12               // t29a
+        vqrshrn.s32     d19, q4,  #12               // t18a
+        vqrshrn.s32     d24, q1,  #12               // t29a
         vmull_vmlal     q3,  d22, d18, d1[3], d1[2] // -> t26a
         vmull_vmlal     q4,  d17, d20, d1[3], d1[2] // -> t22a
-        vrshrn.i32      d22, q2,  #12               // t21a
-        vrshrn.i32      d18, q3,  #12               // t26a
+        vqrshrn.s32     d22, q2,  #12               // t21a
+        vqrshrn.s32     d18, q3,  #12               // t26a
         vneg.s32        q4,  q4                     // -> t22a
         vmull_vmlsl     q1,  d17, d20, d1[2], d1[3] // -> t25a
-        vrshrn.i32      d17, q4,  #12               // t22a
-        vrshrn.i32      d20, q1,  #12               // t25a
+        vqrshrn.s32     d17, q4,  #12               // t22a
+        vqrshrn.s32     d20, q1,  #12               // t25a
 
         vqsub.s16       d2,  d27, d24 // t29
         vqadd.s16       d27, d27, d24 // t30
@@ -2015,21 +2015,21 @@ function inv_dct32_odd_4h_x16_neon, export=1
         vmull_vmlsl     q2,  d2,  d3,  d0[2], d0[3] // -> t18a
         vmull_vmlal     q3,  d2,  d3,  d0[3], d0[2] // -> t29a
         vmull_vmlsl     q4,  d29, d24, d0[2], d0[3] // -> t19
-        vrshrn.i32      d18, q2,  #12               // t18a
-        vrshrn.i32      d25, q3,  #12               // t29a
+        vqrshrn.s32     d18, q2,  #12               // t18a
+        vqrshrn.s32     d25, q3,  #12               // t29a
         vmull_vmlal     q1,  d29, d24, d0[3], d0[2] // -> t28
         vmull_vmlal     q2,  d26, d19, d0[3], d0[2] // -> t20
-        vrshrn.i32      d29, q4,  #12               // t19
-        vrshrn.i32      d24, q1,  #12               // t28
+        vqrshrn.s32     d29, q4,  #12               // t19
+        vqrshrn.s32     d24, q1,  #12               // t28
         vneg.s32        q2,  q2                     // -> t20
         vmull_vmlsl     q3,  d26, d19, d0[2], d0[3] // -> t27
         vmull_vmlal     q4,  d20, d28, d0[3], d0[2] // -> t21a
-        vrshrn.i32      d26, q2,  #12               // t20
-        vrshrn.i32      d19, q3,  #12               // t27
+        vqrshrn.s32     d26, q2,  #12               // t20
+        vqrshrn.s32     d19, q3,  #12               // t27
         vneg.s32        q4,  q4                     // -> t21a
         vmull_vmlsl     q1,  d20, d28, d0[2], d0[3] // -> t26a
-        vrshrn.i32      d20, q4,  #12               // t21a
-        vrshrn.i32      d28, q1,  #12               // t26a
+        vqrshrn.s32     d20, q4,  #12               // t21a
+        vqrshrn.s32     d28, q1,  #12               // t26a
 
         vqsub.s16       d2,  d16, d30 // t23
         vqadd.s16       d16, d16, d30 // t16 = out16
@@ -2051,24 +2051,24 @@ function inv_dct32_odd_4h_x16_neon, export=1
 
         vmull_vmlsl     q2,  d24, d26, d0[0], d0[0] // -> t20
         vmull_vmlal     q3,  d24, d26, d0[0], d0[0] // -> t27
-        vrshrn.i32      d20, q2,  #12   // t20
-        vrshrn.i32      d22, q3,  #12   // t27
+        vqrshrn.s32     d20, q2,  #12   // t20
+        vqrshrn.s32     d22, q3,  #12   // t27
 
         vmull_vmlal     q2,  d25, d27, d0[0], d0[0] // -> t26a
         vmull_vmlsl     q3,  d25, d27, d0[0], d0[0] // -> t21a
         vmov            d27, d22        // t27
-        vrshrn.i32      d26, q2,  #12   // t26a
+        vqrshrn.s32     d26, q2,  #12   // t26a
 
         vmull_vmlsl     q12, d21, d23, d0[0], d0[0] // -> t22
         vmull_vmlal     q2,  d21, d23, d0[0], d0[0] // -> t25
-        vrshrn.i32      d21, q3,  #12   // t21a
-        vrshrn.i32      d22, q12, #12   // t22
-        vrshrn.i32      d25, q2,  #12   // t25
+        vqrshrn.s32     d21, q3,  #12   // t21a
+        vqrshrn.s32     d22, q12, #12   // t22
+        vqrshrn.s32     d25, q2,  #12   // t25
 
         vmull_vmlsl     q2,  d3,  d2,  d0[0], d0[0] // -> t23a
         vmull_vmlal     q3,  d3,  d2,  d0[0], d0[0] // -> t24a
-        vrshrn.i32      d23, q2,  #12   // t23a
-        vrshrn.i32      d24, q3,  #12   // t24a
+        vqrshrn.s32     d23, q2,  #12   // t23a
+        vqrshrn.s32     d24, q3,  #12   // t24a
 
         bx              lr
 endfunc
@@ -2679,11 +2679,11 @@ function inv_dct64_step1_neon
         vmull_vmlsl     q3,  d29, d26, d2[1], d2[0] // -> t61a
         vneg.s32        q2,  q2                     // t34a
         vmull_vmlsl     q4,  d30, d25, d2[1], d2[0] // -> t33a
-        vrshrn.i32      d26, q2,  #12               // t34a
+        vqrshrn.s32     d26, q2,  #12               // t34a
         vmull_vmlal     q2,  d30, d25, d2[0], d2[1] // -> t62a
-        vrshrn.i32      d29, q3,  #12               // t61a
-        vrshrn.i32      d25, q4,  #12               // t33a
-        vrshrn.i32      d30, q2,  #12               // t62a
+        vqrshrn.s32     d29, q3,  #12               // t61a
+        vqrshrn.s32     d25, q4,  #12               // t33a
+        vqrshrn.s32     d30, q2,  #12               // t62a
 
         vqadd.s16       d16, d24, d27    // t32a
         vqsub.s16       d19, d24, d27    // t35a
@@ -2697,11 +2697,11 @@ function inv_dct64_step1_neon
         vmull_vmlal     q2,  d21, d18, d2[2], d2[3] // -> t61a
         vmull_vmlsl     q3,  d21, d18, d2[3], d2[2] // -> t34a
         vmull_vmlal     q4,  d20, d19, d2[2], d2[3] // -> t60
-        vrshrn.i32      d21, q2,  #12               // t61a
-        vrshrn.i32      d18, q3,  #12               // t34a
+        vqrshrn.s32     d21, q2,  #12               // t61a
+        vqrshrn.s32     d18, q3,  #12               // t34a
         vmull_vmlsl     q2,  d20, d19, d2[3], d2[2] // -> t35
-        vrshrn.i32      d20, q4,  #12               // t60
-        vrshrn.i32      d19, q2,  #12               // t35
+        vqrshrn.s32     d20, q4,  #12               // t60
+        vqrshrn.s32     d19, q2,  #12               // t35
 
         vst1.16         {d16, d17, d18, d19}, [r6, :128]!
         vst1.16         {d20, d21, d22, d23}, [r6, :128]!
@@ -2738,12 +2738,12 @@ function inv_dct64_step2_neon
         vmull_vmlal     q2,  d27, d25, d0[3], d0[2] // -> t56a
         vmull_vmlsl     q3,  d27, d25, d0[2], d0[3] // -> t39a
         vmull_vmlal     q4,  d31, d28, d0[3], d0[2] // -> t40a
-        vrshrn.i32      d25, q2,  #12               // t56a
-        vrshrn.i32      d27, q3,  #12               // t39a
+        vqrshrn.s32     d25, q2,  #12               // t56a
+        vqrshrn.s32     d27, q3,  #12               // t39a
         vneg.s32        q4,  q4                     // t40a
         vmull_vmlsl     q2,  d31, d28, d0[2], d0[3] // -> t55a
-        vrshrn.i32      d31, q4,  #12               // t40a
-        vrshrn.i32      d28, q2,  #12               // t55a
+        vqrshrn.s32     d31, q4,  #12               // t40a
+        vqrshrn.s32     d28, q2,  #12               // t55a
 
         vqadd.s16       d16, d24, d29      // t32a
         vqsub.s16       d19, d24, d29      // t47a
@@ -2757,11 +2757,11 @@ function inv_dct64_step2_neon
         vmull_vmlsl     q2,  d21, d18, d0[0], d0[0] // -> t40a
         vmull_vmlal     q3,  d21, d18, d0[0], d0[0] // -> t55a
         vmull_vmlsl     q4,  d20, d19, d0[0], d0[0] // -> t47
-        vrshrn.i32      d18, q2,  #12               // t40a
-        vrshrn.i32      d21, q3,  #12               // t55a
+        vqrshrn.s32     d18, q2,  #12               // t40a
+        vqrshrn.s32     d21, q3,  #12               // t55a
         vmull_vmlal     q2,  d20, d19, d0[0], d0[0] // -> t48
-        vrshrn.i32      d19, q4,  #12               // t47
-        vrshrn.i32      d20, q2,  #12               // t48
+        vqrshrn.s32     d19, q4,  #12               // t47
+        vqrshrn.s32     d20, q2,  #12               // t48
 
         vstr            d16, [r6, #2*4*0]  // t32a
         vstr            d17, [r9, #2*4*0]  // t39
