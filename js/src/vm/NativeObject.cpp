@@ -368,9 +368,10 @@ bool NativeObject::addDenseElementPure(JSContext* cx, NativeObject* obj) {
 
 static inline void FreeSlots(JSContext* cx, NativeObject* obj,
                              ObjectSlots* slots, size_t nbytes) {
-  if (cx->isHelperThreadContext()) {
-    js_free(slots);
-  } else if (obj->isTenured()) {
+  // Note: this is called when shrinking slots, not from the finalizer.
+  MOZ_ASSERT(cx->isMainThreadContext());
+
+  if (obj->isTenured()) {
     MOZ_ASSERT(!cx->nursery().isInside(slots));
     js_free(slots);
   } else {
