@@ -186,11 +186,4 @@ void PrintTarget::Finish() {
   cairo_surface_finish(mCairoSurface);
 }
 
-void PrintTarget::RegisterPageDoneCallback(PageDoneCallback&& aCallback) {
-  MOZ_ASSERT(aCallback && !IsSyncPagePrinting());
-  mPageDoneCallback = std::move(aCallback);
-}
-
-void PrintTarget::UnregisterPageDoneCallback() { mPageDoneCallback = nullptr; }
-
 }  // namespace mozilla::gfx
