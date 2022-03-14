@@ -342,6 +342,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   friend Derived;
   friend DocAccessibleParent;
+  friend class xpcAccessible;
 
   nsTArray<Derived*> mChildren;
   DocAccessibleParent* mDoc;
