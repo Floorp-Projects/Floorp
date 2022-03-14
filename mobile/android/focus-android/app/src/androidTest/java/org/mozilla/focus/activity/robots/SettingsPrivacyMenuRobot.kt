@@ -216,6 +216,8 @@ class SettingsPrivacyMenuRobot {
 
     fun clickAutoPlayOption() = autoplayOption().perform(click())
 
+    fun clickYesPleaseOption() = blockCookiesYesPleaseOption.click()
+
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
 
     fun verifyExceptionsListDisabled() {
@@ -248,7 +250,14 @@ class SettingsPrivacyMenuRobot {
             .perform(click())
     }
 
-    class Transition
+    class Transition {
+        fun goBackToSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            mDevice.pressBack()
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
+        }
+    }
 }
 
 private val privacySettingsList =

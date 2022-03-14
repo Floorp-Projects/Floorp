@@ -3,19 +3,48 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
+import androidx.core.net.toUri
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.homeScreen
+import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.TestHelper.progressBar
+import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // These tests the Privacy and Security settings menus and options
 @RunWith(AndroidJUnit4ClassRunner::class)
 class SettingsPrivacyTest {
+    private lateinit var webServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
+
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
+
+    @Before
+    fun setup() {
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
+        webServer = MockWebServer()
+        webServer.start()
+    }
+
+    @After
+    fun tearDown() {
+        webServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
+    }
 
     @SmokeTest
     @Test
@@ -32,6 +61,44 @@ class SettingsPrivacyTest {
             verifySitePermissionsSection()
             clickAutoPlayOption()
             verifyAutoplaySection()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verifyCookiesEnabledTest() {
+        val cookiesEnabledURL = "https://www.whatismybrowser.com/detect/are-cookies-enabled"
+
+        homeScreen {
+        }.openMainMenu {
+        }.openSettings {
+        }.openPrivacySettingsMenu {
+            clickBlockCookies()
+            clickYesPleaseOption()
+        }.goBackToSettings {
+        }.goBackToHomeScreen {
+        }.loadPage(cookiesEnabledURL.toUri().toString()) {
+            progressBar.waitUntilGone(waitingTime)
+            verifyCookiesEnabled("No")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verify3rdPartyCookiesEnabledTest() {
+        val cookiesEnabledURL = "https://www.whatismybrowser.com/detect/are-third-party-cookies-enabled"
+
+        homeScreen {
+        }.openMainMenu {
+        }.openSettings {
+        }.openPrivacySettingsMenu {
+            clickBlockCookies()
+            clickYesPleaseOption()
+        }.goBackToSettings {
+        }.goBackToHomeScreen {
+        }.loadPage(cookiesEnabledURL.toUri().toString()) {
+            progressBar.waitUntilGone(waitingTime)
+            verifyCookiesEnabled("No")
         }
     }
 }
