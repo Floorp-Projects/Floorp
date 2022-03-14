@@ -10,12 +10,10 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-var tmp = {};
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm", tmp);
-ChromeUtils.import("resource://gre/modules/Log.jsm", tmp);
-var AddonManager = tmp.AddonManager;
-var AddonManagerPrivate = tmp.AddonManagerPrivate;
-var Log = tmp.Log;
+let { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+let { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 var pathParts = gTestPath.split("/");
 // Drop the test filename

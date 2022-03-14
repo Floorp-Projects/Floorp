@@ -1,11 +1,6 @@
 "use strict";
 
-function scopedCuImport(path) {
-  const scope = {};
-  ChromeUtils.import(path, scope);
-  return scope;
-}
-const { require } = scopedCuImport(
+const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 let { gDevTools } = require("devtools/client/framework/devtools");

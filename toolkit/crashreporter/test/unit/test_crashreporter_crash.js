@@ -64,12 +64,10 @@ add_task(async function run_test() {
       crashReporter.appendAppNotesToCrashReport("MoreJunk");
 
       // TelemetrySession setup will trigger the session annotation
-      let scope = {};
-      ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm",
-        scope
+      let { TelemetryController } = ChromeUtils.import(
+        "resource://gre/modules/TelemetryController.jsm"
       );
-      scope.TelemetryController.testSetup();
+      TelemetryController.testSetup();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestKey, "TestValue");
@@ -122,14 +120,14 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let scope = {};
-      ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm",
-        scope
+      let { TelemetryController } = ChromeUtils.import(
+        "resource://gre/modules/TelemetryController.jsm"
       );
-      ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
-      scope.TelemetrySend.setTestModeEnabled(true);
-      scope.TelemetryController.testSetup();
+      let { TelemetrySend } = ChromeUtils.import(
+        "resource://gre/modules/TelemetrySend.jsm"
+      );
+      TelemetrySend.setTestModeEnabled(true);
+      TelemetryController.testSetup();
     },
     function(mdump, extra) {
       Assert.ok(
@@ -166,14 +164,14 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let scope = {};
-      ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm",
-        scope
+      let { TelemetryController } = ChromeUtils.import(
+        "resource://gre/modules/TelemetryController.jsm"
       );
-      ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
-      scope.TelemetrySend.setTestModeEnabled(true);
-      scope.TelemetryController.testSetup();
+      let { TelemetrySend } = ChromeUtils.import(
+        "resource://gre/modules/TelemetrySend.jsm"
+      );
+      TelemetrySend.setTestModeEnabled(true);
+      TelemetryController.testSetup();
     },
     function(mdump, extra) {
       Assert.ok(
@@ -201,14 +199,14 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let scope = {};
-      ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm",
-        scope
+      let { TelemetryController } = ChromeUtils.import(
+        "resource://gre/modules/TelemetryController.jsm"
       );
-      ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
-      scope.TelemetrySend.setTestModeEnabled(true);
-      scope.TelemetryController.testSetup();
+      let { TelemetrySend } = ChromeUtils.import(
+        "resource://gre/modules/TelemetrySend.jsm"
+      );
+      TelemetrySend.setTestModeEnabled(true);
+      TelemetryController.testSetup();
     },
     function(mdump, extra) {
       Assert.ok(
