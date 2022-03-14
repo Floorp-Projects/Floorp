@@ -489,7 +489,7 @@ def npm(command_context, args):
     if not npm_path:
         exit(-1, "could not find npm executable")
     path = os.path.abspath(os.path.dirname(npm_path))
-    os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
+    os.environ["PATH"] = "{}{}{}".format(path, os.pathsep, os.environ["PATH"])
 
     # karma-firefox-launcher needs the path to firefox binary.
     firefox_bin = command_context.get_binary_path(validate_exists=False)
