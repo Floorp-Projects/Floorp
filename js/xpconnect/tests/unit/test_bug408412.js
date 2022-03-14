@@ -3,8 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 function run_test() {
+  var file = do_get_file("syntax_error.jsm");
+  var ios = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService);
+  var uri = ios.newFileURI(file);
+
   try {
-    ChromeUtils.import("resource://testing-common/syntax_error.jsm");
+    ChromeUtils.import(uri.spec);
     do_throw("Failed to report any error at all");
   } catch (e) {
     Assert.notEqual(/^SyntaxError:/.exec(e + ''), null);
