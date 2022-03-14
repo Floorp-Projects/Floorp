@@ -65,10 +65,9 @@ function run_test() {
   // In xpcshell tests, the "@mozilla.org/xre/app-info;1" component implements
   // only the nsIXULRuntime interface, but not nsIXULAppInfo.  To test the
   // service getter for the latter interface, load mock app-info.
-  let { updateAppInfo } = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm"
-  );
-  updateAppInfo();
+  let tmp = {};
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
+  tmp.updateAppInfo();
 
   // We need to reload the module to update the lazy getter.
   Cu.unload("resource://gre/modules/Services.jsm");

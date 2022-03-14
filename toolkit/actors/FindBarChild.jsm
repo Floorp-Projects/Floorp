@@ -27,10 +27,9 @@ class FindBarChild extends JSWindowActorChild {
       this,
       "FindBarContent",
       () => {
-        const { FindBarContent } = ChromeUtils.import(
-          "resource://gre/modules/FindBarContent.jsm"
-        );
-        return new FindBarContent(this);
+        let tmp = {};
+        ChromeUtils.import("resource://gre/modules/FindBarContent.jsm", tmp);
+        return new tmp.FindBarContent(this);
       },
       { inQuickFind: false, inPassThrough: false }
     );

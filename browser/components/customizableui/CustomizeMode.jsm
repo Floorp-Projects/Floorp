@@ -74,13 +74,14 @@ XPCOMUtils.defineLazyServiceGetter(
 
 let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let scope = {};
+  ChromeUtils.import("resource://gre/modules/Console.jsm", scope);
   gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
     maxLogLevel: gDebug ? "all" : "log",
     prefix: "CustomizeMode",
   };
-  return new ConsoleAPI(consoleOptions);
+  return new scope.ConsoleAPI(consoleOptions);
 });
 
 var gDraggingInToolbars;

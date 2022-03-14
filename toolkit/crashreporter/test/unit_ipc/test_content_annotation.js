@@ -10,10 +10,9 @@ add_task(async function run_test() {
   }
 
   // TelemetrySession setup will trigger the session annotation
-  let { TelemetryController } = ChromeUtils.import(
-    "resource://gre/modules/TelemetryController.jsm"
-  );
-  TelemetryController.testSetup();
+  let scope = {};
+  ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
+  scope.TelemetryController.testSetup();
 
   // Try crashing with a runtime abort
   await do_content_crash(

@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let syncService = {};
+ChromeUtils.import("resource://services-sync/service.js", syncService);
+const service = syncService.Service;
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 function mockState(state) {

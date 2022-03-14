@@ -11,10 +11,9 @@ var { XPCOMUtils } = ChromeUtils.import(
 var gAppInfo = null;
 
 function createAppInfo(ID, name, version, platformVersion = "1.0") {
-  let { newAppInfo } = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm"
-  );
-  gAppInfo = newAppInfo({
+  let tmp = {};
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
+  gAppInfo = tmp.newAppInfo({
     ID,
     name,
     version,

@@ -14,14 +14,16 @@ var { Constants } = ChromeUtils.import(
   "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
 );
 
-var SysAll;
+var SysAll = {};
 if (Constants.Win) {
-  SysAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_win_allthreads.jsm"
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_win_allthreads.jsm",
+    SysAll
   );
 } else if (Constants.libc) {
-  SysAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm"
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm",
+    SysAll
   );
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");

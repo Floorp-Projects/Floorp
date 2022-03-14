@@ -3,9 +3,12 @@
 
 "use strict";
 
-const { Translation, TranslationTelemetry } = ChromeUtils.import(
-  "resource:///modules/translation/TranslationParent.jsm"
+var tmp = {};
+ChromeUtils.import(
+  "resource:///modules/translation/TranslationParent.jsm",
+  tmp
 );
+var { Translation, TranslationTelemetry } = tmp;
 const Telemetry = Services.telemetry;
 
 var MetricsChecker = {

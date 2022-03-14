@@ -1143,6 +1143,11 @@ class SpecialPowersChild extends JSWindowActorChild {
   removeAutoCompletePopupEventListener(window, eventname, listener) {
     this._getAutoCompletePopup(window).removeEventListener(eventname, listener);
   }
+  get formHistory() {
+    let tmp = {};
+    ChromeUtils.import("resource://gre/modules/FormHistory.jsm", tmp);
+    return tmp.FormHistory;
+  }
   getFormFillController(window) {
     return Cc["@mozilla.org/satchel/form-fill-controller;1"].getService(
       Ci.nsIFormFillController
