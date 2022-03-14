@@ -20,9 +20,9 @@
  *
  * Wasm-internal ABI.
  *
- * This section pertains to calls from one wasm function to another, and to
- * wasm's view of the situation when calling into wasm from JS and C++.  Calls
- * to JS and to C++ have other conventions.
+ * The *Wasm-internal ABI* is the ABI a wasm function assumes when it is
+ * entered, and the one it assumes when it is making a call to what it believes
+ * is another wasm function.
  *
  * We pass the first function arguments in registers (GPR and FPU both) and the
  * rest on the stack, generally according to platform ABI conventions (which can
@@ -146,6 +146,112 @@
  *
  * In the wasm-internal ABI, the ARM64 PseudoStackPointer (PSP) is garbage on
  * entry but must be synced with the real SP at the point the function returns.
+ *
+ *
+ * The Wasm Builtin ABIs.
+ *
+ * Also see `[SMDOC] Process-wide builtin thunk set` in WasmBuiltins.cpp.
+ *
+ * The *Wasm-builtin ABIs* comprise the ABIs used when wasm makes calls directly
+ * to the C++ runtime (but not to the JS interpreter), including instance
+ * methods, helpers for operations such as 64-bit division on 32-bit systems,
+ * allocation and writer barriers, conversions to/from JS values, special
+ * fast-path JS imports, and trap handling.
+ *
+ * The callee of a builtin call will always assume the C/C++ ABI.  Therefore
+ * every volatile (caller-saves) register that wasm uses must be saved across
+ * the call, the stack must be aligned as for a C/C++-ABI call before the call,
+ * and any ABI registers the callee expect to have specific values must be set
+ * up (eg the frame pointer, if the C/C++ ABI assumes it is set).
+ *
+ * Most builtin calls are straightforward: the wasm caller knows that it is
+ * performing a call, and so it saves live registers, moves arguments into ABI
+ * locations, etc, before calling.  Abstractions in the masm make sure to pass
+ * the instance pointer to an instance "method" call and to restore the
+ * WasmTlsReg and HeapReg after the call.  In these straightforward cases,
+ * calling the builtin additionally amounts to:
+ *
+ *  - exiting the wasm activation
+ *  - adjusting parameter values to account for platform weirdness (FP arguments
+ *    are handled differently in the C/C++ ABIs on ARM and x86-32 than in the
+ *    Wasm ABI)
+ *  - copying stack arguments into place for the C/C++ ABIs
+ *  - making the call
+ *  - adjusting the return values on return
+ *  - re-entering the wasm activation and returning to the wasm caller
+ *
+ * The steps above are performed by the *builtin thunk* for the builtin and the
+ * builtin itself is said to be *thunked*.  Going via the thunk is simple and,
+ * except for always having to copy stack arguments on x86-32 and the extra call
+ * in the thunk, close to as fast as we can make it without heroics.  Except for
+ * the arithmetic helpers on 32-bit systems, most builtins are rarely used, are
+ * asm.js-specific, or are expensive anyway, and the overhead of the extra call
+ * doesn't matter.
+ *
+ * A few builtins for special purposes are *unthunked* and fall into two
+ * classes: they would normally be thunked but are used in circumstances where
+ * the VM is in an unusual state; or they do their work within the activation.
+ *
+ * In the former class, we find the debug trap handler, which must preserve all
+ * live registers because it is called in contexts where live registers have not
+ * been saved; argument coercion functions, which are called while a call frame
+ * is being built for a JS->Wasm or Wasm->JS call; and other routines that have
+ * special needs for constructing the call.  These all exit the activation, but
+ * handle the exit specially.
+ *
+ * In the latter class, we find two functions that abandon the VM state and
+ * unwind the activation, HandleThrow and HandleTrap; and some debug print
+ * functions that do not affect the VM state at all.
+ *
+ * To summarize, when wasm calls a builtin thunk the stack will end up looking
+ * like this from within the C++ code:
+ *
+ *      |                         |
+ *      +-------------------------+
+ *      |        Wasm frame       |
+ *      +-------------------------+
+ *      |    Thunk frame (exit)   |
+ *      +-------------------------+
+ *      |   Builtin frame (C++)   |
+ *      +-------------------------+  <= SP
+ *
+ * There is an assumption in the profiler (in initFromExitFP) that an exit has
+ * left precisely one frame on the stack for the thunk itself.  There may be
+ * additional assumptions elsewhere, not yet found.
+ *
+ * Very occasionally, Wasm will call C++ without going through the builtin
+ * thunks, and this can be a source of problems.  The one case I know about
+ * right now is that the JS pre-barrier filtering code is called directly from
+ * Wasm, see bug 1464157.
+ *
+ *
+ * Wasm stub ABIs.
+ *
+ * Also see `[SMDOC] Exported wasm functions and the jit-entry stubs` in
+ * WasmJS.cpp.
+ *
+ * The "stub ABIs" are not properly speaking ABIs themselves, but ABI
+ * converters.  An "entry" stub calls in to wasm and an "exit" stub calls out
+ * from wasm.  The entry stubs must convert from whatever data formats the
+ * caller has to wasm formats (and in the future must provide some kind of type
+ * checking for pointer types); the exit stubs convert from wasm formats to the
+ * callee's expected format.
+ *
+ * There are different entry paths from the JS interpreter (using the C++ ABI
+ * and data formats) and from jitted JS code (using the JIT ABI and data
+ * formats); indeed there is a "normal" JitEntry path ("JitEntry") that will
+ * perform argument and return value conversion, and the "fast" JitEntry path
+ * ("DirectCallFromJit") that is only used when it is known that the JIT will
+ * only pass and receive wasm-compatible data and no conversion is needed.
+ *
+ * Similarly, there are different exit paths to the interpreter (using the C++
+ * ABI and data formats) and to JS JIT code (using the JIT ABI and data
+ * formats).  Also, builtin calls described above are themselves a type of exit,
+ * and builtin thunks are properly a type of exit stub.
+ *
+ * Data conversions are difficult because the VM is in an intermediate state
+ * when they happen, we want them to be fast when possible, and some conversions
+ * can re-enter both JS code and wasm code.
  */
 
 #ifndef wasm_frame_h

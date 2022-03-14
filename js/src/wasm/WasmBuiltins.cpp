@@ -1339,16 +1339,21 @@ bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
 }
 
 bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
+  // Also see "The Wasm Builtin ABIs" in WasmFrame.h.
   switch (sym) {
     // No thunk, because these are data addresses
     case SymbolicAddress::InlineTypedObjectClass:
       return false;
 
     // No thunk, because they do their work within the activation
-    case SymbolicAddress::HandleDebugTrap:  // GenerateDebugTrapStub
-    case SymbolicAddress::HandleThrow:      // GenerateThrowStub
-    case SymbolicAddress::HandleTrap:       // GenerateTrapExit
+    case SymbolicAddress::HandleThrow:  // GenerateThrowStub
+    case SymbolicAddress::HandleTrap:   // GenerateTrapExit
       return false;
+
+    // No thunk, because some work has to be done within the activation before
+    // the activation exit: when called, arbitrary wasm registers are live and
+    // must be saved, and the stack pointer may not be aligned for any ABI.
+    case SymbolicAddress::HandleDebugTrap:  // GenerateDebugTrapStub
 
     // No thunk, because their caller manages the activation exit explicitly
     case SymbolicAddress::CallImport_General:      // GenerateImportInterpExit
@@ -1464,6 +1469,8 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 }
 
 // ============================================================================
+// [SMDOC] JS Fast Wasm Imports
+//
 // JS builtins that can be imported by wasm modules and called efficiently
 // through thunks. These thunks conform to the internal wasm ABI and thus can be
 // patched in for import calls. Calling a JS builtin through a thunk is much
@@ -1583,7 +1590,7 @@ static bool PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives) {
 #undef FOR_EACH_BINARY_NATIVE
 
 // ============================================================================
-// Process-wide builtin thunk set
+// [SMDOC] Process-wide builtin thunk set
 //
 // Thunks are inserted between wasm calls and the C++ callee and achieve two
 // things:
@@ -1604,7 +1611,7 @@ static bool PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives) {
 //  - no problems toggling W^X permissions which, because of multiple executing
 //    threads, would require each thunk allocation to be on its own page
 // The cost for creating all thunks at once is relatively low since all thunks
-// fit within the smallest executable quanta (64k).
+// fit within the smallest executable-code allocation quantum (64k).
 
 using TypedNativeToCodeRangeMap =
     HashMap<TypedNative, uint32_t, TypedNative, SystemAllocPolicy>;
