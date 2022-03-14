@@ -280,8 +280,8 @@ var configureFxAccountIdentity = function(
 
 var configureIdentity = async function(identityOverrides, server) {
   let config = makeIdentityConfig(identityOverrides, server);
-  // Must be imported after the identity configuration is set up.
-  let { Service } = ChromeUtils.import("resource://services-sync/service.js");
+  let ns = {};
+  ChromeUtils.import("resource://services-sync/service.js", ns);
 
   // If a server was specified, ensure FxA has a correct cluster URL available.
   if (server && !config.fxaccount.token.endpoint) {
@@ -293,16 +293,16 @@ var configureIdentity = async function(identityOverrides, server) {
     config.fxaccount.token.endpoint = ep;
   }
 
-  configureFxAccountIdentity(Service.identity, config);
+  configureFxAccountIdentity(ns.Service.identity, config);
   Services.prefs.setStringPref("services.sync.username", config.username);
   // many of these tests assume all the auth stuff is setup and don't hit
   // a path which causes that auth to magically happen - so do it now.
-  await Service.identity._ensureValidToken();
+  await ns.Service.identity._ensureValidToken();
 
   // and cheat to avoid requiring each test do an explicit login - give it
   // a cluster URL.
   if (config.fxaccount.token.endpoint) {
-    Service.clusterURL = config.fxaccount.token.endpoint;
+    ns.Service.clusterURL = config.fxaccount.token.endpoint;
   }
 };
 
@@ -314,6 +314,9 @@ function syncTestLogging(level = "Trace") {
 }
 
 var SyncTestingInfrastructure = async function(server, username) {
+  let ns = {};
+  ChromeUtils.import("resource://services-sync/service.js", ns);
+
   let config = makeIdentityConfig({ username });
   await configureIdentity(config, server);
   return {

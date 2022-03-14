@@ -194,12 +194,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let scope = {};
+  ChromeUtils.import("resource://gre/modules/Console.jsm", scope);
   let consoleOptions = {
     maxLogLevel: gDebuggingEnabled ? "all" : "log",
     prefix: "CustomizableUI",
   };
-  return new ConsoleAPI(consoleOptions);
+  return new scope.ConsoleAPI(consoleOptions);
 });
 
 var CustomizableUIInternal = {

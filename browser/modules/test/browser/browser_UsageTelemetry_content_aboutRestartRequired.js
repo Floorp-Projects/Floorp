@@ -3,8 +3,10 @@
 const SCALAR_BUILDID_MISMATCH = "dom.contentprocess.buildID_mismatch";
 
 add_task(async function test_aboutRestartRequired() {
-  const { TabCrashHandler } = ChromeUtils.import(
-    "resource:///modules/ContentCrashHandlers.jsm"
+  let CrashHandlers = {};
+  ChromeUtils.import(
+    "resource:///modules/ContentCrashHandlers.jsm",
+    CrashHandlers
   );
 
   // Let's reset the counts.
@@ -20,8 +22,10 @@ add_task(async function test_aboutRestartRequired() {
   );
 
   // Simulate buildID mismatch
-  TabCrashHandler._crashedTabCount = 1;
-  TabCrashHandler.sendToRestartRequiredPage(gBrowser.selectedTab.linkedBrowser);
+  CrashHandlers.TabCrashHandler._crashedTabCount = 1;
+  CrashHandlers.TabCrashHandler.sendToRestartRequiredPage(
+    gBrowser.selectedTab.linkedBrowser
+  );
 
   scalars = TelemetryTestUtils.getProcessScalars("parent");
 

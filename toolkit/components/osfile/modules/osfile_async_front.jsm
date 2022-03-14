@@ -22,8 +22,10 @@
 // Scheduler is exported for test-only usage.
 var EXPORTED_SYMBOLS = ["OS", "Scheduler"];
 
-var SharedAll = ChromeUtils.import(
-  "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
+var SharedAll = {};
+ChromeUtils.import(
+  "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+  SharedAll
 );
 const { clearInterval, setInterval } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
@@ -34,14 +36,16 @@ var LOG = SharedAll.LOG.bind(SharedAll, "Controller");
 var isTypedArray = SharedAll.isTypedArray;
 
 // The constructor for file errors.
-var SysAll;
+var SysAll = {};
 if (SharedAll.Constants.Win) {
-  SysAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_win_allthreads.jsm"
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_win_allthreads.jsm",
+    SysAll
   );
 } else if (SharedAll.Constants.libc) {
-  SysAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm"
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm",
+    SysAll
   );
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
@@ -49,7 +53,8 @@ if (SharedAll.Constants.Win) {
 var OSError = SysAll.Error;
 var Type = SysAll.Type;
 
-var Path = ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm");
+var Path = {};
+ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
 ChromeUtils.defineModuleGetter(

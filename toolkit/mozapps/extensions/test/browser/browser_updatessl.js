@@ -2,9 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let { AddonUpdateChecker } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonUpdateChecker.jsm"
+var tempScope = {};
+ChromeUtils.import(
+  "resource://gre/modules/addons/AddonUpdateChecker.jsm",
+  tempScope
 );
+var AddonUpdateChecker = tempScope.AddonUpdateChecker;
 
 const updatejson = RELATIVE_DIR + "browser_updatessl.json";
 const redirect = RELATIVE_DIR + "redirect.sjs?";

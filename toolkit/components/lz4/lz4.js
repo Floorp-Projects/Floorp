@@ -6,8 +6,10 @@
 
 var SharedAll;
 if (typeof Components != "undefined") {
-  SharedAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
+  SharedAll = {};
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+    SharedAll
   );
   var { Primitives } = ChromeUtils.import(
     "resource://gre/modules/lz4_internal.js"

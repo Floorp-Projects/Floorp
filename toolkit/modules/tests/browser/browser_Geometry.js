@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Point, Rect } = ChromeUtils.import(
-  "resource://gre/modules/Geometry.jsm"
-);
+var tempScope = {};
+ChromeUtils.import("resource://gre/modules/Geometry.jsm", tempScope);
+var Point = tempScope.Point;
+var Rect = tempScope.Rect;
 
 function test() {
   ok(Rect, "Rect class exists");

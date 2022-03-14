@@ -39,7 +39,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Weave: "resource://services-sync/main.js",
 });
 
-let constants = ChromeUtils.import("resource://services-sync/constants.js");
+let constants = {};
+ChromeUtils.import("resource://services-sync/constants.js", constants);
 
 XPCOMUtils.defineLazyGetter(
   this,
