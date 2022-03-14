@@ -2088,12 +2088,8 @@ static inline bool GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id,
 
 bool js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
                                 int32_t int_id, MutableHandleValue result) {
-  // Callers should have ensured that this object has a static prototype.
-  MOZ_ASSERT(obj->hasStaticPrototype());
-
   // Indexed properties can not exist on the prototype chain.
-  MOZ_ASSERT_IF(obj->staticPrototype() != nullptr,
-                !ObjectMayHaveExtraIndexedProperties(obj->staticPrototype()));
+  MOZ_ASSERT(!PrototypeMayHaveIndexedProperties(obj));
 
   MOZ_ASSERT(PropertyKey::fitsInInt(int_id));
   RootedId id(cx, PropertyKey::Int(int_id));
