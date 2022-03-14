@@ -73,7 +73,9 @@ def main():
         else:
             os.environ["LD_LIBRARY_PATH"] = "{}/lib64/".format(gcc_dir)
 
-        os.environ["PATH"] = "{}/bin/:{}".format(gcc_dir, os.environ["PATH"])
+        os.environ["PATH"] = "{}/bin/{}{}".format(
+            gcc_dir, os.pathsep, os.environ["PATH"]
+        )
 
     grcov_output = subprocess.check_output(grcov_command)
 
