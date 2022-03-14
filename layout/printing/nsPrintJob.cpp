@@ -605,12 +605,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   printData->mPrintDC = new nsDeviceContext();
   MOZ_TRY(printData->mPrintDC->InitForPrinting(devspec));
 
-  if (XRE_IsParentProcess() && !printData->mPrintDC->IsSyncPagePrinting()) {
-    RefPtr<nsPrintJob> self(this);
-    printData->mPrintDC->RegisterPageDoneCallback(
-        [self](nsresult aResult) { self->PageDone(aResult); });
-  }
-
   MOZ_TRY(EnablePOsForPrinting());
 
   if (!mIsCreatingPrintPreview) {
@@ -2041,10 +2035,6 @@ bool nsPrintJob::PrintSheet(nsPrintObject* aPO, bool& aInRange) {
     return true;
   }
 
-  if (XRE_IsParentProcess() && !printData->mPrintDC->IsSyncPagePrinting()) {
-    mPagePrintTimer->WaitForRemotePrint();
-  }
-
   // Print the sheet
   // if a print job was cancelled externally, an EndPage or BeginPage may
   // fail and the failure is passed back here.
@@ -2175,11 +2165,6 @@ bool nsPrintJob::DonePrintingSheets(nsPrintObject* aPO, nsresult aResult) {
            aPO, gFrameTypesStr[aPO->mFrameType], PRT_YESNO(didPrint)));
       return false;
     }
-  }
-
-  if (XRE_IsParentProcess() && printData->mPrintDC &&
-      !printData->mPrintDC->IsSyncPagePrinting()) {
-    printData->mPrintDC->UnregisterPageDoneCallback();
   }
 
   if (NS_SUCCEEDED(aResult)) {

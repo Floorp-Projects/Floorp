@@ -233,10 +233,6 @@ class nsDeviceContext final {
 
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale();
 
-  bool IsSyncPagePrinting() const;
-  void RegisterPageDoneCallback(PrintTarget::PageDoneCallback&& aCallback);
-  void UnregisterPageDoneCallback();
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsDeviceContext();
