@@ -28,11 +28,10 @@ export default function update(state = initialThreadsState(), action) {
       };
 
     case "REMOVE_THREAD":
-      const { oldThread } = action;
       return {
         ...state,
         threads: state.threads.filter(
-          thread => oldThread.actor != thread.actor
+          thread => action.threadActorID != thread.actor
         ),
       };
     case "UPDATE_SERVICE_WORKER_STATUS":

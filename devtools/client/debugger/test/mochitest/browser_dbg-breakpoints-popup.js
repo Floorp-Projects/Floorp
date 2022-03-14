@@ -69,7 +69,9 @@ add_task(async function testPausedByBreakpoint() {
 
   info("Open the popup in order to be able to set a breakpoint");
   const firstPopupBrowsingContext = await openPopup(POPUP_URL);
-  const source = await waitForSource(dbg, POPUP_URL);
+
+  await waitForSource(dbg, POPUP_URL);
+  const source = findSource(dbg, POPUP_URL);
 
   await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 4);
@@ -86,22 +88,9 @@ add_task(async function testPausedByBreakpoint() {
     "The popup is really paused"
   );
 
-  // As we still spawn distinct reducer sources when the sources come from distinct
-  // thread/target (i.e. behavior of `makeSourceId`).
-  // Wait for the second source to be created. We can't use `waitForSource/findSource`
-  // as that isn't designed to handle more than one source per url :/
-  const sources = await waitFor(() => {
-    const list = dbg.selectors
-      .getSourceList()
-      .filter(s => s.url.includes(POPUP_URL));
-    return list.length == 2 ? list : null;
-  });
-  is(
-    sources[0],
-    source,
-    "The first source is the previous one, related to the closed popup"
-  );
-  const newSource = sources[1];
+  await waitForSource(dbg, POPUP_URL);
+  const newSource = findSource(dbg, POPUP_URL);
+
   isnot(
     source,
     newSource,
@@ -149,7 +138,9 @@ add_task(async function testPausedInTwoPopups() {
   info("Open the popup in order to be able to set a breakpoint");
   const browser = gBrowser.selectedBrowser;
   const popupBrowsingContext = await openPopup(POPUP_URL);
-  const source = await waitForSource(dbg, POPUP_URL);
+
+  await waitForSource(dbg, POPUP_URL);
+  const source = findSource(dbg, POPUP_URL);
 
   await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 4);
