@@ -43,6 +43,8 @@ class TabsTrayInactiveTabsOnboardingBinding(
     private val navigationInteractor: NavigationInteractor
 ) : AbstractBinding<BrowserState>(store) {
 
+    private lateinit var inactiveTabsDialog: Dialog
+
     @VisibleForTesting
     internal var banner: InfoBanner? = null
 
@@ -63,26 +65,29 @@ class TabsTrayInactiveTabsOnboardingBinding(
             settings.canShowCfr
 
     private fun createInactiveCFR() {
+        // Don't create a new dialog if one is already displayed
+        if (this::inactiveTabsDialog.isInitialized) return
+
         val context: Context = context
         val metrics = context.components.analytics.metrics
         val anchorPosition = IntArray(2)
         val popupBinding = OnboardingInactiveTabsCfrBinding.inflate(LayoutInflater.from(context))
-        val popup = Dialog(context)
+        inactiveTabsDialog = Dialog(context)
 
-        popup.apply {
+        inactiveTabsDialog.apply {
             setContentView(popupBinding.root)
             setCancelable(false)
             // removing title or setting it as an empty string does not prevent a11y services from assigning one
             setTitle(" ")
         }
         popupBinding.closeInfoBanner.setOnClickListener {
-            popup.dismiss()
+            inactiveTabsDialog.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
             metrics.track(Event.TabsTrayInactiveTabsCFRDismissed)
         }
 
         popupBinding.bannerInfoMessage.setOnClickListener {
-            popup.dismiss()
+            inactiveTabsDialog.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
             navigationInteractor.onTabSettingsClicked()
             metrics.track(Event.TabsTrayInactiveTabsCFRGotoSettings)
@@ -106,7 +111,7 @@ class TabsTrayInactiveTabsOnboardingBinding(
 
         popupBinding.root.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
 
-        popup.window?.apply {
+        inactiveTabsDialog.window?.apply {
             val attr = attributes
             setGravity(Gravity.START or Gravity.TOP)
             attr.x = x + 15.dpToPx(context.resources.displayMetrics)
@@ -114,7 +119,7 @@ class TabsTrayInactiveTabsOnboardingBinding(
             attributes = attr
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
-        popup.show()
+        inactiveTabsDialog.show()
         metrics.track(Event.TabsTrayInactiveTabsCFRIsVisible)
     }
 }
