@@ -510,7 +510,9 @@
     <string name="onboarding_history_title">Naviga come non hai mai fatto</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
+
+    <string name="onboarding_history_description2">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacy che si adatta a qualsiasi situazione</string>

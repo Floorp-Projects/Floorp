@@ -510,7 +510,9 @@
     <string name="onboarding_history_title">Prehliadajte bez stôp</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Jedným ťuknutím vymažete históriu prehliadania a súbory cookie – a zastavíte sledovanie pre reklamné účely všade kam sa pohnete.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jedným ťuknutím vymažete históriu prehliadania a súbory cookie – a zastavíte sledovanie pre reklamné účely všade kam sa pohnete.</string>
+
+    <string name="onboarding_history_description2">Jedným ťuknutím vymažete históriu prehliadania a súbory cookie – a zastavíte sledovanie pre reklamné účely všade kam sa pohnete.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Súkromie, ktoré sa hodí do každej situácie</string>

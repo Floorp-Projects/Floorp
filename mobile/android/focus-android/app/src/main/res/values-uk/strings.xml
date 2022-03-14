@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Переглядайте інтернет як ніколи раніше</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
+
+    <string name="onboarding_history_description2">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Приватність, яка підходить для будь-якої ситуації</string>

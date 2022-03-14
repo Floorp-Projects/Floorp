@@ -512,7 +512,9 @@
     <string name="onboarding_history_title">Περιηγηθείτε σαν να μην συνέβη ποτέ</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
+
+    <string name="onboarding_history_description2">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Απόρρητο σε κάθε περίσταση</string>

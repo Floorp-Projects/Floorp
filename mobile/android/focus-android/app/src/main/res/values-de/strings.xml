@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Surfen, als wäre es nie passiert</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Ein Fingertipp löscht Ihre Surf-Chronik und Ihre Cookies – und verhindert, dass Werbung Sie verfolgt.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ein Fingertipp löscht Ihre Surf-Chronik und Ihre Cookies – und verhindert, dass Werbung Sie verfolgt.</string>
+
+    <string name="onboarding_history_description2">Ein Fingertipp löscht Ihre Surf-Chronik und Ihre Cookies – und verhindert, dass Werbung Sie verfolgt.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privatsphäre, die zu jeder Situation passt</string>

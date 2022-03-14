@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Surf som om det aldri skjedde</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Ett trykk sletter nettleserhistorikken og infokapslene — og hindrer annonser i å spore deg rundt.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ett trykk sletter nettleserhistorikken og infokapslene — og hindrer annonser i å spore deg rundt.</string>
+
+    <string name="onboarding_history_description2">Ett trykk sletter nettleserhistorikken og infokapslene — og hindrer annonser i å spore deg.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Personvern som passer enhver situasjon</string>

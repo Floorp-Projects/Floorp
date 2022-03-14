@@ -489,7 +489,36 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Ongi etorri %1$s(e)ra!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Hurrengo mailako nabigatze pribatua, zuk nahi duzunean</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Ezkutukoak eta ikusezinak bat egiten dutenean</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">Pribatutasunari lehentasuna ematen dion eta jarraipenaren babes indartsua eta cookien berezko babesa duen nabigatzailea da %s.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Nabigatu inoiz gertatu izan ez balitz bezala</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Egoera guztietarako pribatutasuna</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Zure nabigatze-beharrak aldatuko balira, erraza da zure pribatutasun-ezarpenak neurrira doitzea.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Hasi nabigatzen</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Indartu zure pribatutasuna</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Eraman nabigatze pribatua hurrengo mailara. Blokeatu iragarkiak eta webguneetan zehar zure jarraipena egin edo orrien karga-denbora makal dezaketen edukiak.</string>
@@ -894,4 +923,22 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Itxi fitxa</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Badirudi gune honek zure jarraipena egin nahi zuela. Egin klik babesaren ikonoan gunearen ezarpenak eta jarraipenaren blokeoaren estatistikak ikusteko.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Itxi laster-leihoa</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Babestuta zaude!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Ezarpen lehenetsi hauek babes sendoa eskaintzen dute. Erraza da halere ezarpenak zure beharretara moldatzea.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Baztertu</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Ezabatu saio honetako zure datu pertsonalak, nabigatze-historia eta gehiago zakarrontziaren botoia sakatuta. Proba ezazu!</string>
+
 </resources>

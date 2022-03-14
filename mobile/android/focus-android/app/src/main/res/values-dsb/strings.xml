@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Pśeglědowaś, ako njeby se nigda stało</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Jadno dotyknjenje wašu pśeglědowańsku historiju a waše cookije lašujo – a blokěrujo wabjenje, kótarež wam slědujo.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jadno dotyknjenje wašu pśeglědowańsku historiju a waše cookije lašujo – a blokěrujo wabjenje, kótarež wam slědujo.</string>
+
+    <string name="onboarding_history_description2">Jadno dotyknjenje wašu pśeglědowańsku historiju a waše cookije lašujo – a blokěrujo wabjenje, kótarež wam slědujo.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Priwatnosć, kótaraž se ku kuždej situaciji góźi</string>

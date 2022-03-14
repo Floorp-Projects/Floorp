@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Surfa som om det aldrig hänt</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
+
+    <string name="onboarding_history_description2">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Sekretess som passar alla situationer</string>

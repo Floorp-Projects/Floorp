@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Přehladować, kaž njeby so ženje stało</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Jedyn podótk wašu přehladowansku historiju a waše placki zhaša – a blokuje wabjenje, kotrež wam slěduje.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jedyn podótk wašu přehladowansku historiju a waše placki zhaša – a blokuje wabjenje, kotrež wam slěduje.</string>
+
+    <string name="onboarding_history_description2">Jedyn podótk wašu přehladowansku historiju a waše placki zhaša – a blokuje wabjenje, kotrež wam slěduje.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Priwatnosć, kotraž so ke kóždej situaciji hodźi</string>

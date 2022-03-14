@@ -496,6 +496,28 @@
     <!-- Onboarding: Description -->
     <string name="onboarding_description">Қажет кезде келесі деңгейлі жекелік шолу</string>
 
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Инкогнито мен жасырын режимдер біріккенде</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s - жекелікті алға қоятын браузер, оның бақылаудан және cookie файлдарынан өте мықты қорғанысы бар.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Интернетті көрінбейтіндей шолыңыз</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Кез келген жағдайға сәйкес келетін жекелік</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Шолуды өзгерту қажет болса, жекелік баптауларын арттыру немесе кішірейту оңай.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Шолуды бастау</string>
+
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
     <!-- First run tour (Default browser): Text. -->
