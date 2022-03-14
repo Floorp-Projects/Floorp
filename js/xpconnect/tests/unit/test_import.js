@@ -49,10 +49,8 @@ function run_test() {
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
   var scope3 = {};
-  Assert.throws(
-    () => ChromeUtils.import(filePath, scope3),
-    /SecurityError/, "Expecting file URI not to be imported"
-  );
+  Assert.throws(() => ChromeUtils.import(filePath, scope3),
+                /NS_ERROR_UNEXPECTED/);
 
   // make sure we throw when the second arg is bogus
   var didThrow = false;
@@ -90,12 +88,4 @@ function run_test() {
               .createInstance(Ci.nsIClassInfo);
   Assert.ok(Boolean(bar));
   Assert.ok(bar.contractID == contractID + "2");
-
-  // make sure we throw when the URL scheme is not known
-  var scope4 = {};
-  const wrongScheme = "data:text/javascript,var a = {a:1}";
-  Assert.throws(
-    () => ChromeUtils.import(wrongScheme, scope4),
-    /SecurityError/, "Expecting data URI not to be imported"
-  );
 }

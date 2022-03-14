@@ -31,7 +31,3 @@ TEST_HARNESS_FILES.xpcshell.js.xpconnect.tests.components.js += [
     "components/js/xpctest_returncode_child.js",
     "components/js/xpctest_utils.js",
 ]
-
-TESTING_JS_MODULES += [
-    "unit/syntax_error.jsm",
-]
