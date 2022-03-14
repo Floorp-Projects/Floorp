@@ -58,8 +58,11 @@ add_task(async function() {
     "The console is scrolled to the bottom"
   );
 
-  info("Scroll up");
+  info("Scroll up and wait for the layout to stabilize");
   outputContainer.scrollTop = 0;
+  await new Promise(r =>
+    window.requestAnimationFrame(() => TestUtils.executeSoon(r))
+  );
 
   info("Add a console.trace message to check that the scroll isn't impacted");
   let onMessage = waitForMessage(hud, "trace in C");
