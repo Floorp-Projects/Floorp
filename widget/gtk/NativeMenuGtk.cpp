@@ -320,9 +320,12 @@ void NativeMenuGtk::ShowAsContextMenu(nsPresContext* aPc,
     return;
   }
 
-  auto pos = LayoutDeviceIntPoint::Round(aPosition * aPc->CSSToDevPixelScale());
-  auto gdkPos = static_cast<nsWindow*>(widget.get())
-                    ->DevicePixelsToGdkPointRoundDown(pos);
+  auto* geckoWin = static_cast<nsWindow*>(widget.get());
+  // The position needs to be relative to our window.
+  auto pos = (aPosition * aPc->CSSToDevPixelScale()) -
+             geckoWin->WidgetToScreenOffset();
+  auto gdkPos = geckoWin->DevicePixelsToGdkPointRoundDown(
+      LayoutDeviceIntPoint::Round(pos));
 
   mMenuModel->WillShow();
   const GdkRectangle rect = {gdkPos.x, gdkPos.y, 1, 1};
