@@ -87,8 +87,14 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/cdef16_avx2.asm', # moved from autovendored
             '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
             '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
-            '../../../third_party/dav1d/src/x86/film_grain16_avx2.asm',
-            '../../../third_party/dav1d/src/x86/film_grain_avx2.asm',
+            '../../../third_party/dav1d/src/x86/filmgrain16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/filmgrain_avx2.asm',
+            '../../../third_party/dav1d/src/x86/filmgrain_avx512.asm',
+            # '../../../third_party/dav1d/src/x86/filmgrain_common.asm',
+            # ^ filmgrain_common.asm must *not* be in SOURCES because it's only
+            # used as an %include for other .asm files. Trying to assemble it
+            # will result in a nasm error: parser: instruction expected
+            '../../../third_party/dav1d/src/x86/ipred16_avx512.asm',
             '../../../third_party/dav1d/src/x86/ipred_avx2.asm',
             '../../../third_party/dav1d/src/x86/ipred_avx512.asm',
             '../../../third_party/dav1d/src/x86/itx16_avx2.asm',
@@ -111,8 +117,8 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/cdef16_sse.asm',
         '../../../third_party/dav1d/src/x86/cdef_sse.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
-        '../../../third_party/dav1d/src/x86/film_grain16_sse.asm',
-        '../../../third_party/dav1d/src/x86/film_grain_sse.asm',
+        '../../../third_party/dav1d/src/x86/filmgrain16_sse.asm',
+        '../../../third_party/dav1d/src/x86/filmgrain_sse.asm',
         '../../../third_party/dav1d/src/x86/ipred16_avx2.asm',
         '../../../third_party/dav1d/src/x86/ipred16_sse.asm',
         '../../../third_party/dav1d/src/x86/ipred_sse.asm',
@@ -129,10 +135,12 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     ]
 
     # BITDEPTH
+    # All the files here should be *_tmpl.c, and the should not appear in SOURCES,
+    # since they require BITDEPTH to be defined
     relative_path = '../../../third_party/dav1d/src/x86/'
     bitdepth_basenames = [
         'cdef_init_tmpl.c',
-        'film_grain_init_tmpl.c',
+        'filmgrain_init_tmpl.c',
         'ipred_init_tmpl.c',
         'itx_init_tmpl.c',
         'loopfilter_init_tmpl.c',
@@ -167,10 +175,12 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     ]
 
     # BITDEPTH c file
+    # All the files here should be *_tmpl.c, and the should not appear in SOURCES,
+    # since they require BITDEPTH to be defined
     relative_path = '../../../third_party/dav1d/src/arm/'
     bitdepth_basenames = [
         'cdef_init_tmpl.c',
-        'film_grain_init_tmpl.c',
+        'filmgrain_init_tmpl.c',
         'ipred_init_tmpl.c',
         'itx_init_tmpl.c',
         'loopfilter_init_tmpl.c',
@@ -198,8 +208,8 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/cdef.S',
             '../../../third_party/dav1d/src/arm/64/cdef16.S',
             '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
-            '../../../third_party/dav1d/src/arm/64/film_grain.S',
-            '../../../third_party/dav1d/src/arm/64/film_grain16.S',
+            '../../../third_party/dav1d/src/arm/64/filmgrain.S',
+            '../../../third_party/dav1d/src/arm/64/filmgrain16.S',
             '../../../third_party/dav1d/src/arm/64/ipred.S',
             '../../../third_party/dav1d/src/arm/64/ipred16.S',
             # itx.S is used for both 8 and 16 bpc.
@@ -221,8 +231,8 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/cdef.S',
             '../../../third_party/dav1d/src/arm/32/cdef16.S',
             '../../../third_party/dav1d/src/arm/32/cdef_tmpl.S',
-            '../../../third_party/dav1d/src/arm/32/film_grain.S',
-            '../../../third_party/dav1d/src/arm/32/film_grain16.S',
+            '../../../third_party/dav1d/src/arm/32/filmgrain.S',
+            '../../../third_party/dav1d/src/arm/32/filmgrain16.S',
             '../../../third_party/dav1d/src/arm/32/ipred.S',
             '../../../third_party/dav1d/src/arm/32/ipred16.S',
             '../../../third_party/dav1d/src/arm/32/itx.S',

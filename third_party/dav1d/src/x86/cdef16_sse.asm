@@ -64,14 +64,6 @@ cextern shufw_6543210x
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %if ARCH_X86_32
 DECLARE_REG_TMP 5, 3
 %elif WIN64

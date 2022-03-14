@@ -145,14 +145,6 @@ cextern iadst_16x16_internal_8bpc_avx2.main_pass2_end
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %define m(x) mangle(private_prefix %+ _ %+ x %+ SUFFIX)
 
 %macro WRAP_XMM 1+
