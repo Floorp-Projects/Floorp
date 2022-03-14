@@ -11,17 +11,18 @@ function makeInputStream(aString) {
 }
 
 add_task(async function test_remoteWebNavigation_postdata() {
-  let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-  let { CommonUtils } = ChromeUtils.import(
-    "resource://services-common/utils.js"
-  );
+  let obj = {};
+  ChromeUtils.import("resource://testing-common/httpd.js", obj);
+  ChromeUtils.import("resource://services-common/utils.js", obj);
 
-  let server = new HttpServer();
+  let server = new obj.HttpServer();
   server.start(-1);
 
   await new Promise(resolve => {
     server.registerPathHandler("/test", (request, response) => {
-      let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+      let body = obj.CommonUtils.readBytesFromInputStream(
+        request.bodyInputStream
+      );
       is(body, "success", "request body is correct");
       is(request.method, "POST", "request was a post");
       response.write("Received from POST: " + body);

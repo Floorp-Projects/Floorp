@@ -1024,8 +1024,9 @@ var TPS = {
         "testing/modules/ajv-6.12.6.js"
       );
       let ajvURL = fileProtocolHandler.getURLSpecFromActualFile(ajvFile);
-      let { Ajv } = ChromeUtils.import(ajvURL);
-      let ajv = new Ajv({ async: "co*" });
+      let ns = {};
+      ChromeUtils.import(ajvURL, ns);
+      let ajv = new ns.Ajv({ async: "co*" });
       this.pingValidator = ajv.compile(schema);
     } catch (e) {
       this.DumpError(

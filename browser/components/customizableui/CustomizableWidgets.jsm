@@ -36,13 +36,14 @@ const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPrefScreenshots = "extensions.screenshots.disabled";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let scope = {};
+  ChromeUtils.import("resource://gre/modules/Console.jsm", scope);
   let debug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
     maxLogLevel: debug ? "all" : "log",
     prefix: "CustomizableWidgets",
   };
-  return new ConsoleAPI(consoleOptions);
+  return new scope.ConsoleAPI(consoleOptions);
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

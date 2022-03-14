@@ -67,19 +67,23 @@ add_task(async function head_setup() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
-  let { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
-  );
-  let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+  let ns = {};
+  ChromeUtils.import("resource://gre/modules/FileUtils.jsm", ns);
+  ChromeUtils.import("resource://gre/modules/NetUtil.jsm", ns);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
   );
   let schema;
   try {
     let schemaFile = do_get_file("sync_ping_schema.json");
-    stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+    stream.init(
+      schemaFile,
+      ns.FileUtils.MODE_RDONLY,
+      ns.FileUtils.PERMS_FILE,
+      0
+    );
 
-    let bytes = NetUtil.readInputStream(stream, stream.available());
+    let bytes = ns.NetUtil.readInputStream(stream, stream.available());
     schema = JSON.parse(new TextDecoder().decode(bytes));
   } finally {
     stream.close();
@@ -92,8 +96,9 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
-  let { Ajv } = ChromeUtils.import("resource://testing-common/ajv-6.12.6.js");
-  let ajv = new Ajv({ async: "co*" });
+  let ns = {};
+  ChromeUtils.import("resource://testing-common/ajv-6.12.6.js", ns);
+  let ajv = new ns.Ajv({ async: "co*" });
   return ajv.compile(SyncPingSchema);
 });
 
@@ -270,16 +275,15 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 // Helper function to get the sync telemetry and add the typically used test
 // engine names to its list of allowed engines.
 function get_sync_test_telemetry() {
-  let { SyncTelemetry } = ChromeUtils.import(
-    "resource://services-sync/telemetry.js"
-  );
-  SyncTelemetry.tryRefreshDevices = function() {};
+  let ns = {};
+  ChromeUtils.import("resource://services-sync/telemetry.js", ns);
+  ns.SyncTelemetry.tryRefreshDevices = function() {};
   let testEngines = ["rotary", "steam", "sterling", "catapult", "nineties"];
   for (let engineName of testEngines) {
-    SyncTelemetry.allowedEngines.add(engineName);
+    ns.SyncTelemetry.allowedEngines.add(engineName);
   }
-  SyncTelemetry.submissionInterval = -1;
-  return SyncTelemetry;
+  ns.SyncTelemetry.submissionInterval = -1;
+  return ns.SyncTelemetry;
 }
 
 function assert_valid_ping(record) {
@@ -436,9 +440,10 @@ async function sync_engine_and_validate_telem(
   let caughtError = null;
   // Clear out status, so failures from previous syncs won't show up in the
   // telemetry ping.
-  let { Status } = ChromeUtils.import("resource://services-sync/status.js");
-  Status._engines = {};
-  Status.partial = false;
+  let ns = {};
+  ChromeUtils.import("resource://services-sync/status.js", ns);
+  ns.Status._engines = {};
+  ns.Status.partial = false;
   // Ideally we'd clear these out like we do with engines, (probably via
   // Status.resetSync()), but this causes *numerous* tests to fail, so we just
   // assume that if no failureReason or engine failures are set, and the
@@ -446,8 +451,8 @@ async function sync_engine_and_validate_telem(
   // a leftover.
   // This is only an issue since we're triggering the sync of just one engine,
   // without doing any other parts of the sync.
-  let initialServiceStatus = Status._service;
-  let initialSyncStatus = Status._sync;
+  let initialServiceStatus = ns.Status._service;
+  let initialSyncStatus = ns.Status._sync;
 
   let oldSubmit = telem.submit;
   let submitPromise = new Promise((resolve, reject) => {

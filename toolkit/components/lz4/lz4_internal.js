@@ -10,8 +10,10 @@ var Primitives = {};
 
 var SharedAll;
 if (typeof Components != "undefined") {
-  SharedAll = ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
+  SharedAll = {};
+  ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
+    SharedAll
   );
 
   this.EXPORTED_SYMBOLS = ["Primitives"];

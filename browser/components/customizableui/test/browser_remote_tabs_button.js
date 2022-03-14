@@ -4,7 +4,9 @@
  */
 "use strict";
 
-let { Service } = ChromeUtils.import("resource://services-sync/service.js");
+let syncService = {};
+ChromeUtils.import("resource://services-sync/service.js", syncService);
+const service = syncService.Service;
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 let getState;
@@ -78,7 +80,7 @@ function mockFunctions() {
     email: "user@mozilla.com",
   });
 
-  Service.sync = mocked_sync;
+  service.sync = mocked_sync;
 }
 
 function mocked_sync() {
@@ -87,10 +89,10 @@ function mocked_sync() {
 
 function restoreValues() {
   UIState.get = getState;
-  Service.sync = originalSync;
+  service.sync = originalSync;
 }
 
 function storeInitialValues() {
   getState = UIState.get;
-  originalSync = Service.sync;
+  originalSync = service.sync;
 }
