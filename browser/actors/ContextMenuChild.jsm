@@ -28,9 +28,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PageMenuChild", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/PageMenu.jsm", tmp);
-  return new tmp.PageMenuChild();
+  let pageMenu = ChromeUtils.import("resource://gre/modules/PageMenu.jsm");
+  return new pageMenu.PageMenuChild();
 });
 
 let contextMenus = new WeakMap();

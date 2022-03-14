@@ -4,15 +4,12 @@
 
 "use strict";
 
-// Avoid leaks by using tmp for imports...
-var tmp = {};
-ChromeUtils.import("resource:///modules/CustomizableUI.jsm", tmp);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm", tmp);
-ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm",
-  tmp
-);
-var { CustomizableUI, AppConstants, CustomizableUITestUtils } = tmp;
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.jsm",
+});
 
 var EventUtils = {};
 Services.scriptloader.loadSubScript(
