@@ -71,7 +71,7 @@ Alarm.prototype = {
   },
 };
 
-this.alarms = class extends ExtensionAPI {
+this.alarms = class extends ExtensionAPIPersistent {
   constructor(extension) {
     super(extension);
 
@@ -85,28 +85,24 @@ this.alarms = class extends ExtensionAPI {
     }
   }
 
-  registerOnAlarm(fire) {
-    let callback = alarm => {
-      fire.sync(alarm.data);
-    };
+  PERSISTENT_EVENTS = {
+    onAlarm({ fire }) {
+      let callback = alarm => {
+        fire.sync(alarm.data);
+      };
 
-    this.callbacks.add(callback);
+      this.callbacks.add(callback);
 
-    return {
-      unregister: () => {
-        this.callbacks.delete(callback);
-      },
-      convert(_fire, context) {
-        fire = _fire;
-      },
-    };
-  }
-
-  primeListener(event, fire) {
-    if (event == "onAlarm") {
-      return this.registerOnAlarm(fire);
-    }
-  }
+      return {
+        unregister: () => {
+          this.callbacks.delete(callback);
+        },
+        convert(_fire, context) {
+          fire = _fire;
+        },
+      };
+    },
+  };
 
   getAPI(context) {
     const self = this;
@@ -157,9 +153,7 @@ this.alarms = class extends ExtensionAPI {
           context,
           module: "alarms",
           event: "onAlarm",
-          register: fire => {
-            return self.registerOnAlarm(fire).unregister;
-          },
+          extensionApi: self,
         }).api(),
       },
     };
