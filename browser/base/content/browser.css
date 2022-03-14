@@ -94,6 +94,7 @@ body {
   }
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar[autohide="true"] {
   overflow: hidden;
 }
@@ -103,10 +104,13 @@ body {
   height: 0 !important;
   appearance: none !important;
 }
+%endif
 
-#toolbar-menubar:not([autohide]) {
+%ifdef XP_MACOSX
+#toolbar-menubar {
   visibility: collapse;
 }
+%endif
 
 panelmultiview {
   -moz-box-align: start;
@@ -287,13 +291,13 @@ toolbar[customizing] #whats-new-menu-button {
   display: none;
 }
 
+
+%ifdef MENUBAR_CAN_AUTOHIDE
 /* Hide the TabsToolbar titlebar controls if the menubar is permanently shown.
  * (That is, if the menu bar doesn't autohide, and we're not in a fullscreen or
  * popup window.) */
-:root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar[autohide="false"] + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer) {
-  display: none;
-}
-
+:root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer),
+%endif
 :root:not([chromemargin], [inFullscreen]) .titlebar-buttonbox-container,
 :root[inFullscreen] .titlebar-spacer,
 :root:not([tabsintitlebar]) .titlebar-spacer {
@@ -326,9 +330,11 @@ toolbar[customizing] #whats-new-menu-button {
   display: none;
 }
 
-#toolbar-menubar[autohide="true"]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar[autohide=true]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {
   visibility: hidden;
 }
+%endif
 
 :root[tabsintitlebar] .titlebar-buttonbox {
   position: relative;
