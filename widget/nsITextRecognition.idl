@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIContainer;
+
+/**
+ * An interface to query the OS's OCR (optical character recognition) service,
+ * if available.
+ */
+[scriptable, uuid(a5b8ee77-e250-4643-a02a-5458813616a5)]
+interface nsITextRecognition : nsISupports
+{
+  /**
+   * TODO - The promise contains the string of the results. This should return
+   * a list of results that includes the text, confidence, and bounding box.
+   */
+  [implicit_jscontext]
+  Promise findText(in imgIContainer aImage);
+};
