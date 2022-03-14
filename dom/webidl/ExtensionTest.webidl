@@ -32,7 +32,9 @@ interface ExtensionTest {
   void notifyFail(DOMString message);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void notifyPass(optional DOMString message);
+  void notifyPass(DOMString message);
+  [Throws, WebExtensionStub="NoReturn"]
+  void notifyPass();
 
   [Throws, WebExtensionStub="NoReturn"]
   void log(DOMString message);
@@ -41,10 +43,14 @@ interface ExtensionTest {
   void sendMessage(any... args);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void fail(optional any message);
+  void fail(any message);
+  [Throws, WebExtensionStub="NoReturn"]
+  void fail();
 
   [Throws, WebExtensionStub="NoReturn"]
-  void succeed(optional any message);
+  void succeed(any message);
+  [Throws, WebExtensionStub="NoReturn"]
+  void succeed();
 
   [Throws, WebExtensionStub="NoReturn"]
   void assertTrue(any... args);
@@ -56,10 +62,14 @@ interface ExtensionTest {
   void assertEq(any... args);
 
   [Throws]
-  any assertRejects(Promise<any> promise, any expectedError, optional DOMString message, optional Function callback);
+  any assertRejects(Promise<any> promise, any expectedError, DOMString message, optional Function callback);
+  [Throws]
+  any assertRejects(Promise<any> promise, any expectedError, optional Function callback);
 
   [Throws]
-  void assertThrows(Function func, any expectedError, optional DOMString message);
+  void assertThrows(Function func, any expectedError, DOMString message);
+  [Throws]
+  void assertThrows(Function func, any expectedError);
 
   // API events.
 
