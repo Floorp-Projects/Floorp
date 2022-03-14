@@ -54,3 +54,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.docshell.test.chrome += [
     "test/chrome/bug89419.sjs",
     "test/chrome/red.png",
 ]
+
+TESTING_JS_MODULES += [
+    "test/unit/AllowJavascriptChild.jsm",
+    "test/unit/AllowJavascriptParent.jsm",
+]
