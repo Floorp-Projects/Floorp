@@ -426,6 +426,12 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+    CFStringRef kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ =
+        CFSTR("SMPTE_ST_2084_PQ");
+#endif
+
 #ifndef MOZ_WIDGET_UIKIT
     // Set pixel buffer properties on aImage before we extract its surface.
     // This ensures that we can use defined enums to set values instead
@@ -434,13 +440,25 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
                             kCVImageBufferYCbCrMatrix_ITU_R_601_4,
                             kCVAttachmentMode_ShouldPropagate);
+    } else if (mColorSpace == gfx::YUVColorSpace::BT709) {
+      CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
+                            kCVImageBufferYCbCrMatrix_ITU_R_709_2,
+                            kCVAttachmentMode_ShouldPropagate);
+      CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
+                            kCVImageBufferColorPrimaries_ITU_R_709_2,
+                            kCVAttachmentMode_ShouldPropagate);
+      CVBufferSetAttachment(aImage, kCVImageBufferTransferFunctionKey,
+                            kCVImageBufferTransferFunction_ITU_R_709_2,
+                            kCVAttachmentMode_ShouldPropagate);
     } else if (mColorSpace == gfx::YUVColorSpace::BT2020) {
       CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
                             kCVImageBufferYCbCrMatrix_ITU_R_2020,
                             kCVAttachmentMode_ShouldPropagate);
-    } else {
-      CVBufferSetAttachment(aImage, kCVImageBufferYCbCrMatrixKey,
-                            kCVImageBufferYCbCrMatrix_ITU_R_709_2,
+      CVBufferSetAttachment(aImage, kCVImageBufferColorPrimariesKey,
+                            kCVImageBufferColorPrimaries_ITU_R_2020,
+                            kCVAttachmentMode_ShouldPropagate);
+      CVBufferSetAttachment(aImage, kCVImageBufferTransferFunctionKey,
+                            kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ,
                             kCVAttachmentMode_ShouldPropagate);
     }
 
