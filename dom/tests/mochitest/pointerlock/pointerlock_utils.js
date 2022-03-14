@@ -44,7 +44,14 @@ SimpleTest.finish = function() {
 
 addLoadEvent(function() {
   if (typeof start !== "undefined") {
-    SimpleTest.waitForFocus(start);
+    // Try to stabilize the initial state of the page so that topWin.normalSize
+    // ends up storing the correct values when entering fullscreen the first time.
+    SimpleTest.requestFlakyTimeout(
+      "Initial window opening animation takes some time."
+    );
+    SimpleTest.waitForFocus(() =>
+      setTimeout(() => requestAnimationFrame(() => setTimeout(start)), 100)
+    );
   }
 });
 
