@@ -6,7 +6,6 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
@@ -17,7 +16,6 @@ browser.jar:
   skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
   skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
   skin/classic/browser/places/editBookmark.css        (places/editBookmark.css)
-* skin/classic/browser/places/sidebar.css             (places/sidebar.css)
   skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
