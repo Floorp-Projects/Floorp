@@ -576,7 +576,9 @@ static MOZ_ALWAYS_INLINE bool CellIsMarkedGray(const Cell* cell) {
   return TenuredCellIsMarkedGray(reinterpret_cast<const TenuredCell*>(cell));
 }
 
-extern JS_PUBLIC_API bool CellIsMarkedGrayIfKnown(const Cell* cell);
+extern JS_PUBLIC_API bool CanCheckGrayBits(const TenuredCell* cell);
+
+extern JS_PUBLIC_API bool CellIsMarkedGrayIfKnown(const TenuredCell* cell);
 
 #ifdef DEBUG
 extern JS_PUBLIC_API void AssertCellIsNotGray(const Cell* cell);
@@ -667,10 +669,31 @@ static MOZ_ALWAYS_INLINE Zone* GetStringZone(JSString* str) {
 extern JS_PUBLIC_API Zone* GetObjectZone(JSObject* obj);
 
 static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGray(GCCellPtr thing) {
-  if (thing.mayBeOwnedByOtherRuntime()) {
+  js::gc::Cell* cell = thing.asCell();
+  if (IsInsideNursery(cell)) {
     return false;
   }
-  return js::gc::detail::CellIsMarkedGrayIfKnown(thing.asCell());
+
+  auto* tenuredCell = reinterpret_cast<js::gc::TenuredCell*>(cell);
+  return js::gc::detail::CellIsMarkedGrayIfKnown(tenuredCell);
+}
+
+// Specialised gray marking check for use by the cycle collector. This is not
+// called during incremental GC or when the gray bits are invalid.
+static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGrayInCC(GCCellPtr thing) {
+  js::gc::Cell* cell = thing.asCell();
+  if (IsInsideNursery(cell)) {
+    return false;
+  }
+
+  auto* tenuredCell = reinterpret_cast<js::gc::TenuredCell*>(cell);
+  if (!js::gc::detail::TenuredCellIsMarkedGray(tenuredCell)) {
+    return false;
+  }
+
+  MOZ_ASSERT(js::gc::detail::CanCheckGrayBits(tenuredCell));
+
+  return true;
 }
 
 extern JS_PUBLIC_API JS::TraceKind GCThingTraceKind(void* thing);
