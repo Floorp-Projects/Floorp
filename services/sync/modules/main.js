@@ -8,8 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-var Weave = {};
-ChromeUtils.import("resource://services-sync/constants.js", Weave);
+var Weave = ChromeUtils.import("resource://services-sync/constants.js");
 var lazies = {
   "service.js": ["Service"],
   "status.js": ["Status"],

@@ -2526,12 +2526,10 @@ BrowserGlue.prototype = {
             WINTASKBAR_CONTRACTID in Cc &&
             Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available
           ) {
-            let temp = {};
-            ChromeUtils.import(
-              "resource:///modules/WindowsJumpLists.jsm",
-              temp
+            const { WinTaskbarJumpList } = ChromeUtils.import(
+              "resource:///modules/WindowsJumpLists.jsm"
             );
-            temp.WinTaskbarJumpList.startup();
+            WinTaskbarJumpList.startup();
           }
         },
       },
@@ -2828,9 +2826,10 @@ BrowserGlue.prototype = {
       },
 
       () => {
-        let obj = {};
-        ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", obj);
-        this._gmpInstallManager = new obj.GMPInstallManager();
+        let { GMPInstallManager } = ChromeUtils.import(
+          "resource://gre/modules/GMPInstallManager.jsm"
+        );
+        this._gmpInstallManager = new GMPInstallManager();
         // We don't really care about the results, if someone is interested they
         // can check the log.
         this._gmpInstallManager.simpleCheckAndInstall().catch(() => {});

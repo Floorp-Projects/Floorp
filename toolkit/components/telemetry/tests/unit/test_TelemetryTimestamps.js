@@ -17,8 +17,6 @@ const { updateAppInfo } = ChromeUtils.import(
 );
 updateAppInfo();
 
-var gGlobalScope = this;
-
 function getSimpleMeasurementsFromTelemetryController() {
   return TelemetrySession.getPayload().simpleMeasurements;
 }
@@ -43,9 +41,9 @@ add_task(async function actualTest() {
   await TelemetryController.testSetup();
 
   // Test the module logic
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
-  let TelemetryTimestamps = tmp.TelemetryTimestamps;
+  let { TelemetryTimestamps } = ChromeUtils.import(
+    "resource://gre/modules/TelemetryTimestamps.jsm"
+  );
   let now = Date.now();
   TelemetryTimestamps.add("foo");
   Assert.ok(TelemetryTimestamps.get().foo != null); // foo was added

@@ -161,11 +161,7 @@ CoverageCollector.prototype._getMethodNames = function() {
  * to a json file in a specified directory.
  */
 CoverageCollector.prototype.recordTestCoverage = function(testName) {
-  let ccov_scope = {};
-  const { OS } = ChromeUtils.import(
-    "resource://gre/modules/osfile.jsm",
-    ccov_scope
-  );
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
