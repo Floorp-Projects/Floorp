@@ -73,6 +73,58 @@ using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;
 using JS::ToUint32;
 
+static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
+  if (!obj->is<NativeObject>()) {
+    return true;
+  }
+
+  if (obj->as<NativeObject>().isIndexed()) {
+    return true;
+  }
+
+  if (obj->is<TypedArrayObject>()) {
+    return true;
+  }
+
+  return ClassMayResolveId(*obj->runtimeFromAnyThread()->commonNames,
+                           obj->getClass(), PropertyKey::Int(0), obj);
+}
+
+bool js::PrototypeMayHaveIndexedProperties(NativeObject* obj) {
+  do {
+    MOZ_ASSERT(obj->hasStaticPrototype(),
+               "dynamic-prototype objects must be non-native");
+
+    JSObject* proto = obj->staticPrototype();
+    if (!proto) {
+      return false;  // no extra indexed properties found
+    }
+
+    if (ObjectMayHaveExtraIndexedOwnProperties(proto)) {
+      return true;
+    }
+    obj = &proto->as<NativeObject>();
+    if (obj->getDenseInitializedLength() != 0) {
+      return true;
+    }
+  } while (true);
+}
+
+/*
+ * Whether obj may have indexed properties anywhere besides its dense
+ * elements. This includes other indexed properties in its shape hierarchy, and
+ * indexed properties or elements along its prototype chain.
+ */
+static bool ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
+  MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->is<NativeObject>());
+
+  if (ObjectMayHaveExtraIndexedOwnProperties(obj)) {
+    return true;
+  }
+
+  return PrototypeMayHaveIndexedProperties(&obj->as<NativeObject>());
+}
+
 bool JS::IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer) {
   if (obj->is<ArrayObject>()) {
     *answer = IsArrayAnswer::Array;
@@ -879,58 +931,6 @@ static bool array_addProperty(JSContext* cx, HandleObject obj, HandleId id,
     arr->setLength(index + 1);
   }
   return true;
-}
-
-static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
-  if (!obj->is<NativeObject>()) {
-    return true;
-  }
-
-  if (obj->as<NativeObject>().isIndexed()) {
-    return true;
-  }
-
-  if (obj->is<TypedArrayObject>()) {
-    return true;
-  }
-
-  return ClassMayResolveId(*obj->runtimeFromAnyThread()->commonNames,
-                           obj->getClass(), PropertyKey::Int(0), obj);
-}
-
-bool js::PrototypeMayHaveIndexedProperties(NativeObject* obj) {
-  do {
-    MOZ_ASSERT(obj->hasStaticPrototype(),
-               "dynamic-prototype objects must be non-native");
-
-    JSObject* proto = obj->staticPrototype();
-    if (!proto) {
-      return false;  // no extra indexed properties found
-    }
-
-    if (ObjectMayHaveExtraIndexedOwnProperties(proto)) {
-      return true;
-    }
-    obj = &proto->as<NativeObject>();
-    if (obj->getDenseInitializedLength() != 0) {
-      return true;
-    }
-  } while (true);
-}
-
-/*
- * Whether obj may have indexed properties anywhere besides its dense
- * elements. This includes other indexed properties in its shape hierarchy, and
- * indexed properties or elements along its prototype chain.
- */
-bool js::ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
-  MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->is<NativeObject>());
-
-  if (ObjectMayHaveExtraIndexedOwnProperties(obj)) {
-    return true;
-  }
-
-  return PrototypeMayHaveIndexedProperties(&obj->as<NativeObject>());
 }
 
 static Shape* AddLengthProperty(JSContext* cx, HandleShape shape) {
