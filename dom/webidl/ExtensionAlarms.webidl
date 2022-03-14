@@ -26,16 +26,22 @@ interface ExtensionAlarms {
   // API methods.
 
   [Throws, WebExtensionStub="NoReturn"]
-  void create(optional DOMString name, any alarmInfo);
+  void create(DOMString name, any alarmInfo);
+  [Throws, WebExtensionStub="NoReturn"]
+  void create(any alarmInfo);
 
   [Throws, WebExtensionStub="Async"]
-  any get(optional DOMString name, optional Function callback);
+  any get(DOMString name, optional Function callback);
+  [Throws, WebExtensionStub="Async"]
+  any get(optional Function callback);
 
   [Throws, WebExtensionStub="Async"]
   any getAll(optional Function callback);
 
   [Throws, WebExtensionStub="Async"]
-  any clear(optional DOMString name, optional Function callback);
+  any clear(DOMString name, optional Function callback);
+  [Throws, WebExtensionStub="Async"]
+  any clear(optional Function callback);
 
   [Throws, WebExtensionStub="Async"]
   any clearAll(optional Function callback);

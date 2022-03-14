@@ -513,7 +513,7 @@ ExtensionAddonObserver.init();
 const manifestTypes = new Map([
   ["theme", "manifest.ThemeManifest"],
   ["sitepermission", "manifest.WebExtensionSitePermissionsManifest"],
-  ["langpack", "manifest.WebExtensionLangpackManifest"],
+  ["locale", "manifest.WebExtensionLangpackManifest"],
   ["dictionary", "manifest.WebExtensionDictionaryManifest"],
   ["extension", "manifest.WebExtensionManifest"],
 ]);
@@ -569,9 +569,6 @@ class ExtensionData {
     // checkPrivileged depends on the extension type and id.
     await extension.initializeAddonTypeAndID();
     let { type, id } = extension;
-    // Map the extension type to the type name used by the add-on manager.
-    // TODO bug 1757084: Remove this.
-    type = type == "langpack" ? "locale" : type;
     extension.isPrivileged = await checkPrivileged(type, id);
     return extension;
   }
@@ -1077,8 +1074,7 @@ class ExtensionData {
     if (manifest.theme) {
       this.type = "theme";
     } else if (manifest.langpack_id) {
-      // TODO bug 1757084: This should be "locale".
-      this.type = "langpack";
+      this.type = "locale";
     } else if (manifest.dictionaries) {
       this.type = "dictionary";
     } else if (manifest.site_permissions) {
@@ -1328,7 +1324,7 @@ class ExtensionData {
           })
         );
       }
-    } else if (this.type == "langpack") {
+    } else if (this.type == "locale") {
       // Langpack startup is performance critical, so we want to compute as much
       // as possible here to make startup not trigger async DB reads.
       // We'll store the four items below in the startupData.

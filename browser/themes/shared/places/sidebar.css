@@ -1,0 +1,216 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.sidebar-panel {
+  appearance: none;
+  background-color: transparent;
+}
+
+/* Themed sidebars */
+
+.sidebar-panel[lwt-sidebar] {
+  background-color: var(--lwt-sidebar-background-color);
+  color: var(--lwt-sidebar-text-color);
+  scrollbar-color: rgba(204,204,204,.5) rgba(230,230,235,.5);
+  color-scheme: light;
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] {
+  scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
+  color-scheme: dark;
+}
+
+.sidebar-panel[lwt-sidebar] .sidebar-placesTreechildren::-moz-tree-row(selected) {
+  background-color: hsla(0,0%,80%,.3);
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-row(selected) {
+  background-color: rgba(249,249,250,.1);
+}
+
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-image(selected),
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-twisty(selected),
+.sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
+  color: var(--lwt-sidebar-text-color);
+}
+
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
+  background-color: var(--lwt-sidebar-highlight-background-color);
+}
+
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-image(selected, focus),
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-twisty(selected, focus),
+.sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-cell-text(selected, focus) {
+  color: var(--lwt-sidebar-highlight-text-color, var(--lwt-sidebar-text-color, var(--sidebar-text-color)));
+}
+
+/* Sidebar tree */
+
+.sidebar-placesTree {
+  appearance: none;
+  background-color: transparent;
+  color: inherit;
+  border: 0;
+  margin: 0;
+}
+
+/* View button */
+
+#viewButton {
+  appearance: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  color: inherit;
+}
+
+#viewButton:hover {
+  /* Matches --toolbarbutton-hover-background: */
+  background-color: color-mix(in srgb, currentColor 17%, transparent);
+}
+
+#viewButton[open] {
+  /* Matches --toolbarbutton-active-background: */
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+#viewButton:focus-visible {
+  outline: var(--focus-outline);
+}
+
+#viewButton > .button-box > .button-menu-dropmarker {
+  appearance: none !important;
+  display: -moz-box;
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  width: 12px;
+  height: 12px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+@media (-moz-platform: windows) {
+  :root[uidensity=touch] #search-box,
+  :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+    min-height: 32px;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell,
+  .sidebar-placesTreechildren::-moz-tree-twisty {
+    padding: 0 4px;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
+  .sidebar-placesTreechildren::-moz-tree-image(leaf) {
+    cursor: pointer;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell(separator) {
+    cursor: default;
+  }
+
+  @media (-moz-windows-default-theme) {
+    .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+      text-decoration: none;
+    }
+  }
+
+  /* Default button vert. margins are 1px/2px, and this can cause misalignment */
+  #viewButton {
+    margin: 0;
+    margin-inline-start: 4px;
+    border-radius: 2px;
+  }
+
+  #sidebar-search-container {
+    padding: 8px;
+  }
+
+  #search-box {
+    margin: 0;
+  }
+}
+
+@media (-moz-platform: linux) {
+  #sidebar-search-container {
+    padding: 8px;
+  }
+
+  #search-box {
+    margin: 0;
+  }
+
+  #viewButton {
+    margin: 1px 0;
+    margin-inline-start: 4px;
+  }
+
+  :root[uidensity=touch] #search-box,
+  :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+    min-height: 32px;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
+  .sidebar-placesTreechildren::-moz-tree-image(leaf) {
+    cursor: pointer;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell(separator) {
+    cursor: default;
+  }
+}
+
+@media (-moz-platform: macos) {
+  .sidebar-placesTree {
+    margin: 0;
+    /* Default font size is 11px on mac, so this is 12px */
+    font-size: 1.0909rem;
+  }
+
+  :root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+    min-height: 32px;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-separator {
+    border-top: 1px solid #505d6d;
+    margin: 0 10px;
+  }
+
+  .sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected,blur) {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-source-list-selection;
+    -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
+  }
+
+  .sidebar-panel:not([lwt-sidebar-highlight]) .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-active-source-list-selection;
+    -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
+  }
+
+  .sidebar-placesTreechildren::-moz-tree-cell-text {
+    margin-inline-end: 6px;
+  }
+
+  #sidebar-search-container {
+    /* Native searchbar styling already adds 4px margin on Mac, so
+     * adding 4px padding results in 8px of total whitespace. */
+    padding: 4px;
+  }
+
+  #viewButton {
+    margin: 4px 0;
+    margin-inline-end: 4px;
+    /* Default font size is 11px on mac, so this is 12px */
+    font-size: 1.0909rem;
+  }
+}

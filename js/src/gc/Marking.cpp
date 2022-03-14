@@ -22,7 +22,6 @@
 #include "gc/GCProbes.h"
 #include "gc/Policy.h"
 #include "jit/JitCode.h"
-#include "js/friend/DumpFunctions.h"  // js::DumpObject
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
 #include "js/SliceBudget.h"
 #include "util/DiagnosticAssertions.h"
@@ -289,6 +288,19 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
   MarkColor color = marker->markColor();
 
   if (!dstCell->isTenured()) {
+#ifdef DEBUG
+    // Bug 1743098: This shouldn't be possible but it does seem to happen. Log
+    // some useful information in debug builds.
+    if (color != MarkColor::Black) {
+      fprintf(stderr,
+              "ShouldMarkCrossCompartment: cross compartment edge from gray "
+              "object to nursery thing\n");
+      fprintf(stderr, "src: ");
+      src->dump();
+      fprintf(stderr, "dst: ");
+      dstCell->dump();
+    }
+#endif
     MOZ_ASSERT(color == MarkColor::Black);
     return false;
   }
@@ -1159,10 +1171,10 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
   // respectively.
   MOZ_ASSERT(!source->isPermanentAndMayBeShared());
 
+  // Shared things are already black so we will not mark them.
   if (target->isPermanentAndMayBeShared()) {
+    MOZ_ASSERT(target->isMarkedBlack());
     MOZ_ASSERT(!target->maybeCompartment());
-
-    // No further checks for parmanent/shared things.
     return;
   }
 
@@ -1960,7 +1972,7 @@ scan_value_range:
                 "processMarkStackTop found ObjectValue(nullptr) "
                 "at %zu Values from end of range in object:\n",
                 size_t(end - (index - 1)));
-        DumpObject(obj);
+        obj->dump();
       }
 #endif
       CheckForCompartmentMismatch(obj, obj2);

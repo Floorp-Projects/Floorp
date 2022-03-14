@@ -2993,6 +2993,7 @@ exports.CSS_PROPERTIES = {
       "transform-style",
       "transform-origin",
       "contain",
+      "content-visibility",
       "appearance",
       "-moz-orient",
       "will-change",
@@ -11597,6 +11598,10 @@ exports.PREFERENCES = [
   [
     "aspect-ratio",
     "layout.css.aspect-ratio.enabled"
+  ],
+  [
+    "content-visibility",
+    "layout.css.content-visibility.enabled"
   ],
   [
     "font-optical-sizing",

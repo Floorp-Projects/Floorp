@@ -1985,7 +1985,11 @@ already_AddRefed<EventSource> EventSource::Constructor(
   } else {
     // Worker side.
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
+    if (!workerPrivate) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
     cookieJarSettings = workerPrivate->CookieJarSettings();
   }
 

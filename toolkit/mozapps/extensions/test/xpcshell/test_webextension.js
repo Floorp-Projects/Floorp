@@ -379,7 +379,7 @@ add_task(async function test_invalid_developer_does_not_override() {
       },
     },
     {
-      type: "statictheme",
+      type: "theme",
       manifestProps: {
         theme: {
           colors: {
@@ -390,7 +390,7 @@ add_task(async function test_invalid_developer_does_not_override() {
       },
     },
     {
-      type: "langpack",
+      type: "locale",
       manifestProps: {
         langpack_id: "und",
         languages: {
@@ -422,7 +422,7 @@ add_task(async function test_invalid_developer_does_not_override() {
         files,
       });
 
-      checkAddon(id, addon, { creator, homepageURL });
+      checkAddon(id, addon, { type, creator, homepageURL });
 
       await addon.uninstall();
     }

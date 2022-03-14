@@ -65,39 +65,67 @@ add_task(async function test_alarm_clear_non_matching_name() {
   await extension.unload();
 });
 
-add_task(
-  {
-    // TODO(Bug 1748714): remove once alarms.create accepts also a single parameter.
-    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
-  },
-  async function test_alarm_get_and_clear_single_argument() {
-    async function backgroundScript() {
-      browser.alarms.create({ when: Date.now() + 2000000 });
+add_task(async function test_alarm_get_and_clear_single_argument() {
+  async function backgroundScript() {
+    browser.alarms.create({ when: Date.now() + 2000000 });
 
-      let alarm = await browser.alarms.get();
-      browser.test.assertEq("", alarm.name, "expected alarm returned");
+    let alarm = await browser.alarms.get();
+    browser.test.assertEq("", alarm.name, "expected alarm returned");
 
-      let wasCleared = await browser.alarms.clear();
-      browser.test.assertTrue(wasCleared, "alarm was cleared");
+    let wasCleared = await browser.alarms.clear();
+    browser.test.assertTrue(wasCleared, "alarm was cleared");
 
-      let alarms = await browser.alarms.getAll();
-      browser.test.assertEq(0, alarms.length, "alarm was removed");
+    let alarms = await browser.alarms.getAll();
+    browser.test.assertEq(0, alarms.length, "alarm was removed");
 
-      browser.test.notifyPass("alarm-single-arg");
-    }
+    browser.test.notifyPass("alarm-single-arg");
+  }
 
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["alarms"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("alarm-single-arg");
+  await extension.unload();
+});
+
+// This test case covers the behavior of browser.alarms.create when the
+// first optional argument (the alarm name) is passed explicitly as null
+// or undefined instead of being omitted.
+add_task(async function test_alarm_name_arg_null_or_undefined() {
+  async function backgroundScript(alarmName) {
+    browser.alarms.create(alarmName, { when: Date.now() + 2000000 });
+
+    let alarm = await browser.alarms.get();
+    browser.test.assertTrue(alarm, "got an alarm");
+    browser.test.assertEq("", alarm.name, "expected alarm returned");
+
+    let wasCleared = await browser.alarms.clear();
+    browser.test.assertTrue(wasCleared, "alarm was cleared");
+
+    let alarms = await browser.alarms.getAll();
+    browser.test.assertEq(0, alarms.length, "alarm was removed");
+
+    browser.test.notifyPass("alarm-test-done");
+  }
+
+  for (const alarmName of [null, undefined]) {
+    info(`Test alarm.create with alarm name ${alarmName}`);
     let extension = ExtensionTestUtils.loadExtension({
-      background: `(${backgroundScript})()`,
+      background: `(${backgroundScript})(${alarmName})`,
       manifest: {
         permissions: ["alarms"],
       },
     });
-
     await extension.startup();
-    await extension.awaitFinish("alarm-single-arg");
+    await extension.awaitFinish("alarm-test-done");
     await extension.unload();
   }
-);
+});
 
 add_task(async function test_get_get_all_clear_all_alarms() {
   async function backgroundScript() {
@@ -257,7 +285,8 @@ function trackEvents(wrapper) {
 
 add_task(
   {
-    // TODO(Bug 1725478): remove the skip if once webidl API bindings will be hidden based on permissions.
+    // TODO(Bug 1748665): remove the skip once background service worker is also
+    // woken up by persistent listeners.
     skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
     pref_set: [
       ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],

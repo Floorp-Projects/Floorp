@@ -1924,6 +1924,20 @@ var PlacesUtils = {
   },
 
   /**
+   * Returns SQL placeholders to bind multiple values into an IN clause.
+   * @param {Array|number} info
+   *   Array or number of entries to create.
+   * @param {string} [prefix]
+   *   String prefix to add before the SQL param.
+   * @param {string} [suffix]
+   *   String suffix to add after the SQL param.
+   */
+  sqlBindPlaceholders(info, prefix = "", suffix = "") {
+    let length = Array.isArray(info) ? info.length : info;
+    return new Array(length).fill(prefix + "?" + suffix).join(",");
+  },
+
+  /**
    * Run some text through md5 and return the hash.
    * @param {string} data The string to hash.
    * @param {string} [format] Which format of the hash to return:

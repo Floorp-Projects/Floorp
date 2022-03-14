@@ -1945,14 +1945,12 @@ bool js::MaybeStringToNumber(JSLinearString* str, double* result) {
 
 JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
                                     double* out) {
+  MOZ_ASSERT(cx->isMainThreadContext());
+
   RootedValue v(cx, v_);
   MOZ_ASSERT(!v.isNumber());
 
   if (!v.isPrimitive()) {
-    if (cx->isHelperThreadContext()) {
-      return false;
-    }
-
     if (!ToPrimitive(cx, JSTYPE_NUMBER, &v)) {
       return false;
     }
@@ -1986,25 +1984,21 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
 #endif
 
   MOZ_ASSERT(v.isSymbol() || v.isBigInt());
-  if (!cx->isHelperThreadContext()) {
-    unsigned errnum = JSMSG_SYMBOL_TO_NUMBER;
-    if (v.isBigInt()) {
-      errnum = JSMSG_BIGINT_TO_NUMBER;
-    }
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errnum);
+  unsigned errnum = JSMSG_SYMBOL_TO_NUMBER;
+  if (v.isBigInt()) {
+    errnum = JSMSG_BIGINT_TO_NUMBER;
   }
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errnum);
   return false;
 }
 
 // BigInt proposal section 3.1.6
 bool js::ToNumericSlow(JSContext* cx, MutableHandleValue vp) {
+  MOZ_ASSERT(cx->isMainThreadContext());
   MOZ_ASSERT(!vp.isNumeric());
 
   // Step 1.
   if (!vp.isPrimitive()) {
-    if (cx->isHelperThreadContext()) {
-      return false;
-    }
     if (!ToPrimitive(cx, JSTYPE_NUMBER, vp)) {
       return false;
     }
