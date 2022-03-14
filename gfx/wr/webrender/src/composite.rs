@@ -414,6 +414,7 @@ pub struct CompositeSurfaceDescriptor {
 #[derive(PartialEq, Clone)]
 pub struct CompositeDescriptor {
     pub surfaces: Vec<CompositeSurfaceDescriptor>,
+    pub external_surfaces_rect: DeviceRect,
 }
 
 impl CompositeDescriptor {
@@ -421,6 +422,7 @@ impl CompositeDescriptor {
     pub fn empty() -> Self {
         CompositeDescriptor {
             surfaces: Vec::new(),
+            external_surfaces_rect: DeviceRect::zero(),
         }
     }
 }
@@ -785,6 +787,11 @@ impl CompositeState {
                     }
                 );
 
+                let device_rect =
+                    self.get_device_rect(&local_rect, external_surface.transform_index);
+                self.descriptor.external_surfaces_rect =
+                    self.descriptor.external_surfaces_rect.union(&device_rect);
+
                 self.tiles.push(tile);
             }
         }
@@ -803,6 +810,20 @@ impl CompositeState {
 
         if old_descriptor.surfaces.len() != self.descriptor.surfaces.len() {
             self.dirty_rects_are_valid = false;
+            return;
+        }
+
+        // The entire area of external surfaces are treated as dirty, however,
+        // if a surface has moved or shrunk that is no longer valid, as we
+        // additionally need to ensure the area the surface used to occupy is
+        // composited.
+        if !self
+            .descriptor
+            .external_surfaces_rect
+            .contains_box(&old_descriptor.external_surfaces_rect)
+        {
+            self.dirty_rects_are_valid = false;
+            return;
         }
     }
 
