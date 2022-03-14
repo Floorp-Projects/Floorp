@@ -35,13 +35,19 @@ interface ExtensionRuntime {
   DOMString getURL(DOMString path);
 
   [Throws, WebExtensionStub="Async"]
-  any setUninstallURL(optional DOMString url, optional Function callback);
+  any setUninstallURL(DOMString url, optional Function callback);
+  [Throws, WebExtensionStub="Async"]
+  any setUninstallURL(optional Function callback);
 
   [Throws, WebExtensionStub="NoReturn"]
   void reload();
 
   [Throws, WebExtensionStub="ReturnsPort"]
-  ExtensionPort connect(optional DOMString extensionId, optional any connectInfo);
+  ExtensionPort connect(DOMString extensionId, any connectInfo);
+  [Throws, WebExtensionStub="ReturnsPort"]
+  ExtensionPort connect(any connectInfo);
+  [Throws, WebExtensionStub="ReturnsPort"]
+  ExtensionPort connect();
 
   [Throws, WebExtensionStub="ReturnsPort"]
   ExtensionPort connectNative(DOMString application);
