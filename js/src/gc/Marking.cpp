@@ -1171,10 +1171,10 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
   // respectively.
   MOZ_ASSERT(!source->isPermanentAndMayBeShared());
 
+  // Shared things are already black so we will not mark them.
   if (target->isPermanentAndMayBeShared()) {
+    MOZ_ASSERT(target->isMarkedBlack());
     MOZ_ASSERT(!target->maybeCompartment());
-
-    // No further checks for parmanent/shared things.
     return;
   }
 
