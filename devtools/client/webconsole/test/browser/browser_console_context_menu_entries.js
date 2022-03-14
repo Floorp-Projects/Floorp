@@ -36,6 +36,7 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
+    "#console-menu-select (A)",
     "#console-menu-export-clipboard ()",
     "#console-menu-export-file ()",
   ]);
@@ -59,6 +60,7 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
+    "#console-menu-select (A)",
     "#console-menu-export-clipboard ()",
     "#console-menu-export-file ()",
   ]);
