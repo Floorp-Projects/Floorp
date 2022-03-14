@@ -50,6 +50,7 @@ endconst
 //                                     const int16_t filter[2][8],
 //                                     const enum LrEdgeFlags edges);
 function wiener_filter7_8bpc_neon, export=1
+        AARCH64_SIGN_LINK_REGISTER
         stp             x29, x30, [sp, #-16]!
         mov             x29, sp
         ld1             {v0.8h, v1.8h},  [x6]
@@ -121,6 +122,7 @@ L(v1_7):
 
         mov             sp,  x29
         ldp             x29, x30, [sp], #16
+        AARCH64_VALIDATE_LINK_REGISTER
         ret
 
 L(no_top_7):
@@ -538,6 +540,7 @@ endfunc
 //                                     const int16_t filter[2][8],
 //                                     const enum LrEdgeFlags edges);
 function wiener_filter5_8bpc_neon, export=1
+        AARCH64_SIGN_LINK_REGISTER
         stp             x29, x30, [sp, #-16]!
         mov             x29, sp
         ld1             {v0.8h, v1.8h},  [x6]
@@ -598,6 +601,7 @@ L(end_5):
 
         mov             sp,  x29
         ldp             x29, x30, [sp], #16
+        AARCH64_VALIDATE_LINK_REGISTER
         ret
 
 L(no_top_5):

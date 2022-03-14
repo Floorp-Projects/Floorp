@@ -254,14 +254,6 @@ cextern resize_filter
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %if WIN64
 DECLARE_REG_TMP 4
 %else

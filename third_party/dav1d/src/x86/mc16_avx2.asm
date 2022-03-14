@@ -202,14 +202,6 @@ cextern resize_filter
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f({%1})
-%endrep
-%endmacro
-
 INIT_XMM avx2
 cglobal put_bilin_16bpc, 4, 8, 0, dst, ds, src, ss, w, h, mxy
     mov                mxyd, r6m ; mx

@@ -106,14 +106,6 @@ ASSERT ARCH_X86_32
 %endif
 %endmacro
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %macro SPLATD 2
     movd %1, %2
     pshufd %1, %1, q0000
