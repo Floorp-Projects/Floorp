@@ -232,6 +232,13 @@ var typeInfo = loadTypeInfo(options.typeInfo_filename);
 
 loadTypes("src_comp.xdb");
 
+// Arbitrary JS code must always be assumed to GC. In real code, there would
+// always be a path anyway through some arbitrary JSNative, but this route will be shorter.
+print(`D ${ID.jscode} ${ID.gc}`);
+
+// An unknown function is assumed to GC.
+print(`D ${ID.anyfunc} ${ID.gc}`);
+
 // Output call edges for all virtual methods defined anywhere, from
 // Class.methodname to what a (dynamic) instance of Class would run when
 // methodname was called (either Class::methodname() if defined, or some
@@ -244,21 +251,6 @@ for (const [fieldkey, methods] of virtualDefinitions) {
     }
 }
 
-function ancestorClassesAndSelf(C) {
-    const ancestors = [C];
-    for (const base of (superclasses.get(C) || []))
-        ancestors.push(...ancestorClassesAndSelf(base));
-    return ancestors;
-}
-
-function isOverridable(C, field) {
-    for (const A of ancestorClassesAndSelf(C)) {
-        if (isOverridableField(C, A, field))
-            return true;
-    }
-    return false;
-}
-
 // Output call edges from C.methodname -> S.methodname for all subclasses S of
 // class C. This is for when you are calling methodname on a pointer/ref of
 // dynamic type C, so that the callgraph contains calls to all descendant
@@ -266,7 +258,7 @@ function isOverridable(C, field) {
 for (const [csu, methods] of virtualDeclarations) {
     for (const {field, dtor} of methods) {
         const caller = getId(fieldKey(csu, field));
-        if (isOverridable(csu, field.Name[0]))
+        if (virtualCanRunJS(csu, field.Name[0]))
             printOnce(`D ${caller} ${functionId("(js-code)")}`);
         if (dtor)
             printOnce(`D ${caller} ${functionId(dtor)}`);
