@@ -727,6 +727,7 @@ describe("CFRPageActions", () => {
             hideClose: true,
             eventCallback: pageAction._popupStateChange,
             persistent: false,
+            persistWhileVisible: false,
           }
         );
       });
