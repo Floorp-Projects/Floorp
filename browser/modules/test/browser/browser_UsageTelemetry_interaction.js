@@ -578,6 +578,11 @@ add_task(async function preferences() {
       {},
       gBrowser.selectedBrowser.browsingContext
     );
+    await BrowserTestUtils.waitForCondition(() =>
+      gBrowser.selectedBrowser.contentDocument.getElementById(
+        "searchBarShownRadio"
+      )
+    );
 
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "#searchBarShownRadio",
@@ -585,12 +590,48 @@ add_task(async function preferences() {
       gBrowser.selectedBrowser.browsingContext
     );
 
+    gBrowser.selectedBrowser.contentDocument
+      .getElementById("openLocationBarPrivacyPreferences")
+      .scrollIntoView();
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#openLocationBarPrivacyPreferences",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#category-privacy",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+    await BrowserTestUtils.waitForCondition(() =>
+      gBrowser.selectedBrowser.contentDocument.getElementById(
+        "contentBlockingLearnMore"
+      )
+    );
+
+    const onLearnMoreOpened = BrowserTestUtils.waitForNewTab(gBrowser);
+    gBrowser.selectedBrowser.contentDocument
+      .getElementById("contentBlockingLearnMore")
+      .scrollIntoView();
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#contentBlockingLearnMore",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+    await onLearnMoreOpened;
+    gBrowser.removeCurrentTab();
+
     assertInteractionScalars({
       preferences_paneGeneral: {
         browserRestoreSession: 1,
       },
+      preferences_panePrivacy: {
+        contentBlockingLearnMore: 1,
+      },
       preferences_paneSearch: {
         searchBarShownRadio: 1,
+        openLocationBarPrivacyPreferences: 1,
       },
     });
   });
