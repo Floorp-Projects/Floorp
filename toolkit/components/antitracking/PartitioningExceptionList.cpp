@@ -33,7 +33,8 @@ bool PartitioningExceptionList::Check(const nsACString& aFirstPartyOrigin,
     return false;
   }
 
-  if (aFirstPartyOrigin.IsEmpty() || aThirdPartyOrigin.IsEmpty()) {
+  if (aFirstPartyOrigin.IsEmpty() || aFirstPartyOrigin == "null" ||
+      aThirdPartyOrigin.IsEmpty() || aThirdPartyOrigin == "null") {
     return false;
   }
 
