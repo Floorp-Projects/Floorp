@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1647053841012,
+      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
+      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
+        "size": 1963,
+        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
+        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
+      "crlite_enrolled": false,
+      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
+      "last_modified": 1647248247223
+    },
+    {
       "schema": 1647046118886,
       "derHash": "AgcFbRcsgL37bcRb6eWAiEYHjR5u7xtu1wJZqzMqZME=",
       "subject": "CN=Cybertrust Japan SureServer CA G4,O=Cybertrust Japan Co.\\, Ltd.,C=JP",
@@ -71,24 +89,6 @@
       "crlite_enrolled": true,
       "id": "0cbd2855-9acf-477f-a083-016847b4753a",
       "last_modified": 1647053840388
-    },
-    {
-      "schema": 1647046118696,
-      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
-      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
-        "size": 1963,
-        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
-        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
-      "crlite_enrolled": true,
-      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
-      "last_modified": 1647053840376
     },
     {
       "schema": 1646966924057,
