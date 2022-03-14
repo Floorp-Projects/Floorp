@@ -563,11 +563,9 @@ class JS::Realm : public JS::shadow::Realm {
     return objectMetadataState_.is<js::PendingMetadata>();
   }
   void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
-    if (!cx->isHelperThreadContext()) {
-      MOZ_ASSERT(objectMetadataState_.is<js::DelayMetadata>());
-      objectMetadataState_ =
-          js::NewObjectMetadataState(js::PendingMetadata(obj));
-    }
+    MOZ_ASSERT(cx->isMainThreadContext());
+    MOZ_ASSERT(objectMetadataState_.is<js::DelayMetadata>());
+    objectMetadataState_ = js::NewObjectMetadataState(js::PendingMetadata(obj));
   }
 
   void* realmPrivate() const { return realmPrivate_; }

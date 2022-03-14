@@ -178,20 +178,20 @@ class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
 template <typename T>
 [[nodiscard]] static MOZ_ALWAYS_INLINE T* SetNewObjectMetadata(JSContext* cx,
                                                                T* obj) {
+  MOZ_ASSERT(cx->isMainThreadContext());
   MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
 
-  // The metadata builder is invoked for each object created on the active
-  // thread, except when analysis/compilation is active, to avoid recursion.
-  if (!cx->isHelperThreadContext()) {
-    if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder()) &&
-        !cx->zone()->suppressAllocationMetadataBuilder) {
-      // Don't collect metadata on objects that represent metadata.
-      AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
+  // The metadata builder is invoked for each object created on the main thread,
+  // except when it's suppressed.
+  if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder()) &&
+      !cx->zone()->suppressAllocationMetadataBuilder) {
+    // Don't collect metadata on objects that represent metadata, to avoid
+    // recursion.
+    AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-      Rooted<T*> rooted(cx, obj);
-      cx->realm()->setNewObjectMetadata(cx, rooted);
-      return rooted;
-    }
+    Rooted<T*> rooted(cx, obj);
+    cx->realm()->setNewObjectMetadata(cx, rooted);
+    return rooted;
   }
 
   return obj;
