@@ -6,13 +6,13 @@
     "message": "Google Search"
   },
   "searchUrl": {
-    "message": "https://www.google.by/search"
+    "message": "https://www.google.kz/search"
   },
   "searchForm": {
-    "message": "https://www.google.by/search?q={searchTerms}"
+    "message": "https://www.google.kz/search?q={searchTerms}"
   },
   "suggestUrl": {
-    "message": "https://www.google.by/complete/search?q={searchTerms}"
+    "message": "https://www.google.kz/complete/search?client=firefox&q={searchTerms}"
   },
   "searchUrlGetParams": {
     "message": "q={searchTerms}"
