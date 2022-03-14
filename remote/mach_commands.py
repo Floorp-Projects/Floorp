@@ -47,7 +47,7 @@ def setup():
     if not npm:
         exit(EX_CONFIG, "could not find npm executable")
     path = os.path.abspath(os.path.join(npm, os.pardir))
-    os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
+    os.environ["PATH"] = "{}{}{}".format(path, os.pathsep, os.environ["PATH"])
 
 
 def remotedir(command_context):
