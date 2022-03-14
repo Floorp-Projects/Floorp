@@ -2072,16 +2072,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
     return;
   }
 
-  bool sizeChanged = false;
   if (aResize) {
-    gint oldWidth = 0, oldHeight = 0;
-    gtk_window_get_size(GTK_WINDOW(mShell), &oldWidth, &oldHeight);
-    LOG("  set size [%d, %d] -> [%d, %d]\n", oldWidth, oldHeight, rect.width,
-        rect.height);
-    sizeChanged = oldWidth != rect.width || oldHeight != rect.height;
-    if (sizeChanged) {
-      gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
-    }
+    LOG("  set size [%d, %d]\n", rect.width, rect.height);
+    gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
   }
 
   auto clearUpdateFlag =
@@ -2091,12 +2084,6 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
     // Popup position has not been changed and its position/size fits
     // parent window so no need to reposition the window.
     LOG("  fits parent window size, just resize\n");
-    return;
-  }
-
-  if (!sizeChanged && mPopupPosition.x == rect.x &&
-      mPopupPosition.y == rect.y) {
-    LOG("  popup position and size didn't change, bailing");
     return;
   }
 
