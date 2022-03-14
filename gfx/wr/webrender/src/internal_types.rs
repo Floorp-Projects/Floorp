@@ -13,6 +13,8 @@ use crate::renderer::{FullFrameStats, PipelineInfo};
 use crate::gpu_cache::GpuCacheUpdateList;
 use crate::frame_builder::Frame;
 use crate::profiler::TransactionProfile;
+use crate::spatial_tree::SpatialNodeIndex;
+use crate::prim_store::PrimitiveInstanceIndex;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
 use smallvec::SmallVec;
@@ -169,14 +171,17 @@ impl FrameStamp {
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PlaneSplitAnchor {
-    pub cluster_index: usize,
-    pub instance_index: usize,
+    pub spatial_node_index: SpatialNodeIndex,
+    pub instance_index: PrimitiveInstanceIndex,
 }
 
 impl PlaneSplitAnchor {
-    pub fn new(cluster_index: usize, instance_index: usize) -> Self {
+    pub fn new(
+        spatial_node_index: SpatialNodeIndex,
+        instance_index: PrimitiveInstanceIndex,
+    ) -> Self {
         PlaneSplitAnchor {
-            cluster_index,
+            spatial_node_index,
             instance_index,
         }
     }
@@ -185,8 +190,8 @@ impl PlaneSplitAnchor {
 impl Default for PlaneSplitAnchor {
     fn default() -> Self {
         PlaneSplitAnchor {
-            cluster_index: 0,
-            instance_index: 0,
+            spatial_node_index: SpatialNodeIndex::INVALID,
+            instance_index: PrimitiveInstanceIndex(!0),
         }
     }
 }
