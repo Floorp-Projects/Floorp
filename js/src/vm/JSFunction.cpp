@@ -654,11 +654,11 @@ inline void JSFunction::trace(JSTracer* trc) {
   if (isInterpreted() && hasBaseScript()) {
     if (BaseScript* script = baseScript()) {
       TraceManuallyBarrieredEdge(trc, &script, "script");
-      // Self-hosted scripts are shared with workers but are never
-      // relocated. Skip unnecessary writes to prevent the possible data race.
+      // Self-hosted scripts are shared with workers but are never relocated.
+      // Skip unnecessary writes to prevent the possible data race.
       if (baseScript() != script) {
-        setFixedSlot(NativeJitInfoOrInterpretedScriptSlot,
-                     JS::PrivateValue(script));
+        HeapSlot& slot = getFixedSlotRef(NativeJitInfoOrInterpretedScriptSlot);
+        slot.unbarrieredSet(JS::PrivateValue(script));
       }
     }
   }
