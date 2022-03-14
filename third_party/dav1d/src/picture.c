@@ -283,6 +283,7 @@ void dav1d_picture_unref_internal(Dav1dPicture *const p) {
         dav1d_ref_dec(&p->itut_t35_ref);
     }
     memset(p, 0, sizeof(*p));
+    dav1d_data_props_set_defaults(&p->m);
 }
 
 void dav1d_thread_picture_unref(Dav1dThreadPicture *const p) {

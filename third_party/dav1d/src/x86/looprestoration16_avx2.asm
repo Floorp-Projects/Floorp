@@ -66,14 +66,6 @@ cextern sgr_x_by_x_avx2
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 DECLARE_REG_TMP 8, 7, 9, 11, 12, 13, 14 ; wiener ring buffer pointers
 
 INIT_YMM avx2

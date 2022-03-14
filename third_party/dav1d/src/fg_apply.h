@@ -32,10 +32,27 @@
 
 #include "common/bitdepth.h"
 
-#include "src/film_grain.h"
+#include "src/filmgrain.h"
 
-bitfn_decls(void dav1d_apply_grain, const Dav1dFilmGrainDSPContext *const dsp,
-                                    Dav1dPicture *const out,
-                                    const Dav1dPicture *const in);
+#ifdef BITDEPTH
+# define array_decl(type, name, sz) type name sz
+#else
+# define array_decl(type, name, sz) void *name
+#endif
+
+bitfn_decls(void dav1d_apply_grain,
+            const Dav1dFilmGrainDSPContext *const dsp,
+            Dav1dPicture *const out, const Dav1dPicture *const in);
+bitfn_decls(void dav1d_prep_grain,
+            const Dav1dFilmGrainDSPContext *const dsp,
+            Dav1dPicture *const out, const Dav1dPicture *const in,
+            array_decl(uint8_t, scaling, [3][SCALING_SIZE]),
+            array_decl(entry, grain_lut, [3][GRAIN_HEIGHT+1][GRAIN_WIDTH]));
+bitfn_decls(void dav1d_apply_grain_row,
+            const Dav1dFilmGrainDSPContext *const dsp,
+            Dav1dPicture *const out, const Dav1dPicture *const in,
+            array_decl(const uint8_t, scaling, [3][SCALING_SIZE]),
+            array_decl(const entry, grain_lut, [3][GRAIN_HEIGHT+1][GRAIN_WIDTH]),
+            const int row);
 
 #endif /* DAV1D_SRC_FG_APPLY_H */

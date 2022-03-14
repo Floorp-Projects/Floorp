@@ -52,6 +52,7 @@ endconst
 //                                      const int bitdepth_max);
 function wiener_filter7_16bpc_neon, export=1
         ldr             w8,  [sp]
+        AARCH64_SIGN_LINK_REGISTER
         stp             x29, x30, [sp, #-32]!
         stp             d8,  d9,  [sp, #16]
         mov             x29, sp
@@ -137,6 +138,7 @@ L(v1_7):
         mov             sp,  x29
         ldp             d8,  d9,  [sp, #16]
         ldp             x29, x30, [sp], #32
+        AARCH64_VALIDATE_LINK_REGISTER
         ret
 
 L(no_top_7):
@@ -595,6 +597,7 @@ endfunc
 //                                      const int bitdepth_max);
 function wiener_filter5_16bpc_neon, export=1
         ldr             w8,  [sp]
+        AARCH64_SIGN_LINK_REGISTER
         stp             x29, x30, [sp, #-32]!
         stp             d8,  d9,  [sp, #16]
         mov             x29, sp
@@ -669,6 +672,7 @@ L(end_5):
         mov             sp,  x29
         ldp             d8,  d9,  [sp, #16]
         ldp             x29, x30, [sp], #32
+        AARCH64_VALIDATE_LINK_REGISTER
         ret
 
 L(no_top_5):

@@ -30,7 +30,7 @@ project('dav1d', ['c'],
                       'b_ndebug=if-release'],
     meson_version: '>= 0.49.0')
 
-dav1d_soname_version       = '6.4.0'
+dav1d_soname_version       = '6.6.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -413,11 +413,7 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
 
     # check NASM version
     if nasm.found()
-        nasm_r = run_command(nasm, '-v')
-
-        if nasm_r.returncode() != 0
-            error('failed running nasm to obtain its version')
-        endif
+        nasm_r = run_command(nasm, '-v', check: true)
 
         out = nasm_r.stdout().strip().split()
         if out[1].to_lower() == 'version'

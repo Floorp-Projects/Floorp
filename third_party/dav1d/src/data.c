@@ -116,11 +116,17 @@ void dav1d_data_props_copy(Dav1dDataProps *const dst,
 void dav1d_data_props_set_defaults(Dav1dDataProps *const props) {
     assert(props != NULL);
 
+    memset(props, 0, sizeof(*props));
     props->timestamp = INT64_MIN;
-    props->duration = 0;
     props->offset = -1;
-    props->user_data.data = NULL;
-    props->user_data.ref = NULL;
+}
+
+void dav1d_data_props_unref_internal(Dav1dDataProps *const props) {
+    validate_input(props != NULL);
+
+    struct Dav1dRef *user_data_ref = props->user_data.ref;
+    dav1d_data_props_set_defaults(props);
+    dav1d_ref_dec(&user_data_ref);
 }
 
 void dav1d_data_unref_internal(Dav1dData *const buf) {
@@ -132,5 +138,6 @@ void dav1d_data_unref_internal(Dav1dData *const buf) {
         dav1d_ref_dec(&buf->ref);
     }
     memset(buf, 0, sizeof(*buf));
+    dav1d_data_props_set_defaults(&buf->m);
     dav1d_ref_dec(&user_data_ref);
 }

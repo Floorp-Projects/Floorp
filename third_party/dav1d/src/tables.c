@@ -756,7 +756,7 @@ const uint16_t dav1d_dr_intra_derivative[44] = {
     [1*idx+32] = f4, [1*idx+40] = f5,      \
     [1*idx+48] = f6
 #endif
-const int8_t ALIGN(dav1d_filter_intra_taps[5][64], 16) = {
+const int8_t ALIGN(dav1d_filter_intra_taps[5][64], 64) = {
     {
         F( 0,  -6, 10,  0,  0,  0, 12,  0 ),
         F( 1,  -5,  2, 10,  0,  0,  9,  0 ),

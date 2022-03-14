@@ -133,10 +133,10 @@ endconst
 .endif
 .endm
 
-.macro rshrn_sz d0, s0, s1, shift, sz
-        rshrn           \d0\().4h, \s0\().4s, \shift
+.macro sqrshrn_sz d0, s0, s1, shift, sz
+        sqrshrn         \d0\().4h, \s0\().4s, \shift
 .ifc \sz, .8h
-        rshrn2          \d0\().8h, \s1\().4s, \shift
+        sqrshrn2        \d0\().8h, \s1\().4s, \shift
 .endif
 .endm
 
@@ -438,11 +438,11 @@ endfunc
         smull_smlal     v6,  v7,  \r1, \r3, v0.h[3], v0.h[2], \sz
         smull_smlsl     v4,  v5,  \r1, \r3, v0.h[2], v0.h[3], \sz
         smull_smlal     v2,  v3,  \r0, \r2, v0.h[0], v0.h[0], \sz
-        rshrn_sz        v6,  v6,  v7,  #12, \sz
-        rshrn_sz        v7,  v4,  v5,  #12, \sz
+        sqrshrn_sz      v6,  v6,  v7,  #12, \sz
+        sqrshrn_sz      v7,  v4,  v5,  #12, \sz
         smull_smlsl     v4,  v5,  \r0, \r2, v0.h[0], v0.h[0], \sz
-        rshrn_sz        v2,  v2,  v3,  #12, \sz
-        rshrn_sz        v3,  v4,  v5,  #12, \sz
+        sqrshrn_sz      v2,  v2,  v3,  #12, \sz
+        sqrshrn_sz      v3,  v4,  v5,  #12, \sz
         sqadd           \r0\sz,  v2\sz,   v6\sz
         sqsub           \r3\sz,  v2\sz,   v6\sz
         sqadd           \r1\sz,  v3\sz,   v7\sz
@@ -714,11 +714,11 @@ def_fn_4x4 identity, flipadst
         smull_smlsl     v2,  v3,  \r1, \r7, v0.h[4], v0.h[5], \sz // -> t4a
         smull_smlal     v4,  v5,  \r1, \r7, v0.h[5], v0.h[4], \sz // -> t7a
         smull_smlsl     v6,  v7,  \r5, \r3, v0.h[6], v0.h[7], \sz // -> t5a
-        rshrn_sz        \r1, v2,  v3,  #12, \sz                   // t4a
-        rshrn_sz        \r7, v4,  v5,  #12, \sz                   // t7a
+        sqrshrn_sz      \r1, v2,  v3,  #12, \sz                   // t4a
+        sqrshrn_sz      \r7, v4,  v5,  #12, \sz                   // t7a
         smull_smlal     v2,  v3,  \r5, \r3, v0.h[7], v0.h[6], \sz // -> t6a
-        rshrn_sz        \r3, v6,  v7,  #12, \sz                   // t5a
-        rshrn_sz        \r5, v2,  v3,  #12, \sz                   // t6a
+        sqrshrn_sz      \r3, v6,  v7,  #12, \sz                   // t5a
+        sqrshrn_sz      \r5, v2,  v3,  #12, \sz                   // t6a
 
         sqadd           v2\sz,   \r1\sz,  \r3\sz // t4
         sqsub           \r1\sz,  \r1\sz,  \r3\sz // t5a
@@ -727,8 +727,8 @@ def_fn_4x4 identity, flipadst
 
         smull_smlsl     v4,  v5,  \r3, \r1, v0.h[0], v0.h[0], \sz // -> t5
         smull_smlal     v6,  v7,  \r3, \r1, v0.h[0], v0.h[0], \sz // -> t6
-        rshrn_sz        v4,  v4,  v5,  #12, \sz // t5
-        rshrn_sz        v5,  v6,  v7,  #12, \sz // t6
+        sqrshrn_sz      v4,  v4,  v5,  #12, \sz // t5
+        sqrshrn_sz      v5,  v6,  v7,  #12, \sz // t6
 
         sqsub           \r7\sz,  \r0\sz,  v3\sz // out7
         sqadd           \r0\sz,  \r0\sz,  v3\sz // out0
@@ -762,19 +762,19 @@ endfunc
         smull_smlal     v2,  v3,  v23, v16, v0.h[0], v0.h[1], \sz
         smull_smlsl     v4,  v5,  v23, v16, v0.h[1], v0.h[0], \sz
         smull_smlal     v6,  v7,  v21, v18, v0.h[2], v0.h[3], \sz
-        rshrn_sz        v16, v2,  v3,  #12, \sz  // t0a
-        rshrn_sz        v23, v4,  v5,  #12, \sz  // t1a
+        sqrshrn_sz      v16, v2,  v3,  #12, \sz  // t0a
+        sqrshrn_sz      v23, v4,  v5,  #12, \sz  // t1a
         smull_smlsl     v2,  v3,  v21, v18, v0.h[3], v0.h[2], \sz
         smull_smlal     v4,  v5,  v19, v20, v0.h[4], v0.h[5], \sz
-        rshrn_sz        v18, v6,  v7,  #12, \sz  // t2a
-        rshrn_sz        v21, v2,  v3,  #12, \sz  // t3a
+        sqrshrn_sz      v18, v6,  v7,  #12, \sz  // t2a
+        sqrshrn_sz      v21, v2,  v3,  #12, \sz  // t3a
         smull_smlsl     v6,  v7,  v19, v20, v0.h[5], v0.h[4], \sz
         smull_smlal     v2,  v3,  v17, v22, v0.h[6], v0.h[7], \sz
-        rshrn_sz        v20, v4,  v5,  #12, \sz  // t4a
-        rshrn_sz        v19, v6,  v7,  #12, \sz  // t5a
+        sqrshrn_sz      v20, v4,  v5,  #12, \sz  // t4a
+        sqrshrn_sz      v19, v6,  v7,  #12, \sz  // t5a
         smull_smlsl     v4,  v5,  v17, v22, v0.h[7], v0.h[6], \sz
-        rshrn_sz        v22, v2,  v3,  #12, \sz  // t6a
-        rshrn_sz        v17, v4,  v5,  #12, \sz  // t7a
+        sqrshrn_sz      v22, v2,  v3,  #12, \sz  // t6a
+        sqrshrn_sz      v17, v4,  v5,  #12, \sz  // t7a
 
         sqadd           v2\sz,   v16\sz,  v20\sz // t0
         sqsub           v3\sz,   v16\sz,  v20\sz // t4
@@ -789,13 +789,13 @@ endfunc
         smull_smlsl     v20, v21, v3,  v5,  v1.h[2], v1.h[3], \sz
         smull_smlsl     v22, v23, v19, v7,  v1.h[3], v1.h[2], \sz
 
-        rshrn_sz        v3,  v16, v17, #12, \sz  // t4a
-        rshrn_sz        v5,  v20, v21, #12, \sz  // t5a
+        sqrshrn_sz      v3,  v16, v17, #12, \sz  // t4a
+        sqrshrn_sz      v5,  v20, v21, #12, \sz  // t5a
 
         smull_smlal     v16, v17, v19, v7,  v1.h[2], v1.h[3], \sz
 
-        rshrn_sz        v7,  v22, v23, #12, \sz  // t6a
-        rshrn_sz        v19, v16, v17, #12, \sz  // t7a
+        sqrshrn_sz      v7,  v22, v23, #12, \sz  // t6a
+        sqrshrn_sz      v19, v16, v17, #12, \sz  // t7a
 
         sqadd           \o0\()\sz, v2\sz, v6\sz  // out0
         sqsub           v2\sz,     v2\sz, v6\sz  // t2
@@ -812,11 +812,11 @@ endfunc
         smull_smlal     v18, v19, v2,  v4,  v1.h[0], v1.h[0], \sz // -> out3 (v19 or v20)
         smull_smlsl     v6,  v7,  v2,  v4,  v1.h[0], v1.h[0], \sz // -> out4 (v20 or v19)
         smull_smlsl     v20, v21, v3,  v5,  v1.h[0], v1.h[0], \sz // -> out5 (v21 or v18)
-        rshrn_sz        v2,  v18, v19, #12, \sz // out3
+        sqrshrn_sz      v2,  v18, v19, #12, \sz // out3
         smull_smlal     v18, v19, v3,  v5,  v1.h[0], v1.h[0], \sz // -> out2 (v18 or v21)
-        rshrn_sz        v3,  v20, v21, #12, \sz // out5
-        rshrn_sz        \o2, v18, v19, #12, \sz // out2 (v18 or v21)
-        rshrn_sz        \o4, v6,  v7,  #12, \sz // out4 (v20 or v19)
+        sqrshrn_sz      v3,  v20, v21, #12, \sz // out5
+        sqrshrn_sz      \o2, v18, v19, #12, \sz // out2 (v18 or v21)
+        sqrshrn_sz      \o4, v6,  v7,  #12, \sz // out4 (v20 or v19)
 
         sqneg           \o3\()\sz, v2\sz     // out3
         sqneg           \o5\()\sz, v3\sz     // out5
@@ -1033,19 +1033,19 @@ def_fns_48 8, 4
         smull_smlsl     v2,  v3,  v17, v31, v1.h[0], v1.h[1], \sz // -> t8a
         smull_smlal     v4,  v5,  v17, v31, v1.h[1], v1.h[0], \sz // -> t15a
         smull_smlsl     v6,  v7,  v25, v23, v1.h[2], v1.h[3], \sz // -> t9a
-        rshrn_sz        v17, v2,  v3,  #12, \sz                   // t8a
-        rshrn_sz        v31, v4,  v5,  #12, \sz                   // t15a
+        sqrshrn_sz      v17, v2,  v3,  #12, \sz                   // t8a
+        sqrshrn_sz      v31, v4,  v5,  #12, \sz                   // t15a
         smull_smlal     v2,  v3,  v25, v23, v1.h[3], v1.h[2], \sz // -> t14a
         smull_smlsl     v4,  v5,  v21, v27, v1.h[4], v1.h[5], \sz // -> t10a
-        rshrn_sz        v23, v6,  v7,  #12, \sz                   // t9a
-        rshrn_sz        v25, v2,  v3,  #12, \sz                   // t14a
+        sqrshrn_sz      v23, v6,  v7,  #12, \sz                   // t9a
+        sqrshrn_sz      v25, v2,  v3,  #12, \sz                   // t14a
         smull_smlal     v6,  v7,  v21, v27, v1.h[5], v1.h[4], \sz // -> t13a
         smull_smlsl     v2,  v3,  v29, v19, v1.h[6], v1.h[7], \sz // -> t11a
-        rshrn_sz        v21, v4,  v5,  #12, \sz                   // t10a
-        rshrn_sz        v27, v6,  v7,  #12, \sz                   // t13a
+        sqrshrn_sz      v21, v4,  v5,  #12, \sz                   // t10a
+        sqrshrn_sz      v27, v6,  v7,  #12, \sz                   // t13a
         smull_smlal     v4,  v5,  v29, v19, v1.h[7], v1.h[6], \sz // -> t12a
-        rshrn_sz        v19, v2,  v3,  #12, \sz                   // t11a
-        rshrn_sz        v29, v4,  v5,  #12, \sz                   // t12a
+        sqrshrn_sz      v19, v2,  v3,  #12, \sz                   // t11a
+        sqrshrn_sz      v29, v4,  v5,  #12, \sz                   // t12a
 
         sqsub           v2\sz,   v17\sz,  v23\sz  // t9
         sqadd           v17\sz,  v17\sz,  v23\sz  // t8
@@ -1058,17 +1058,17 @@ def_fns_48 8, 4
 
         smull_smlsl     v4,  v5,  v3,  v2,  v0.h[2], v0.h[3], \sz // -> t9a
         smull_smlal     v6,  v7,  v3,  v2,  v0.h[3], v0.h[2], \sz // -> t14a
-        rshrn_sz        v21, v4,  v5,  #12, \sz                   // t9a
-        rshrn_sz        v27, v6,  v7,  #12, \sz                   // t14a
+        sqrshrn_sz      v21, v4,  v5,  #12, \sz                   // t9a
+        sqrshrn_sz      v27, v6,  v7,  #12, \sz                   // t14a
 
         smull_smlsl     v4,  v5,  v29, v23, v0.h[2], v0.h[3], \sz // -> t13a
         smull_smlal     v6,  v7,  v29, v23, v0.h[3], v0.h[2], \sz // -> t10a
-        rshrn_sz        v29, v4,  v5,  #12, \sz                   // t13a
+        sqrshrn_sz      v29, v4,  v5,  #12, \sz                   // t13a
         neg             v6.4s,   v6.4s
 .ifc \sz, .8h
         neg             v7.4s,   v7.4s
 .endif
-        rshrn_sz        v23, v6,  v7,  #12, \sz                   // t10a
+        sqrshrn_sz      v23, v6,  v7,  #12, \sz                   // t10a
 
         sqsub           v2\sz,   v17\sz,  v19\sz  // t11a
         sqadd           v17\sz,  v17\sz,  v19\sz  // t8a
@@ -1083,11 +1083,11 @@ def_fns_48 8, 4
         smull_smlal     v6,  v7,  v3,  v2,  v0.h[0], v0.h[0], \sz // -> t12
         smull_smlsl     v2,  v3,  v25, v21, v0.h[0], v0.h[0], \sz // -> t10a
 
-        rshrn_sz        v4,  v4,  v5,  #12, \sz   // t11
-        rshrn_sz        v5,  v6,  v7,  #12, \sz   // t12
+        sqrshrn_sz      v4,  v4,  v5,  #12, \sz   // t11
+        sqrshrn_sz      v5,  v6,  v7,  #12, \sz   // t12
         smull_smlal     v6,  v7,  v25, v21, v0.h[0], v0.h[0], \sz // -> t13a
-        rshrn_sz        v2,  v2,  v3,  #12, \sz   // t10a
-        rshrn_sz        v3,  v6,  v7,  #12, \sz   // t13a
+        sqrshrn_sz      v2,  v2,  v3,  #12, \sz   // t10a
+        sqrshrn_sz      v3,  v6,  v7,  #12, \sz   // t13a
 
         sqadd           v6\sz,   v16\sz,  v31\sz  // out0
         sqsub           v31\sz,  v16\sz,  v31\sz  // out15
@@ -1132,35 +1132,35 @@ endfunc
         smull_smlal     v2,  v3,  v31, v16, v0.h[0], v0.h[1], \sz // -> t0
         smull_smlsl     v4,  v5,  v31, v16, v0.h[1], v0.h[0], \sz // -> t1
         smull_smlal     v6,  v7,  v29, v18, v0.h[2], v0.h[3], \sz // -> t2
-        rshrn_sz        v16, v2,  v3,  #12, \sz   // t0
-        rshrn_sz        v31, v4,  v5,  #12, \sz   // t1
+        sqrshrn_sz      v16, v2,  v3,  #12, \sz   // t0
+        sqrshrn_sz      v31, v4,  v5,  #12, \sz   // t1
         smull_smlsl     v2,  v3,  v29, v18, v0.h[3], v0.h[2], \sz // -> t3
         smull_smlal     v4,  v5,  v27, v20, v0.h[4], v0.h[5], \sz // -> t4
-        rshrn_sz        v18, v6,  v7,  #12, \sz   // t2
-        rshrn_sz        v29, v2,  v3,  #12, \sz   // t3
+        sqrshrn_sz      v18, v6,  v7,  #12, \sz   // t2
+        sqrshrn_sz      v29, v2,  v3,  #12, \sz   // t3
         smull_smlsl     v6,  v7,  v27, v20, v0.h[5], v0.h[4], \sz // -> t5
         smull_smlal     v2,  v3,  v25, v22, v0.h[6], v0.h[7], \sz // -> t6
-        rshrn_sz        v20, v4,  v5,  #12, \sz   // t4
-        rshrn_sz        v27, v6,  v7,  #12, \sz   // t5
+        sqrshrn_sz      v20, v4,  v5,  #12, \sz   // t4
+        sqrshrn_sz      v27, v6,  v7,  #12, \sz   // t5
         smull_smlsl     v4,  v5,  v25, v22, v0.h[7], v0.h[6], \sz // -> t7
         smull_smlal     v6,  v7,  v23, v24, v1.h[0], v1.h[1], \sz // -> t8
-        rshrn_sz        v22, v2,  v3,  #12, \sz   // t6
-        rshrn_sz        v25, v4,  v5,  #12, \sz   // t7
+        sqrshrn_sz      v22, v2,  v3,  #12, \sz   // t6
+        sqrshrn_sz      v25, v4,  v5,  #12, \sz   // t7
         smull_smlsl     v2,  v3,  v23, v24, v1.h[1], v1.h[0], \sz // -> t9
         smull_smlal     v4,  v5,  v21, v26, v1.h[2], v1.h[3], \sz // -> t10
-        rshrn_sz        v23, v6,  v7,  #12, \sz   // t8
-        rshrn_sz        v24, v2,  v3,  #12, \sz   // t9
+        sqrshrn_sz      v23, v6,  v7,  #12, \sz   // t8
+        sqrshrn_sz      v24, v2,  v3,  #12, \sz   // t9
         smull_smlsl     v6,  v7,  v21, v26, v1.h[3], v1.h[2], \sz // -> t11
         smull_smlal     v2,  v3,  v19, v28, v1.h[4], v1.h[5], \sz // -> t12
-        rshrn_sz        v21, v4,  v5,  #12, \sz   // t10
-        rshrn_sz        v26, v6,  v7,  #12, \sz   // t11
+        sqrshrn_sz      v21, v4,  v5,  #12, \sz   // t10
+        sqrshrn_sz      v26, v6,  v7,  #12, \sz   // t11
         smull_smlsl     v4,  v5,  v19, v28, v1.h[5], v1.h[4], \sz // -> t13
         smull_smlal     v6,  v7,  v17, v30, v1.h[6], v1.h[7], \sz // -> t14
-        rshrn_sz        v19, v2,  v3,  #12, \sz   // t12
-        rshrn_sz        v28, v4,  v5,  #12, \sz   // t13
+        sqrshrn_sz      v19, v2,  v3,  #12, \sz   // t12
+        sqrshrn_sz      v28, v4,  v5,  #12, \sz   // t13
         smull_smlsl     v2,  v3,  v17, v30, v1.h[7], v1.h[6], \sz // -> t15
-        rshrn_sz        v17, v6,  v7,  #12, \sz   // t14
-        rshrn_sz        v30, v2,  v3,  #12, \sz   // t15
+        sqrshrn_sz      v17, v6,  v7,  #12, \sz   // t14
+        sqrshrn_sz      v30, v2,  v3,  #12, \sz   // t15
 
         ld1             {v0.8h}, [x16]
 
@@ -1184,19 +1184,19 @@ endfunc
         smull_smlal     v4,  v5,  v2,  v3,  v0.h[5], v0.h[4], \sz // -> t8
         smull_smlsl     v6,  v7,  v2,  v3,  v0.h[4], v0.h[5], \sz // -> t9
         smull_smlal     v2,  v3,  v18, v29, v0.h[7], v0.h[6], \sz // -> t10
-        rshrn_sz        v17, v4,  v5,  #12, \sz  // t8
-        rshrn_sz        v30, v6,  v7,  #12, \sz  // t9
+        sqrshrn_sz      v17, v4,  v5,  #12, \sz  // t8
+        sqrshrn_sz      v30, v6,  v7,  #12, \sz  // t9
         smull_smlsl     v4,  v5,  v18, v29, v0.h[6], v0.h[7], \sz // -> t11
         smull_smlsl     v6,  v7,  v27, v20, v0.h[5], v0.h[4], \sz // -> t12
-        rshrn_sz        v18, v2,  v3,  #12, \sz  // t10
-        rshrn_sz        v29, v4,  v5,  #12, \sz  // t11
+        sqrshrn_sz      v18, v2,  v3,  #12, \sz  // t10
+        sqrshrn_sz      v29, v4,  v5,  #12, \sz  // t11
         smull_smlal     v2,  v3,  v27, v20, v0.h[4], v0.h[5], \sz // -> t13
         smull_smlsl     v4,  v5,  v25, v22, v0.h[7], v0.h[6], \sz // -> t14
-        rshrn_sz        v27, v6,  v7,  #12, \sz  // t12
-        rshrn_sz        v20, v2,  v3,  #12, \sz  // t13
+        sqrshrn_sz      v27, v6,  v7,  #12, \sz  // t12
+        sqrshrn_sz      v20, v2,  v3,  #12, \sz  // t13
         smull_smlal     v6,  v7,  v25, v22, v0.h[6], v0.h[7], \sz // -> t15
-        rshrn_sz        v25, v4,  v5,  #12, \sz  // t14
-        rshrn_sz        v22, v6,  v7,  #12, \sz  // t15
+        sqrshrn_sz      v25, v4,  v5,  #12, \sz  // t14
+        sqrshrn_sz      v22, v6,  v7,  #12, \sz  // t15
 
         sqsub           v2\sz,   v16\sz,  v21\sz // t4
         sqadd           v16\sz,  v16\sz,  v21\sz // t0
@@ -1218,19 +1218,19 @@ endfunc
         smull_smlal     v4,  v5,  v2,  v3,  v0.h[3], v0.h[2], \sz // -> t4a
         smull_smlsl     v6,  v7,  v2,  v3,  v0.h[2], v0.h[3], \sz // -> t5a
         smull_smlsl     v2,  v3,  v24, v23, v0.h[3], v0.h[2], \sz // -> t6a
-        rshrn_sz        v22, v4,  v5,  #12, \sz // t4a
-        rshrn_sz        v25, v6,  v7,  #12, \sz // t5a
+        sqrshrn_sz      v22, v4,  v5,  #12, \sz // t4a
+        sqrshrn_sz      v25, v6,  v7,  #12, \sz // t5a
         smull_smlal     v4,  v5,  v24, v23, v0.h[2], v0.h[3], \sz // -> t7a
         smull_smlal     v6,  v7,  v17, v30, v0.h[3], v0.h[2], \sz // -> t12
-        rshrn_sz        v24, v2,  v3,  #12, \sz // t6a
-        rshrn_sz        v23, v4,  v5,  #12, \sz // t7a
+        sqrshrn_sz      v24, v2,  v3,  #12, \sz // t6a
+        sqrshrn_sz      v23, v4,  v5,  #12, \sz // t7a
         smull_smlsl     v2,  v3,  v17, v30, v0.h[2], v0.h[3], \sz // -> t13
         smull_smlsl     v4,  v5,  v29, v18, v0.h[3], v0.h[2], \sz // -> t14
-        rshrn_sz        v17, v6,  v7,  #12, \sz // t12
+        sqrshrn_sz      v17, v6,  v7,  #12, \sz // t12
         smull_smlal     v6,  v7,  v29, v18, v0.h[2], v0.h[3], \sz // -> t15
-        rshrn_sz        v29, v2,  v3,  #12, \sz // t13
-        rshrn_sz        v30, v4,  v5,  #12, \sz // t14
-        rshrn_sz        v18, v6,  v7,  #12, \sz // t15
+        sqrshrn_sz      v29, v2,  v3,  #12, \sz // t13
+        sqrshrn_sz      v30, v4,  v5,  #12, \sz // t14
+        sqrshrn_sz      v18, v6,  v7,  #12, \sz // t15
 
         sqsub           v2\sz,   v16\sz,  v21\sz // t2a
 .ifc \o0, v16
@@ -1267,21 +1267,21 @@ endfunc
         smull_smlal     v4,  v5,  v2,  v21, v0.h[0], v0.h[0], \sz // -> out7 (v23 or v24)
         smull_smlal     v6,  v7,  v26, v3,  v0.h[0], v0.h[0], \sz // -> out5 (v21 or v26)
 
-        rshrn_sz        v24, v24, v25, #12, \sz // out8
-        rshrn_sz        v4,  v4,  v5,  #12, \sz // out7
-        rshrn_sz        v5,  v6,  v7,  #12, \sz // out5
+        sqrshrn_sz      v24, v24, v25, #12, \sz // out8
+        sqrshrn_sz      v4,  v4,  v5,  #12, \sz // out7
+        sqrshrn_sz      v5,  v6,  v7,  #12, \sz // out5
         smull_smlsl     v6,  v7,  v26, v3,  v0.h[0], v0.h[0], \sz // -> out10 (v26 or v21)
         smull_smlal     v2,  v3,  v22, v23, v0.h[0], v0.h[0], \sz // -> out4 (v20 or v27)
-        rshrn_sz        v26, v6,  v7,  #12, \sz // out10
+        sqrshrn_sz      v26, v6,  v7,  #12, \sz // out10
 
         smull_smlsl     v6,  v7,  v22, v23, v0.h[0], v0.h[0], \sz // -> out11 (v27 or v20)
         smull_smlal     v22, v23, v27, v20, v0.h[0], v0.h[0], \sz // -> out6 (v22 or v25)
         smull_smlsl     v21, v25, v27, v20, v0.h[0], v0.h[0], \sz // -> out9 (v25 or v22)
 
-        rshrn_sz        \o4, v2,  v3,  #12, \sz // out4
-        rshrn_sz        v6,  v6,  v7,  #12, \sz // out11
-        rshrn_sz        v7,  v21, v25, #12, \sz // out9
-        rshrn_sz        \o6, v22, v23, #12, \sz // out6
+        sqrshrn_sz      \o4, v2,  v3,  #12, \sz // out4
+        sqrshrn_sz      v6,  v6,  v7,  #12, \sz // out11
+        sqrshrn_sz      v7,  v21, v25, #12, \sz // out9
+        sqrshrn_sz      \o6, v22, v23, #12, \sz // out6
 
 .ifc \o8, v23
         mov             \o8\szb,  v24\szb
@@ -1860,35 +1860,35 @@ function inv_dct32_odd_8h_x16_neon, export=1
         smull_smlsl     v2,  v3,  v16, v31, v0.h[0], v0.h[1], .8h // -> t16a
         smull_smlal     v4,  v5,  v16, v31, v0.h[1], v0.h[0], .8h // -> t31a
         smull_smlsl     v6,  v7,  v24, v23, v0.h[2], v0.h[3], .8h // -> t17a
-        rshrn_sz        v16, v2,  v3,  #12, .8h                   // t16a
-        rshrn_sz        v31, v4,  v5,  #12, .8h                   // t31a
+        sqrshrn_sz      v16, v2,  v3,  #12, .8h                   // t16a
+        sqrshrn_sz      v31, v4,  v5,  #12, .8h                   // t31a
         smull_smlal     v2,  v3,  v24, v23, v0.h[3], v0.h[2], .8h // -> t30a
         smull_smlsl     v4,  v5,  v20, v27, v0.h[4], v0.h[5], .8h // -> t18a
-        rshrn_sz        v24, v6,  v7,  #12, .8h                   // t17a
-        rshrn_sz        v23, v2,  v3,  #12, .8h                   // t30a
+        sqrshrn_sz      v24, v6,  v7,  #12, .8h                   // t17a
+        sqrshrn_sz      v23, v2,  v3,  #12, .8h                   // t30a
         smull_smlal     v6,  v7,  v20, v27, v0.h[5], v0.h[4], .8h // -> t29a
         smull_smlsl     v2,  v3,  v28, v19, v0.h[6], v0.h[7], .8h // -> t19a
-        rshrn_sz        v20, v4,  v5,  #12, .8h                   // t18a
-        rshrn_sz        v27, v6,  v7,  #12, .8h                   // t29a
+        sqrshrn_sz      v20, v4,  v5,  #12, .8h                   // t18a
+        sqrshrn_sz      v27, v6,  v7,  #12, .8h                   // t29a
         smull_smlal     v4,  v5,  v28, v19, v0.h[7], v0.h[6], .8h // -> t28a
         smull_smlsl     v6,  v7,  v18, v29, v1.h[0], v1.h[1], .8h // -> t20a
-        rshrn_sz        v28, v2,  v3,  #12, .8h                   // t19a
-        rshrn_sz        v19, v4,  v5,  #12, .8h                   // t28a
+        sqrshrn_sz      v28, v2,  v3,  #12, .8h                   // t19a
+        sqrshrn_sz      v19, v4,  v5,  #12, .8h                   // t28a
         smull_smlal     v2,  v3,  v18, v29, v1.h[1], v1.h[0], .8h // -> t27a
         smull_smlsl     v4,  v5,  v26, v21, v1.h[2], v1.h[3], .8h // -> t21a
-        rshrn_sz        v18, v6,  v7,  #12, .8h                   // t20a
-        rshrn_sz        v29, v2,  v3,  #12, .8h                   // t27a
+        sqrshrn_sz      v18, v6,  v7,  #12, .8h                   // t20a
+        sqrshrn_sz      v29, v2,  v3,  #12, .8h                   // t27a
         smull_smlal     v6,  v7,  v26, v21, v1.h[3], v1.h[2], .8h // -> t26a
         smull_smlsl     v2,  v3,  v22, v25, v1.h[4], v1.h[5], .8h // -> t22a
-        rshrn_sz        v26, v4,  v5,  #12, .8h                   // t21a
-        rshrn_sz        v21, v6,  v7,  #12, .8h                   // t26a
+        sqrshrn_sz      v26, v4,  v5,  #12, .8h                   // t21a
+        sqrshrn_sz      v21, v6,  v7,  #12, .8h                   // t26a
         smull_smlal     v4,  v5,  v22, v25, v1.h[5], v1.h[4], .8h // -> t25a
         smull_smlsl     v6,  v7,  v30, v17, v1.h[6], v1.h[7], .8h // -> t23a
-        rshrn_sz        v22, v2,  v3,  #12, .8h                   // t22a
-        rshrn_sz        v25, v4,  v5,  #12, .8h                   // t25a
+        sqrshrn_sz      v22, v2,  v3,  #12, .8h                   // t22a
+        sqrshrn_sz      v25, v4,  v5,  #12, .8h                   // t25a
         smull_smlal     v2,  v3,  v30, v17, v1.h[7], v1.h[6], .8h // -> t24a
-        rshrn_sz        v30, v6,  v7,  #12, .8h                   // t23a
-        rshrn_sz        v17, v2,  v3,  #12, .8h                   // t24a
+        sqrshrn_sz      v30, v6,  v7,  #12, .8h                   // t23a
+        sqrshrn_sz      v17, v2,  v3,  #12, .8h                   // t24a
 
         ld1             {v0.8h}, [x16]
 
@@ -1912,23 +1912,23 @@ function inv_dct32_odd_8h_x16_neon, export=1
         smull_smlsl     v4,  v5,  v3,  v2,  v0.h[4], v0.h[5], .8h // -> t17a
         smull_smlal     v6,  v7,  v3,  v2,  v0.h[5], v0.h[4], .8h // -> t30a
         smull_smlal     v2,  v3,  v19, v24, v0.h[5], v0.h[4], .8h // -> t18a
-        rshrn_sz        v21, v4,  v5,  #12, .8h                   // t17a
-        rshrn_sz        v27, v6,  v7,  #12, .8h                   // t30a
+        sqrshrn_sz      v21, v4,  v5,  #12, .8h                   // t17a
+        sqrshrn_sz      v27, v6,  v7,  #12, .8h                   // t30a
         neg             v2.4s,   v2.4s                            // -> t18a
         neg             v3.4s,   v3.4s                            // -> t18a
         smull_smlsl     v4,  v5,  v19, v24, v0.h[4], v0.h[5], .8h // -> t29a
         smull_smlsl     v6,  v7,  v22, v18, v0.h[6], v0.h[7], .8h // -> t21a
-        rshrn_sz        v19, v2,  v3,  #12, .8h                   // t18a
-        rshrn_sz        v24, v4,  v5,  #12, .8h                   // t29a
+        sqrshrn_sz      v19, v2,  v3,  #12, .8h                   // t18a
+        sqrshrn_sz      v24, v4,  v5,  #12, .8h                   // t29a
         smull_smlal     v2,  v3,  v22, v18, v0.h[7], v0.h[6], .8h // -> t26a
         smull_smlal     v4,  v5,  v17, v20, v0.h[7], v0.h[6], .8h // -> t22a
-        rshrn_sz        v22, v6,  v7,  #12, .8h                   // t21a
-        rshrn_sz        v18, v2,  v3,  #12, .8h                   // t26a
+        sqrshrn_sz      v22, v6,  v7,  #12, .8h                   // t21a
+        sqrshrn_sz      v18, v2,  v3,  #12, .8h                   // t26a
         neg             v4.4s,   v4.4s                            // -> t22a
         neg             v5.4s,   v5.4s                            // -> t22a
         smull_smlsl     v6,  v7,  v17, v20, v0.h[6], v0.h[7], .8h // -> t25a
-        rshrn_sz        v17, v4,  v5,  #12, .8h                   // t22a
-        rshrn_sz        v20, v6,  v7,  #12, .8h                   // t25a
+        sqrshrn_sz      v17, v4,  v5,  #12, .8h                   // t22a
+        sqrshrn_sz      v20, v6,  v7,  #12, .8h                   // t25a
 
         sqsub           v2.8h,   v27.8h,  v24.8h // t29
         sqadd           v27.8h,  v27.8h,  v24.8h // t30
@@ -1950,23 +1950,23 @@ function inv_dct32_odd_8h_x16_neon, export=1
         smull_smlsl     v4,  v5,  v2,  v3,  v0.h[2], v0.h[3], .8h // -> t18a
         smull_smlal     v6,  v7,  v2,  v3,  v0.h[3], v0.h[2], .8h // -> t29a
         smull_smlsl     v2,  v3,  v29, v24, v0.h[2], v0.h[3], .8h // -> t19
-        rshrn_sz        v18, v4,  v5,  #12, .8h                   // t18a
-        rshrn_sz        v25, v6,  v7,  #12, .8h                   // t29a
+        sqrshrn_sz      v18, v4,  v5,  #12, .8h                   // t18a
+        sqrshrn_sz      v25, v6,  v7,  #12, .8h                   // t29a
         smull_smlal     v4,  v5,  v29, v24, v0.h[3], v0.h[2], .8h // -> t28
         smull_smlal     v6,  v7,  v26, v19, v0.h[3], v0.h[2], .8h // -> t20
-        rshrn_sz        v29, v2,  v3,  #12, .8h                   // t19
-        rshrn_sz        v24, v4,  v5,  #12, .8h                   // t28
+        sqrshrn_sz      v29, v2,  v3,  #12, .8h                   // t19
+        sqrshrn_sz      v24, v4,  v5,  #12, .8h                   // t28
         neg             v6.4s,   v6.4s                            // -> t20
         neg             v7.4s,   v7.4s                            // -> t20
         smull_smlsl     v2,  v3,  v26, v19, v0.h[2], v0.h[3], .8h // -> t27
         smull_smlal     v4,  v5,  v20, v28, v0.h[3], v0.h[2], .8h // -> t21a
-        rshrn_sz        v26, v6,  v7,  #12, .8h                   // t20
-        rshrn_sz        v19, v2,  v3,  #12, .8h                   // t27
+        sqrshrn_sz      v26, v6,  v7,  #12, .8h                   // t20
+        sqrshrn_sz      v19, v2,  v3,  #12, .8h                   // t27
         neg             v4.4s,   v4.4s                            // -> t21a
         neg             v5.4s,   v5.4s                            // -> t21a
         smull_smlsl     v6,  v7,  v20, v28, v0.h[2], v0.h[3], .8h // -> t26a
-        rshrn_sz        v20, v4,  v5,  #12, .8h                   // t21a
-        rshrn_sz        v28, v6,  v7,  #12, .8h                   // t26a
+        sqrshrn_sz      v20, v4,  v5,  #12, .8h                   // t21a
+        sqrshrn_sz      v28, v6,  v7,  #12, .8h                   // t26a
 
         sqsub           v2.8h,   v16.8h,  v30.8h // t23
         sqadd           v16.8h,  v16.8h,  v30.8h // t16 = out16
@@ -1988,24 +1988,24 @@ function inv_dct32_odd_8h_x16_neon, export=1
 
         smull_smlsl     v4,  v5,  v24, v26, v0.h[0], v0.h[0], .8h // -> t20
         smull_smlal     v6,  v7,  v24, v26, v0.h[0], v0.h[0], .8h // -> t27
-        rshrn_sz        v20, v4,  v5,  #12, .8h   // t20
-        rshrn_sz        v22, v6,  v7,  #12, .8h   // t27
+        sqrshrn_sz      v20, v4,  v5,  #12, .8h   // t20
+        sqrshrn_sz      v22, v6,  v7,  #12, .8h   // t27
 
         smull_smlal     v4,  v5,  v25, v27, v0.h[0], v0.h[0], .8h // -> t26a
         smull_smlsl     v6,  v7,  v25, v27, v0.h[0], v0.h[0], .8h // -> t21a
         mov             v27.16b,  v22.16b         // t27
-        rshrn_sz        v26, v4,  v5,  #12, .8h   // t26a
+        sqrshrn_sz      v26, v4,  v5,  #12, .8h   // t26a
 
         smull_smlsl     v24, v25, v21, v23, v0.h[0], v0.h[0], .8h // -> t22
         smull_smlal     v4,  v5,  v21, v23, v0.h[0], v0.h[0], .8h // -> t25
-        rshrn_sz        v21, v6,  v7,  #12, .8h   // t21a
-        rshrn_sz        v22, v24, v25, #12, .8h   // t22
-        rshrn_sz        v25, v4,  v5,  #12, .8h   // t25
+        sqrshrn_sz      v21, v6,  v7,  #12, .8h   // t21a
+        sqrshrn_sz      v22, v24, v25, #12, .8h   // t22
+        sqrshrn_sz      v25, v4,  v5,  #12, .8h   // t25
 
         smull_smlsl     v4,  v5,  v3,  v2,  v0.h[0], v0.h[0], .8h // -> t23a
         smull_smlal     v6,  v7,  v3,  v2,  v0.h[0], v0.h[0], .8h // -> t24a
-        rshrn_sz        v23, v4,  v5,  #12, .8h   // t23a
-        rshrn_sz        v24, v6,  v7,  #12, .8h   // t24a
+        sqrshrn_sz      v23, v4,  v5,  #12, .8h   // t23a
+        sqrshrn_sz      v24, v6,  v7,  #12, .8h   // t24a
 
         ret
 endfunc
@@ -2594,11 +2594,11 @@ function inv_dct64_step1_neon
         neg             v2.4s,   v2.4s              // t34a
         neg             v3.4s,   v3.4s              // t34a
         smull_smlsl     v6,  v7,  v30, v25, v1.h[1], v1.h[0], .8h // -> t33a
-        rshrn_sz        v26, v2,  v3,  #12, .8h     // t34a
+        sqrshrn_sz      v26, v2,  v3,  #12, .8h     // t34a
         smull_smlal     v2,  v3,  v30, v25, v1.h[0], v1.h[1], .8h // -> t62a
-        rshrn_sz        v29, v4,  v5,  #12, .8h     // t61a
-        rshrn_sz        v25, v6,  v7,  #12, .8h     // t33a
-        rshrn_sz        v30, v2,  v3,  #12, .8h     // t62a
+        sqrshrn_sz      v29, v4,  v5,  #12, .8h     // t61a
+        sqrshrn_sz      v25, v6,  v7,  #12, .8h     // t33a
+        sqrshrn_sz      v30, v2,  v3,  #12, .8h     // t62a
 
         sqadd           v16.8h,  v24.8h,  v27.8h    // t32a
         sqsub           v19.8h,  v24.8h,  v27.8h    // t35a
@@ -2612,11 +2612,11 @@ function inv_dct64_step1_neon
         smull_smlal     v2,  v3,  v21, v18, v1.h[2], v1.h[3], .8h // -> t61a
         smull_smlsl     v4,  v5,  v21, v18, v1.h[3], v1.h[2], .8h // -> t34a
         smull_smlal     v6,  v7,  v20, v19, v1.h[2], v1.h[3], .8h // -> t60
-        rshrn_sz        v21, v2,  v3,  #12, .8h     // t61a
-        rshrn_sz        v18, v4,  v5,  #12, .8h     // t34a
+        sqrshrn_sz      v21, v2,  v3,  #12, .8h     // t61a
+        sqrshrn_sz      v18, v4,  v5,  #12, .8h     // t34a
         smull_smlsl     v2,  v3,  v20, v19, v1.h[3], v1.h[2], .8h // -> t35
-        rshrn_sz        v20, v6,  v7,  #12, .8h     // t60
-        rshrn_sz        v19, v2,  v3,  #12, .8h     // t35
+        sqrshrn_sz      v20, v6,  v7,  #12, .8h     // t60
+        sqrshrn_sz      v19, v2,  v3,  #12, .8h     // t35
 
         st1             {v16.8h, v17.8h, v18.8h, v19.8h}, [x6], #64
         st1             {v20.8h, v21.8h, v22.8h, v23.8h}, [x6], #64
@@ -2653,13 +2653,13 @@ function inv_dct64_step2_neon
         smull_smlal     v2,  v3,  v27, v25, v0.h[3], v0.h[2], .8h // -> t56a
         smull_smlsl     v4,  v5,  v27, v25, v0.h[2], v0.h[3], .8h // -> t39a
         smull_smlal     v6,  v7,  v31, v28, v0.h[3], v0.h[2], .8h // -> t40a
-        rshrn_sz        v25, v2,  v3,  #12, .8h     // t56a
-        rshrn_sz        v27, v4,  v5,  #12, .8h     // t39a
+        sqrshrn_sz      v25, v2,  v3,  #12, .8h     // t56a
+        sqrshrn_sz      v27, v4,  v5,  #12, .8h     // t39a
         neg             v6.4s,   v6.4s              // t40a
         neg             v7.4s,   v7.4s              // t40a
         smull_smlsl     v2,  v3,  v31, v28, v0.h[2], v0.h[3], .8h // -> t55a
-        rshrn_sz        v31, v6,  v7,  #12, .8h     // t40a
-        rshrn_sz        v28, v2,  v3,  #12, .8h     // t55a
+        sqrshrn_sz      v31, v6,  v7,  #12, .8h     // t40a
+        sqrshrn_sz      v28, v2,  v3,  #12, .8h     // t55a
 
         sqadd           v16.8h,  v24.8h,  v29.8h    // t32a
         sqsub           v19.8h,  v24.8h,  v29.8h    // t47a
@@ -2673,11 +2673,11 @@ function inv_dct64_step2_neon
         smull_smlsl     v2,  v3,  v21, v18, v0.h[0], v0.h[0], .8h // -> t40a
         smull_smlal     v4,  v5,  v21, v18, v0.h[0], v0.h[0], .8h // -> t55a
         smull_smlsl     v6,  v7,  v20, v19, v0.h[0], v0.h[0], .8h // -> t47
-        rshrn_sz        v18, v2,  v3,  #12, .8h     // t40a
-        rshrn_sz        v21, v4,  v5,  #12, .8h     // t55a
+        sqrshrn_sz      v18, v2,  v3,  #12, .8h     // t40a
+        sqrshrn_sz      v21, v4,  v5,  #12, .8h     // t55a
         smull_smlal     v2,  v3,  v20, v19, v0.h[0], v0.h[0], .8h // -> t48
-        rshrn_sz        v19, v6,  v7,  #12, .8h     // t47
-        rshrn_sz        v20, v2,  v3,  #12, .8h     // t48
+        sqrshrn_sz      v19, v6,  v7,  #12, .8h     // t47
+        sqrshrn_sz      v20, v2,  v3,  #12, .8h     // t48
 
         str             q16, [x6, #2*8*0]  // t32a
         str             q17, [x9, #2*8*0]  // t39

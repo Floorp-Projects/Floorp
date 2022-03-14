@@ -28,7 +28,7 @@
  */
 
 #include "src/cpu.h"
-#include "src/film_grain.h"
+#include "src/filmgrain.h"
 #include "asm-offsets.h"
 
 CHECK_OFFSET(Dav1dFilmGrainData, seed, FGD_SEED);

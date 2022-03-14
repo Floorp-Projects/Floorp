@@ -25,6 +25,7 @@
 
 %include "config.asm"
 %include "ext/x86/x86inc.asm"
+%include "x86/filmgrain_common.asm"
 
 %if ARCH_X86_64
 
@@ -74,37 +75,7 @@ JMP_TABLE generate_grain_uv_420, avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_422, avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_444, avx2, 0, 1, 2, 3
 
-struc FGData
-    .seed:                      resd 1
-    .num_y_points:              resd 1
-    .y_points:                  resb 14 * 2
-    .chroma_scaling_from_luma:  resd 1
-    .num_uv_points:             resd 2
-    .uv_points:                 resb 2 * 10 * 2
-    .scaling_shift:             resd 1
-    .ar_coeff_lag:              resd 1
-    .ar_coeffs_y:               resb 24
-    .ar_coeffs_uv:              resb 2 * 28 ; includes padding
-    .ar_coeff_shift:            resq 1
-    .grain_scale_shift:         resd 1
-    .uv_mult:                   resd 2
-    .uv_luma_mult:              resd 2
-    .uv_offset:                 resd 2
-    .overlap_flag:              resd 1
-    .clip_to_restricted_range:  resd 1
-endstruc
-
-cextern gaussian_sequence
-
 SECTION .text
-
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
 
 INIT_YMM avx2
 cglobal generate_grain_y_8bpc, 2, 9, 8, buf, fg_data
@@ -1097,9 +1068,6 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 15, dst, src, stride, fg_data, w, scaling, \
     jne .loop_x_hv_overlap
     jmp .loop_x_h_overlap
 
-.end:
-    RET
-
 .vertical_overlap:
     DEFINE_ARGS dst, src, stride, fg_data, w, scaling, grain_lut, \
                 unused, sby, see, overlap
@@ -1214,7 +1182,7 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 15, dst, src, stride, fg_data, w, scaling, \
     jmp .loop_y
 .end_y_v_overlap:
     add              wq, 32
-    jge .end_hv
+    jge .end
     lea            srcq, [src_bakq+wq]
 
     ; since fg_dataq.overlap is guaranteed to be set, we never jump
@@ -1334,7 +1302,7 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 15, dst, src, stride, fg_data, w, scaling, \
     add              wq, 32
     lea            srcq, [src_bakq+wq]
     jl .loop_x_hv_overlap
-.end_hv:
+.end:
     RET
 
 %macro FGUV_FN 3 ; name, ss_hor, ss_ver
@@ -1691,9 +1659,6 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
     jne %%loop_x_hv_overlap
     jmp %%loop_x_h_overlap
 
-%%end:
-    RET
-
 %%vertical_overlap:
     DEFINE_ARGS dst, src, stride, fg_data, w, scaling, grain_lut, unused, \
                 sby, see, overlap, unused1, unused2, lstride
@@ -1887,7 +1852,7 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
 
 %%end_y_v_overlap:
     add              wq, 32>>%2
-    jge %%end_hv
+    jge %%end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
@@ -2116,15 +2081,14 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
 
 %%end_y_hv_overlap:
     add              wq, 32>>%2
-    jge %%end_hv
+    jge %%end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
     add            srcq, wq
     add            dstq, wq
     jmp %%loop_x_hv_overlap
-
-%%end_hv:
+%%end:
     RET
 %endmacro
 

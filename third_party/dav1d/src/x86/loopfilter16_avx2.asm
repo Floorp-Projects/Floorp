@@ -49,14 +49,6 @@ pb_mask: dd 1, 1, 2, 2, 4, 4, 8, 8
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 ;        in:            out:
 ; mm%1   a b c d        a e i m
 ; mm%2   e f g h        b f j n

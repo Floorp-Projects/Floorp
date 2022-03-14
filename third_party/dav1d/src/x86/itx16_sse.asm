@@ -174,14 +174,6 @@ tbl_Nx64_offset: db 2* 0, 2*32, 2*16, 2*46
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %define m_suffix(x, sfx) mangle(private_prefix %+ _ %+ x %+ sfx)
 %define m(x) m_suffix(x, SUFFIX)
 

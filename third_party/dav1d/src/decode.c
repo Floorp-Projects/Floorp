@@ -42,7 +42,7 @@
 #include "src/decode.h"
 #include "src/dequant_tables.h"
 #include "src/env.h"
-#include "src/film_grain.h"
+#include "src/filmgrain.h"
 #include "src/log.h"
 #include "src/qm.h"
 #include "src/recon.h"
@@ -1242,6 +1242,7 @@ static int decode_b(Dav1dTaskContext *const t,
             if (DEBUG_BLOCK_INFO)
                 printf("Post-uvmode[%d]: r=%d\n", b->uv_mode, ts->msac.rng);
 
+            b->uv_angle = 0;
             if (b->uv_mode == CFL_PRED) {
 #define SIGN(a) (!!(a) + ((a) > 0))
                 const int sign = dav1d_msac_decode_symbol_adapt8(&ts->msac,
@@ -1274,8 +1275,6 @@ static int decode_b(Dav1dTaskContext *const t,
                 uint16_t *const acdf = ts->cdf.m.angle_delta[b->uv_mode - VERT_PRED];
                 const int angle = dav1d_msac_decode_symbol_adapt8(&ts->msac, acdf, 6);
                 b->uv_angle = angle - 3;
-            } else {
-                b->uv_angle = 0;
             }
         }
 
@@ -3231,8 +3230,6 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
         if (ret < 0) goto error;
     }
 
-    retval = DAV1D_ERR(EINVAL);
-
     // setup dequant tables
     init_quant_tables(f->seq_hdr, f->frame_hdr, f->frame_hdr->quant.yac, f->dq);
     if (f->frame_hdr->quant.qm)
@@ -3356,7 +3353,7 @@ error:
 
 int dav1d_decode_frame_main(Dav1dFrameContext *const f) {
     const Dav1dContext *const c = f->c;
-    int retval = DAV1D_ERR(ENOMEM);
+    int retval = DAV1D_ERR(EINVAL);
 
     assert(f->c->n_tc == 1);
 
@@ -3500,7 +3497,13 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
                 c->task_thread.cur--;
         }
-        if (out_delayed->p.data[0]) {
+        const int error = f->task_thread.retval;
+        if (error) {
+            f->task_thread.retval = 0;
+            c->cached_error = error;
+            dav1d_data_props_copy(&c->cached_error_props, &out_delayed->p.m);
+            dav1d_thread_picture_unref(out_delayed);
+        } else if (out_delayed->p.data[0]) {
             const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                            memory_order_relaxed);
             if ((out_delayed->visible || c->output_invisible_frames) &&
@@ -3842,7 +3845,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
                     dav1d_ref_dec(&c->refs[i].refmvs);
                 }
             }
-            return res;
+            goto error;
         }
     } else {
         dav1d_task_frame_init(f);
@@ -3869,6 +3872,7 @@ error:
     dav1d_ref_dec(&f->mvs_ref);
     dav1d_ref_dec(&f->seq_hdr_ref);
     dav1d_ref_dec(&f->frame_hdr_ref);
+    dav1d_data_props_copy(&c->cached_error_props, &c->in.m);
 
     for (int i = 0; i < f->n_tile_data; i++)
         dav1d_data_unref_internal(&f->tile[i].data);

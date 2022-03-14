@@ -1,3 +1,32 @@
+Changes for 1.0.0 'Peregrine falcon':
+-------------------------------------
+
+1.0.0 is a major release of dav1d, adding important features and bug fixes.
+
+It notably changes, in an important way, the way threading works, by adding
+an automatic thread management.
+
+It also adds support for AVX-512 acceleration, and adds speedups to existing x86
+code (from SSE2 to AVX2).
+
+1.0.0 adds new grain API to ease acceleration on the GPU.
+
+Finally, 1.0.0 fixes numerous small bugs that were reported since the beginning
+of the project to have a proper release.
+
+                                     .''.
+         .''.      .        *''*    :_\/_:     .
+        :_\/_:   _\(/_  .:.*_\/_*   : /\ :  .'.:.'.
+    .''.: /\ :   ./)\   ':'* /\ * :  '..'.  -=:o:=-
+   :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_'.':'.'
+   : /\ : :::::     *_\/_*     -= o =-  /)\    '  *
+    '..'  ':::'     * /\ *     .'/.\'.   '
+        *            *..*         :
+          *                       :
+          *         1.0.0
+
+
+
 Changes for 0.9.2 'Golden Eagle':
 ---------------------------------
 

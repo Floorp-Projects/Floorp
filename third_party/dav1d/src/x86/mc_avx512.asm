@@ -303,14 +303,6 @@ BIDIR_JMP_TABLE blend_h, avx512icl,     2, 4, 8, 16, 32, 64, 128
 
 SECTION .text
 
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %macro WRAP_YMM 1+
 INIT_YMM cpuname
     %1
