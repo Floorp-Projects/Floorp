@@ -37,6 +37,10 @@
   background: var(--theme-tab-toolbar-background);
 }
 
+.theme-dark .result-list li:hover {
+  background: var(--grey-70);
+}
+
 .result-list li.selected {
   background: var(--theme-accordion-header-background);
 }
@@ -44,14 +48,6 @@
 .result-list.small li.selected {
   background-color: var(--theme-selection-background);
   color: white;
-}
-
-.theme-dark .result-list li:hover {
-  background: var(--grey-70);
-}
-
-.theme-dark .result-list li.selected {
-  background: var(--grey-70);
 }
 
 .result-list li .result-item-icon {
