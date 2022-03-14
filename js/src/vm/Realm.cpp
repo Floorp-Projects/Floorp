@@ -616,21 +616,12 @@ mozilla::HashCodeScrambler Realm::randomHashCodeScrambler() {
 }
 
 AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(JSContext* cx)
-    : cx_(cx->isHelperThreadContext() ? nullptr : cx),
-      prevState_(cx, cx->realm()->objectMetadataState_) {
-  if (cx_) {
-    cx_->realm()->objectMetadataState_ =
-        NewObjectMetadataState(DelayMetadata());
-  }
+    : cx_(cx), prevState_(cx, cx->realm()->objectMetadataState_) {
+  MOZ_ASSERT(cx_->isMainThreadContext());
+  cx_->realm()->objectMetadataState_ = NewObjectMetadataState(DelayMetadata());
 }
 
 AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata() {
-  // If we don't have a cx, we didn't change the metadata state, so no need to
-  // reset it here.
-  if (!cx_) {
-    return;
-  }
-
   if (!cx_->isExceptionPending() && cx_->realm()->hasObjectPendingMetadata()) {
     // This destructor often runs upon exit from a function that is
     // returning an unrooted pointer to a Cell. The allocation metadata
