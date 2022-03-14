@@ -479,19 +479,3 @@ DesktopToLayoutDeviceScale nsDeviceContext::GetDesktopToDeviceScale() {
 
   return DesktopToLayoutDeviceScale(1.0);
 }
-
-bool nsDeviceContext::IsSyncPagePrinting() const {
-  MOZ_ASSERT(mPrintTarget);
-  return mPrintTarget->IsSyncPagePrinting();
-}
-
-void nsDeviceContext::RegisterPageDoneCallback(
-    PrintTarget::PageDoneCallback&& aCallback) {
-  MOZ_ASSERT(mPrintTarget && aCallback && !IsSyncPagePrinting());
-  mPrintTarget->RegisterPageDoneCallback(std::move(aCallback));
-}
-void nsDeviceContext::UnregisterPageDoneCallback() {
-  if (mPrintTarget) {
-    mPrintTarget->UnregisterPageDoneCallback();
-  }
-}
