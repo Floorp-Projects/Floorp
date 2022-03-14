@@ -12,16 +12,22 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
 
-function setup() {
-  trr_test_setup();
-}
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
-setup();
-registerCleanupFunction(async () => {
-  trr_clear_prefs();
-  Services.prefs.clearUserPref("network.http.http3.support_version1");
-  if (trrServer) {
-    await trrServer.stop();
+add_setup(async function setup() {
+  trr_test_setup();
+  registerCleanupFunction(async () => {
+    trr_clear_prefs();
+    Services.prefs.clearUserPref("network.http.http3.support_version1");
+    if (trrServer) {
+      await trrServer.stop();
+    }
+  });
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 });
 

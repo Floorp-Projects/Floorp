@@ -6,6 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 let h2Port;
 let h3Port;
@@ -19,7 +22,7 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 
-function setup() {
+add_setup(async function setup() {
   trr_test_setup();
 
   let env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -37,31 +40,34 @@ function setup() {
   Assert.notEqual(h3NoResponsePort, null);
   Assert.notEqual(h3NoResponsePort, "");
 
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
-
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
-}
 
-setup();
-registerCleanupFunction(async () => {
-  trr_clear_prefs();
-  Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
-  Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
-  Services.prefs.clearUserPref("network.dns.echconfig.enabled");
-  Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
-  Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
-  Services.prefs.clearUserPref("network.http.http3.enable");
-  Services.prefs.clearUserPref(
-    "network.dns.httpssvc.http3_fast_fallback_timeout"
-  );
-  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
-  Services.prefs.clearUserPref("network.dns.localDomains");
-  Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
-  if (trrServer) {
-    await trrServer.stop();
+  registerCleanupFunction(async () => {
+    trr_clear_prefs();
+    Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
+    Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
+    Services.prefs.clearUserPref("network.dns.echconfig.enabled");
+    Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+    Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
+    Services.prefs.clearUserPref("network.http.http3.enable");
+    Services.prefs.clearUserPref(
+      "network.dns.httpssvc.http3_fast_fallback_timeout"
+    );
+    Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+    Services.prefs.clearUserPref("network.dns.localDomains");
+    Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
+    if (trrServer) {
+      await trrServer.stop();
+    }
+  });
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
+
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 });
 
 function makeChan(url) {
