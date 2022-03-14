@@ -33,13 +33,13 @@ skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) fuzzy-if(winWidg
 # -
 # yuv420p10
 
-skip-if(Android) fuzzy(33-49,2346-2579) fuzzy-if(swgl,34-52,181053-270528) fuzzy-if(appleSilicon,49-49,2263-2263) fuzzy-if(useDrawSnapshot,16-16,183840-183840) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
-skip-if(Android) fuzzy-if(appleSilicon,36-36,273725-273725) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
+skip-if(Android) fuzzy(33-49,2263-2579) fuzzy-if(swgl,34-52,180421-270528) fuzzy-if(useDrawSnapshot,16-16,183840-183840) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
+skip-if(Android) fuzzy-if(appleSilicon,34-36,273725-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 #[2] skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
-skip-if(Android) fuzzy-if(appleSilicon,36-36,273725-273725) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
+skip-if(Android) fuzzy-if(appleSilicon,34-36,273725-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 
-skip-if(Android) fuzzy(33-49,174699-175092) fuzzy-if(swgl&&!winWidget,36-52,11553-11555) fuzzy-if(swgl&&winWidget,40-52,11555-187200) fuzzy-if(useDrawSnapshot,20-20,186800-186800) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
+skip-if(Android) fuzzy(33-49,174699-175092) fuzzy-if(swgl&&!winWidget,36-52,11553-11555) fuzzy-if(swgl&&winWidget,40-52,11555-187200) fuzzy-if(swgl&&appleSilicon,50-50,11465-11465) fuzzy-if(useDrawSnapshot,20-20,186800-186800) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
 skip-if(Android) fuzzy-if(appleSilicon,27-27,273726-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
 skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
 #[2] skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
@@ -65,11 +65,11 @@ skip-if(winWidget&&swgl) fuzzy(0-1,0-7200) == ../reftest_video.html?src=color_qu
 == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.h264.mp4 ../reftest_video.html?src=timeout
 == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.h264.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.h264.mp4
 
-# Our vp9 support doesn't handle gbrp
+# Bug 1759557: Our vp9 support doesn't handle gbrp
 # (BTW: skip-if(!foo) == run-if(foo))
 skip-if(!(cocoaWidget||winWidget||(gtkWidget&&isCoverageBuild))) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm ../reftest_video.html?src=none
 skip-if(!!(cocoaWidget||winWidget||(gtkWidget&&isCoverageBuild))) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm ../reftest_video.html?src=timeout
 
-fuzzy-if(appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
+fuzzy-if(!swgl&&appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
 == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
-fuzzy-if(appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
+fuzzy-if(!swgl&&appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
