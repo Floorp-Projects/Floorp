@@ -52,6 +52,9 @@ WEBEXT_TYPES_MAPPING = glbl["WEBEXT_TYPES_MAPPING"]
 # require special handling.
 WEBEXT_STUBS_MAPPING = glbl["WEBEXT_STUBS_MAPPING"]
 
+# Set of the webidl type names to be threated as primitive types.
+WEBIDL_PRIMITIVE_TYPES = glbl["WEBIDL_PRIMITIVE_TYPES"]
+
 # Mapping table for the directory where the JSON schema are going to be loaded from,
 # the 'toolkit' ones are potentially available on both desktop and mobile builds
 # (if not specified otherwise through the WEBEXT_ANDROID_EXCLUDED list), whereas the
@@ -483,13 +486,16 @@ class WebIDLHelpers:
             if stub_attr:
                 attrs = attrs + [stub_attr]
             retval_type = cls.webidl_method_retval_type(api_fun, group)
-            params = ", ".join(cls.webidl_method_params(api_fun, group))
-            return "\n".join(
-                [
-                    "  [%s]" % ", ".join(attrs),
-                    "  %s %s(%s);" % (retval_type, api_fun.name, params),
-                ]
-            )
+            lines = []
+            for fn_params in api_fun.iter_multiple_webidl_signatures_params(group):
+                params = ", ".join(cls.webidl_method_params(api_fun, group, fn_params))
+                lines.extend(
+                    [
+                        "  [%s]" % ", ".join(attrs),
+                        "  %s %s(%s);" % (retval_type, api_fun.name, params),
+                    ]
+                )
+            return "\n".join(lines)
 
         if schema_group is not None:
             return generate_webidl(schema_group)
@@ -609,13 +615,16 @@ class WebIDLHelpers:
         return "void"
 
     @classmethod
-    def webidl_method_params(cls, api_fun, schema_group=None):
+    def webidl_method_params(cls, api_fun, schema_group=None, params_schema_data=None):
         """
         Return the webidl method parameters for the given `APIFunction` entry.
 
         If the schema for the function includes `allowAmbiguousOptionalArguments`
         then the methods paramers are going to be the variadic arguments of type
         `any` (e.g. `void myMethod(any... args);`).
+
+        If params_schema_data is None, then the parameters will be resolved internally
+        from the schema data.
         """
 
         cls.expect_instance(api_fun, APIFunction)
@@ -632,28 +641,42 @@ class WebIDLHelpers:
         if "allowAmbiguousOptionalArguments" in schema_data:
             return ["any... args"]
 
-        if "parameters" in schema_data:
-            for param in schema_data["parameters"]:
-                is_optional = "optional" in param and param["optional"]
+        if params_schema_data is None:
+            if "parameters" in schema_data:
+                params_schema_data = schema_data["parameters"]
+            else:
+                params_schema_data = []
 
-                if (
-                    api_fun.is_async(schema_group)
-                    and schema_data["async"] == param["name"]
-                    and schema_data["parameters"][-1] == param
-                ):
-                    # the last async callback parameter is validated and added later
-                    # in this method.
-                    continue
+        for param in params_schema_data:
+            is_optional = "optional" in param and param["optional"]
 
-                ptype = cls.webidl_type_from_mapping(
-                    param,
-                    "%s method parameter %s" % (api_fun.api_path_string, param["name"]),
-                )
+            if (
+                api_fun.is_async(schema_group)
+                and schema_data["async"] == param["name"]
+                and schema_data["parameters"][-1] == param
+            ):
+                # the last async callback parameter is validated and added later
+                # in this method.
+                continue
 
-                if is_optional:
-                    ptype = "optional %s" % ptype
+            ptype = cls.webidl_type_from_mapping(
+                param,
+                "%s method parameter %s" % (api_fun.api_path_string, param["name"]),
+            )
 
-                params.append("%s %s" % (ptype, param["name"]))
+            if (
+                ptype != "any"
+                and not cls.webidl_type_is_primitive(ptype)
+                and is_optional
+            ):
+                if ptype != "Function":
+                    raise TypeError(
+                        "unexpected optional type. "
+                        "Only Function is expected to be marked as optional"
+                    )
+                ptype = "optional %s" % ptype
+
+            params.append("%s %s" % (ptype, param["name"]))
 
         if api_fun.is_async(schema_group):
             # Add the chrome-compatible callback as an additional optional parameter
@@ -668,6 +691,10 @@ class WebIDLHelpers:
             )
 
         return params
+
+    @classmethod
+    def webidl_type_is_primitive(cls, webidl_type):
+        return webidl_type in WEBIDL_PRIMITIVE_TYPES
 
     @classmethod
     def webidl_type_from_mapping(cls, schema_data, where_info):
@@ -785,7 +812,7 @@ class APIEntry:
             if schema_group not in self.schema_data_by_group:
                 return []
             if "allowedContexts" in self.schema_data_by_group[schema_group]:
-                return self.schema_data_list_by_group[schema_group]["allowedContexts"]
+                return self.schema_data_by_group[schema_group]["allowedContexts"]
         else:
             if "allowedContexts" in self.schema_data_list[0]:
                 return self.schema_data_list[0]["allowedContexts"]
@@ -919,6 +946,71 @@ class APIFunction(APIEntry):
         """
         schema_data = self.get_schema_data(schema_group)
         return "async" in schema_data
+
+    def is_optional_param(self, param):
+        return "optional" in param and param["optional"]
+
+    def is_callback_param(self, param, schema_group=None):
+        return self.is_async(schema_group) and (
+            param["name"] == self.get_async_callback_name(schema_group)
+        )
+
+    def iter_multiple_webidl_signatures_params(self, schema_group=None):
+        """
+        Lazily generate the parameters set to use in the multiple webidl definitions
+        that should be generated by this method, due to a set of optional parameters
+        followed by a mandatory one.
+
+        NOTE: the caller SHOULD NOT mutate (or save for later use) the list of parameters
+        yielded by this generator function (because the parameters list and parameters
+        are not deep cloned and reused internally between yielded values).
+        """
+        schema_data = self.get_schema_data(schema_group)
+        parameters = schema_data["parameters"].copy()
+        yield parameters
+
+        if not self.has_multiple_webidl_signatures(schema_group):
+            return
+
+        def get_next_idx(p):
+            return parameters.index(p) + 1
+
+        def get_next_rest(p):
+            return parameters[get_next_idx(p) : :]
+
+        def is_optional(p):
+            return self.is_optional_param(p)
+
+        def is_mandatory(p):
+            return not is_optional(p)
+
+        rest = parameters
+        while not all(is_mandatory(param) for param in rest):
+            param = next(filter(is_optional, rest))
+            rest = get_next_rest(param)
+            if self.is_callback_param(param, schema_group):
+                return
+
+            parameters.remove(param)
+            yield parameters
+
+    def has_multiple_webidl_signatures(self, schema_group=None):
+        """
+        Determine if the API method in the JSONSchema needs to be turned in
+        multiple function signatures in the WebIDL definitions (e.g. `alarms.create`,
+        needs two separate WebIDL definitions accepting 1 and 2 parameters to match the
+        expected behaviors).
+        """
+
+        schema_data = self.get_schema_data(schema_group)
+        if "allowAmbiguousOptionalArguments" in schema_data:
+            # The few methods that are marked as ambiguous (only runtime.sendMessage,
+            # besides the ones in the `test` API) are currently generated as
+            # a single webidl method with a variadic parameter.
+            return False
+        params = schema_data["parameters"] or []
+
+        return not all(not self.is_optional_param(param) for param in params)
 
     def get_async_callback_name(self, schema_group):
         """
@@ -1065,6 +1157,7 @@ class APINamespace:
             # load types
             if "types" in data:
                 for type_data in data["types"]:
+                    type_id = None
                     if "id" in type_data:
                         type_id = type_data["id"]
                     elif "$extend" in type_data:
@@ -1200,6 +1293,18 @@ class APINamespace:
 
         print("functions:")
         dump_names_by_group(self.functions.values())
+        fn_multi_signatures = list(
+            filter(
+                lambda fn: fn.has_multiple_webidl_signatures(), self.functions.values()
+            )
+        )
+        if len(fn_multi_signatures) > 0:
+            print("functions with multiple WebIDL type signatures:")
+            for fn in fn_multi_signatures:
+                print("  -", fn.name)
+                for params in fn.iter_multiple_webidl_signatures_params():
+                    print("    -", params)
+
         print("events:")
         dump_names_by_group(self.events.values())
         print("properties:")
