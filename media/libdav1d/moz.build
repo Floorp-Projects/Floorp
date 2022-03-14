@@ -103,7 +103,7 @@ EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/data.h',
     '../../third_party/dav1d/src/decode.h',
     '../../third_party/dav1d/src/dequant_tables.h',
-    '../../third_party/dav1d/src/film_grain.h',
+    '../../third_party/dav1d/src/filmgrain.h',
     '../../third_party/dav1d/src/getbits.h',
     '../../third_party/dav1d/src/intra_edge.h',
     '../../third_party/dav1d/src/lf_mask.h',
@@ -123,12 +123,14 @@ EXPORTS.dav1d.src += [
 ]
 
 # common BITDEPTH 8, 16
+# All the files here should be *_tmpl.c, and the should not appear in SOURCES,
+# since they require BITDEPTH to be defined
 relative_path = '../../third_party/dav1d/src/'
 bitdepth_basenames = [
     'cdef_apply_tmpl.c',
     'cdef_tmpl.c',
     'fg_apply_tmpl.c',
-    'film_grain_tmpl.c',
+    'filmgrain_tmpl.c',
     'ipred_prepare_tmpl.c',
     'ipred_tmpl.c',
     'itx_tmpl.c',
