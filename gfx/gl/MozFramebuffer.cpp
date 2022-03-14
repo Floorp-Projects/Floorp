@@ -120,7 +120,12 @@ MozFramebuffer::CreateForBackingWithSharedDepthAndStencil(
 
   const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
   if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-    MOZ_ASSERT(false);
+    gfxCriticalNote << "MozFramebuffer::CreateImpl(size:" << size
+                    << ", samples:" << samples
+                    << ", depthAndStencil:" << bool(depthAndStencilBuffer)
+                    << ", colorTarget:" << gfx::hexa(colorTarget)
+                    << ", colorName:" << colorName << "): Incomplete: 0x"
+                    << gfx::hexa(status);
     return nullptr;
   }
 
