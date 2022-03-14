@@ -30,6 +30,9 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 const ncs = Cc[
   "@mozilla.org/network/network-connectivity-service;1"
 ].getService(Ci.nsINetworkConnectivityService);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
@@ -72,6 +75,10 @@ add_task(async function test_setup() {
 
   trrServer = new TRRServer();
   await trrServer.start();
+
+  if (mozinfo.socketprocess_networking) {
+    await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
+  }
 
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
