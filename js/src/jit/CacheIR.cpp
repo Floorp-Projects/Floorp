@@ -4018,15 +4018,16 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
   return AttachDecision::Attach;
 }
 
-static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
-  // Make sure the objects on the prototype don't have any indexed properties
-  // or that such properties can't appear without a shape change.
-  do {
-    // The first two checks are also relevant to the receiver object.
-    if (obj->isIndexed()) {
-      return false;
-    }
+static bool CanAttachAddElement(NativeObject* obj, bool isInit,
+                                AllowIndexedReceiver allowIndexedReceiver) {
+  // Make sure the receiver doesn't have any indexed properties and that such
+  // properties can't appear without a shape change.
+  if (allowIndexedReceiver == AllowIndexedReceiver::No && obj->isIndexed()) {
+    return false;
+  }
 
+  do {
+    // This check is also relevant for the receiver object.
     const JSClass* clasp = obj->getClass();
     if (clasp != &ArrayObject::class_ &&
         (clasp->getAddProperty() || clasp->getResolve() ||
@@ -4049,9 +4050,13 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
       return false;
     }
 
+    NativeObject* nproto = &proto->as<NativeObject>();
+    if (nproto->isIndexed()) {
+      return false;
+    }
+
     // We have to make sure the proto has no non-writable (frozen) elements
     // because we're not allowed to shadow them.
-    NativeObject* nproto = &proto->as<NativeObject>();
     if (nproto->denseElementsAreFrozen() &&
         nproto->getDenseInitializedLength() > 0) {
       return false;
@@ -4116,7 +4121,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
   }
 
   // Check for other indexed properties or class hooks.
-  if (!CanAttachAddElement(nobj, IsPropertyInitOp(op))) {
+  if (!CanAttachAddElement(nobj, IsPropertyInitOp(op),
+                           AllowIndexedReceiver::No)) {
     return AttachDecision::NoAction;
   }
 
@@ -4177,8 +4183,10 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
     return AttachDecision::NoAction;
   }
 
-  // Indexed properties on the prototype chain aren't handled by the helper.
-  if (PrototypeMayHaveIndexedProperties(aobj)) {
+  // Check for class hooks or indexed properties on the prototype chain that
+  // we're not allowed to shadow.
+  if (!CanAttachAddElement(aobj, /* isInit = */ false,
+                           AllowIndexedReceiver::Yes)) {
     return AttachDecision::NoAction;
   }
 
@@ -5275,7 +5283,8 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
   auto* thisarray = &thisobj->as<ArrayObject>();
 
   // Check for other indexed properties or class hooks.
-  if (!CanAttachAddElement(thisarray, /* isInit = */ false)) {
+  if (!CanAttachAddElement(thisarray, /* isInit = */ false,
+                           AllowIndexedReceiver::No)) {
     return AttachDecision::NoAction;
   }
 
