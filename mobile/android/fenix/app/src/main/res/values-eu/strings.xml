@@ -46,8 +46,9 @@
     <string name="recently_saved_show_all">Erakutsi denak</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Erakutsi gordetako laster-marka guztiak</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Erakutsi gordetako laster-marka guztien botoia</string>
+
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Kendu</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozillak egina da.</string>
@@ -70,7 +71,9 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Loturak aplikazioetan automatikoki irekitzeko ezar dezakezu Firefox</string>
+    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Loturak aplikazioetan automatikoki irekitzeko ezar dezakezu Firefox</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Loturak aplikazioetan automatikoki irekitzeko ezar dezakezu %1$s.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Joan ezarpenetara</string>
     <!-- Text for the negative action button -->
@@ -98,7 +101,10 @@
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Automatikoki itxi hilabete ondoren?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake Firefoxek.</string>
+    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake Firefoxek.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake %1$s(e)k.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Itxi</string>
 
@@ -120,8 +126,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Azken fitxa guztiak erakusteko botoia</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Erakutsi azken fitxa guztiak</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Zure bilaketa: \&quot;%1$s\&quot;</string>
@@ -129,6 +133,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d gune</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Kendu</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -139,8 +147,6 @@
     <string name="recently_visited_menu_item_remove">Kendu</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Erakutsi esplorazio guztiak</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Iraganeko esplorazio guztiak erakusteko botoia</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -249,11 +255,15 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Firefoxen berrikuntzak</string>
+    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefoxen berrikuntzak</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">%1$s(r)en nobedadeak</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Errazagoa da orain utzi zenuen tokitik jarraitzea.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Firefoxen hasiera-orri pertsonalizatua</string>
+    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Firefoxen hasiera-orri pertsonalizatua</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">%1$s hasiera-orri pertsonalizatua</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Saltatu irekitako zure fitxa, laster-marka eta nabigazio-historiara.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -270,7 +280,9 @@
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Ireki Firefoxen fitxa berri bat</string>
+    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ireki Firefoxen fitxa berri bat</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Ireki %1$s fitxa berria</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Bilatu</string>
     <!-- Text preview for larger sized widgets -->
@@ -650,7 +662,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktibo</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">Noizean behin esperimentuak instala eta exekuta litzake Firefoxek.</string>
+    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Noizean behin esperimentuak instala eta exekuta litzake Firefoxek.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">Noizean behin esperimentuak instala eta exekuta litzake %1$s(e)k.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Argibide gehiago</string>
     <!-- Dialog message shown after removing a study -->
@@ -1154,10 +1168,13 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ongi etorri %s(e)ra!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sinkronizatu Firefox gailuen artean</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Ekarri laster-markak, historia eta pasahitzak gailu honetako Firefoxera.</string>
+    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sinkronizatu Firefox gailuen artean</string>
 
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string name="onboarding_account_sign_in_header_2">Sinkronizatu %1$s gailuen artean</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Ekarri laster-markak, historia eta pasahitzak gailu honetako %1$s(e)ra.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Eman izena</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1165,7 +1182,9 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Pribatutasuna beti aktibo</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Firefoxek automatikoki eragozten du konpainiek sekretuki zu webean zehar jarraitzea.</string>
+    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefoxek automatikoki eragozten du konpainiek sekretuki zu webean zehar jarraitzea.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s(e)k automatikoki eragozten du konpainiek sekretuki zu webean zehar jarraitzea.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Oinarrizkoa (lehenetsia)</string>
     <!-- text for standard blocking option button description -->
@@ -1503,11 +1522,15 @@
     <string name="credit_cards_menu_delete_card">Ezabatu txartela</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Ezabatu txartela</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Ziur zaude kreditu-txartel hau ezabatu nahi duzula?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Ezabatu</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Gorde</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Gorde</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Utzi</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Gordetako txartelak</string>
@@ -1671,7 +1694,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Gaitu fitxen sinkronizazioa mesedez.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">Ez daukazu fitxarik irekita beste gailuetako Firefoxetan.</string>
+    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Ez daukazu fitxarik irekita beste gailuetako Firefoxetan.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string name="synced_tabs_no_tabs_2">Ez daukazu fitxarik irekita beste gailuetako %1$s(e)n.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Ikusi zure beste gailuetako fitxen zerrenda.</string>
 
@@ -1680,6 +1705,11 @@
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Irekitako fitxarik ez</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Zabaldu sinkronizatutako fitxen taldea</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Tolestu sinkronizatutako fitxen taldea</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
@@ -1729,22 +1759,22 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Lagundu Firefox hobetzen</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Lagundu Firefox hobetzen</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">Zergatik desgaitu dituzu fitxa inaktiboak?</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Zergatik desgaitu dituzu fitxa inaktiboak?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Ez dut ulertzen nola dabilen</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ez dut ulertzen nola dabilen</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Fitxa zaharrak neronek garbitzea gustatzen zait</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Fitxa zaharrak neronek garbitzea gustatzen zait</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">Bi asteko denbora-tartea luzeegia da</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Bi asteko denbora-tartea luzeegia da</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">Bi asteko denbora-tartea laburregia da</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Bi asteko denbora-tartea laburregia da</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Bidali</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Bidali</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Itxi</string>
+    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Itxi</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Ireki webgune, posta elektroniko eta mezuetako loturak Firefoxen automatikoki.</string>

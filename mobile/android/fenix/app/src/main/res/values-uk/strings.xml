@@ -996,6 +996,10 @@
 
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно використані</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Копіювати у буфер обміну</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Скопійовано у буфер обміну</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Увійти до синхронізації</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1170,10 +1174,9 @@
     <string name="onboarding_header">Вітаємо в %s!</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Синхронізуйте Firefox між пристроями</string>
+    <string name="onboarding_account_sign_in_header_1">Синхронізуйте Firefox між пристроями</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Синхронізація %1$s між пристроями</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Синхронізація %1$s між пристроями</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Перенесіть свої закладки, історію та паролі у %1$s на цьому пристрої.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1702,9 +1705,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Увімкніть синхронізацію вкладок.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">У вас немає вкладок, відкритих у Firefox на інших пристроях.</string>
+    <string name="synced_tabs_no_tabs">У вас немає вкладок, відкритих у Firefox на інших пристроях.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">У вас немає вкладок, відкритих у %1$s на інших пристроях.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">У вас немає вкладок, відкритих у %1$s на інших пристроях.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Переглядайте список вкладок з ваших інших пристроїв.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

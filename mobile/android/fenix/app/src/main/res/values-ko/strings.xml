@@ -49,8 +49,6 @@
     <string name="recently_saved_show_all">모두 표시</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">저장된 북마크 모두 표시</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">저장된 북마크 모두 표시 버튼</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">삭제</string>
@@ -132,8 +130,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">모든 최근 탭 표시 버튼</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">모든 최근 탭 표시</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot;에 대한 검색</string>
@@ -156,8 +152,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">모든 지난 탐색 표시</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">모든 지난 탐색 표시 버튼</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -1025,6 +1019,10 @@
     <string name="share_link_all_apps_subheader">모든 동작</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">최근 사용</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">클립보드에 복사</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">클립보드에 복사됨</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Sync에 로그인</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1209,10 +1207,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s에 오신걸 환영합니다!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">기기 간에 Firefox 동기화</string>
+    <string name="onboarding_account_sign_in_header_1">기기 간에 Firefox 동기화</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">기기 간에 %1$s 동기화</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">기기 간에 %1$s 동기화</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">이 기기의 %1$s에 북마크, 기록 및 비밀번호를 가져오세요.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1743,9 +1740,9 @@
     <string name="synced_tabs_enable_tab_syncing">탭 동기화를 활성화하세요.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">다른 기기의 Firefox에서 열린 탭이 없습니다.</string>
+    <string name="synced_tabs_no_tabs">다른 기기의 Firefox에서 열린 탭이 없습니다.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">다른 기기의 %1$s에서 열린 탭이 없습니다.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">다른 기기의 %1$s에서 열린 탭이 없습니다.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">다른 기기의 탭 목록을 봅니다.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

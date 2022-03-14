@@ -997,6 +997,10 @@
     <string name="share_link_all_apps_subheader">Όλες οι ενέργειες</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Πρόσφατη χρήση</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Αντιγραφή στο πρόχειρο</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Αντιγράφηκε στο πρόχειρο</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Σύνδεση για συγχρονισμό</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1177,10 +1181,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Καλώς ορίσατε στο %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Συγχρονισμός Firefox μεταξύ συσκευών</string>
+    <string name="onboarding_account_sign_in_header_1">Συγχρονισμός Firefox μεταξύ συσκευών</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Συγχρονισμός %1$s ανάμεσα σε συσκευές</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Συγχρονισμός %1$s ανάμεσα σε συσκευές</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Φέρτε σελιδοδείκτες, ιστορικό και κωδικούς πρόσβασης στο %1$s σε αυτήν τη συσκευή.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1713,9 +1716,9 @@
     <string name="synced_tabs_enable_tab_syncing">Παρακαλούμε ενεργοποιήστε το συγχρονισμό καρτελών.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Δεν έχετε καμία άλλη καρτέλα ανοικτή στο Firefox σε άλλες σας συσκευές.</string>
+    <string name="synced_tabs_no_tabs">Δεν έχετε καμία άλλη καρτέλα ανοικτή στο Firefox σε άλλες σας συσκευές.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Δεν έχετε καμία ανοικτή καρτέλα στο %1$s στις άλλες σας συσκευές.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Δεν έχετε καμία ανοικτή καρτέλα στο %1$s στις άλλες σας συσκευές.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Δείτε μια λίστα καρτελών από τις άλλες συσκευές σας.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
