@@ -551,7 +551,8 @@ class PageAction {
     );
     const { primary, secondary } = content.buttons;
     let primaryActionCallback;
-    let options = { persistent: !!content.persistent_doorhanger };
+    let persistent = !!content.persistent_doorhanger;
+    let options = { persistent, persistWhileVisible: persistent };
     let panelTitle;
 
     headerLabel.value = await this.getStrings(content.heading_text);
@@ -851,16 +852,18 @@ const CFRPageActions = {
         // The browser has a recommendation specified with this host, so show
         // the page action
         pageAction.showAddressBarNotifier(recommendation);
-      } else if (recommendation.retain) {
-        // Keep the recommendation first time the user navigates away just in
-        // case they will go back to the previous page
-        pageAction.hideAddressBarNotifier();
-        recommendation.retain = false;
-      } else {
-        // The user has navigated away from the specified host in the given
-        // browser, so the recommendation is no longer valid and should be removed
-        RecommendationMap.delete(browser);
-        pageAction.hideAddressBarNotifier();
+      } else if (!recommendation.content.persistent_doorhanger) {
+        if (recommendation.retain) {
+          // Keep the recommendation first time the user navigates away just in
+          // case they will go back to the previous page
+          pageAction.hideAddressBarNotifier();
+          recommendation.retain = false;
+        } else {
+          // The user has navigated away from the specified host in the given
+          // browser, so the recommendation is no longer valid and should be removed
+          RecommendationMap.delete(browser);
+          pageAction.hideAddressBarNotifier();
+        }
       }
     } else {
       // There's no recommendation specified for this browser, so hide the page action
