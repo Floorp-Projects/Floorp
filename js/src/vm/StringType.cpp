@@ -637,8 +637,10 @@ static bool CanReuseLeftmostBuffer(JSString* leftmostChild, size_t wholeLength,
 }
 
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
+  MOZ_ASSERT_IF(maybecx, maybecx->isMainThreadContext());
+
   mozilla::Maybe<AutoGeckoProfilerEntry> entry;
-  if (maybecx && !maybecx->isHelperThreadContext()) {
+  if (maybecx) {
     entry.emplace(maybecx, "JSRope::flatten");
   }
 
