@@ -613,7 +613,7 @@ style:
   UseIsNullOrEmpty:
     active: false
   UseOrEmpty:
-    active: false
+    active: true
   UseRequire:
     active: false
   UseRequireNotNull:
