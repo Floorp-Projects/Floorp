@@ -3,7 +3,7 @@ Processes, Threads and IPC
 
 These pages contain the documentation for Gecko's architecture for platform
 process and thread creation, communication and synchronization.  They live
-mozilla-central in the 'ipc/docs' directory.
+in mozilla-central in the 'ipc/docs' directory.
 
 .. toctree::
     :maxdepth: 3
