@@ -33,6 +33,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "Assert",
+  "resource://testing-common/Assert.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "Extension",
   "resource://gre/modules/Extension.jsm"
 );
@@ -246,7 +251,79 @@ function provide(obj, keys, value, override = false) {
   }
 }
 
+// Some test assertions to work in both mochitest and xpcshell.  This
+// will be revisited later.
+const ExtensionTestAssertions = {
+  getPersistentListeners(extWrapper, apiNs, apiEvent) {
+    let policy = WebExtensionPolicy.getByID(extWrapper.id);
+    const extension = policy?.extension || extWrapper.extension;
+
+    if (!extension || !(extension instanceof Extension)) {
+      throw new Error(
+        `Unable to retrieve the Extension class instance for ${extWrapper.id}`
+      );
+    }
+
+    const { persistentListeners } = extension;
+    if (
+      !persistentListeners?.size > 0 ||
+      !persistentListeners.get(apiNs)?.has(apiEvent)
+    ) {
+      return [];
+    }
+
+    return Array.from(
+      persistentListeners
+        .get(apiNs)
+        .get(apiEvent)
+        .values()
+    );
+  },
+
+  assertPersistentListeners(
+    extWrapper,
+    apiNs,
+    apiEvent,
+    { primed, persisted = true }
+  ) {
+    if (primed && !persisted) {
+      throw new Error(
+        "Inconsistent assertion, can't assert a primed listener if it is not persisted"
+      );
+    }
+
+    let listenersInfo = ExtensionTestAssertions.getPersistentListeners(
+      extWrapper,
+      apiNs,
+      apiEvent
+    );
+    Assert.equal(
+      persisted,
+      !!listenersInfo?.length,
+      `Got a persistent listener for ${apiNs}.${apiEvent}`
+    );
+    for (const info of listenersInfo) {
+      if (primed) {
+        Assert.ok(
+          info.primed,
+          `${apiNs}.${apiEvent} listener expected to be primed`
+        );
+      } else {
+        Assert.equal(
+          info.primed,
+          undefined,
+          `${apiNs}.${apiEvent} listener expected to not be primed`
+        );
+      }
+    }
+  },
+};
+
 ExtensionTestCommon = class ExtensionTestCommon {
+  static get testAssertions() {
+    return ExtensionTestAssertions;
+  }
+
   // Called by AddonTestUtils.promiseShutdownManager to reset startup promises
   static resetStartupPromises() {
     ExtensionParent._resetStartupPromises();
