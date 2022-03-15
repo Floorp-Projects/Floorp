@@ -352,10 +352,6 @@
       return this.mSearchNames[aIndex];
     }
 
-    setTextValueWithReason(aValue, aReason) {
-      this.textValue = aValue;
-    }
-
     selectTextRange(aStartIndex, aEndIndex) {
       super.setSelectionRange(aStartIndex, aEndIndex);
     }

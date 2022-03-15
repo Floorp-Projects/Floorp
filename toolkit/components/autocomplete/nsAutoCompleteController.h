@@ -39,10 +39,9 @@ class nsAutoCompleteController final : public nsIAutoCompleteController,
   MOZ_CAN_RUN_SCRIPT virtual ~nsAutoCompleteController();
 
   /**
-   * SetValueOfInputTo() sets value of mInput to aValue and notifies the input
-   * of setting reason.
+   * SetValueOfInputTo() sets value of mInput to aValue.
    */
-  void SetValueOfInputTo(const nsString& aValue, uint16_t aReason);
+  void SetValueOfInputTo(const nsString& aValue);
 
   /**
    * SetSearchStringInternal() sets both mSearchString and mSetValue to
