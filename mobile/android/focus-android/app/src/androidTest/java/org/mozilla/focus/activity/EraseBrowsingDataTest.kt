@@ -14,6 +14,7 @@ import org.hamcrest.core.IsNull
 import org.junit.After
 import org.junit.Assert.assertThat
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -129,6 +130,7 @@ class EraseBrowsingDataTest {
         }
     }
 
+    @Ignore("See: https://github.com/mozilla-mobile/focus-android/issues/6438")
     @SmokeTest
     @Test
     fun systemBarHomeViewTest() {
