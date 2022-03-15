@@ -286,6 +286,9 @@ class ResponsiveUI {
     // Remove observers on the stack.
     this.resizeToolbarObserver.unobserve(this.browserStackEl);
 
+    // Cleanup the frame content before disconnecting the frame element.
+    this.rdmFrame.contentWindow.destroy();
+
     this.rdmFrame.remove();
 
     // Clean up resize handlers
