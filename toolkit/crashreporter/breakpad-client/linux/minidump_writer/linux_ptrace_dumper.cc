@@ -306,6 +306,33 @@ bool LinuxPtraceDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
   return true;
 }
 
+bool LinuxPtraceDumper::GetThreadNameByIndex(size_t index, char* name,
+                                             size_t size) {
+  if (index >= threads_.size())
+    return false;
+
+  pid_t tid = threads_[index];
+
+  assert(name != NULL);
+  char path[NAME_MAX];
+
+  // Read the thread name (aka comm entry in /proc)
+  if (!BuildProcPath(path, tid, "comm"))
+    return false;
+
+  const int fd = sys_open(path, O_RDONLY, 0);
+  if (fd < 0)
+    return false;
+
+  const int len = sys_read(fd, name, size);
+  if (len > 0)
+    name[len - 1] = '\0'; // Get rid of the newline
+
+  sys_close(fd);
+
+  return len > 0;
+}
+
 bool LinuxPtraceDumper::IsPostMortem() const {
   return false;
 }

@@ -80,6 +80,11 @@ class LinuxCoreDumper : public LinuxDumper {
   // Returns true on success. One must have called |ThreadsSuspend| first.
   virtual bool GetThreadInfoByIndex(size_t index, ThreadInfo* info);
 
+  // Implements LinuxDumper::GetThreadNameByIndex().
+  // Reads the name of the |index|-th thread of |threads_|.
+  // Returns true on success. One must have called |ThreadsSuspend| first.
+  virtual bool GetThreadNameByIndex(size_t index, char* info, size_t size);
+
   // Implements LinuxDumper::IsPostMortem().
   // Always returns true to indicate that this dumper performs a
   // post-mortem dump of a crashed process via a core dump file.

@@ -119,6 +119,12 @@ bool LinuxCoreDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
   return true;
 }
 
+bool LinuxCoreDumper::GetThreadNameByIndex(size_t index, char* name,
+                                           size_t size) {
+  // Not implemented
+  return false;
+}
+
 bool LinuxCoreDumper::IsPostMortem() const {
   return true;
 }
