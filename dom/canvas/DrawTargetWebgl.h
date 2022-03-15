@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/ThreadLocal.h"
 #include <vector>
 
 namespace mozilla {
@@ -98,7 +99,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     SharedContext();
     ~SharedContext();
 
-    int32_t mNumTargets = 0;
     WeakPtr<DrawTargetWebgl> mCurrentTarget;
     IntSize mViewportSize;
     IntRect mClipRect;
@@ -226,7 +226,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   RefPtr<SharedContext> mSharedContext;
 
-  static RefPtr<SharedContext> sSharedContext;
+  static MOZ_THREAD_LOCAL(SharedContext*) sSharedContext;
 
  public:
   DrawTargetWebgl();
