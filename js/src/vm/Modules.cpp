@@ -198,12 +198,6 @@ JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
   return moduleRecord->as<ModuleObject>().script();
 }
 
-JS_PUBLIC_API bool JS::IsModuleEvaluated(JS::HandleObject moduleRecord) {
-  AssertHeapIsIdle();
-
-  return !moduleRecord->as<ModuleObject>().maybeScript();
-}
-
 JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
     JSContext* cx, Handle<JSString*> specifierArg) {
   AssertHeapIsIdle();

@@ -70,14 +70,6 @@ class ScriptLoaderInterface : public nsISupports {
       JSContext* cx, ScriptLoadRequest* aRequest,
       JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
       JS::MutableHandle<JSScript*> aIntroductionScript) = 0;
-
-  virtual void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
-      JSContext* aCx, ModuleLoadRequest* aRequest) = 0;
-
-  virtual nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
-      ModuleLoadRequest* aRequest, nsresult aRv) = 0;
-
-  virtual void MaybeTriggerBytecodeEncoding() = 0;
 };
 
 class ModuleLoaderBase : public nsISupports {
@@ -111,7 +103,6 @@ class ModuleLoaderBase : public nsISupports {
     MOZ_ASSERT(false, "You must override EnsureModuleHooksInitialized");
   }
   virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
-  virtual nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
   virtual nsresult CompileOrFinishModuleScript(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,
@@ -134,7 +125,6 @@ class ModuleLoaderBase : public nsISupports {
       ModuleLoadRequest* aRequest, nsresult aResult);
 
   bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
   RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
       nsIURI* aURL, nsIGlobalObject* aGlobal);
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;

@@ -70,7 +70,17 @@ class nsJSUtils {
       JS::CompileOptions& aOptions, JS::Handle<JSString*> aElementAttributeName,
       JS::Handle<JS::Value> aPrivateValue);
 
-  static bool IsScriptable(JS::Handle<JSObject*> aEvaluationGlobal);
+  static nsresult CompileModule(JSContext* aCx,
+                                JS::SourceText<char16_t>& aSrcBuf,
+                                JS::Handle<JSObject*> aEvaluationGlobal,
+                                JS::CompileOptions& aCompileOptions,
+                                JS::MutableHandle<JSObject*> aModule);
+
+  static nsresult CompileModule(JSContext* aCx,
+                                JS::SourceText<mozilla::Utf8Unit>& aSrcBuf,
+                                JS::Handle<JSObject*> aEvaluationGlobal,
+                                JS::CompileOptions& aCompileOptions,
+                                JS::MutableHandle<JSObject*> aModule);
 
   static nsresult ModuleInstantiate(JSContext* aCx,
                                     JS::Handle<JSObject*> aModule);
