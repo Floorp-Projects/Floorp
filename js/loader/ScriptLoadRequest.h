@@ -275,7 +275,11 @@ class ScriptLoadRequest
 
   void ClearScriptSource();
 
-  void SetScript(JSScript* aScript);
+  void MarkForBytecodeEncoding(JSScript* aScript);
+
+  bool IsMarkedForBytecodeEncoding() const {
+    return !!mScriptForBytecodeEncoding;
+  }
 
   bool IsBytecode() const { return mDataType == DataType::eBytecode; }
 
@@ -328,7 +332,7 @@ class ScriptLoadRequest
 
   // Holds the top-level JSScript that corresponds to the current source, once
   // it is parsed, and planned to be saved in the bytecode cache.
-  JS::Heap<JSScript*> mScript;
+  JS::Heap<JSScript*> mScriptForBytecodeEncoding;
 
   // Holds the Cache information, which is used to register the bytecode
   // on the cache entry, such that we can load it the next time.
