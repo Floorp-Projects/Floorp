@@ -88,6 +88,7 @@ class MediaNotificationTest {
         mDevice.pressBack()
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/23716")
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
