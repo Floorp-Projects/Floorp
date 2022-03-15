@@ -181,6 +181,12 @@
             "type": "boolean",
             "enum": [false],
             "description": "Specifies if this content script will persist into future sessions. This is currently NOT supported."
+          },
+          "css": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of CSS files to be injected into matching pages. These are injected in the order they appear in this array.",
+            "items": { "$ref": "manifest.ExtensionURL" }
           }
         }
       }

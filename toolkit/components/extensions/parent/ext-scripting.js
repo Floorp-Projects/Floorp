@@ -115,8 +115,7 @@ const makeInternalContentScript = details => {
     scriptId: getUniqueId(),
     options: {
       allFrames: details.allFrames || false,
-      // TODO: Bug 1755976 - Add support for `details.css`.
-      cssPaths: [],
+      cssPaths: details.css || [],
       excludeMatches: details.excludeMatches,
       jsPaths: details.js || [],
       matchAboutBlank: true,
@@ -201,8 +200,10 @@ this.scripting = class extends ExtensionAPI {
               );
             }
 
-            if (!script.js?.length) {
-              throw new ExtensionError("js must be specified.");
+            if (!script.js?.length && !script.css?.length) {
+              throw new ExtensionError(
+                "At least one js or css must be specified."
+              );
             }
 
             if (!script.matches?.length) {
@@ -243,17 +244,31 @@ this.scripting = class extends ExtensionAPI {
             .map(([id, scriptId]) => {
               const options = extension.registeredContentScripts.get(scriptId);
 
-              return {
+              let script = {
                 id,
                 allFrames: options.allFrames,
-                excludeMatches: options.excludeMatches || undefined,
-                js: options.jsPaths.map(jsPath =>
-                  jsPath.replace(extension.baseURL, "")
-                ),
                 matches: options.matches,
                 runAt: options.runAt,
                 persistAcrossSessions: options.persistAcrossSessions,
               };
+
+              if (options.cssPaths.length) {
+                script.css = options.cssPaths.map(cssPath =>
+                  cssPath.replace(extension.baseURL, "")
+                );
+              }
+
+              if (options.excludeMatches?.length) {
+                script.excludeMatches = options.excludeMatches;
+              }
+
+              if (options.jsPaths.length) {
+                script.js = options.jsPaths.map(jsPath =>
+                  jsPath.replace(extension.baseURL, "")
+                );
+              }
+
+              return script;
             });
         },
 
