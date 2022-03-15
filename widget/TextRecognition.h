@@ -32,6 +32,8 @@ class TextRecognition final {
 
   TextRecognition() = default;
 
+  static void FillShadow(dom::ShadowRoot&, const dom::TextRecognitionResult&);
+
   static RefPtr<NativePromise> FindText(imgIContainer&);
   static RefPtr<NativePromise> FindText(gfx::DataSourceSurface&);
 
