@@ -170,6 +170,9 @@ c4 e2 69 37 c1            vpcmpgtq %xmm1, %xmm2, %xmm0
       ['f32x4.pmax', `c5 e8 5f c1               vmaxps %xmm1, %xmm2, %xmm0`],
       ['f64x2.pmin', `c5 e9 5d c1               vminpd %xmm1, %xmm2, %xmm0`],
       ['f64x2.pmax', `c5 e9 5f c1               vmaxpd %xmm1, %xmm2, %xmm0`],
+      ['i8x16.swizzle', `
+c5 69 dc 3d ${RIPRADDR}   vpaddusbx ${RIPR}, %xmm2, %xmm15
+c4 c2 71 00 c7            vpshufb %xmm15, %xmm1, %xmm0`],
       ['i16x8.extmul_high_i8x16_s', `
 66 44 0f 3a 0f fa 08      palignr \\$0x08, %xmm2, %xmm15
 c4 42 79 20 ff            vpmovsxbw %xmm15, %xmm15
