@@ -170,6 +170,24 @@ c4 e2 69 37 c1            vpcmpgtq %xmm1, %xmm2, %xmm0
       ['f32x4.pmax', `c5 e8 5f c1               vmaxps %xmm1, %xmm2, %xmm0`],
       ['f64x2.pmin', `c5 e9 5d c1               vminpd %xmm1, %xmm2, %xmm0`],
       ['f64x2.pmax', `c5 e9 5f c1               vmaxpd %xmm1, %xmm2, %xmm0`],
+      ['i16x8.extmul_high_i8x16_s', `
+66 44 0f 3a 0f fa 08      palignr \\$0x08, %xmm2, %xmm15
+c4 42 79 20 ff            vpmovsxbw %xmm15, %xmm15
+66 0f 3a 0f c1 08         palignr \\$0x08, %xmm1, %xmm0
+c4 e2 79 20 c0            vpmovsxbw %xmm0, %xmm0
+66 41 0f d5 c7            pmullw %xmm15, %xmm0`],
+      ['i32x4.extmul_low_i16x8_u', `
+c5 71 e4 fa               vpmulhuw %xmm2, %xmm1, %xmm15
+c5 f1 d5 c2               vpmullw %xmm2, %xmm1, %xmm0
+66 41 0f 61 c7            punpcklwd %xmm15, %xmm0`],
+      ['i64x2.extmul_low_i32x4_s', `
+c5 79 70 f9 10            vpshufd \\$0x10, %xmm1, %xmm15
+c5 f9 70 c2 10            vpshufd \\$0x10, %xmm2, %xmm0
+66 41 0f 38 28 c7         pmuldq %xmm15, %xmm0`],
+      ['i16x8.q15mulr_sat_s', `
+c4 e2 71 0b c2            vpmulhrsw %xmm2, %xmm1, %xmm0
+c5 79 75 3d ${RIPRADDR}   vpcmpeqwx ${RIPR}, %xmm0, %xmm15
+66 41 0f ef c7            pxor %xmm15, %xmm0`],
 ]);
 
 // Bitwise binary ops
