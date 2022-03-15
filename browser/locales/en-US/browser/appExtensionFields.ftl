@@ -23,8 +23,14 @@ extension-floorp-lepton-description=Move horizontal tabs to the bottom of the bo
 extension-floorp-edge-name=Optimized for vertical tabs
 extension-floorp-edge-description=Optimizes Floorp for vertical tabs. Make better use of your screen!
 
-extension-floorp-Kanaze-name= Kanaze Project theme
-extension-floorp-edge-description= Character of the Kanaze project. This is a limited time theme. Please visit our website for more details.
+extension-kanaze-aria-name= Kanaze Project -aria-
+extension-kanaze-aria-description=
+
+extension-kanaze-erua-name= Kanaze Project -erua-
+extension-kanaze-erua-description=
+
+extension-kanaze-melt-name= Kanaze Project -melt-
+extension-kanaze-melt-description=
 
 ## Colorway Themes
 ## These themes are variants of a colorway. The colorway is specified in the
