@@ -171,7 +171,7 @@ combined with either of the above patterns). It's using other knowledge
 about the execution pattern of the code to assert that it's safe to avoid
 taking certain locks.   A primary example is when a value can
 only be accessed from a single thread for part of its lifetime (this can
-also be referred to as "time-based locking").  
+also be referred to as "time-based locking").
 
 Note that thread-safety analysis always ignores constructors and destructors
 (which shouldn’t have races with other threads barring really odd usages).
