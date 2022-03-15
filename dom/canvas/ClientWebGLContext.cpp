@@ -291,6 +291,13 @@ void ClientWebGLContext::Event_webglcontextrestored() const {
     return;
   }
 
+  if (!requestSize.x) {
+    requestSize.x = 1;
+  }
+  if (!requestSize.y) {
+    requestSize.y = 1;
+  }
+
   const auto mutThis = const_cast<ClientWebGLContext*>(
       this);  // TODO: Make context loss non-mutable.
   if (!mutThis->CreateHostContext(requestSize)) {
