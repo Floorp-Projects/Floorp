@@ -7682,6 +7682,27 @@ nsresult nsContentUtils::CalculateBufferSizeForImage(
   return NS_OK;
 }
 
+static already_AddRefed<DataSourceSurface> ShmemToDataSurface(
+    Shmem& aData, uint32_t aStride, const IntSize& aImageSize,
+    SurfaceFormat aFormat) {
+  if (!aData.IsReadable() || !aImageSize.width || !aImageSize.height) {
+    return nullptr;
+  }
+
+  // Validate shared memory buffer size
+  size_t imageBufLen = 0;
+  size_t maxBufLen = 0;
+  if (NS_FAILED(nsContentUtils::CalculateBufferSizeForImage(
+          aStride, aImageSize, aFormat, &maxBufLen, &imageBufLen))) {
+    return nullptr;
+  }
+  if (imageBufLen > aData.Size<uint8_t>()) {
+    return nullptr;
+  }
+  return CreateDataSourceSurfaceFromData(aImageSize, aFormat,
+                                         aData.get<uint8_t>(), aStride);
+}
+
 nsresult nsContentUtils::DataTransferItemToImage(
     const IPCDataTransferItem& aItem, imgIContainer** aContainer) {
   MOZ_ASSERT(aItem.data().type() == IPCDataTransferData::TShmem);
@@ -7689,27 +7710,12 @@ nsresult nsContentUtils::DataTransferItemToImage(
 
   const IPCDataTransferImage& imageDetails = aItem.imageDetails();
   const IntSize size(imageDetails.width(), imageDetails.height());
-  if (!size.width || !size.height) {
+  RefPtr<DataSourceSurface> image =
+      ShmemToDataSurface(aItem.data().get_Shmem(), imageDetails.stride(), size,
+                         imageDetails.format());
+  if (!image) {
     return NS_ERROR_FAILURE;
   }
-
-  Shmem data = aItem.data().get_Shmem();
-
-  // Validate shared memory buffer size
-  size_t imageBufLen = 0;
-  size_t maxBufLen = 0;
-  nsresult rv = CalculateBufferSizeForImage(imageDetails.stride(), size,
-                                            imageDetails.format(), &maxBufLen,
-                                            &imageBufLen);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (imageBufLen > data.Size<uint8_t>()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<DataSourceSurface> image = CreateDataSourceSurfaceFromData(
-      size, imageDetails.format(), data.get<uint8_t>(), imageDetails.stride());
 
   RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
   nsCOMPtr<imgIContainer> imageContainer =
@@ -7840,7 +7846,7 @@ void nsContentUtils::TransferableToIPCTransferable(
             aChild ? static_cast<IShmemAllocator*>(aChild)
                    : static_cast<IShmemAllocator*>(aParent);
         Maybe<Shmem> surfaceData =
-            GetSurfaceData(dataSurface, &length, &stride, allocator);
+            GetSurfaceData(*dataSurface, &length, &stride, allocator);
 
         if (surfaceData.isNothing()) {
           continue;
@@ -8004,21 +8010,20 @@ struct GetSurfaceDataShmem {
  */
 template <typename GetSurfaceDataContext = GetSurfaceDataRawBuffer>
 typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
-    mozilla::gfx::DataSourceSurface* aSurface, size_t* aLength,
-    int32_t* aStride,
+    DataSourceSurface& aSurface, size_t* aLength, int32_t* aStride,
     GetSurfaceDataContext aContext = GetSurfaceDataContext()) {
   mozilla::gfx::DataSourceSurface::MappedSurface map;
-  if (!aSurface->Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map)) {
+  if (!aSurface.Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map)) {
     return GetSurfaceDataContext::NullValue();
   }
 
   size_t bufLen = 0;
   size_t maxBufLen = 0;
   nsresult rv = nsContentUtils::CalculateBufferSizeForImage(
-      map.mStride, aSurface->GetSize(), aSurface->GetFormat(), &maxBufLen,
+      map.mStride, aSurface.GetSize(), aSurface.GetFormat(), &maxBufLen,
       &bufLen);
   if (NS_FAILED(rv)) {
-    aSurface->Unmap();
+    aSurface.Unmap();
     return GetSurfaceDataContext::NullValue();
   }
 
@@ -8035,25 +8040,45 @@ typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
   *aLength = maxBufLen;
   *aStride = map.mStride;
 
-  aSurface->Unmap();
+  aSurface.Unmap();
   return surfaceData;
 }
 }  // Anonymous namespace.
 
-mozilla::UniquePtr<char[]> nsContentUtils::GetSurfaceData(
-    NotNull<mozilla::gfx::DataSourceSurface*> aSurface, size_t* aLength,
-    int32_t* aStride) {
+UniquePtr<char[]> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
+                                                 size_t* aLength,
+                                                 int32_t* aStride) {
   return GetSurfaceDataImpl(aSurface, aLength, aStride);
 }
 
-Maybe<Shmem> nsContentUtils::GetSurfaceData(
-    mozilla::gfx::DataSourceSurface* aSurface, size_t* aLength,
-    int32_t* aStride, IShmemAllocator* aAllocator) {
+Maybe<Shmem> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
+                                            size_t* aLength, int32_t* aStride,
+                                            IShmemAllocator* aAllocator) {
   return GetSurfaceDataImpl(aSurface, aLength, aStride,
                             GetSurfaceDataShmem(aAllocator));
 }
 
-mozilla::Modifiers nsContentUtils::GetWidgetModifiers(int32_t aModifiers) {
+Maybe<ShmemImage> nsContentUtils::SurfaceToIPCImage(
+    DataSourceSurface& aSurface, IShmemAllocator* aAllocator) {
+  size_t len = 0;
+  int32_t stride = 0;
+  auto mem = GetSurfaceData(aSurface, &len, &stride, aAllocator);
+  if (!mem) {
+    return Nothing();
+  }
+  return Some(ShmemImage{*mem, uint32_t(stride), aSurface.GetFormat(),
+                         ImageIntSize::FromUnknownSize(aSurface.GetSize())});
+}
+
+already_AddRefed<DataSourceSurface> nsContentUtils::IPCImageToSurface(
+    ShmemImage&& aImage, IShmemAllocator* aAllocator) {
+  auto release =
+      MakeScopeExit([&] { aAllocator->DeallocShmem(aImage.data()); });
+  return ShmemToDataSurface(aImage.data(), aImage.stride(),
+                            aImage.size().ToUnknownSize(), aImage.format());
+}
+
+Modifiers nsContentUtils::GetWidgetModifiers(int32_t aModifiers) {
   Modifiers result = 0;
   if (aModifiers & nsIDOMWindowUtils::MODIFIER_SHIFT) {
     result |= mozilla::MODIFIER_SHIFT;

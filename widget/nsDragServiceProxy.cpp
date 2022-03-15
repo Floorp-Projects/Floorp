@@ -66,7 +66,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         size_t length;
         int32_t stride;
         Maybe<Shmem> maybeShm = nsContentUtils::GetSurfaceData(
-            dataSurface, &length, &stride, child);
+            *dataSurface, &length, &stride, child);
         if (maybeShm.isNothing()) {
           return NS_ERROR_FAILURE;
         }

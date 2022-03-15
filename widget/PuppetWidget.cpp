@@ -926,8 +926,8 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
     if (surface) {
       if (RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface()) {
         hasCustomCursor = true;
-        customCursorData = nsContentUtils::GetSurfaceData(
-            WrapNotNull(dataSurface), &length, &stride);
+        customCursorData =
+            nsContentUtils::GetSurfaceData(*dataSurface, &length, &stride);
         customCursorSize = dataSurface->GetSize();
         format = dataSurface->GetFormat();
       }
