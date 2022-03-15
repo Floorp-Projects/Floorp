@@ -446,7 +446,7 @@ menupopup::part(drop-indicator) {
   margin: 0;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button {
   background-color: rgba(216, 216, 216, 0.2);
   color: white;
   border: none;
@@ -456,7 +456,7 @@ menupopup::part(drop-indicator) {
   flex: 1;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:after {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:after {
   content: url(chrome://global/skin/icons/arrow-left-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
@@ -464,19 +464,19 @@ menupopup::part(drop-indicator) {
   float: inline-end;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-primary-button:after {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-button.popup-notification-primary-button:after {
   content: url(chrome://global/skin/icons/arrow-right-12.svg);
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:hover {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:hover {
   background-color: rgba(216, 216, 216, 0.4);
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:active {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:active {
   background-color: rgba(216, 216, 216, 0.5);
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-secondary-button {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-secondary-button {
   margin: 3px;
   border: none;
   border-radius: 2px;
@@ -496,7 +496,7 @@ menupopup::part(drop-indicator) {
   font-size: 0;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-secondary-button:hover {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-secondary-button:hover {
   background-color: rgba(216, 216, 216, 0.4);
 }
 
