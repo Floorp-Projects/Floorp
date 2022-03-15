@@ -1853,14 +1853,16 @@ os.environment:
     bug_numbers:
       - 1685213
       - 1725298
+      - 1754656
     description: >
       Records how Firefox was started on Windows.
       Currently will be one of "Desktop", "StartMenu" (including pins),
       "Taskbar", "OtherShortcut", or "Other"
-    expires: "100"
+    expires: never
     kind: string
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
+      - rtestard@mozilla.com
       - shong@mozilla.com
     release_channel_collection: opt-out
     products:
