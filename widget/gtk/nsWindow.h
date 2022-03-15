@@ -878,7 +878,7 @@ class nsWindow final : public nsBaseWidget {
   bool ConfigureX11GLVisual();
 #endif
 #ifdef MOZ_WAYLAND
-  RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
+  RefPtr<mozilla::WaylandVsyncSource> mWaylandVsyncSource;
   LayoutDeviceIntPoint mNativePointerLockCenter;
   zwp_locked_pointer_v1* mLockedPointer = nullptr;
   zwp_relative_pointer_v1* mRelativePointer = nullptr;

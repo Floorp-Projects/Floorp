@@ -3125,8 +3125,8 @@ void gfxPlatform::NotifyFrameStats(nsTArray<FrameStats>&& aFrameStats) {
 /*static*/
 uint32_t gfxPlatform::TargetFrameRate() {
   if (gPlatform && gPlatform->mVsyncSource) {
-    VsyncSource::Display& display = gPlatform->mVsyncSource->GetGlobalDisplay();
-    return round(1000.0 / display.GetVsyncRate().ToMilliseconds());
+    return round(1000.0 /
+                 gPlatform->mVsyncSource->GetVsyncRate().ToMilliseconds());
   }
   return 0;
 }

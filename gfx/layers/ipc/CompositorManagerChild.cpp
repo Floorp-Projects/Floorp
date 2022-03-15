@@ -130,10 +130,8 @@ CompositorManagerChild::CreateWidgetCompositorBridge(
     return nullptr;
   }
 
-  TimeDuration vsyncRate = gfxPlatform::GetPlatform()
-                               ->GetHardwareVsync()
-                               ->GetGlobalDisplay()
-                               .GetVsyncRate();
+  TimeDuration vsyncRate =
+      gfxPlatform::GetPlatform()->GetHardwareVsync()->GetVsyncRate();
 
   CompositorBridgeOptions options = WidgetCompositorOptions(
       aScale, vsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize,
