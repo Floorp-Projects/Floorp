@@ -209,15 +209,12 @@ function createContextMenu(event, message, webConsoleWrapper) {
     })
   );
 
-  const exportSubmenu = new Menu({
-    id: "export-submenu",
-  });
-
   // Export to clipboard
-  exportSubmenu.append(
+  menu.append(
     new MenuItem({
       id: "console-menu-export-clipboard",
-      label: l10n.getStr("webconsole.menu.exportSubmenu.exportCliboard.label"),
+      label: l10n.getStr("webconsole.menu.copyAllMessages.label"),
+      accesskey: l10n.getStr("webconsole.menu.copyAllMessages.accesskey"),
       disabled: false,
       click: () => {
         const webconsoleOutput = parentNode.querySelector(".webconsole-output");
@@ -227,10 +224,11 @@ function createContextMenu(event, message, webConsoleWrapper) {
   );
 
   // Export to file
-  exportSubmenu.append(
+  menu.append(
     new MenuItem({
       id: "console-menu-export-file",
-      label: l10n.getStr("webconsole.menu.exportSubmenu.exportFile.label"),
+      label: l10n.getStr("webconsole.menu.saveAllMessagesFile.label"),
+      accesskey: l10n.getStr("webconsole.menu.saveAllMessagesFile.accesskey"),
       disabled: false,
       // Note: not async, but returns a promise for the actual save.
       click: () => {
@@ -243,15 +241,6 @@ function createContextMenu(event, message, webConsoleWrapper) {
         const data = new TextEncoder().encode(getElementText(webconsoleOutput));
         return saveAs(window, data, suggestedName);
       },
-    })
-  );
-
-  menu.append(
-    new MenuItem({
-      id: "console-menu-export",
-      label: l10n.getStr("webconsole.menu.exportSubmenu.label"),
-      disabled: false,
-      submenu: exportSubmenu,
     })
   );
 

@@ -36,8 +36,8 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-export-clipboard ()",
-    "#console-menu-export-file ()",
+    "#console-menu-export-clipboard (M)",
+    "#console-menu-export-file (F)",
   ]);
   is(
     getSimplifiedContextMenu(menuPopup).join("\n"),
@@ -59,8 +59,8 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-export-clipboard ()",
-    "#console-menu-export-file ()",
+    "#console-menu-export-clipboard (M)",
+    "#console-menu-export-file (F)",
   ]);
   is(
     getSimplifiedContextMenu(menuPopup).join("\n"),
