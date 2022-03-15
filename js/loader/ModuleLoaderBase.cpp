@@ -748,10 +748,6 @@ nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
                             MarkerInnerWindowIdFromJSContext(cx),
                             profilerLabelString);
 
-  // When a module is already loaded, it is not feched a second time and the
-  // mDataType of the request might remain set to DataType::Unknown.
-  MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
-
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
   MOZ_ASSERT(request->mModuleScript);
   MOZ_ASSERT_IF(request->HasLoadContext(),
