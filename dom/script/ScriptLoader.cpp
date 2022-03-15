@@ -2133,7 +2133,7 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncoding(
 
   // Queue the current script load request to later save the bytecode.
   if (aScript && encodeBytecode) {
-    aRequest->SetScript(aScript);
+    aRequest->MarkForBytecodeEncoding(aScript);
     TRACE_FOR_TEST(aRequest->GetLoadContext()->GetScriptElement(),
                    "scriptloader_encode");
     MOZ_ASSERT(aRequest->mBytecodeOffset == aRequest->mScriptBytecode.length());
@@ -2222,7 +2222,7 @@ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
 
 void ScriptLoader::RegisterForBytecodeEncoding(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mCacheInfo);
-  MOZ_ASSERT(aRequest->mScript);
+  MOZ_ASSERT(aRequest->mScriptForBytecodeEncoding);
   MOZ_DIAGNOSTIC_ASSERT(!aRequest->isInList());
   mBytecodeEncodingQueue.AppendElement(aRequest);
 }
@@ -2340,7 +2340,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
                         "scriptloader_bytecode_failed");
   });
 
-  JS::RootedScript script(aCx, aRequest->mScript);
+  JS::RootedScript script(aCx, aRequest->mScriptForBytecodeEncoding);
   if (!JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode)) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
@@ -2428,7 +2428,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal());
 
     if (aes.isSome()) {
-      JS::RootedScript script(aes->cx(), request->mScript);
+      JS::RootedScript script(aes->cx(), request->mScriptForBytecodeEncoding);
       if (!JS::FinishIncrementalEncoding(aes->cx(), script,
                                          request->mScriptBytecode)) {
         JS_ClearPendingException(aes->cx());
