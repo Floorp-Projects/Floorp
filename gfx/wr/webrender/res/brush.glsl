@@ -95,8 +95,8 @@ void brush_shader_main_vs(
     PictureTask pic_task,
     ClipArea clip_area
 ) {
-    int edge_flags = instance.flags & 0xff;
-    int brush_flags = (instance.flags >> 8) & 0xff;
+    int edge_flags = (instance.flags >> 12) & 0xf;
+    int brush_flags = instance.flags & 0xfff;
 
     // Fetch the segment of this brush primitive we are drawing.
     vec4 segment_data;
