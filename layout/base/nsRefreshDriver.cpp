@@ -1521,7 +1521,11 @@ void nsRefreshDriver::NotifyDOMContentLoaded() {
   // everything is flushed in the next tick. If it isn't, mark ourselves as
   // flushed now.
   if (!HasObservers()) {
-    GetPresContext()->NotifyDOMContentFlushed();
+    if (nsPresContext* pc = GetPresContext()) {
+      pc->NotifyDOMContentFlushed();
+    }
+    // else, we don't have a nsPresContext, so our doc is probably being
+    // destroyed and this notification doesn't need sending anyway.
   } else {
     mNotifyDOMContentFlushed = true;
   }
