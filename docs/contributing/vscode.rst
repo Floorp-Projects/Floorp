@@ -6,6 +6,7 @@ General Knowledge
 
 `VSCode <https://code.visualstudio.com/>`__ is a multi-platform open-source programming editor developed by Microsoft and volunteers.
 It has support for many programming languages using extensions.
+This is the recommended editor for Firefox development.
 
 For more general information on the VSCode project see `repo <https://github.com/Microsoft/vscode/>`__.
 
