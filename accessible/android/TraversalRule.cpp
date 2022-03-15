@@ -39,12 +39,9 @@ uint16_t TraversalRule::Match(Accessible* aAcc) {
     return result;
   }
 
-  // Bug 1733268: Support OPAQUE1/opacity remotely
-  if (aAcc->IsLocal() && (state & states::OPAQUE1) == 0) {
-    nsIFrame* frame = aAcc->AsLocal()->GetFrame();
-    if (frame && frame->StyleEffects()->mOpacity == 0.0f) {
-      return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-    }
+  auto opacity = aAcc->Opacity();
+  if (opacity && *opacity == 0.0f) {
+    return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }
 
   switch (mGranularity) {

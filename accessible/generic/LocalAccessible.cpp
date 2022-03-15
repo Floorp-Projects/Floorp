@@ -1544,7 +1544,8 @@ uint64_t LocalAccessible::State() {
   nsIFrame* frame = GetFrame();
   if (!frame) return state;
 
-  if (frame->StyleEffects()->mOpacity == 1.0f && !(state & states::INVISIBLE)) {
+  Maybe<float> opacity = Opacity();
+  if (opacity && *opacity == 1.0f && !(state & states::INVISIBLE)) {
     state |= states::OPAQUE1;
   }
 
@@ -3234,10 +3235,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
     }
   }
-
+  nsIFrame* frame = GetFrame();
   if (aCacheDomain & CacheDomain::TransformMatrix) {
-    nsIFrame* frame = GetFrame();
-
     if (frame && frame->IsTransformed()) {
       // We need to find a frame to make our transform relative to.
       // It's important this frame have a corresponding accessible,
@@ -3329,6 +3328,13 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     if (RefPtr<nsAtom> display = DisplayStyle()) {
       fields->SetAttribute(nsGkAtoms::display, display);
     }
+
+    Maybe<float> opacity = Opacity();
+    if (opacity && !(NativeState() & states::INVISIBLE)) {
+      fields->SetAttribute(nsGkAtoms::opacity, *opacity);
+    } else {
+      fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
+    }
   }
 
   if (aUpdateType == CacheUpdateType::Initial) {
@@ -3376,10 +3382,19 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
   if (nsIFrame* frame = GetFrame()) {
     const ComputedStyle* newStyle = frame->Style();
 
-    nsAutoCString oldVal, newVal;
-    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display, oldVal);
-    newStyle->GetComputedPropertyValue(eCSSProperty_display, newVal);
-    if (oldVal != newVal) {
+    nsAutoCString oldDisplay, newDisplay;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display,
+                                                oldDisplay);
+    newStyle->GetComputedPropertyValue(eCSSProperty_display, newDisplay);
+
+    nsAutoCString oldOpacity, newOpacity;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_opacity,
+                                                oldOpacity);
+    newStyle->GetComputedPropertyValue(eCSSProperty_opacity, newOpacity);
+
+    if (oldDisplay != newDisplay || oldOpacity != newOpacity) {
+      // CacheDomain::Style covers both display and opacity, so if
+      // either property has changed, send an update for the entire domain.
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
     }
 
@@ -3430,6 +3445,14 @@ already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
     return info.Display();
   }
   return nullptr;
+}
+
+Maybe<float> LocalAccessible::Opacity() const {
+  if (nsIFrame* frame = GetFrame()) {
+    return Some(frame->StyleEffects()->mOpacity);
+  }
+
+  return Nothing();
 }
 
 void LocalAccessible::StaticAsserts() const {

@@ -211,3 +211,41 @@ addAccessibleTask(
     testStates(docAcc, STATE_FOCUSED);
   }
 );
+
+function checkOpacity(acc, present) {
+  // eslint-disable-next-line no-unused-vars
+  let [_, extraState] = getStates(acc);
+  let currOpacity = extraState & EXT_STATE_OPAQUE;
+  return present ? currOpacity : !currOpacity;
+}
+
+/**
+ * Test caching of the OPAQUE1 state.
+ */
+addAccessibleTask(
+  `
+  <div id="div">hello world</div>
+  `,
+  async function(browser, docAcc) {
+    const div = findAccessibleChildByID(docAcc, "div");
+    await untilCacheOk(() => checkOpacity(div, true), "Found opaque state");
+
+    await invokeContentTask(browser, [], () => {
+      let elm = content.document.getElementById("div");
+      elm.style = "opacity: 0.4;";
+    });
+
+    await untilCacheOk(
+      () => checkOpacity(div, false),
+      "Did not find opaque state"
+    );
+
+    await invokeContentTask(browser, [], () => {
+      let elm = content.document.getElementById("div");
+      elm.style = "opacity: 1;";
+    });
+
+    await untilCacheOk(() => checkOpacity(div, true), "Found opaque state");
+  },
+  { iframe: true, remoteIframe: true, chrome: true }
+);
