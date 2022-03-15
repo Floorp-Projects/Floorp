@@ -1792,7 +1792,10 @@ def default_debug_flags(compiler_info, target):
         return "-Z7"
     elif target.kernel == "WINNT" and compiler_info.type == "clang":
         return "-g -gcodeview"
-    return "-g"
+    # The oldest versions of supported compilers default to DWARF-4, but
+    # newer versions may default to DWARF-5 or newer (e.g. clang 14), which
+    # Valgrind doesn't support. Force-use DWARF-4.
+    return "-gdwarf-4"
 
 
 option(env="MOZ_DEBUG_FLAGS", nargs=1, help="Debug compiler flags")
