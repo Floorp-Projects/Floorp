@@ -15,13 +15,12 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.FloatingActionButtonBinding
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.toComposeList
+import org.mozilla.fenix.tabstray.ext.toSyncedTabsListItem
 
 /**
  * TabsTrayFragment delegate to handle all layout updates needed to display synced tabs and any errors.
@@ -78,7 +77,7 @@ class SyncedTabsIntegration(
         // We may still be displaying a "loading" spinner, hide it.
         stopLoading()
 
-        store.dispatch(TabsTrayAction.UpdateSyncedTabs(listOf(error.toSyncedTabsListItem())))
+        store.dispatch(TabsTrayAction.UpdateSyncedTabs(listOf(error.toSyncedTabsListItem(context, navController))))
     }
 
     /**
@@ -98,35 +97,5 @@ class SyncedTabsIntegration(
                 )
             )
         )
-    }
-
-    /**
-     * Converts [SyncedTabsView.ErrorType] to [SyncedTabsListItem.Error] with a lambda for ONLY
-     * [SyncedTabsView.ErrorType.SYNC_UNAVAILABLE]
-     */
-    private fun SyncedTabsView.ErrorType.toSyncedTabsListItem() = when (this) {
-        SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE ->
-            SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_connect_another_device))
-
-        SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE ->
-            SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_enable_tab_syncing))
-
-        SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION ->
-            SyncedTabsListItem.Error(errorText = context.getString(R.string.synced_tabs_reauth))
-
-        SyncedTabsView.ErrorType.NO_TABS_AVAILABLE ->
-            SyncedTabsListItem.Error(
-                errorText = context.getString(R.string.synced_tabs_no_tabs),
-            )
-
-        SyncedTabsView.ErrorType.SYNC_UNAVAILABLE ->
-            SyncedTabsListItem.Error(
-                errorText = context.getString(R.string.synced_tabs_sign_in_message),
-                errorButton = SyncedTabsListItem.ErrorButton(
-                    buttonText = context.getString(R.string.synced_tabs_sign_in_button)
-                ) {
-                    navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
-                },
-            )
     }
 }
