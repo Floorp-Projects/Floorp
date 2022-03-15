@@ -15,6 +15,10 @@ var ExtensionTestUtils = {
   isInBackgroundServiceWorkerTests() {
     return ExtensionTestCommon.isInBackgroundServiceWorkerTests();
   },
+
+  get testAssertions() {
+    return ExtensionTestCommon.testAssertions;
+  },
 };
 
 ExtensionTestUtils.loadExtension = function(ext) {
