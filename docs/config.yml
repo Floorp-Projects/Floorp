@@ -49,6 +49,7 @@ categories:
         - testing/marionette
         - testing/geckodriver
         - testing/test-verification
+        - testing/webrender
         - testing/xpcshell
         - web-platform
         - gtest
