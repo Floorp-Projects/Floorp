@@ -64,6 +64,11 @@ class LinuxPtraceDumper : public LinuxDumper {
   // Returns true on success. One must have called |ThreadsSuspend| first.
   virtual bool GetThreadInfoByIndex(size_t index, ThreadInfo* info);
 
+  // Implements LinuxDumper::GetThreadNameByIndex().
+  // Reads the name of the |index|-th thread of |threads_|.
+  // Returns true on success. One must have called |ThreadsSuspend| first.
+  virtual bool GetThreadNameByIndex(size_t index, char* name, size_t size);
+
   // Implements LinuxDumper::IsPostMortem().
   // Always returns false to indicate this dumper performs a dump of
   // a crashed process via ptrace.

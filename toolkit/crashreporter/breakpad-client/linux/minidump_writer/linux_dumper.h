@@ -102,6 +102,10 @@ class LinuxDumper {
   // Returns true on success. One must have called |ThreadsSuspend| first.
   virtual bool GetThreadInfoByIndex(size_t index, ThreadInfo* info) = 0;
 
+  // Read the name ofthe |index|-th thread of |threads_|.
+  // Returns true on success. One must have called |ThreadsSuspend| first.
+  virtual bool GetThreadNameByIndex(size_t index, char* name, size_t size) = 0;
+
   size_t GetMainThreadIndex() const {
     for (size_t i = 0; i < threads_.size(); ++i) {
       if (threads_[i] == pid_) return i;

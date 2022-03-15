@@ -16,8 +16,14 @@ UNIFIED_SOURCES += [
     'microdump_writer/microdump_writer.cc',
     'minidump_writer/linux_dumper.cc',
     'minidump_writer/linux_ptrace_dumper.cc',
-    'minidump_writer/minidump_writer.cc',
 ]
+
+if CONFIG["CC_TYPE"] == "gcc":
+    # Workaround for an ICE in the hazard detection GCC plug-in, see
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1756505#c7
+    SOURCES += ['minidump_writer/minidump_writer.cc']
+else:
+    UNIFIED_SOURCES += ['minidump_writer/minidump_writer.cc']
 
 # On Linux we override the guid_creator.h header and use our own instead
 if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Android':
