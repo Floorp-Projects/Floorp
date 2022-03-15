@@ -305,7 +305,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   if (cic) {
     nsAutoCString altDataType;
     cic->GetAlternativeDataType(altDataType);
-    if (altDataType.Equals(ScriptLoader::BytecodeMimeTypeFor(mRequest))) {
+    if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->SetBytecode();
       TRACE_FOR_TEST(mRequest->mLoadContext->GetScriptElement(),
                      "scriptloader_load_bytecode");

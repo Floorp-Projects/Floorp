@@ -53,14 +53,7 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
    * Short-circuits if the module is already being loaded.
    */
   nsresult StartModuleLoad(ScriptLoadRequest* aRequest) override;
-  nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) override;
 
- private:
-  enum class RestartRequest { No, Yes };
-  nsresult StartModuleLoadImpl(ScriptLoadRequest* aRequest,
-                               RestartRequest aRestart);
-
- public:
   void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) override;
 
   nsresult CompileOrFinishModuleScript(
