@@ -24,9 +24,6 @@ define(function(require, exports, module) {
     MODE,
   } = require("devtools/client/shared/components/reps/reps/constants");
 
-  const {
-    ModePropType,
-  } = require("devtools/client/shared/components/reps/reps/array");
   const DEFAULT_TITLE = "Array";
 
   /**
@@ -36,8 +33,7 @@ define(function(require, exports, module) {
 
   GripArray.propTypes = {
     object: PropTypes.object.isRequired,
-    // @TODO Change this to Object.values when supported in Node's version of V8
-    mode: ModePropType,
+    mode: PropTypes.oneOf(Object.values(MODE)),
     provider: PropTypes.object,
     onDOMNodeMouseOver: PropTypes.func,
     onDOMNodeMouseOut: PropTypes.func,
