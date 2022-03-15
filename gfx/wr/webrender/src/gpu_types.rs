@@ -571,6 +571,9 @@ bitflags! {
         const SEGMENT_NINEPATCH_MIDDLE = 64;
         /// The extra segment data is a texel rect.
         const SEGMENT_TEXEL_RECT = 128;
+        /// Whether to force the anti-aliasing when the primitive
+        /// is axis-aligned.
+        const FORCE_AA = 256;
     }
 }
 
