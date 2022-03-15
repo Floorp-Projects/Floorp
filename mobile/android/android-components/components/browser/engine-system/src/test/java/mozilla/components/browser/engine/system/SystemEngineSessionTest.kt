@@ -45,6 +45,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 import java.lang.reflect.Modifier
 import org.mockito.ArgumentMatchers.any as mockitoAny
@@ -223,6 +224,9 @@ class SystemEngineSessionTest {
 
         engineSession.webView = webView
         engineSession.webView.loadUrl("http://example.com")
+
+        // update the WebView's history async.
+        shadowOf(webView).pushEntryToHistory("http://example.com")
 
         val bundle = Bundle()
         webView.saveState(bundle)
