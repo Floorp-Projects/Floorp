@@ -192,11 +192,8 @@ void nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
        */
       if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
               errorCode)) {
-        nsCOMPtr<nsIContent> thisNode =
-            do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
         Document* doc = GetOurOwnerDoc();
-        doc->AddBlockedNodeByClassifier(thisNode);
+        doc->AddBlockedNodeByClassifier(AsContent());
       }
     }
     nsresult status =
@@ -262,9 +259,8 @@ void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
     FireEvent(u"loadend"_ns);
   }
 
-  nsCOMPtr<nsINode> thisNode =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  SVGObserverUtils::InvalidateDirectRenderingObservers(thisNode->AsElement());
+  SVGObserverUtils::InvalidateDirectRenderingObservers(
+      AsContent()->AsElement());
   MaybeResolveDecodePromises();
 }
 
@@ -1343,8 +1339,7 @@ nsresult nsImageLoadingContent::FireEvent(const nsAString& aEventType,
   // loops in cases when onLoad handlers reset the src and the new src is in
   // cache.
 
-  nsCOMPtr<nsINode> thisNode =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsINode> thisNode = AsContent();
 
   RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
       new LoadBlockingAsyncEventDispatcher(thisNode, aEventType, CanBubble::eNo,
