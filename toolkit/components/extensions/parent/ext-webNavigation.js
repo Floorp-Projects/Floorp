@@ -101,12 +101,13 @@ const fillTransitionProperties = (eventName, src, dst) => {
   }
 };
 
-this.webNavigation = class extends ExtensionAPI {
+this.webNavigation = class extends ExtensionAPIPersistent {
   makeEventHandler(event) {
     let { extension } = this;
     let { tabManager } = extension;
-    return ({ fire }, urlFilters) => {
+    return ({ fire }, params) => {
       // Don't create a MatchURLFilters instance if the listener does not include any filter.
+      let [urlFilters] = params;
       let filters = urlFilters ? new MatchURLFilters(urlFilters.url) : null;
 
       let listener = data => {
@@ -194,12 +195,27 @@ this.webNavigation = class extends ExtensionAPI {
       context,
       module: "webNavigation",
       event,
-      register(fire, urlFilters) {
+      register(fire, ...params) {
         let fn = self.makeEventHandler(event);
-        return fn({ fire }, urlFilters).unregister;
+        return fn({ fire }, params).unregister;
       },
     }).api();
   }
+
+  PERSISTENT_EVENTS = {
+    onBeforeNavigate: this.makeEventHandler("onBeforeNavigate"),
+    onCommitted: this.makeEventHandler("onCommitted"),
+    onDOMContentLoaded: this.makeEventHandler("onDOMContentLoaded"),
+    onCompleted: this.makeEventHandler("onCompleted"),
+    onErrorOccurred: this.makeEventHandler("onErrorOccurred"),
+    onReferenceFragmentUpdated: this.makeEventHandler(
+      "onReferenceFragmentUpdated"
+    ),
+    onHistoryStateUpdated: this.makeEventHandler("onHistoryStateUpdated"),
+    onCreatedNavigationTarget: this.makeEventHandler(
+      "onCreatedNavigationTarget"
+    ),
+  };
 
   getAPI(context) {
     let { extension } = context;
