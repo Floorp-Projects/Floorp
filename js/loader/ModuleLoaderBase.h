@@ -111,6 +111,7 @@ class ModuleLoaderBase : public nsISupports {
     MOZ_ASSERT(false, "You must override EnsureModuleHooksInitialized");
   }
   virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
+  virtual nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
   virtual nsresult CompileOrFinishModuleScript(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,
@@ -133,6 +134,7 @@ class ModuleLoaderBase : public nsISupports {
       ModuleLoadRequest* aRequest, nsresult aResult);
 
   bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
   RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
       nsIURI* aURL, nsIGlobalObject* aGlobal);
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;

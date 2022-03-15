@@ -344,6 +344,15 @@ ScriptLoader* ModuleLoader::GetScriptLoader() {
 }
 
 nsresult ModuleLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
+  return StartModuleLoadImpl(aRequest, RestartRequest::No);
+}
+
+nsresult ModuleLoader::RestartModuleLoad(ScriptLoadRequest* aRequest) {
+  return StartModuleLoadImpl(aRequest, RestartRequest::Yes);
+}
+
+nsresult ModuleLoader::StartModuleLoadImpl(ScriptLoadRequest* aRequest,
+                                           RestartRequest aRestart) {
   MOZ_ASSERT(aRequest->IsLoading());
   NS_ENSURE_TRUE(GetScriptLoader()->GetDocument(), NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
@@ -371,7 +380,16 @@ nsresult ModuleLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
   // Check whether the module has been fetched or is currently being fetched,
   // and if so wait for it rather than starting a new fetch.
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
-  if (ModuleMapContainsURL(request->mURI,
+
+  // If we're restarting the request, the module should already be in the
+  // "fetching" map.
+  MOZ_ASSERT_IF(
+      aRestart == RestartRequest::Yes,
+      IsModuleFetching(request->mURI,
+                       aRequest->GetLoadContext()->GetWebExtGlobal()));
+
+  if (aRestart == RestartRequest::No &&
+      ModuleMapContainsURL(request->mURI,
                            aRequest->GetLoadContext()->GetWebExtGlobal())) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
     WaitForModuleFetch(request->mURI,
@@ -410,7 +428,9 @@ nsresult ModuleLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
 
   // We successfully started fetching a module so put its URL in the module
   // map and mark it as fetching.
-  SetModuleFetchStarted(aRequest->AsModuleRequest());
+  if (aRestart == RestartRequest::No) {
+    SetModuleFetchStarted(aRequest->AsModuleRequest());
+  }
   LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
 
   return NS_OK;
