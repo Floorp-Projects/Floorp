@@ -144,7 +144,7 @@ function checkExportedText(text) {
 }
 
 async function exportAllToFile(hud, message) {
-  const menuPopup = await openContextMenuExportSubMenu(hud, message);
+  const menuPopup = await openContextMenu(hud, message);
   const exportFile = menuPopup.querySelector("#console-menu-export-file");
   ok(exportFile, "copy menu item is enabled");
 
@@ -168,7 +168,7 @@ async function exportAllToFile(hud, message) {
  * export visible messages to clipboard.
  */
 async function exportAllToClipboard(hud, message) {
-  const menuPopup = await openContextMenuExportSubMenu(hud, message);
+  const menuPopup = await openContextMenu(hud, message);
   const exportClipboard = menuPopup.querySelector(
     "#console-menu-export-clipboard"
   );
@@ -185,13 +185,4 @@ async function exportAllToClipboard(hud, message) {
 
   menuPopup.hidePopup();
   return clipboardText;
-}
-
-async function openContextMenuExportSubMenu(hud, message) {
-  const menuPopup = await openContextMenu(hud, message);
-  const exportMenu = menuPopup.querySelector("#console-menu-export");
-
-  const view = exportMenu.ownerDocument.defaultView;
-  EventUtils.synthesizeMouseAtCenter(exportMenu, { type: "mousemove" }, view);
-  return menuPopup;
 }

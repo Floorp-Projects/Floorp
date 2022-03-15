@@ -119,3 +119,38 @@ add_task(async function typeCharWhileProcessingEnter() {
   // Cleanup.
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function keyupEnterWhilePressingMeta() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const searchBar = win.BrowserSearch.searchBar;
+
+  info("Keydown Meta+Enter");
+  searchBar.textbox.focus();
+  searchBar.textbox.value = "";
+  EventUtils.synthesizeKey(
+    "KEY_Enter",
+    { type: "keydown", metaKey: true },
+    win
+  );
+
+  // Pressing Enter key while pressing Meta key, and next, even when releasing
+  // Enter key before releasing Meta key, the keyup event is not fired.
+  // Therefor, we fire Meta keyup event only.
+  info("Keyup Meta");
+  EventUtils.synthesizeKey("KEY_Meta", { type: "keyup" }, win);
+
+  await TestUtils.waitForCondition(
+    () => browser.ownerDocument.activeElement === browser,
+    "Wait for focus to be moved to the browser"
+  );
+  info("The focus is moved to the browser");
+
+  info("Check whether we can input on the search bar");
+  searchBar.textbox.focus();
+  EventUtils.synthesizeKey("a", {}, win);
+  is(searchBar.textbox.value, "a", "Can input a char");
+
+  // Cleanup.
+  await BrowserTestUtils.closeWindow(win);
+});
