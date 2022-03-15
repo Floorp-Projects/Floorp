@@ -211,9 +211,7 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite) {
   }
 }
 
-DrawTargetWebgl::~DrawTargetWebgl() {
-  ClearSnapshot(false);
-}
+DrawTargetWebgl::~DrawTargetWebgl() { ClearSnapshot(false); }
 
 DrawTargetWebgl::SharedContext::SharedContext() = default;
 
