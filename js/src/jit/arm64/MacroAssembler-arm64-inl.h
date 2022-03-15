@@ -2566,18 +2566,9 @@ void MacroAssembler::reverseInt64x2(FloatRegister src, FloatRegister dest) {
 
 // Swizzle - permute with variable indices.  `rhs` holds the lanes parameter.
 
-void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
-  Tbl(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
-}
-
 void MacroAssembler::swizzleInt8x16(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister dest) {
   Tbl(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
-}
-
-void MacroAssembler::swizzleInt8x16Relaxed(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  Tbl(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
 void MacroAssembler::swizzleInt8x16Relaxed(FloatRegister lhs, FloatRegister rhs,
