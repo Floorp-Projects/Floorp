@@ -85,27 +85,8 @@ interface nsIAutoCompleteInput : nsISupports
 
   /*
    * The value of text in the autocomplete textbox.
-   *
-   * @note when setting a new value, the controller always first tries to use
-   *       setTextboxValueWithReason, and only if that throws (unimplemented),
-   *       fallbacks to the textValue's setter.  If a reason is not provided,
-   *       the implementation should assume TEXTVALUE_REASON_UNKNOWN, but it
-   *       should only happen in testing code.
    */
   attribute AString textValue;
-
-  /*
-   * Set the value of text in the autocomplete textbox, providing a reason to
-   * the autocomplete view.
-   */
-  const unsigned short TEXTVALUE_REASON_UNKNOWN = 0;
-  const unsigned short TEXTVALUE_REASON_COMPLETEDEFAULT = 1;
-  const unsigned short TEXTVALUE_REASON_COMPLETESELECTED = 2;
-  const unsigned short TEXTVALUE_REASON_REVERT = 3;
-  const unsigned short TEXTVALUE_REASON_ENTERMATCH = 4;
-
-  void setTextValueWithReason(in AString aValue,
-                              in unsigned short aReason);
 
   /*
    * Report the starting index of the cursor in the textbox

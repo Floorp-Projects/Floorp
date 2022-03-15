@@ -60,14 +60,10 @@ nsAutoCompleteController::nsAutoCompleteController()
 
 nsAutoCompleteController::~nsAutoCompleteController() { SetInput(nullptr); }
 
-void nsAutoCompleteController::SetValueOfInputTo(const nsString& aValue,
-                                                 uint16_t aReason) {
+void nsAutoCompleteController::SetValueOfInputTo(const nsString& aValue) {
   mSetValue = aValue;
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
-  nsresult rv = input->SetTextValueWithReason(aValue, aReason);
-  if (NS_FAILED(rv)) {
-    input->SetTextValue(aValue);
-  }
+  input->SetTextValue(aValue);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -461,14 +457,10 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
                              nsCaseInsensitiveStringComparator)) {
               start = mSearchString.Length();
               value = mPlaceholderCompletionString;
-              SetValueOfInputTo(
-                  value,
-                  nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
+              SetValueOfInputTo(value);
             } else {
               start = value.Length();
-              SetValueOfInputTo(
-                  value,
-                  nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETESELECTED);
+              SetValueOfInputTo(value);
             }
 
             input->SelectTextRange(start, value.Length());
@@ -476,8 +468,7 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
           mCompletedSelectionIndex = selectedIndex;
         } else {
           // Nothing is selected, so fill in the last typed value
-          SetValueOfInputTo(mSearchString,
-                            nsIAutoCompleteInput::TEXTVALUE_REASON_REVERT);
+          SetValueOfInputTo(mSearchString);
           input->SelectTextRange(mSearchString.Length(),
                                  mSearchString.Length());
           mCompletedSelectionIndex = -1;
@@ -614,8 +605,7 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
           }
 
           if (value.Equals(suggestedValue, nsCaseInsensitiveStringComparator)) {
-            SetValueOfInputTo(
-                value, nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
+            SetValueOfInputTo(value);
             input->SelectTextRange(value.Length(), value.Length());
           }
         }
@@ -624,8 +614,7 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
         // The pop-up is open and has a selection, take its value
         nsAutoString value;
         if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, false, value))) {
-          SetValueOfInputTo(
-              value, nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETESELECTED);
+          SetValueOfInputTo(value);
           input->SelectTextRange(value.Length(), value.Length());
         }
       }
@@ -1283,7 +1272,7 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
   obsSvc->NotifyObservers(input, "autocomplete-will-enter-text", nullptr);
 
   if (!value.IsEmpty()) {
-    SetValueOfInputTo(value, nsIAutoCompleteInput::TEXTVALUE_REASON_ENTERMATCH);
+    SetValueOfInputTo(value);
     input->SelectTextRange(value.Length(), value.Length());
     SetSearchStringInternal(value);
   }
@@ -1329,8 +1318,7 @@ nsresult nsAutoCompleteController::RevertTextValue() {
     // events. NOTE: how can |RevertTextValue| be called with inputValue !=
     // oldValue?
     if (mSearchString != currentValue) {
-      SetValueOfInputTo(mSearchString,
-                        nsIAutoCompleteInput::TEXTVALUE_REASON_REVERT);
+      SetValueOfInputTo(mSearchString);
     }
 
     obsSvc->NotifyObservers(input, "autocomplete-did-revert-text", nullptr);
@@ -1510,8 +1498,7 @@ nsresult nsAutoCompleteController::CompleteDefaultIndex(int32_t aResultIndex) {
     nsAutoString inputValue;
     input->GetTextValue(inputValue);
     if (!inputValue.Equals(mSearchString)) {
-      SetValueOfInputTo(mSearchString,
-                        nsIAutoCompleteInput::TEXTVALUE_REASON_REVERT);
+      SetValueOfInputTo(mSearchString);
       input->SelectTextRange(mSearchString.Length(), mSearchString.Length());
     }
     mPlaceholderCompletionString.Truncate();
@@ -1639,8 +1626,7 @@ nsresult nsAutoCompleteController::CompleteValue(nsString& aValue)
     // matches the beginning of aValue.  In either case we can simply
     // autocomplete to aValue.
     mPlaceholderCompletionString = aValue;
-    SetValueOfInputTo(aValue,
-                      nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
+    SetValueOfInputTo(aValue);
   } else {
     nsresult rv;
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
@@ -1664,16 +1650,14 @@ nsresult nsAutoCompleteController::CompleteValue(nsString& aValue)
       mPlaceholderCompletionString =
           mSearchString +
           Substring(aValue, mSearchStringLength + findIndex, endSelect);
-      SetValueOfInputTo(mPlaceholderCompletionString,
-                        nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
+      SetValueOfInputTo(mPlaceholderCompletionString);
 
       endSelect -= findIndex;  // We're skipping this many characters of aValue.
     } else {
       // Autocompleting something other than a URI from the middle.
       // Use the format "searchstring >> full string" to indicate to the user
       // what we are going to replace their search string with.
-      SetValueOfInputTo(mSearchString + u" >> "_ns + aValue,
-                        nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
+      SetValueOfInputTo(mSearchString + u" >> "_ns + aValue);
 
       endSelect = mSearchString.Length() + 4 + aValue.Length();
 
