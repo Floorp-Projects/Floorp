@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1436400 -->
+<!-- The JS bytecode cache is not supposed to be observable. To make it
+     observable, the ScriptLoader is instrumented to trigger events on the
+     script tag.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for saving and loading module bytecode in/from the necko cache</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+
+// List of testcases
+//
+// src
+//   HTML file loaded twice in an iframe
+// encodeEvents
+//   Non-ordered multi-set of expected events dispatched during loading the
+//   HTML file at the first time
+// decodeEvents
+//   Non-ordered multi-set of expected events dispatched during loading the
+//   HTML file at the second time
+const tests = [
+  // Module without import.
+  {
+    src: "file_script_module_single.html",
+    encodeEvents: [
+      // file_script_module_single.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+    ],
+    decodeEvents: [
+      // file_script_module_single.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module",
+      "test_evaluated",
+    ],
+  },
+
+  // Module with import.
+  {
+    src: "file_script_module_import.html",
+    encodeEvents: [
+      // file_script_module_import.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_import_imported.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+    ],
+    decodeEvents: [
+      // file_script_module_import.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_import_imported.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is imported twice.
+  {
+    src: "file_script_module_import_multi.html",
+    encodeEvents: [
+      // file_script_module_import_multi.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_import_multi_imported_once.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_multi_imported_twice.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_import_multi.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_import_multi_imported_once.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_import_multi_imported_twice.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is imported twice from different elements.
+  {
+    src: "file_script_module_import_multi_elems.html",
+    encodeEvents: [
+      // file_script_module_import_multi_elems_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_import_multi_elems_2.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_import_multi_elems_imported_once_1.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_multi_elems_imported_once_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_multi_elems_imported_once_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_multi_elems_imported_twice.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_import_multi_elems_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_import_multi_elems_2.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_import_multi_elems_imported_once_1.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_import_multi_elems_imported_once_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_import_multi_elems_imported_once_3.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_import_multi_elems_imported_twice.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is imported, and then loaded by element.
+  {
+    src: "file_script_module_import_and_element.html",
+    encodeEvents: [
+      // file_script_module_import_and_element.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_import_and_element_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_and_element_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_import_and_element_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_import_and_element.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_import_and_element_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+
+      // file_script_module_import_and_element_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_import_and_element_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is loaded by element, and then imported.
+  {
+    src: "file_script_module_element_and_import.html",
+    encodeEvents: [
+      // file_script_module_element_and_import.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_element_and_import_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_element_and_import_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_element_and_import_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_element_and_import.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+      "test_evaluated",
+
+      // file_script_module_element_and_import_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level
+
+      // file_script_module_element_and_import_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_element_and_import_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Module with dynamic import.
+  {
+    src: "file_script_module_dynamic_import.html",
+    encodeEvents: [
+      // file_script_module_dynamic_import.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_dynamic_import_imported.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_dynamic_import.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "test_evaluated",
+
+      // file_script_module_dynamic_import_imported.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+    ],
+  },
+
+  // Single module is imported dynamically, and then loaded by element.
+  {
+    src: "file_script_module_dynamic_and_element.html",
+    encodeEvents: [
+      // file_script_module_dynamic_and_element.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_dynamic_and_element_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_dynamic_and_element_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_dynamic_and_element_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_dynamic_and_element.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "test_evaluated",
+
+      // file_script_module_dynamic_and_element_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+
+      // file_script_module_dynamic_and_element_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_dynamic_and_element_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is loaded by element, and then imported dynamically.
+  {
+    src: "file_script_module_element_and_dynamic.html",
+    encodeEvents: [
+      // file_script_module_element_and_dynamic.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_element_and_dynamic_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_element_and_dynamic_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_element_and_dynamic_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_element_and_dynamic.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "test_evaluated",
+
+      // file_script_module_element_and_dynamic_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+
+      // file_script_module_element_and_dynamic_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_element_and_dynamic_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is imported dynamically, and then statically.
+  {
+    src: "file_script_module_dynamic_and_static.html",
+    encodeEvents: [
+      // file_script_module_dynamic_and_static.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_dynamic_and_static_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_dynamic_and_static_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_dynamic_and_static_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_dynamic_and_static.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "test_evaluated",
+
+      // file_script_module_dynamic_and_static_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+
+      // file_script_module_dynamic_and_static_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_dynamic_and_static_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Single module is imported statically and then dynamically.
+  {
+    src: "file_script_module_static_and_dynamic.html",
+    encodeEvents: [
+      // file_script_module_static_and_dynamic.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_static_and_dynamic_imported_1.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_static_and_dynamic_imported_2.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+
+      // file_script_module_static_and_dynamic_imported_3.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    decodeEvents: [
+      // file_script_module_static_and_dynamic.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (element)
+      "test_evaluated",
+
+      // file_script_module_static_and_dynamic_imported_1.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
+
+      // file_script_module_static_and_dynamic_imported_2.js
+      "scriptloader_load_bytecode",
+
+      // file_script_module_static_and_dynamic_imported_3.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+];
+
+promise_test(async function() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ['dom.script_loader.bytecode_cache.enabled', true],
+    ['dom.expose_test_interfaces', true],
+    ['dom.script_loader.bytecode_cache.strategy', -1]
+  ]});
+
+  for (const { src, encodeEvents, decodeEvents } of tests) {
+    for (let i = 0; i < 2; i++) {
+      const expectedEvents = i == 0 ? encodeEvents : decodeEvents;
+
+      const iframe = document.createElement("iframe");
+      document.body.appendChild(iframe);
+
+      const iwin = iframe.contentWindow;
+
+      dump("## Start: " + src + "\n");
+      let observedEvents = [];
+      await new Promise(resolve => {
+        function logEvent(evt) {
+          if (evt.type != "test_evaluated") {
+            if (!/^watchme/.test(evt.target.id)) {
+              return;
+            }
+          }
+          dump("## ScriptLoader event: " + evt.type + "\n");
+          observedEvents.push(evt.type);
+          if (observedEvents.length == expectedEvents.length) {
+            resolve();
+          }
+        }
+        iwin.addEventListener("scriptloader_load_source", logEvent);
+        iwin.addEventListener("scriptloader_load_bytecode", logEvent);
+        iwin.addEventListener("scriptloader_execute", logEvent);
+        iwin.addEventListener("scriptloader_evaluate_module", logEvent);
+        iwin.addEventListener("scriptloader_encode", logEvent);
+        iwin.addEventListener("scriptloader_no_encode", logEvent);
+        iwin.addEventListener("scriptloader_bytecode_saved", logEvent);
+        iwin.addEventListener("scriptloader_bytecode_failed", logEvent);
+        iwin.addEventListener("scriptloader_fallback", logEvent);
+        iwin.addEventListener("test_evaluated", logEvent);
+        iframe.src = src;
+      });
+
+      // The event order is non-deterministic.
+      // Just compare them as multi-set.
+      expectedEvents.sort();
+      observedEvents.sort();
+      assert_equals(
+        JSON.stringify(observedEvents),
+        JSON.stringify(expectedEvents),
+        `Expected events should be observed for ${src} during ${i == 0 ? "encoding" : "decoding"}`);
+
+      document.body.removeChild(iframe);
+    }
+  }
+}, "Test module bytecode save and load");
+
+done();
+  </script>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1436400">Mozilla Bug 1436400</a>
+</body>
+</html>
