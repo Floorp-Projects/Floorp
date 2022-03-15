@@ -29,8 +29,7 @@ define(function(require, exports, module) {
 
   GripRep.propTypes = {
     object: PropTypes.object.isRequired,
-    // @TODO Change this to Object.values when supported in Node's version of V8
-    mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+    mode: PropTypes.oneOf(Object.values(MODE)),
     isInterestingProp: PropTypes.func,
     title: PropTypes.string,
     onDOMNodeMouseOver: PropTypes.func,
