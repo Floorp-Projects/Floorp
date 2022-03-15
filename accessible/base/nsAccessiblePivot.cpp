@@ -472,12 +472,7 @@ uint16_t RuleCache::Match(Accessible* aAcc) {
   }
 
   if (mPreFilter) {
-    uint64_t state;
-    if (aAcc->IsLocal()) {
-      state = aAcc->AsLocal()->State();
-    } else {
-      state = aAcc->AsRemote()->State();
-    }
+    uint64_t state = aAcc->State();
 
     if ((nsIAccessibleTraversalRule::PREFILTER_PLATFORM_PRUNED & mPreFilter) &&
         nsAccUtils::MustPrune(aAcc)) {
@@ -499,11 +494,9 @@ uint16_t RuleCache::Match(Accessible* aAcc) {
       return result;
     }
 
-    if (aAcc->IsLocal() &&
-        (nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
-        !(state & states::OPAQUE1)) {
-      nsIFrame* frame = aAcc->AsLocal()->GetFrame();
-      if (frame->StyleEffects()->mOpacity == 0.0f) {
+    if (nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) {
+      Maybe<float> opacity = aAcc->Opacity();
+      if (opacity && *opacity == 0.0f) {
         return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
       }
     }
@@ -523,9 +516,6 @@ uint16_t RuleCache::Match(Accessible* aAcc) {
   }
 
   uint16_t matchResult = nsIAccessibleTraversalRule::FILTER_IGNORE;
-
-  // XXX: ToXPC takes an Accessible. This can go away when pivot
-  // removes AoP too.
 
   DebugOnly<nsresult> rv = mRule->Match(ToXPC(aAcc), &matchResult);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
