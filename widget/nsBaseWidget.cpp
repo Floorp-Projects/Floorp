@@ -362,8 +362,11 @@ void nsBaseWidget::DestroyCompositor() {
     mAPZC = nullptr;
     SetCompositorWidgetDelegate(nullptr);
     mCompositorBridgeChild = nullptr;
-    mCompositorSession->Shutdown();
-    mCompositorSession = nullptr;
+
+    // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created
+    // in ClientLayerManager destructor. See bug 1133426.
+    RefPtr<CompositorSession> session = std::move(mCompositorSession);
+    session->Shutdown();
   }
 }
 
