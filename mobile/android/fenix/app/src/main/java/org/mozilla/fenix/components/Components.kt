@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.os.StrictMode
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -144,15 +145,6 @@ class Components(private val context: Context) {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
     }
 
-    val wallpaperManager by lazyMonitored {
-        WallpaperManager(
-            settings,
-            WallpaperDownloader(context, core.client),
-            WallpaperFileManager(context.filesDir),
-            analytics.crashReporter,
-        )
-    }
-
     val analytics by lazyMonitored { Analytics(context) }
     val publicSuffixList by lazyMonitored { PublicSuffixList(context) }
     val clipboardHandler by lazyMonitored { ClipboardHandler(context) }
@@ -161,6 +153,17 @@ class Components(private val context: Context) {
     val push by lazyMonitored { Push(context, analytics.crashReporter) }
     val wifiConnectionMonitor by lazyMonitored { WifiConnectionMonitor(context as Application) }
     val strictMode by lazyMonitored { StrictModeManager(Config, this) }
+
+    val wallpaperManager by lazyMonitored {
+        strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            WallpaperManager(
+                settings,
+                WallpaperDownloader(context, core.client),
+                WallpaperFileManager(context.filesDir),
+                analytics.crashReporter,
+            )
+        }
+    }
 
     val settings by lazyMonitored { Settings(context) }
 
