@@ -3,7 +3,7 @@
 "use strict";
 
 /* exported CustomizableUI makeWidgetId focusWindow forceGC
- *          getBrowserActionWidget
+ *          getBrowserActionWidget assertPersistentListeners
  *          clickBrowserAction clickPageAction clickPageActionInPanel
  *          triggerPageActionWithKeyboard triggerPageActionWithKeyboardInPanel
  *          triggerBrowserActionWithKeyboard
@@ -104,6 +104,9 @@ Services.prefs
   );
   void LoginManagerParent.recipeParentPromise;
 }
+
+// Persistent Listener test functionality
+const { assertPersistentListeners } = ExtensionTestUtils.testAssertions;
 
 // Bug 1239884: Our tests occasionally hit a long GC pause at unpredictable
 // times in debug builds, which results in intermittent timeouts. Until we have

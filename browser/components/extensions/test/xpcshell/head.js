@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported createHttpServer, promiseConsoleOutput  */
+/* exported createHttpServer, promiseConsoleOutput, assertPersistentListeners  */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { XPCOMUtils } = ChromeUtils.import(
@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 ExtensionTestUtils.init(this);
+
+// Persistent Listener test functionality
+const { assertPersistentListeners } = ExtensionTestUtils.testAssertions;
 
 /**
  * Creates a new HttpServer for testing, and begins listening on the
