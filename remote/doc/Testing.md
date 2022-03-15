@@ -115,9 +115,6 @@ In addition to our own Firefox-specific tests, we run the upstream
 towards achieving full [Puppeteer support] in Firefox. The tests are written
 in the behaviour-driven testing framework [Mocha].
 
-Check the upstream [Puppeteer test suite] documentation for instructions on
-how to skip tests, run only one test or a subsuite of tests.
-
 Puppeteer tests are vendored under _remote/test/puppeteer/_ and are
 run locally like this:
 
@@ -125,15 +122,27 @@ run locally like this:
 
 You can also run them against Chrome as:
 
-	% ./mach puppeteer-test --product=chrome --subset
+	% ./mach puppeteer-test --product=chrome
 
-`--subset` disables a check for missing or skipped tests in our log parsing.
-This check is typically not relevant when running against Chrome.
+By default the mach command will automatically install Puppeteer but that's
+only needed for the very first time, or when a new Puppeteer release has been
+vendored in. To skip the install step use the `--no-install` option.
+
+To run only some specific tests from the whole test suite the appropriate
+test files have to be updated first. To select specific tests or test
+groups within a file define [exclusive tests] by adding the `.only` suffix
+like `it.only()` or `describe.only()`. Make sure to specify as well the
+`--subset` option to the mach command to disable the check for missing or
+skipped tests in our log parsing.
+
+More customizations for [Mocha] can be found in its own documentation.
 
 Test expectation metadata is collected in _remote/test/puppeteer-expected.json_
 via log parsing and a custom Mocha reporter under
 _remote/test/puppeteer/json-mocha-reporter.js_
 
+Check the upstream [Puppeteer test suite] documentation for instructions on
+how to skip tests, run only one test or a subsuite of tests.
 
 Testing on Try
 --------------
@@ -147,8 +156,9 @@ But you can also schedule tests by selecting relevant jobs yourself:
 
 	mach try fuzzy
 
+[Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
 [Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
 [Mocha]: https://mochajs.org/
-[Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
+[exclusive tests]: https://mochajs.org/#exclusive-tests
 [track progress]: https://puppeteer.github.io/ispuppeteerfirefoxready/
 [try preset]: /tools/try/presets
