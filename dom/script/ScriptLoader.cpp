@@ -20,6 +20,7 @@
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ModuleLoadRequest.h"
 #include "js/MemoryFunctions.h"
+#include "js/Modules.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Realm.h"
@@ -589,6 +590,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
   if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled() &&
       // Bug 1436400: no bytecode cache support for modules yet.
+      // TODO: Remove this also to enable bytecode encoding.
       !aRequest->IsModuleRequest()) {
     MOZ_ASSERT(!aRequest->GetLoadContext()->GetWebExtGlobal(),
                "Can not bytecode cache WebExt code");
@@ -2127,6 +2129,9 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
 
 /* static */
 nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
+  if (aRequest->IsModuleRequest()) {
+    return nsContentUtils::JSModuleBytecodeMimeType();
+  }
   return nsContentUtils::JSScriptBytecodeMimeType();
 }
 
@@ -2148,6 +2153,7 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
     //       first encode.
     MOZ_ASSERT(aRequest->mBytecodeOffset == aRequest->mScriptBytecode.length());
     RegisterForBytecodeEncoding(aRequest);
+    MOZ_ASSERT(IsAlreadyHandledForBytecodeEncodingPreparation(aRequest));
 
     return aRv;
   }
@@ -2157,6 +2163,54 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
   TRACE_FOR_TEST_NONE(aRequest->GetLoadContext()->GetScriptElement(),
                       "scriptloader_no_encode");
   aRequest->mCacheInfo = nullptr;
+  MOZ_ASSERT(IsAlreadyHandledForBytecodeEncodingPreparation(aRequest));
+
+  return aRv;
+}
+
+bool ScriptLoader::IsAlreadyHandledForBytecodeEncodingPreparation(
+    ScriptLoadRequest* aRequest) {
+  return aRequest->isInList() || !aRequest->mCacheInfo;
+}
+
+void ScriptLoader::MaybePrepareModuleForBytecodeEncodingBeforeExecute(
+    JSContext* aCx, ModuleLoadRequest* aRequest) {
+  {
+    ModuleScript* moduleScript = aRequest->mModuleScript;
+    JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
+
+    if (JS::IsModuleEvaluated(module)) {
+      // This module is already evaluated, and all imported modules should also
+      // already be evaluated.
+      return;
+    }
+
+    if (aRequest->IsMarkedForBytecodeEncoding()) {
+      // This module is imported multiple times, and already marked.
+      return;
+    }
+
+    JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
+    MaybePrepareForBytecodeEncodingBeforeExecute(aRequest, script);
+  }
+
+  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
+    MaybePrepareModuleForBytecodeEncodingBeforeExecute(aCx, childRequest);
+  }
+}
+
+nsresult ScriptLoader::MaybePrepareModuleForBytecodeEncodingAfterExecute(
+    ModuleLoadRequest* aRequest, nsresult aRv) {
+  if (IsAlreadyHandledForBytecodeEncodingPreparation(aRequest)) {
+    // This module is imported multiple times and already handled.
+    return aRv;
+  }
+
+  aRv = MaybePrepareForBytecodeEncodingAfterExecute(aRequest, aRv);
+
+  for (ModuleLoadRequest* childRequest : aRequest->mImports) {
+    aRv = MaybePrepareModuleForBytecodeEncodingAfterExecute(childRequest, aRv);
+  }
 
   return aRv;
 }
@@ -2338,7 +2392,6 @@ void ScriptLoader::EncodeBytecode() {
   RefPtr<ScriptLoadRequest> request;
   while (!mBytecodeEncodingQueue.isEmpty()) {
     request = mBytecodeEncodingQueue.StealFirst();
-    MOZ_ASSERT(!request->IsModuleRequest());
     MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal(),
                "Not handling global above");
     EncodeRequestBytecode(aes.cx(), request);
@@ -2441,7 +2494,6 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
     TRACE_FOR_TEST_NONE(request->GetLoadContext()->GetScriptElement(),
                         "scriptloader_bytecode_failed");
-    MOZ_ASSERT(!request->IsModuleRequest());
     MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal());
 
     if (aes.isSome()) {
