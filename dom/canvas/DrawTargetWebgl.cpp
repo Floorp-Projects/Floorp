@@ -213,16 +213,14 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite) {
 
 DrawTargetWebgl::~DrawTargetWebgl() {
   ClearSnapshot(false);
-
-  // If this was the last target the shared context used, then get rid of it.
-  if (--mSharedContext->mNumTargets <= 0 && sSharedContext == mSharedContext) {
-    sSharedContext = nullptr;
-  }
 }
 
 DrawTargetWebgl::SharedContext::SharedContext() = default;
 
 DrawTargetWebgl::SharedContext::~SharedContext() {
+  if (sSharedContext.init() && sSharedContext.get() == this) {
+    sSharedContext.set(nullptr);
+  }
   while (!mTextureHandles.isEmpty()) {
     PruneTextureHandle(mTextureHandles.popLast());
     --mNumTextureHandles;
@@ -264,7 +262,8 @@ void DrawTargetWebgl::SharedContext::UnlinkGlyphCaches() {
   }
 }
 
-RefPtr<DrawTargetWebgl::SharedContext> DrawTargetWebgl::sSharedContext;
+MOZ_THREAD_LOCAL(DrawTargetWebgl::SharedContext*)
+DrawTargetWebgl::sSharedContext;
 
 // Try to initialize a new WebGL context. Verifies that the requested size does
 // not exceed the available texture limits and that shader creation succeeded.
@@ -275,14 +274,21 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
   mSize = size;
   mFormat = format;
 
-  if (!sSharedContext || sSharedContext->IsContextLost()) {
+  if (!sSharedContext.init()) {
+    return false;
+  }
+
+  DrawTargetWebgl::SharedContext* sharedContext = sSharedContext.get();
+  if (!sharedContext || sharedContext->IsContextLost()) {
     mSharedContext = new DrawTargetWebgl::SharedContext;
     if (!mSharedContext->Initialize()) {
       mSharedContext = nullptr;
       return false;
     }
+
+    sSharedContext.set(mSharedContext.get());
   } else {
-    mSharedContext = sSharedContext;
+    mSharedContext = sharedContext;
   }
 
   if (size_t(std::max(size.width, size.height)) >
@@ -299,10 +305,6 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
     return false;
   }
   mSkia->SetPermitSubpixelAA(IsOpaque(format));
-
-  // Remember the last shared context used.
-  ++mSharedContext->mNumTargets;
-  sSharedContext = mSharedContext;
   return true;
 }
 
