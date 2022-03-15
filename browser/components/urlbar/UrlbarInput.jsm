@@ -3369,7 +3369,8 @@ class UrlbarInput {
       return;
     }
 
-    let href = this.window.gBrowser.currentURI.displaySpec;
+    let uri = this.makeURIReadable(this.window.gBrowser.currentURI);
+    let href = uri.displaySpec;
     let title = this.window.gBrowser.contentTitle || href;
 
     event.dataTransfer.setData("text/x-moz-url", `${href}\n${title}`);
