@@ -583,7 +583,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  // To avoid decoding issues, the build-id is part of the JSBytecodeMimeType
+  // To avoid decoding issues, the build-id is part of the bytecode MIME type
   // constant.
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
@@ -598,7 +598,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
       // registered.
       LOG(("ScriptLoadRequest (%p): Maybe request bytecode", aRequest));
       cic->PreferAlternativeDataType(
-          nsContentUtils::JSBytecodeMimeType(), ""_ns,
+          BytecodeMimeTypeFor(aRequest), ""_ns,
           nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::ASYNC);
     } else {
       // If we are explicitly loading from the sources, such as after a
@@ -2125,6 +2125,11 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
   return rv;
 }
 
+/* static */
+nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
+  return nsContentUtils::JSBytecodeMimeType();
+}
+
 nsresult ScriptLoader::MaybePrepareForBytecodeEncoding(
     JS::Handle<JSScript*> aScript, ScriptLoadRequest* aRequest, nsresult aRv) {
   bool encodeBytecode = ShouldCacheBytecode(aRequest);
@@ -2362,7 +2367,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
   rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(
-      nsContentUtils::JSBytecodeMimeType(), aRequest->mScriptBytecode.length(),
+      BytecodeMimeTypeFor(aRequest), aRequest->mScriptBytecode.length(),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
