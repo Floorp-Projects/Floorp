@@ -1089,10 +1089,25 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::I16x8NarrowI32x4S:
     case wasm::SimdOp::I16x8NarrowI32x4U:
     case wasm::SimdOp::I32x4DotI16x8S:
+    case wasm::SimdOp::I16x8ExtmulLowI8x16S:
+    case wasm::SimdOp::I16x8ExtmulHighI8x16S:
+    case wasm::SimdOp::I16x8ExtmulLowI8x16U:
+    case wasm::SimdOp::I16x8ExtmulHighI8x16U:
+    case wasm::SimdOp::I32x4ExtmulLowI16x8S:
+    case wasm::SimdOp::I32x4ExtmulHighI16x8S:
+    case wasm::SimdOp::I32x4ExtmulLowI16x8U:
+    case wasm::SimdOp::I32x4ExtmulHighI16x8U:
+    case wasm::SimdOp::I64x2ExtmulLowI32x4S:
+    case wasm::SimdOp::I64x2ExtmulHighI32x4S:
+    case wasm::SimdOp::I64x2ExtmulLowI32x4U:
+    case wasm::SimdOp::I64x2ExtmulHighI32x4U:
+    case wasm::SimdOp::I16x8Q15MulrSatS:
     case wasm::SimdOp::F32x4RelaxedMin:
     case wasm::SimdOp::F32x4RelaxedMax:
     case wasm::SimdOp::F64x2RelaxedMin:
     case wasm::SimdOp::F64x2RelaxedMax:
+    case wasm::SimdOp::MozWHPMADDUBSW:
+    case wasm::SimdOp::MozWHPMADDWD:
       if (isThreeOpAllowed()) {
         auto* lir = new (alloc())
             LWasmBinarySimd128(op, useRegisterAtStart(lhs),

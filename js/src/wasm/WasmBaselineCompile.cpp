@@ -6814,55 +6814,55 @@ static void DotI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 }
 
 static void ExtMulLowI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulLowInt8x16(rs, rsd);
+  masm.extMulLowInt8x16(rsd, rs, rsd);
 }
 
 static void ExtMulHighI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulHighInt8x16(rs, rsd);
+  masm.extMulHighInt8x16(rsd, rs, rsd);
 }
 
 static void ExtMulLowUI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulLowInt8x16(rs, rsd);
+  masm.unsignedExtMulLowInt8x16(rsd, rs, rsd);
 }
 
 static void ExtMulHighUI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulHighInt8x16(rs, rsd);
+  masm.unsignedExtMulHighInt8x16(rsd, rs, rsd);
 }
 
 static void ExtMulLowI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulLowInt16x8(rs, rsd);
+  masm.extMulLowInt16x8(rsd, rs, rsd);
 }
 
 static void ExtMulHighI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulHighInt16x8(rs, rsd);
+  masm.extMulHighInt16x8(rsd, rs, rsd);
 }
 
 static void ExtMulLowUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulLowInt16x8(rs, rsd);
+  masm.unsignedExtMulLowInt16x8(rsd, rs, rsd);
 }
 
 static void ExtMulHighUI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulHighInt16x8(rs, rsd);
+  masm.unsignedExtMulHighInt16x8(rsd, rs, rsd);
 }
 
 static void ExtMulLowI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulLowInt32x4(rs, rsd);
+  masm.extMulLowInt32x4(rsd, rs, rsd);
 }
 
 static void ExtMulHighI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.extMulHighInt32x4(rs, rsd);
+  masm.extMulHighInt32x4(rsd, rs, rsd);
 }
 
 static void ExtMulLowUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulLowInt32x4(rs, rsd);
+  masm.unsignedExtMulLowInt32x4(rsd, rs, rsd);
 }
 
 static void ExtMulHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.unsignedExtMulHighInt32x4(rs, rsd);
+  masm.unsignedExtMulHighInt32x4(rsd, rs, rsd);
 }
 
 static void Q15MulrSatS(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.q15MulrSatInt16x8(rs, rsd);
+  masm.q15MulrSatInt16x8(rsd, rs, rsd);
 }
 
 static void CmpI8x16(MacroAssembler& masm, Assembler::Condition cond,

@@ -2485,86 +2485,57 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Note for the extMul opcodes, the NxM designation is for the input lanes;
   // the output lanes are twice as wide.
-  inline void extMulLowInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
-
   inline void extMulLowInt8x16(FloatRegister lhs, FloatRegister rhs,
-                               FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void extMulHighInt8x16(FloatRegister rhs, FloatRegister lhsDest)
+                               FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void extMulHighInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulLowInt8x16(FloatRegister rhs, FloatRegister lhsDest)
+                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulLowInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                       FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulHighInt8x16(FloatRegister rhs,
-                                        FloatRegister lhsDest)
+                                       FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulHighInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                        FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void extMulLowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+                                        FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void extMulLowInt16x8(FloatRegister lhs, FloatRegister rhs,
-                               FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void extMulHighInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+                               FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void extMulHighInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulLowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulLowInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                       FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulHighInt16x8(FloatRegister rhs,
-                                        FloatRegister lhsDest)
+                                       FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulHighInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                        FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void extMulLowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+                                        FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void extMulLowInt32x4(FloatRegister lhs, FloatRegister rhs,
-                               FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void extMulHighInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+                               FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void extMulHighInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulLowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
+                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulLowInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                       FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void unsignedExtMulHighInt32x4(FloatRegister rhs,
-                                        FloatRegister lhsDest)
+                                       FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedExtMulHighInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                        FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void q15MulrSatInt16x8(FloatRegister rhs, FloatRegister lhsDest)
+                                        FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void q15MulrSatInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
+                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   // Integer Negate
 
