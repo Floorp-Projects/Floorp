@@ -95,7 +95,7 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
       frame.contentWindow
     );
 
-    Assert.ok(context, "Got content script context");
+    Assert.ok(!!context, "Got content script context");
 
     this.contextWeakRef = Cu.getWeakReference(context);
     frame.remove();
@@ -144,7 +144,7 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
       this.content
     );
 
-    Assert.ok(context, "Got content script context");
+    Assert.ok(!!context, "Got content script context");
 
     this.contextWeakRef = Cu.getWeakReference(context);
   });
@@ -199,7 +199,7 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
       frame.browsingContext.currentWindowContext.innerWindowId;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
-    Assert.ok(context, "Got extension page context for child frame");
+    Assert.ok(!!context, "Got extension page context for child frame");
 
     this.contextWeakRef = Cu.getWeakReference(context);
     frame.remove();
@@ -245,7 +245,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
     let innerWindowID = this.content.windowGlobalChild.innerWindowId;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
-    Assert.ok(context, "Got extension page context for top-level document");
+    Assert.ok(!!context, "Got extension page context for top-level document");
 
     this.contextWeakRef = Cu.getWeakReference(context);
   });
