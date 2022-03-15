@@ -111,6 +111,17 @@ async function setupManifests(modules) {
 add_task(async function test_pkcs11() {
   async function background() {
     try {
+      const { os } = await browser.runtime.getPlatformInfo();
+      if (os !== "win") {
+        // Expect this call to not throw (explicitly cover regression fixed in Bug 1759162).
+        let isInstalledNonAbsolute = await browser.pkcs11.isModuleInstalled(
+          "testmoduleNonAbsolutePath"
+        );
+        browser.test.assertFalse(
+          isInstalledNonAbsolute,
+          "PKCS#11 module with non absolute path expected to not be installed"
+        );
+      }
       let isInstalled = await browser.pkcs11.isModuleInstalled("testmodule");
       browser.test.assertFalse(
         isInstalled,
@@ -245,6 +256,12 @@ add_task(async function test_pkcs11() {
       name: "testmodule",
       description: "PKCS#11 Test Module",
       path: testmodule,
+      id: "pkcs11@tests.mozilla.org",
+    },
+    {
+      name: "testmoduleNonAbsolutePath",
+      description: "PKCS#11 Test Module",
+      path: ctypes.libraryName("pkcs11testmodule"),
       id: "pkcs11@tests.mozilla.org",
     },
     {
