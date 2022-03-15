@@ -2074,10 +2074,6 @@ void nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::Side aSide) {
   // Extend dirty rect to avoid clipping pixel for anti-aliasing.
   const Float AA_MARGIN = 2.0f;
 
-  // The following algorithm assumes the border's rect and the dirty rect
-  // intersect.
-  MOZ_ASSERT(mDirtyRect.Intersects(mOuterRect));
-
   if (aSide == eSideTop) {
     // Tweak |from| and |to| to fit into |mDirtyRect + radius margin|,
     // to render only paths that may overlap mDirtyRect.
@@ -2975,10 +2971,6 @@ void nsCSSBorderRenderer::DrawSolidBorder() {
 }
 
 void nsCSSBorderRenderer::DrawBorders() {
-  if (MOZ_UNLIKELY(!mDirtyRect.Intersects(mOuterRect))) {
-    return;
-  }
-
   if (mAllBordersSameStyle && (mBorderStyles[0] == StyleBorderStyle::None ||
                                mBorderStyles[0] == StyleBorderStyle::Hidden ||
                                mBorderColors[0] == NS_RGBA(0, 0, 0, 0))) {
