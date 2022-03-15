@@ -30,8 +30,7 @@ define(function(require, exports, module) {
     name: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
     // Equal character rendered between property name and value.
     equal: PropTypes.string,
-    // @TODO Change this to Object.values when supported in Node's version of V8
-    mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+    mode: PropTypes.oneOf(Object.values(MODE)),
     onDOMNodeMouseOver: PropTypes.func,
     onDOMNodeMouseOut: PropTypes.func,
     onInspectIconClick: PropTypes.func,

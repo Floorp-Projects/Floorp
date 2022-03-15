@@ -47,7 +47,7 @@ add_task(async function test_validate_registerContentScripts_params() {
     async background() {
       const TEST_CASES = [
         {
-          title: "no js",
+          title: "no js and no css",
           params: [
             {
               id: "script",
@@ -55,7 +55,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               persistAcrossSessions: false,
             },
           ],
-          expectedError: "js must be specified.",
+          expectedError: "At least one js or css must be specified.",
         },
         {
           title: "empty js",
@@ -67,7 +67,19 @@ add_task(async function test_validate_registerContentScripts_params() {
               persistAcrossSessions: false,
             },
           ],
-          expectedError: "js must be specified.",
+          expectedError: "At least one js or css must be specified.",
+        },
+        {
+          title: "empty css",
+          params: [
+            {
+              id: "script",
+              css: [],
+              matches: ["*://mochi.test/*"],
+              persistAcrossSessions: false,
+            },
+          ],
+          expectedError: "At least one js or css must be specified.",
         },
         {
           title: "no matches",
@@ -486,50 +498,49 @@ add_task(async function test_registerContentScripts_js() {
           {
             id: "script-1",
             allFrames: false,
-            js: ["script-1.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            js: ["script-1.js"],
           },
           {
             id: "script-2",
             allFrames: true,
-            js: ["script-2.js"],
             matches: [
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            js: ["script-2.js"],
           },
           {
             id: "script-3",
             allFrames: true,
-            excludeMatches: ["*://test1.example.com/*"],
-            js: ["script-3.js"],
             matches: [
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            excludeMatches: ["*://test1.example.com/*"],
+            js: ["script-3.js"],
           },
           {
             id: "script-4",
             allFrames: false,
-            js: ["script-4-1.js", "script-4-2.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            js: ["script-4-1.js", "script-4-2.js"],
           },
           {
             id: "script-5",
             allFrames: false,
-            excludeMatches: [],
-            js: ["script-5.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            js: ["script-5.js"],
           },
         ]),
         JSON.stringify(scripts),
@@ -875,14 +886,14 @@ add_task(async function test_getRegisteredContentScripts_during_a_registration()
           {
             id: "a-script",
             allFrames: false,
-            js: ["script.js"],
             matches: ["*://test1.example.com/*"],
             runAt: "document_idle",
             persistAcrossSessions: false,
+            js: ["script.js"],
           },
         ]),
         JSON.stringify(scripts),
-        "expected empty result array"
+        "expected 1 registered script"
       );
 
       browser.test.sendMessage("background-done");
