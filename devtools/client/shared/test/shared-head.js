@@ -65,6 +65,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "localTypes",
+  "devtools/client/responsive/types"
+);
+loader.lazyRequireGetter(
+  this,
   "ResponsiveMessageHelper",
   "devtools/client/responsive/utils/message"
 );
@@ -1685,6 +1690,34 @@ function checkPoolChildrenSize(parentPool, typeName, expected) {
 }
 
 /**
+ * Wait until the store has reached a state that matches the predicate.
+ * @param Store store
+ *        The Redux store being used.
+ * @param function predicate
+ *        A function that returns true when the store has reached the expected
+ *        state.
+ * @return Promise
+ *         Resolved once the store reaches the expected state.
+ */
+function waitUntilState(store, predicate) {
+  return new Promise(resolve => {
+    const unsubscribe = store.subscribe(check);
+
+    info(`Waiting for state predicate "${predicate}"`);
+    function check() {
+      if (predicate(store.getState())) {
+        info(`Found state predicate "${predicate}"`);
+        unsubscribe();
+        resolve();
+      }
+    }
+
+    // Fire the check immediately in case the action has already occurred
+    check();
+  });
+}
+
+/**
  * Wait for a specific action type to be dispatched.
  *
  * If the action is async and defines a `status` property, this helper will wait
@@ -1973,7 +2006,7 @@ async function getFluentStringHelper(resourceIds) {
 /**
  * Open responsive design mode for the given tab.
  */
-async function openRDM(tab) {
+async function openRDM(tab, { waitForDeviceList = true } = {}) {
   info("Opening responsive design mode");
   const manager = ResponsiveUIManager;
   const ui = await manager.openIfNeeded(tab.ownerGlobal, tab, {
@@ -1984,7 +2017,23 @@ async function openRDM(tab) {
   await ResponsiveMessageHelper.wait(ui.toolWindow, "post-init");
   info("Responsive design initialized");
 
+  await waitForRDMLoaded(ui, { waitForDeviceList });
+
   return { ui, manager };
+}
+
+async function waitForRDMLoaded(ui, { waitForDeviceList = true } = {}) {
+  // Always wait for the viewport to be added.
+  const { store } = ui.toolWindow;
+  await waitUntilState(store, state => state.viewports.length == 1);
+
+  if (waitForDeviceList) {
+    // Wait until the device list has been loaded.
+    await waitUntilState(
+      store,
+      state => state.devices.listState == localTypes.loadableState.LOADED
+    );
+  }
 }
 
 /**
