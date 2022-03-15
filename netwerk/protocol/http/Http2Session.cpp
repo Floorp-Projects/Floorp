@@ -21,8 +21,9 @@
 #include "Http2Push.h"
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Telemetry.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnection.h"
@@ -190,9 +191,9 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
   mCurrentTopBrowsingContextId =
       gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId();
 
-  mEnableWebsockets = gHttpHandler->IsH2WebsocketsEnabled();
+  mEnableWebsockets = StaticPrefs::network_http_http2_websockets();
 
-  bool dumpHpackTables = gHttpHandler->DumpHpackTables();
+  bool dumpHpackTables = StaticPrefs::network_http_http2_enable_hpack_dump();
   mCompressor.SetDumpTables(dumpHpackTables);
   mDecompressor.SetDumpTables(dumpHpackTables);
 }
@@ -1016,7 +1017,7 @@ void Http2Session::SendHello() {
       maxHpackBufferSize);
   numberOfEntries++;
 
-  if (!gHttpHandler->AllowPush()) {
+  if (!StaticPrefs::network_http_http2_allow_push()) {
     // If we don't support push then set MAX_CONCURRENT to 0 and also
     // set ENABLE_PUSH to 0
     NetworkEndian::writeUint16(
@@ -1074,7 +1075,7 @@ void Http2Session::SendHello() {
     LogIO(this, nullptr, "Session Window Bump ", packet, kFrameHeaderBytes + 4);
   }
 
-  if (gHttpHandler->UseH2Deps() &&
+  if (StaticPrefs::network_http_http2_enabled_deps() &&
       gHttpHandler->CriticalRequestPrioritization()) {
     mUseH2Deps = true;
     MOZ_ASSERT(mNextStreamID == kLeaderGroupID);
@@ -1838,7 +1839,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
          "mode refused.\n",
          self));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
-  } else if (!gHttpHandler->AllowPush()) {
+  } else if (!StaticPrefs::network_http_http2_allow_push()) {
     // ENABLE_PUSH and MAX_CONCURRENT_STREAMS of 0 in settings disabled push
     LOG3(("Http2Session::RecvPushPromise Push Recevied when Disabled\n"));
     if (self->mGoAwayOnPush) {
@@ -4202,7 +4203,7 @@ nsresult Http2Session::ConfirmTLSProfile() {
     return NS_OK;
   }
 
-  if (!gHttpHandler->EnforceHttp2TlsProfile()) {
+  if (!StaticPrefs::network_http_http2_enforce_tls_profile()) {
     LOG3(
         ("Http2Session::ConfirmTLSProfile %p passed due to configuration "
          "bypass\n",

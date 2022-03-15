@@ -270,26 +270,20 @@ static nsCString DocumentAcceptHeader(const nsCString& aImageAcceptHeader) {
 
 nsHttpHandler::nsHttpHandler()
     : mIdleTimeout(PR_SecondsToInterval(10)),
-      mSpdyTimeout(PR_SecondsToInterval(180)),
+      mSpdyTimeout(
+          PR_SecondsToInterval(StaticPrefs::network_http_http2_timeout())),
       mResponseTimeout(PR_SecondsToInterval(300)),
       mImageAcceptHeader(ImageAcceptHeader()),
       mDocumentAcceptHeader(DocumentAcceptHeader(ImageAcceptHeader())),
       mLastUniqueID(NowInSeconds()),
       mDebugObservations(false),
-      mEnableSpdy(false),
-      mHttp2Enabled(true),
-      mUseH2Deps(true),
-      mEnforceHttp2TlsProfile(true),
-      mCoalesceSpdy(true),
-      mSpdyPersistentSettings(false),
-      mAllowPush(true),
       mEnableAltSvc(false),
       mEnableAltSvcOE(false),
       mEnableOriginExtension(false),
-      mEnableH2Websockets(true),
-      mDumpHpackTables(false),
-      mSpdyPingThreshold(PR_SecondsToInterval(58)),
-      mSpdyPingTimeout(PR_SecondsToInterval(8)) {
+      mSpdyPingThreshold(PR_SecondsToInterval(
+          StaticPrefs::network_http_http2_ping_threshold())),
+      mSpdyPingTimeout(PR_SecondsToInterval(
+          StaticPrefs::network_http_http2_ping_timeout())) {
   LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
   mUserAgentOverride.SetIsVoid(true);
@@ -1388,74 +1382,29 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.enabled"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.enabled"), &cVar);
-    if (NS_SUCCEEDED(rv)) mEnableSpdy = cVar;
+  if (PREF_CHANGED(HTTP_PREF("http2.timeout"))) {
+    mSpdyTimeout = PR_SecondsToInterval(
+        clamped(StaticPrefs::network_http_http2_timeout(), 1, 0xffff));
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.enabled.http2"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.enabled.http2"), &cVar);
-    if (NS_SUCCEEDED(rv)) mHttp2Enabled = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.enabled.deps"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.enabled.deps"), &cVar);
-    if (NS_SUCCEEDED(rv)) mUseH2Deps = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.enforce-tls-profile"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.enforce-tls-profile"), &cVar);
-    if (NS_SUCCEEDED(rv)) mEnforceHttp2TlsProfile = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
-    if (NS_SUCCEEDED(rv)) mCoalesceSpdy = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.persistent-settings"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.persistent-settings"), &cVar);
-    if (NS_SUCCEEDED(rv)) mSpdyPersistentSettings = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.timeout"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.timeout"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdyTimeout = PR_SecondsToInterval(clamped(val, 1, 0xffff));
-    }
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
+  if (PREF_CHANGED(HTTP_PREF("http2.chunk-size"))) {
     // keep this within http/2 ranges of 1 to 2^24-1
-    rv = Preferences::GetInt(HTTP_PREF("spdy.chunk-size"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdySendingChunkSize = (uint32_t)clamped(val, 1, 0xffffff);
-    }
+    mSpdySendingChunkSize = (uint32_t)clamped(
+        StaticPrefs::network_http_http2_chunk_size(), 1, 0xffffff);
   }
 
-  // The amount of idle seconds on a spdy connection before initiating a
+  // The amount of idle seconds on a http2 connection before initiating a
   // server ping. 0 will disable.
-  if (PREF_CHANGED(HTTP_PREF("spdy.ping-threshold"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.ping-threshold"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdyPingThreshold =
-          PR_SecondsToInterval((uint16_t)clamped(val, 0, 0x7fffffff));
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.ping-threshold"))) {
+    mSpdyPingThreshold = PR_SecondsToInterval((uint16_t)clamped(
+        StaticPrefs::network_http_http2_ping_threshold(), 0, 0x7fffffff));
   }
 
-  // The amount of seconds to wait for a spdy ping response before
+  // The amount of seconds to wait for a http2 ping response before
   // closing the session.
-  if (PREF_CHANGED(HTTP_PREF("spdy.ping-timeout"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.ping-timeout"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdyPingTimeout =
-          PR_SecondsToInterval((uint16_t)clamped(val, 0, 0x7fffffff));
-    }
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.allow-push"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.allow-push"), &cVar);
-    if (NS_SUCCEEDED(rv)) mAllowPush = cVar;
+  if (PREF_CHANGED(HTTP_PREF("http2.ping-timeout"))) {
+    mSpdyPingTimeout = PR_SecondsToInterval((uint16_t)clamped(
+        StaticPrefs::network_http_http2_ping_timeout(), 0, 0x7fffffff));
   }
 
   if (PREF_CHANGED(HTTP_PREF("altsvc.enabled"))) {
@@ -1473,51 +1422,29 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     if (NS_SUCCEEDED(rv)) mEnableOriginExtension = cVar;
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.websockets"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.websockets"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mEnableH2Websockets = cVar;
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.push-allowance"))) {
+    mSpdyPushAllowance = static_cast<uint32_t>(
+        clamped(StaticPrefs::network_http_http2_push_allowance(), 1024,
+                static_cast<int32_t>(ASpdySession::kInitialRwin)));
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.push-allowance"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.push-allowance"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdyPushAllowance = static_cast<uint32_t>(
-          clamped(val, 1024, static_cast<int32_t>(ASpdySession::kInitialRwin)));
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.pull-allowance"))) {
+    mSpdyPullAllowance = static_cast<uint32_t>(clamped(
+        StaticPrefs::network_http_http2_pull_allowance(), 1024, 0x7fffffff));
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.pull-allowance"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.pull-allowance"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdyPullAllowance =
-          static_cast<uint32_t>(clamped(val, 1024, 0x7fffffff));
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.default-concurrent"))) {
+    mDefaultSpdyConcurrent = static_cast<uint32_t>(std::max<int32_t>(
+        std::min<int32_t>(StaticPrefs::network_http_http2_default_concurrent(),
+                          9999),
+        1));
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.default-concurrent"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.default-concurrent"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mDefaultSpdyConcurrent = static_cast<uint32_t>(
-          std::max<int32_t>(std::min<int32_t>(val, 9999), 1));
-    }
-  }
-
-  // The amount of seconds to wait for a spdy ping response before
+  // The amount of seconds to wait for a http2 ping response before
   // closing the session.
-  if (PREF_CHANGED(HTTP_PREF("spdy.send-buffer-size"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.send-buffer-size"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mSpdySendBufferSize = (uint32_t)clamped(val, 1500, 0x7fffffff);
-    }
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("spdy.enable-hpack-dump"))) {
-    rv = Preferences::GetBool(HTTP_PREF("spdy.enable-hpack-dump"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mDumpHpackTables = cVar;
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.send-buffer-size"))) {
+    mSpdySendBufferSize = (uint32_t)clamped(
+        StaticPrefs::network_http_http2_send_buffer_size(), 1500, 0x7fffffff);
   }
 
   // The maximum amount of time to wait for socket transport to be
@@ -1829,11 +1756,9 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("spdy.default-hpack-buffer"))) {
-    rv = Preferences::GetInt(HTTP_PREF("spdy.default-hpack-buffer"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mDefaultHpackBuffer = val;
-    }
+  if (PREF_CHANGED(HTTP_PREF("http2.default-hpack-buffer"))) {
+    mDefaultHpackBuffer =
+        StaticPrefs::network_http_http2_default_hpack_buffer();
   }
 
   if (PREF_CHANGED(HTTP_PREF("http3.default-qpack-table-size"))) {

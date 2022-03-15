@@ -28,7 +28,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.http.http3.enable");
-  Services.prefs.clearUserPref("network.http.spdy.enabled");
+  Services.prefs.clearUserPref("network.http.http2.enabled");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -453,7 +453,7 @@ add_task(async function testOneRecordsHasEchConfig() {
 });
 
 // Test the case that "network.http.http3.enable" and
-// "network.http.spdy.enabled" are true/false.
+// "network.http.http2.enabled" are true/false.
 add_task(async function testHttp3AndHttp2Pref() {
   dns.clearCache(true);
 
@@ -519,7 +519,7 @@ add_task(async function testHttp3AndHttp2Pref() {
   checkResult(inRecord, true, false);
   checkResult(inRecord, true, true);
 
-  Services.prefs.setBoolPref("network.http.spdy.enabled", false);
+  Services.prefs.setBoolPref("network.http.http2.enabled", false);
   checkResult(inRecord, false, false);
 
   Services.prefs.setBoolPref("network.http.http3.enable", true);

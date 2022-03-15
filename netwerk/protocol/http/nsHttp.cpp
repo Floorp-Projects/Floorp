@@ -987,7 +987,7 @@ SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn) {
     return H3VersionToRank(aAlpn);
   }
 
-  if (gHttpHandler->IsSpdyEnabled()) {
+  if (StaticPrefs::network_http_http2_enabled()) {
     uint32_t spdyIndex;
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&

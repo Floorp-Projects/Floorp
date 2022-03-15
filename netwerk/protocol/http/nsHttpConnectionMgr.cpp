@@ -222,7 +222,8 @@ void nsHttpConnectionMgr::PruneDeadConnectionsAfter(uint32_t timeInSeconds) {
 void nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer() {
   // Leave the timer in place if there are connections that potentially
   // need management
-  if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled())) {
+  if (mNumIdleConns ||
+      (mNumActiveConns && StaticPrefs::network_http_http2_enabled())) {
     return;
   }
 
@@ -1233,7 +1234,7 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
   }
 
   if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) && mNumActiveConns &&
-      gHttpHandler->IsSpdyEnabled()) {
+      StaticPrefs::network_http_http2_enabled()) {
     // If the global number of connections is preventing the opening of new
     // connections to a host without idle connections, then close any spdy
     // ASAP.
@@ -1314,10 +1315,12 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // look for existing spdy connection - that's always best because it is
   // essentially pipelining without head of line blocking
 
-  RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(
-      ent, (!gHttpHandler->IsSpdyEnabled() || (caps & NS_HTTP_DISALLOW_SPDY)),
-      (!StaticPrefs::network_http_http3_enable() ||
-       (caps & NS_HTTP_DISALLOW_HTTP3)));
+  RefPtr<HttpConnectionBase> conn =
+      GetH2orH3ActiveConn(ent,
+                          (!StaticPrefs::network_http_http2_enabled() ||
+                           (caps & NS_HTTP_DISALLOW_SPDY)),
+                          (!StaticPrefs::network_http_http3_enable() ||
+                           (caps & NS_HTTP_DISALLOW_HTTP3)));
   if (conn) {
     if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
       // This is a websocket transaction and we already have a h2 connection
@@ -2169,7 +2172,8 @@ void nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, ARefBase*) {
 
   // check canreuse() for all idle connections plus any active connections on
   // connection entries that are using spdy.
-  if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled())) {
+  if (mNumIdleConns ||
+      (mNumActiveConns && StaticPrefs::network_http_http2_enabled())) {
     for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
       RefPtr<ConnectionEntry> ent = iter.Data();
 
