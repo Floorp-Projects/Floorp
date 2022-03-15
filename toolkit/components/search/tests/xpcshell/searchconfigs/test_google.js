@@ -15,13 +15,6 @@ const test = new SearchConfigTest({
     // just excluding what Yandex and Baidu include.
     excluded: [
       {
-        regions: ["ru", "tr", "by", "kz"],
-        locales: {
-          matches: ["ru", "tr", "be", "kk"],
-          startsWith: ["en"],
-        },
-      },
-      {
         regions: ["cn"],
         locales: {
           matches: ["zh-CN"],
@@ -38,10 +31,8 @@ const test = new SearchConfigTest({
     {
       included: [{ regions: ["us"] }],
       domain: "google.com",
-      telemetryId: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-        ? "google-b-1-e"
-        : "google-b-1-d",
-      codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+      telemetryId: AppConstants.IS_ESR ? "google-b-1-e" : "google-b-1-d",
+      codes: AppConstants.IS_ESR
         ? "client=firefox-b-1-e"
         : "client=firefox-b-1-d",
     },
@@ -49,20 +40,13 @@ const test = new SearchConfigTest({
       excluded: [{ regions: ["us", "by", "kz", "ru", "tr"] }],
       included: [{}],
       domain: "google.com",
-      telemetryId: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-        ? "google-b-e"
-        : "google-b-d",
-      codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-        ? "client=firefox-b-e"
-        : "client=firefox-b-d",
+      telemetryId: AppConstants.IS_ESR ? "google-b-e" : "google-b-d",
+      codes: AppConstants.IS_ESR ? "client=firefox-b-e" : "client=firefox-b-d",
     },
     {
-      excluded: [{ regions: ["us"] }],
       included: [{ regions: ["by", "kz", "ru", "tr"] }],
       domain: "google.com",
-      codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-        ? "client=firefox-b-e"
-        : "client=firefox-b-d",
+      telemetryId: "google-com-nocodes",
     },
   ],
 });
