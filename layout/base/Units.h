@@ -121,6 +121,11 @@ typedef gfx::MarginTyped<RenderTargetPixel> RenderTargetMargin;
 typedef gfx::IntMarginTyped<RenderTargetPixel> RenderTargetIntMargin;
 typedef gfx::IntRegionTyped<RenderTargetPixel> RenderTargetIntRegion;
 
+typedef gfx::PointTyped<ImagePixel> ImagePoint;
+typedef gfx::IntPointTyped<ImagePixel> ImageIntPoint;
+typedef gfx::SizeTyped<ImagePixel> ImageSize;
+typedef gfx::IntSizeTyped<ImagePixel> ImageIntSize;
+typedef gfx::RectTyped<ImagePixel> ImageRect;
 typedef gfx::IntRectTyped<ImagePixel> ImageIntRect;
 
 typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;

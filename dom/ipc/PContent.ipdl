@@ -95,9 +95,12 @@ using mozilla::a11y::IHandlerControlHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::ImagePoint from "Units.h";
+using mozilla::ImageIntSize from "Units.h";
 using mozilla::widget::ThemeChangeKind from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
@@ -423,6 +426,13 @@ union BlobURLDataRequestResult
 {
   IPCBlob;
   nsresult;
+};
+
+struct ShmemImage {
+    Shmem data;
+    uint32_t stride;
+    SurfaceFormat format;
+    ImageIntSize size;
 };
 
 /**

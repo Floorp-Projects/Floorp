@@ -161,6 +161,7 @@ template <class T>
 class StaticRefPtr;
 
 namespace dom {
+class ShmemImage;
 struct AutocompleteInfo;
 class BrowserChild;
 class BrowserParent;
@@ -2890,16 +2891,20 @@ class nsContentUtils {
    * The length and stride will be assigned from the surface.
    */
   static mozilla::UniquePtr<char[]> GetSurfaceData(
-      mozilla::NotNull<mozilla::gfx::DataSourceSurface*> aSurface,
-      size_t* aLength, int32_t* aStride);
+      mozilla::gfx::DataSourceSurface&, size_t* aLength, int32_t* aStride);
 
   /*
    * Get the pixel data from the given source surface and fill it in Shmem.
    * The length and stride will be assigned from the surface.
    */
   static mozilla::Maybe<mozilla::ipc::Shmem> GetSurfaceData(
-      mozilla::gfx::DataSourceSurface* aSurface, size_t* aLength,
+      mozilla::gfx::DataSourceSurface& aSurface, size_t* aLength,
       int32_t* aStride, mozilla::ipc::IShmemAllocator* aAlloc);
+
+  static mozilla::Maybe<mozilla::dom::ShmemImage> SurfaceToIPCImage(
+      mozilla::gfx::DataSourceSurface&, mozilla::ipc::IShmemAllocator*);
+  static already_AddRefed<mozilla::gfx::DataSourceSurface> IPCImageToSurface(
+      mozilla::dom::ShmemImage&&, mozilla::ipc::IShmemAllocator*);
 
   // Helpers shared by the implementations of nsContentUtils methods and
   // nsIDOMWindowUtils methods.
