@@ -777,6 +777,8 @@ nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
 
   JS::Rooted<JS::Value> rval(cx);
 
+  mLoader->MaybePrepareModuleForBytecodeEncodingBeforeExecute(cx, request);
+
   rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
 
   if (NS_SUCCEEDED(rv)) {
@@ -814,11 +816,10 @@ nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
     }
   }
 
-  if (aRequest->HasLoadContext()) {
-    TRACE_FOR_TEST_NONE(aRequest->GetLoadContext()->GetScriptElement(),
-                        "scriptloader_no_encode");
-  }
-  aRequest->mCacheInfo = nullptr;
+  rv = mLoader->MaybePrepareModuleForBytecodeEncodingAfterExecute(request, rv);
+
+  mLoader->MaybeTriggerBytecodeEncoding();
+
   return rv;
 }
 

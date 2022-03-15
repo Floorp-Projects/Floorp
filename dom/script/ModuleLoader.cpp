@@ -460,6 +460,12 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
       return NS_ERROR_FAILURE;
     }
 
+    if (ScriptLoader::ShouldCacheBytecode(aRequest)) {
+      if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
     return NS_OK;
   }
 
@@ -485,6 +491,12 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
   aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
   if (!aModule) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (ScriptLoader::ShouldCacheBytecode(aRequest)) {
+    if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   return NS_OK;

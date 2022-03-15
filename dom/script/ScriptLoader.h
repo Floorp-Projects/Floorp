@@ -573,6 +573,17 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   nsresult MaybePrepareForBytecodeEncodingAfterExecute(
       ScriptLoadRequest* aRequest, nsresult aRv);
 
+  // Returns true if MaybePrepareForBytecodeEncodingAfterExecute is called
+  // for given script load request.
+  bool IsAlreadyHandledForBytecodeEncodingPreparation(
+      ScriptLoadRequest* aRequest);
+
+  void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
+      JSContext* aCx, ModuleLoadRequest* aRequest) override;
+
+  nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
+      ModuleLoadRequest* aRequest, nsresult aRv) override;
+
   // Implements https://html.spec.whatwg.org/#run-a-classic-script
   nsresult EvaluateScript(nsIGlobalObject* aGlobalObject,
                           ScriptLoadRequest* aRequest);
@@ -590,7 +601,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * no more script have to be processed.  If all conditions are met, queue an
    * event to encode all the bytecode and save them on the cache.
    */
-  void MaybeTriggerBytecodeEncoding();
+  void MaybeTriggerBytecodeEncoding() override;
 
   /**
    * Iterate over all script load request and save the bytecode of executed
