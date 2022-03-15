@@ -94,10 +94,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3)
 
-        var actualResults: List<HistoryDB>? = null
-        provider.getHistory(10, 5) {
-            actualResults = it
-        }
+        val actualResults: List<HistoryDB> = provider.getHistory(10, 5)
 
         coVerify {
             storage.getVisitsPaginated(
@@ -178,10 +175,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
-        var actualResults: List<HistoryDB>? = null
-        provider.getHistory(0, 5) {
-            actualResults = it
-        }
+        val actualResults: List<HistoryDB> = provider.getHistory(0, 5)
 
         coVerify {
             storage.getVisitsPaginated(
@@ -251,10 +245,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
-        var actualResults: List<HistoryDB>? = null
-        provider.getHistory(0, 5) {
-            actualResults = it
-        }
+        val actualResults: List<HistoryDB> = provider.getHistory(0, 5)
 
         coVerify {
             storage.getVisitsPaginated(
@@ -404,10 +395,7 @@ class PagedHistoryProviderTest {
 
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3, historyEntry4)
 
-        var actualResults: List<HistoryDB>? = null
-        provider.getHistory(10, 5) {
-            actualResults = it
-        }
+        val actualResults: List<HistoryDB> = provider.getHistory(10, 5)
 
         coVerify {
             storage.getVisitsPaginated(
