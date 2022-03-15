@@ -48,6 +48,8 @@ interface HTMLImageElement : HTMLElement {
   readonly attribute boolean complete;
            [NewObject]
            Promise<void> decode();
+           [NewObject, ChromeOnly]
+           Promise<void> recognizeCurrentImageText();
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
