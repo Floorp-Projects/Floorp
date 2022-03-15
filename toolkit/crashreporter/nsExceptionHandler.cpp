@@ -30,7 +30,6 @@
 #include "nsThreadUtils.h"
 #include "nsThread.h"
 #include "jsfriendapi.h"
-#include "ThreadAnnotation.h"
 #include "private/pprio.h"
 #include "base/process_util.h"
 #include "common/basictypes.h"
@@ -1379,15 +1378,6 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 #ifdef MOZ_PHC
   WritePHCAddrInfo(writer, addrInfo);
 #endif
-
-  std::function<void(const char*)> getThreadAnnotationCB =
-      [&](const char* aValue) -> void {
-    if (aValue) {
-      writer.Write(Annotation::ThreadIdNameMapping, aValue);
-    }
-  };
-  GetFlatThreadAnnotation(getThreadAnnotationCB,
-                          /* aIsHandlingException */ true);
 }
 
 static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
@@ -1656,15 +1646,6 @@ static void PrepareChildExceptionTimeAnnotations(
   WritePHCAddrInfo(writer, addrInfo);
 #endif
 
-  std::function<void(const char*)> getThreadAnnotationCB =
-      [&](const char* aValue) -> void {
-    if (aValue) {
-      writer.Write(Annotation::ThreadIdNameMapping, aValue);
-    }
-  };
-  GetFlatThreadAnnotation(getThreadAnnotationCB,
-                          /* aIsHandlingException */ true);
-
   WriteAnnotations(writer, crashReporterAPIData_Table);
 }
 
@@ -1907,7 +1888,6 @@ static void InitializeAnnotationFacilities() {
   crashReporterAPILock = new Mutex("crashReporterAPILock");
   notesFieldLock = new Mutex("notesFieldLock");
   notesField = new nsCString();
-  InitThreadAnnotation();
   if (!XRE_IsParentProcess()) {
     InitChildAnnotationsFlusher();
   }
@@ -1925,8 +1905,6 @@ static void TeardownAnnotationFacilities() {
 
   delete notesField;
   notesField = nullptr;
-
-  ShutdownThreadAnnotation();
 }
 
 #ifdef XP_WIN

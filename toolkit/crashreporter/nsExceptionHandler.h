@@ -344,9 +344,6 @@ void SetNotificationPipeForChild(FileHandle childCrashFd);
 void SetCrashAnnotationPipeForChild(FileHandle childCrashAnnotationFd);
 #endif
 
-// Annotates the crash report with the name of the calling thread.
-void SetCurrentThreadName(const char* aName);
-
 }  // namespace CrashReporter
 
 #endif /* nsExceptionHandler_h__ */
