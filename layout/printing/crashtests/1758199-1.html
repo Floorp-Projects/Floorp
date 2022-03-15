@@ -1,0 +1,13 @@
+<script>
+window.onload = () => {
+  let o = document.getElementById('a')
+  o.parentNode.appendChild(o)
+  window.print()
+  window.requestIdleCallback(() => { document.write('') })
+}
+</script>
+<style>
+:first-of-type { padding-block-start: 99% }
+</style>
+<mark id='a'>
+<embed src='#'>
