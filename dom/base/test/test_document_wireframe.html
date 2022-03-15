@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for document.getWireframe()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    /**
+     * This test creates some simple webpages, captures wireframes for them, and
+     * then compares them against some expected wireframe structures.
+     */
+
+    /**
+     * Converts some RGB values into the same uint32_t nsColor representation
+     * that getWireframe uses.
+     *
+     * @param {Number} r
+     *   Red color value.
+     * @param {Number} g
+     *   Green color value.
+     * @param {Number} b
+     *   Blue color value.
+     * @returns {Number}
+     *   The red, green and blue values composed in a single uint32_t-compatible
+     *   value.
+     */
+    function nscolor(r, g, b) {
+      return (255 << 24 | b << 16 | g << 8 | r) >>> 0;
+    }
+
+    const RED_RGB = "rgb(255, 0, 0)";
+    const RED_NSCOLOR = nscolor(255, 0, 0);
+    const GREEN_RGB = "rgb(0, 255, 0)";
+    const GREEN_NSCOLOR = nscolor(0, 255, 0);
+    const BLUE_RGB = "rgb(0, 0, 255)";
+    const BLUE_NSCOLOR = nscolor(0, 0, 255);
+    const BLACK_RGB = "rgb(0, 0, 0)";
+    const BLACK_NSCOLOR = nscolor(0, 0, 0);
+    const BUILDER = "http://mochi.test:8888/document-builder.sjs?html=";
+    const TEST_PATH = "http://mochi.test:8888/tests/dom/base/test/";
+
+    /**
+     * This array contains the definition of each test. Each test is an object
+     * that expects two properties:
+     *
+     * {String} html
+     *   The markup to be loaded in the page iframe that a wireframe will be
+     *   generated for.
+     * {Object} expectedWireframe
+     *   An approximation of the wireframe that should be generated. The
+     *   approximation is due to the fact that different platforms and
+     *   execution environments might produce slightly different positioning
+     *   of wireframe rects. We skip comparing the position of the rects, and
+     *   only look at their dimensions (sometimes only one dimension if the
+     *   other is potentially more variable - for example with text). Properties
+     *   included in this object will do a strict comparison with the generated
+     *   wireframe. Properties in the generated wireframe that are not in the
+     *   expectedWireframe will be ignored.
+     */
+    const kTests = [{
+      // Base case: a simple solid background with a single character in the
+      // foreground.
+      html: `
+        <html>
+        <style>
+          body {
+            width: 500px;
+            height: 500px;
+            background-color: ${RED_RGB};
+            color: ${BLACK_RGB};
+            overflow: hidden;
+            font-size: 12px;
+          }
+        </style>
+        <body>x</body>
+        </html>
+      `,
+      expectedWireframe: {
+        canvasBackground: 0,
+        rects: [{
+          color: RED_NSCOLOR,
+          height: 500,
+          width: 500,
+          type: "background",
+        }, {
+          color: BLACK_NSCOLOR,
+          height: 12,
+          type: "text",
+        }]
+      },
+    }, {
+      // Additional background on top of the main background.
+      html: `
+        <html>
+        <style>
+          body {
+            width: 500px;
+            height: 500px;
+            background-color: ${RED_RGB};
+            color: ${BLACK_RGB};
+            overflow: hidden;
+            font-size: 12px;
+          }
+          div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-color: ${GREEN_RGB};
+          }
+        </style>
+        <body>
+          <div>x</div>
+        </body>
+        </html>
+      `,
+      expectedWireframe: {
+        canvasBackground: RED_NSCOLOR,
+        rects: [{
+          color: RED_NSCOLOR,
+          height: 500,
+          width: 500,
+          type: "background",
+        }, {
+          color: GREEN_NSCOLOR,
+          height: 20,
+          width: 20,
+          type: "background",
+        }, {
+          color: BLACK_NSCOLOR,
+          height: 12,
+          type: "text",
+        }]
+      },
+    }, {
+      // Image on top of the main background with another background
+      // floating in the top right.
+      html: `
+        <html>
+        <style>
+          body {
+            width: 500px;
+            height: 500px;
+            background-color: ${RED_RGB};
+            color: ${BLACK_RGB};
+            overflow: hidden;
+            font-size: 12px;
+          }
+          div {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            background-color: ${GREEN_RGB};
+          }
+          img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 50px;
+            width: 50px;
+          }
+        </style>
+        <body>
+          <img src="${TEST_PATH}/green.png"/>
+          <div>x</div>
+        </body>
+        </html>
+      `,
+      expectedWireframe: {
+        canvasBackground: RED_NSCOLOR,
+        rects: [{
+          color: RED_NSCOLOR,
+          height: 500,
+          width: 500,
+          type: "background",
+        }, {
+          color: 0,
+          height: 50,
+          width: 50,
+          type: "image",
+        }, {
+          color: GREEN_NSCOLOR,
+          height: 20,
+          width: 20,
+          type: "background",
+        }, {
+          color: BLACK_NSCOLOR,
+          height: 12,
+          type: "text",
+        }]
+      },
+    }, {
+      // Image on top of the main background with another background
+      // floating over the image
+      html: `
+        <html>
+        <style>
+          body {
+            width: 500px;
+            height: 500px;
+            background-color: ${RED_RGB};
+            color: ${BLACK_RGB};
+            overflow: hidden;
+            font-size: 12px;
+          }
+          div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-color: ${BLUE_RGB};
+          }
+          img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 50px;
+            width: 50px;
+          }
+        </style>
+        <body>
+          <img src="${TEST_PATH}/green.png"/>
+          <div>x</div>
+        </body>
+        </html>
+      `,
+      expectedWireframe: {
+        canvasBackground: RED_NSCOLOR,
+        rects: [{
+          color: RED_NSCOLOR,
+          height: 500,
+          width: 500,
+          type: "background",
+        }, {
+          color: 0,
+          height: 50,
+          width: 50,
+          type: "image",
+        }, {
+          color: BLUE_NSCOLOR,
+          height: 20,
+          width: 20,
+          type: "background",
+        }, {
+          color: BLACK_NSCOLOR,
+          height: 12,
+          type: "text",
+        }]
+      },
+    }];
+
+    /**
+     * Returns a Promise once page has been loaded in frame.
+     *
+     * @param {Element} frame
+     *   The iframe to load the page in.
+     * @param {String} page
+     *   The URL of the page to load in the frame.
+     * @returns Promise
+     * @resolves undefined
+     *   Once the load event has fired for the frame.
+     */
+    function loadInIframe(frame, page) {
+      return new Promise(resolve => {
+        frame.addEventListener("load", resolve, { once: true });
+        frame.src = page;
+      });
+    }
+
+    /**
+     * Compares a generated wireframe to an Object that contains some or all of
+     * the expected structure of the generated wireframe.
+     *
+     * If the wireframe doesn't contain the expected number of rects, the
+     * serialized structure of both the wireframe and approximateWireframe will
+     * be dumped to stdout.
+     *
+     * @param {Wireframe} wireframe
+     *   A wireframe generated via document.getWireframe()
+     * @param {Object} approximateWireframe
+     *   An object that closely resembles a wireframe but the rects in the
+     *   rects property do not need to contain all of the properties expected
+     *   in a WireframeTaggedRect. Skipped properties won't be checked.
+     */
+    function assertApproximateWireframe(wireframe, approximateWireframe) {
+      is(
+        wireframe.canvasBackground,
+        approximateWireframe.canvasBackground,
+        "Canvas backgrounds match."
+      );
+      is(
+        wireframe.rects.length,
+        approximateWireframe.rects.length,
+        "Same rect count"
+      );
+      if (wireframe.rects.length != approximateWireframe.rects.length) {
+        dump(
+          "Generated wireframe: " + JSON.stringify(wireframe, null, "\t") + "\n"
+        );
+        dump(
+          "Expected approximate wireframe: " +
+            JSON.stringify(approximateWireframe, null, "\t") +
+            "\n"
+        );
+      }
+
+      for (let index = 0; index < approximateWireframe.length; ++index) {
+        let wireframeRect = wireframe.rects[index];
+        let approximationRect = approximateWireframe.rects[index];
+        for (let prop of approximationRect) {
+          is(
+            wireframeRect[prop],
+            approximationRect[prop],
+            `Property ${prop} should be equal.`
+          );
+        }
+      }
+    }
+
+    add_task(async () => {
+      const iframe = document.getElementById("iframe");
+
+      for (let testDefinition of kTests) {
+        let pageURL = BUILDER + encodeURIComponent(testDefinition.html);
+        await loadInIframe(iframe, pageURL);
+        let wireframe = SpecialPowers.wrap(
+          iframe.contentDocument
+        ).getWireframe();
+        assertApproximateWireframe(wireframe, testDefinition.expectedWireframe);
+      }
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<iframe id="iframe"></iframe>
+</body>
+</html>
