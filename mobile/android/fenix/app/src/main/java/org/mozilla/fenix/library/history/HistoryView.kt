@@ -61,7 +61,7 @@ class HistoryView(
 
         historyAdapter.updatePendingDeletionIds(state.pendingDeletionIds)
 
-        updateEmptyState(state.pendingDeletionIds.size != historyAdapter.currentList?.size)
+        updateEmptyState(state.pendingDeletionIds.size != historyAdapter.itemCount)
 
         historyAdapter.updateMode(state.mode)
         val first = layoutManager.findFirstVisibleItemPosition()

@@ -15,11 +15,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
@@ -158,10 +160,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                 historyView::updateEmptyState
             )
 
-            model.history.observe(
-                viewLifecycleOwner,
-                historyView.historyAdapter::submitList
-            )
+            model.viewModelScope.launch {
+                model.history.collect {
+                    historyView.historyAdapter.submitData(it)
+                }
+            }
         }
     }
 
@@ -322,7 +325,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                         requireComponents.core.historyStorage.deleteEverything()
                         deleteOpenTabsEngineHistory(requireComponents.core.store)
                         launch(Main) {
-                            viewModel.invalidate()
+                            historyView.historyAdapter.refresh()
                             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
                             showSnackBar(
                                 requireView(),
@@ -411,6 +414,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private suspend fun syncHistory() {
         val accountManager = requireComponents.backgroundServices.accountManager
         accountManager.syncNow(SyncReason.User)
-        viewModel.invalidate()
+        historyView.historyAdapter.refresh()
     }
 }

@@ -5,38 +5,40 @@
 package org.mozilla.fenix.library.history
 
 import androidx.annotation.VisibleForTesting
-import androidx.paging.ItemKeyedDataSource
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import org.mozilla.fenix.components.history.HistoryDB
 import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryDataSource(
-    private val historyProvider: PagedHistoryProvider
-) : ItemKeyedDataSource<Int, History>() {
+    private val historyProvider: PagedHistoryProvider,
+    private val onZeroItemsLoaded: () -> Unit
+) : PagingSource<Int, History>() {
 
-    // Because the pagination is not based off of the key
-    // we want to start at 1, not 0 to be able to send the correct offset
-    // to the `historyProvider.getHistory` call.
-    override fun getKey(item: History): Int = item.position + 1
+    // having any value but null creates visual glitches in case or swipe to refresh and immediate
+    // scroll down
+    override fun getRefreshKey(state: PagingState<Int, History>): Int? = null
 
-    override fun loadInitial(
-        params: LoadInitialParams<Int>,
-        callback: LoadInitialCallback<History>
-    ) {
-        historyProvider.getHistory(INITIAL_OFFSET, params.requestedLoadSize) { history ->
-            callback.onResult(history.positionWithOffset(INITIAL_OFFSET))
+    // params.key is expected to be null for the initial load or a refresh
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, History> {
+        val offset = params.key ?: 0
+        val historyItems = historyProvider.getHistory(offset, params.loadSize).run {
+            positionWithOffset(offset)
         }
-    }
-
-    override fun loadAfter(params: LoadParams<Int>, callback: LoadCallback<History>) {
-        historyProvider.getHistory(params.key, params.requestedLoadSize) { history ->
-            callback.onResult(history.positionWithOffset(params.key))
+        val nextOffset = if (historyItems.isEmpty()) {
+            if (params.key == null) {
+                onZeroItemsLoaded.invoke()
+            }
+            null
+        } else {
+            (offset + historyItems.size) + 1
         }
-    }
-
-    override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<History>) { /* noop */ }
-
-    companion object {
-        internal const val INITIAL_OFFSET = 0
+        // prevKey is needed in case load would work upwards, so passing null is fine
+        return LoadResult.Page(
+            data = historyItems,
+            prevKey = null,
+            nextKey = nextOffset
+        )
     }
 }
 

@@ -17,8 +17,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LivePagedListBuilder
-import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +34,7 @@ import org.mozilla.fenix.ext.nav
 
 private const val MAX_ITEMS_PER_PAGE = 50
 
+@Suppress("DEPRECATION")
 class SitePermissionsExceptionsFragment :
     Fragment(R.layout.fragment_site_permissions_exceptions), View.OnClickListener {
     private lateinit var emptyContainerMessage: View
@@ -63,7 +62,7 @@ class SitePermissionsExceptionsFragment :
 
             withContext(Main) {
                 val adapter = ExceptionsAdapter(this@SitePermissionsExceptionsFragment)
-                val liveData = LivePagedListBuilder(sitePermissionsPaged, MAX_ITEMS_PER_PAGE).build()
+                val liveData = androidx.paging.LivePagedListBuilder(sitePermissionsPaged, MAX_ITEMS_PER_PAGE).build()
 
                 liveData.observe(
                     viewLifecycleOwner,
@@ -135,8 +134,9 @@ class SitePermissionsExceptionsFragment :
 class SitePermissionsViewHolder(val view: View, val iconView: ImageView, val siteTextView: TextView) :
     RecyclerView.ViewHolder(view)
 
+@Suppress("DEPRECATION")
 class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
-    PagedListAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback) {
+    androidx.paging.PagedListAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SitePermissionsViewHolder {
         val context = parent.context
