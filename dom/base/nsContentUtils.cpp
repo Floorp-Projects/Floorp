@@ -445,7 +445,8 @@ bool nsContentUtils::sInitialized = false;
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
 
-nsCString* nsContentUtils::sJSBytecodeMimeType = nullptr;
+nsCString* nsContentUtils::sJSScriptBytecodeMimeType = nullptr;
+nsCString* nsContentUtils::sJSModuleBytecodeMimeType = nullptr;
 
 nsContentUtils::UserInteractionObserver*
     nsContentUtils::sUserInteractionObserver = nullptr;
@@ -805,7 +806,8 @@ nsresult nsContentUtils::Init() {
 
 bool nsContentUtils::InitJSBytecodeMimeType() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!sJSBytecodeMimeType);
+  MOZ_ASSERT(!sJSScriptBytecodeMimeType);
+  MOZ_ASSERT(!sJSModuleBytecodeMimeType);
 
   JS::BuildIdCharVector jsBuildId;
   if (!JS::GetScriptTranscodingBuildId(&jsBuildId)) {
@@ -813,8 +815,10 @@ bool nsContentUtils::InitJSBytecodeMimeType() {
   }
 
   nsDependentCSubstring jsBuildIdStr(jsBuildId.begin(), jsBuildId.length());
-  sJSBytecodeMimeType =
-      new nsCString("javascript/moz-bytecode-"_ns + jsBuildIdStr);
+  sJSScriptBytecodeMimeType =
+      new nsCString("javascript/moz-script-bytecode-"_ns + jsBuildIdStr);
+  sJSModuleBytecodeMimeType =
+      new nsCString("javascript/moz-module-bytecode-"_ns + jsBuildIdStr);
   return true;
 }
 
@@ -1910,8 +1914,11 @@ void nsContentUtils::Shutdown() {
   delete sModifierSeparator;
   sModifierSeparator = nullptr;
 
-  delete sJSBytecodeMimeType;
-  sJSBytecodeMimeType = nullptr;
+  delete sJSScriptBytecodeMimeType;
+  sJSScriptBytecodeMimeType = nullptr;
+
+  delete sJSModuleBytecodeMimeType;
+  sJSModuleBytecodeMimeType = nullptr;
 
   NS_IF_RELEASE(sSameOriginChecker);
 
