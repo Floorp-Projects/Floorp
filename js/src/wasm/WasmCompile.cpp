@@ -107,8 +107,7 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
 
 SharedCompileArgs CompileArgs::build(JSContext* cx,
                                      ScriptedCaller&& scriptedCaller,
-                                     const FeatureOptions& options,
-                                     CompileArgsError* error) {
+                                     const FeatureOptions& options) {
   bool baseline = BaselineAvailable(cx);
   bool ion = IonAvailable(cx);
   bool cranelift = CraneliftAvailable(cx);
@@ -129,7 +128,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   // when we're fuzzing we allow inconsistent switches and the check may thus
   // fail.  Let it go to a run-time error instead of crashing.
   if (debug && (ion || cranelift)) {
-    *error = CompileArgsError::NoCompiler;
+    JS_ReportErrorASCII(cx, "no WebAssembly compiler available");
     return nullptr;
   }
 
@@ -141,13 +140,12 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   }
 
   if (!(baseline || ion || cranelift)) {
-    *error = CompileArgsError::NoCompiler;
+    JS_ReportErrorASCII(cx, "no WebAssembly compiler available");
     return nullptr;
   }
 
   CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
   if (!target) {
-    *error = CompileArgsError::OutOfMemory;
     return nullptr;
   }
 
@@ -158,34 +156,11 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->forceTiering = forceTiering;
   target->features = FeatureArgs::build(cx, options);
 
+  Log(cx, "available wasm compilers: tier1=%s tier2=%s",
+      baseline ? "baseline" : "none",
+      ion ? "ion" : (cranelift ? "cranelift" : "none"));
+
   return target;
-}
-
-SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
-                                              ScriptedCaller&& scriptedCaller,
-                                              const FeatureOptions& options) {
-  CompileArgsError error;
-  SharedCompileArgs args =
-      CompileArgs::build(cx, std::move(scriptedCaller), options, &error);
-  if (args) {
-    Log(cx, "available wasm compilers: tier1=%s tier2=%s",
-        args->baselineEnabled ? "baseline" : "none",
-        args->ionEnabled ? "ion"
-                         : (args->craneliftEnabled ? "cranelift" : "none"));
-    return args;
-  }
-
-  switch (error) {
-    case CompileArgsError::NoCompiler: {
-      JS_ReportErrorASCII(cx, "no WebAssembly compiler available");
-      break;
-    }
-    case CompileArgsError::OutOfMemory: {
-      // Intentionally do not report the OOM, as callers expect this behavior
-      break;
-    }
-  }
-  return nullptr;
 }
 
 /*
