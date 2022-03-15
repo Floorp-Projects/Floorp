@@ -64,7 +64,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext)
-  tmp->mScript = nullptr;
+  tmp->mScriptForBytecodeEncoding = nullptr;
   tmp->DropBytecodeCacheReferences();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -73,7 +73,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScript)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptForBytecodeEncoding)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
@@ -100,7 +100,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
 }
 
 ScriptLoadRequest::~ScriptLoadRequest() {
-  if (mScript) {
+  if (IsMarkedForBytecodeEncoding()) {
     DropBytecodeCacheReferences();
   }
   mLoadContext = nullptr;
@@ -140,9 +140,9 @@ void ScriptLoadRequest::ClearScriptSource() {
   }
 }
 
-void ScriptLoadRequest::SetScript(JSScript* aScript) {
-  MOZ_ASSERT(!mScript);
-  mScript = aScript;
+void ScriptLoadRequest::MarkForBytecodeEncoding(JSScript* aScript) {
+  MOZ_ASSERT(!IsMarkedForBytecodeEncoding());
+  mScriptForBytecodeEncoding = aScript;
   HoldJSObjects(this);
 }
 
