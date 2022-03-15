@@ -77,12 +77,12 @@ import org.mozilla.focus.ext.disableDynamicBehavior
 import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
-import org.mozilla.focus.ext.isMultiTabsEnabled
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.session.ui.TabsPopup
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
@@ -749,7 +749,7 @@ class BrowserFragment :
 
         TelemetryWrapper.openFullBrowser()
 
-        if (requireComponents.experiments.isMultiTabsEnabled) {
+        if (FocusNimbus.features.tabs.value().isMultiTab) {
             requireComponents.customTabsUseCases.migrate(tab.id)
             requireComponents.experiments.recordExposureEvent(FEATURE_TABS)
         } else {

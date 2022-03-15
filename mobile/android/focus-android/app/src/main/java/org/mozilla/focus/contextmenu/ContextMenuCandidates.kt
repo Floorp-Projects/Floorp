@@ -11,9 +11,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.contextmenu.DefaultSnackbarDelegate
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.focus.ext.FEATURE_TABS
-import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.isMultiTabsEnabled
+import org.mozilla.focus.nimbus.FocusNimbus
 
 object ContextMenuCandidates {
     @Suppress("LongParameterList")
@@ -25,8 +23,7 @@ object ContextMenuCandidates {
         snackBarParentView: View,
         snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
     ): List<ContextMenuCandidate> =
-        if (context.components.experiments.isMultiTabsEnabled) {
-            context.components.experiments.recordExposureEvent(FEATURE_TABS)
+        if (FocusNimbus.features.tabs.value().isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenInPrivateTabCandidate(
                     context,
@@ -42,8 +39,7 @@ object ContextMenuCandidates {
             ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createShareLinkCandidate(context),
             ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases)
-        ) + if (context.components.experiments.isMultiTabsEnabled) {
-            context.components.experiments.recordExposureEvent(FEATURE_TABS)
+        ) + if (FocusNimbus.features.tabs.value().isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenImageInNewTabCandidate(
                     context,

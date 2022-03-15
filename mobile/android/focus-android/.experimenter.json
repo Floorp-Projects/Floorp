@@ -1,0 +1,35 @@
+{
+  "tabs": {
+    "description": "Nimbus feature name intended to control the multiple tabs feature in the app.",
+    "hasExposure": true,
+    "exposureDescription": "",
+    "variables": {
+      "is_multi_tab": {
+        "description": "Nimbus variable of [FEATURE_TABS] allowing outside control of whether the multiple tabs feature should be enabled or not.",
+        "type": "boolean"
+      }
+    }
+  },
+  "onboarding-with-cfrs": {
+    "description": "Nimbus feature name intended to control the onboarding plus all CFRs in the app.",
+    "hasExposure": true,
+    "exposureDescription": "",
+    "variables": {
+      "is-onboarding-with-cfrs": {
+        "description": "If `true`, the app will show the new onboarding screen and all the cfrs",
+        "type": "boolean"
+      }
+    }
+  },
+  "onboarding-without-cfrs": {
+    "description": "Nimbus feature name intended to control the onboarding without CFRs in the app.",
+    "hasExposure": true,
+    "exposureDescription": "",
+    "variables": {
+      "is-onboarding-without-cfrs": {
+        "description": "If `true`, the app will show only the new onboarding screen",
+        "type": "boolean"
+      }
+    }
+  }
+}
