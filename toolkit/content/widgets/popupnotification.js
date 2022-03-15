@@ -29,10 +29,8 @@
         ".popup-notification-learnmore-link":
           "onclick=learnmoreclick,href=learnmoreurl",
         ".popup-notification-warning": "hidden=warninghidden,text=warninglabel",
-        ".popup-notification-button-container > .popup-notification-secondary-button":
+        ".popup-notification-secondary-button":
           "oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden,dropmarkerhidden",
-        ".popup-notification-button-container > toolbarseparator":
-          "hidden=dropmarkerhidden",
         ".popup-notification-dropmarker":
           "onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden",
         ".popup-notification-dropmarker > menupopup": "oncommand=menucommand",
@@ -91,13 +89,12 @@
       </hbox>
       <hbox class="popup-notification-footer-container"></hbox>
       <hbox class="popup-notification-button-container panel-footer">
-        <button class="popup-notification-button popup-notification-secondary-button"></button>
-        <toolbarseparator></toolbarseparator>
-        <button type="menu" class="popup-notification-button popup-notification-dropmarker" aria-label="&moreActionsButton.accessibleLabel;">
+        <button class="popup-notification-secondary-button"/>
+        <button type="menu" class="popup-notification-dropmarker" aria-label="&moreActionsButton.accessibleLabel;">
           <menupopup position="after_end" aria-label="&moreActionsButton.accessibleLabel;">
           </menupopup>
         </button>
-        <button class="popup-notification-button popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;"></button>
+        <button class="popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;"/>
       </hbox>
       `;
     }

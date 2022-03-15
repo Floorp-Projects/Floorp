@@ -92,10 +92,6 @@ html|img#editBookmarkPanelFavicon[src] {
   background-color: var(--button-active-bgcolor);
 }
 
-#editBookmarkPanelBottomButtons {
-  display: flex;
-}
-
 #editBookmarkPanel > #editBookmarkHeaderSeparator,
 #editBookmarkPanel > .panel-subview-body > #editBookmarkSeparator {
   margin-bottom: 0;
@@ -140,7 +136,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanelBottomButtons > button {
-  margin-block: 0;
+  margin-top: 0;
 }
 
 #editBookmarkPanel .expander-up > .button-box > .button-text,
