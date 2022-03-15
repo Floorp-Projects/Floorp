@@ -31,6 +31,7 @@
   skin/classic/global/menu-scrolling.css                   (../../shared/menu-scrolling.css)
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
+  skin/classic/global/shared/menulist.css                  (../../shared/menulist.css)
   skin/classic/global/tree.css                             (../../shared/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
 #ifdef XP_MACOSX
