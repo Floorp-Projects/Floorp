@@ -615,9 +615,9 @@ style:
   UseOrEmpty:
     active: true
   UseRequire:
-    active: false
+    active: true
   UseRequireNotNull:
-    active: false
+    active: true
   UselessCallOnNotNull:
     active: true
   UtilityClassWithPublicConstructor:
