@@ -12,10 +12,9 @@ script's URL.
   <script>
     const iframeId = "test_iframe";
 
-    let count = 0;
-    let waitForLoadOrEncode = true;
+    var checkResult = null;
 
-    function startTest() {
+    async function startTest() {
       SimpleTest.waitForExplicitFinish();
 
       // Setting dom.expose_test_interfaces pref causes the
@@ -28,75 +27,65 @@ script's URL.
       // nsScriptLoadRequest to force all the conditions necessary to make a
       // script be saved as bytecode in the alternate data storage provided
       // by the channel (necko cache).
-      SpecialPowers.pushPrefEnv({
+      await SpecialPowers.pushPrefEnv({
         set: [
           ['dom.script_loader.bytecode_cache.enabled', true],
           ['dom.expose_test_interfaces', true],
           ["dom.script_loader.bytecode_cache.strategy", -1]
-        ]}).then(nextIteration);
-    }
+        ]});
 
-    function nextIteration() {
-      let iframe = document.getElementById(iframeId)
-      if (iframe) {
-        document.body.removeChild(iframe);
+      for (let i = 0; i < 3; i++) {
+        let iframe = document.getElementById(iframeId);
+        if (iframe) {
+          document.body.removeChild(iframe);
+        }
+
+        iframe = document.createElement("iframe");
+        document.body.appendChild(iframe);
+        iframe.id = iframeId;
+
+        let iwin = iframe.contentWindow;
+
+        let eventPromise = new Promise(resolve => {
+          // Both regular script and imported module scripts are encoded/decoded
+          // Wait for 2 encode/load events to be fired.
+          let count = 0;
+          if (i == 0) {
+            iwin.addEventListener("scriptloader_bytecode_saved", event => {
+              count++;
+              ok(true, "Bytecode encoding succeeded");
+              if (count == 2) {
+                resolve();
+              }
+            });
+          } else {
+            iwin.addEventListener("scriptloader_load_bytecode", event => {
+              count++;
+              ok(true, "Script loaded from bytecode");
+              if (count == 2) {
+                resolve();
+              }
+            });
+          }
+
+          iwin.addEventListener("scriptloader_bytecode_failed", () => {
+            ok(false, "Bytecode encoding failed");
+            SimpleTest.finish();
+          });
+        });
+
+        let resultPromise = new Promise(resolve => {
+          checkResult = resolve;
+        });
+
+        iframe.src = "bug1656248_frame.html";
+
+        let [_, result] = await Promise.all([eventPromise, resultPromise]);
+
+        is(result, 42, `Module was loaded successfully (${i})`);
       }
 
-      iframe = document.createElement("iframe");
-      document.body.appendChild(iframe);
-      iframe.id = iframeId;
-
-      var iwin = iframe.contentWindow;
-      iwin.addEventListener("scriptloader_bytecode_saved",
-                            handleScriptLoaderEvent);
-      iwin.addEventListener("scriptloader_bytecode_failed",
-                            handleScriptLoaderEvent);
-      iwin.addEventListener("scriptloader_load_bytecode",
-                            handleScriptLoaderEvent);
-
-      iframe.src = "bug1656248_frame.html";
-    }
-
-    function handleScriptLoaderEvent(event) {
-      ok(true, `handleScriptLoaderEvent received ${event.type}`);
-
-      if (!waitForLoadOrEncode) {
-        return;
-      }
-
-      if (event.type === 'scriptloader_load_bytecode') {
-        ok(true, "Script loaded from bytecode")
-        waitForLoadOrEncode = false;
-        nextIteration();
-        return;
-      }
-
-      if (event.type === 'scriptloader_bytecode_saved') {
-        ok(true, "Bytecode encoding succeeded")
-        waitForLoadOrEncode = false;
-        nextIteration();
-        return;
-      }
-
-      if (event.type === 'scriptloader_bytecode_failed') {
-        ok(false, "Bytecode encoding failed")
-        SimpleTest.finish();
-        return;
-      }
-    }
-
-    function checkResult(result) {
-      is(result, 42, "Module was loaded successfully");
-
-      count++;
-      if (count === 3) {
-        SimpleTest.finish();
-        return;
-      }
-
-      if (!waitForLoadOrEncode) {
-        nextIteration();
-      }
+      SimpleTest.finish();
     }
   </script>
 </head>

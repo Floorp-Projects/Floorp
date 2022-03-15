@@ -464,8 +464,15 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
   if (aRequest->GetLoadContext()->mWasCompiledOMT) {
     JS::Rooted<JS::InstantiationStorage> storage(aCx);
 
-    RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
-        aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+    RefPtr<JS::Stencil> stencil;
+    if (aRequest->IsTextSource()) {
+      stencil = JS::FinishCompileModuleToStencilOffThread(
+          aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+    } else {
+      MOZ_ASSERT(aRequest->IsBytecode());
+      stencil = JS::FinishDecodeStencilOffThread(
+          aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+    }
 
     aRequest->GetLoadContext()->mOffThreadToken = nullptr;
 
@@ -480,7 +487,8 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
       return NS_ERROR_FAILURE;
     }
 
-    if (ScriptLoader::ShouldCacheBytecode(aRequest)) {
+    if (aRequest->IsTextSource() &&
+        ScriptLoader::ShouldCacheBytecode(aRequest)) {
       if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
         return NS_ERROR_FAILURE;
       }
@@ -493,16 +501,35 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
     return NS_OK;
   }
 
-  MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<JS::Stencil> stencil;
+  if (aRequest->IsTextSource()) {
+    MaybeSourceText maybeSource;
+    nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<JS::Stencil> stencil =
-      maybeSource.constructed<SourceText<char16_t>>()
-          ? JS::CompileModuleScriptToStencil(
-                aCx, aOptions, maybeSource.ref<SourceText<char16_t>>())
-          : JS::CompileModuleScriptToStencil(
-                aCx, aOptions, maybeSource.ref<SourceText<Utf8Unit>>());
+    stencil = maybeSource.constructed<SourceText<char16_t>>()
+                  ? JS::CompileModuleScriptToStencil(
+                        aCx, aOptions, maybeSource.ref<SourceText<char16_t>>())
+                  : JS::CompileModuleScriptToStencil(
+                        aCx, aOptions, maybeSource.ref<SourceText<Utf8Unit>>());
+  } else {
+    MOZ_ASSERT(aRequest->IsBytecode());
+    JS::DecodeOptions decodeOptions(aOptions);
+    decodeOptions.borrowBuffer = true;
+
+    auto& bytecode = aRequest->mScriptBytecode;
+    auto& offset = aRequest->mBytecodeOffset;
+
+    JS::TranscodeRange range(bytecode.begin() + offset,
+                             bytecode.length() - offset);
+
+    JS::TranscodeResult tr =
+        JS::DecodeStencil(aCx, decodeOptions, range, getter_AddRefs(stencil));
+    if (tr != JS::TranscodeResult::Ok) {
+      return NS_ERROR_DOM_JS_DECODING_ERROR;
+    }
+  }
+
   if (!stencil) {
     return NS_ERROR_FAILURE;
   }
@@ -513,7 +540,7 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
     return NS_ERROR_FAILURE;
   }
 
-  if (ScriptLoader::ShouldCacheBytecode(aRequest)) {
+  if (aRequest->IsTextSource() && ScriptLoader::ShouldCacheBytecode(aRequest)) {
     if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
       return NS_ERROR_FAILURE;
     }

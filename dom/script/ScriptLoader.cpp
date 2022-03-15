@@ -593,10 +593,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
   // constant.
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
-  if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled() &&
-      // Bug 1436400: no bytecode cache support for modules yet.
-      // TODO: Remove this also to enable bytecode encoding.
-      !aRequest->IsModuleRequest()) {
+  if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
     MOZ_ASSERT(!aRequest->GetLoadContext()->GetWebExtGlobal(),
                "Can not bytecode cache WebExt code");
     if (!aRequest->IsLoadingSource()) {
@@ -1530,7 +1527,15 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   auto signalOOM = mozilla::MakeScopeExit(
       [&aRequest]() { aRequest->GetLoadContext()->mRunnable = nullptr; });
 
-  if (aRequest->IsModuleRequest()) {
+  if (aRequest->IsBytecode()) {
+    JS::DecodeOptions decodeOptions(options);
+    aRequest->GetLoadContext()->mOffThreadToken = JS::DecodeStencilOffThread(
+        cx, decodeOptions, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
+        OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
+    if (!aRequest->GetLoadContext()->mOffThreadToken) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
@@ -1544,14 +1549,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
             : JS::CompileModuleToStencilOffThread(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
-    if (!aRequest->GetLoadContext()->mOffThreadToken) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else if (aRequest->IsBytecode()) {
-    JS::DecodeOptions decodeOptions(options);
-    aRequest->GetLoadContext()->mOffThreadToken = JS::DecodeStencilOffThread(
-        cx, decodeOptions, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
-        OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
     if (!aRequest->GetLoadContext()->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3251,7 +3248,6 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   }
 
   if (aRequest->IsModuleRequest()) {
-    MOZ_ASSERT(aRequest->IsSource());
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
 
     // When loading a module, only responses with a JavaScript MIME type are
