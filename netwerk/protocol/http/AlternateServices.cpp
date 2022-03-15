@@ -159,10 +159,9 @@ void AltSvcMapping::ProcessHeader(
       continue;
     }
 
-    uint32_t spdyIndex;
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
-    if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
-          spdyInfo->ProtocolEnabled(spdyIndex)) &&
+    if (!(npnToken.Equals(spdyInfo->VersionString) &&
+          StaticPrefs::network_http_http2_enabled()) &&
         !(isHttp3 && StaticPrefs::network_http_http3_enable() &&
           !gHttpHandler->IsHttp3Excluded(hostname.IsEmpty() ? originHost
                                                             : hostname))) {

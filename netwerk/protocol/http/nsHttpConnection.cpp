@@ -394,9 +394,8 @@ void nsHttpConnection::Check0RttEnabled(nsISSLSocketControl* ssl) {
         ("nsHttpConnection::Check0RttEnabled %p -"
          "early selected alpn: %s",
          this, mEarlyNegotiatedALPN.get()));
-    uint32_t infoIndex;
     const SpdyInformation* info = gHttpHandler->SpdyInfo();
-    if (NS_FAILED(info->GetNPNIndex(mEarlyNegotiatedALPN, &infoIndex))) {
+    if (!mEarlyNegotiatedALPN.Equals(info->VersionString)) {
       // This is the HTTP/1 case.
       // Check if early-data is allowed for this transaction.
       if (mTransaction->Do0RTT()) {
@@ -419,7 +418,7 @@ void nsHttpConnection::Check0RttEnabled(nsISSLSocketControl* ssl) {
            "0RTT for h2!",
            this));
       mEarlyDataState = EarlyData::USED;
-      Start0RTTSpdy(info->Version[infoIndex]);
+      Start0RTTSpdy(info->Version);
     }
   }
 }
@@ -772,11 +771,8 @@ nsresult nsHttpConnection::SetupNPNList(nsISSLSocketControl* ssl,
         !(caps & NS_HTTP_DISALLOW_SPDY)) {
       LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
       const SpdyInformation* info = gHttpHandler->SpdyInfo();
-      for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
-        if (info->ProtocolEnabled(index - 1) &&
-            info->ALPNCallbacks[index - 1](ssl)) {
-          protocolArray.AppendElement(info->VersionString[index - 1]);
-        }
+      if (info->ALPNCallbacks(ssl)) {
+        protocolArray.AppendElement(info->VersionString);
       }
     }
   } else {
@@ -2652,11 +2648,10 @@ void nsHttpConnection::HandshakeDoneInternal() {
          "accepted or early data were not used",
          this));
 
-    uint32_t infoIndex;
     const SpdyInformation* info = gHttpHandler->SpdyInfo();
-    if (NS_SUCCEEDED(info->GetNPNIndex(negotiatedNPN, &infoIndex))) {
+    if (negotiatedNPN.Equals(info->VersionString)) {
       if (mTransaction) {
-        StartSpdy(ssl, info->Version[infoIndex]);
+        StartSpdy(ssl, info->Version);
       } else {
         LOG(
             ("nsHttpConnection::HandshakeDone [this=%p] set "
@@ -2664,7 +2659,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
              this));
         RefPtr<nsHttpConnection> self = this;
         mContinueHandshakeDone = [self = RefPtr{this}, ssl(ssl),
-                                  info(info->Version[infoIndex])]() {
+                                  info(info->Version)]() {
           LOG(("nsHttpConnection do mContinueHandshakeDone [this=%p]",
                self.get()));
           self->StartSpdy(ssl, info);

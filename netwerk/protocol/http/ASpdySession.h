@@ -102,24 +102,14 @@ class SpdyInformation {
   SpdyInformation();
   ~SpdyInformation() = default;
 
-  static const uint32_t kCount = 1;
-
-  // determine the index (0..kCount-1) of the spdy information that
-  // correlates to the npn string. NS_FAILED() if no match is found.
-  [[nodiscard]] nsresult GetNPNIndex(const nsACString& npnString,
-                                     uint32_t* result) const;
-
-  // determine if a version of the protocol is enabled for index < kCount
-  bool ProtocolEnabled(uint32_t index) const;
-
-  SpdyVersion Version[kCount];      // telemetry enum e.g. SPDY_VERSION_31
-  nsCString VersionString[kCount];  // npn string e.g. "spdy/3.1"
+  SpdyVersion Version;      // telemetry enum e.g. SPDY_VERSION_31
+  nsCString VersionString;  // npn string e.g. "spdy/3.1"
 
   // the ALPNCallback function allows the protocol stack to decide whether or
   // not to offer a particular protocol based on the known TLS information
   // that we will offer in the client hello (such as version). There has
   // not been a Server Hello received yet, so not much else can be considered.
-  ALPNCallback ALPNCallbacks[kCount];
+  ALPNCallback ALPNCallbacks;
 };
 
 }  // namespace net
