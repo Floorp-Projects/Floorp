@@ -4,61 +4,73 @@
 
 #include "TextRecognition.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/ContentChild.h"
+#include "nsTextNode.h"
 #include "imgIContainer.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla::widget {
 
-NS_IMPL_ISUPPORTS(TextRecognition, nsITextRecognition);
-
-static bool ToJSValue(JSContext* aCx, widget::TextRecognitionResult& aResult,
-                      JS::MutableHandle<JS::Value> aValue) {
-  // TODO(emilio): Expose this to JS in a nicer way than just the string.
-  nsAutoString string;
-  for (const auto& quad : aResult.mQuads) {
-    string.Append(quad.mString);
-    string.Append(u'\n');
-  }
-  return dom::ToJSValue(aCx, string, aValue);
-}
-
-NS_IMETHODIMP
-TextRecognition::FindText(imgIContainer* aImage, JSContext* aCx,
-                          dom::Promise** aResultPromise) {
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise =
-      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-  if (MOZ_UNLIKELY(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  RefPtr<gfx::SourceSurface> surface = aImage->GetFrame(
+auto TextRecognition::FindText(imgIContainer& aImage) -> RefPtr<NativePromise> {
+  // TODO: Maybe decode async.
+  RefPtr<gfx::SourceSurface> surface = aImage.GetFrame(
       imgIContainer::FRAME_CURRENT,
       imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
-
   if (NS_WARN_IF(!surface)) {
-    promise->MaybeRejectWithInvalidStateError("Failed to get surface");
-    return NS_OK;
+    return NativePromise::CreateAndReject("Failed to get surface"_ns, __func__);
   }
-
-  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
-      "nsTextRecognition::SpawnOSBackgroundThread", promise);
-  FindText(*surface)->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [promiseHolder = std::move(promiseHolder)](
-          NativePromise::ResolveOrRejectValue&& aValue) {
-        dom::Promise* p = promiseHolder->get();
-        if (aValue.IsReject()) {
-          p->MaybeRejectWithNotSupportedError(aValue.RejectValue());
-          return;
-        }
-        p->MaybeResolve(aValue.ResolveValue());
-      });
-
-  promise.forget(aResultPromise);
-  return NS_OK;
+  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+  if (NS_WARN_IF(!dataSurface)) {
+    return NativePromise::CreateAndReject("Failed to get data surface"_ns,
+                                          __func__);
+  }
+  return FindText(*dataSurface);
 }
 
-auto TextRecognition::FindText(gfx::SourceSurface&) -> RefPtr<NativePromise> {
+auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface)
+    -> RefPtr<NativePromise> {
+  if (XRE_IsContentProcess()) {
+    auto* contentChild = ContentChild::GetSingleton();
+    auto image = nsContentUtils::SurfaceToIPCImage(aSurface, contentChild);
+    if (!image) {
+      return NativePromise::CreateAndReject("Failed to share data surface"_ns,
+                                            __func__);
+    }
+    auto promise = MakeRefPtr<NativePromise::Private>(__func__);
+    contentChild->SendFindImageText(*image)->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise](TextRecognitionResultOrError&& aResultOrError) {
+          switch (aResultOrError.type()) {
+            case TextRecognitionResultOrError::Type::TTextRecognitionResult:
+              promise->Resolve(
+                  std::move(aResultOrError.get_TextRecognitionResult()),
+                  __func__);
+              break;
+            case TextRecognitionResultOrError::Type::TnsCString:
+              promise->Reject(std::move(aResultOrError.get_nsCString()),
+                              __func__);
+              break;
+            default:
+              MOZ_ASSERT_UNREACHABLE("Unknown result?");
+              promise->Reject("Unknown error"_ns, __func__);
+              break;
+          }
+        },
+        [promise](mozilla::ipc::ResponseRejectReason) {
+          promise->Reject("IPC rejection"_ns, __func__);
+        });
+    return promise;
+  }
+  return DoFindText(aSurface);
+}
+
+auto TextRecognition::DoFindText(gfx::DataSourceSurface&)
+    -> RefPtr<NativePromise> {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
+                     "This should only run in the parent process");
   return NativePromise::CreateAndReject("Text recognition not available"_ns,
                                         __func__);
 }
