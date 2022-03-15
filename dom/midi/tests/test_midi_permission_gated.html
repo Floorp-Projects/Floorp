@@ -27,7 +27,10 @@
 
     async function runTests() {
       await SpecialPowers.pushPrefEnv({
-        set: [["dom.webmidi.enabled", true]],
+        set: [
+          ["dom.webmidi.enabled", true],
+          ["midi.testing", true],
+        ],
       });
       ok(
         await SpecialPowers.testPermission(
