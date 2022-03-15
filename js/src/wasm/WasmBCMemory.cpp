@@ -229,7 +229,11 @@ void BaseCompiler::pushHeapBase() {
 #else
 void BaseCompiler::pushHeapBase() {
   RegPtr heapBase = need<RegPtr>();
+#  ifdef RABALDR_PIN_INSTANCE
+  movePtr(RegPtr(WasmTlsReg), heapBase);
+#  else
   fr.loadTlsPtr(heapBase);
+#  endif
   masm.loadPtr(Address(heapBase, Instance::offsetOfMemoryBase()), heapBase);
   push(RegPtrToRegIntptr(heapBase));
 }
@@ -433,9 +437,23 @@ bool BaseCompiler::needTlsForAccess(const AccessCheck& check) {
 
 RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
   if (needTlsForAccess(check)) {
+#ifdef RABALDR_PIN_INSTANCE
+    // NOTE, returning WasmTlsReg here depends for correctness on *ALL* clients
+    // not attempting to free this register and not push it on the value stack.
+    //
+    // We have assertions in place to guard against that, so the risk of the
+    // leaky abstraction is acceptable.  performRegisterLeakCheck() will ensure
+    // that after every bytecode, the union of available registers from the
+    // regalloc and used registers from the stack equals the set of allocatable
+    // registers at startup.  Thus if the Tls is freed incorrectly it will end
+    // up in that union via the regalloc, and if it is pushed incorrectly it
+    // will end up in the union via the stack.
+    return RegPtr(WasmTlsReg);
+#else
     RegPtr tls = need<RegPtr>();
     fr.loadTlsPtr(tls);
     return tls;
+#endif
   }
   return RegPtr::Invalid();
 }
@@ -443,7 +461,11 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
 RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
                                            RegPtr specific) {
   if (needTlsForAccess(check)) {
+#ifdef RABALDR_PIN_INSTANCE
+    movePtr(RegPtr(WasmTlsReg), specific);
+#else
     fr.loadTlsPtr(specific);
+#endif
     return specific;
   }
   return RegPtr::Invalid();
@@ -750,7 +772,9 @@ void BaseCompiler::doLoadCommon(MemoryAccessDesc* access, AccessCheck check,
       break;
   }
 
+#ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#endif
   maybeFree(temp);
 }
 
@@ -829,7 +853,9 @@ void BaseCompiler::doStoreCommon(MemoryAccessDesc* access, AccessCheck check,
       break;
   }
 
+#ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#endif
   maybeFree(temp);
 }
 
@@ -964,7 +990,9 @@ void BaseCompiler::atomicLoad64(MemoryAccessDesc* access) {
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   masm.wasmAtomicLoad64(*access, memaddr, temp, rd);
+#    ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#    endif
 #  else
   ScratchAtomicNoHeapReg scratch(*this);
   RegPtr tls = maybeLoadTlsForAccess(check, RegIntptrToRegPtr(scratch));
@@ -1213,7 +1241,9 @@ void BaseCompiler::atomicRMW32(MemoryAccessDesc* access, ValType type,
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_rmw32::Perform(this, *access, memaddr, op, rv, rd, temps);
 
+#ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#endif
   atomic_rmw32::Deallocate(this, rv, temps);
   free(rp);
 
@@ -1368,7 +1398,9 @@ void BaseCompiler::atomicRMW64(MemoryAccessDesc* access, ValType type,
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_rmw64::Perform(this, *access, memaddr, op, rv, temp, rd);
+#  ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#  endif
 #else
   ScratchAtomicNoHeapReg scratch(*this);
   RegPtr tls = maybeLoadTlsForAccess(check, RegIntptrToRegPtr(scratch));
@@ -1543,7 +1575,9 @@ void BaseCompiler::atomicXchg32(MemoryAccessDesc* access, ValType type) {
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_xchg32::Perform(this, *access, memaddr, rv, rd, temps);
 
+#ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#endif
   free(rp);
   atomic_xchg32::Deallocate(this, rv, temps);
 
@@ -1659,7 +1693,9 @@ void BaseCompiler::atomicXchg64(MemoryAccessDesc* access,
   auto memaddr =
       prepareAtomicMemoryAccess<RegIndexType>(access, &check, tls, rp);
   masm.wasmAtomicExchange64(*access, memaddr, rv, rd);
+#  ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#  endif
 #else
   ScratchAtomicNoHeapReg scratch(*this);
   RegPtr tls = maybeLoadTlsForAccess(check, RegIntptrToRegPtr(scratch));
@@ -1849,7 +1885,9 @@ void BaseCompiler::atomicCmpXchg32(MemoryAccessDesc* access, ValType type) {
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_cmpxchg32::Perform(this, *access, memaddr, rexpect, rnew, rd, temps);
 
+#ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#endif
   free(rp);
   atomic_cmpxchg32::Deallocate(this, rexpect, rnew, temps);
 
@@ -2054,7 +2092,9 @@ void BaseCompiler::atomicCmpXchg64(MemoryAccessDesc* access, ValType type) {
   RegPtr tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   atomic_cmpxchg64::Perform(this, *access, memaddr, rexpect, rnew, rd);
+#  ifndef RABALDR_PIN_INSTANCE
   maybeFree(tls);
+#  endif
 #else
   ScratchAtomicNoHeapReg scratch(*this);
   RegPtr tls = maybeLoadTlsForAccess(check, RegIntptrToRegPtr(scratch));

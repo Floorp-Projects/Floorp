@@ -1069,7 +1069,7 @@ struct BaseCompiler final {
   //
   // Global variable access.
 
-  Address addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp);
+  Address addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp);
 
   //////////////////////////////////////////////////////////////////////
   //
