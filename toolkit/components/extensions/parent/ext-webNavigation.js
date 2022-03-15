@@ -8,21 +8,13 @@
 // by ext-browser.js or ext-android.js).
 /* global tabTracker */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "MatchURLFilters",
-  "resource://gre/modules/MatchURLFilters.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebNavigation",
-  "resource://gre/modules/WebNavigation.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  MatchURLFilters: "resource://gre/modules/MatchURLFilters.jsm",
+  WebNavigation: "resource://gre/modules/WebNavigation.jsm",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
 var { ExtensionError } = ExtensionUtils;
 
 const defaultTransitionTypes = {
@@ -122,6 +114,16 @@ class WebNavigationEventManager extends EventManager {
         if (!data.browser) {
           return;
         }
+        if (
+          context &&
+          !context.privateBrowsingAllowed &&
+          PrivateBrowsingUtils.isBrowserPrivate(data.browser)
+        ) {
+          return;
+        }
+        if (filters && !filters.matches(data.url)) {
+          return;
+        }
 
         let data2 = {
           url: data.url,
@@ -176,7 +178,7 @@ class WebNavigationEventManager extends EventManager {
         fire.async(data2);
       };
 
-      WebNavigation[eventName].addListener(listener, filters, context);
+      WebNavigation[eventName].addListener(listener);
       return () => {
         WebNavigation[eventName].removeListener(listener);
       };
