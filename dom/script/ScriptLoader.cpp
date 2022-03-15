@@ -487,7 +487,12 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   // Start a new channel from which we explicitly request to stream the source
   // instead of the bytecode.
   aRequest->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
-  nsresult rv = StartLoad(aRequest);
+  nsresult rv;
+  if (aRequest->IsModuleRequest()) {
+    rv = mModuleLoader->RestartModuleLoad(aRequest);
+  } else {
+    rv = StartLoad(aRequest);
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
