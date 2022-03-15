@@ -277,7 +277,8 @@ class PosixProcessLauncher : public BaseProcessLauncher {
   PosixProcessLauncher(GeckoChildProcessHost* aHost,
                        std::vector<std::string>&& aExtraOpts)
       : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
-        mProfileDir(aHost->mProfileDir) {}
+        mProfileDir(aHost->mProfileDir),
+        mChannelDstFd(-1) {}
 
  protected:
   bool SetChannel(IPC::Channel* aChannel) override {
@@ -287,6 +288,9 @@ class PosixProcessLauncher : public BaseProcessLauncher {
     // this purpose it's just a number.
     int origSrcFd;
     aChannel->GetClientFileDescriptorMapping(&origSrcFd, &mChannelDstFd);
+#  ifndef MOZ_WIDGET_ANDROID
+    MOZ_ASSERT(mChannelDstFd >= 0);
+#  endif
     mChannelSrcFd.reset(dup(origSrcFd));
     if (NS_WARN_IF(!mChannelSrcFd)) {
       return false;
@@ -1142,8 +1146,16 @@ bool PosixProcessLauncher::DoSetup() {
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
+#  ifdef MOZ_WIDGET_ANDROID
+  // On Android mChannelDstFd is uninitialised and the launching code uses only
+  // the first of each pair.
+  mLaunchOptions->fds_to_remap.push_back(
+      std::pair<int, int>(mChannelSrcFd.get(), -1));
+#  else
+  MOZ_ASSERT(mChannelDstFd >= 0);
   mLaunchOptions->fds_to_remap.push_back(
       std::pair<int, int>(mChannelSrcFd.get(), mChannelDstFd));
+#  endif
 
   // no need for kProcessChannelID, the child process inherits the
   // other end of the socketpair() from us
