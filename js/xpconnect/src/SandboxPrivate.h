@@ -49,6 +49,8 @@ class SandboxPrivate : public nsIGlobalObject,
     return static_cast<SandboxPrivate*>(sop);
   }
 
+  mozilla::OriginTrials Trials() const final { return {}; }
+
   nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
   nsIPrincipal* GetEffectiveStoragePrincipal() override { return mPrincipal; }
