@@ -9,6 +9,7 @@ These pages contain documentation for Mozilla's Cross-Platform Component Object 
    logging
    stringguide
    refptr
+   thread-safety
    huntingleaks
    collections
    xpidl
