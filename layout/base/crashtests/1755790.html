@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+      *,
+      #id_0 {
+          position: fixed;
+          border-inline-style: groove hidden;
+          opacity: 0% ! important;
+          border-bottom-style: groove ! important;
+          backdrop-filter: opacity(44%);
+      }
+
+      HTML {
+          -webkit-mask-image: url(0062be2b5ec34515f5de93ee618142001c6f4728.icc);
+      }
+
+      * {
+          all: revert;
+      }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const slot = document.createElement("slot")
+      document.documentElement.appendChild(slot)
+      slot.setAttribute("id", "id_0")
+      setTimeout(() => (slot.style.display = "block"), 50)
+    })
+  </script>
+</head>
+</html>
