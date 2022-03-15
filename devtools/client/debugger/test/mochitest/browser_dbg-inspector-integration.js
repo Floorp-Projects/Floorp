@@ -28,7 +28,7 @@ add_task(async function() {
   // TODO: Remove when Bug 1562165 lands.
   await onWhyPausedDisplayed;
   // TODO: Remove when Bug 1562165 lands.
-  waitUntil(() => !dbg.win.document.querySelector(".why-paused"));
+  await waitUntil(() => !dbg.win.document.querySelector(".why-paused"));
 
   info(
     "Check that hovering over DOM element highlights the node in content panel"
