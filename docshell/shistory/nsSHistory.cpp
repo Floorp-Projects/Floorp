@@ -1214,26 +1214,27 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       do_QueryInterface(aBrowsingContext->GetEmbedderElement());
   if (frameLoaderOwner && aFrameLoader->GetMaybePendingBrowsingContext() &&
       indexOfHistoryLoad >= 0) {
-    // Synthesize a STATE_START WebProgress state change event from here
-    // in order to ensure emitting it on the BrowsingContext we navigate *from*
-    // instead of the BrowsingContext we navigate *to*.
-    // This will fire before and the next one will be ignored by
-    // BrowsingContextWebProgress:
-    // https://searchfox.org/mozilla-central/rev/77f0b36028b2368e342c982ea47609040b399d89/docshell/base/BrowsingContextWebProgress.cpp#196-203
-    nsCOMPtr<nsIURI> nextURI = aEntry->GetURI();
-    nsCOMPtr<nsIURI> nextOriginalURI = aEntry->GetOriginalURI();
-    nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
-        nextURI, nextOriginalURI ? nextOriginalURI : nextURI,
-        ""_ns /* aMatchedList */);
-    BrowsingContextWebProgress* webProgress =
+    RefPtr<BrowsingContextWebProgress> webProgress =
         aBrowsingContext->GetWebProgress();
-    webProgress->OnStateChange(webProgress, request,
-                               nsIWebProgressListener::STATE_START |
-                                   nsIWebProgressListener::STATE_IS_DOCUMENT |
-                                   nsIWebProgressListener::STATE_IS_REQUEST |
-                                   nsIWebProgressListener::STATE_IS_WINDOW |
-                                   nsIWebProgressListener::STATE_IS_NETWORK,
-                               NS_OK);
+    if (webProgress) {
+      // Synthesize a STATE_START WebProgress state change event from here
+      // in order to ensure emitting it on the BrowsingContext we navigate
+      // *from* instead of the BrowsingContext we navigate *to*. This will fire
+      // before and the next one will be ignored by BrowsingContextWebProgress:
+      // https://searchfox.org/mozilla-central/rev/77f0b36028b2368e342c982ea47609040b399d89/docshell/base/BrowsingContextWebProgress.cpp#196-203
+      nsCOMPtr<nsIURI> nextURI = aEntry->GetURI();
+      nsCOMPtr<nsIURI> nextOriginalURI = aEntry->GetOriginalURI();
+      nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
+          nextURI, nextOriginalURI ? nextOriginalURI : nextURI,
+          ""_ns /* aMatchedList */);
+      webProgress->OnStateChange(webProgress, request,
+                                 nsIWebProgressListener::STATE_START |
+                                     nsIWebProgressListener::STATE_IS_DOCUMENT |
+                                     nsIWebProgressListener::STATE_IS_REQUEST |
+                                     nsIWebProgressListener::STATE_IS_WINDOW |
+                                     nsIWebProgressListener::STATE_IS_NETWORK,
+                                 NS_OK);
+    }
 
     RefPtr<CanonicalBrowsingContext> loadingBC =
         aFrameLoader->GetMaybePendingBrowsingContext()->Canonical();
