@@ -1988,9 +1988,7 @@ class MOZ_RAII AutoSetProcessingScriptTag {
   ~AutoSetProcessingScriptTag() { mContext->SetProcessingScriptTag(mOldTag); }
 };
 
-static nsresult ExecuteCompiledScript(JSContext* aCx,
-                                      ScriptLoadRequest* aRequest,
-                                      JSExecutionContext& aExec,
+static nsresult ExecuteCompiledScript(JSContext* aCx, JSExecutionContext& aExec,
                                       ClassicScript* aLoaderScript) {
   JS::Rooted<JSScript*> script(aCx, aExec.GetScript());
   if (!script) {
@@ -2197,7 +2195,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
                               MarkerInnerWindowIdFromJSContext(cx),
                               profilerLabelString);
 
-    rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
+    rv = ExecuteCompiledScript(cx, exec, classicScript);
   }
   rv = MaybePrepareForBytecodeEncoding(script, aRequest, rv);
 
