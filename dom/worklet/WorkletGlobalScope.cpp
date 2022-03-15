@@ -38,8 +38,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope(WorkletImpl* aImpl)
-    : mImpl(aImpl), mCreationTimeStamp(TimeStamp::Now()) {}
+WorkletGlobalScope::WorkletGlobalScope(const Maybe<nsID>& aAgentClusterId,
+                                       bool aSharedMemoryAllowed)
+    : mCreationTimeStamp(TimeStamp::Now()),
+      mAgentClusterId(aAgentClusterId),
+      mSharedMemoryAllowed(aSharedMemoryAllowed) {}
 
 WorkletGlobalScope::~WorkletGlobalScope() = default;
 
@@ -63,16 +66,6 @@ already_AddRefed<Console> WorkletGlobalScope::GetConsole(JSContext* aCx,
 
   RefPtr<Console> console = mConsole;
   return console.forget();
-}
-
-OriginTrials WorkletGlobalScope::Trials() const { return mImpl->Trials(); }
-
-Maybe<nsID> WorkletGlobalScope::GetAgentClusterId() const {
-  return mImpl->GetAgentClusterId();
-}
-
-bool WorkletGlobalScope::IsSharedMemoryAllowed() const {
-  return mImpl->IsSharedMemoryAllowed();
 }
 
 void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {

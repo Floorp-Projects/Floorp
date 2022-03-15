@@ -1625,10 +1625,6 @@ bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
 
-OriginTrials nsGlobalWindowInner::Trials() const {
-  return OriginTrials::FromWindow(this);
-}
-
 uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
   if (mDoc) {
     return mDoc->NodePrincipal()->GetHashValue();

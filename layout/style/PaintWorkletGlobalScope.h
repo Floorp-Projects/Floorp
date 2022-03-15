@@ -26,10 +26,12 @@ class PaintWorkletGlobalScope final : public WorkletGlobalScope {
 
   void RegisterPaint(const nsAString& aType, VoidFunction& aProcessorCtor);
 
-  PaintWorkletImpl* Impl() const;
+  WorkletImpl* Impl() const override;
 
  private:
   ~PaintWorkletGlobalScope() = default;
+
+  const RefPtr<PaintWorkletImpl> mImpl;
 };
 
 }  // namespace dom
