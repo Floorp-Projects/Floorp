@@ -303,3 +303,25 @@ add_task(async function typeCharWhileProcessingEnter() {
   // Cleanup.
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function keyupEnterWhilePressingMeta() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  info("Keydown Meta+Enter");
+  gURLBar.focus();
+  gURLBar.value = "";
+  EventUtils.synthesizeKey("KEY_Enter", { type: "keydown", metaKey: true });
+
+  // Pressing Enter key while pressing Meta key, and next, even when releasing
+  // Enter key before releasing Meta key, the keyup event is not fired.
+  // Therefor, we fire Meta keyup event only.
+  info("Keyup Meta");
+  EventUtils.synthesizeKey("KEY_Meta", { type: "keyup" });
+
+  // Check whether we can input on URL bar.
+  EventUtils.synthesizeKey("a");
+  is(gURLBar.value, "a", "Can input a char");
+
+  // Cleanup.
+  BrowserTestUtils.removeTab(tab);
+});

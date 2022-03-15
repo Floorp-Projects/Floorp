@@ -3250,10 +3250,17 @@ class UrlbarInput {
   }
 
   async _on_keyup(event) {
-    if (
-      event.keyCode === KeyEvent.DOM_VK_RETURN &&
-      this._keyDownEnterDeferred
-    ) {
+    if (event.keyCode === KeyEvent.DOM_VK_CONTROL) {
+      this._isKeyDownWithCtrl = false;
+    }
+
+    this._toggleActionOverride(event);
+
+    // Pressing Enter key while pressing Meta key, and next, even when releasing
+    // Enter key before releasing Meta key, the keyup event is not fired.
+    // Therefore, if Enter keydown is detecting, continue the post processing
+    // for Enter key when any keyup event is detected.
+    if (this._keyDownEnterDeferred) {
       if (this._keyDownEnterDeferred.loadedContent) {
         try {
           const loadingBrowser = await this._keyDownEnterDeferred.promise;
@@ -3263,24 +3270,19 @@ class UrlbarInput {
             // Make sure the domain name stays visible for spoof protection and usability.
             this.selectionStart = this.selectionEnd = 0;
           }
-          this._keyDownEnterDeferred = null;
         } catch (ex) {
           // Not all the Enter actions in the urlbar will cause a navigation, then it
           // is normal for this to be rejected.
           // If _keyDownEnterDeferred was rejected on keydown, we don't nullify it here
           // to ensure not overwriting the new value created by keydown.
         }
-        return;
+      } else {
+        // Discard the _keyDownEnterDeferred promise to receive any key inputs immediately.
+        this._keyDownEnterDeferred.resolve();
       }
 
-      // Discard the _keyDownEnterDeferred promise to receive any key inputs immediately.
-      this._keyDownEnterDeferred.resolve();
       this._keyDownEnterDeferred = null;
-    } else if (event.keyCode === KeyEvent.DOM_VK_CONTROL) {
-      this._isKeyDownWithCtrl = false;
     }
-
-    this._toggleActionOverride(event);
   }
 
   _on_compositionstart(event) {
