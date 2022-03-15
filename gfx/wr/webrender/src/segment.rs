@@ -60,6 +60,9 @@ use smallvec::SmallVec;
 const MAX_SEGMENTS: usize = 64;
 
 bitflags! {
+    // Note: This can use up to 4 bits due to how it will be packed in
+    // the instance data.
+
     /// Each bit of the edge AA mask is:
     /// 0, when the edge of the primitive needs to be considered for AA
     /// 1, when the edge of the segment needs to be considered for AA
