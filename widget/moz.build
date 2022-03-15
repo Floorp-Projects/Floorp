@@ -127,14 +127,9 @@ XPIDL_SOURCES += [
     "nsISharePicker.idl",
     "nsISound.idl",
     "nsISystemStatusBar.idl",
-    "nsITextRecognition.idl",
     "nsITransferable.idl",
     "nsIUserIdleService.idl",
     "nsIUserIdleServiceInternal.idl",
-]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
 ]
 
 XPIDL_MODULE = "widget"
