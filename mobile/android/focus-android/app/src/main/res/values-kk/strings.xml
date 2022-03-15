@@ -507,7 +507,9 @@
     <string name="onboarding_history_title">Интернетті көрінбейтіндей шолыңыз</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
+
+    <string name="onboarding_history_description2">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Кез келген жағдайға сәйкес келетін жекелік</string>

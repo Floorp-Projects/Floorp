@@ -507,7 +507,9 @@
     <string name="onboarding_history_title">Nabigatu inoiz gertatu izan ez balitz bezala</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
+
+    <string name="onboarding_history_description2">Behin sakatuta, zure nabigatze-historia eta cookieak ezabatu egiten dira — eragotzi egiten da halaber iragarkiek zu zelatatzea.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Egoera guztietarako pribatutasuna</string>

@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Böngésszen úgy, mintha meg sem történt volna</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
+
+    <string name="onboarding_history_description2">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Adatvédelem minden helyzethez</string>

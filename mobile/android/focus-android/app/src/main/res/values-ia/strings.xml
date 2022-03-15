@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Naviga como il eveniva jammais</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
+
+    <string name="onboarding_history_description2">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Confidentialitate que vade ben pro ulle situation</string>

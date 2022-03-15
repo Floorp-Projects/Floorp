@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Navigate cum’è s’ella fussi a prima volta</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Una picchicciata squassa a cronolugia di a vostra navigazione è i canistrelli - è impedisce e publicità di seguità i vostri circondi.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Una picchicciata squassa a cronolugia di a vostra navigazione è i canistrelli - è impedisce e publicità di seguità i vostri circondi.</string>
+
+    <string name="onboarding_history_description2">Una picchicciata squassa a cronolugia di a vostra navigazione è i canistrelli - è impedisce e publicità di seguità i vostri circondi.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">A cunfidenzialità adattata à ogni situazione</string>

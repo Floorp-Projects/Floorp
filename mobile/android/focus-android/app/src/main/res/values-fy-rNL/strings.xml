@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Sneup as oft it nea bard is</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Mei ien tik wurde jo navigaasjeskiednis en cookies wiske en wurdt foarkommen dat advertinsjes jo folgje.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Mei ien tik wurde jo navigaasjeskiednis en cookies wiske en wurdt foarkommen dat advertinsjes jo folgje.</string>
+
+    <string name="onboarding_history_description2">Mei ien tik wurde jo navigaasjeskiednis en cookies wiske en wurdt foarkommen dat advertinsjes jo folgje.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacy foar elke situaasje</string>

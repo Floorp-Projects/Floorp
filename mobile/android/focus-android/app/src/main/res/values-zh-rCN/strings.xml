@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">浏览无痕迹</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
+
+    <string name="onboarding_history_description2">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">适合任何场景的隐私保护机制</string>

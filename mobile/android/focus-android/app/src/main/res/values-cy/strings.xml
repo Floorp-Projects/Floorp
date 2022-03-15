@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Pori fel nad yw wedi digwydd erioed</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Mae un tap yn dileu eich hanes pori a’ch cwcis - ac yn atal hysbysebion rhag eich dilyn o le i le.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Mae un tap yn dileu eich hanes pori a’ch cwcis - ac yn atal hysbysebion rhag eich dilyn o le i le.</string>
+
+    <string name="onboarding_history_description2">Mae un tap yn dileu eich hanes pori a’ch cwcis - ac yn atal hysbysebion rhag eich dilyn o le i le.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Preifatrwydd sy’n gweddu i bob sefyllfa</string>

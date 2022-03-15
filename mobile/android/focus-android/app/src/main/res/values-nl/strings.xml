@@ -510,7 +510,9 @@
     <string name="onboarding_history_title">Surf alsof het nooit is gebeurd</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
+
+    <string name="onboarding_history_description2">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacy voor elke situatie</string>

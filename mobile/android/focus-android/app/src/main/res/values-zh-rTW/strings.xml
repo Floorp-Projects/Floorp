@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">讓瀏覽紀錄彷彿沒發生過</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
+
+    <string name="onboarding_history_description2">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">符合任何情境的隱私保護機制</string>

@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">何事もなかったかのようなブラウジング</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
+
+    <string name="onboarding_history_description2">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">どんな状況でも適合するプライバシー機能</string>

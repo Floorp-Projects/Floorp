@@ -510,7 +510,9 @@
     <string name="onboarding_history_title">Naviguez comme si de rien n’était</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez les publicités de suivre votre navigation.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez les publicités de suivre votre navigation.</string>
+
+    <string name="onboarding_history_description2">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez ainsi les publicités de suivre votre navigation.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Une confidentialité adaptée à vos besoins</string>

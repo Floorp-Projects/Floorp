@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Brskajte, kot da se nikoli ni zgodilo</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
+
+    <string name="onboarding_history_description2">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Zasebnost, ki ustreza vsaki situaciji</string>

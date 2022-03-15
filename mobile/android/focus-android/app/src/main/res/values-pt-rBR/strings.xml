@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Navegue como se nunca tivesse acontecido</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Um único toque apaga o histórico de navegação e cookies, além de impedir que anúncios te sigam.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Um único toque apaga o histórico de navegação e cookies, além de impedir que anúncios te sigam.</string>
+
+    <string name="onboarding_history_description2">Um único toque apaga o histórico de navegação e cookies, além de impedir que anúncios te sigam.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacidade adequada a qualquer situação</string>
