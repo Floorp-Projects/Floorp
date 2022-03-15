@@ -193,8 +193,8 @@ class alignas(16) Instance {
                   uint64_t* argv);
 
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
-           HandleWasmMemoryObject memory,
-           SharedTableVector&& tables, UniqueDebugState maybeDebug);
+           HandleWasmMemoryObject memory, SharedTableVector&& tables,
+           UniqueDebugState maybeDebug);
   ~Instance();
 
  public:
@@ -236,12 +236,14 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfValueBoxClass() {
     return offsetof(Instance, valueBoxClass_);
   }
+#ifdef ENABLE_WASM_EXCEPTIONS
   static constexpr size_t offsetOfPendingException() {
     return offsetof(Instance, pendingException_);
   }
   static constexpr size_t offsetOfPendingExceptionTag() {
     return offsetof(Instance, pendingExceptionTag_);
   }
+#endif  // ENABLE_WASM_EXCEPTIONS
   static constexpr size_t offsetOfStackLimit() {
     return offsetof(Instance, stackLimit_);
   }
@@ -287,11 +289,10 @@ class alignas(16) Instance {
 
   // Methods to set, test and clear the interrupt fields. Both interrupt
   // fields are Relaxed and so no consistency/ordering can be assumed.
+
   void setInterrupt();
   bool isInterrupted() const;
   void resetInterrupt(JSContext* cx);
-
-  void setPendingException(JSObject* pendingException);
 
   const Code& code() const { return *code_; }
   inline const CodeTier& code(Tier t) const;
