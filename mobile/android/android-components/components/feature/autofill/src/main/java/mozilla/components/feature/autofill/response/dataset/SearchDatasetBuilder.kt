@@ -17,7 +17,6 @@ import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
 import mozilla.components.feature.autofill.handler.MAX_LOGINS
 import mozilla.components.feature.autofill.structure.ParsedStructure
-import mozilla.components.support.utils.PendingIntentUtils
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal data class SearchDatasetBuilder(
@@ -37,7 +36,7 @@ internal data class SearchDatasetBuilder(
             context,
             configuration.activityRequestCode + MAX_LOGINS,
             searchIntent,
-            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_CANCEL_CURRENT
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
         )
         val intentSender: IntentSender = searchPendingIntent.intentSender
 

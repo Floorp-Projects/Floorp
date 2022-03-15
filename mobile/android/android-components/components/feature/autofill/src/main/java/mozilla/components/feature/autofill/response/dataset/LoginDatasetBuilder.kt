@@ -87,7 +87,7 @@ internal data class LoginDatasetBuilder(
                 context,
                 configuration.activityRequestCode + requestOffset,
                 confirmIntent,
-                PendingIntentUtils.defaultFlags or PendingIntent.FLAG_CANCEL_CURRENT
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
             ).intentSender
 
             dataset.setAuthentication(intentSender)

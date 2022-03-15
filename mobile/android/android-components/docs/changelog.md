@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-autofill**
+  * 🚒 Bug fixed [issue #11869](https://github.com/mozilla-mobile/android-components/issues/11869) - Fix regression causing autofill to not work after unlocking the app doing the autofill or after accepting that the authenticity of the autofill target could not be verified.
+
 * **feature-contextmenu**
   * 🚒 Bug fixed [issue #11829](https://github.com/mozilla-mobile/android-components/pull/11830) - To make the additional note visible in landscape mode.
 
