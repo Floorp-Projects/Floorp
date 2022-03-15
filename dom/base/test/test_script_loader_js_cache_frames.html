@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1436400 -->
+<!-- The JS bytecode cache is not supposed to be observable. To make it
+     observable, the ScriptLoader is instrumented to trigger events on the
+     script tag.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for saving and loading module bytecode in/from the necko cache</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+
+// List of testcases
+//
+// src
+//   HTML file loaded in iframe
+// saveEvents
+//   Non-ordered multi-set of expected events dispatched during loading the
+//   "save" iframe in the HTML file
+// loadEvents
+//   Non-ordered multi-set of expected events dispatched during loading the
+//   "load" iframe in the HTML file
+const tests = [
+  // Same module is loaded by script element in 2 frames.
+  {
+    src: "file_script_module_frames_element.html",
+    saveEvents: [
+      // file_script_module_frames_element_shared.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+    ],
+    loadEvents: [
+      // file_script_module_frames_element_shared.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module",
+      "test_evaluated",
+    ],
+  },
+
+  // Same module is imported in 2 frames.
+  {
+    src: "file_script_module_frames_import.html",
+    saveEvents: [
+      // file_script_module_frames_import_save.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_frames_import_shared.js
+      "scriptloader_load_source",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    loadEvents: [
+      // file_script_module_frames_import_load.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_frames_import_shared.js
+      "scriptloader_load_bytecode",
+    ],
+  },
+
+  // Same module is dynamically imported in 2 frames.
+  {
+    src: "file_script_module_frames_dynamic.html",
+    saveEvents: [
+      // file_script_module_frames_dynamic_save.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_frames_dynamic_shared.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+    ],
+    loadEvents: [
+      // file_script_module_frames_dynamic_load.js
+      "scriptloader_load_source",
+      "scriptloader_evaluate_module",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
+      "test_evaluated",
+
+      // file_script_module_frames_dynamic_shared.js
+      "scriptloader_load_bytecode",
+      "scriptloader_evaluate_module",
+    ],
+  },
+];
+
+promise_test(async function() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ['dom.script_loader.bytecode_cache.enabled', true],
+    ['dom.expose_test_interfaces', true],
+    ['dom.script_loader.bytecode_cache.strategy', -1]
+  ]});
+
+  for (const { src, saveEvents, loadEvents } of tests) {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+
+    const iwin = iframe.contentWindow;
+
+    dump("## Start: " + src + "\n");
+    let observedSaveEvents = [];
+    await new Promise(resolve => {
+      function logEvent(evt) {
+        const type = evt.type.replace(/^save_/, "");
+
+        dump("## ScriptLoader event: " + type + "\n");
+        observedSaveEvents.push(type);
+        if (observedSaveEvents.length == saveEvents.length) {
+          resolve();
+        }
+      }
+      iwin.addEventListener("save_scriptloader_load_source", logEvent);
+      iwin.addEventListener("save_scriptloader_load_bytecode", logEvent);
+      iwin.addEventListener("save_scriptloader_execute", logEvent);
+      iwin.addEventListener("save_scriptloader_evaluate_module", logEvent);
+      iwin.addEventListener("save_scriptloader_encode", logEvent);
+      iwin.addEventListener("save_scriptloader_no_encode", logEvent);
+      iwin.addEventListener("save_scriptloader_bytecode_saved", logEvent);
+      iwin.addEventListener("save_scriptloader_bytecode_failed", logEvent);
+      iwin.addEventListener("save_scriptloader_fallback", logEvent);
+      iwin.addEventListener("save_test_evaluated", logEvent);
+      iframe.src = src;
+    });
+
+    // The event order is non-deterministic.
+    // Just compare them as multi-set.
+    saveEvents.sort();
+    observedSaveEvents.sort();
+    assert_equals(
+      JSON.stringify(observedSaveEvents),
+      JSON.stringify(saveEvents),
+      `Expected events should be observed for ${src} while saving`);
+
+    let observedLoadEvents = [];
+    await new Promise(resolve => {
+      function logEvent(evt) {
+        const type = evt.type.replace(/^load_/, "");
+
+        dump("## ScriptLoader event: " + type + "\n");
+        observedLoadEvents.push(type);
+        if (observedLoadEvents.length == loadEvents.length) {
+          resolve();
+        }
+      }
+      iwin.addEventListener("load_scriptloader_load_source", logEvent);
+      iwin.addEventListener("load_scriptloader_load_bytecode", logEvent);
+      iwin.addEventListener("load_scriptloader_execute", logEvent);
+      iwin.addEventListener("load_scriptloader_evaluate_module", logEvent);
+      iwin.addEventListener("load_scriptloader_encode", logEvent);
+      iwin.addEventListener("load_scriptloader_no_encode", logEvent);
+      iwin.addEventListener("load_scriptloader_bytecode_saved", logEvent);
+      iwin.addEventListener("load_scriptloader_bytecode_failed", logEvent);
+      iwin.addEventListener("load_scriptloader_fallback", logEvent);
+      iwin.addEventListener("load_test_evaluated", logEvent);
+
+      iwin.document.getElementById("load").contentWindow.doLoad();
+    });
+
+    // The event order is non-deterministic.
+    // Just compare them as multi-set.
+    loadEvents.sort();
+    observedLoadEvents.sort();
+    assert_equals(
+      JSON.stringify(observedLoadEvents),
+      JSON.stringify(loadEvents),
+      `Expected events should be observed for ${src} while loading`);
+
+    document.body.removeChild(iframe);
+  }
+}, "Test module bytecode save and load");
+
+done();
+  </script>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1436400">Mozilla Bug 1436400</a>
+</body>
+</html>
