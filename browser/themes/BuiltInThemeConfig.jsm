@@ -36,7 +36,7 @@ const BuiltInThemeConfig = new Map([
     "kanaze-erua@floorp.ablaze.one",
     {
       version: "1.0",
-      path: "resource://builtin-themes/erua/",
+      path: "resource://builtin-themes/monochromatic/erua/",
       expiry: "2022-04-15",
     },
   ],
@@ -44,7 +44,7 @@ const BuiltInThemeConfig = new Map([
     "kanaze-aria@floorp.ablaze.one",
     {
       version: "1.0",
-      path: "resource://builtin-themes/aria/",
+      path: "resource://builtin-themes/monochromatic/aria/",
       expiry: "2022-04-15",
     },
   ],
@@ -52,7 +52,7 @@ const BuiltInThemeConfig = new Map([
     "kanaze-melt@floorp.ablaze.one",
     {
       version: "1.0",
-      path: "resource://builtin-themes/melt/",
+      path: "resource://builtin-themes/monochromatic/melt/",
       expiry: "2022-04-15",
     },
   ],
