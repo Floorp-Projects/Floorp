@@ -137,47 +137,9 @@ nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
   return NS_OK;
 }
 
-template <typename Unit>
-static nsresult CompileJSModule(JSContext* aCx, JS::SourceText<Unit>& aSrcBuf,
-                                JS::Handle<JSObject*> aEvaluationGlobal,
-                                JS::CompileOptions& aCompileOptions,
-                                JS::MutableHandle<JSObject*> aModule) {
-  AUTO_PROFILER_LABEL("nsJSUtils::CompileModule", JS);
-  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
-  MOZ_ASSERT(aSrcBuf.get());
-  MOZ_ASSERT(JS_IsGlobalObject(aEvaluationGlobal));
-  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == aEvaluationGlobal);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(CycleCollectedJSContext::Get() &&
-             CycleCollectedJSContext::Get()->MicroTaskLevel());
-
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aEvaluationGlobal).Allowed(), NS_OK);
-
-  JSObject* module = JS::CompileModule(aCx, aCompileOptions, aSrcBuf);
-  if (!module) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aModule.set(module);
-  return NS_OK;
-}
-
-nsresult nsJSUtils::CompileModule(JSContext* aCx,
-                                  JS::SourceText<char16_t>& aSrcBuf,
-                                  JS::Handle<JSObject*> aEvaluationGlobal,
-                                  JS::CompileOptions& aCompileOptions,
-                                  JS::MutableHandle<JSObject*> aModule) {
-  return CompileJSModule(aCx, aSrcBuf, aEvaluationGlobal, aCompileOptions,
-                         aModule);
-}
-
-nsresult nsJSUtils::CompileModule(JSContext* aCx,
-                                  JS::SourceText<Utf8Unit>& aSrcBuf,
-                                  JS::Handle<JSObject*> aEvaluationGlobal,
-                                  JS::CompileOptions& aCompileOptions,
-                                  JS::MutableHandle<JSObject*> aModule) {
-  return CompileJSModule(aCx, aSrcBuf, aEvaluationGlobal, aCompileOptions,
-                         aModule);
+/* static */
+bool nsJSUtils::IsScriptable(JS::Handle<JSObject*> aEvaluationGlobal) {
+  return xpc::Scriptability::Get(aEvaluationGlobal).Allowed();
 }
 
 nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
