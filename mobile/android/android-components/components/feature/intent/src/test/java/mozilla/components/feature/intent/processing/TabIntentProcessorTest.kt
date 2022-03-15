@@ -95,8 +95,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open or select tab on ACTION_VIEW intent`() {
-        val useCases = SessionUseCases(store)
-        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
         whenever(intent.dataString).thenReturn("http://mozilla.org")
@@ -140,8 +139,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open or select tab on ACTION_MAIN intent`() {
-        val useCases = SessionUseCases(store)
-        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_MAIN)
         whenever(intent.dataString).thenReturn("https://mozilla.org")
@@ -176,8 +174,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open or select tab on ACTION_NDEF_DISCOVERED intent`() {
-        val useCases = SessionUseCases(store)
-        val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
         whenever(intent.dataString).thenReturn("https://mozilla.org")
@@ -211,7 +208,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab on ACTION_SEND intent`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -263,7 +260,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab and trigger search on ACTION_SEND if text is not a URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"
@@ -284,7 +281,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `nothing happens on ACTION_SEND if no text is provided`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -296,7 +293,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `nothing happens on ACTION_SEARCH if text is empty`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
@@ -308,7 +305,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab on ACTION_SEARCH intent`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
@@ -334,7 +331,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab and trigger search on ACTION_SEARCH intent if text is not a URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"
@@ -355,7 +352,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `nothing happens on ACTION_WEB_SEARCH if text is empty`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
@@ -367,7 +364,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab on ACTION_WEB_SEARCH intent`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
@@ -392,7 +389,7 @@ class TabIntentProcessorTest {
 
     @Test
     fun `open tab and trigger search on ACTION_WEB_SEARCH intent if text is not a URL`() {
-        val handler = TabIntentProcessor(TabsUseCases(store), sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+        val handler = TabIntentProcessor(TabsUseCases(store), searchUseCases.newTabSearch)
 
         val searchTerms = "mozilla android"
         val searchUrl = "https://localhost/?q=mozilla%20android"

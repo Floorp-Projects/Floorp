@@ -17,7 +17,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.externalPackage
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
@@ -28,14 +27,12 @@ import mozilla.components.support.utils.WebURLFinder
  * Processor for intents which should trigger session-related actions.
  *
  * @property tabsUseCases An instance of [TabsUseCases] used to open new tabs.
- * @property loadUrlUseCase A reference to [SessionUseCases.DefaultLoadUrlUseCase] used to load URLs.
  * @property newTabSearchUseCase A reference to [SearchUseCases.NewTabSearchUseCase] to be used for
  * ACTION_SEND intents if the provided text is not a URL.
  * @property isPrivate Whether a processed intent should open a new tab as private
  */
 class TabIntentProcessor(
     private val tabsUseCases: TabsUseCases,
-    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val newTabSearchUseCase: SearchUseCases.NewTabSearchUseCase,
     private val isPrivate: Boolean = false
 ) : IntentProcessor {

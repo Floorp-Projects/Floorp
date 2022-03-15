@@ -27,7 +27,6 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONException
@@ -59,7 +58,7 @@ class FxaWebChannelFeatureTest {
         val store: BrowserStore = mock()
         val accountManager: FxaAccountManager = mock()
         val serverConfig: ServerConfig = mock()
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+        val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
         webchannelFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
@@ -90,7 +89,7 @@ class FxaWebChannelFeatureTest {
         val accountManager: FxaAccountManager = mock()
         val serverConfig: ServerConfig = mock()
         val controller: WebExtensionController = mock()
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+        val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
 
         webchannelFeature.extensionController = controller
 
@@ -106,7 +105,7 @@ class FxaWebChannelFeatureTest {
         val accountManager: FxaAccountManager = mock()
         val serverConfig: ServerConfig = mock()
         val controller: WebExtensionController = mock()
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+        val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
 
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
         webchannelFeature.extensionController = controller
@@ -134,7 +133,7 @@ class FxaWebChannelFeatureTest {
         val accountManager: FxaAccountManager = mock()
         val serverConfig: ServerConfig = mock()
         val controller: WebExtensionController = mock()
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+        val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
 
         whenever(serverConfig.contentUrl).thenReturn(Server.RELEASE.contentUrl)
         webchannelFeature.extensionController = controller
@@ -163,7 +162,7 @@ class FxaWebChannelFeatureTest {
             BrowserStore(initialState = BrowserState(tabs = listOf(tab), selectedTabId = tab.id))
         )
 
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+        val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
         webchannelFeature.extensionController = controller
 
         webchannelFeature.start()
@@ -825,6 +824,6 @@ class FxaWebChannelFeatureTest {
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
         whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
 
-        return spy(FxaWebChannelFeature(testContext, null, mock(), store, accountManager, serverConfig, fxaCapabilities))
+        return spy(FxaWebChannelFeature(null, mock(), store, accountManager, serverConfig, fxaCapabilities))
     }
 }

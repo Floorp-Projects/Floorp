@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.paging.DataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.session.storage.serialize.BrowserStateReader
 import mozilla.components.browser.session.storage.serialize.BrowserStateWriter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.adapter.TabAdapter
@@ -25,7 +24,6 @@ import java.util.UUID
  */
 class TabCollectionStorage(
     context: Context,
-    private val reader: BrowserStateReader = BrowserStateReader(),
     private val writer: BrowserStateWriter = BrowserStateWriter(),
     private val filesDir: File = context.filesDir
 ) {

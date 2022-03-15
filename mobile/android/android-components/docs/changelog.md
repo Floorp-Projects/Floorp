@@ -18,10 +18,19 @@ permalink: /changelog/
   * 🆕 New `ServiceWorkerSupport` component for handling all service workers' events and callbacks. Currently this is supported only for using `GeckoEngine`.
 
 * **feature-autofill**
+  * ⚠️ **This is a breaking change**: Removed unused `context` parameter in `FxaWebChannelFeature`. [#11864](https://github.com/mozilla-mobile/android-components/pull/11864).
+
+* **feature-autofill**
   * 🚒 Bug fixed [issue #11869](https://github.com/mozilla-mobile/android-components/issues/11869) - Fix regression causing autofill to not work after unlocking the app doing the autofill or after accepting that the authenticity of the autofill target could not be verified.
+
+* **feature-tab-collections**
+  * ⚠️ **This is a breaking change**: Removed unused `reader` parameter in `TabCollectionStorage`. [#11864](https://github.com/mozilla-mobile/android-components/pull/11864).
 
 * **feature-contextmenu**
   * 🚒 Bug fixed [issue #11829](https://github.com/mozilla-mobile/android-components/pull/11830) - To make the additional note visible in landscape mode.
+
+* **feature-intent**
+  * ⚠️ **This is a breaking change**: Removed unused `loadUrlUseCase` parameter in `TabIntentProcessor`. [#11864](https://github.com/mozilla-mobile/android-components/pull/11864).
 
 * **browser-toolbar**
   * Removed reflective access to non-public SDK APIs controlling the sensitivity of the gesture detector following which sparingly and for very short time a pinch/spread to zoom gesture might be identified first as a scroll gesture and move the toolbar a little before snapping to it's original position.

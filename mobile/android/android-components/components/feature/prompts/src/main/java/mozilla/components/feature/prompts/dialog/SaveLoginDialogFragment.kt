@@ -36,7 +36,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
@@ -45,7 +44,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KProperty
 import com.google.android.material.R as MaterialR
 
@@ -85,10 +83,6 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     internal var password by SafeArgString(KEY_LOGIN_PASSWORD)
 
     private var validateStateUpdate: Job? = null
-
-    // List of potential dupes ignoring username. We could potentially both read and write this list
-    // from different threads, so we are using a copy-on-write list.
-    private var potentialDupesList: CopyOnWriteArrayList<Login>? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return BottomSheetDialog(requireContext(), R.style.MozDialogStyle).apply {

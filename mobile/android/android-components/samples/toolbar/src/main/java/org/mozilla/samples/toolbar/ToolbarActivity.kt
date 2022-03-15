@@ -461,13 +461,16 @@ class ToolbarActivity : AppCompatActivity() {
     private var back = true
 
     private fun canGoForward(): Boolean = forward
+    @Suppress("UnusedPrivateMember")
     private fun canGoBack(): Boolean = back
 
+    @Suppress("UnusedPrivateMember")
     private fun goBack() {
         back = !(forward && back)
         forward = true
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun goForward() {
         forward = !(back && forward)
         back = true
@@ -522,7 +525,6 @@ class ToolbarActivity : AppCompatActivity() {
 
     companion object {
         private val PROGRESS_RANGE = 0..100
-        private const val SPACING_SIZE_DP = 128
         private const val RELOAD_STEP_SIZE = 5
     }
 }

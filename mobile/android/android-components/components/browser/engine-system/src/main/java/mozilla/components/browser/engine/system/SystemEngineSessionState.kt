@@ -66,17 +66,6 @@ private fun JsonReader.toBundle(): Bundle {
     return bundle
 }
 
-private fun shouldSerialize(value: Any?): Boolean {
-    // For now we only persist primitive types
-    // https://github.com/mozilla-mobile/android-components/issues/279
-    return when (value) {
-        is Number -> true
-        is Boolean -> true
-        is String -> true
-        else -> false
-    }
-}
-
 private fun JSONObject.toBundle(): Bundle {
     val bundle = Bundle()
 

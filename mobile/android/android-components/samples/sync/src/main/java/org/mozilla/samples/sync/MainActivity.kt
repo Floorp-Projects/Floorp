@@ -57,8 +57,6 @@ import org.mozilla.samples.sync.databinding.ActivityMainBinding
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
-private const val PASSWORDS_ENCRYPTION_KEY_STRENGTH = 256
-
 class MainActivity :
     AppCompatActivity(),
     LoginFragment.OnLoginCompleteListener,

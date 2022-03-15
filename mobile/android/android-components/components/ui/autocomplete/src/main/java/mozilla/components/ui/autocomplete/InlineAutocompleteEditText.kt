@@ -101,8 +101,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     data class AutocompleteResult(
         val text: String,
         val source: String,
-        val totalItems: Int,
-        private val textFormatter: TextFormatter? = null
+        val totalItems: Int
     ) {
         fun startsWith(text: String): Boolean = this.text.startsWith(text)
     }

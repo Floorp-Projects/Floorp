@@ -153,7 +153,6 @@ internal class MonthAndYearPicker @JvmOverloads constructor(
 
         private const val SPEED_MONTH_SPINNER = 200L
         private const val SPEED_YEAR_SPINNER = 100L
-        private const val DEFAULT_VALUE = -1
 
         @VisibleForTesting
         internal const val DEFAULT_MAX_YEAR = 9999

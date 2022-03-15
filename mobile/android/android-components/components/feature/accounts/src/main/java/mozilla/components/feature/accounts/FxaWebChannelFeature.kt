@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.accounts
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +50,6 @@ enum class FxaCapability {
  * For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
  * This feature uses a web extension to communicate with FxA Web Content.
  *
- * @property context a reference to the context.
  * @property customTabSessionId optional custom tab session ID, if feature is being used with a custom tab.
  * @property runtime the [WebExtensionRuntime] (e.g the browser engine) to use.
  * @property store a reference to the application's [BrowserStore].
@@ -59,7 +57,6 @@ enum class FxaCapability {
  * @property fxaCapabilities a set of [FxaCapability] that client supports.
  */
 class FxaWebChannelFeature(
-    private val context: Context,
     private val customTabSessionId: String?,
     private val runtime: WebExtensionRuntime,
     private val store: BrowserStore,
