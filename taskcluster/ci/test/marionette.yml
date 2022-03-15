@@ -56,10 +56,7 @@ job-defaults:
                 by-test-platform:
                     linux.*: ['trunk']
                     default: []
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual
+    virtualization: virtual
 
 marionette:
     description: "Marionette unittest run"
