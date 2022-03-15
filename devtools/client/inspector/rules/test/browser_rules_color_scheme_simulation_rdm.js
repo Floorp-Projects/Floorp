@@ -6,9 +6,6 @@
 // Test color scheme simulation when RDM is toggled
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
-const ResponsiveUIManager = require("devtools/client/responsive/manager");
-const ResponsiveMessageHelper = require("devtools/client/responsive/utils/message");
-
 add_task(async function() {
   // Use a local file for the device list, otherwise the panel tries to reach an external
   // URL, which makes the test fail.
@@ -41,14 +38,7 @@ add_task(async function() {
   );
 
   info("Open responsive design mode");
-  let { toolWindow } = await ResponsiveUIManager.openIfNeeded(
-    tab.ownerGlobal,
-    tab,
-    {
-      trigger: "test",
-    }
-  );
-  await ResponsiveMessageHelper.wait(toolWindow, "post-init");
+  await openRDM(tab);
 
   info("Click on the dark button");
   darkButton.click();
@@ -62,7 +52,7 @@ add_task(async function() {
   );
 
   info("Close responsive design mode");
-  await ResponsiveUIManager.closeIfNeeded(tab.ownerGlobal, tab);
+  await closeRDM(tab);
 
   info("Wait for a bit before checking dark mode is still enabled");
   await wait(1000);
@@ -89,14 +79,7 @@ add_task(async function() {
   );
 
   info("Open responsive design mode again");
-  ({ toolWindow } = await ResponsiveUIManager.openIfNeeded(
-    tab.ownerGlobal,
-    tab,
-    {
-      trigger: "test",
-    }
-  ));
-  await ResponsiveMessageHelper.wait(toolWindow, "post-init");
+  await openRDM(tab);
 
   info("Click the button to disable simulation while RDM is still opened");
   darkButton.click();
@@ -106,7 +89,7 @@ add_task(async function() {
   ok(true, "We're not simulating color-scheme anymore");
 
   info("Close responsive design mode");
-  await ResponsiveUIManager.closeIfNeeded(tab.ownerGlobal, tab);
+  await closeRDM(tab);
 });
 
 function isButtonChecked(el) {

@@ -106,29 +106,6 @@ registerCleanupFunction(async () => {
 });
 
 /**
- * Open responsive design mode for the given tab.
- */
-var openRDM = async function(tab) {
-  info("Opening responsive design mode");
-  const manager = ResponsiveUIManager;
-  const ui = await manager.openIfNeeded(tab.ownerGlobal, tab, {
-    trigger: "test",
-  });
-  info("Responsive design mode opened");
-  return { ui, manager };
-};
-
-/**
- * Close responsive design mode for the given tab.
- */
-var closeRDM = async function(tab, options) {
-  info("Closing responsive design mode");
-  const manager = ResponsiveUIManager;
-  await manager.closeIfNeeded(tab.ownerGlobal, tab, options);
-  info("Responsive design mode closed");
-};
-
-/**
  * Adds a new test task that adds a tab with the given URL, awaits the
  * preTask (if provided), opens responsive design mode, awaits the task,
  * closes responsive design mode, awaits the postTask (if provided), and
@@ -224,9 +201,6 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
  * Wait for the RDM UI to be fully loaded
  */
 async function waitForRDMLoaded(ui, { waitForDeviceList }) {
-  // Always wait for the post-init message.
-  await message.wait(ui.toolWindow, "post-init");
-
   // Always wait for the viewport to be added.
   const { store } = ui.toolWindow;
   await waitUntilState(store, state => state.viewports.length == 1);
