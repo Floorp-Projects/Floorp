@@ -732,13 +732,14 @@ dictionary WireframeTaggedRect {
   unrestricted double y = 0;
   unrestricted double width = 0;
   unrestricted double height = 0;
-  DOMString? color; /* Only relevant for "background" rects */
+  unsigned long color = 0; // in nscolor format
   WireframeRectType type;
   Node? node;
 };
 dictionary Wireframe {
-  DOMString canvasBackground;
+  unsigned long canvasBackground = 0; // in nscolor format
   sequence<WireframeTaggedRect> rects;
+  unsigned long version = 1; // Increment when the wireframe structure changes in backwards-incompatible ways
 };
 partial interface Document {
   [ChromeOnly]
