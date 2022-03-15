@@ -20,7 +20,7 @@ object Versions {
     const val android_gradle_plugin = "7.0.0"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "27.0.1"
-    const val detekt = "1.17.1"
+    const val detekt = "1.19.0"
 
     const val sentry_legacy = "1.7.21"
     const val sentry_latest = "5.6.1"
