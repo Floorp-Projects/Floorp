@@ -113,6 +113,12 @@ bool ModuleLoaderBase::ModuleMapContainsURL(nsIURI* aURL,
   return mFetchingModules.Contains(key) || mFetchedModules.Contains(key);
 }
 
+bool ModuleLoaderBase::IsModuleFetching(nsIURI* aURL,
+                                        nsIGlobalObject* aGlobal) const {
+  ModuleMapKey key(aURL, aGlobal);
+  return mFetchingModules.Contains(key);
+}
+
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
