@@ -704,7 +704,7 @@ static SharedCompileArgs InitCompileArgs(JSContext* cx,
   if (!ParseCompileOptions(cx, maybeOptions, &options)) {
     return nullptr;
   }
-  return CompileArgs::build(cx, std::move(scriptedCaller), options);
+  return CompileArgs::buildAndReport(cx, std::move(scriptedCaller), options);
 }
 
 // ============================================================================
@@ -2051,8 +2051,7 @@ WasmInstanceObject* WasmInstanceObject::create(
 
     // Create this just before constructing Instance to avoid rooting hazards.
     instance = Instance::create(cx, obj, code, globalDataLength, memory,
-                                std::move(tables),
-                                std::move(maybeDebug));
+                                std::move(tables), std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
@@ -4284,7 +4283,7 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
   FeatureOptions options;
   ScriptedCaller scriptedCaller;
   SharedCompileArgs compileArgs =
-      CompileArgs::build(cx, std::move(scriptedCaller), options);
+      CompileArgs::buildAndReport(cx, std::move(scriptedCaller), options);
   if (!compileArgs) {
     return nullptr;
   }
