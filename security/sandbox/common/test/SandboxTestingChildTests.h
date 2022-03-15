@@ -7,6 +7,9 @@
 #include "SandboxTestingChild.h"
 
 #include "mozilla/StaticPrefs_security.h"
+#ifdef XP_MACOSX
+#  include "nsCocoaFeatures.h"
+#endif
 #include "nsXULAppAPI.h"
 
 #ifdef XP_UNIX
@@ -36,7 +39,12 @@
 #endif
 
 #ifdef XP_MACOSX
+#  include <spawn.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #  include <CoreGraphics/CoreGraphics.h>
+namespace ApplicationServices {
+#  include <ApplicationServices/ApplicationServices.h>
+}
 #endif
 
 #ifdef XP_WIN
@@ -145,6 +153,84 @@ static void FileTest(const nsCString& aName, const char* aSpecialDirName,
                                 message);
 }
 #endif
+
+/*
+ * Test if this process can launch another process with posix_spawnp,
+ * exec, and LSOpenCFURLRef. All launches are expected to fail. In processes
+ * where the sandbox permits reading of file metadata (content processes at
+ * this time), we expect the posix_spawnp error to be EPERM. In processes
+ * without that permission, we expect ENOENT. Changing the sandbox policy
+ * may break this assumption, but the important aspect to test for is that the
+ * launch is not permitted.
+ */
+void RunMacTestLaunchProcess(SandboxTestingChild* child,
+                             int aPosixSpawnExpectedError = ENOENT) {
+  // Test that posix_spawnp fails
+  char* argv[2];
+  argv[0] = const_cast<char*>("bash");
+  argv[1] = NULL;
+  int rv = posix_spawnp(NULL, "/bin/bash", NULL, NULL, argv, NULL);
+  nsPrintfCString posixSpawnMessage("posix_spawnp returned %d, expected %d", rv,
+                                    aPosixSpawnExpectedError);
+  child->SendReportTestResults("posix_spawnp test"_ns,
+                               rv == aPosixSpawnExpectedError,
+                               posixSpawnMessage);
+
+  // Test that exec fails
+  child->ErrnoTest("execv /bin/bash test"_ns, false, [&] {
+    char* argvp = NULL;
+    return execv("/bin/bash", &argvp);
+  });
+
+  // Test that launching an application using LSOpenCFURLRef fails
+  char* uri;
+  if (nsCocoaFeatures::OnCatalinaOrLater()) {
+    uri = const_cast<char*>("/System/Applications/Utilities/Console.app");
+  } else {
+    uri = const_cast<char*>("/Applications/Utilities/Console.app");
+  }
+  CFStringRef filePath = ::CFStringCreateWithCString(kCFAllocatorDefault, uri,
+                                                     kCFStringEncodingUTF8);
+  CFURLRef urlRef = ::CFURLCreateWithFileSystemPath(
+      kCFAllocatorDefault, filePath, kCFURLPOSIXPathStyle, false);
+  if (!urlRef) {
+    child->SendReportTestResults("LSOpenCFURLRef"_ns, false,
+                                 "CFURLCreateWithFileSystemPath failed"_ns);
+    return;
+  }
+
+  OSStatus status = ApplicationServices::LSOpenCFURLRef(urlRef, NULL);
+  ::CFRelease(urlRef);
+  nsPrintfCString lsMessage(
+      "LSOpenCFURLRef returned %d, "
+      "expected kLSServerCommunicationErr (%d)",
+      status, ApplicationServices::kLSServerCommunicationErr);
+  child->SendReportTestResults(
+      "LSOpenCFURLRef"_ns,
+      status == ApplicationServices::kLSServerCommunicationErr, lsMessage);
+}
+
+/*
+ * Test if this process can connect to the macOS window server.
+ * When |aShouldHaveAccess| is true, the test passes if access is __permitted__.
+ * When |aShouldHaveAccess| is false, the test passes if access is __blocked__.
+ */
+void RunMacTestWindowServer(SandboxTestingChild* child,
+                            bool aShouldHaveAccess = false) {
+  // CGSessionCopyCurrentDictionary() returns NULL when a
+  // connection to the window server is not available.
+  CFDictionaryRef windowServerDict = CGSessionCopyCurrentDictionary();
+  bool gotWindowServerDetails = (windowServerDict != nullptr);
+  bool testPassed = (gotWindowServerDetails == aShouldHaveAccess);
+  child->SendReportTestResults(
+      "CGSessionCopyCurrentDictionary"_ns, testPassed,
+      gotWindowServerDetails
+          ? "dictionary returned, access is permitted"_ns
+          : "no dictionary returned, access appears blocked"_ns);
+  if (windowServerDict != nullptr) {
+    CFRelease(windowServerDict);
+  }
+}
 
 void RunTestsContent(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
@@ -296,18 +382,8 @@ void RunTestsContent(SandboxTestingChild* child) {
 #  endif    // XP_LINUX
 
 #  ifdef XP_MACOSX
-  // Test that content processes can not connect to the macOS window server.
-  // CGSessionCopyCurrentDictionary() returns NULL when a connection to the
-  // window server is not available.
-  CFDictionaryRef windowServerDict = CGSessionCopyCurrentDictionary();
-  bool gotWindowServerDetails = (windowServerDict != nullptr);
-  child->SendReportTestResults(
-      "CGSessionCopyCurrentDictionary"_ns, !gotWindowServerDetails,
-      gotWindowServerDetails ? "Failed: dictionary unexpectedly returned"_ns
-                             : "Succeeded: no dictionary returned"_ns);
-  if (windowServerDict != nullptr) {
-    CFRelease(windowServerDict);
-  }
+  RunMacTestLaunchProcess(child, EPERM);
+  RunMacTestWindowServer(child);
 #  endif
 
 #elif XP_WIN
@@ -385,7 +461,9 @@ void RunTestsSocket(SandboxTestingChild* child) {
   child->ErrnoTest("getcpu"_ns, true,
                    [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
 #  endif  // XP_LINUX
-
+#elif XP_MACOSX
+  RunMacTestLaunchProcess(child);
+  RunMacTestWindowServer(child);
 #else   // XP_UNIX
   child->ReportNoTests();
 #endif  // XP_UNIX
@@ -440,7 +518,10 @@ void RunTestsRDD(SandboxTestingChild* child) {
   int c;
   child->ErrnoTest("getcpu"_ns, true,
                    [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
-#  endif  // XP_LINUX
+#  elif XP_MACOSX
+  RunMacTestLaunchProcess(child);
+  RunMacTestWindowServer(child);
+#  endif
 #else     // XP_UNIX
   child->ReportNoTests();
 #endif
@@ -487,7 +568,11 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
                        return fd;
                      });
   }
-#  endif  // XP_LINUX
+#  elif XP_MACOSX  // XP_LINUX
+  RunMacTestLaunchProcess(child);
+  /* The Mac GMP process requires access to the window server */
+  RunMacTestWindowServer(child, true /* aShouldHaveAccess */);
+#  endif           // XP_MACOSX
 #else     // XP_UNIX
   child->ReportNoTests();
 #endif
@@ -508,9 +593,11 @@ void RunTestsUtility(SandboxTestingChild* child) {
     int rv = getrusage(RUSAGE_SELF, &res);
     return rv;
   });
-#  endif  // XP_LINUX
-#else     // XP_UNIX
-#  ifdef XP_WIN
+#  elif XP_MACOSX  // XP_LINUX
+  RunMacTestLaunchProcess(child);
+  RunMacTestWindowServer(child);
+#  endif           // XP_MACOSX
+#elif XP_WIN       // XP_UNIX
   child->ErrnoValueTest("write_only"_ns, EACCES, [&] {
     FILE* rv = fopen("test_sandbox.txt", "w");
     if (rv != nullptr) {
@@ -519,10 +606,9 @@ void RunTestsUtility(SandboxTestingChild* child) {
     }
     return -1;
   });
-#  else   // XP_WIN
+#else              // XP_UNIX
   child->ReportNoTests();
-#  endif  // XP_WIN
-#endif
+#endif             // XP_MACOSX
 }
 
 }  // namespace mozilla
