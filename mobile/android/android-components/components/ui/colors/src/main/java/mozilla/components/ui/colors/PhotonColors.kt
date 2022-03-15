@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
  * _"Firefox colors are bold, vibrant and attractive. They enhance the experience by providing visual
  * clues and by bringing attention to primary actions."_
  */
-@Suppress("MagicNumber") // It's a kind of magic ✨
 object PhotonColors {
     // Firefox Blue is one of our primary colors. We use blue as accent color for highlighting buttons,
     // links and active states like the current tab in Firefox for desktop.
