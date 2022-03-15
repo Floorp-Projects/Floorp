@@ -6,9 +6,13 @@ package mozilla.components.feature.syncedtabs.storage
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
@@ -23,30 +27,44 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 /**
  * A storage that listens to the [BrowserStore] changes to synchronize the local tabs state
  * with [RemoteTabsStorage].
+ *
+ * @param accountManager Account manager used to retrieve synced tabs.
+ * @param store Browser store to observe for state changes.
+ * @param tabsStorage Storage layer for tabs to sync.
+ * @param debounceMillis Length to debounce rapid changes for storing.
+ * @param onStoreComplete Callback for action to take after tabs are stored.
+ * Note that this will be debounced by [debounceMillis].
  */
 class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
-    private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
+    private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage(),
+    private val debounceMillis: Long = 1000L,
+    private val onStoreComplete: () -> Unit = {}
 ) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
 
     /**
      * Start listening to browser store changes.
      */
+    @OptIn(FlowPreview::class)
     fun start() {
         scope = store.flowScoped { flow ->
-            flow.ifChanged { it.tabs }.map { state ->
-                // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
-                val iconUrl = null
-                state.tabs.filter { !it.content.private }.map { tab ->
-                    // TO-DO: https://github.com/mozilla-mobile/android-components/issues/1340
-                    val history = listOf(TabEntry(tab.content.title, tab.content.url, iconUrl))
-                    Tab(history, 0, tab.lastAccess)
+            flow.ifChanged { it.toSyncTabState() }
+                .map { state ->
+                    // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
+                    val iconUrl = null
+                    state.tabs.filter { !it.content.private && !it.content.loading }.map { tab ->
+                        // TO-DO: https://github.com/mozilla-mobile/android-components/issues/1340
+                        val history = listOf(TabEntry(tab.content.title, tab.content.url, iconUrl))
+                        Tab(history, 0, tab.lastAccess)
+                    }
                 }
-            }.collect { tabs ->
-                tabsStorage.store(tabs)
-            }
+                .debounce(debounceMillis)
+                .collect { tabs ->
+                    tabsStorage.store(tabs)
+                    onStoreComplete()
+                }
         }
     }
 
@@ -83,4 +101,16 @@ class SyncedTabsStorage(
         }
         return null
     }
+
+    private data class SyncComponents(
+        val selectedId: String?,
+        val lastAccessed: List<Long>,
+        val loadedTabs: List<TabSessionState>,
+    )
+
+    private fun BrowserState.toSyncTabState() = SyncComponents(
+        selectedId = selectedTabId,
+        lastAccessed = tabs.map { it.lastAccess },
+        loadedTabs = tabs.filter { it.content.loading },
+    )
 }

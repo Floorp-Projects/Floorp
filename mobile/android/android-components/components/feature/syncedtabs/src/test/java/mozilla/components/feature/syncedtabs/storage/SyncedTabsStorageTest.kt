@@ -10,8 +10,12 @@
 
 package mozilla.components.feature.syncedtabs.storage
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -27,19 +31,20 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class SyncedTabsStorageTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsStorage: RemoteTabsStorage
@@ -61,41 +66,48 @@ class SyncedTabsStorageTest {
         )
         tabsStorage = mock()
         accountManager = mock()
+
+        Dispatchers.setMain(TestCoroutineDispatcher())
     }
 
     @Test
-    fun `listens to browser store changes and stores its state`() = runBlocking {
+    fun `listens to browser store changes, stores state changes, and calls onStoreComplete`() = runBlockingTest {
+        val onStoreComplete: () -> Unit = mock()
         val feature = SyncedTabsStorage(
             accountManager,
             store,
-            tabsStorage
+            tabsStorage,
+            debounceMillis = 0,
+            onStoreComplete = onStoreComplete
         )
         feature.start()
 
         // This action will change the state due to lastUsed timestamp, but will run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
 
-        verify(tabsStorage).store(
+        verify(tabsStorage, times(2)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
                 // Private tab is absent.
             )
         )
+        verify(onStoreComplete, times(2)).invoke()
     }
 
     @Test
-    fun `stops listening to browser store changes on stop()`() = runBlocking {
+    fun `stops listening to browser store changes on stop()`() = runBlockingTest {
         val feature = SyncedTabsStorage(
             accountManager,
             store,
-            tabsStorage
+            tabsStorage,
+            debounceMillis = 0
         )
         feature.start()
         // Run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
 
-        verify(tabsStorage).store(
+        verify(tabsStorage, times(2)).store(
             listOf(
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
                 Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
@@ -110,7 +122,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `getSyncedTabs matches tabs with FxA devices`() = runBlocking {
+    fun `getSyncedTabs matches tabs with FxA devices`() = runBlockingTest {
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
@@ -157,7 +169,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `getSyncedTabs returns empty list if syncClients() is null`() = runBlocking {
+    fun `getSyncedTabs returns empty list if syncClients() is null`() = runBlockingTest {
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
@@ -228,5 +240,144 @@ class SyncedTabsStorageTest {
         )
         whenever(accountManager.authenticatedAccount()).thenReturn(null)
         assertEquals(null, feature.syncClients())
+    }
+
+    @Test
+    fun `tabs are stored when loaded`() = runBlockingTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
+                    createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
+                ),
+                selectedTabId = "tab1"
+            )
+        )
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage,
+                debounceMillis = 0
+            )
+        )
+        feature.start()
+
+        // Tabs are only stored when initial state is collected, since they are already loaded
+        verify(tabsStorage, times(1)).store(
+            listOf(
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
+            )
+        )
+
+        // Change a tab besides loading it
+        store.dispatch(ContentAction.UpdateProgressAction("tab1", 50)).joinBlocking()
+
+        reset(tabsStorage)
+
+        verify(tabsStorage, never()).store(any())
+    }
+
+    @Test
+    fun `only loaded tabs are stored on load`() = runBlockingTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createUnloadedTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
+                    createUnloadedTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
+                ),
+                selectedTabId = "tab1"
+            )
+        )
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage,
+                debounceMillis = 0
+            )
+        )
+        feature.start()
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction("tab1", false)).joinBlocking()
+
+        verify(tabsStorage).store(
+            listOf(
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+            )
+        )
+    }
+
+    @Test
+    fun `tabs are stored when selected tab changes`() = runBlockingTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
+                    createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
+                ),
+                selectedTabId = "tab1"
+            )
+        )
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage,
+                debounceMillis = 0
+            )
+        )
+        feature.start()
+
+        store.dispatch(TabListAction.SelectTabAction("tab2")).joinBlocking()
+
+        verify(tabsStorage, times(2)).store(
+            listOf(
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
+            )
+        )
+    }
+
+    @Test
+    fun `tabs are stored when lastAccessed is changed for any tab`() = runBlockingTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "tab1", url = "https://www.mozilla.org", lastAccess = 123L),
+                    createTab(id = "tab2", url = "https://www.foo.bar", lastAccess = 124L),
+                ),
+                selectedTabId = "tab1"
+            )
+        )
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage,
+                debounceMillis = 0
+            )
+        )
+        feature.start()
+
+        store.dispatch(LastAccessAction.UpdateLastAccessAction("tab1", 300L)).joinBlocking()
+
+        verify(tabsStorage, times(1)).store(
+            listOf(
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
+            )
+        )
+        verify(tabsStorage, times(1)).store(
+            listOf(
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 300L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
+            )
+        )
+    }
+
+    private fun createUnloadedTab(id: String, url: String, lastAccess: Long) = createTab(id = id, url = url, lastAccess = lastAccess).run {
+        copy(content = this.content.copy(loading = true))
     }
 }

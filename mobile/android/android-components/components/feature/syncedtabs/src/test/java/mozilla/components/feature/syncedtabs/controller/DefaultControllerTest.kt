@@ -13,6 +13,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.mock
@@ -146,6 +147,6 @@ class DefaultControllerTest {
         controller.syncAccount()
 
         verify(constellation).refreshDevices()
-        verify(accountManager).syncNow(SyncReason.User, false)
+        verify(accountManager).syncNow(SyncReason.User, false, listOf(SyncEngine.Tabs))
     }
 }

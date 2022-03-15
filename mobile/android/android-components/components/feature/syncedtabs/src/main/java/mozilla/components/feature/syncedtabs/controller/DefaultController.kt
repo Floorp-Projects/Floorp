@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsProvider
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.service.fxa.sync.SyncReason
@@ -58,7 +59,7 @@ internal class DefaultController(
     override fun syncAccount() {
         scope.launch {
             accountManager.withConstellation { refreshDevices() }
-            accountManager.syncNow(SyncReason.User)
+            accountManager.syncNow(SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs))
         }
     }
 }
