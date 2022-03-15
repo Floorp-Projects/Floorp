@@ -116,7 +116,7 @@ def test_output_crash(flavor, runFailures, runtests, test_name):
         "status": 0 if runFailures else 1,
         "tbpl_status": TBPL_FAILURE,
         "log_level": ERROR,
-        "lines": 1 if runFailures else 0,
+        "lines": 1,
     }
     if runFailures:
         extra_opts["runFailures"] = runFailures
