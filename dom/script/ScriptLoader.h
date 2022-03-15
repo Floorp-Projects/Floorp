@@ -559,9 +559,19 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   static nsCString& BytecodeMimeTypeFor(ScriptLoadRequest* aRequest);
 
-  nsresult MaybePrepareForBytecodeEncoding(JS::Handle<JSScript*> aScript,
-                                           ScriptLoadRequest* aRequest,
-                                           nsresult aRv);
+  // Decide whether to encode bytecode for given script load request,
+  // and store the script into the request if necessary.
+  //
+  // This method must be called before executing the script.
+  void MaybePrepareForBytecodeEncodingBeforeExecute(
+      ScriptLoadRequest* aRequest, JS::Handle<JSScript*> aScript);
+
+  // Queue the script load request for bytecode encoding if we decided to
+  // encode, or cleanup the script load request fields otherwise.
+  //
+  // This method must be called after executing the script.
+  nsresult MaybePrepareForBytecodeEncodingAfterExecute(
+      ScriptLoadRequest* aRequest, nsresult aRv);
 
   // Implements https://html.spec.whatwg.org/#run-a-classic-script
   nsresult EvaluateScript(nsIGlobalObject* aGlobalObject,
