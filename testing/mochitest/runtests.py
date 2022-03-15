@@ -2654,27 +2654,34 @@ toolbar#nav-bar {
                 quiet=quiet,
             )
 
+            expected = None
             if crashAsPass:
                 # self.message_logger.is_test_running indicates we need a test_end message
                 if crash_count > 0 and self.message_logger.is_test_running:
                     # this works for browser-chrome, mochitest-plain has status=0
-                    message = {
-                        "action": "test_end",
-                        "status": "CRASH",
-                        "expected": "CRASH",
-                        "thread": None,
-                        "pid": None,
-                        "source": "mochitest",
-                        "time": int(time.time()) * 1000,
-                        "test": self.lastTestSeen,
-                        "message": "application terminated with exit code 0",
-                    }
-                    # need to send a test_end in order to have mozharness process messages properly
-                    # this requires a custom message vs log.error/log.warning/etc.
-                    self.message_logger.process_message(message)
+                    expected = "CRASH"
                 status = 0
             elif crash_count or zombieProcesses:
+                if self.message_logger.is_test_running:
+                    expected = "PASS"
                 status = 1
+
+            if expected:
+                # send this out so we always wrap up the test-end message
+                message = {
+                    "action": "test_end",
+                    "status": "CRASH",
+                    "expected": expected,
+                    "thread": None,
+                    "pid": None,
+                    "source": "mochitest",
+                    "time": int(time.time()) * 1000,
+                    "test": self.lastTestSeen,
+                    "message": "application terminated with exit code 0",
+                }
+                # need to send a test_end in order to have mozharness process messages properly
+                # this requires a custom message vs log.error/log.warning/etc.
+                self.message_logger.process_message(message)
         finally:
             # cleanup
             if os.path.exists(processLog):
