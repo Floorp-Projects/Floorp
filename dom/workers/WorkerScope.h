@@ -116,6 +116,8 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   uint32_t GetPrincipalHashValue() const final;
 
+  OriginTrials Trials() const final;
+
   StorageAccess GetStorageAccess() final;
 
   Maybe<ClientInfo> GetClientInfo() const final;

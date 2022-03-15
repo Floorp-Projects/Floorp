@@ -159,18 +159,9 @@ bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
     return true;
   }
   LOG("OriginTrials::IsEnabled(%d)\n", int(aTrial));
-
-  if (dom::WorkletThread::IsOnWorkletThread()) {
-    // TODO: Worklet support, clean up the assumption below than not main thread
-    // means worker.
-    return false;
-  }
-
-  const OriginTrials trials =
-      NS_IsMainThread()
-          ? FromWindow(xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject)))
-          : dom::GetWorkerPrivateFromContext(aCx)->Trials();
-  return trials.IsEnabled(aTrial);
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  MOZ_ASSERT(global);
+  return global && global->Trials().IsEnabled(aTrial);
 }
 
 #undef LOG
