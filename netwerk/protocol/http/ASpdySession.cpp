@@ -43,29 +43,9 @@ ASpdySession* ASpdySession::NewSpdySession(net::SpdyVersion version,
 SpdyInformation::SpdyInformation() {
   // highest index of enabled protocols is the
   // most preferred for ALPN negotiaton
-  Version[0] = SpdyVersion::HTTP_2;
-  VersionString[0] = "h2"_ns;
-  ALPNCallbacks[0] = Http2Session::ALPNCallback;
-}
-
-bool SpdyInformation::ProtocolEnabled(uint32_t index) const {
-  MOZ_ASSERT(index < kCount, "index out of range");
-
-  return StaticPrefs::network_http_http2_enabled();
-}
-
-nsresult SpdyInformation::GetNPNIndex(const nsACString& npnString,
-                                      uint32_t* result) const {
-  if (npnString.IsEmpty()) return NS_ERROR_FAILURE;
-
-  for (uint32_t index = 0; index < kCount; ++index) {
-    if (npnString.Equals(VersionString[index])) {
-      *result = index;
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  Version = SpdyVersion::HTTP_2;
+  VersionString = "h2"_ns;
+  ALPNCallbacks = Http2Session::ALPNCallback;
 }
 
 //////////////////////////////////////////

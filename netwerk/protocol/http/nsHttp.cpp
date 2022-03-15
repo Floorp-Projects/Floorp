@@ -988,10 +988,8 @@ SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn) {
   }
 
   if (StaticPrefs::network_http_http2_enabled()) {
-    uint32_t spdyIndex;
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
-    if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&
-        spdyInfo->ProtocolEnabled(spdyIndex)) {
+    if (aAlpn.Equals(spdyInfo->VersionString)) {
       return SupportedAlpnRank::HTTP_2;
     }
   }
