@@ -55,26 +55,13 @@ httpServer.registerPathHandler("/http-error-script.js", (request, response) => {
   response.write(`console.log("http error")`);
 });
 add_task(async function testSourceTextContent() {
-  const tab = await addTab(BASE_URL + "index.html");
+  const dbg = await initDebuggerWithAbsoluteURL("about:blank");
 
-  is(
-    loadCounts["/index.html"],
-    1,
-    "index.html is loaded once before opening devtools"
-  );
-
-  // For some reason external to the debugger, we issue two requests to scripts having http error codes.
-  // These two requests are done before opening the debugger.
-  is(
-    loadCounts["/http-error-script.js"],
-    2,
-    "We loaded http-error-script.js twice."
-  );
-
-  const toolbox = await openToolboxForTab(tab, "jsdebugger");
-  const dbg = createDebuggerContext(toolbox);
-  await waitForSources(
+  // Load the document *once* the debugger is opened
+  // in order to avoid having any source being GC-ed.
+  await navigateToAbsoluteURL(
     dbg,
+    BASE_URL + "index.html",
     "index.html",
     "normal-script.js",
     "slow-loading-script.js"
@@ -94,9 +81,9 @@ add_task(async function testSourceTextContent() {
     "scripts with HTTP error code do not appear in the source list"
   );
 
-  // The HTML page is fetched a second time because it was loaded before opening DevTools
-  // and Spidermonkey doesn't store HTML page in any cache
-  is(loadCounts["/index.html"], 2, "We loaded index.html twice");
+  // As we are loading the page while the debugger is already opened,
+  // none of the resources are loaded twice.
+  is(loadCounts["/index.html"], 1, "We loaded index.html only once");
   is(
     loadCounts["/normal-script.js"],
     1,
@@ -107,6 +94,8 @@ add_task(async function testSourceTextContent() {
     1,
     "We loaded slow-loading-script.js only once"
   );
+  // For some reason external to the debugger, we issue two requests to scripts having http error codes.
+  // These two requests are done before opening the debugger.
   is(
     loadCounts["/http-error-script.js"],
     2,
