@@ -18,11 +18,11 @@
 
 class XPCWrappedNative;
 
-class BackstagePass : public nsIGlobalObject,
-                      public nsIScriptObjectPrincipal,
-                      public nsIXPCScriptable,
-                      public nsIClassInfo,
-                      public nsSupportsWeakReference {
+class BackstagePass final : public nsIGlobalObject,
+                            public nsIScriptObjectPrincipal,
+                            public nsIXPCScriptable,
+                            public nsIClassInfo,
+                            public nsSupportsWeakReference {
  public:
   BackstagePass();
 
@@ -30,13 +30,13 @@ class BackstagePass : public nsIGlobalObject,
   NS_DECL_NSIXPCSCRIPTABLE
   NS_DECL_NSICLASSINFO
 
-  virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
+  nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
-  virtual nsIPrincipal* GetEffectiveStoragePrincipal() override {
-    return mPrincipal;
-  }
+  nsIPrincipal* GetEffectiveStoragePrincipal() override { return mPrincipal; }
 
-  virtual nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
+  nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
+
+  mozilla::OriginTrials Trials() const override { return {}; }
 
   JSObject* GetGlobalJSObject() override;
   JSObject* GetGlobalJSObjectPreserveColor() const override;
