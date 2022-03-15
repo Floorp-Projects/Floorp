@@ -18,11 +18,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "UrlbarUtils",
   "resource:///modules/UrlbarUtils.jsm"
 );
@@ -76,16 +71,16 @@ var WebNavigationManager = {
     this.recentTabTransitionData = new WeakMap();
   },
 
-  addListener(type, listener, filters, context) {
+  addListener(type, listener) {
     if (this.listeners.size == 0) {
       this.init();
     }
 
     if (!this.listeners.has(type)) {
-      this.listeners.set(type, new Map());
+      this.listeners.set(type, new Set());
     }
     let listeners = this.listeners.get(type);
-    listeners.set(listener, { filters, context });
+    listeners.add(listener);
   },
 
   removeListener(type, listener) {
@@ -393,18 +388,8 @@ var WebNavigationManager = {
       details[prop] = extra[prop];
     }
 
-    for (let [listener, { filters, context }] of listeners) {
-      if (
-        context &&
-        !context.privateBrowsingAllowed &&
-        PrivateBrowsingUtils.isBrowserPrivate(browser)
-      ) {
-        continue;
-      }
-      // Call the listener if the listener has no filter or if its filter matches.
-      if (!filters || filters.matches(extra.url)) {
-        listener(details);
-      }
+    for (let listener of listeners) {
+      listener(details);
     }
   },
 };
