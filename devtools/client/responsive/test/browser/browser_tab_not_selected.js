@@ -19,7 +19,6 @@ addRDMTask(
 
     info("Open RDM for the non-selected tab");
     const { ui } = await openRDM(tab1);
-    await waitForRDMLoaded(ui, { waitForDeviceList: true });
 
     ok(!ResponsiveUIManager.isActiveForTab(tab2), "RDM is not opened on tab2");
 

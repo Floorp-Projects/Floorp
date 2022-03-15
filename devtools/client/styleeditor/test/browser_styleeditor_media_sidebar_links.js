@@ -80,9 +80,11 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
   await onRDMOpened;
   const rdmUI = ResponsiveUIManager.getResponsiveUIForTab(tab);
-
   await waitForResizeTo(rdmUI, type, value);
   rdmUI.transitionsEnabled = false;
+
+  info("Wait for RDM ui to be fully loaded");
+  await waitForRDMLoaded(rdmUI);
 
   info("Waiting for the @media list to update");
   await onMediaChange;
