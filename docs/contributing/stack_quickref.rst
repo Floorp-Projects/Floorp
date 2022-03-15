@@ -11,6 +11,8 @@ various commands.
 In Phabricator, the stack can be seen in the `Revision Contents` section.
 The top of the stack (most recent change) is first in the list.
 
+This is also sometimes called "stack of revisions", "stack of commits" or "series of commits".
+
 **Example:**
 
 .. image:: img/example-stack.png
