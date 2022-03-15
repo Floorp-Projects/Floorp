@@ -102,6 +102,9 @@ ImageBitmapRenderingContext::InitializeWithDrawTarget(
 already_AddRefed<gfx::DataSourceSurface>
 ImageBitmapRenderingContext::MatchWithIntrinsicSize() {
   RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  if (!surface) {
+    return nullptr;
+  }
   RefPtr<gfx::DataSourceSurface> temp = gfx::Factory::CreateDataSourceSurface(
       gfx::IntSize(mWidth, mHeight), surface->GetFormat());
   if (!temp) {
@@ -195,6 +198,10 @@ ImageBitmapRenderingContext::GetSurfaceSnapshot(
   }
 
   RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  if (!surface) {
+    return nullptr;
+  }
+
   if (surface->GetSize() != gfx::IntSize(mWidth, mHeight)) {
     return MatchWithIntrinsicSize();
   }
