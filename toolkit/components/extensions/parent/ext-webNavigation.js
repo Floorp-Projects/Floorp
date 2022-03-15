@@ -8,21 +8,13 @@
 // by ext-browser.js or ext-android.js).
 /* global tabTracker */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "MatchURLFilters",
-  "resource://gre/modules/MatchURLFilters.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebNavigation",
-  "resource://gre/modules/WebNavigation.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  MatchURLFilters: "resource://gre/modules/MatchURLFilters.jsm",
+  WebNavigation: "resource://gre/modules/WebNavigation.jsm",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
 var { ExtensionError } = ExtensionUtils;
 
 const defaultTransitionTypes = {
@@ -109,17 +101,26 @@ const fillTransitionProperties = (eventName, src, dst) => {
   }
 };
 
-// Similar to WebRequestEventManager but for WebNavigation.
-class WebNavigationEventManager extends EventManager {
-  constructor(context, eventName) {
-    let { tabManager } = context.extension;
-    let name = `webNavigation.${eventName}`;
-    let register = (fire, urlFilters) => {
+this.webNavigation = class extends ExtensionAPIPersistent {
+  makeEventHandler(event) {
+    let { extension } = this;
+    let { tabManager } = extension;
+    return ({ fire }, params) => {
       // Don't create a MatchURLFilters instance if the listener does not include any filter.
+      let [urlFilters] = params;
       let filters = urlFilters ? new MatchURLFilters(urlFilters.url) : null;
 
       let listener = data => {
         if (!data.browser) {
+          return;
+        }
+        if (
+          !extension.privateBrowsingAllowed &&
+          PrivateBrowsingUtils.isBrowserPrivate(data.browser)
+        ) {
+          return;
+        }
+        if (filters && !filters.matches(data.url)) {
           return;
         }
 
@@ -128,7 +129,7 @@ class WebNavigationEventManager extends EventManager {
           timeStamp: Date.now(),
         };
 
-        if (eventName == "onErrorOccurred") {
+        if (event == "onErrorOccurred") {
           data2.error = data.error;
         }
 
@@ -171,27 +172,58 @@ class WebNavigationEventManager extends EventManager {
           ).tabId;
         }
 
-        fillTransitionProperties(eventName, data, data2);
+        fillTransitionProperties(event, data, data2);
 
         fire.async(data2);
       };
 
-      WebNavigation[eventName].addListener(listener, filters, context);
-      return () => {
-        WebNavigation[eventName].removeListener(listener);
+      WebNavigation[event].addListener(listener);
+      return {
+        unregister() {
+          WebNavigation[event].removeListener(listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
       };
     };
-
-    super({ context, name, register });
   }
-}
 
-this.webNavigation = class extends ExtensionAPI {
+  makeEventManagerAPI(event, context) {
+    let self = this;
+    return new EventManager({
+      context,
+      module: "webNavigation",
+      event,
+      register(fire, ...params) {
+        let fn = self.makeEventHandler(event);
+        return fn({ fire }, params).unregister;
+      },
+    }).api();
+  }
+
+  PERSISTENT_EVENTS = {
+    onBeforeNavigate: this.makeEventHandler("onBeforeNavigate"),
+    onCommitted: this.makeEventHandler("onCommitted"),
+    onDOMContentLoaded: this.makeEventHandler("onDOMContentLoaded"),
+    onCompleted: this.makeEventHandler("onCompleted"),
+    onErrorOccurred: this.makeEventHandler("onErrorOccurred"),
+    onReferenceFragmentUpdated: this.makeEventHandler(
+      "onReferenceFragmentUpdated"
+    ),
+    onHistoryStateUpdated: this.makeEventHandler("onHistoryStateUpdated"),
+    onCreatedNavigationTarget: this.makeEventHandler(
+      "onCreatedNavigationTarget"
+    ),
+  };
+
   getAPI(context) {
-    let { tabManager } = context.extension;
+    let { extension } = context;
+    let { tabManager } = extension;
 
     return {
       webNavigation: {
+        // onTabReplaced does nothing, it exists for compat.
         onTabReplaced: new EventManager({
           context,
           name: "webNavigation.onTabReplaced",
@@ -199,38 +231,26 @@ this.webNavigation = class extends ExtensionAPI {
             return () => {};
           },
         }).api(),
-        onBeforeNavigate: new WebNavigationEventManager(
-          context,
-          "onBeforeNavigate"
-        ).api(),
-        onCommitted: new WebNavigationEventManager(
-          context,
-          "onCommitted"
-        ).api(),
-        onDOMContentLoaded: new WebNavigationEventManager(
-          context,
-          "onDOMContentLoaded"
-        ).api(),
-        onCompleted: new WebNavigationEventManager(
-          context,
-          "onCompleted"
-        ).api(),
-        onErrorOccurred: new WebNavigationEventManager(
-          context,
-          "onErrorOccurred"
-        ).api(),
-        onReferenceFragmentUpdated: new WebNavigationEventManager(
-          context,
-          "onReferenceFragmentUpdated"
-        ).api(),
-        onHistoryStateUpdated: new WebNavigationEventManager(
-          context,
-          "onHistoryStateUpdated"
-        ).api(),
-        onCreatedNavigationTarget: new WebNavigationEventManager(
-          context,
-          "onCreatedNavigationTarget"
-        ).api(),
+        onBeforeNavigate: this.makeEventManagerAPI("onBeforeNavigate", context),
+        onCommitted: this.makeEventManagerAPI("onCommitted", context),
+        onDOMContentLoaded: this.makeEventManagerAPI(
+          "onDOMContentLoaded",
+          context
+        ),
+        onCompleted: this.makeEventManagerAPI("onCompleted", context),
+        onErrorOccurred: this.makeEventManagerAPI("onErrorOccurred", context),
+        onReferenceFragmentUpdated: this.makeEventManagerAPI(
+          "onReferenceFragmentUpdated",
+          context
+        ),
+        onHistoryStateUpdated: this.makeEventManagerAPI(
+          "onHistoryStateUpdated",
+          context
+        ),
+        onCreatedNavigationTarget: this.makeEventManagerAPI(
+          "onCreatedNavigationTarget",
+          context
+        ),
         getAllFrames({ tabId }) {
           let tab = tabManager.get(tabId);
           if (tab.discarded) {
