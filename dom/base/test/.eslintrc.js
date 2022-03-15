@@ -6,12 +6,4 @@ module.exports = {
     "plugin:mozilla/chrome-test",
     "plugin:mozilla/mochitest-test",
   ],
-  overrides: [
-    {
-      files: ["file_module_js_cache.js", "file_script_module_*.js"],
-      parserOptions: {
-        sourceType: "module",
-      },
-    },
-  ],
 };

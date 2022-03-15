@@ -3199,13 +3199,9 @@ class nsContentUtils {
   // Alternate data MIME type used by the ScriptLoader to register and read
   // bytecode out of the nsCacheInfoChannel.
   [[nodiscard]] static bool InitJSBytecodeMimeType();
-  static nsCString& JSScriptBytecodeMimeType() {
-    MOZ_ASSERT(sJSScriptBytecodeMimeType);
-    return *sJSScriptBytecodeMimeType;
-  }
-  static nsCString& JSModuleBytecodeMimeType() {
-    MOZ_ASSERT(sJSModuleBytecodeMimeType);
-    return *sJSModuleBytecodeMimeType;
+  static nsCString& JSBytecodeMimeType() {
+    MOZ_ASSERT(sJSBytecodeMimeType);
+    return *sJSBytecodeMimeType;
   }
 
   /**
@@ -3424,10 +3420,9 @@ class nsContentUtils {
   static nsString* sAltText;
   static nsString* sModifierSeparator;
 
-  // Alternate data mime types, used by the ScriptLoader to register and read
-  // the bytecode out of the nsCacheInfoChannel.
-  static nsCString* sJSScriptBytecodeMimeType;
-  static nsCString* sJSModuleBytecodeMimeType;
+  // Alternate data mime type, used by the ScriptLoader to register and read the
+  // bytecode out of the nsCacheInfoChannel.
+  static nsCString* sJSBytecodeMimeType;
 
   static mozilla::LazyLogModule gResistFingerprintingLog;
   static mozilla::LazyLogModule sDOMDumpLog;

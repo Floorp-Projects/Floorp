@@ -557,32 +557,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                                         JSExecutionContext& aExec,
                                         ScriptLoadRequest* aRequest);
 
-  static nsCString& BytecodeMimeTypeFor(ScriptLoadRequest* aRequest);
-
-  // Decide whether to encode bytecode for given script load request,
-  // and store the script into the request if necessary.
-  //
-  // This method must be called before executing the script.
-  void MaybePrepareForBytecodeEncodingBeforeExecute(
-      ScriptLoadRequest* aRequest, JS::Handle<JSScript*> aScript);
-
-  // Queue the script load request for bytecode encoding if we decided to
-  // encode, or cleanup the script load request fields otherwise.
-  //
-  // This method must be called after executing the script.
-  nsresult MaybePrepareForBytecodeEncodingAfterExecute(
-      ScriptLoadRequest* aRequest, nsresult aRv);
-
-  // Returns true if MaybePrepareForBytecodeEncodingAfterExecute is called
-  // for given script load request.
-  bool IsAlreadyHandledForBytecodeEncodingPreparation(
-      ScriptLoadRequest* aRequest);
-
-  void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
-      JSContext* aCx, ModuleLoadRequest* aRequest) override;
-
-  nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
-      ModuleLoadRequest* aRequest, nsresult aRv) override;
+  nsresult MaybePrepareForBytecodeEncoding(JS::Handle<JSScript*> aScript,
+                                           ScriptLoadRequest* aRequest,
+                                           nsresult aRv);
 
   // Implements https://html.spec.whatwg.org/#run-a-classic-script
   nsresult EvaluateScript(nsIGlobalObject* aGlobalObject,
@@ -601,7 +578,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * no more script have to be processed.  If all conditions are met, queue an
    * event to encode all the bytecode and save them on the cache.
    */
-  void MaybeTriggerBytecodeEncoding() override;
+  void MaybeTriggerBytecodeEncoding();
 
   /**
    * Iterate over all script load request and save the bytecode of executed
