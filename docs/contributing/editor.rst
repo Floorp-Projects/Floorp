@@ -29,8 +29,6 @@ Visual Studio Code
 
 Go to :doc:`Visual Studio Code <vscode>` dedicated page.
 
-.. _VIM:
-
 VIM
 ---
 
