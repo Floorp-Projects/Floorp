@@ -85,6 +85,7 @@ void text_shader_main(
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND      32
 #define BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE    64
 #define BRUSH_FLAG_TEXEL_RECT                 128
+#define BRUSH_FLAG_FORCE_AA                   256
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
@@ -118,8 +119,9 @@ void brush_shader_main_vs(
 
     VertexInfo vi;
 
+    bool force_aa = (brush_flags & BRUSH_FLAG_FORCE_AA) != 0 && edge_flags != 0;
     // Write the normal vertex information out.
-    if (transform.is_axis_aligned) {
+    if (transform.is_axis_aligned && !force_aa) {
 
         // Select the corner of the local rect that we are processing.
         vec2 local_pos = mix(segment_rect.p0, segment_rect.p1, aPosition.xy);
