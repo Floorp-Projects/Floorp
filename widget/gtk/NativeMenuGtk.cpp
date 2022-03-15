@@ -7,6 +7,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/XULCommandEvent.h"
+#include "mozilla/EventDispatcher.h"
 #include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsWindow.h"
@@ -58,26 +59,25 @@ struct Actions {
   RefPtr<GSimpleActionGroup> mGroup;
   size_t mNextActionIndex = 0;
 
-  nsPrintfCString Register(const dom::Element&);
+  nsPrintfCString Register(const dom::Element&, bool aForSubmenu);
   void Clear();
 };
 
-void ActivateItem(dom::Element* aElement) {
-  RefPtr element = aElement;
-  if (Maybe<bool> checked = GetChecked(*element)) {
-    if (!element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
+static MOZ_CAN_RUN_SCRIPT void ActivateItem(dom::Element& aElement) {
+  if (Maybe<bool> checked = GetChecked(aElement)) {
+    if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
                               nsGkAtoms::_false, eCaseMatters)) {
       bool newValue = !*checked;
       if (newValue) {
-        element->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"true"_ns,
+        aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"true"_ns,
                          true);
       } else {
-        element->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);
+        aElement.UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);
       }
     }
   }
 
-  RefPtr doc = aElement->OwnerDoc();
+  RefPtr doc = aElement.OwnerDoc();
   RefPtr event = new dom::XULCommandEvent(doc, doc->GetPresContext(), nullptr);
   IgnoredErrorResult rv;
   event->InitCommandEvent(u"command"_ns, true, true,
@@ -88,17 +88,46 @@ void ActivateItem(dom::Element* aElement) {
   if (MOZ_UNLIKELY(rv.Failed())) {
     return;
   }
-  element->DispatchEvent(*event);
+  aElement.DispatchEvent(*event);
 }
 
-void ActivateSignal(GSimpleAction* aAction, GVariant* aParam,
-                    gpointer aUserData) {
-  ActivateItem(static_cast<dom::Element*>(aUserData));
+static MOZ_CAN_RUN_SCRIPT void ActivateSignal(GSimpleAction* aAction,
+                                              GVariant* aParam,
+                                              gpointer aUserData) {
+  RefPtr element = static_cast<dom::Element*>(aUserData);
+  ActivateItem(*element);
 }
 
-nsPrintfCString Actions::Register(const dom::Element& aMenuItem) {
+static MOZ_CAN_RUN_SCRIPT void FireEvent(dom::Element* aTarget,
+                                         EventMessage aPopupMessage) {
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetMouseEvent event(true, aPopupMessage, nullptr, WidgetMouseEvent::eReal);
+  EventDispatcher::Dispatch(aTarget, nullptr, &event, nullptr, &status);
+}
+
+static MOZ_CAN_RUN_SCRIPT void ChangeStateSignal(GSimpleAction* aAction,
+                                                 GVariant* aParam,
+                                                 gpointer aUserData) {
+  // TODO: Fire events when safe. These run at a bad time for now.
+  static constexpr bool kEnabled = false;
+  if (!kEnabled) {
+    return;
+  }
+  const bool open = g_variant_get_boolean(aParam);
+  RefPtr popup = static_cast<dom::Element*>(aUserData);
+  if (open) {
+    FireEvent(popup, eXULPopupShowing);
+    FireEvent(popup, eXULPopupShown);
+  } else {
+    FireEvent(popup, eXULPopupHiding);
+    FireEvent(popup, eXULPopupHidden);
+  }
+}
+
+nsPrintfCString Actions::Register(const dom::Element& aMenuItem,
+                                  bool aForSubmenu) {
   nsPrintfCString actionName("item-%zu", mNextActionIndex++);
-  Maybe<bool> paramValue = GetChecked(aMenuItem);
+  Maybe<bool> paramValue = aForSubmenu ? Some(false) : GetChecked(aMenuItem);
   RefPtr<GSimpleAction> action;
   if (paramValue) {
     action = dont_AddRef(g_simple_action_new_stateful(
@@ -106,8 +135,13 @@ nsPrintfCString Actions::Register(const dom::Element& aMenuItem) {
   } else {
     action = dont_AddRef(g_simple_action_new(actionName.get(), nullptr));
   }
-  g_signal_connect(action, "activate", G_CALLBACK(ActivateSignal),
-                   gpointer(&aMenuItem));
+  if (aForSubmenu) {
+    g_signal_connect(action, "change-state", G_CALLBACK(ChangeStateSignal),
+                     gpointer(&aMenuItem));
+  } else {
+    g_signal_connect(action, "activate", G_CALLBACK(ActivateSignal),
+                     gpointer(&aMenuItem));
+  }
   g_action_map_add_action(G_ACTION_MAP(mGroup.get()), G_ACTION(action.get()));
   return actionName;
 }
@@ -227,8 +261,10 @@ static void RecomputeModelFor(GMenu* aMenu, Actions& aActions,
       if (label.IsEmpty()) {
         child->AsElement()->GetAttr(nsGkAtoms::aria_label, label);
       }
-      nsPrintfCString actionName("menu.%s",
-                                 aActions.Register(*child->AsElement()).get());
+      nsPrintfCString actionName(
+          "menu.%s",
+          aActions.Register(*child->AsElement(), /* aForSubmenu = */ false)
+              .get());
       g_menu_append(sectionMenu ? sectionMenu.get() : aMenu,
                     NS_ConvertUTF16toUTF8(label).get(), actionName.get());
       continue;
@@ -252,9 +288,15 @@ static void RecomputeModelFor(GMenu* aMenu, Actions& aActions,
         RecomputeModelFor(submenu, aActions, *popup);
         nsAutoString label;
         child->AsElement()->GetAttr(nsGkAtoms::label, label);
-        g_menu_append_submenu(sectionMenu ? sectionMenu.get() : aMenu,
-                              NS_ConvertUTF16toUTF8(label).get(),
-                              G_MENU_MODEL(submenu.get()));
+        RefPtr<GMenuItem> submenuItem = dont_AddRef(g_menu_item_new_submenu(
+            NS_ConvertUTF16toUTF8(label).get(), G_MENU_MODEL(submenu.get())));
+        nsPrintfCString actionName(
+            "menu.%s",
+            aActions.Register(*popup, /* aForSubmenu = */ true).get());
+        g_menu_item_set_attribute_value(submenuItem.get(), "submenu-action",
+                                        g_variant_new_string(actionName.get()));
+        g_menu_append_item(sectionMenu ? sectionMenu.get() : aMenu,
+                           submenuItem.get());
       }
     }
   }
@@ -281,9 +323,16 @@ bool NativeMenuGtk::CanUse() {
   return StaticPrefs::widget_gtk_native_context_menus() && GetPopupAtRectFn();
 }
 
-#define METHOD_SIGNAL(name_)                                      \
-  void On##name_##Signal(GtkWidget* widget, gpointer user_data) { \
-    return static_cast<NativeMenuGtk*>(user_data)->On##name_();   \
+void NativeMenuGtk::FireEvent(EventMessage aPopupMessage) {
+  RefPtr target = Element();
+  widget::FireEvent(target, aPopupMessage);
+}
+
+#define METHOD_SIGNAL(name_)                                 \
+  static MOZ_CAN_RUN_SCRIPT_BOUNDARY void On##name_##Signal( \
+      GtkWidget* widget, gpointer user_data) {               \
+    RefPtr menu = static_cast<NativeMenuGtk*>(user_data);    \
+    return menu->On##name_();                                \
   }
 
 METHOD_SIGNAL(Unmap);
@@ -332,6 +381,9 @@ void NativeMenuGtk::ShowAsContextMenu(nsPresContext* aPc,
   auto openFn = GetPopupAtRectFn();
   openFn(GTK_MENU(mNativeMenu.get()), win, &rect, GDK_GRAVITY_NORTH_WEST,
          GDK_GRAVITY_NORTH_WEST, nullptr);
+
+  RefPtr pin{this};
+  FireEvent(eXULPopupShown);
 }
 
 bool NativeMenuGtk::Close() {
@@ -343,7 +395,12 @@ bool NativeMenuGtk::Close() {
 }
 
 void NativeMenuGtk::OnUnmap() {
+  FireEvent(eXULPopupHiding);
+
   mMenuModel->DidHide();
+
+  FireEvent(eXULPopupHidden);
+
   for (NativeMenu::Observer* observer : mObservers.Clone()) {
     observer->OnNativeMenuClosed();
   }
