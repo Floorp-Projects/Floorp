@@ -39,19 +39,31 @@ this.pkcs11 = class extends ExtensionAPI {
         context
       );
       if (hostInfo) {
-        if (AppConstants.platform === "win") {
-          // If the path specified in the manifest is not an abslute path,
-          // translate it relative to manifest's directory.
-          if (!PathUtils.isAbsolute(hostInfo.manifest.path)) {
-            hostInfo.manifest.path = PathUtils.normalize(
-              PathUtils.joinRelative(
-                PathUtils.parent(hostInfo.path),
-                hostInfo.manifest.path
-              )
+        // We don't normalize the absolute path below because
+        // `Path.normalize` throws when the target file doesn't
+        // exist, and that might be the case on non Windows
+        // builds.
+        let absolutePath = PathUtils.isAbsolute(hostInfo.manifest.path)
+          ? hostInfo.manifest.path
+          : PathUtils.joinRelative(
+              PathUtils.parent(hostInfo.path),
+              hostInfo.manifest.path
             );
-          }
+
+        if (AppConstants.platform === "win") {
+          // On Windows, `hostInfo.manifest.path` is expected to be a normalized
+          // absolute path. On other platforms, this path may be relative but we
+          // cannot use `PathUtils.normalize()` on non-absolute paths.
+          absolutePath = PathUtils.normalize(absolutePath);
+          hostInfo.manifest.path = absolutePath;
         }
-        let manifestLib = PathUtils.filename(hostInfo.manifest.path);
+
+        // PathUtils.filename throws if the path is not an absolute path.
+        // The result is expected to be the basename of the file (without
+        // the dir path and the extension) so it is fine to use an absolute
+        // path that may not be normalized (non-Windows platforms).
+        let manifestLib = PathUtils.filename(absolutePath);
+
         if (AppConstants.platform !== "linux") {
           manifestLib = manifestLib.toLowerCase(manifestLib);
         }
