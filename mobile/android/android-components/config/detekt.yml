@@ -598,7 +598,7 @@ style:
   UseArrayLiteralsInAnnotations:
     active: false
   UseCheckNotNull:
-    active: false
+    active: true
   UseCheckOrError:
     active: false
   UseDataClass:
