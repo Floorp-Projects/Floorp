@@ -661,7 +661,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   if (mUpgradeProtocolCallback) {
     // Websockets can run over HTTP/2, but other upgrades can't.
     if (mUpgradeProtocol.EqualsLiteral("websocket") &&
-        gHttpHandler->IsH2WebsocketsEnabled()) {
+        StaticPrefs::network_http_http2_websockets()) {
       // Need to tell the conn manager that we're ok with http/2 even with
       // the allow keepalive bit not set. That bit needs to stay off,
       // though, in case we end up having to fallback to http/1.1 (where

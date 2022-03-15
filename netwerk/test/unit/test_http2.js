@@ -491,7 +491,7 @@ Http2ConcurrentListener.prototype.onStopRequest = function(request, status) {
 
   if (this.count == this.target) {
     if (this.reset > 0) {
-      prefs.setIntPref("network.http.spdy.default-concurrent", this.reset);
+      prefs.setIntPref("network.http.http2.default-concurrent", this.reset);
     }
     run_next_test();
     do_test_finished();
@@ -502,9 +502,9 @@ function test_http2_concurrent() {
   var concurrent_listener = new Http2ConcurrentListener();
   concurrent_listener.target = 201;
   concurrent_listener.reset = prefs.getIntPref(
-    "network.http.spdy.default-concurrent"
+    "network.http.http2.default-concurrent"
   );
-  prefs.setIntPref("network.http.spdy.default-concurrent", 100);
+  prefs.setIntPref("network.http.http2.default-concurrent", 100);
 
   for (var i = 0; i < concurrent_listener.target; i++) {
     concurrent_channels[i] = makeChan(
@@ -520,9 +520,9 @@ function test_http2_concurrent_post() {
   concurrent_listener.target = 8;
   concurrent_listener.recvdHdr = posts[2].length;
   concurrent_listener.reset = prefs.getIntPref(
-    "network.http.spdy.default-concurrent"
+    "network.http.http2.default-concurrent"
   );
-  prefs.setIntPref("network.http.spdy.default-concurrent", 3);
+  prefs.setIntPref("network.http.http2.default-concurrent", 3);
 
   for (var i = 0; i < concurrent_listener.target; i++) {
     concurrent_channels[i] = makeChan(
@@ -1362,8 +1362,7 @@ function run_next_test() {
 }
 
 var prefs;
-var spdypref;
-var spdypush;
+var http2push;
 var http2pref;
 var altsvcpref1;
 var altsvcpref2;
@@ -1373,9 +1372,8 @@ var speculativeLimit;
 
 function resetPrefs() {
   prefs.setIntPref("network.http.speculative-parallel-limit", speculativeLimit);
-  prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
+  prefs.setBoolPref("network.http.http2.enabled", http2pref);
+  prefs.setBoolPref("network.http.http2.allow-push", http2push);
   prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
   prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
   prefs.clearUserPref("network.dns.localDomains");
@@ -1408,15 +1406,13 @@ function run_test() {
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   // Enable all versions of spdy to see that we auto negotiate http/2
-  spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
-  http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
+  http2pref = prefs.getBoolPref("network.http.http2.enabled");
+  http2push = prefs.getBoolPref("network.http.http2.allow-push");
   altsvcpref1 = prefs.getBoolPref("network.http.altsvc.enabled");
   altsvcpref2 = prefs.getBoolPref("network.http.altsvc.oe", true);
 
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.allow-push", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  prefs.setBoolPref("network.http.http2.enabled", true);
+  prefs.setBoolPref("network.http.http2.allow-push", true);
   prefs.setBoolPref("network.http.altsvc.enabled", true);
   prefs.setBoolPref("network.http.altsvc.oe", true);
   prefs.setCharPref(

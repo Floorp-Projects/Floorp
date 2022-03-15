@@ -38,7 +38,7 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
   Preferences::SetBool("fuzzing.necko.enabled", true);
   Preferences::SetInt("network.http.speculative-parallel-limit", 0);
-  Preferences::SetInt("network.http.spdy.default-concurrent", 1);
+  Preferences::SetInt("network.http.http2.default-concurrent", 1);
 
   if (httpSpec.IsEmpty()) {
     httpSpec = "http://127.0.0.1/";

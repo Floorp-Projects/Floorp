@@ -748,8 +748,9 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
 
   nsCOMPtr<nsIDNSAddrRecord> dnsRecord(
       do_GetInterface(mPrimaryTransport.mSocketTransport));
-  if (status == NS_NET_STATUS_CONNECTING_TO && gHttpHandler->IsSpdyEnabled() &&
-      gHttpHandler->CoalesceSpdy()) {
+  if (status == NS_NET_STATUS_CONNECTING_TO &&
+      StaticPrefs::network_http_http2_enabled() &&
+      StaticPrefs::network_http_http2_coalesce_hostnames()) {
     RefPtr<ConnectionEntry> ent =
         gHttpHandler->ConnMgr()->FindConnectionEntry(mConnInfo);
     MOZ_DIAGNOSTIC_ASSERT(ent);
@@ -1037,7 +1038,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     rv = connUDP->Init(ent->mConnInfo, mDNSRecord, status, callbacks, cap);
     if (NS_SUCCEEDED(rv)) {
       if (StaticPrefs::network_http_http3_enable() &&
-          gHttpHandler->CoalesceSpdy()) {
+          StaticPrefs::network_http_http2_coalesce_hostnames()) {
         if (ent->MaybeProcessCoalescingKeys(mDNSRecord, true)) {
           gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(ent);
         }

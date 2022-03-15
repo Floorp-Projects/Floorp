@@ -213,7 +213,7 @@ interface nsIHttpChannelInternal : nsISupports
 
     /**
      * Enable/Disable Spdy negotiation on per channel basis.
-     * The network.http.spdy.enabled preference is still a pre-requisite
+     * The network.http.http2.enabled preference is still a pre-requisite
      * for starting spdy.
      */
     [must_use] attribute boolean allowSpdy;

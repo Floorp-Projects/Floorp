@@ -4,7 +4,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var h2Port;
 var prefs;
-var spdypref;
 var http2pref;
 var altsvcpref1;
 var altsvcpref2;
@@ -36,13 +35,11 @@ function run_test() {
   do_get_profile();
   prefs = Services.prefs;
 
-  spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
+  http2pref = prefs.getBoolPref("network.http.http2.enabled");
   altsvcpref1 = prefs.getBoolPref("network.http.altsvc.enabled");
   altsvcpref2 = prefs.getBoolPref("network.http.altsvc.oe", true);
 
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  prefs.setBoolPref("network.http.http2.enabled", true);
   prefs.setBoolPref("network.http.altsvc.enabled", true);
   prefs.setBoolPref("network.http.altsvc.oe", true);
   prefs.setCharPref(
@@ -136,8 +133,7 @@ function h1ServerWK(metadata, response) {
 }
 
 function resetPrefs() {
-  prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
+  prefs.setBoolPref("network.http.http2.enabled", http2pref);
   prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
   prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
   prefs.clearUserPref("network.dns.localDomains");

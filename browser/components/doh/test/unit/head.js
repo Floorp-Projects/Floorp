@@ -57,8 +57,7 @@ function setup() {
   // Set to allow the cert presented by our H2 server
   do_get_profile();
 
-  Services.prefs.setBoolPref("network.http.spdy.enabled", true);
-  Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  Services.prefs.setBoolPref("network.http.http2.enabled", true);
 
   // use the h2 server as DOH provider
   trrServer1 = `https://foo.example.com:${h2Port}/doh?responseIP=1.1.1.1`;
@@ -98,8 +97,7 @@ function setup() {
   Services.telemetry.canRecordExtended = true;
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("network.http.spdy.enabled");
-    Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
+    Services.prefs.clearUserPref("network.http.http2.enabled");
     Services.prefs.clearUserPref("network.dns.native-is-localhost");
 
     Services.telemetry.canRecordExtended = oldCanRecord;
