@@ -32,15 +32,13 @@ namespace mozilla {
 static void WaylandVsyncSourceCallbackHandler(void* aData,
                                               struct wl_callback* aCallback,
                                               uint32_t aTime) {
-  WaylandVsyncSource::WaylandDisplay* context =
-      (WaylandVsyncSource::WaylandDisplay*)aData;
+  WaylandVsyncSource* context = (WaylandVsyncSource*)aData;
   wl_callback_destroy(aCallback);
   context->FrameCallback(aTime);
 }
 
 static void WaylandVsyncSourceCallbackHandler(void* aData, uint32_t aTime) {
-  WaylandVsyncSource::WaylandDisplay* context =
-      (WaylandVsyncSource::WaylandDisplay*)aData;
+  WaylandVsyncSource* context = (WaylandVsyncSource*)aData;
   context->FrameCallback(aTime);
 }
 
@@ -51,20 +49,17 @@ static float GetFPS(TimeDuration aVsyncRate) {
   return 1000.0 / aVsyncRate.ToMilliseconds();
 }
 
-static UniquePtr<LinkedList<WaylandVsyncSource::WaylandDisplay>>
-    gWaylandDisplays;
+static nsTArray<WaylandVsyncSource*> gWaylandVsyncSources;
 
 Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
   Maybe<TimeDuration> retVal;
-  if (gWaylandDisplays) {
-    for (auto* display : *gWaylandDisplays) {
-      if (display->IsVsyncEnabled()) {
-        TimeDuration rate = display->GetVsyncRate();
-        if (!retVal.isSome()) {
-          retVal.emplace(rate);
-        } else if (rate < *retVal) {
-          retVal.ref() = rate;
-        }
+  for (auto* source : gWaylandVsyncSources) {
+    if (source->IsVsyncEnabled()) {
+      TimeDuration rate = source->GetVsyncRate();
+      if (!retVal.isSome()) {
+        retVal.emplace(rate);
+      } else if (rate < *retVal) {
+        retVal.ref() = rate;
       }
     }
   }
@@ -72,7 +67,7 @@ Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
   return retVal;
 }
 
-WaylandVsyncSource::WaylandDisplay::WaylandDisplay()
+WaylandVsyncSource::WaylandVsyncSource()
     : mMutex("WaylandVsyncSource"),
       mIsShutdown(false),
       mVsyncEnabled(false),
@@ -83,22 +78,14 @@ WaylandVsyncSource::WaylandDisplay::WaylandDisplay()
       mLastVsyncTimeStamp(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!gWaylandDisplays) {
-    gWaylandDisplays =
-        MakeUnique<LinkedList<WaylandVsyncSource::WaylandDisplay>>();
-  }
-  gWaylandDisplays->insertBack(this);
+  gWaylandVsyncSources.AppendElement(this);
 }
 
-WaylandVsyncSource::WaylandDisplay::~WaylandDisplay() {
-  remove();  // Remove from the linked list.
-  if (gWaylandDisplays->isEmpty()) {
-    gWaylandDisplays = nullptr;
-  }
+WaylandVsyncSource::~WaylandVsyncSource() {
+  gWaylandVsyncSources.RemoveElement(this);
 }
 
-void WaylandVsyncSource::WaylandDisplay::MaybeUpdateSource(
-    MozContainer* aContainer) {
+void WaylandVsyncSource::MaybeUpdateSource(MozContainer* aContainer) {
   MutexAutoLock lock(mMutex);
 
   LOG("WaylandVsyncSource::MaybeUpdateSource mContainer (nsWindow %p) fps %f",
@@ -120,7 +107,7 @@ void WaylandVsyncSource::WaylandDisplay::MaybeUpdateSource(
   }
 }
 
-void WaylandVsyncSource::WaylandDisplay::MaybeUpdateSource(
+void WaylandVsyncSource::MaybeUpdateSource(
     const RefPtr<NativeLayerRootWayland>& aNativeLayerRoot) {
   MutexAutoLock lock(mMutex);
 
@@ -142,9 +129,8 @@ void WaylandVsyncSource::WaylandDisplay::MaybeUpdateSource(
   }
 }
 
-void WaylandVsyncSource::WaylandDisplay::Refresh(
-    const MutexAutoLock& aProofOfLock) {
-  LOG("WaylandDisplay::Refresh fps %f\n", GetFPS(mVsyncRate));
+void WaylandVsyncSource::Refresh(const MutexAutoLock& aProofOfLock) {
+  LOG("WaylandVsyncSource::Refresh fps %f\n", GetFPS(mVsyncRate));
 
   if (!(mContainer || mNativeLayerRoot) || !mMonitorEnabled || !mVsyncEnabled ||
       mCallbackRequested) {
@@ -166,7 +152,7 @@ void WaylandVsyncSource::WaylandDisplay::Refresh(
       LOG("  we're missing wl_surface, register Refresh() callback");
       // The surface hasn't been created yet. Try again when the surface is
       // ready.
-      RefPtr<WaylandVsyncSource::WaylandDisplay> self(this);
+      RefPtr<WaylandVsyncSource> self(this);
       moz_container_wayland_add_initial_draw_callback(
           mContainer, [self]() -> void {
             MutexAutoLock lock(self->mMutex);
@@ -189,7 +175,7 @@ void WaylandVsyncSource::WaylandDisplay::Refresh(
   }
 }
 
-void WaylandVsyncSource::WaylandDisplay::EnableMonitor() {
+void WaylandVsyncSource::EnableMonitor() {
   LOG("WaylandVsyncSource::EnableMonitor");
   MutexAutoLock lock(mMutex);
   if (mMonitorEnabled) {
@@ -199,7 +185,7 @@ void WaylandVsyncSource::WaylandDisplay::EnableMonitor() {
   Refresh(lock);
 }
 
-void WaylandVsyncSource::WaylandDisplay::DisableMonitor() {
+void WaylandVsyncSource::DisableMonitor() {
   LOG("WaylandVsyncSource::DisableMonitor");
   MutexAutoLock lock(mMutex);
   if (!mMonitorEnabled) {
@@ -209,8 +195,7 @@ void WaylandVsyncSource::WaylandDisplay::DisableMonitor() {
   mCallbackRequested = false;
 }
 
-void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback(
-    const MutexAutoLock& aProofOfLock) {
+void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(!mCallbackRequested);
 
   LOG("WaylandVsyncSource::SetupFrameCallback");
@@ -242,7 +227,7 @@ void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback(
   mCallbackRequested = true;
 }
 
-void WaylandVsyncSource::WaylandDisplay::FrameCallback(uint32_t aTime) {
+void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
   LOG("WaylandVsyncSource::FrameCallback");
 
   MutexAutoLock lock(mMutex);
@@ -280,16 +265,15 @@ void WaylandVsyncSource::WaylandDisplay::FrameCallback(uint32_t aTime) {
   }
 }
 
-TimeDuration WaylandVsyncSource::WaylandDisplay::GetVsyncRate() {
-  return mVsyncRate;
-}
+TimeDuration WaylandVsyncSource::GetVsyncRate() { return mVsyncRate; }
 
-void WaylandVsyncSource::WaylandDisplay::CalculateVsyncRate(
-    const MutexAutoLock& aProofOfLock, TimeStamp aVsyncTimestamp) {
+void WaylandVsyncSource::CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
+                                            TimeStamp aVsyncTimestamp) {
   double duration = (aVsyncTimestamp - mLastVsyncTimeStamp).ToMilliseconds();
   double curVsyncRate = mVsyncRate.ToMilliseconds();
 
-  LOG("WaylandDisplay::CalculateVsyncRate start fps %f\n", GetFPS(mVsyncRate));
+  LOG("WaylandVsyncSource::CalculateVsyncRate start fps %f\n",
+      GetFPS(mVsyncRate));
 
   double correction;
   if (duration > curVsyncRate) {
@@ -303,7 +287,7 @@ void WaylandVsyncSource::WaylandDisplay::CalculateVsyncRate(
   LOG("  new fps %f correction %f\n", GetFPS(mVsyncRate), correction);
 }
 
-void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
+void WaylandVsyncSource::EnableVsync() {
   MOZ_ASSERT(NS_IsMainThread());
 
   LOG("WaylandVsyncSource::EnableVsync fps %f\n", GetFPS(mVsyncRate));
@@ -316,19 +300,19 @@ void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
   Refresh(lock);
 }
 
-void WaylandVsyncSource::WaylandDisplay::DisableVsync() {
+void WaylandVsyncSource::DisableVsync() {
   LOG("WaylandVsyncSource::DisableVsync fps %f\n", GetFPS(mVsyncRate));
   MutexAutoLock lock(mMutex);
   mVsyncEnabled = false;
   mCallbackRequested = false;
 }
 
-bool WaylandVsyncSource::WaylandDisplay::IsVsyncEnabled() {
+bool WaylandVsyncSource::IsVsyncEnabled() {
   MutexAutoLock lock(mMutex);
   return mVsyncEnabled;
 }
 
-void WaylandVsyncSource::WaylandDisplay::Shutdown() {
+void WaylandVsyncSource::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   LOG("WaylandVsyncSource::Shutdown fps %f\n", GetFPS(mVsyncRate));
   MutexAutoLock lock(mMutex);

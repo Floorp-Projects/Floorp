@@ -111,8 +111,8 @@ void CompositorVsyncDispatcher::Shutdown() {
 }
 
 RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher(
-    gfx::VsyncSource::Display* aDisplay)
-    : mDisplay(aDisplay),
+    gfx::VsyncSource* aVsyncSource)
+    : mVsyncSource(aVsyncSource),
       mVsyncObservers("RefreshTimerVsyncDispatcher::mVsyncObservers") {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
@@ -123,10 +123,9 @@ RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void RefreshTimerVsyncDispatcher::MoveToDisplay(
-    gfx::VsyncSource::Display* aDisplay) {
+void RefreshTimerVsyncDispatcher::MoveToSource(gfx::VsyncSource* aVsyncSource) {
   MOZ_ASSERT(NS_IsMainThread());
-  mDisplay = aDisplay;
+  mVsyncSource = aVsyncSource;
 }
 
 void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
@@ -169,7 +168,7 @@ void RefreshTimerVsyncDispatcher::UpdateVsyncStatus() {
     return;
   }
 
-  mDisplay->NotifyRefreshTimerVsyncStatus(NeedsVsync());
+  mVsyncSource->NotifyRefreshTimerVsyncStatus(NeedsVsync());
 }
 
 bool RefreshTimerVsyncDispatcher::NeedsVsync() {

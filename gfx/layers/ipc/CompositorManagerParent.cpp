@@ -104,10 +104,8 @@ CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
     return nullptr;
   }
 
-  TimeDuration vsyncRate = gfxPlatform::GetPlatform()
-                               ->GetHardwareVsync()
-                               ->GetGlobalDisplay()
-                               .GetVsyncRate();
+  TimeDuration vsyncRate =
+      gfxPlatform::GetPlatform()->GetHardwareVsync()->GetVsyncRate();
 
   RefPtr<CompositorBridgeParent> bridge = new CompositorBridgeParent(
       sInstance, aScale, vsyncRate, aOptions, aUseExternalSurfaceSize,
