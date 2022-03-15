@@ -14638,7 +14638,8 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
     const auto r =
         CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
             frame, frame->GetRectRelativeToSelf(), relativeTo));
-    if ((uint32_t)r.Area() < StaticPrefs::browser_history_wireframeAreaThreshold()) {
+    if ((uint32_t)r.Area() <
+        StaticPrefs::browser_history_wireframeAreaThreshold()) {
       continue;
     }
 
