@@ -1314,9 +1314,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-                   SharedCode code,
-                   HandleWasmMemoryObject memory, SharedTableVector&& tables,
-                   UniqueDebugState maybeDebug)
+                   SharedCode code, HandleWasmMemoryObject memory,
+                   SharedTableVector&& tables, UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       jsJitArgsRectifier_(
           cx->runtime()->jitRuntime()->getArgumentsRectifier().value),
@@ -1349,9 +1348,8 @@ Instance* Instance::create(JSContext* cx, HandleWasmInstanceObject object,
   }
   void* aligned = (void*)AlignBytes(uintptr_t(base), alignof(Instance));
 
-  auto* instance =
-      new (aligned) Instance(cx, object, code, memory,
-                             std::move(tables), std::move(maybeDebug));
+  auto* instance = new (aligned) Instance(
+      cx, object, code, memory, std::move(tables), std::move(maybeDebug));
   instance->allocatedBase_ = base;
   return instance;
 }
@@ -1621,10 +1619,6 @@ void Instance::resetInterrupt(JSContext* cx) {
   stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
 }
 
-void Instance::setPendingException(JSObject* pendingException) {
-  pendingException_ = pendingException;
-}
-
 size_t Instance::memoryMappedSize() const {
   return memory_->buffer().wasmMappedSize();
 }
@@ -1694,10 +1688,8 @@ void Instance::tracePrivate(JSTracer* trc) {
 #endif
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  TraceNullableEdge(trc, &pendingException_,
-                    "wasm pending exception value");
-  TraceNullableEdge(trc, &pendingExceptionTag_,
-                    "wasm pending exception tag");
+  TraceNullableEdge(trc, &pendingException_, "wasm pending exception value");
+  TraceNullableEdge(trc, &pendingExceptionTag_, "wasm pending exception tag");
 #endif
 
   if (maybeDebug_) {
