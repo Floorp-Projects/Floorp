@@ -45,8 +45,6 @@
     <string name="recently_saved_show_all">Birta allt</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Sýna öll vistuð bókamerki</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Sýna hnapp fyrir öll vistuð bókamerki</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Fjarlægja</string>
@@ -125,8 +123,6 @@
     <string name="recent_tabs_show_all">Birta allt</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Sýna hnapp fyrir alla nýlega flipa</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Sýna alla nýlega flipa</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Leitin þín að \&quot;%1$s\&quot;</string>
@@ -148,8 +144,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Sýna alla fyrri leiðangra</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Sýna hnapp fyrir alla fyrri leiðangra</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -988,6 +982,10 @@
     <string name="share_link_all_apps_subheader">Allar aðgerðir</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Nýlega notað</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Afrita á klippispjald</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Afritað á klippispjald</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Skráðu þig inn til að samstilla</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1165,10 +1163,9 @@
     <string name="onboarding_header">Velkomin í %s!</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Samstilla Firefox á milli tækja</string>
+    <string name="onboarding_account_sign_in_header_1">Samstilla Firefox á milli tækja</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Samstilla %1$s á milli tækja</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Samstilla %1$s á milli tækja</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Komdu með bókamerki, feril og lykilorð yfir í %1$s á þessu tæki.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1690,9 +1687,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Virkjaðu samstillingu flipa.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Þú ert ekki með neina Firefox flipa opna á hinum tækjunum þínum.</string>
+    <string name="synced_tabs_no_tabs">Þú ert ekki með neina Firefox flipa opna á hinum tækjunum þínum.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Þú ert ekki með neina %1$s-flipa opna á hinum tækjunum þínum.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Þú ert ekki með neina %1$s-flipa opna á hinum tækjunum þínum.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Skoða lista yfir flipa frá öðrum tækjum.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

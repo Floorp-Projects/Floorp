@@ -44,8 +44,6 @@
     <string name="recently_saved_show_all">Mussar tut</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Mussar tut ils segnapaginas memorisads</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Buttun per mussar tut ils segnapaginas memorisads</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Allontanar</string>
@@ -124,8 +122,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Buttun per mussar tut ils tabs averts dacurt</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Mussar tut ils tabs averts dacurt</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Tia tschertga da «%1$s»</string>
@@ -148,8 +144,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Mussar tut las navigaziuns vargadas</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Buttun per mussar ils artitgels gia visitads</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -984,6 +978,10 @@
     <string name="share_link_all_apps_subheader">Tuttas acziuns</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Utilisà dacurt</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Copiar en l\'archiv provisoric</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Copià en l\'archiv provisoric</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">S\'annunziar per sincronisar</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1161,10 +1159,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Bainvegni en %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sincronisescha Firefox sin differents apparats</string>
+    <string name="onboarding_account_sign_in_header_1">Sincronisescha Firefox sin differents apparats</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Sincronisescha %1$s tranter apparats</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sincronisescha %1$s tranter apparats</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Importescha segnapaginas, la cronologia e pleds-clav en %1$s sin quest apparat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1698,9 +1695,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Activescha p.pl. la sincronisaziun da tabs.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Ti n\'has nagins tabs da Firefox averts sin auters apparats.</string>
+    <string name="synced_tabs_no_tabs">Ti n\'has nagins tabs da Firefox averts sin auters apparats.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Ti n\'has nagins tabs averts en %1$s sin tes auters apparats.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Ti n\'has nagins tabs averts en %1$s sin tes auters apparats.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Mussar ina glista dals tabs da tes auters apparats.</string>
 

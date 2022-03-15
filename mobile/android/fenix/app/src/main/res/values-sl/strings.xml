@@ -47,8 +47,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Prikaži vse shranjene zaznamke</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Gumb za prikaz vseh shranjenih zaznamkov</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Odstrani</string>
@@ -129,8 +127,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Gumb za prikaz vseh nedavnih zavihkov</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Prikaži vse nedavne zavihke</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Vaše iskanje \&quot;%1$s\&quot;</string>
@@ -153,8 +149,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Prikaži vsa pretekla odkritja</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Gumb za prikaz vseh preteklih odkritij</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -1006,6 +1000,10 @@
     <string name="share_link_all_apps_subheader">Vsa dejanja</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Nedavno uporabljene</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Kopiraj v odložišče</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Kopirano v odložišče</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Prijava v sinhronizacijo</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1181,10 +1179,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Dobrodošli v %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sinhronizirajte Firefox med napravami</string>
+    <string name="onboarding_account_sign_in_header_1">Sinhronizirajte Firefox med napravami</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Sinhronizirajte %1$s med napravami</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sinhronizirajte %1$s med napravami</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Prinesite zaznamke, zgodovino in gesla v %1$s na tej napravi.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1717,9 +1714,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Omogočite sinhronizacijo zavihkov.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">V Firefoxu na drugih napravah nimate odprtih drugih zavihkov.</string>
+    <string name="synced_tabs_no_tabs">V Firefoxu na drugih napravah nimate odprtih drugih zavihkov.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">V %1$su na drugih napravah nimate odprtih zavihkov.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">V %1$su na drugih napravah nimate odprtih zavihkov.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Oglejte si seznam zavihkov drugih naprav.</string>
 

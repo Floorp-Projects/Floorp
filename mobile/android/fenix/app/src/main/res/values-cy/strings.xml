@@ -45,8 +45,6 @@
     <string name="recently_saved_show_all">Dangos y cyfan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Dangos pob nod tudalen wedi’u cadw</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Dangos fotwm nodau tudalen wedi’u cadw</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Tynnu</string>
@@ -127,8 +125,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Dangos botwm bob tab diweddar</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Dangos bob tab diweddar</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Eich chwilio am \&quot;%1$s\&quot;</string>
@@ -151,8 +147,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Dangos archwiliad  y gorffennol</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Dangos botwm holl chwilio’r gorffennol</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -992,6 +986,10 @@
     <string name="share_link_all_apps_subheader">Pob gweithred</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Defnyddiwyd yn ddiweddar</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Copïo i’r clipfwrdd</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Copïwyd i’r clipfwrdd</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Mewngofnodi i gydweddu</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1165,10 +1163,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Croeso i %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Cydweddu Firefox rhwng dyfeisiau</string>
+    <string name="onboarding_account_sign_in_header_1">Cydweddu Firefox rhwng dyfeisiau</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Cydweddu %1$s rhwng dyfeisiau</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Cydweddu %1$s rhwng dyfeisiau</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Dewch â nodau tudalen, hanes, a chyfrineiriau i %1$s ar y ddyfais hon.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1693,9 +1690,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="synced_tabs_enable_tab_syncing">Galluogwch gydweddu tabiau.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Nid oes gennych unrhyw dabiau ar agor yn Firefox ar eich dyfeisiau eraill.</string>
+    <string name="synced_tabs_no_tabs">Nid oes gennych unrhyw dabiau ar agor yn Firefox ar eich dyfeisiau eraill.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Nid oes gennych unrhyw dabiau ar agor yn %1$s ar eich dyfeisiau eraill.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Nid oes gennych unrhyw dabiau ar agor yn %1$s ar eich dyfeisiau eraill.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Gweld rhestr o dabiau o’ch dyfeisiau eraill.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

@@ -48,8 +48,6 @@
     <string name="recently_saved_show_all">Alles tonen</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle opgeslagen bladwijzers tonen</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Knop Alle opgeslagen bladwijzers tonen</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Verwijderen</string>
@@ -132,8 +130,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Knop Alle recente tabbladen tonen</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Alle recente tabbladen tonen</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Uw zoekopdracht naar ‘%1$s’</string>
@@ -156,8 +152,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Alle eerdere zoekopdrachten tonen</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Knop Alle eerdere zoekopdrachten tonen</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -445,7 +439,7 @@
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tik op het logo om de achtergrond te wijzigen</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Wijzig uw achtergrond door op het Firefox-startpaginalogo te tikken</string>
+    <string name="wallpaper_tap_to_change_switch_label_1">Uw achtergrond wijzigen door op het Firefox-startpaginalogo te tikken</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Door afbeeldingen lopen en ze bijwerken zonder de startpagina te verlaten.</string>
 
@@ -1003,6 +997,10 @@
     <string name="share_link_all_apps_subheader">Alle acties</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Onlangs gebruikt</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Kopiëren naar klembord</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Naar klembord gekopieerd</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Aanmelden om te synchroniseren</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1180,10 +1178,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Welkom bij %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchroniseer Firefox tussen apparaten</string>
+    <string name="onboarding_account_sign_in_header_1">Synchroniseer Firefox tussen apparaten</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Synchroniseer %1$s tussen apparaten</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synchroniseer %1$s tussen apparaten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Breng bladwijzers, geschiedenis en wachtwoorden naar %1$s op dit apparaat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1705,9 +1702,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Schakel het synchroniseren van tabbladen in.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">U hebt geen tabbladen geopend in Firefox op uw andere apparaten.</string>
+    <string name="synced_tabs_no_tabs">U hebt geen tabbladen geopend in Firefox op uw andere apparaten.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">U hebt geen tabbladen geopend in %1$s op uw andere apparaten.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">U hebt geen tabbladen geopend in %1$s op uw andere apparaten.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Bekijk een lijst met tabbladen van uw overige apparaten.</string>
 

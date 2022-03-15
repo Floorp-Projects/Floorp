@@ -993,6 +993,10 @@
     <string name="share_link_all_apps_subheader">Ekintza guztiak</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Erabilitako azkenak</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Kopiatu arbelean</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Arbelean kopiatuta</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Hasi saioa sinkronizatzeko</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1168,11 +1172,10 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ongi etorri %s(e)ra!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sinkronizatu Firefox gailuen artean</string>
+    <string name="onboarding_account_sign_in_header_1">Sinkronizatu Firefox gailuen artean</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Sinkronizatu %1$s gailuen artean</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sinkronizatu %1$s gailuen artean</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Ekarri laster-markak, historia eta pasahitzak gailu honetako %1$s(e)ra.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1694,9 +1697,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Gaitu fitxen sinkronizazioa mesedez.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Ez daukazu fitxarik irekita beste gailuetako Firefoxetan.</string>
+    <string name="synced_tabs_no_tabs">Ez daukazu fitxarik irekita beste gailuetako Firefoxetan.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Ez daukazu fitxarik irekita beste gailuetako %1$s(e)n.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Ez daukazu fitxarik irekita beste gailuetako %1$s(e)n.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Ikusi zure beste gailuetako fitxen zerrenda.</string>
 

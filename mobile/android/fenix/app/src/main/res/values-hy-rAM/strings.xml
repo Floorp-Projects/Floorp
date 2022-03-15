@@ -45,8 +45,6 @@
     <string name="recently_saved_show_all">Ցուցադրել բոլորը</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Ցուցադրել բոլոր էջանիշերը</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Ցուցադրել բոլոր պահպանված էջանիշների կոճակը</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Հեռացնել</string>
@@ -126,8 +124,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Ցուցադրել բոլոր վերջին ներդիրների կոճակները</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Ցուցադրել բոլոր վերջին ներդիրները</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Ձեր որոնումը \&quot;%1$s\&quot;-ի համար</string>
@@ -150,8 +146,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Ցուցադրել բոլոր անցած բացատրությունները</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Ցույց տալ բոլոր անցած հետազոտությունների կոճակը</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -991,6 +985,10 @@
     <string name="share_link_all_apps_subheader">Բոլոր գործողությունները</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Վերջերս փակված</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Պատճենել սեղմատախտակին</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Պատճենվել է սեղմատախտակին</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Մուտք գործեք՝ համաժամեցնելու համար</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1165,10 +1163,9 @@
     <string name="onboarding_header">Բարի գալուստ %s:</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Համաժամեցնել Firefox-ը</string>
+    <string name="onboarding_account_sign_in_header_1">Համաժամեցնել Firefox-ը</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Համաժամացրեք %1$s-ը սարքերի միջև</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Համաժամացրեք %1$s-ը սարքերի միջև</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Այս սարքում բերեք էջանիշները, պատմությունը և գաղտնաբառերը %1$s-ում:</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1692,9 +1689,9 @@
     <string name="synced_tabs_enable_tab_syncing">Խնդրում ենք միացնել ներդիրի համաժամացումը:</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Դուք չունեք բացված որևէ ներդիր Firefox-ի ձեր մյուս սարքերում:</string>
+    <string name="synced_tabs_no_tabs">Դուք չունեք բացված որևէ ներդիր Firefox-ի ձեր մյուս սարքերում:</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Դուք չունեք բաց ներդիրներ %1$s-ում ձեր այլ սարքերում:</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Դուք չունեք բաց ներդիրներ %1$s-ում ձեր այլ սարքերում:</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Դիտեք այլ սարքերում ձեր ներդիրների ցանկը:</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

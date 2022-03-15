@@ -44,8 +44,6 @@
     <string name="recently_saved_show_all">Alles toane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle bewarre blêdwizers toane</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Knop Alle bewarre blêdwizers toane</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Fuortsmite</string>
@@ -128,8 +126,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Knop Alle resinte ljepblêden toane</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Alle resinte ljepblêden toane</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Jo sykopdracht nei ‘%1$s’</string>
@@ -152,8 +148,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Alle eardere sykopdrachten toane</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Knop Alle eardere sykopdrachten toane</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -989,6 +983,10 @@
     <string name="share_link_all_apps_subheader">Alle aksjes</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Koartlyn brûkt</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Nei klamboerd kopiearje</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Kopiearre nei klamboerd</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Oanmelde om te syngronisearjen</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1163,10 +1161,9 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Wolkom by %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Syngronisearje Firefox tusken apparaten</string>
+    <string name="onboarding_account_sign_in_header_1">Syngronisearje Firefox tusken apparaten</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Syngronisearje %1$s tusken apparaten</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Syngronisearje %1$s tusken apparaten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Bring blêdwizers, skiednis en wachtwurden nei %1$s op dit apparaat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1693,9 +1690,9 @@
     <string name="synced_tabs_enable_tab_syncing">Skeakelje it syngronisearjen fan ljepblêden yn.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Jo hawwe gjin ljepblêden iepene yn Firefox op jo oare apparaten.</string>
+    <string name="synced_tabs_no_tabs">Jo hawwe gjin ljepblêden iepene yn Firefox op jo oare apparaten.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Jo hawwe gjin ljepblêden iepene yn %1$s op jo oare apparaten.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Jo hawwe gjin ljepblêden iepene yn %1$s op jo oare apparaten.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Besjoch in list mei ljepblêden fan jo oare apparaten.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

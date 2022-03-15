@@ -47,8 +47,6 @@
     <string name="recently_saved_show_all">Tout afficher</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Afficher tous les marque-pages enregistrés</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Bouton Afficher tous les marque-pages enregistrés</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Supprimer</string>
@@ -128,8 +126,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Afficher le bouton des onglets récents</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Afficher tous les onglets récents</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Votre recherche de « %1$s »</string>
@@ -152,8 +148,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Afficher toutes les navigations passées</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Afficher le bouton des navigations passées</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -1018,6 +1012,10 @@
     <string name="share_link_all_apps_subheader">Toutes les actions</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Récemment utilisés</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Copier dans le presse-papiers</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Copié dans le presse-papiers</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Se connecter pour synchroniser</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1202,11 +1200,10 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="onboarding_header">Bienvenue dans %s !</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchronisez Firefox entre vos appareils</string>
+    <string name="onboarding_account_sign_in_header_1">Synchronisez Firefox entre vos appareils</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Synchronisez %1$s entre vos appareils</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synchronisez %1$s entre vos appareils</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Importez vos marque-pages, votre historique et vos mots de passe dans %1$s sur cet appareil.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1727,9 +1724,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Veuillez activer la synchronisation des onglets.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
+    <string name="synced_tabs_no_tabs">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Vous n’avez aucun onglet ouvert dans %1$s sur vos autres appareils.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Vous n’avez aucun onglet ouvert dans %1$s sur vos autres appareils.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Affichez la liste des onglets de vos autres appareils.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
