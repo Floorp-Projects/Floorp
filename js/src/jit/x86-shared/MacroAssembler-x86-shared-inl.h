@@ -1598,17 +1598,18 @@ void MacroAssembler::bitmaskInt64x2(FloatRegister src, Register dest) {
 
 // Swizzle - permute with variable indices
 
-void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
+void MacroAssembler::swizzleInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
   ScratchSimd128Scope scratch(*this);
   rhs = moveSimd128IntIfNotAVX(rhs, scratch);
   // Set high bit to 1 for values > 15 via adding with saturation.
   vpaddusbSimd128(SimdConstant::SplatX16(0x70), rhs, scratch);
-  vpshufb(scratch, lhsDest, lhsDest);  // permute
+  vpshufb(scratch, lhs, dest);  // permute
 }
 
-void MacroAssembler::swizzleInt8x16Relaxed(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  vpshufb(rhs, lhsDest, lhsDest);
+void MacroAssembler::swizzleInt8x16Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpshufb(rhs, lhs, dest);
 }
 
 // Integer Add

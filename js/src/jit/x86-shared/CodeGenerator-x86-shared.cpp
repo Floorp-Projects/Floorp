@@ -2311,7 +2311,6 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
 void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   FloatRegister lhs = ToFloatRegister(ins->lhsDest());
-  FloatRegister lhsDest = lhs;
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister temp1 = ToTempFloatRegisterOrInvalid(ins->getTemp(0));
   FloatRegister temp2 = ToTempFloatRegisterOrInvalid(ins->getTemp(1));
@@ -2468,10 +2467,10 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.maxFloat64x2(lhs, rhs, dest, temp1, temp2);
       break;
     case wasm::SimdOp::I8x16Swizzle:
-      masm.swizzleInt8x16(rhs, lhsDest);
+      masm.swizzleInt8x16(lhs, rhs, dest);
       break;
     case wasm::SimdOp::V8x16RelaxedSwizzle:
-      masm.swizzleInt8x16Relaxed(rhs, lhsDest);
+      masm.swizzleInt8x16Relaxed(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I8x16NarrowI16x8S:
       masm.narrowInt16x8(lhs, rhs, dest);

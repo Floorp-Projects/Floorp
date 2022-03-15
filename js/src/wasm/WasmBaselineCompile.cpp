@@ -7473,7 +7473,7 @@ static void BitmaskI64x2(MacroAssembler& masm, RegV128 rs, RegI32 rd,
 #  endif
 
 static void Swizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.swizzleInt8x16(rs, rsd);
+  masm.swizzleInt8x16(rsd, rs, rsd);
 }
 
 static void ConvertI32x4ToF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
@@ -7565,7 +7565,7 @@ static void RelaxedFmsF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
 }
 
 static void RelaxedSwizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.swizzleInt8x16Relaxed(rs, rsd);
+  masm.swizzleInt8x16Relaxed(rsd, rs, rsd);
 }
 
 static void RelaxedMinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
