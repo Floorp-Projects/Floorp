@@ -266,7 +266,9 @@ void BaseCompiler::branchTo(Assembler::Condition c, RegRef lhs, ImmWord rhs,
 // Debugger API.
 
 void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
+#ifndef RABALDR_PIN_INSTANCE
   fr.loadTlsPtr(WasmTlsReg);
+#endif
   masm.nopPatchableToCall(CallSiteDesc(iter_.lastOpcodeOffset(), kind));
 }
 

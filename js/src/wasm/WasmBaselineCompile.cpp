@@ -154,8 +154,12 @@ bool BaseCompiler::generateOutOfLineCode() {
 // Sundry code generation.
 
 bool BaseCompiler::addInterruptCheck() {
+#ifdef RABALDR_PIN_INSTANCE
+  Register tmp(WasmTlsReg);
+#else
   ScratchI32 tmp(*this);
   fr.loadTlsPtr(tmp);
+#endif
   masm.wasmInterruptCheck(tmp, bytecodeOffset());
   return createStackMap("addInterruptCheck");
 }
@@ -295,6 +299,9 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
   MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
   MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
+#  ifdef RABALDR_PIN_INSTANCE
+#    error "Pinned tls not expected"
+#  endif
   fr.loadTlsPtr(regForTls);
   masm.store32(r.low, Address(regForTls, Instance::offsetOfBaselineScratch()));
   masm.store32(r.high,
@@ -303,6 +310,9 @@ void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
 
 void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
   MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
+#  ifdef RABALDR_PIN_INSTANCE
+#    error "Pinned tls not expected"
+#  endif
   fr.loadTlsPtr(regForTls);
   if (regForTls == r.low) {
     masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch() + 4),
@@ -547,9 +557,11 @@ bool BaseCompiler::endFunction() {
     restoreRegisterReturnValues(resultType);
   }
 
+#ifndef RABALDR_PIN_INSTANCE
   // To satisy Tls extent invariant we need to reload WasmTlsReg because
   // baseline can clobber it.
   fr.loadTlsPtr(WasmTlsReg);
+#endif
   GenerateFunctionEpilogue(masm, fr.fixedAllocSize(), &offsets_);
 
 #if defined(JS_ION_PERF)
@@ -1128,6 +1140,7 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
   stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
   if (call.restoreRegisterStateAndRealm) {
+    // The Tls has been clobbered, so always reload
     fr.loadTlsPtr(WasmTlsReg);
     masm.loadWasmPinnedRegsFromTls();
     masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
@@ -1135,6 +1148,7 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
     // On x86 there are no pinned registers, so don't waste time
     // reloading the Tls.
 #ifndef JS_CODEGEN_X86
+    // The Tls has been clobbered, so always reload
     fr.loadTlsPtr(WasmTlsReg);
     masm.loadWasmPinnedRegsFromTls();
 #endif
@@ -1387,9 +1401,10 @@ CodeOffset BaseCompiler::builtinCall(SymbolicAddress builtin,
 CodeOffset BaseCompiler::builtinInstanceMethodCall(
     const SymbolicAddressSignature& builtin, const ABIArg& instanceArg,
     const FunctionCall& call) {
+#ifndef RABALDR_PIN_INSTANCE
   // Builtin method calls assume the TLS register has been set.
   fr.loadTlsPtr(WasmTlsReg);
-
+#endif
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
   return masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin.identity,
                                             builtin.failureMode);
@@ -1438,7 +1453,8 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
 
   *tagDst = needRef();
   masm.computeEffectiveAddress(
-      Address(WasmTlsReg, Instance::offsetOfPendingExceptionTag()), pendingAddr);
+      Address(WasmTlsReg, Instance::offsetOfPendingExceptionTag()),
+      pendingAddr);
   masm.loadPtr(Address(pendingAddr, 0), *tagDst);
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
@@ -1887,9 +1903,13 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 //
 // Global variable access.
 
-Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp) {
+Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
   uint32_t globalToTlsOffset = Instance::offsetOfGlobalArea() + global.offset();
+#ifdef RABALDR_PIN_INSTANCE
+  movePtr(RegPtr(WasmTlsReg), tmp);
+#else
   fr.loadTlsPtr(tmp);
+#endif
   if (global.isIndirect()) {
     masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);
     return Address(tmp, 0);
@@ -3990,11 +4010,17 @@ bool BaseCompiler::emitThrow() {
   const TagOffsetVector& offsets = tagDesc.type->argOffsets_;
 
   // Load the tag object
+#  ifdef RABALDR_PIN_INSTANCE
+  RegPtr tls(WasmTlsReg);
+#  else
   RegPtr tls = needPtr();
   fr.loadTlsPtr(tls);
+#  endif
   RegRef tag = needRef();
   loadTag(tls, tagIndex, tag);
+#  ifndef RABALDR_PIN_INSTANCE
   freePtr(tls);
+#  endif
 
   // Create the new exception object that we will throw.
   pushRef(tag);
@@ -4171,7 +4197,9 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
     }
   }
 
+#ifndef RABALDR_PIN_INSTANCE
   fr.loadTlsPtr(WasmTlsReg);
+#endif
   return true;
 }
 
@@ -4817,28 +4845,28 @@ bool BaseCompiler::emitGetGlobal() {
   switch (global.type().kind()) {
     case ValType::I32: {
       RegI32 rv = needI32();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.load32(addressOfGlobalVar(global, tmp), rv);
       pushI32(rv);
       break;
     }
     case ValType::I64: {
       RegI64 rv = needI64();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.load64(addressOfGlobalVar(global, tmp), rv);
       pushI64(rv);
       break;
     }
     case ValType::F32: {
       RegF32 rv = needF32();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.loadFloat32(addressOfGlobalVar(global, tmp), rv);
       pushF32(rv);
       break;
     }
     case ValType::F64: {
       RegF64 rv = needF64();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.loadDouble(addressOfGlobalVar(global, tmp), rv);
       pushF64(rv);
       break;
@@ -4846,7 +4874,7 @@ bool BaseCompiler::emitGetGlobal() {
     case ValType::Rtt:
     case ValType::Ref: {
       RegRef rv = needRef();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.loadPtr(addressOfGlobalVar(global, tmp), rv);
       pushRef(rv);
       break;
@@ -4854,7 +4882,7 @@ bool BaseCompiler::emitGetGlobal() {
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
       RegV128 rv = needV128();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.loadUnalignedSimd128(addressOfGlobalVar(global, tmp), rv);
       pushV128(rv);
       break;
@@ -4883,28 +4911,28 @@ bool BaseCompiler::emitSetGlobal() {
   switch (global.type().kind()) {
     case ValType::I32: {
       RegI32 rv = popI32();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.store32(rv, addressOfGlobalVar(global, tmp));
       freeI32(rv);
       break;
     }
     case ValType::I64: {
       RegI64 rv = popI64();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.store64(rv, addressOfGlobalVar(global, tmp));
       freeI64(rv);
       break;
     }
     case ValType::F32: {
       RegF32 rv = popF32();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.storeFloat32(rv, addressOfGlobalVar(global, tmp));
       freeF32(rv);
       break;
     }
     case ValType::F64: {
       RegF64 rv = popF64();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.storeDouble(rv, addressOfGlobalVar(global, tmp));
       freeF64(rv);
       break;
@@ -4914,7 +4942,7 @@ bool BaseCompiler::emitSetGlobal() {
       RegPtr valueAddr(PreBarrierReg);
       needPtr(valueAddr);
       {
-        ScratchI32 tmp(*this);
+        ScratchPtr tmp(*this);
         masm.computeEffectiveAddress(addressOfGlobalVar(global, tmp),
                                      valueAddr);
       }
@@ -4929,7 +4957,7 @@ bool BaseCompiler::emitSetGlobal() {
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
       RegV128 rv = popV128();
-      ScratchI32 tmp(*this);
+      ScratchPtr tmp(*this);
       masm.storeUnalignedSimd128(rv, addressOfGlobalVar(global, tmp));
       freeV128(rv);
       break;
@@ -5650,10 +5678,18 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   Label skipBarrier;
   ScratchPtr scratch(*this);
 
-  fr.loadTlsPtr(scratch);
-  EmitWasmPreBarrierGuard(masm, scratch, scratch, valueAddr, &skipBarrier);
+#ifdef RABALDR_PIN_INSTANCE
+  Register tls(WasmTlsReg);
+#else
+  Register tls(scratch);
+  fr.loadTlsPtr(tls);
+#endif
 
-  fr.loadTlsPtr(scratch);
+  EmitWasmPreBarrierGuard(masm, tls, scratch, valueAddr, &skipBarrier);
+
+#ifndef RABALDR_PIN_INSTANCE
+  fr.loadTlsPtr(tls);
+#endif
 #ifdef JS_CODEGEN_ARM64
   // The prebarrier stub assumes the PseudoStackPointer is set up.  It is OK
   // to just move the sp to x28 here because x28 is not being used by the
@@ -5662,7 +5698,7 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.Mov(x28, sp);
 #endif
   // The prebarrier call preserves all volatile registers
-  EmitWasmPreBarrierCall(masm, scratch, scratch, valueAddr);
+  EmitWasmPreBarrierCall(masm, tls, scratch, valueAddr);
 
   masm.bind(&skipBarrier);
 }
@@ -5738,7 +5774,9 @@ void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
 void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
   const TypeIdDesc& typeId = moduleEnv_.typeIds[typeIndex];
   RegRef rp = needRef();
+#  ifndef RABALDR_PIN_INSTANCE
   fr.loadTlsPtr(WasmTlsReg);
+#  endif
   masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
   pushRef(rp);
 }

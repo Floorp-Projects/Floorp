@@ -564,6 +564,11 @@ class BaseRegAlloc {
   {
     RegisterAllocator::takeWasmRegisters(availGPR);
 
+#ifdef RABALDR_PIN_INSTANCE
+    // If the WasmTlsReg is pinned then it is never available for allocation.
+    availGPR.take(WasmTlsReg);
+#endif
+
     // Allocate any private scratch registers.
 #if defined(RABALDR_SCRATCH_I32)
     if (RabaldrScratchI32 != RegI32::Invalid()) {
