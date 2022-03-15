@@ -8,7 +8,6 @@
 
 #include "base/thread.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
@@ -44,59 +43,45 @@ using layers::NativeLayerRootWayland;
  */
 class WaylandVsyncSource final : public gfx::VsyncSource {
  public:
-  WaylandVsyncSource() { mGlobalDisplay = new WaylandDisplay(); }
-
-  virtual ~WaylandVsyncSource() { MOZ_ASSERT(NS_IsMainThread()); }
-
-  virtual Display& GetGlobalDisplay() override { return *mGlobalDisplay; }
+  WaylandVsyncSource();
+  virtual ~WaylandVsyncSource();
 
   static Maybe<TimeDuration> GetFastestVsyncRate();
 
-  class WaylandDisplay final : public mozilla::gfx::VsyncSource::Display,
-                               public LinkedListElement<WaylandDisplay> {
-   public:
-    WaylandDisplay();
+  void MaybeUpdateSource(MozContainer* aContainer);
+  void MaybeUpdateSource(
+      const RefPtr<NativeLayerRootWayland>& aNativeLayerRoot);
 
-    void MaybeUpdateSource(MozContainer* aContainer);
-    void MaybeUpdateSource(
-        const RefPtr<NativeLayerRootWayland>& aNativeLayerRoot);
+  void EnableMonitor();
+  void DisableMonitor();
 
-    void EnableMonitor();
-    void DisableMonitor();
+  void FrameCallback(uint32_t aTime);
 
-    void FrameCallback(uint32_t aTime);
+  TimeDuration GetVsyncRate() override;
 
-    TimeDuration GetVsyncRate() override;
+  virtual void EnableVsync() override;
 
-    virtual void EnableVsync() override;
+  virtual void DisableVsync() override;
 
-    virtual void DisableVsync() override;
+  virtual bool IsVsyncEnabled() override;
 
-    virtual bool IsVsyncEnabled() override;
-
-    virtual void Shutdown() override;
-
-   private:
-    ~WaylandDisplay() override;
-    void Refresh(const MutexAutoLock& aProofOfLock);
-    void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
-    void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
-                            TimeStamp aVsyncTimestamp);
-
-    Mutex mMutex;
-    bool mIsShutdown;
-    bool mVsyncEnabled;
-    bool mMonitorEnabled;
-    bool mCallbackRequested;
-    MozContainer* mContainer;
-    RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
-    TimeDuration mVsyncRate;
-    TimeStamp mLastVsyncTimeStamp;
-  };
+  virtual void Shutdown() override;
 
  private:
-  // We need a refcounted VsyncSource::Display to use chromium IPC runnables.
-  RefPtr<WaylandDisplay> mGlobalDisplay;
+  void Refresh(const MutexAutoLock& aProofOfLock);
+  void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
+  void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
+                          TimeStamp aVsyncTimestamp);
+
+  Mutex mMutex;
+  bool mIsShutdown;
+  bool mVsyncEnabled;
+  bool mMonitorEnabled;
+  bool mCallbackRequested;
+  MozContainer* mContainer;
+  RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
+  TimeDuration mVsyncRate;
+  TimeStamp mLastVsyncTimeStamp;
 };
 
 }  // namespace mozilla

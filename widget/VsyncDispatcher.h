@@ -79,12 +79,12 @@ class RefreshTimerVsyncDispatcher final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefreshTimerVsyncDispatcher)
 
  public:
-  explicit RefreshTimerVsyncDispatcher(gfx::VsyncSource::Display* aDisplay);
+  explicit RefreshTimerVsyncDispatcher(gfx::VsyncSource* aVsyncSource);
 
   // Please check CompositorVsyncDispatcher::NotifyVsync().
   void NotifyVsync(const VsyncEvent& aVsync);
 
-  void MoveToDisplay(gfx::VsyncSource::Display* aDisplay);
+  void MoveToSource(gfx::VsyncSource* aVsyncSource);
 
   // Add a vsync observer to this dispatcher. This is a no-op if the observer is
   // already registered. Can be called from any thread.
@@ -99,10 +99,10 @@ class RefreshTimerVsyncDispatcher final {
   void UpdateVsyncStatus();
   bool NeedsVsync();
 
-  // We need to hold a weak ref to the display we belong to in order to notify
-  // it of our vsync requirement. The display holds a RefPtr to us, so we can't
-  // hold a RefPtr back without causing a cyclic dependency.
-  gfx::VsyncSource::Display* mDisplay;
+  // We need to hold a weak ref to the vsync source we belong to in order to
+  // notify it of our vsync requirement. The vsync source holds a RefPtr to us,
+  // so we can't hold a RefPtr back without causing a cyclic dependency.
+  gfx::VsyncSource* mVsyncSource;
   DataMutex<nsTArray<RefPtr<VsyncObserver>>> mVsyncObservers;
 };
 

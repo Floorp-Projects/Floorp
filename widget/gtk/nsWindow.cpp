@@ -6101,22 +6101,19 @@ void nsWindow::WaylandStartVsync() {
 
   LOG_VSYNC("nsWindow::WaylandStartVsync");
 
-  WaylandVsyncSource::WaylandDisplay& display =
-      static_cast<WaylandVsyncSource::WaylandDisplay&>(
-          mWaylandVsyncSource->GetGlobalDisplay());
-
   if (mCompositorWidgetDelegate) {
     if (RefPtr<layers::NativeLayerRoot> nativeLayerRoot =
             mCompositorWidgetDelegate->AsGtkCompositorWidget()
                 ->GetNativeLayerRoot()) {
       LOG_VSYNC("  use source NativeLayerRootWayland");
-      display.MaybeUpdateSource(nativeLayerRoot->AsNativeLayerRootWayland());
+      mWaylandVsyncSource->MaybeUpdateSource(
+          nativeLayerRoot->AsNativeLayerRootWayland());
     } else {
       LOG_VSYNC("  use source mContainer");
-      display.MaybeUpdateSource(mContainer);
+      mWaylandVsyncSource->MaybeUpdateSource(mContainer);
     }
   }
-  display.EnableMonitor();
+  mWaylandVsyncSource->EnableMonitor();
 #endif
 }
 
@@ -6130,11 +6127,8 @@ void nsWindow::WaylandStopVsync() {
 
   // The widget is going to be hidden, so clear the surface of our
   // vsync source.
-  WaylandVsyncSource::WaylandDisplay& display =
-      static_cast<WaylandVsyncSource::WaylandDisplay&>(
-          mWaylandVsyncSource->GetGlobalDisplay());
-  display.DisableMonitor();
-  display.MaybeUpdateSource(nullptr);
+  mWaylandVsyncSource->DisableMonitor();
+  mWaylandVsyncSource->MaybeUpdateSource(nullptr);
 #endif
 }
 
