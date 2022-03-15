@@ -9287,6 +9287,13 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
       const auto& directory,
       QM_NewLocalFile(aQuotaManager.GetStoragePath(aPersistenceType)), QM_VOID);
 
+  QM_TRY_INSPECT(const bool& exists,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(directory, Exists), QM_VOID);
+
+  if (!exists) {
+    return;
+  }
+
   nsTArray<nsCOMPtr<nsIFile>> directoriesForRemovalRetry;
 
   aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
