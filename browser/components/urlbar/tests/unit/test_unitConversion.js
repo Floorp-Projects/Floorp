@@ -389,28 +389,76 @@ const TEST_DATA = [
       { queryString: "23 pm pst to cet", expected: "8:00 AM CET" },
       { queryString: "23:30 pm pst to cet", expected: "8:30 AM CET" },
       {
-        queryString: "1:00 utc to here",
-        timezone: "Asia/Tokyo",
-        expected: "10:00 UTC+900",
+        queryString: "0:00 utc to here",
+        timezone: "EST5EDT",
+        assertResult: output => {
+          const date = new Date();
+          const offset = date.getTimezoneOffset();
+          if (offset === 240) {
+            // Summer time.
+            Assert.equal(output, "20:00 UTC-400");
+          } else if (offset === 300) {
+            // Standard time.
+            Assert.equal(output, "19:00 UTC-500");
+          } else {
+            Assert.ok(false, "Unexpected time");
+          }
+        },
       },
       {
-        queryString: "1:00 utc to here",
-        timezone: "Asia/Singapore",
-        expected: "09:00 UTC+800",
+        queryString: "0:00 utc to here",
+        timezone: "PST8PDT",
+        assertResult: output => {
+          const date = new Date();
+          const offset = date.getTimezoneOffset();
+          if (offset === 420) {
+            // Summer time.
+            Assert.equal(output, "17:00 UTC-700");
+          } else if (offset === 480) {
+            // Standard time.
+            Assert.equal(output, "16:00 UTC-800");
+          } else {
+            Assert.ok(false, "Unexpected time");
+          }
+        },
       },
       {
-        queryString: "10:00 to utc",
-        timezone: "Asia/Tokyo",
-        expected: "01:00 UTC",
+        queryString: "9:00 to utc",
+        timezone: "EST5EDT",
+        assertResult: output => {
+          const date = new Date();
+          const offset = date.getTimezoneOffset();
+          if (offset === 240) {
+            // Summer time.
+            Assert.equal(output, "13:00 UTC");
+          } else if (offset === 300) {
+            // Standard time.
+            Assert.equal(output, "14:00 UTC");
+          } else {
+            Assert.ok(false, "Unexpected time");
+          }
+        },
       },
       {
-        queryString: "10 am to utc",
-        timezone: "Asia/Tokyo",
-        expected: "1:00 AM UTC",
+        queryString: "9 am to utc",
+        timezone: "EST5EDT",
+        assertResult: output => {
+          const date = new Date();
+          const offset = date.getTimezoneOffset();
+          if (offset === 240) {
+            // Summer time.
+            Assert.equal(output, "1:00 PM UTC");
+          } else if (offset === 300) {
+            // Standard time.
+            Assert.equal(output, "2:00 PM UTC");
+          } else {
+            Assert.ok(false, "Unexpected time");
+          }
+        },
       },
       {
         queryString: "now to utc",
-        timezone: "Asia/Tokyo",
+        timezone: "EST5EDT",
         assertResult: output => {
           const outputRegexResult = /([0-9]+):([0-9]+)/.exec(output);
           const outputMinutes =
@@ -427,7 +475,7 @@ const TEST_DATA = [
       },
       {
         queryString: "now to here",
-        timezone: "Asia/Tokyo",
+        timezone: "EST5EDT",
         assertResult: output => {
           const outputRegexResult = /([0-9]+):([0-9]+)/.exec(output);
           const outputMinutes =
