@@ -439,34 +439,39 @@ void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoader::CompileOrFinishModuleScript(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModule) {
-  nsresult rv;
   if (aRequest->GetLoadContext()->mWasCompiledOMT) {
     JS::Rooted<JS::InstantiationStorage> storage(aCx);
 
     RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
         aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
-    if (stencil) {
-      JS::InstantiateOptions instantiateOptions(aOptions);
-      aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil,
-                                               storage.address()));
-    }
 
     aRequest->GetLoadContext()->mOffThreadToken = nullptr;
-    rv = aModule ? NS_OK : NS_ERROR_FAILURE;
-  } else {
-    MaybeSourceText maybeSource;
-    rv = aRequest->GetScriptSource(aCx, &maybeSource);
-    if (NS_SUCCEEDED(rv)) {
-      rv = maybeSource.constructed<SourceText<char16_t>>()
-               ? nsJSUtils::CompileModule(
-                     aCx, maybeSource.ref<SourceText<char16_t>>(), aGlobal,
-                     aOptions, aModule)
-               : nsJSUtils::CompileModule(
-                     aCx, maybeSource.ref<SourceText<Utf8Unit>>(), aGlobal,
-                     aOptions, aModule);
+
+    if (!stencil) {
+      return NS_ERROR_FAILURE;
     }
+
+    JS::InstantiateOptions instantiateOptions(aOptions);
+    aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil,
+                                             storage.address()));
+    if (!aModule) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
   }
-  return rv;
+
+  MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return maybeSource.constructed<SourceText<char16_t>>()
+             ? nsJSUtils::CompileModule(aCx,
+                                        maybeSource.ref<SourceText<char16_t>>(),
+                                        aGlobal, aOptions, aModule)
+             : nsJSUtils::CompileModule(aCx,
+                                        maybeSource.ref<SourceText<Utf8Unit>>(),
+                                        aGlobal, aOptions, aModule);
 }
 
 /* static */
