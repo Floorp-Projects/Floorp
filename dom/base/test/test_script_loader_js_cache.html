@@ -27,10 +27,10 @@
         },
         "scriptloader_evaluate_module": {
           "scriptloader_encode": {
-            "scriptloader_bytecode_saved": "bytecode_saved",
-            "scriptloader_bytecode_failed": "bytecode_failed"
+            "scriptloader_bytecode_saved": "module_bytecode_saved",
+            "scriptloader_bytecode_failed": "module_bytecode_failed"
           },
-          "scriptloader_no_encode": "source_exec"
+          "scriptloader_no_encode": "module_source_exec"
         },
       },
       "scriptloader_load_bytecode": {
@@ -44,10 +44,18 @@
                 "scriptloader_bytecode_failed": "fallback_bytecode_failed"
               },
               "scriptloader_no_encode": "fallback_source_exec"
-            }
+            },
+            "scriptloader_evaluate_module": {
+              "scriptloader_encode": {
+                "scriptloader_bytecode_saved": "module_fallback_bytecode_saved",
+                "scriptloader_bytecode_failed": "module_fallback_bytecode_failed",
+              },
+              "scriptloader_no_encode": "module_fallback_source_exec",
+            },
           }
         },
-        "scriptloader_execute": "bytecode_exec"
+        "scriptloader_execute": "bytecode_exec",
+        "scriptloader_evaluate_module": "module_bytecode_exec",
       }
     };
 
@@ -111,7 +119,10 @@
       return statePromise;
     }
 
-    promise_test(async function() {
+    async function basicTest(isModule) {
+      const prefix = isModule ? "module_" : "";
+      const name = isModule ? "module" : "script";
+
       // Setting dom.expose_test_interfaces pref causes the
       // nsScriptLoadRequest to fire event on script tags, with information
       // about its internal state. The ScriptLoader source send events to
@@ -131,44 +142,60 @@
       // Load the test page, and verify that the code path taken by the
       // nsScriptLoadRequest corresponds to the code path which is loading a
       // source and saving it as bytecode.
-      var stateMachineResult = WaitForScriptTagEvent("file_js_cache.html");
-      assert_equals(await stateMachineResult, "bytecode_saved",
-                    "[1] ScriptLoadRequest status after the first visit");
+      var stateMachineResult = WaitForScriptTagEvent(`file_${prefix}js_cache.html`);
+      assert_equals(await stateMachineResult, `${prefix}bytecode_saved`,
+                    `[1-${name}] ScriptLoadRequest status after the first visit`);
 
       // Reload the same test page, and verify that the code path taken by
       // the nsScriptLoadRequest corresponds to the code path which is
       // loading bytecode and executing it.
-      stateMachineResult = WaitForScriptTagEvent("file_js_cache.html");
-      assert_equals(await stateMachineResult, "bytecode_exec",
-                    "[2] ScriptLoadRequest status after the second visit");
+      stateMachineResult = WaitForScriptTagEvent(`file_${prefix}js_cache.html`);
+      assert_equals(await stateMachineResult, `${prefix}bytecode_exec`,
+                    `[2-${name}] ScriptLoadRequest status after the second visit`);
 
       // Load another page which loads the same script with an SRI, while
       // the cached bytecode does not have any. This should fallback to
       // loading the source before saving the bytecode once more.
-      stateMachineResult = WaitForScriptTagEvent("file_js_cache_with_sri.html");
-      assert_equals(await stateMachineResult, "fallback_bytecode_saved",
-                    "[3] ScriptLoadRequest status after the SRI hash");
+      stateMachineResult = WaitForScriptTagEvent(`file_${prefix}js_cache_with_sri.html`);
+      assert_equals(await stateMachineResult, `${prefix}fallback_bytecode_saved`,
+                    `[3-${name}] ScriptLoadRequest status after the SRI hash`);
 
       // Loading a page, which has the same SRI should verify the SRI and
       // continue by executing the bytecode.
-      var stateMachineResult1 = WaitForScriptTagEvent("file_js_cache_with_sri.html");
+      var stateMachineResult1 = WaitForScriptTagEvent(`file_${prefix}js_cache_with_sri.html`);
 
       // Loading a page which does not have a SRI while we have one in the
       // cache should not change anything. We should also be able to load
       // the cache simultanesouly.
-      var stateMachineResult2 = WaitForScriptTagEvent("file_js_cache.html");
+      var stateMachineResult2 = WaitForScriptTagEvent(`file_${prefix}js_cache.html`);
 
-      assert_equals(await stateMachineResult1, "bytecode_exec",
-                    "[4] ScriptLoadRequest status after same SRI hash");
-      assert_equals(await stateMachineResult2, "bytecode_exec",
-                    "[5] ScriptLoadRequest status after visit with no SRI");
+      assert_equals(await stateMachineResult1, `${prefix}bytecode_exec`,
+                    `[4-${name}] ScriptLoadRequest status after same SRI hash`);
+      assert_equals(await stateMachineResult2, `${prefix}bytecode_exec`,
+                    `[5-${name}] ScriptLoadRequest status after visit with no SRI`);
 
-      // Load a page that uses the same script as a module and verify that we
-      // re-parse it from source.
-      stateMachineResult = WaitForScriptTagEvent("file_js_cache_module.html");
-      assert_equals(await stateMachineResult, "bytecode_saved",
-                    "[6] ScriptLoadRequest status for a module");
-    }, "Check the JS bytecode cache");
+      if (!isModule) {
+        // Load a page that uses the same script as a module and verify that we
+        // re-parse it from source.
+        stateMachineResult = WaitForScriptTagEvent("file_js_cache_module.html");
+        assert_equals(await stateMachineResult, "module_bytecode_saved",
+                      `[6-${name}] ScriptLoadRequest status for a module`);
+      } else {
+        // Load a page that uses the same module script as a regular script and
+        // verify that we re-parse it from source.
+        stateMachineResult = WaitForScriptTagEvent("file_module_js_cache_no_module.html");
+        assert_equals(await stateMachineResult, "bytecode_saved",
+                      `[6-${name}] ScriptLoadRequest status for a script`);
+      }
+    }
+
+    promise_test(async function() {
+      await basicTest(false);
+    }, "Check the JS bytecode cache for script");
+
+    promise_test(async function() {
+      await basicTest(true);
+    }, "Check the JS bytecode cache for module");
 
     promise_test(async function() {
       // (see above)
