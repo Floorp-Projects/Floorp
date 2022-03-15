@@ -10,7 +10,6 @@ import textwrap
 from marionette_driver.addons import Addons
 from marionette_driver.errors import MarionetteException
 from marionette_driver.wait import Wait
-from marionette_driver import By, keys
 from marionette_harness import MarionetteTestCase
 from marionette_harness.runner.mixins.window_manager import WindowManagerMixin
 
@@ -72,42 +71,12 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             self.marionette.close()
             self.marionette.switch_to_window(start_tab)
 
-    def search(self, text):
-        """Perform a search via the browser's URL bar."""
-
-        # Reload newtab to prevent urlbar from not accepting correct input
-        with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
-            self.marionette.navigate("about:newtab")
-
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            self.marionette.execute_script("gURLBar.select();")
-            urlbar = self.marionette.find_element(By.ID, "urlbar-input")
-            urlbar.send_keys(keys.Keys.DELETE)
-            urlbar.send_keys(text + keys.Keys.ENTER)
-        # This script checks that the search terms used for searching
-        # appear in the URL when the page loads.
-        script = """\
-        let location = document.location.toString()
-        function validate(term){
-            return location.includes(term)
-        }
-        return arguments[0].every(validate)
-        """
-        # Wait for search page to load
-        with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
-            Wait(self.marionette, 30, 0.5).until(
-                lambda driver: driver.execute_script(
-                    script, script_args=[text.split()]
-                ),
-                message="Search terms not found, maybe the page didn't load?",
-            )
-
-    def search_in_new_tab(self, text):
-        """Open a new tab and perform a search via the browser's URL bar,
-        then close the new tab."""
+    def navigate_in_new_tab(self, url):
+        """Open a new tab and navigate to the provided URL."""
 
         with self.new_tab():
-            self.search(text)
+            with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
+                self.marionette.navigate(url)
 
     def assertIsValidUUID(self, value):
         """Check if the given UUID is valid."""
