@@ -124,7 +124,7 @@ const GARBAGED_PAGE_CONTENT = `<!DOCTYPE html>
       <head>
         <script type="text/javascript" src="/garbaged-script.js"></script>
         <script>
-          SpecialPowers.gc();
+          console.log("garbaged inline script");
         </script>
       </head>
     </html>`;
@@ -144,11 +144,27 @@ httpServer.registerPathHandler("/garbaged-script.js", (request, response) => {
   response.write(`console.log("garbaged script ${loadCounts[request.path]}")`);
 });
 add_task(async function testGarbageCollectedSourceTextContent() {
-  const dbg = await initDebuggerWithAbsoluteURL(
-    BASE_URL + "garbaged-collected.html",
-    "garbaged-collected.html",
-    "garbaged-script.js"
+  const tab = await addTab(BASE_URL + "garbaged-collected.html");
+  is(
+    loadCounts["/garbaged-collected.html"],
+    1,
+    "The HTML page is loaded once before opening the DevTools"
   );
+  is(
+    loadCounts["/garbaged-script.js"],
+    1,
+    "The script is loaded once before opening the DevTools"
+  );
+
+  // Force freeing both the HTML page and script in memory
+  // so that the debugger has to fetch source content from http cache.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    Cu.forceGC();
+  });
+
+  const toolbox = await openToolboxForTab(tab, "jsdebugger");
+  const dbg = createDebuggerContext(toolbox);
+  await waitForSources(dbg, "garbaged-collected.html", "garbaged-script.js");
 
   await selectSource(dbg, "garbaged-script.js");
   // XXX Bug 1758454 - Source content of GC-ed script can be wrong!
@@ -159,12 +175,13 @@ add_task(async function testGarbageCollectedSourceTextContent() {
   // but instead, a new HTTP request is dispatched and we get a new content.
   is(getCM(dbg).getValue(), `console.log("garbaged script 2")`);
 
-  // The HTML page is fetched a second time because it was loaded before opening DevTools
-  // and Spidermonkey doesn't store HTML page in any cache
+  await selectSource(dbg, "garbaged-collected.html");
+  is(getCM(dbg).getValue(), GARBAGED_PAGE_CONTENT);
+
   is(
     loadCounts["/garbaged-collected.html"],
-    1,
-    "We loaded the html page once as we haven't tried to display it in the debugger"
+    2,
+    "We loaded the html page once as we haven't tried to display it in the debugger (2)"
   );
   is(
     loadCounts["/garbaged-script.js"],
