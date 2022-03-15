@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test module script bytecode across iframe</title>
+</head>
+<body>
+  <script type="text/javascript" src="file_script_module_frames_relay.js"></script>
+  <script type="text/javascript">
+// Dynamically insert the script element so that the load doesn't happen
+// before the event relay handler is set up.
+const script = document.createElement("script");
+script.id = "watchme";
+script.setAttribute("type", "module");
+script.setAttribute("src", "file_script_module_frames_dynamic_save.js");
+document.body.appendChild(script);
+  </script>
+</body>
+</html>
