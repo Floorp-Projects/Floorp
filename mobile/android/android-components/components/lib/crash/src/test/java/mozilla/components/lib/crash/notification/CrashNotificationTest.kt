@@ -22,47 +22,68 @@ import org.robolectric.Shadows.shadowOf
 class CrashNotificationTest {
     @Test
     fun shouldShowNotificationInsteadOfPrompt() {
-        val nonFatalNativeCrash = Crash.NativeCodeCrash(
+        val foregroundChildNativeCrash = Crash.NativeCodeCrash(
             timestamp = 0,
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf()
         )
 
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 21))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 22))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 23))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 24))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 25))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 26))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 27))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 28))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 29))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 30))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(nonFatalNativeCrash, sdkLevel = 31))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 21))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 22))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 23))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 24))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 25))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 26))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 27))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 28))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 29))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 30))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 31))
 
-        val fatalNativeCrash = Crash.NativeCodeCrash(
+        val mainProcessNativeCrash = Crash.NativeCodeCrash(
             timestamp = 0,
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = true,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = arrayListOf()
         )
 
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 21))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 22))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 23))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 24))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 25))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 26))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 27))
-        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 28))
-        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 29))
-        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 30))
-        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(fatalNativeCrash, sdkLevel = 31))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 21))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 22))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 23))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 24))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 25))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 26))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 27))
+        assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 28))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 29))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 30))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 31))
+
+        val backgroundChildNativeCrash = Crash.NativeCodeCrash(
+            timestamp = 0,
+            minidumpPath = "",
+            minidumpSuccess = true,
+            extrasPath = "",
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+            breadcrumbs = arrayListOf()
+        )
+
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 21))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 22))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 23))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 24))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 25))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 26))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 27))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 28))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 29))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 30))
+        assertTrue(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 31))
 
         val exceptionCrash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
 

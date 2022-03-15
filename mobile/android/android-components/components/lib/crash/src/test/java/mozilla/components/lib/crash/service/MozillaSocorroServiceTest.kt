@@ -44,7 +44,7 @@ class MozillaSocorroServiceTest {
         )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
-        val crash = Crash.NativeCodeCrash(123, "", true, "", false, arrayListOf())
+        val crash = Crash.NativeCodeCrash(123, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
@@ -124,7 +124,7 @@ class MozillaSocorroServiceTest {
                 "dump.path",
                 true,
                 "extras.path",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
             service.report(crash)
@@ -178,7 +178,7 @@ class MozillaSocorroServiceTest {
                 "test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e.ini",
                 true,
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
 
@@ -219,7 +219,7 @@ class MozillaSocorroServiceTest {
                 "test/minidumps/test.dmp",
                 true,
                 "test/file/test.extra",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
 
@@ -260,7 +260,7 @@ class MozillaSocorroServiceTest {
                 "test/minidumps/3fa772dc-dc89-c08d-c03e-7f441c50821e.dmp",
                 true,
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827.extra",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
 
@@ -308,7 +308,7 @@ class MozillaSocorroServiceTest {
                 "dump.path",
                 true,
                 "extras.path",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
             service.report(crash)
@@ -369,7 +369,7 @@ class MozillaSocorroServiceTest {
                 "dump.path",
                 true,
                 "extras.path",
-                isFatal = false,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
                 breadcrumbs = arrayListOf()
             )
             service.report(crash)
@@ -495,7 +495,7 @@ class MozillaSocorroServiceTest {
                 )
             )
 
-            val crash = Crash.NativeCodeCrash(123, null, true, null, false, arrayListOf())
+            val crash = Crash.NativeCodeCrash(123, null, true, null, Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
             service.report(crash)
             mockWebServer.shutdown()
 
@@ -657,7 +657,7 @@ class MozillaSocorroServiceTest {
                 "dump.path",
                 true,
                 "extras.path",
-                isFatal = true,
+                processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf()
             )
             val id = service.report(crash)

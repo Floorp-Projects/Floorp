@@ -47,8 +47,19 @@ internal class CrashNotification(
 
         val channel = ensureChannelExists(context)
 
+        val title = if (crash is Crash.NativeCodeCrash &&
+            crash.processType == Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD
+        ) {
+            context.getString(
+                R.string.mozac_lib_crash_background_process_notification_title,
+                configuration.appName
+            )
+        } else {
+            context.getString(R.string.mozac_lib_crash_dialog_title, configuration.appName)
+        }
+
         val notification = NotificationCompat.Builder(context, channel)
-            .setContentTitle(context.getString(R.string.mozac_lib_crash_dialog_title, configuration.appName))
+            .setContentTitle(title)
             .setSmallIcon(R.drawable.mozac_lib_crash_notification)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_ERROR)
@@ -73,8 +84,15 @@ internal class CrashNotification(
          * services launching activities in Q+. On those system we may need to show a notification for the given [crash]
          * and launch the reporter from the notification.
          */
-        fun shouldShowNotificationInsteadOfPrompt(crash: Crash, sdkLevel: Int = Build.VERSION.SDK_INT): Boolean {
+        fun shouldShowNotificationInsteadOfPrompt(
+            crash: Crash,
+            sdkLevel: Int = Build.VERSION.SDK_INT
+        ): Boolean {
             return when {
+                // We always want to show the notification for background child process crashes.
+                crash is Crash.NativeCodeCrash && crash.processType ==
+                    Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD -> true
+
                 // We can always launch an activity from a background service pre Android Q.
                 sdkLevel < NOTIFICATION_SDK_LEVEL -> false
 

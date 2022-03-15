@@ -26,7 +26,7 @@ class NativeCodeCrashTest {
             "minidumpPath",
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
         )
-        intent.putExtra("fatal", false)
+        intent.putExtra("processType", "FOREGROUND_CHILD")
         intent.putExtra(
             "extrasPath",
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
@@ -41,6 +41,7 @@ class NativeCodeCrashTest {
         )
         assertEquals(crash.minidumpSuccess, true)
         assertEquals(crash.isFatal, false)
+        assertEquals(crash.processType, Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD)
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             crash.minidumpPath
@@ -58,7 +59,7 @@ class NativeCodeCrashTest {
             "minidumpPath",
             true,
             "extrasPath",
-            true,
+            Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             arrayListOf()
         )
 

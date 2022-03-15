@@ -146,7 +146,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter will show prompt for fatal native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
+    fun `CrashReporter will show prompt for main process native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -165,7 +165,7 @@ class CrashReporterTest {
             "dump.path",
             true,
             "extras.path",
-            isFatal = true,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = arrayListOf()
         )
 
@@ -403,7 +403,7 @@ class CrashReporterTest {
         )
 
         reporter.submitReport(
-            Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -541,7 +541,7 @@ class CrashReporterTest {
         )
 
         reporter.submitCrashTelemetry(
-            Crash.NativeCodeCrash(0, "", true, "", false, arrayListOf())
+            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -567,7 +567,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter invokes PendingIntent if provided`() {
+    fun `CrashReporter invokes PendingIntent if provided for foreground child process crashes`() {
         val context = Robolectric.setupActivity(Activity::class.java)
 
         val intent = Intent("action")
@@ -585,7 +585,7 @@ class CrashReporterTest {
             "dump.path",
             true,
             "extras.path",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf()
         )
         reporter.onCrash(context, nativeCrash)
@@ -602,10 +602,65 @@ class CrashReporterTest {
         assertEquals(true, receivedCrash.minidumpSuccess)
         assertEquals("extras.path", receivedCrash.extrasPath)
         assertEquals(false, receivedCrash.isFatal)
+        assertEquals(Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, receivedCrash.processType)
     }
 
     @Test
-    fun `CrashReporter sends telemetry but don't send native crash if the crash is non-fatal and nonFatalPendingIntent is not null`() {
+    fun `CrashReporter does not invoke PendingIntent if provided for main process crashes`() {
+        val context = Robolectric.setupActivity(Activity::class.java)
+
+        val intent = Intent("action")
+        val pendingIntent = spy(PendingIntent.getActivity(context, 0, intent, 0))
+
+        val reporter = CrashReporter(
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            services = listOf(mock()),
+            nonFatalCrashIntent = pendingIntent
+        ).install(context)
+
+        val nativeCrash = Crash.NativeCodeCrash(
+            0,
+            "dump.path",
+            true,
+            "extras.path",
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+            breadcrumbs = arrayListOf()
+        )
+        reporter.onCrash(context, nativeCrash)
+
+        verify(pendingIntent, never()).send(eq(context), eq(0), any())
+    }
+
+    @Test
+    fun `CrashReporter does not invoke PendingIntent if provided for background child process crashes`() {
+        val context = Robolectric.setupActivity(Activity::class.java)
+
+        val intent = Intent("action")
+        val pendingIntent = spy(PendingIntent.getActivity(context, 0, intent, 0))
+
+        val reporter = CrashReporter(
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            services = listOf(mock()),
+            nonFatalCrashIntent = pendingIntent
+        ).install(context)
+
+        val nativeCrash = Crash.NativeCodeCrash(
+            0,
+            "dump.path",
+            true,
+            "extras.path",
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+            breadcrumbs = arrayListOf()
+        )
+        reporter.onCrash(context, nativeCrash)
+
+        verify(pendingIntent, never()).send(eq(context), eq(0), any())
+    }
+
+    @Test
+    fun `CrashReporter sends telemetry but don't send native crash if the crash is in foreground child process and nonFatalPendingIntent is not null`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -625,7 +680,7 @@ class CrashReporterTest {
             "dump.path",
             true,
             "extras.path",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf()
         )
         reporter.onCrash(testContext, nativeCrash)
@@ -636,7 +691,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter sends telemetry and crash if the crash is non-fatal and nonFatalPendingIntent is null`() {
+    fun `CrashReporter sends telemetry and crash if the crash is in foreground child process and nonFatalPendingIntent is null`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -655,7 +710,7 @@ class CrashReporterTest {
             "dump.path",
             true,
             "extras.path",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf()
         )
         reporter.onCrash(testContext, nativeCrash)

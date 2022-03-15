@@ -172,9 +172,10 @@ class SentryService(
 
 private fun createMessage(crash: Crash.NativeCodeCrash): String {
     val fatal = crash.isFatal.toString()
+    val processType = crash.processType
     val minidumpSuccess = crash.minidumpSuccess
 
-    return "NativeCodeCrash(fatal=$fatal, minidumpSuccess=$minidumpSuccess)"
+    return "NativeCodeCrash(fatal=$fatal, processType=$processType, minidumpSuccess=$minidumpSuccess)"
 }
 
 private fun createMessage(crash: Crash.UncaughtExceptionCrash): String {

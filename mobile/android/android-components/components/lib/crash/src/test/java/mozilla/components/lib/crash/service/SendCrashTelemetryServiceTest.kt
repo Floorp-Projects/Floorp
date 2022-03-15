@@ -76,7 +76,7 @@ class SendCrashTelemetryServiceTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            false,
+            Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             arrayListOf()
         )
 
@@ -89,7 +89,7 @@ class SendCrashTelemetryServiceTest {
             "minidumpPath",
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
         )
-        intent.putExtra("fatal", false)
+        intent.putExtra("processType", "FOREGROUND_CHILD")
         intent.putExtra(
             "extrasPath",
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
@@ -109,6 +109,7 @@ class SendCrashTelemetryServiceTest {
         assertEquals(123, nativeCrash.timestamp)
         assertEquals(true, nativeCrash.minidumpSuccess)
         assertEquals(false, nativeCrash.isFatal)
+        assertEquals(Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, nativeCrash.processType)
         assertEquals(
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             nativeCrash.minidumpPath

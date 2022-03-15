@@ -79,10 +79,10 @@ class CrashHandlerServiceTest {
     }
 
     @Test
-    fun `CrashHandlerService forwards fatal native code crash to crash reporter`() = runBlocking {
+    fun `CrashHandlerService forwards main process native code crash to crash reporter`() = runBlocking {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
-        intent!!.putExtra("fatal", true)
+        intent!!.putExtra("processType", "MAIN")
         service!!.handleCrashIntent(intent!!, scope)
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendCrashReport(any(), any())
@@ -90,13 +90,24 @@ class CrashHandlerServiceTest {
     }
 
     @Test
-    fun `CrashHandlerService forwards non-fatal native code crash to crash reporter`() = runBlocking {
+    fun `CrashHandlerService forwards foreground child process native code crash to crash reporter`() = runBlocking {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
-        intent!!.putExtra("fatal", false)
+        intent!!.putExtra("processType", "FOREGROUND_CHILD")
         service!!.handleCrashIntent(intent!!, scope)
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendNonFatalCrashIntent(any(), any())
         verify(reporter, never())!!.sendCrashReport(any(), any())
+    }
+
+    @Test
+    fun `CrashHandlerService forwards background child process native code crash to crash reporter`() = runBlocking {
+        doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
+
+        intent!!.putExtra("processType", "BACKGROUND_CHILD")
+        service!!.handleCrashIntent(intent!!, scope)
+        verify(reporter)!!.onCrash(any(), any())
+        verify(reporter)!!.sendCrashReport(any(), any())
+        verify(reporter, never())!!.sendNonFatalCrashIntent(any(), any())
     }
 }

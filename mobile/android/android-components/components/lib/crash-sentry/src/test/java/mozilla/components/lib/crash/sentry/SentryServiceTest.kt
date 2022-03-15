@@ -65,7 +65,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `GIVEN a fatal native crash WHEN reporting THEN forward to a fatal crash the Sentry sdk`() {
+    fun `GIVEN a main process native crash WHEN reporting THEN forward to a fatal crash the Sentry sdk`() {
         val service = spy(
             SentryService(
                 applicationContext = testContext,
@@ -80,7 +80,7 @@ class SentryServiceTest {
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = true,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = breadcrumbs
         )
 
@@ -91,7 +91,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `GIVEN a no fatal native crash WHEN reporting THEN forward an error to the Sentry sdk`() {
+    fun `GIVEN a foreground child process native crash WHEN reporting THEN forward an error to the Sentry sdk`() {
         val service = spy(
             SentryService(
                 applicationContext = testContext,
@@ -106,7 +106,33 @@ class SentryServiceTest {
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+            breadcrumbs = breadcrumbs
+        )
+
+        service.report(nativeCrash)
+
+        verify(service).prepareReport(breadcrumbs, SentryLevel.ERROR)
+        verify(service).reportToSentry(nativeCrash)
+    }
+
+    @Test
+    fun `GIVEN a background child process native crash WHEN reporting THEN forward an error to the Sentry sdk`() {
+        val service = spy(
+            SentryService(
+                applicationContext = testContext,
+                dsn = "https://not:real6@sentry.prod.example.net/405",
+                sendEventForNativeCrashes = true
+            )
+        )
+
+        val breadcrumbs = arrayListOf<Breadcrumb>()
+        val nativeCrash = Crash.NativeCodeCrash(
+            timestamp = 0,
+            minidumpPath = "",
+            minidumpSuccess = true,
+            extrasPath = "",
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
             breadcrumbs = breadcrumbs
         )
 
@@ -132,7 +158,7 @@ class SentryServiceTest {
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = false,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = breadcrumbs
         )
 
@@ -157,13 +183,13 @@ class SentryServiceTest {
             minidumpPath = "",
             minidumpSuccess = true,
             extrasPath = "",
-            isFatal = true,
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = breadcrumbs
         )
 
         val result = service.createMessage(nativeCrash)
         val expected =
-            "NativeCodeCrash(fatal=${nativeCrash.isFatal}, minidumpSuccess=${nativeCrash.minidumpSuccess})"
+            "NativeCodeCrash(fatal=${nativeCrash.isFatal}, processType=${nativeCrash.processType}, minidumpSuccess=${nativeCrash.minidumpSuccess})"
 
         assertEquals(expected, result)
     }

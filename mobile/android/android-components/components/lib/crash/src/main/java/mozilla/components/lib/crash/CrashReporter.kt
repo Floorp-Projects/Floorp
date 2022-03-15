@@ -266,8 +266,11 @@ class CrashReporter(
             // If the app has not registered any intent then we can't send one.
             false
         } else {
-            // If this is a non-fatal native code crash then we can recover and can notify the app
-            crash is Crash.NativeCodeCrash && !crash.isFatal
+            // If this is a native code crash in a foreground child process then we can recover
+            // and can notify the app. Background child process crashes will be recovered from
+            // automatically, and main process crashes cannot be recovered from, so we do not
+            // send the intent for those.
+            crash is Crash.NativeCodeCrash && crash.processType == Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD
         }
     }
 
