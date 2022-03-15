@@ -5,7 +5,6 @@
 #include ../../shared/desktop-jar.inc.mn
 
 toolkit.jar:
-* skin/classic/global/alert.css
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
   skin/classic/global/dialog.css
