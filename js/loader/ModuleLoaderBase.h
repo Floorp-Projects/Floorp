@@ -70,6 +70,14 @@ class ScriptLoaderInterface : public nsISupports {
       JSContext* cx, ScriptLoadRequest* aRequest,
       JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
       JS::MutableHandle<JSScript*> aIntroductionScript) = 0;
+
+  virtual void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
+      JSContext* aCx, ModuleLoadRequest* aRequest) = 0;
+
+  virtual nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
+      ModuleLoadRequest* aRequest, nsresult aRv) = 0;
+
+  virtual void MaybeTriggerBytecodeEncoding() = 0;
 };
 
 class ModuleLoaderBase : public nsISupports {
