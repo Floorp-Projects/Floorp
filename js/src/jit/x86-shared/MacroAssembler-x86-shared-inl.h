@@ -2444,6 +2444,12 @@ void MacroAssembler::compareInt8x16(Assembler::Condition cond,
 }
 
 void MacroAssembler::compareInt8x16(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  MacroAssemblerX86Shared::compareInt8x16(lhs, Operand(rhs), cond, dest);
+}
+
+void MacroAssembler::compareInt8x16(Assembler::Condition cond,
                                     FloatRegister lhs, const SimdConstant& rhs,
                                     FloatRegister dest) {
   MOZ_ASSERT(cond != Assembler::Condition::LessThan &&
@@ -2454,6 +2460,12 @@ void MacroAssembler::compareInt8x16(Assembler::Condition cond,
 void MacroAssembler::compareInt16x8(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   MacroAssemblerX86Shared::compareInt16x8(lhsDest, Operand(rhs), cond, lhsDest);
+}
+
+void MacroAssembler::compareInt16x8(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  MacroAssemblerX86Shared::compareInt16x8(lhs, Operand(rhs), cond, dest);
 }
 
 void MacroAssembler::compareInt16x8(Assembler::Condition cond,
@@ -2484,19 +2496,22 @@ void MacroAssembler::compareInt32x4(Assembler::Condition cond,
 }
 
 void MacroAssembler::compareForEqualityInt64x2(Assembler::Condition cond,
+                                               FloatRegister lhs,
                                                FloatRegister rhs,
-                                               FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::compareForEqualityInt64x2(lhsDest, Operand(rhs),
-                                                     cond, lhsDest);
+                                               FloatRegister dest) {
+  MacroAssemblerX86Shared::compareForEqualityInt64x2(lhs, Operand(rhs), cond,
+                                                     dest);
 }
 
-void MacroAssembler::compareForOrderingInt64x2(Assembler::Condition cond,
-                                               FloatRegister rhs,
-                                               FloatRegister lhsDest,
-                                               FloatRegister temp1,
-                                               FloatRegister temp2) {
-  MacroAssemblerX86Shared::compareForOrderingInt64x2(
-      lhsDest, Operand(rhs), cond, temp1, temp2, lhsDest);
+void MacroAssembler::compareForOrderingInt64x2(
+    Assembler::Condition cond, FloatRegister lhs, FloatRegister rhs,
+    FloatRegister dest, FloatRegister temp1, FloatRegister temp2) {
+  if (HasAVX() && HasSSE42()) {
+    MacroAssemblerX86Shared::compareForOrderingInt64x2AVX(lhs, rhs, cond, dest);
+  } else {
+    MacroAssemblerX86Shared::compareForOrderingInt64x2(lhs, Operand(rhs), cond,
+                                                       temp1, temp2, dest);
+  }
 }
 
 void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
@@ -2535,18 +2550,23 @@ void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
 void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
                                       FloatRegister rhs,
                                       FloatRegister lhsDest) {
+  compareFloat64x2(cond, lhsDest, rhs, lhsDest);
+}
+
+void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
+                                      FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
   // Code in the SIMD implementation allows operands to be reversed like this,
   // this benefits the baseline compiler.  Ion takes care of the reversing
   // itself and never generates GT/GE.
   if (cond == Assembler::GreaterThan) {
-    MacroAssemblerX86Shared::compareFloat64x2(rhs, Operand(lhsDest),
-                                              Assembler::LessThan, lhsDest);
+    MacroAssemblerX86Shared::compareFloat64x2(rhs, Operand(lhs),
+                                              Assembler::LessThan, dest);
   } else if (cond == Assembler::GreaterThanOrEqual) {
-    MacroAssemblerX86Shared::compareFloat64x2(
-        rhs, Operand(lhsDest), Assembler::LessThanOrEqual, lhsDest);
+    MacroAssemblerX86Shared::compareFloat64x2(rhs, Operand(lhs),
+                                              Assembler::LessThanOrEqual, dest);
   } else {
-    MacroAssemblerX86Shared::compareFloat64x2(lhsDest, Operand(rhs), cond,
-                                              lhsDest);
+    MacroAssemblerX86Shared::compareFloat64x2(lhs, Operand(rhs), cond, dest);
   }
 }
 

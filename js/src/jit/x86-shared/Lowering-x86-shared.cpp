@@ -973,12 +973,20 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::F32x4Max:
     case wasm::SimdOp::F64x2Min:
     case wasm::SimdOp::F64x2Max:
+      tempReg0 = tempSimd128();
+      tempReg1 = tempSimd128();
+      break;
     case wasm::SimdOp::I64x2LtS:
     case wasm::SimdOp::I64x2GtS:
     case wasm::SimdOp::I64x2LeS:
     case wasm::SimdOp::I64x2GeS:
-      tempReg0 = tempSimd128();
-      tempReg1 = tempSimd128();
+      // The compareForOrderingInt64x2AVX implementation does not require
+      // temps but needs SSE4.2 support. Checking if both AVX and SSE4.2
+      // are enabled.
+      if (!(Assembler::HasAVX() && Assembler::HasSSE42())) {
+        tempReg0 = tempSimd128();
+        tempReg1 = tempSimd128();
+      }
       break;
     default:
       break;
@@ -994,7 +1002,7 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   // If AVX support is enabled, some binary ops can use output as destination,
   // useRegisterAtStart is applied for both operands and no need for ReuseInput.
 
-  switch (ins->simdOp()) {
+  switch (op) {
     case wasm::SimdOp::I8x16AvgrU:
     case wasm::SimdOp::I16x8AvgrU:
     case wasm::SimdOp::I8x16Add:
@@ -1030,6 +1038,26 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::F32x4Ne:
     case wasm::SimdOp::F32x4Lt:
     case wasm::SimdOp::F32x4Le:
+    case wasm::SimdOp::F64x2Eq:
+    case wasm::SimdOp::F64x2Ne:
+    case wasm::SimdOp::F64x2Lt:
+    case wasm::SimdOp::F64x2Le:
+    case wasm::SimdOp::I8x16Eq:
+    case wasm::SimdOp::I8x16Ne:
+    case wasm::SimdOp::I8x16GtS:
+    case wasm::SimdOp::I8x16LeS:
+    case wasm::SimdOp::I8x16LtU:
+    case wasm::SimdOp::I8x16GtU:
+    case wasm::SimdOp::I8x16LeU:
+    case wasm::SimdOp::I8x16GeU:
+    case wasm::SimdOp::I16x8Eq:
+    case wasm::SimdOp::I16x8Ne:
+    case wasm::SimdOp::I16x8GtS:
+    case wasm::SimdOp::I16x8LeS:
+    case wasm::SimdOp::I16x8LtU:
+    case wasm::SimdOp::I16x8GtU:
+    case wasm::SimdOp::I16x8LeU:
+    case wasm::SimdOp::I16x8GeU:
     case wasm::SimdOp::I32x4Eq:
     case wasm::SimdOp::I32x4Ne:
     case wasm::SimdOp::I32x4GtS:
@@ -1038,6 +1066,12 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::I32x4GtU:
     case wasm::SimdOp::I32x4LeU:
     case wasm::SimdOp::I32x4GeU:
+    case wasm::SimdOp::I64x2Eq:
+    case wasm::SimdOp::I64x2Ne:
+    case wasm::SimdOp::I64x2LtS:
+    case wasm::SimdOp::I64x2GtS:
+    case wasm::SimdOp::I64x2LeS:
+    case wasm::SimdOp::I64x2GeS:
     case wasm::SimdOp::V128And:
     case wasm::SimdOp::V128Or:
     case wasm::SimdOp::V128Xor:

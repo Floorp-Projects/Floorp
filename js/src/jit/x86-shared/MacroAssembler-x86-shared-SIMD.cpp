@@ -284,22 +284,42 @@ void MacroAssemblerX86Shared::compareInt8x16(FloatRegister lhs, Operand rhs,
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::Above:
-      vpmaxub(rhs, lhs, output);
-      vpcmpeqb(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpminub(rhs, lhs, output);
+        vpcmpeqb(Operand(lhs), output, output);
+      } else {
+        vpmaxub(rhs, lhs, output);
+        vpcmpeqb(rhs, output, output);
+      }
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::BelowOrEqual:
-      vpmaxub(rhs, lhs, output);
-      vpcmpeqb(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpminub(rhs, lhs, output);
+        vpcmpeqb(Operand(lhs), output, output);
+      } else {
+        vpmaxub(rhs, lhs, output);
+        vpcmpeqb(rhs, output, output);
+      }
       break;
     case Assembler::Below:
-      vpminub(rhs, lhs, output);
-      vpcmpeqb(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpmaxub(rhs, lhs, output);
+        vpcmpeqb(Operand(lhs), output, output);
+      } else {
+        vpminub(rhs, lhs, output);
+        vpcmpeqb(rhs, output, output);
+      }
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::AboveOrEqual:
-      vpminub(rhs, lhs, output);
-      vpcmpeqb(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpmaxub(rhs, lhs, output);
+        vpcmpeqb(Operand(lhs), output, output);
+      } else {
+        vpminub(rhs, lhs, output);
+        vpcmpeqb(rhs, output, output);
+      }
       break;
     default:
       MOZ_CRASH("unexpected condition op");
@@ -385,22 +405,42 @@ void MacroAssemblerX86Shared::compareInt16x8(FloatRegister lhs, Operand rhs,
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::Above:
-      vpmaxuw(rhs, lhs, output);
-      vpcmpeqw(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpminuw(rhs, lhs, output);
+        vpcmpeqw(Operand(lhs), output, output);
+      } else {
+        vpmaxuw(rhs, lhs, output);
+        vpcmpeqw(rhs, output, output);
+      }
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::BelowOrEqual:
-      vpmaxuw(rhs, lhs, output);
-      vpcmpeqw(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpminuw(rhs, lhs, output);
+        vpcmpeqw(Operand(lhs), output, output);
+      } else {
+        vpmaxuw(rhs, lhs, output);
+        vpcmpeqw(rhs, output, output);
+      }
       break;
     case Assembler::Below:
-      vpminuw(rhs, lhs, output);
-      vpcmpeqw(rhs, output, output);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpmaxuw(rhs, lhs, output);
+        vpcmpeqw(Operand(lhs), output, output);
+      } else {
+        vpminuw(rhs, lhs, output);
+        vpcmpeqw(rhs, output, output);
+      }
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     case Assembler::AboveOrEqual:
-      vpminuw(rhs, lhs, lhs);
-      vpcmpeqw(rhs, lhs, lhs);
+      if (rhs.kind() == Operand::FPREG && ToSimdFloatRegister(rhs) == output) {
+        vpmaxuw(rhs, lhs, output);
+        vpcmpeqw(Operand(lhs), output, output);
+      } else {
+        vpminuw(rhs, lhs, output);
+        vpcmpeqw(rhs, output, output);
+      }
       break;
     default:
       MOZ_CRASH("unexpected condition op");
@@ -578,9 +618,9 @@ void MacroAssemblerX86Shared::compareForOrderingInt64x2(
   static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
   // The pseudo code is for (e.g. > comparison):
   //  __m128i pcmpgtq_sse2 (__m128i a, __m128i b) {
-  //      __m128i r = _mm_and_si128(_mm_cmpeq_epi32(a, b), _mm_sub_epi64(b,
-  //      a)); r = _mm_or_si128(r, _mm_cmpgt_epi32(a, b)); return
-  //      _mm_shuffle_epi32(r, _MM_SHUFFLE(3,3,1,1));
+  //    __m128i r = _mm_and_si128(_mm_cmpeq_epi32(a, b), _mm_sub_epi64(b, a));
+  //    r = _mm_or_si128(r, _mm_cmpgt_epi32(a, b));
+  //    return _mm_shuffle_epi32(r, _MM_SHUFFLE(3,3,1,1));
   //  }
   // Credits to https://stackoverflow.com/a/65175746
   switch (cond) {
@@ -628,6 +668,31 @@ void MacroAssemblerX86Shared::compareForOrderingInt64x2(
       vpcmpgtd(rhs, lhs, output);
       vpor(Operand(temp1), output, output);
       vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), output, output);
+      asMasm().bitwiseXorSimd128(output, allOnes, output);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+}
+
+void MacroAssemblerX86Shared::compareForOrderingInt64x2AVX(
+    FloatRegister lhs, FloatRegister rhs, Assembler::Condition cond,
+    FloatRegister output) {
+  MOZ_ASSERT(HasSSE42());
+  static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
+  switch (cond) {
+    case Assembler::Condition::GreaterThan:
+      vpcmpgtq(Operand(rhs), lhs, output);
+      break;
+    case Assembler::Condition::LessThan:
+      vpcmpgtq(Operand(lhs), rhs, output);
+      break;
+    case Assembler::Condition::GreaterThanOrEqual:
+      vpcmpgtq(Operand(lhs), rhs, output);
+      asMasm().bitwiseXorSimd128(output, allOnes, output);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      vpcmpgtq(Operand(rhs), lhs, output);
       asMasm().bitwiseXorSimd128(output, allOnes, output);
       break;
     default:
@@ -710,27 +775,28 @@ void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
   // Move lhs to output if lhs!=output; move rhs out of the way if rhs==output.
   // This is bad, but Ion does not need this fixup.
   ScratchSimd128Scope scratch(asMasm());
-  if (!lhs.aliases(output)) {
+  if (!HasAVX() && !lhs.aliases(output)) {
     if (rhs.kind() == Operand::FPREG &&
         output.aliases(FloatRegister::FromCode(rhs.fpu()))) {
       vmovapd(rhs, scratch);
       rhs = Operand(scratch);
     }
     vmovapd(lhs, output);
+    lhs = output;
   }
 
   switch (cond) {
     case Assembler::Condition::Equal:
-      vcmpeqpd(rhs, output, output);
+      vcmpeqpd(rhs, lhs, output);
       break;
     case Assembler::Condition::LessThan:
-      vcmpltpd(rhs, output, output);
+      vcmpltpd(rhs, lhs, output);
       break;
     case Assembler::Condition::LessThanOrEqual:
-      vcmplepd(rhs, output, output);
+      vcmplepd(rhs, lhs, output);
       break;
     case Assembler::Condition::NotEqual:
-      vcmpneqpd(rhs, output, output);
+      vcmpneqpd(rhs, lhs, output);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
     case Assembler::Condition::GreaterThan:
