@@ -22,3 +22,27 @@
       path: "resource://builtin-themes/lepton/",
     },
   ],
+  [
+    "kanaze-erua@floorp.ablaze.one",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/erua/",
+      expiry: "2022-04-15",
+    },
+  ],
+  [
+    "kanaze-aria@floorp.ablaze.one",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/aria/",
+      expiry: "2022-04-15",
+    },
+  ],
+  [
+    "kanaze-melt@floorp.ablaze.one",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/melt/",
+      expiry: "2022-04-15",
+    },
+  ],

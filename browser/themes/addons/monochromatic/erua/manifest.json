@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "version": "1.0",
+  "name": "Kanaze-erua-theme",
+  "applications": {
+    "gecko": {
+      "id": "kanaze-erua@floorp.ablaze.one"
+    }
+  },
+  
+  "icons": {
+    "32": "icon.svg"
+  },
+  "theme": {
+    "images": {
+      "additional_backgrounds": [
+        "images/0.png"
+      ]
+    },
+    "properties": {
+      "additional_backgrounds_alignment": [
+        "right top"
+      ],
+      "additional_backgrounds_tiling": [
+        "repeat"
+      ]
+    },
+    "colors": {
+      "toolbar": "rgb(245, 255, 252, 0.9)",
+      "toolbar_text": "rgb(0, 0, 0)",
+      "frame": "rgb(215, 234, 234, 0.9)",
+      "tab_background_text": "rgb(0, 0, 0)",
+      "toolbar_field": "rgb(255, 255, 255,0.9)",
+      "toolbar_field_text": "rgb(0, 0, 0)",
+      "tab_line": "rgb(0, 255, 200)",
+      "popup": "rgb(245, 255, 252)",
+      "popup_text": "rgb(0, 0, 0)",
+      "tab_loading": "rgb(0, 255, 200)"
+    }
+  }
+}
