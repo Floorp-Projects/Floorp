@@ -891,11 +891,6 @@ TextureUsage:
   type: string
   ping: true
 
-ThreadIdNameMapping:
-  description: >
-    List of thread names with their corresponding thread IDs.
-  type: string
-
 TotalPageFile:
   description: >
     Maximum amount of memory that can be committed without extending the swap/page file.
