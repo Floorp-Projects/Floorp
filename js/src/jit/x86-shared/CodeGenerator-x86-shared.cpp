@@ -2622,20 +2622,20 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.compareFloat64x2(Assembler::LessThanOrEqual, lhs, rhs, dest);
       break;
     case wasm::SimdOp::F32x4PMax:
-      // `lhsDest` is actually rhsDest, and `rhs` is actually lhs
-      masm.pseudoMaxFloat32x4(lhsDest, rhs);
+      // `lhs` and `rhs` are swapped, for non-VEX platforms the output is rhs.
+      masm.pseudoMaxFloat32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F32x4PMin:
-      // `lhsDest` is actually rhsDest, and `rhs` is actually lhs
-      masm.pseudoMinFloat32x4(lhsDest, rhs);
+      // `lhs` and `rhs` are swapped, for non-VEX platforms the output is rhs.
+      masm.pseudoMinFloat32x4(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2PMax:
-      // `lhsDest` is actually rhsDest, and `rhs` is actually lhs
-      masm.pseudoMaxFloat64x2(lhsDest, rhs);
+      // `lhs` and `rhs` are swapped, for non-VEX platforms the output is rhs.
+      masm.pseudoMaxFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2PMin:
-      // `lhsDest` is actually rhsDest, and `rhs` is actually lhs
-      masm.pseudoMinFloat64x2(lhsDest, rhs);
+      // `lhs` and `rhs` are swapped, for non-VEX platforms the output is rhs.
+      masm.pseudoMinFloat64x2(lhs, rhs, dest);
       break;
     case wasm::SimdOp::I32x4DotI16x8S:
       masm.widenDotInt16x8(lhs, rhs, dest);
@@ -2680,16 +2680,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.q15MulrSatInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::F32x4RelaxedMin:
-      masm.minFloat32x4Relaxed(rhs, lhsDest);
+      masm.minFloat32x4Relaxed(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F32x4RelaxedMax:
-      masm.maxFloat32x4Relaxed(rhs, lhsDest);
+      masm.maxFloat32x4Relaxed(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2RelaxedMin:
-      masm.minFloat64x2Relaxed(rhs, lhsDest);
+      masm.minFloat64x2Relaxed(lhs, rhs, dest);
       break;
     case wasm::SimdOp::F64x2RelaxedMax:
-      masm.maxFloat64x2Relaxed(rhs, lhsDest);
+      masm.maxFloat64x2Relaxed(lhs, rhs, dest);
       break;
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
     case wasm::SimdOp::MozWHSELFTEST:

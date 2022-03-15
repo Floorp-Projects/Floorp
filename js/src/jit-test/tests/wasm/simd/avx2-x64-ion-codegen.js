@@ -165,7 +165,12 @@ c4 e2 69 37 c1            vpcmpgtq %xmm1, %xmm2, %xmm0
       ['f32x4.ge', `c5 e8 c2 c1 02            vcmpps \\$0x02, %xmm1, %xmm2, %xmm0`],
       ['f64x2.eq', `c5 f1 c2 c2 00            vcmppd \\$0x00, %xmm2, %xmm1, %xmm0`],
       ['f64x2.lt', `c5 f1 c2 c2 01            vcmppd \\$0x01, %xmm2, %xmm1, %xmm0`],
-      ['f64x2.ge', `c5 e9 c2 c1 02            vcmppd \\$0x02, %xmm1, %xmm2, %xmm0`]]);
+      ['f64x2.ge', `c5 e9 c2 c1 02            vcmppd \\$0x02, %xmm1, %xmm2, %xmm0`],
+      ['f32x4.pmin', `c5 e8 5d c1               vminps %xmm1, %xmm2, %xmm0`],
+      ['f32x4.pmax', `c5 e8 5f c1               vmaxps %xmm1, %xmm2, %xmm0`],
+      ['f64x2.pmin', `c5 e9 5d c1               vminpd %xmm1, %xmm2, %xmm0`],
+      ['f64x2.pmax', `c5 e9 5f c1               vmaxpd %xmm1, %xmm2, %xmm0`],
+]);
 
 // Bitwise binary ops
 codegenTestX64_v128xv128_v128_avxhack(
