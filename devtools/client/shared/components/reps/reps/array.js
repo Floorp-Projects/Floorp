@@ -16,10 +16,7 @@ define(function(require, exports, module) {
     MODE,
   } = require("devtools/client/shared/components/reps/reps/constants");
 
-  const ModePropType = PropTypes.oneOf(
-    // @TODO Change this to Object.values when supported in Node's version of V8
-    Object.keys(MODE).map(key => MODE[key])
-  );
+  const ModePropType = PropTypes.oneOf(Object.values(MODE));
 
   /**
    * Renders an array. The array is enclosed by left and right bracket
@@ -169,6 +166,5 @@ define(function(require, exports, module) {
     supportsObject,
     maxLengthMap,
     getLength,
-    ModePropType,
   };
 });

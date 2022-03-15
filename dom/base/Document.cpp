@@ -14585,8 +14585,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   }
 
   auto& wireframe = aWireframe.SetValue();
-  nsStyleUtil::GetSerializedColorValue(shell->GetCanvasBackground(),
-                                       wireframe.mCanvasBackground.Construct());
+  wireframe.mCanvasBackground = shell->GetCanvasBackground();
 
   FrameForPointOptions options;
   options.mBits += FrameForPointOption::IgnoreCrossDoc;
@@ -14606,11 +14605,47 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
     return;
   }
   for (nsIFrame* frame : Reversed(frames)) {
-    // Can't really fail because SetCapacity succeeded.
-    auto& taggedRect = *rects.AppendElement(fallible);
+    auto [rectColor,
+          rectType] = [&]() -> std::tuple<nscolor, WireframeRectType> {
+      if (frame->IsTextFrame()) {
+        return {frame->StyleText()->mWebkitTextFillColor.CalcColor(frame),
+                WireframeRectType::Text};
+      }
+      if (frame->IsImageFrame() || frame->IsSVGOuterSVGFrame()) {
+        return {0, WireframeRectType::Image};
+      }
+      if (frame->IsThemed()) {
+        return {0, WireframeRectType::Background};
+      }
+      bool drawImage = false;
+      bool drawColor = false;
+      const nscolor color = nsCSSRendering::DetermineBackgroundColor(
+          pc, frame->Style(), frame, drawImage, drawColor);
+      if (drawImage &&
+          !frame->StyleBackground()->mImage.BottomLayer().mImage.IsNone()) {
+        return {color, WireframeRectType::Image};
+      }
+      if (drawColor) {
+        return {color, WireframeRectType::Background};
+      }
+      return {0, WireframeRectType::Unknown};
+    }();
+
+    if (rectType == WireframeRectType::Unknown) {
+      continue;
+    }
+
     const auto r =
         CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
             frame, frame->GetRectRelativeToSelf(), relativeTo));
+    if ((uint32_t)r.Area() <
+        StaticPrefs::browser_history_wireframeAreaThreshold()) {
+      continue;
+    }
+
+    // Can't really fail because SetCapacity succeeded.
+    auto& taggedRect = *rects.AppendElement(fallible);
+
     if (aIncludeNodes) {
       if (nsIContent* c = frame->GetContent()) {
         taggedRect.mNode.Construct(c);
@@ -14620,34 +14655,8 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
     taggedRect.mY = r.y;
     taggedRect.mWidth = r.width;
     taggedRect.mHeight = r.height;
-    taggedRect.mType.Construct() = [&] {
-      if (frame->IsTextFrame()) {
-        nsStyleUtil::GetSerializedColorValue(
-            frame->StyleText()->mWebkitTextFillColor.CalcColor(frame),
-            taggedRect.mColor.Construct());
-        return WireframeRectType::Text;
-      }
-      if (frame->IsImageFrame() || frame->IsSVGOuterSVGFrame()) {
-        return WireframeRectType::Image;
-      }
-      if (frame->IsThemed()) {
-        return WireframeRectType::Background;
-      }
-      bool drawImage = false;
-      bool drawColor = false;
-      const nscolor color = nsCSSRendering::DetermineBackgroundColor(
-          pc, frame->Style(), frame, drawImage, drawColor);
-      if (drawImage &&
-          !frame->StyleBackground()->mImage.BottomLayer().mImage.IsNone()) {
-        return WireframeRectType::Image;
-      }
-      if (drawColor) {
-        nsStyleUtil::GetSerializedColorValue(color,
-                                             taggedRect.mColor.Construct());
-        return WireframeRectType::Background;
-      }
-      return WireframeRectType::Unknown;
-    }();
+    taggedRect.mColor = rectColor;
+    taggedRect.mType.Construct(rectType);
   }
 }
 
