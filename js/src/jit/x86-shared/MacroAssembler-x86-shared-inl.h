@@ -2672,11 +2672,21 @@ void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhsOrRhsDest,
   vminps(Operand(lhs), rhsDest, rhsDest);
 }
 
+void MacroAssembler::pseudoMinFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  vminps(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
                                         FloatRegister lhsOrLhsDest) {
   FloatRegister rhsDest = rhsOrRhsDest;
   FloatRegister lhs = lhsOrLhsDest;
   vminpd(Operand(lhs), rhsDest, rhsDest);
+}
+
+void MacroAssembler::pseudoMinFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  vminpd(Operand(rhs), lhs, dest);
 }
 
 // Compare-based maximum
@@ -2688,11 +2698,21 @@ void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
   vmaxps(Operand(lhs), rhsDest, rhsDest);
 }
 
+void MacroAssembler::pseudoMaxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  vmaxps(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
                                         FloatRegister lhsOrLhsDest) {
   FloatRegister rhsDest = rhsOrRhsDest;
   FloatRegister lhs = lhsOrLhsDest;
   vmaxpd(Operand(lhs), rhsDest, rhsDest);
+}
+
+void MacroAssembler::pseudoMaxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  vmaxpd(Operand(rhs), lhs, dest);
 }
 
 // Widening/pairwise integer dot product
@@ -3116,9 +3136,19 @@ void MacroAssembler::minFloat32x4Relaxed(FloatRegister src,
   vminps(Operand(src), srcDest, srcDest);
 }
 
+void MacroAssembler::minFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  vminps(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::maxFloat32x4Relaxed(FloatRegister src,
                                          FloatRegister srcDest) {
   vmaxps(Operand(src), srcDest, srcDest);
+}
+
+void MacroAssembler::maxFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  vmaxps(Operand(rhs), lhs, dest);
 }
 
 void MacroAssembler::minFloat64x2Relaxed(FloatRegister src,
@@ -3126,9 +3156,19 @@ void MacroAssembler::minFloat64x2Relaxed(FloatRegister src,
   vminpd(Operand(src), srcDest, srcDest);
 }
 
+void MacroAssembler::minFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  vminpd(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::maxFloat64x2Relaxed(FloatRegister src,
                                          FloatRegister srcDest) {
   vmaxpd(Operand(src), srcDest, srcDest);
+}
+
+void MacroAssembler::maxFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  vmaxpd(Operand(rhs), lhs, dest);
 }
 
 // ========================================================================

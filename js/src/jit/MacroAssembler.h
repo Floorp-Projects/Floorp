@@ -3388,28 +3388,32 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMinFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
                                  FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMinFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
                                  FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMaxFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
                                  FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void pseudoMaxFloat64x2(FloatRegister lhs, FloatRegister rhs,
-                                 FloatRegister dest) DEFINED_ON(arm64);
+                                 FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   // Widening/pairwise integer dot product
 
@@ -3463,25 +3467,29 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void minFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
-                                  FloatRegister dest) DEFINED_ON(arm64);
+                                  FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void maxFloat32x4Relaxed(FloatRegister src, FloatRegister srcDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void maxFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
-                                  FloatRegister dest) DEFINED_ON(arm64);
+                                  FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void minFloat64x2Relaxed(FloatRegister src, FloatRegister srcDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void minFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
-                                  FloatRegister dest) DEFINED_ON(arm64);
+                                  FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void maxFloat64x2Relaxed(FloatRegister src, FloatRegister srcDest)
       DEFINED_ON(x86_shared, arm64);
 
   inline void maxFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
-                                  FloatRegister dest) DEFINED_ON(arm64);
+                                  FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
  public:
   // ========================================================================
