@@ -8,6 +8,7 @@
 #define mozilla_widget_NativeMenuGtk_h
 
 #include "mozilla/widget/NativeMenu.h"
+#include "mozilla/EventForwards.h"
 #include "GRefPtr.h"
 
 namespace mozilla {
@@ -28,7 +29,8 @@ class NativeMenuGtk : public NativeMenu {
   explicit NativeMenuGtk(dom::Element* aElement);
 
   // NativeMenu
-  void ShowAsContextMenu(nsPresContext*, const CSSIntPoint& aPosition) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ShowAsContextMenu(
+      nsPresContext*, const CSSIntPoint& aPosition) override;
   bool Close() override;
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
                     int16_t aButton, ErrorResult& aRv) override;
@@ -42,12 +44,12 @@ class NativeMenuGtk : public NativeMenu {
     mObservers.RemoveElement(aObserver);
   }
 
-  void Dump();
-
-  void OnUnmap();
+  MOZ_CAN_RUN_SCRIPT void OnUnmap();
 
  protected:
   virtual ~NativeMenuGtk();
+
+  MOZ_CAN_RUN_SCRIPT void FireEvent(EventMessage);
 
   bool mPoppedUp = false;
   RefPtr<GtkWidget> mNativeMenu;
