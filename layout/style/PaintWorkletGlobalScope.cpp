@@ -11,14 +11,13 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "PaintWorkletImpl.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PaintWorkletGlobalScope::PaintWorkletGlobalScope(PaintWorkletImpl* aImpl)
-    : WorkletGlobalScope(aImpl) {}
-
-PaintWorkletImpl* PaintWorkletGlobalScope::Impl() const {
-  return static_cast<PaintWorkletImpl*>(mImpl.get());
-}
+    : WorkletGlobalScope(aImpl->GetAgentClusterId(),
+                         aImpl->IsSharedMemoryAllowed()),
+      mImpl(aImpl) {}
 
 bool PaintWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
@@ -41,4 +40,7 @@ void PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,
   // Nothing to do here, yet.
 }
 
-}  // namespace mozilla::dom
+WorkletImpl* PaintWorkletGlobalScope::Impl() const { return mImpl; }
+
+}  // namespace dom
+}  // namespace mozilla

@@ -38,7 +38,8 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  WorkletGlobalScope(WorkletImpl*);
+  WorkletGlobalScope(const Maybe<nsID>& aAgentClusterId,
+                     bool aSharedMemoryAllowed);
 
   nsIGlobalObject* GetParentObject() const { return nullptr; }
 
@@ -55,7 +56,7 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
 
   already_AddRefed<Console> GetConsole(JSContext* aCx, ErrorResult& aRv);
 
-  WorkletImpl* Impl() const { return mImpl.get(); }
+  virtual WorkletImpl* Impl() const = 0;
 
   void Dump(const Optional<nsAString>& aString) const;
 
@@ -65,17 +66,19 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
     return duration.ToMilliseconds();
   }
 
-  OriginTrials Trials() const override;
-  Maybe<nsID> GetAgentClusterId() const override;
-  bool IsSharedMemoryAllowed() const override;
+  Maybe<nsID> GetAgentClusterId() const override { return mAgentClusterId; }
+
+  bool IsSharedMemoryAllowed() const override { return mSharedMemoryAllowed; }
 
  protected:
   ~WorkletGlobalScope();
+  ;
 
-  const RefPtr<WorkletImpl> mImpl;
  private:
   TimeStamp mCreationTimeStamp;
+  Maybe<nsID> mAgentClusterId;
   RefPtr<Console> mConsole;
+  bool mSharedMemoryAllowed;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WorkletGlobalScope, WORKLET_IID)

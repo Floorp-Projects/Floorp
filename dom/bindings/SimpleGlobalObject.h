@@ -20,7 +20,8 @@
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
  public:
@@ -66,10 +67,8 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
     return GetWrapperPreserveColor();
   }
 
-  OriginTrials Trials() const override { return {}; }
-
-  JSObject* WrapObject(JSContext* cx,
-                       JS::Handle<JSObject*> aGivenProto) override {
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     MOZ_CRASH("SimpleGlobalObject doesn't use DOM bindings!");
   }
 
@@ -83,6 +82,7 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   const GlobalType mType;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_SimpleGlobalObject_h__ */

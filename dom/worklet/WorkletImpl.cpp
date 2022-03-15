@@ -41,8 +41,7 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
       mWorkletLoadInfo(aWindow),
       mTerminated(false),
-      mFinishedOnExecutionThread(false),
-      mTrials(OriginTrials::FromWindow(nsGlobalWindowInner::Cast(aWindow))) {
+      mFinishedOnExecutionThread(false) {
   Unused << NS_WARN_IF(
       NS_FAILED(ipc::PrincipalToPrincipalInfo(mPrincipal, &mPrincipalInfo)));
 

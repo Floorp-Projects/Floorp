@@ -39,7 +39,7 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
                          AudioWorkletProcessorConstructor& aProcessorCtor,
                          ErrorResult& aRv);
 
-  AudioWorkletImpl* Impl() const;
+  WorkletImpl* Impl() const override;
 
   uint64_t CurrentFrame() const;
 
@@ -68,6 +68,8 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
   AudioParamDescriptorMap DescriptorsFromJS(JSContext* aCx,
                                             JS::ForOfIterator* aIter,
                                             ErrorResult& aRv);
+
+  const RefPtr<AudioWorkletImpl> mImpl;
 
   typedef nsRefPtrHashtable<nsStringHashKey, AudioWorkletProcessorConstructor>
       NodeNameToProcessorDefinitionMap;

@@ -35,17 +35,15 @@ NS_IMPL_ADDREF_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 NS_IMPL_RELEASE_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 
 AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
-    : WorkletGlobalScope(aImpl) {}
-
-AudioWorkletImpl* AudioWorkletGlobalScope::Impl() const {
-  return static_cast<AudioWorkletImpl*>(mImpl.get());
-}
+    : WorkletGlobalScope(aImpl->GetAgentClusterId(),
+                         aImpl->IsSharedMemoryAllowed()),
+      mImpl(aImpl) {}
 
 bool AudioWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   // |this| is being exposed to JS and content script will soon be running.
   // The graph needs a handle on the JSContext so it can interrupt JS.
-  Impl()->DestinationTrack()->Graph()->NotifyJSContext(aCx);
+  mImpl->DestinationTrack()->Graph()->NotifyJSContext(aCx);
 
   JS::RealmOptions options;
 
@@ -191,8 +189,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    */
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "AudioWorkletGlobalScope: parameter descriptors",
-      [impl = RefPtr{Impl()}, name = nsString(aName),
-       map = std::move(map)]() mutable {
+      [impl = mImpl, name = nsString(aName), map = std::move(map)]() mutable {
         AudioNode* destinationNode =
             impl->DestinationTrack()->Engine()->NodeMainThread();
         if (!destinationNode) {
@@ -202,8 +199,10 @@ void AudioWorkletGlobalScope::RegisterProcessor(
       }));
 }
 
+WorkletImpl* AudioWorkletGlobalScope::Impl() const { return mImpl; }
+
 uint64_t AudioWorkletGlobalScope::CurrentFrame() const {
-  AudioNodeTrack* destinationTrack = Impl()->DestinationTrack();
+  AudioNodeTrack* destinationTrack = mImpl->DestinationTrack();
   GraphTime processedTime = destinationTrack->Graph()->ProcessedTime();
   return destinationTrack->GraphTimeToTrackTime(processedTime);
 }
@@ -213,7 +212,7 @@ double AudioWorkletGlobalScope::CurrentTime() const {
 }
 
 float AudioWorkletGlobalScope::SampleRate() const {
-  return static_cast<float>(Impl()->DestinationTrack()->mSampleRate);
+  return static_cast<float>(mImpl->DestinationTrack()->mSampleRate);
 }
 
 AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
