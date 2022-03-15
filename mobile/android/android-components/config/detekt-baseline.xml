@@ -338,11 +338,12 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun TabHistoryEntry.into(): mozilla.components.concept.sync.TabData</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.Device.into(): Device</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry</ID>
-    <ID>UndocumentedPublicFunction:WebAppActivityFeature.kt$WebAppActivityFeature$@OnLifecycleEvent(Lifecycle.Event.ON_DESTROY) fun onDestroy()</ID>
-    <ID>UndocumentedPublicFunction:WebAppActivityFeature.kt$WebAppActivityFeature$@OnLifecycleEvent(Lifecycle.Event.ON_RESUME) fun onResume()</ID>
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:WebserverRule.kt$WebserverRule$fun url(path: String = ""): String</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
+    <ID>UnusedPrivateMember:FennecMigrator.kt$FennecMigrator.Builder$private var loginsStorageKey: String? = null</ID>
+    <ID>UnusedPrivateMember:FennecMigrator.kt$FennecMigrator.Builder$private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD</ID>
+    <ID>UnusedPrivateMember:GeckoPromptDelegate.kt$GeckoPromptDelegate$private operator fun Int.contains(mask: Int): Boolean</ID>
   </CurrentIssues>
 </SmellBaseline>
