@@ -1698,11 +1698,6 @@ uint32_t nsGlobalWindowOuter::GetPrincipalHashValue() const {
   return 0;
 }
 
-OriginTrials nsGlobalWindowOuter::Trials() const {
-  return mInnerWindow ? nsGlobalWindowInner::Cast(mInnerWindow)->Trials()
-                      : OriginTrials();
-}
-
 nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
   if (GetWrapperPreserveColor()) {
     return NS_OK;
