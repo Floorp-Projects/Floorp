@@ -4548,15 +4548,14 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
 
   // try all the coalescable versions we support.
   const SpdyInformation* info = gHttpHandler->SpdyInfo();
-  static_assert(SpdyInformation::kCount == 1, "assume 1 alpn version");
   bool joinedReturn = false;
-  if (info->ProtocolEnabled(0)) {
+  if (StaticPrefs::network_http_http2_enabled()) {
     if (justKidding) {
-      rv = sslSocketControl->TestJoinConnection(info->VersionString[0],
-                                                hostname, port, &isJoined);
+      rv = sslSocketControl->TestJoinConnection(info->VersionString, hostname,
+                                                port, &isJoined);
     } else {
-      rv = sslSocketControl->JoinConnection(info->VersionString[0], hostname,
-                                            port, &isJoined);
+      rv = sslSocketControl->JoinConnection(info->VersionString, hostname, port,
+                                            &isJoined);
     }
     if (NS_SUCCEEDED(rv) && isJoined) {
       joinedReturn = true;
