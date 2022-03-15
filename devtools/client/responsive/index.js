@@ -60,11 +60,17 @@ const bootstrap = {
 
     const store = (this.store = Store());
     const provider = createElement(Provider, { store }, App());
-    ReactDOM.render(provider, document.querySelector("#root"));
+    this._root = document.querySelector("#root");
+    ReactDOM.render(provider, this._root);
     message.post(window, "init:done");
+
+    this.destroy = this.destroy.bind(this);
+    window.addEventListener("unload", this.destroy, { once: true });
   },
 
   destroy() {
+    window.removeEventListener("unload", this.destroy, { once: true });
+
     this.store = null;
 
     // responsive is not connected with a toolbox so we pass -1 as the
@@ -83,9 +89,9 @@ const bootstrap = {
       // If actions are dispatched after store is destroyed, ignore them.  This
       // can happen in tests that close the tool quickly while async tasks like
       // initDevices() below are still pending.
-      return;
+      return Promise.resolve();
     }
-    this.store.dispatch(action);
+    return this.store.dispatch(action);
   },
 };
 
@@ -95,19 +101,12 @@ message.wait(window, "init").then(() => bootstrap.init());
 // manager.js sends a message to signal init is done, which can be used for delayed
 // startup work that shouldn't block initial load
 message.wait(window, "post-init").then(() => {
-  bootstrap.store.dispatch(loadDevices()).then(() => {
+  bootstrap.dispatch(loadDevices()).then(() => {
     bootstrap.dispatch(restoreDeviceState());
   });
 });
 
-window.addEventListener(
-  "unload",
-  function() {
-    bootstrap.destroy();
-  },
-  { once: true }
-);
-
+window.destroy = () => bootstrap.destroy();
 // Allows quick testing of actions from the console
 window.dispatch = action => bootstrap.dispatch(action);
 
