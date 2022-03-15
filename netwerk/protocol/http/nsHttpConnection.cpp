@@ -768,7 +768,8 @@ nsresult nsHttpConnection::SetupNPNList(nsISSLSocketControl* ssl,
     // there is no match.
     protocolArray.AppendElement("http/1.1"_ns);
 
-    if (gHttpHandler->IsSpdyEnabled() && !(caps & NS_HTTP_DISALLOW_SPDY)) {
+    if (StaticPrefs::network_http_http2_enabled() &&
+        !(caps & NS_HTTP_DISALLOW_SPDY)) {
       LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
       const SpdyInformation* info = gHttpHandler->SpdyInfo();
       for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {

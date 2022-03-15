@@ -340,8 +340,7 @@ add_task(async function setup() {
     `data:text/html,test`
   );
 
-  Services.prefs.setBoolPref("network.http.spdy.enabled", true);
-  Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  Services.prefs.setBoolPref("network.http.http2.enabled", true);
 
   // Even with network state isolation active, we don't end up using the
   // partitioned principal.
@@ -359,8 +358,7 @@ add_task(async function setup() {
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("services.settings.server");
-  Services.prefs.clearUserPref("network.http.spdy.enabled");
-  Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
+  Services.prefs.clearUserPref("network.http.http2.enabled");
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
 
   pps.unregisterFilter(filter);

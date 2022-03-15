@@ -20,8 +20,7 @@ function setup() {
   prefs = Services.prefs;
 
   prefs.setBoolPref("network.security.esni.enabled", false);
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  prefs.setBoolPref("network.http.http2.enabled", true);
   // the TRR server is on 127.0.0.1
   prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
@@ -49,8 +48,7 @@ function setup() {
 setup();
 registerCleanupFunction(() => {
   prefs.clearUserPref("network.security.esni.enabled");
-  prefs.clearUserPref("network.http.spdy.enabled");
-  prefs.clearUserPref("network.http.spdy.enabled.http2");
+  prefs.clearUserPref("network.http.http2.enabled");
   prefs.clearUserPref("network.dns.localDomains");
   prefs.clearUserPref("network.dns.native-is-localhost");
   prefs.clearUserPref("network.trr.mode");

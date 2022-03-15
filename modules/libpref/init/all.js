@@ -1402,26 +1402,6 @@ pref("network.http.rendering-critical-requests-prioritization", true);
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
 
-// Try and use SPDY when using SSL
-pref("network.http.spdy.enabled", true);
-pref("network.http.spdy.enabled.http2", true);
-pref("network.http.spdy.enabled.deps", true);
-pref("network.http.spdy.enforce-tls-profile", true);
-pref("network.http.spdy.chunk-size", 16000);
-pref("network.http.spdy.timeout", 170);
-pref("network.http.spdy.coalesce-hostnames", true);
-pref("network.http.spdy.persistent-settings", false);
-pref("network.http.spdy.ping-threshold", 58);
-pref("network.http.spdy.ping-timeout", 8);
-pref("network.http.spdy.send-buffer-size", 131072);
-pref("network.http.spdy.allow-push", true);
-pref("network.http.spdy.push-allowance", 131072);   // 128KB
-pref("network.http.spdy.pull-allowance", 12582912); // 12MB
-pref("network.http.spdy.default-concurrent", 100);
-pref("network.http.spdy.default-hpack-buffer", 65536); // 64k
-pref("network.http.spdy.websockets", true);
-pref("network.http.spdy.enable-hpack-dump", false);
-
 // Http3 qpack table size.
 pref("network.http.http3.default-qpack-table-size", 65536); // 64k
 // Maximal number of streams that can be blocked on waiting for qpack

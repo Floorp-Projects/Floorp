@@ -19,6 +19,7 @@
 #include "Http2Push.h"
 #include "Http2Session.h"
 
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
@@ -50,7 +51,7 @@ SpdyInformation::SpdyInformation() {
 bool SpdyInformation::ProtocolEnabled(uint32_t index) const {
   MOZ_ASSERT(index < kCount, "index out of range");
 
-  return gHttpHandler->IsHttp2Enabled();
+  return StaticPrefs::network_http_http2_enabled();
 }
 
 nsresult SpdyInformation::GetNPNIndex(const nsACString& npnString,

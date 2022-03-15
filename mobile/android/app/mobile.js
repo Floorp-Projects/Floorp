@@ -81,8 +81,8 @@ pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 20);
 
 // spdy
-pref("network.http.spdy.push-allowance", 32768);
-pref("network.http.spdy.default-hpack-buffer", 4096); // 4k
+pref("network.http.http2.push-allowance", 32768);
+pref("network.http.http2.default-hpack-buffer", 4096); // 4k
 
 // http3
 pref("network.http.http3.default-qpack-table-size", 0);
