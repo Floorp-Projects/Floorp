@@ -14,7 +14,7 @@ class TestDeletionRequestPing(FOGTestCase):
     def test_deletion_request_ping_across_sessions(self):
         """Test the "deletion-request" ping behaviour across sessions."""
 
-        self.search_in_new_tab("mozilla firefox")
+        self.navigate_in_new_tab("about:glean")
 
         ping1 = self.wait_for_ping(
             self.disable_telemetry,
@@ -45,7 +45,7 @@ class TestDeletionRequestPing(FOGTestCase):
         )
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script(textwrap.dedent(tagging_script))
-        self.search_in_new_tab("python unittest")
+        self.navigate_in_new_tab("about:glean")
 
         ping2 = self.wait_for_ping(
             self.disable_telemetry,
