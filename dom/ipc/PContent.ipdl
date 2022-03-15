@@ -428,6 +428,21 @@ union BlobURLDataRequestResult
   nsresult;
 };
 
+struct TextRecognitionQuad {
+    float confidence;
+    nsString string;
+    ImagePoint[] points;
+};
+
+struct TextRecognitionResult {
+    TextRecognitionQuad[] quads;
+};
+
+union TextRecognitionResultOrError {
+    TextRecognitionResult;
+    nsCString;
+};
+
 struct ShmemImage {
     Shmem data;
     uint32_t stride;
@@ -1229,6 +1244,8 @@ parent:
     async DeviceReset();
 
     async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
+
+    async FindImageText(ShmemImage image) returns (TextRecognitionResultOrError result);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
