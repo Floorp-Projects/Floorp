@@ -1,19 +1,29 @@
 "use strict";
 
-do_get_profile();
-
 ChromeUtils.defineModuleGetter(
   this,
   "ExtensionPreferencesManager",
   "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextualIdentityService",
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 const CONTAINERS_PREF = "privacy.userContext.enabled";
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function startup() {
-  await ExtensionTestUtils.startAddonManager();
+  await AddonTestUtils.promiseStartupManager();
 });
 
 add_task(async function test_contextualIdentities_without_permissions() {
@@ -511,3 +521,72 @@ add_task(async function test_contextualIdentity_preference_change() {
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
+
+add_task(
+  { pref_set: [["extensions.eventPages.enabled", true]] },
+  async function test_contextualIdentity_event_page() {
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        applications: {
+          gecko: { id: "eventpage@mochitest" },
+        },
+        permissions: ["contextualIdentities"],
+        background: { persistent: false },
+      },
+      background() {
+        browser.contextualIdentities.onCreated.addListener(() => {
+          browser.test.sendMessage("created");
+        });
+        browser.contextualIdentities.onUpdated.addListener(() => {});
+        browser.contextualIdentities.onRemoved.addListener(() => {
+          browser.test.sendMessage("removed");
+        });
+        browser.test.sendMessage("ready");
+      },
+    });
+
+    const EVENTS = ["onCreated", "onUpdated", "onRemoved"];
+
+    await extension.startup();
+    await extension.awaitMessage("ready");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "contextualIdentities", event, {
+        primed: false,
+      });
+    }
+
+    await extension.terminateBackground();
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "contextualIdentities", event, {
+        primed: true,
+      });
+    }
+
+    // test events waken background
+    let identity = ContextualIdentityService.create("foobar", "circle", "red");
+
+    await extension.awaitMessage("ready");
+    await extension.awaitMessage("created");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "contextualIdentities", event, {
+        primed: false,
+      });
+    }
+
+    ContextualIdentityService.remove(identity.userContextId);
+    await extension.awaitMessage("removed");
+
+    // check primed listeners after startup
+    await AddonTestUtils.promiseRestartManager();
+    await extension.awaitStartup();
+
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "contextualIdentities", event, {
+        primed: true,
+      });
+    }
+
+    await extension.unload();
+  }
+);
