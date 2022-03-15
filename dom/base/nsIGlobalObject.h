@@ -12,6 +12,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/OriginTrials.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -195,6 +196,9 @@ class nsIGlobalObject : public nsISupports,
    * this method in your subclass of this class!
    */
   virtual mozilla::StorageAccess GetStorageAccess();
+
+  // Returns the set of active origin trials for this global.
+  virtual mozilla::OriginTrials Trials() const = 0;
 
   // Returns a pointer to this object as an inner window if this is one or
   // nullptr otherwise.
