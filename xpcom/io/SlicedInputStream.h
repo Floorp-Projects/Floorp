@@ -99,7 +99,7 @@ class SlicedInputStream final : public nsIAsyncInputStream,
   // This is protected by mutex.
   nsCOMPtr<nsIInputStreamLengthCallback> mAsyncWaitLengthCallback;
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 }  // namespace mozilla

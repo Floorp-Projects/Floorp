@@ -360,7 +360,7 @@ class RenderThread final {
     }
   };
 
-  Mutex mRenderTextureMapLock MOZ_UNANNOTATED;
+  Mutex mRenderTextureMapLock;
   std::unordered_map<wr::ExternalImageId, RefPtr<RenderTextureHost>,
                      ExternalImageIdHashFn>
       mRenderTextures;

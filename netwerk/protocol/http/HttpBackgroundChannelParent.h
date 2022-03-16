@@ -108,7 +108,7 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   Atomic<bool> mIPCOpened;
 
   // Used to ensure atomicity of mBackgroundThread
-  Mutex mBgThreadMutex MOZ_UNANNOTATED;
+  Mutex mBgThreadMutex;
 
   nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
 

@@ -1246,7 +1246,7 @@ class GCRuntime {
   /* Synchronize GC heap access among GC helper threads and the main thread. */
   friend class js::AutoLockGC;
   friend class js::AutoLockGCBgAlloc;
-  js::Mutex lock MOZ_UNANNOTATED;
+  js::Mutex lock;
 
   friend class BackgroundSweepTask;
   friend class BackgroundFreeTask;

@@ -80,7 +80,7 @@ class Tickler final : public nsSupportsWeakReference {
   ~Tickler();
 
   friend class TicklerTimer;
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIPrefBranch> mPrefs;

@@ -106,7 +106,7 @@ class FakeAudioTrack : public ProcessedMediaTrack {
   uint32_t NumberOfChannels() const override { return NUM_CHANNELS; }
 
  private:
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   MediaTrackListener* mListener = nullptr;
   nsCOMPtr<nsITimer> mTimer;
   int mCount = 0;

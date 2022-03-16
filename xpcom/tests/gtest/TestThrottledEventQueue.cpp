@@ -254,7 +254,7 @@ TEST(ThrottledEventQueue, DropWhileRunning)
 
 TEST(ThrottledEventQueue, AwaitIdle)
 {
-  Mutex mutex MOZ_UNANNOTATED("TEQ AwaitIdle");
+  Mutex mutex("TEQ AwaitIdle");
   CondVar cond(mutex, "TEQ AwaitIdle");
 
   string dequeue_await;           // mutex
@@ -317,7 +317,7 @@ TEST(ThrottledEventQueue, AwaitIdleMixed)
   ASSERT_TRUE(NS_SUCCEEDED(
       NS_NewNamedThread("AwaitIdleMixed", getter_AddRefs(thread))));
 
-  Mutex mutex MOZ_UNANNOTATED("AwaitIdleMixed");
+  Mutex mutex("AwaitIdleMixed");
   CondVar cond(mutex, "AwaitIdleMixed");
 
   // The following are protected by mutex and cond, above.
@@ -480,7 +480,7 @@ TEST(ThrottledEventQueue, MixedPauseResume)
 
 TEST(ThrottledEventQueue, AwaitIdlePaused)
 {
-  Mutex mutex MOZ_UNANNOTATED("AwaitIdlePaused");
+  Mutex mutex("AwaitIdlePaused");
   CondVar cond(mutex, "AwaitIdlePaused");
 
   string dequeue_await;           // mutex

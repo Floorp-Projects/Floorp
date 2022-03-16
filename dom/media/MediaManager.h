@@ -391,7 +391,7 @@ class MediaManager final : public nsIMediaManagerService,
   RefPtr<MediaEngine> mBackend;
 
   static StaticRefPtr<MediaManager> sSingleton;
-  static StaticMutex sSingletonMutex MOZ_UNANNOTATED;
+  static StaticMutex sSingletonMutex;
 
   // Connect/Disconnect on media thread only
   MediaEventListener mDeviceListChangeListener;

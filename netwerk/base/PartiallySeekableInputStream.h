@@ -82,7 +82,7 @@ class PartiallySeekableInputStream final : public nsISeekableStream,
   uint64_t mPos;
   bool mClosed;
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 }  // namespace net

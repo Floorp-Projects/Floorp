@@ -1546,7 +1546,7 @@ class MediaPipelineReceiveVideo::PipelineListener
 
  private:
   RefPtr<layers::ImageContainer> mImageContainer;
-  Mutex mMutex MOZ_UNANNOTATED;  // Protects the below members.
+  Mutex mMutex;  // Protects the below members.
   PrincipalHandle mPrincipalHandle;
   // Set to true on the sts thread if privacy is requested when ALPN was
   // negotiated. Set to false again when mPrincipalHandle is private.

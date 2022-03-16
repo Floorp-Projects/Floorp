@@ -73,7 +73,7 @@ class NativeDNSResolverOverride : public nsINativeDNSResolverOverride {
 
  private:
   virtual ~NativeDNSResolverOverride() = default;
-  mozilla::RWLock mLock MOZ_UNANNOTATED{"NativeDNSResolverOverride"};
+  mozilla::RWLock mLock{"NativeDNSResolverOverride"};
 
   nsTHashMap<nsCStringHashKey, nsTArray<NetAddr>> mOverrides;
   nsTHashMap<nsCStringHashKey, nsCString> mCnames;

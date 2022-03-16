@@ -242,7 +242,7 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
 
 template <const GUID& aGuid>
 static bool CanCreateWMFDecoder() {
-  static StaticMutex sMutex MOZ_UNANNOTATED;
+  static StaticMutex sMutex;
   StaticMutexAutoLock lock(sMutex);
   static Maybe<bool> result;
   if (result.isNothing()) {

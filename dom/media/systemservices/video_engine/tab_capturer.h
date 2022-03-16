@@ -61,7 +61,7 @@ class TabCapturer {
   // Used to protect mCallback, since TabCapturer's lifetime might be
   // longer than mCallback's on stop/shutdown, and we may be waiting on a
   // tab to finish capturing on MainThread.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   webrtc::DesktopCapturer::Callback* mCallback = nullptr;
 
   uint64_t mBrowserId = 0;

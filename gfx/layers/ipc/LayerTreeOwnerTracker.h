@@ -63,7 +63,7 @@ class LayerTreeOwnerTracker final {
  private:
   LayerTreeOwnerTracker();
 
-  mozilla::Mutex mLayerIdsLock MOZ_UNANNOTATED;
+  mozilla::Mutex mLayerIdsLock;
   std::map<LayersId, base::ProcessId> mLayerIds;
 };
 

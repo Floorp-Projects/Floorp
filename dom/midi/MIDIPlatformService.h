@@ -149,7 +149,7 @@ class MIDIPlatformService {
   nsClassHashtable<nsStringHashKey, MIDIMessageQueue> mMessageQueues;
 
   // Mutex for managing access to message queue objects.
-  Mutex mMessageQueueMutex MOZ_UNANNOTATED;
+  Mutex mMessageQueueMutex;
 };
 
 }  // namespace mozilla::dom

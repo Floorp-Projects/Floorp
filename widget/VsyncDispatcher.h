@@ -64,7 +64,7 @@ class CompositorVsyncDispatcher final {
   void ObserveVsync(bool aEnable);
 
   RefPtr<gfx::VsyncSource> mVsyncSource;
-  Mutex mCompositorObserverLock MOZ_UNANNOTATED;
+  Mutex mCompositorObserverLock;
   RefPtr<VsyncObserver> mCompositorVsyncObserver;
   bool mDidShutdown;
 };

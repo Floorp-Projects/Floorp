@@ -242,7 +242,7 @@ class DataChannelRegistry {
   uintptr_t mNextId = 1;
   std::map<uintptr_t, RefPtr<DataChannelConnection>> mConnections;
   UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
-  static StaticMutex sInstanceMutex MOZ_UNANNOTATED;
+  static StaticMutex sInstanceMutex;
 };
 
 StaticMutex DataChannelRegistry::sInstanceMutex;

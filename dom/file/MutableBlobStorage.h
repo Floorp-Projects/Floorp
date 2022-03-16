@@ -92,7 +92,7 @@ class MutableBlobStorage final {
   [[nodiscard]] nsresult DispatchToIOThread(
       already_AddRefed<nsIRunnable> aRunnable);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // All these variables are touched on the main thread only or in the
   // retargeted thread when used by Append(). They are protected by mMutex.

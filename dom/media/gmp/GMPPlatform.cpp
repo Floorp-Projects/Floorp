@@ -86,7 +86,7 @@ class GMPSyncRunnable final {
   bool mDone;
   GMPTask* mTask;
   MessageLoop* mMessageLoop;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 };
 
 class GMPThreadImpl : public GMPThread {
@@ -99,7 +99,7 @@ class GMPThreadImpl : public GMPThread {
   void Join() override;
 
  private:
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   base::Thread mThread;
 };
 
@@ -148,7 +148,7 @@ class GMPMutexImpl : public GMPMutex {
   void Destroy() override;
 
  private:
-  ReentrantMonitor mMonitor MOZ_UNANNOTATED;
+  ReentrantMonitor mMonitor;
 };
 
 GMPErr CreateMutex(GMPMutex** aMutex) {

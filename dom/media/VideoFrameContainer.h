@@ -117,7 +117,7 @@ class VideoFrameContainer {
   } mMainThreadState;
 
   // mMutex protects all the fields below.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   // The intrinsic size is the ideal size which we should render the
   // ImageContainer's current Image at.
   // This can differ from the Image's actual size when the media resource

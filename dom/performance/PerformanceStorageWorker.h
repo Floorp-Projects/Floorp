@@ -37,7 +37,7 @@ class PerformanceStorageWorker final : public PerformanceStorage {
   PerformanceStorageWorker();
   ~PerformanceStorageWorker();
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // Protected by mutex.
   // Created and released on worker-thread. Used also on main-thread.

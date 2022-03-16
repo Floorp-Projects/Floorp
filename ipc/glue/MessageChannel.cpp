@@ -346,7 +346,7 @@ class ChannelCountReporter final : public nsIMemoryReporter {
 
   using CountTable = nsTHashMap<nsDepCharHashKey, ChannelCounts>;
 
-  static StaticMutex sChannelCountMutex MOZ_UNANNOTATED;
+  static StaticMutex sChannelCountMutex;
   static CountTable* sChannelCounts;
 
  public:

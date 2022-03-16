@@ -12,7 +12,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 static bool gRunLoopSet = false;
-static mozilla::StaticMutex gMutex MOZ_UNANNOTATED;
+static mozilla::StaticMutex gMutex;
 
 void mozilla_set_coreaudio_notification_runloop_if_needed() {
   mozilla::StaticMutexAutoLock lock(gMutex);

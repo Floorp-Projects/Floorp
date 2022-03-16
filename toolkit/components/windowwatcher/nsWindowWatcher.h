@@ -108,7 +108,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
  protected:
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
   nsWatcherWindowEntry* mOldestWindow;
-  mozilla::Mutex mListLock MOZ_UNANNOTATED;
+  mozilla::Mutex mListLock;
 
   nsCOMPtr<nsIWindowCreator> mWindowCreator;
 };

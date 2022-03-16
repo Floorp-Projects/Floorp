@@ -521,7 +521,7 @@ class ProcessExecutableMemory {
   uint8_t* base_;
 
   // The fields below should only be accessed while we hold the lock.
-  Mutex lock_ MOZ_UNANNOTATED;
+  Mutex lock_;
 
   // pagesAllocated_ is an Atomic so that bytesAllocated does not have to
   // take the lock.

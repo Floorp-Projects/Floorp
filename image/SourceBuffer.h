@@ -475,7 +475,7 @@ class SourceBuffer final {
   //////////////////////////////////////////////////////////////////////////////
 
   /// All private members are protected by mMutex.
-  mutable Mutex mMutex MOZ_UNANNOTATED;
+  mutable Mutex mMutex;
 
   /// The data in this SourceBuffer, stored as a series of Chunks.
   AutoTArray<Chunk, 1> mChunks;

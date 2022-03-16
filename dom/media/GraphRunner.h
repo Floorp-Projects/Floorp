@@ -80,7 +80,7 @@ class GraphRunner final : public Runnable {
 
   // Monitor used for yielding mThread through Wait(), and scheduling mThread
   // through Signal() from a GraphDriver.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   // The MediaTrackGraph we're running. Weakptr beecause this graph owns us and
   // guarantees that our lifetime will not go beyond that of itself.
   MediaTrackGraphImpl* const mGraph;

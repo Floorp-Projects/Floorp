@@ -248,7 +248,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   bool mIsMainThread;
 
   // This mutex protects mWorkerShuttingDown.
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   bool mWorkerShuttingDown;
 
   RefPtr<WebSocketEventService> mService;

@@ -64,7 +64,7 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   // of the operations) and the main thread (which does memory reporting).
   // It should be held for all operations between Init() and destruction that
   // touch this class's data members.
-  mutable mozilla::Mutex mLock MOZ_UNANNOTATED;
+  mutable mozilla::Mutex mLock;
   // list of fully stored prefixes, that also form the
   // start of a run of deltas in mIndexDeltas.
   nsTArray<uint32_t> mIndexPrefixes;
