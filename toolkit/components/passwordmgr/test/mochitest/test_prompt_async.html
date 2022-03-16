@@ -77,9 +77,18 @@
 
       function promiseProxyErrorLoad(frame) {
         return TestUtils.waitForCondition(async function checkForProxyConnectFailure() {
-          return SpecialPowers.spawn(frame, [], function() {
-            return this.content.document.documentURI.includes("proxyConnectFailure");
-          })
+          try {
+            return await SpecialPowers.spawn(frame, [], function() {
+              return this.content.document.documentURI.includes("proxyConnectFailure");
+            })
+          } catch (e) {
+            // The frame may not be ready for the 'spawn' task right after setting
+            // iframe.src, which will throw an exception when that happens.
+            // Since this test is testing error load, we can't wait until the iframe
+            // is 'loaded' either. So we simply catch the exception here and retry the task
+            // later since we are in the waitForCondition loop.
+            return false;
+          }
         }, "Waiting for proxyConnectFailure documentURI");
       }
 
