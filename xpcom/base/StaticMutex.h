@@ -26,7 +26,7 @@ namespace mozilla {
  * initialized to 0 in order to initialize mMutex.  It is only safe to use
  * StaticMutex as a global or static variable.
  */
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMutex {
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMutex {
  public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that
@@ -35,11 +35,11 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMutex {
   StaticMutex() { MOZ_ASSERT(!mMutex); }
 #endif
 
-  void Lock() CAPABILITY_ACQUIRE() { Mutex()->Lock(); }
+  void Lock() { Mutex()->Lock(); }
 
-  void Unlock() CAPABILITY_RELEASE() { Mutex()->Unlock(); }
+  void Unlock() { Mutex()->Unlock(); }
 
-  void AssertCurrentThreadOwns() ASSERT_CAPABILITY(this) {
+  void AssertCurrentThreadOwns() {
 #ifdef DEBUG
     Mutex()->AssertCurrentThreadOwns();
 #endif

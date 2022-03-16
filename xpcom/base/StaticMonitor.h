@@ -9,11 +9,10 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/ThreadSafety.h"
 
 namespace mozilla {
 
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMonitor {
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMonitor {
  public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that
@@ -22,20 +21,17 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMonitor {
   StaticMonitor() { MOZ_ASSERT(!mMutex); }
 #endif
 
-  void Lock() CAPABILITY_ACQUIRE() { Mutex()->Lock(); }
+  void Lock() { Mutex()->Lock(); }
 
-  void Unlock() CAPABILITY_RELEASE() { Mutex()->Unlock(); }
+  void Unlock() { Mutex()->Unlock(); }
 
   void Wait() { CondVar()->Wait(); }
-  CVStatus Wait(TimeDuration aDuration) {
-    AssertCurrentThreadOwns();
-    return CondVar()->Wait(aDuration);
-  }
+  CVStatus Wait(TimeDuration aDuration) { return CondVar()->Wait(aDuration); }
 
   void Notify() { CondVar()->Notify(); }
   void NotifyAll() { CondVar()->NotifyAll(); }
 
-  void AssertCurrentThreadOwns() ASSERT_CAPABILITY(this) {
+  void AssertCurrentThreadOwns() {
 #ifdef DEBUG
     Mutex()->AssertCurrentThreadOwns();
 #endif
@@ -86,14 +82,14 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMonitor {
   static void operator delete(void*);
 };
 
-class MOZ_STACK_CLASS SCOPED_CAPABILITY StaticMonitorAutoLock {
+class MOZ_STACK_CLASS StaticMonitorAutoLock {
  public:
-  explicit StaticMonitorAutoLock(StaticMonitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
+  explicit StaticMonitorAutoLock(StaticMonitor& aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Lock();
   }
 
-  ~StaticMonitorAutoLock() CAPABILITY_RELEASE() { mMonitor->Unlock(); }
+  ~StaticMonitorAutoLock() { mMonitor->Unlock(); }
 
   void Wait() { mMonitor->Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mMonitor->Wait(aDuration); }
