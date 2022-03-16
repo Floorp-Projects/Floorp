@@ -515,6 +515,16 @@ input:is([type=radio], [type=checkbox]):is(:disabled, :disabled:active, :disable
   cursor: unset;
 }
 
+input:not([type=file], [type=image]):focus-visible,
+select:focus-visible,
+button:focus-visible,
+textarea:focus-visible {
+  /* These elements can handle outline themselves when themed, so we use
+   * outline-style: auto and skip rendering the outline only when themed and
+   * the theme allows so */
+  outline-style: auto;
+}
+
 input[type=search] {
   box-sizing: border-box;
 }
