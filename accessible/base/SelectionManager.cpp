@@ -24,10 +24,12 @@ using namespace mozilla::a11y;
 using mozilla::dom::Selection;
 
 struct mozilla::a11y::SelData final {
-  SelData(Selection* aSel, int32_t aReason) : mSel(aSel), mReason(aReason) {}
+  SelData(Selection* aSel, int32_t aReason, int32_t aGranularity)
+      : mSel(aSel), mReason(aReason), mGranularity(aGranularity) {}
 
   RefPtr<Selection> mSel;
   int16_t mReason;
+  int32_t mGranularity;
 
   NS_INLINE_DECL_REFCOUNTING(SelData)
 
@@ -148,17 +150,18 @@ void SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent) {
                                              selection->FocusOffset());
   mAccWithCaret = caretCntr;
   if (mCaretOffset != -1) {
-    RefPtr<AccCaretMoveEvent> caretMoveEvent = new AccCaretMoveEvent(
-        caretCntr, mCaretOffset, selection->IsCollapsed(),
-        caretCntr->IsCaretAtEndOfLine(), aEvent->FromUserInput());
+    RefPtr<AccCaretMoveEvent> caretMoveEvent =
+        new AccCaretMoveEvent(caretCntr, mCaretOffset, selection->IsCollapsed(),
+                              caretCntr->IsCaretAtEndOfLine(),
+                              event->GetGranularity(), aEvent->FromUserInput());
     nsEventShell::FireEvent(caretMoveEvent);
   }
 }
 
 NS_IMETHODIMP
 SelectionManager::NotifySelectionChanged(dom::Document* aDocument,
-                                         Selection* aSelection,
-                                         int16_t aReason) {
+                                         Selection* aSelection, int16_t aReason,
+                                         int32_t aAmount) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -175,7 +178,7 @@ SelectionManager::NotifySelectionChanged(dom::Document* aDocument,
     // Selection manager has longer lifetime than any document accessible,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
-    RefPtr<SelData> selData = new SelData(aSelection, aReason);
+    RefPtr<SelData> selData = new SelData(aSelection, aReason, aAmount);
     document->HandleNotification<SelectionManager, SelData>(
         this, &SelectionManager::ProcessSelectionChanged, selData);
   }
@@ -211,8 +214,8 @@ void SelectionManager::ProcessSelectionChanged(SelData* aSelData) {
   }
 
   if (selection->GetType() == SelectionType::eNormal) {
-    RefPtr<AccEvent> event =
-        new AccTextSelChangeEvent(text, selection, aSelData->mReason);
+    RefPtr<AccEvent> event = new AccTextSelChangeEvent(
+        text, selection, aSelData->mReason, aSelData->mGranularity);
     text->Document()->FireDelayedEvent(event);
 
   } else if (selection->GetType() == SelectionType::eSpellCheck) {
