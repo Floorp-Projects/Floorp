@@ -47,10 +47,8 @@ class CrashReportingTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @SmokeTest
     @Test
     fun closeTabCrashedReporterTest() {
-
         homeScreen {
         }.openNavigationToolbar {
         }.openTabCrashReporter {
@@ -61,7 +59,6 @@ class CrashReportingTest {
     }
 
     @Ignore("Test failure caused by: https://github.com/mozilla-mobile/fenix/issues/19964")
-    @SmokeTest
     @Test
     fun restoreTabCrashedReporterTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
