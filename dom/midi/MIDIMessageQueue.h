@@ -49,7 +49,7 @@ class MIDIMessageQueue {
   // Array of messages to be sent.
   nsTArray<MIDIMessage> mMessageQueue;
   // Mutex for coordinating cross thread array access.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 };
 
 }  // namespace dom

@@ -113,13 +113,13 @@ class AnimationSurfaceProvider final : public ISurfaceProvider,
   RefPtr<RasterImage> mImage;
 
   /// A mutex to protect mDecoder. Always taken before mFramesMutex.
-  mutable Mutex mDecodingMutex;
+  mutable Mutex mDecodingMutex MOZ_UNANNOTATED;
 
   /// The decoder used to decode this animation.
   RefPtr<Decoder> mDecoder;
 
   /// A mutex to protect mFrames. Always taken after mDecodingMutex.
-  mutable Mutex mFramesMutex;
+  mutable Mutex mFramesMutex MOZ_UNANNOTATED;
 
   /// The frames of this animation, in order.
   UniquePtr<AnimationFrameBuffer> mFrames;

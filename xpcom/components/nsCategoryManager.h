@@ -84,7 +84,7 @@ class CategoryNode {
   void* operator new(size_t aSize, CategoryAllocator* aArena);
 
   nsTHashtable<CategoryLeaf> mTable;
-  mozilla::Mutex mLock;
+  mozilla::Mutex mLock MOZ_UNANNOTATED;
 };
 
 /**
@@ -138,7 +138,7 @@ class nsCategoryManager final : public nsICategoryManager,
 
   CategoryAllocator mArena;
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;
-  mozilla::Mutex mLock;
+  mozilla::Mutex mLock MOZ_UNANNOTATED;
   bool mSuppressNotifications;
 };
 

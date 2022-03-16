@@ -116,7 +116,7 @@ class WebMContainerParser
 
     WebMBufferedParser parser(0);
     nsTArray<WebMTimeDataOffset> mapping;
-    ReentrantMonitor dummy("dummy");
+    ReentrantMonitor dummy MOZ_ANNOTATED("dummy");
     bool result =
         parser.Append(aData.Elements(), aData.Length(), mapping, dummy);
     if (!result) {
@@ -134,7 +134,7 @@ class WebMContainerParser
 
     WebMBufferedParser parser(0);
     nsTArray<WebMTimeDataOffset> mapping;
-    ReentrantMonitor dummy("dummy");
+    ReentrantMonitor dummy MOZ_ANNOTATED("dummy");
     parser.AppendMediaSegmentOnly();
     bool result =
         parser.Append(aData.Elements(), aData.Length(), mapping, dummy);
@@ -182,7 +182,7 @@ class WebMContainerParser
     nsTArray<WebMTimeDataOffset> mapping;
     mapping.AppendElements(mOverlappedMapping);
     mOverlappedMapping.Clear();
-    ReentrantMonitor dummy("dummy");
+    ReentrantMonitor dummy MOZ_ANNOTATED("dummy");
     mParser.Append(aData.Elements(), aData.Length(), mapping, dummy);
     if (mResource) {
       mResource->AppendData(aData);

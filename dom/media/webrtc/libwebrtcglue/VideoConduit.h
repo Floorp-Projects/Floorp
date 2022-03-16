@@ -271,7 +271,7 @@ class WebrtcVideoConduit
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
-  mutable mozilla::ReentrantMonitor mRendererMonitor;
+  mutable mozilla::ReentrantMonitor mRendererMonitor MOZ_UNANNOTATED;
 
   // Accessed on any thread under mRendererMonitor.
   RefPtr<mozilla::VideoRenderer> mRenderer;
@@ -328,7 +328,7 @@ class WebrtcVideoConduit
   // that will update the webrtc.org configuration.
   WatchManager<WebrtcVideoConduit> mWatchManager;
 
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
 
   // Decoder factory used by mRecvStream when it needs new decoders. This is
   // not shared broader like some state in the WebrtcCallWrapper because it

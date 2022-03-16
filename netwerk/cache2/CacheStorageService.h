@@ -324,7 +324,7 @@ class CacheStorageService final : public nsICacheStorageService,
 
   static CacheStorageService* sSelf;
 
-  mozilla::Mutex mLock{"CacheStorageService.mLock"};
+  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheStorageService.mLock"};
   mozilla::Mutex mForcedValidEntriesLock{
       "CacheStorageService.mForcedValidEntriesLock"};
 
@@ -413,7 +413,7 @@ class CacheStorageService final : public nsICacheStorageService,
     virtual ~IOThreadSuspender() = default;
     NS_IMETHOD Run() override;
 
-    Monitor mMon;
+    Monitor mMon MOZ_UNANNOTATED;
     bool mSignaled{false};
   };
 

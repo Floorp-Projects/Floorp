@@ -51,7 +51,7 @@ class SamplesWaitingForKey {
   ~SamplesWaitingForKey();
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   RefPtr<CDMProxy> mProxy;
   struct SampleEntry {
     RefPtr<MediaRawData> mSample;

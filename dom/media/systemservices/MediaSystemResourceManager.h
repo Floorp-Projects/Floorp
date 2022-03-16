@@ -65,7 +65,7 @@ class MediaSystemResourceManager {
 
   void HandleAcquireResult(uint32_t aId, bool aSuccess);
 
-  ReentrantMonitor mReentrantMonitor;
+  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
 
   bool mShutDown;
 

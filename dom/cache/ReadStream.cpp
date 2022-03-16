@@ -105,7 +105,7 @@ class ReadStream::Inner final : public ReadStream::Controllable {
   // to close a stream on our owning thread while an IO thread is simultaneously
   // reading the same stream.  Therefore, protect all access to these stream
   // objects with a mutex.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   CondVar mCondVar;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsIInputStream> mSnappyStream;

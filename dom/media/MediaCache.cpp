@@ -443,7 +443,7 @@ class MediaCache {
   // The monitor protects all the data members here. Also, off-main-thread
   // readers that need to block will Wait() on this monitor. When new
   // data becomes available in the cache, we NotifyAll() on this monitor.
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
   // This must always be accessed when the monitor is held.
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.

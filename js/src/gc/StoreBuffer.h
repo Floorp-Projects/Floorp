@@ -441,7 +441,7 @@ class StoreBuffer {
     }
   }
 
-  Mutex lock_;
+  Mutex lock_ MOZ_UNANNOTATED;
 
   MonoTypeBuffer<ValueEdge> bufferVal;
   MonoTypeBuffer<StringPtrEdge> bufStrCell;

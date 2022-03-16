@@ -606,7 +606,7 @@ class nsHtml5StreamParser final : public nsISupports {
    * Makes sure the main thread can't mess the tokenizer state while it's
    * tokenizing. This mutex also protects the current speculation.
    */
-  mozilla::Mutex mTokenizerMutex;
+  mozilla::Mutex mTokenizerMutex MOZ_UNANNOTATED;
 
   /**
    * The scoped atom table
@@ -645,7 +645,7 @@ class nsHtml5StreamParser final : public nsISupports {
    * The current speculation is the last element
    */
   nsTArray<mozilla::UniquePtr<nsHtml5Speculation>> mSpeculations;
-  mozilla::Mutex mSpeculationMutex;
+  mozilla::Mutex mSpeculationMutex MOZ_UNANNOTATED;
 
   /**
    * Number of times speculation has failed for this parser.
@@ -727,7 +727,7 @@ class nsHtml5StreamParser final : public nsISupports {
    * Mutex for protecting access to mFlushTimer (but not for the two
    * mFlushTimerFoo booleans below).
    */
-  mozilla::Mutex mFlushTimerMutex;
+  mozilla::Mutex mFlushTimerMutex MOZ_UNANNOTATED;
 
   /**
    * Keeps track whether mFlushTimer has been armed. Unfortunately,

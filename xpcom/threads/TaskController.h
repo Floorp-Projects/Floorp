@@ -371,10 +371,10 @@ class TaskController {
   void RunPoolThread();
 
   static std::unique_ptr<TaskController> sSingleton;
-  static StaticMutex sSingletonMutex;
+  static StaticMutex sSingletonMutex MOZ_UNANNOTATED;
 
   // This protects access to the task graph.
-  Mutex mGraphMutex;
+  Mutex mGraphMutex MOZ_UNANNOTATED;
 
   // This protects thread pool initialization. We cannot do this from within
   // the GraphMutex, since thread creation on Windows can generate events on

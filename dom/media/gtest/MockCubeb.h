@@ -182,7 +182,7 @@ class MockCubebStream {
 
  private:
   // Monitor used to block start until mFrozenStart is false.
-  Monitor mFrozenStartMonitor;
+  Monitor mFrozenStartMonitor MOZ_UNANNOTATED;
   // Whether this stream should wait for an explicit start request before
   // starting. Protected by FrozenStartMonitor.
   bool mFrozenStart;

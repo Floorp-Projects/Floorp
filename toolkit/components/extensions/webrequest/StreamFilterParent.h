@@ -169,7 +169,7 @@ class StreamFilterParent final : public PStreamFilterParent,
 
   RefPtr<net::ChannelEventQueue> mQueue;
 
-  Mutex mBufferMutex;
+  Mutex mBufferMutex MOZ_UNANNOTATED;
 
   bool mReceivedStop;
   bool mSentStop;

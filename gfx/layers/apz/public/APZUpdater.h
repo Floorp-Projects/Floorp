@@ -193,12 +193,12 @@ class APZUpdater {
   // StaticAutoPtr wrapper on sWindowIdMap to avoid a static initializer for the
   // unordered_map. This also avoids the initializer/memory allocation in cases
   // where we're not using WebRender.
-  static StaticMutex sWindowIdLock;
+  static StaticMutex sWindowIdLock MOZ_UNANNOTATED;
   static StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
   // Lock used to protected mUpdaterThreadId;
-  mutable Mutex mThreadIdLock;
+  mutable Mutex mThreadIdLock MOZ_UNANNOTATED;
   // If WebRender and async scene building are enabled, this holds the thread id
   // of the scene builder thread (which is the updater thread) for the
   // compositor associated with this APZUpdater instance. It may be populated
@@ -215,7 +215,7 @@ class APZUpdater {
   };
 
   // Lock used to protect mUpdaterQueue
-  Mutex mQueueLock;
+  Mutex mQueueLock MOZ_UNANNOTATED;
   // Holds a queue of tasks to be run on the updater thread, when the updater
   // thread is a WebRender thread, since it won't have a message loop we can
   // dispatch to. Note that although this is a single queue it is conceptually

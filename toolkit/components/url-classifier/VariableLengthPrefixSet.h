@@ -55,7 +55,7 @@ class VariableLengthPrefixSet final : public nsIMemoryReporter {
   // of the operations) and the main thread (which does memory reporting).
   // It should be held for all operations between Init() and destruction that
   // touch this class's data members.
-  mutable mozilla::Mutex mLock;
+  mutable mozilla::Mutex mLock MOZ_UNANNOTATED;
 
   const RefPtr<nsUrlClassifierPrefixSet> mFixedPrefixSet;
   mozilla::safebrowsing::PrefixStringMap mVLPrefixSet;

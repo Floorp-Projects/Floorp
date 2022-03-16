@@ -310,7 +310,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
       bool aMemoryOnly, nsICacheEntryOpenCallback* aCallback);
   void TransferCallbacks(CacheEntry& aFromEntry);
 
-  mozilla::Mutex mLock{"CacheEntry"};
+  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheEntry"};
 
   // Reflects the number of existing handles for this entry
   ::mozilla::ThreadSafeAutoRefCnt mHandlesCount;

@@ -60,7 +60,7 @@ class BlobURLInputStream final : public nsIAsyncInputStream,
 
   // Non-recursive mutex introduced in order to guard access to mState, mError
   // and mAsyncInputStream
-  Mutex mStateMachineMutex;
+  Mutex mStateMachineMutex MOZ_UNANNOTATED;
   State mState;
   // Stores the error code if stream is in error state
   nsresult mError;

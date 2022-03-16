@@ -79,7 +79,7 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
   if (!ShouldRun()) {
     return false;
   }
-  static StaticMutex sMutex;
+  static StaticMutex sMutex MOZ_UNANNOTATED;
   uint32_t decodeFps = StaticPrefs::media_benchmark_vp9_fps();
   uint32_t hadRecentUpdate = StaticPrefs::media_benchmark_vp9_versioncheck();
   bool needBenchmark;

@@ -16,7 +16,7 @@ class nsIRunnable;
 
 class nsProtectedAuthThread : public nsIProtectedAuthThread {
  private:
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   nsCOMPtr<nsIRunnable> mNotifyObserver;
 

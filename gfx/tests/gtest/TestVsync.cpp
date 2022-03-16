@@ -67,7 +67,7 @@ class TestVsyncObserver : public VsyncObserver {
   bool mDidGetVsyncNotification;
 
  private:
-  Monitor mVsyncMonitor;
+  Monitor mVsyncMonitor MOZ_UNANNOTATED;
 };
 
 class VsyncTester : public ::testing::Test {

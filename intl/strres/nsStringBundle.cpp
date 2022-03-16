@@ -138,7 +138,7 @@ class StringBundleProxy : public nsIStringBundle {
   virtual ~StringBundleProxy() = default;
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   nsCOMPtr<nsIStringBundle> mTarget;
 
   // Atomically reads mTarget and returns a strong reference to it. This

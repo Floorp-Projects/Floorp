@@ -66,7 +66,7 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
 
   // The provider lookup table and its mutex.
   ProviderDictType mProviderDict;
-  mozilla::Mutex mProviderDictLock;
+  mozilla::Mutex mProviderDictLock MOZ_UNANNOTATED;
 };
 
 #endif  // nsUrlClassifierUtils_h_

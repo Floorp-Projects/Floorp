@@ -70,7 +70,7 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   // Cache the appDir returned from GetAppPath to avoid doing I/O
   static StaticAutoPtr<nsCString> sCachedAppPath;
   // For thread safe setting/checking of sCachedAppPath
-  static StaticMutex sCachedAppPathMutex;
+  static StaticMutex sCachedAppPathMutex MOZ_UNANNOTATED;
   // Utility method to call ClearOnShutdown() on the main thread
   static nsresult ClearCachedAppPathOnShutdown();
 #endif

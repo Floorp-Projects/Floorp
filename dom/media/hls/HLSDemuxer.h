@@ -127,7 +127,7 @@ class HLSTrackDemuxer : public MediaTrackDemuxer,
   RefPtr<MediaRawData> mQueuedSample;
 
   // Mutex to protect members below across multiple threads.
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
   UniquePtr<TrackInfo> mTrackInfo;
 };
 

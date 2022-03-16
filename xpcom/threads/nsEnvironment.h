@@ -30,7 +30,7 @@ class nsEnvironment final : public nsIEnvironment {
   nsEnvironment() : mLock("nsEnvironment.mLock") {}
   ~nsEnvironment();
 
-  mozilla::Mutex mLock;
+  mozilla::Mutex mLock MOZ_UNANNOTATED;
 };
 
 #endif /* !nsEnvironment_h__ */

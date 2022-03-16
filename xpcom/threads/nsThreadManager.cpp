@@ -66,7 +66,7 @@ class BackgroundEventTarget final : public nsIEventTarget {
   nsCOMPtr<nsIThreadPool> mPool;
   nsCOMPtr<nsIThreadPool> mIOPool;
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   nsTArray<RefPtr<TaskQueue>> mTaskQueues;
   bool mIsBackgroundDelayedRunnablesCanceled;
 };

@@ -60,7 +60,7 @@ class SurfaceCacheImpl;
 static StaticRefPtr<SurfaceCacheImpl> sInstance;
 
 // The mutex protecting the surface cache.
-static StaticMutex sInstanceMutex;
+static StaticMutex sInstanceMutex MOZ_UNANNOTATED;
 
 ///////////////////////////////////////////////////////////////////////////////
 // SurfaceCache Implementation

@@ -28,7 +28,7 @@ class WorkerEventTarget final : public nsISerialEventTarget {
   enum class Behavior : uint8_t { Hybrid, ControlOnly };
 
  private:
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
   const Behavior mBehavior;
 
