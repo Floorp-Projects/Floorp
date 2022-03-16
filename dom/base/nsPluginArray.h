@@ -61,7 +61,7 @@ class nsPluginArray final : public nsSupportsWeakReference,
  private:
   virtual ~nsPluginArray();
 
-  bool ForceNoPlugins();
+  static bool ForceNoPlugins();
 
   RefPtr<nsMimeTypeArray> mMimeTypeArray;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

@@ -56,7 +56,7 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~nsMimeTypeArray();
 
-  bool ForceNoPlugins();
+  static bool ForceNoPlugins();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   mozilla::Array<RefPtr<nsMimeType>, 2> mMimeTypes;
