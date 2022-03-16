@@ -1,8 +1,16 @@
 #stp_style_guide {
+  #dark_mode_toggle {
+    text-align: end;
+  }
+
   border: 1px solid #ddd;
   margin: 20px auto;
   padding: 20px;
   width: 260px;
+
+  @include theme_dark {
+    background: #42414c;
+  }
 
   .stp_superheader {
     margin: 0;

@@ -8,6 +8,32 @@ function onDOMLoaded() {
     thePKT_PANEL.initStyleGuide();
   }
   window.thePKT_PANEL.create();
+
+  setupDarkModeUI();
+}
+
+function setupDarkModeUI() {
+  let isDarkModeEnabled = false; // TODO: Use browser pref for starting value
+  let elDarkModeToggle = document.querySelector(`#dark_mode_toggle input`);
+  let elBody = document.querySelector(`body`);
+
+  function setTheme() {
+    if (isDarkModeEnabled) {
+      elBody.classList.add(`theme_dark`);
+      elDarkModeToggle.checked = true;
+    } else {
+      elBody.classList.remove(`theme_dark`);
+      elDarkModeToggle.checked = false;
+    }
+  }
+
+  setTheme();
+
+  elDarkModeToggle.addEventListener(`click`, function(e) {
+    e.preventDefault;
+    isDarkModeEnabled = !isDarkModeEnabled;
+    setTheme();
+  });
 }
 
 if (document.readyState != `loading`) {

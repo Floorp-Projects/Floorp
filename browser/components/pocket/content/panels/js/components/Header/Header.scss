@@ -11,5 +11,9 @@
     background-size: contain;
     height: 32px;
     width: 121px;
+
+    @include theme_dark {
+      background: url(../img/pocketlogo-dark.svg) bottom center no-repeat;
+    }
   }
 }

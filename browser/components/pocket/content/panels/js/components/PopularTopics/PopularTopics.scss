@@ -13,8 +13,17 @@
     margin-bottom: 8px;
     padding: 4px 8px;
 
+    @include theme_dark {
+      background: #2B2A33;
+
+    }
+
     .stp_popular_topic_link {
       color: #000;
+
+      @include theme_dark {
+        color: #FBFBFE;
+      }
 
       &::after {
         content: " >";
