@@ -348,7 +348,7 @@ function triggerSecondaryCommand(popup, index) {
   }
 
   // Extra secondary actions appear in a menu.
-  notification.secondaryButton.nextElementSibling.nextElementSibling.focus();
+  notification.secondaryButton.nextElementSibling.focus();
 
   popup.addEventListener(
     "popupshown",
