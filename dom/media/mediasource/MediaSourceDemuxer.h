@@ -83,7 +83,7 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   MozPromiseHolder<InitPromise> mInitPromise;
 
   // Monitor to protect members below across multiple threads.
-  mutable Monitor mMonitor MOZ_UNANNOTATED;
+  mutable Monitor mMonitor;
   RefPtr<TrackBuffersManager> mAudioTrack;
   RefPtr<TrackBuffersManager> mVideoTrack;
   MediaInfo mInfo;
@@ -138,7 +138,7 @@ class MediaSourceTrackDemuxer
   RefPtr<MediaSourceDemuxer> mParent;
   TrackInfo::TrackType mType;
   // Monitor protecting members below accessed from multiple threads.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   media::TimeUnit mNextRandomAccessPoint;
   // Would be accessed in MFR's demuxer proxy task queue and TaskQueue, and
   // only be set on the TaskQueue. It can be accessed while on TaskQueue without

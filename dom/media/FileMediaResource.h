@@ -109,7 +109,7 @@ class FileMediaResource : public BaseMediaResource {
   // Read or Seek is in progress since it resets various internal
   // values to null.
   // This lock protects mSeekable, mInput, mSize, and mSizeInitialized.
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
   // Seekable stream interface to file. This can be used from any
   // thread.

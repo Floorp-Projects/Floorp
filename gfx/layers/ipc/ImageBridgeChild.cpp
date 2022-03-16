@@ -178,7 +178,7 @@ void ImageBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
 }
 
 // Singleton
-static StaticMutex sImageBridgeSingletonLock MOZ_UNANNOTATED;
+static StaticMutex sImageBridgeSingletonLock;
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
 static StaticRefPtr<nsIThread> sImageBridgeChildThread;
 

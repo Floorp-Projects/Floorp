@@ -44,7 +44,7 @@ class HLSResourceCallbacksSupport
 
  private:
   ~HLSResourceCallbacksSupport() {}
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   HLSDecoder* mDecoder;
 };
 

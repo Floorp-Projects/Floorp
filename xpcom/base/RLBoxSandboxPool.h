@@ -63,7 +63,7 @@ class RLBoxSandboxPool : public nsITimerCallback, public nsINamed {
   nsTArray<UniquePtr<RLBoxSandboxDataBase>> mPool;
   const size_t mDelaySeconds;
   nsCOMPtr<nsITimer> mTimer;
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 };
 
 // The RLBoxSandboxDataBase class serves as the subclass for all sandbox data

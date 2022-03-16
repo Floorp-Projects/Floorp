@@ -229,7 +229,7 @@ struct ShellContext {
   /*
    * Watchdog thread state.
    */
-  js::Mutex watchdogLock MOZ_UNANNOTATED;
+  js::Mutex watchdogLock;
   js::ConditionVariable watchdogWakeup;
   mozilla::Maybe<js::Thread> watchdogThread;
   mozilla::Maybe<mozilla::TimeStamp> watchdogTimeout;
@@ -252,7 +252,7 @@ struct ShellContext {
   UniquePtr<MarkBitObservers> markObservers;
 
   // Off-thread parse state.
-  js::Monitor offThreadMonitor MOZ_UNANNOTATED;
+  js::Monitor offThreadMonitor;
   Vector<OffThreadJob*, 0, SystemAllocPolicy> offThreadJobs;
 
   // Queued finalization registry cleanup jobs.

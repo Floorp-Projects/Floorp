@@ -172,7 +172,7 @@ class DeviceManagerDx final {
 
   nsModuleHandle mDcompModule;
 
-  mozilla::Mutex mDeviceLock MOZ_UNANNOTATED;
+  mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;

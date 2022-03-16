@@ -59,7 +59,7 @@ void MediaSystemResourceManager::Init() {
     return;
   }
 
-  ReentrantMonitor barrier MOZ_UNANNOTATED("MediaSystemResourceManager::Init");
+  ReentrantMonitor barrier("MediaSystemResourceManager::Init");
   ReentrantMonitorAutoEnter mainThreadAutoMon(barrier);
   bool done = false;
 
@@ -191,8 +191,7 @@ bool MediaSystemResourceManager::AcquireSyncNoWait(
   MOZ_ASSERT(aClient);
   MOZ_ASSERT(!InImageBridgeChildThread());
 
-  ReentrantMonitor barrier MOZ_UNANNOTATED(
-      "MediaSystemResourceManager::AcquireSyncNoWait");
+  ReentrantMonitor barrier("MediaSystemResourceManager::AcquireSyncNoWait");
   ReentrantMonitorAutoEnter autoMon(barrier);
   bool done = false;
   {

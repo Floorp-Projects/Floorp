@@ -1150,7 +1150,7 @@ class CDMStorageTest {
   nsTArray<ExpectedMessage> mExpected;
 
   RefPtr<gmp::ChromiumCDMParent> mCDM;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   Atomic<bool> mFinished;
   nsCString mNodeId;
 

@@ -357,7 +357,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCOMPtr<nsIDashboardEventNotifier>
       mConnectionLogService;  // effectively const
 
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 };
 
 class WebSocketSSLChannel : public WebSocketChannel {

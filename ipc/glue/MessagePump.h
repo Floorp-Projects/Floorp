@@ -134,7 +134,7 @@ class MessagePumpForNonMainUIThreads final : public base::MessagePumpForUI,
   ~MessagePumpForNonMainUIThreads() {}
 
   bool mInWait;
-  mozilla::Mutex mWaitLock MOZ_UNANNOTATED;
+  mozilla::Mutex mWaitLock;
 };
 #endif  // defined(XP_WIN)
 

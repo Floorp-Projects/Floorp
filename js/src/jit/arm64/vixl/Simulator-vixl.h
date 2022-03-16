@@ -2508,7 +2508,7 @@ class SimulatorProcess
   {}
 
   // Synchronizes access between main thread and compilation threads.
-  js::Mutex lock_ MOZ_UNANNOTATED;
+  js::Mutex lock_;
   vixl::Redirection* redirection_;
 
 #ifdef JS_CACHE_SIMULATOR_ARM64

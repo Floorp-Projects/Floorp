@@ -80,7 +80,7 @@ class SharedBuffers final {
     // Synchronizes access to mBufferList.  Note that it's the responsibility
     // of the callers to perform the required locking, and we assert that every
     // time we access mBufferList.
-    Mutex mMutex MOZ_UNANNOTATED;
+    Mutex mMutex;
     // The list representing the queue.
     BufferList mBufferList;
   };

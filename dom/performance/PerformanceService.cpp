@@ -14,7 +14,7 @@
 namespace mozilla::dom {
 
 static StaticRefPtr<PerformanceService> gPerformanceService;
-static StaticMutex gPerformanceServiceMutex MOZ_UNANNOTATED;
+static StaticMutex gPerformanceServiceMutex;
 
 /* static */
 PerformanceService* PerformanceService::GetOrCreate() {

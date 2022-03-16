@@ -95,7 +95,7 @@ class MediaTimer {
 
   nsCOMPtr<nsIEventTarget> mThread;
   std::priority_queue<Entry> mEntries;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   nsCOMPtr<nsITimer> mTimer;
   TimeStamp mCurrentTimerTarget;
 

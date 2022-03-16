@@ -24,7 +24,7 @@ namespace js {
 namespace jit {
 
 class CacheIRSpewer {
-  Mutex outputLock_ MOZ_UNANNOTATED;
+  Mutex outputLock_;
   Fprinter output_;
   mozilla::Maybe<JSONPrinter> json_;
   static CacheIRSpewer cacheIRspewer;

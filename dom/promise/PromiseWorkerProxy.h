@@ -207,7 +207,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   const PromiseWorkerProxyStructuredCloneCallbacks* mCallbacks;
 
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
-  Mutex mCleanUpLock MOZ_UNANNOTATED;
+  Mutex mCleanUpLock;
 };
 }  // namespace dom
 }  // namespace mozilla

@@ -54,7 +54,7 @@ class WindowSurfaceWaylandMB : public WindowSurface {
                            const LayoutDeviceIntRegion& aInvalidRegion);
   void IncrementBufferAge(const MutexAutoLock& aProofOfLock);
 
-  mozilla::Mutex mSurfaceLock MOZ_UNANNOTATED;
+  mozilla::Mutex mSurfaceLock;
 
   RefPtr<nsWindow> mWindow;
   LayoutDeviceIntSize mMozContainerSize;

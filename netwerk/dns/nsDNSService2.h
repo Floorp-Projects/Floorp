@@ -106,7 +106,7 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
 
   // mLock protects access to mResolver, mLocalDomains, mIPv4OnlyDomains and
   // mFailedSVCDomainNames
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"nsDNSServer.mLock"};
+  mozilla::Mutex mLock{"nsDNSServer.mLock"};
 
   // mIPv4OnlyDomains is a comma-separated list of domains for which only
   // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on

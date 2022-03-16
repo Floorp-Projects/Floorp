@@ -63,7 +63,7 @@ class SSLTokensCache : public nsIMemoryReporter {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static mozilla::StaticRefPtr<SSLTokensCache> gInstance;
-  static StaticMutex sLock MOZ_UNANNOTATED;
+  static StaticMutex sLock;
 
   uint32_t mCacheSize{0};  // Actual cache size in bytes
 

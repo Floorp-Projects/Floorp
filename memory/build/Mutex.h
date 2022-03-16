@@ -121,4 +121,5 @@ struct MOZ_RAII AutoLock {
 };
 
 using MutexAutoLock = AutoLock<Mutex>;
+
 #endif

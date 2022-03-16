@@ -78,7 +78,7 @@ class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
   nsTArray<RemoteLazyInputStream*> mStreams;
 
   // This mutex protects mStreams because that can be touched in any thread.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   const nsID mID;
   const uint64_t mSize;

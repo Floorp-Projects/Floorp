@@ -160,7 +160,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   Atomic<bool> mInitialized{false};
   // indicates whether we are currently in the process of shutting down
   Atomic<bool> mShuttingDown{false};
-  Mutex mLock MOZ_UNANNOTATED{"nsSocketTransportService::mLock"};
+  Mutex mLock{"nsSocketTransportService::mLock"};
   // Variables in the next section protected by mLock
 
   // mThread and mDirectTaskDispatcher are only ever modified on the main

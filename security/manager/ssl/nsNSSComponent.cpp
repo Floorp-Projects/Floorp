@@ -921,7 +921,7 @@ nsresult nsNSSComponent::BlockUntilLoadableCertsLoaded() {
 }
 
 #ifndef MOZ_NO_SMART_CARDS
-static StaticMutex sCheckForSmartCardChangesMutex MOZ_UNANNOTATED;
+static StaticMutex sCheckForSmartCardChangesMutex;
 static TimeStamp sLastCheckedForSmartCardChanges = TimeStamp::Now();
 #endif
 

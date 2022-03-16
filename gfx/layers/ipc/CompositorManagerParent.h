@@ -65,7 +65,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
  private:
   static StaticRefPtr<CompositorManagerParent> sInstance;
-  static StaticMutex sMutex MOZ_UNANNOTATED;
+  static StaticMutex sMutex;
 
 #ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
   static StaticAutoPtr<nsTArray<CompositorManagerParent*>> sActiveActors;

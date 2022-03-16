@@ -118,7 +118,7 @@ class GetFilesHelper : public Runnable, public GetFilesHelperBase {
   nsTArray<RefPtr<Promise>> mPromises;
   nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // This variable is protected by mutex.
   bool mCanceled;

@@ -63,7 +63,7 @@ class SurfacePoolWayland final : public SurfacePool {
       const MutexAutoLock& aProofOfLock, gl::GLContext* aGL,
       const gfx::IntSize& aSize, GLuint aTexture, bool aNeedsDepthBuffer);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // Stores the entries for surfaces that are in use by NativeLayerWayland, i.e.
   // an entry is inside mInUseEntries between calls to ObtainSurfaceFromPool()

@@ -117,7 +117,7 @@ class AndroidSharedBlitGL final {
     return egl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   }
 
-  static StaticMutex sMutex MOZ_UNANNOTATED;
+  static StaticMutex sMutex;
   static StaticRefPtr<GLContextEGL> sContext;
   static size_t sInstanceCount;
 

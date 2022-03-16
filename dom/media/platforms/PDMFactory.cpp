@@ -148,7 +148,7 @@ class PDMInitializer final {
   }
 
   static bool sHasInitializedPDMs;
-  static StaticMutex sMonitor MOZ_UNANNOTATED;
+  static StaticMutex sMonitor;
 };
 
 bool PDMInitializer::sHasInitializedPDMs = false;

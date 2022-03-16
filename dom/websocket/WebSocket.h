@@ -178,7 +178,7 @@ class WebSocket final : public DOMEventTargetHelper {
 
   // This mutex protects mReadyState that is the only variable that is used in
   // different threads.
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 
   // This value should not be used directly but use ReadyState() instead.
   uint16_t mReadyState;

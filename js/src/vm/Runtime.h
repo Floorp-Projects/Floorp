@@ -564,7 +564,7 @@ struct JSRuntime {
    * Locking this only occurs if there is actually a thread other than the
    * main thread which could access this.
    */
-  js::Mutex scriptDataLock MOZ_UNANNOTATED;
+  js::Mutex scriptDataLock;
 #ifdef DEBUG
   bool activeThreadHasScriptDataAccess;
 #endif

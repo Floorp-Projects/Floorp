@@ -120,7 +120,7 @@ class OCSPCache {
                     /*out*/ size_t& index, const MutexAutoLock& aProofOfLock);
   void MakeMostRecentlyUsed(size_t aIndex, const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   static const size_t MaxEntries = 1024;
   // Sorted with the most-recently-used entry at the end.
   // Using 256 here reserves as much possible inline storage as the vector
