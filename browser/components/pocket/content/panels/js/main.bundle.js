@@ -1318,15 +1318,13 @@ StyleGuideOverlay.prototype = {
         url: "https://example.org",
         alt: "Alt Text"
       }, {
-        title: "Article Title",
-        publisher: "Publisher",
+        title: "Article Title (No Publisher)",
         thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
         url: "https://example.org",
         alt: "Alt Text"
       }, {
-        title: "Article Title",
+        title: "Article Title (No Thumbnail)",
         publisher: "Publisher",
-        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
         url: "https://example.org",
         alt: "Alt Text"
       }]
