@@ -737,10 +737,6 @@ optgroup:before {
   input, textarea, select, button {
     -moz-user-input: none !important;
   }
-
-  input[type=file] {
-    height: 2em;
-  }
 }
 
 progress {
