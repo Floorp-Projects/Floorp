@@ -96,7 +96,7 @@ class RefMessageBody final {
   // In case the RefMessageBody is shared and refcounted (see mCount/mMaxCount),
   // we must enforce that the reading does not happen simultaneously on
   // different threads.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   UniquePtr<ipc::StructuredCloneData> mCloneData;
 

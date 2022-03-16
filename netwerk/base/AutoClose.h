@@ -53,7 +53,7 @@ class AutoClose {
   AutoClose(const AutoClose<T>&) = delete;
 
   nsCOMPtr<T> mPtr;
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 };
 
 }  // namespace net

@@ -25,7 +25,7 @@ class GLLibraryEGL;
 // EGLImage
 
 class SharedSurface_EGLImage final : public SharedSurface {
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
   EGLSync mSync = 0;
 
  public:

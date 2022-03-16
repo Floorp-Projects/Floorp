@@ -298,7 +298,7 @@ class WebMBufferedState final {
   MOZ_COUNTED_DTOR(WebMBufferedState)
 
   // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
-  ReentrantMonitor mReentrantMonitor;
+  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.

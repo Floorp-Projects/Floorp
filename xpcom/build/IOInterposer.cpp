@@ -304,7 +304,7 @@ class MasterList {
   // unregister observers during shutdown an OffTheBooksMutex is not an option
   // either, as its base calls into sDeadlockDetector which may be nullptr
   // during shutdown.
-  mozilla::IOInterposer::Mutex mLock;
+  mozilla::IOInterposer::Mutex mLock MOZ_UNANNOTATED;
   // Flags tracking which operations are being observed
   mozilla::Atomic<mozilla::IOInterposeObserver::Operation,
                   mozilla::MemoryOrdering::Relaxed>

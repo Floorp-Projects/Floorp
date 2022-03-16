@@ -475,7 +475,7 @@ class MediaEventSourceImpl {
   }
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   nsTArray<RefPtr<Listener>> mListeners;
 };
 

@@ -998,7 +998,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
  private:
   FT_Face mFace;
   SharedFTFaceData* mData;
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
   // Remember the last owner of the lock, even after unlocking, to allow users
   // to avoid reinitializing state on the FT face if the last owner hasn't
   // changed by the next time it is locked with the same owner.
@@ -2013,7 +2013,7 @@ class GFX2D_API Factory {
 
  private:
   static FT_Library mFTLibrary;
-  static StaticMutex mFTLock;
+  static StaticMutex mFTLock MOZ_UNANNOTATED;
 
  public:
 #endif
@@ -2082,10 +2082,10 @@ class GFX2D_API Factory {
  protected:
   // This guards access to the singleton devices above, as well as the
   // singleton devices in DrawTargetD2D1.
-  static StaticMutex mDeviceLock;
+  static StaticMutex mDeviceLock MOZ_UNANNOTATED;
   // This synchronizes access between different D2D drawtargets and their
   // implied dependency graph.
-  static StaticMutex mDTDependencyLock;
+  static StaticMutex mDTDependencyLock MOZ_UNANNOTATED;
 
   friend class DrawTargetD2D1;
 #endif  // WIN32

@@ -190,7 +190,7 @@ class DMABufSurface {
 
   int mGlobalRefCountFd;
   uint32_t mUID;
-  mozilla::Mutex mSurfaceLock;
+  mozilla::Mutex mSurfaceLock MOZ_UNANNOTATED;
 
   mozilla::gfx::ColorRange mColorRange = mozilla::gfx::ColorRange::LIMITED;
 };

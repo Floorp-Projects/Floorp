@@ -65,7 +65,7 @@ class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
   nsISeekableStream* MOZ_NON_OWNING_REF mWeakSeekableInputStream;
   nsITellableStream* MOZ_NON_OWNING_REF mWeakTellableInputStream;
 
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
 
   struct WaitClosureOnly {
     WaitClosureOnly(AsyncWaitRunnable* aRunnable, nsIEventTarget* aEventTarget);

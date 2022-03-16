@@ -79,7 +79,7 @@ class InputStreamLengthWrapper final : public nsIAsyncInputStream,
   int64_t mLength;
   bool mConsumed;
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   // This is used for AsyncWait and it's protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;

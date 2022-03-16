@@ -994,7 +994,7 @@ void XPCJSRuntime::OnLargeAllocationFailure() {
 }
 
 class LargeAllocationFailureRunnable final : public Runnable {
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   CondVar mCondVar;
   bool mWaiting;
 

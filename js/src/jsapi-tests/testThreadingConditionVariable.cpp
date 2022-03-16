@@ -11,7 +11,7 @@
 #include "vm/MutexIDs.h"
 
 struct TestState {
-  js::Mutex mutex;
+  js::Mutex mutex MOZ_UNANNOTATED;
   js::ConditionVariable condition;
   bool flag;
   js::Thread testThread;

@@ -506,7 +506,7 @@ BEGIN_TEST(testScriptSourceCompression_offThread) {
   JS::SourceText<char16_t> source;
   CHECK(source.init(cx, std::move(chars), len));
 
-  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
   JS::OffThreadToken* token;
 

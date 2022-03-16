@@ -227,7 +227,7 @@ class BodyStream final : public nsIInputStreamCallback,
   // We need a mutex because JS engine can release BodyStream on a non-owning
   // thread. We must be sure that the releasing of resources doesn't trigger
   // race conditions.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // Protected by mutex.
   State mState;

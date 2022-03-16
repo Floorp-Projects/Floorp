@@ -60,7 +60,7 @@ class RuntimeService final : public nsIObserver {
     mozilla::TimeStamp mExpirationTime;
   };
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   // Protected by mMutex.
   nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap;

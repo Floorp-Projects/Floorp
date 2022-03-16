@@ -74,7 +74,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   nsTArray<NestedQueueItem> mNestedQueues;
 
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
   CondVar mEventsAvailable;
 
   bool mEventsAreDoomed = false;

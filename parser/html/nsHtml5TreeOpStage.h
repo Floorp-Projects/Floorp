@@ -54,7 +54,7 @@ class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
  private:
   nsTArray<nsHtml5TreeOperation> mOpQueue;
   nsTArray<nsHtml5SpeculativeLoad> mSpeculativeLoadQueue;
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 };
 
 #endif /* nsHtml5TreeOpStage_h */

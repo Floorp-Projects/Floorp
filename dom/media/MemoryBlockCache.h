@@ -76,7 +76,7 @@ class MemoryBlockCache : public MediaBlockCacheBase {
   const size_t mMaxBlocks;
 
   // Mutex which controls access to all members below.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   nsTArray<uint8_t> mBuffer;
   bool mHasGrown = false;

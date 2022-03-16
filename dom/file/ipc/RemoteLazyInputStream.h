@@ -115,7 +115,7 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
 
   // Any member of this class is protected by mutex because touched on
   // multiple threads.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 };
 
 }  // namespace mozilla

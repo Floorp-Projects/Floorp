@@ -330,7 +330,7 @@ struct DequeWrapperAW : DequeWrapperST {
 // Multi-thread writes allowed, make sure you don't pop unless writes can't
 // happen.
 struct DequeWrapperMW : DequeWrapperST {
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   DequeWrapperMW() : mMutex("DequeWrapperMW/MT") {}
 

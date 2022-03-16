@@ -208,7 +208,7 @@ class VRPuppetCommandBuffer {
   void SimulateHaptics(double aDeltaTime);
   void CompleteTest(bool aTimedOut);
   nsTArray<uint64_t> mBuffer;
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   VRSystemState mPendingState;
   VRSystemState mCommittedState;
   double mHapticPulseRemaining[kVRControllerMaxCount][kNumPuppetHaptics];
