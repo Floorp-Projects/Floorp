@@ -590,7 +590,7 @@ add_task(function setup() {
   OSKeyStoreTestUtils.setup();
 });
 
-registerCleanupFunction(removeAllRecords);
 registerCleanupFunction(async () => {
+  await removeAllRecords();
   await OSKeyStoreTestUtils.cleanup();
 });

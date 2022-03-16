@@ -49,6 +49,10 @@ const getCCExpMonthFormatted = () => {
   return DEFAULT_CREDITCARD_RECORD["cc-exp-month"].toString().padStart(2, "0");
 };
 
+const getCCExpYearFormatted = () => {
+  return DEFAULT_CREDITCARD_RECORD["cc-exp-year"].toString().substring(2);
+};
+
 const TESTCASES = [
   {
     description: "Address form with street-address",
@@ -1076,11 +1080,26 @@ const TESTCASES = [
     document: `<form>
                 <input autocomplete="cc-number">
                 <input autocomplete="cc-exp-month" placeholder="MM">
+                <input autocomplete="cc-exp-year">
                </form>`,
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [
       Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
         "cc-exp-month-formatted": getCCExpMonthFormatted(),
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp-year field [yy].",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp-month">
+                <input autocomplete="cc-exp-year" placeholder="YY">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-year-formatted": getCCExpYearFormatted(),
       }),
     ],
   },
