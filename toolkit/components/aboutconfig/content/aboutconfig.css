@@ -293,4 +293,14 @@ td.cell-value > form > input[type="number"] {
   tr.deleted:hover input[type="radio"]:checked:not(:hover) {
     border-color: ThreeDShadow;
   }
+
+  .button-reset,
+  .button-delete {
+    color: inherit;
+    border-color: currentColor;
+  }
+
+  input[type="text"] {
+    color: -moz-FieldText;
+  }
 }
