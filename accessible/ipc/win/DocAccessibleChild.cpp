@@ -200,22 +200,26 @@ bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID,
 bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
                                             const int32_t& aOffset,
                                             const bool& aIsSelectionCollapsed,
-                                            const bool& aIsAtEndOfLine) {
+                                            const bool& aIsAtEndOfLine,
+                                            const int32_t& aGranularity) {
   return SendCaretMoveEvent(aID, GetCaretRectFor(aID), aOffset,
-                            aIsSelectionCollapsed, aIsAtEndOfLine);
+                            aIsSelectionCollapsed, aIsAtEndOfLine,
+                            aGranularity);
 }
 
 bool DocAccessibleChild::SendCaretMoveEvent(
     const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect,
     const int32_t& aOffset, const bool& aIsSelectionCollapsed,
-    const bool& aIsAtEndOfLine) {
+    const bool& aIsAtEndOfLine, const int32_t& aGranularity) {
   if (IsConstructedInParentProcess()) {
     return PDocAccessibleChild::SendCaretMoveEvent(
-        aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine);
+        aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
+        aGranularity);
   }
 
   PushDeferredEvent(MakeUnique<SerializedCaretMove>(
-      this, aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine));
+      this, aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
+      aGranularity));
   return true;
 }
 

@@ -52,12 +52,14 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                             const bool& aEnabled);
   bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
                           const bool& aIsSelectionCollapsed,
-                          const bool& aIsAtEndOfLine);
+                          const bool& aIsAtEndOfLine,
+                          const int32_t& aGranularity);
   bool SendCaretMoveEvent(const uint64_t& aID,
                           const LayoutDeviceIntRect& aCaretRect,
                           const int32_t& aOffset,
                           const bool& aIsSelectionCollapsed,
-                          const bool& aIsAtEndOfLine);
+                          const bool& aIsAtEndOfLine,
+                          const int32_t& aGranularity);
   bool SendFocusEvent(const uint64_t& aID);
   bool SendFocusEvent(const uint64_t& aID,
                       const LayoutDeviceIntRect& aCaretRect);
@@ -175,17 +177,20 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   struct SerializedCaretMove final : public DeferredEvent {
     SerializedCaretMove(DocAccessibleChild* aTarget, uint64_t aID,
                         const LayoutDeviceIntRect& aCaretRect, int32_t aOffset,
-                        bool aIsSelectionCollapsed, bool aIsAtEndOfLine)
+                        bool aIsSelectionCollapsed, bool aIsAtEndOfLine,
+                        int32_t aGranularity)
         : DeferredEvent(aTarget),
           mID(aID),
           mCaretRect(aCaretRect),
           mOffset(aOffset),
           mIsSelectionCollapsed(aIsSelectionCollapsed),
-          mIsAtEndOfLine(aIsAtEndOfLine) {}
+          mIsAtEndOfLine(aIsAtEndOfLine),
+          mGranularity(aGranularity) {}
 
     void Dispatch(DocAccessibleChild* aIPCDoc) override {
-      Unused << aIPCDoc->SendCaretMoveEvent(
-          mID, mCaretRect, mOffset, mIsSelectionCollapsed, mIsAtEndOfLine);
+      Unused << aIPCDoc->SendCaretMoveEvent(mID, mCaretRect, mOffset,
+                                            mIsSelectionCollapsed,
+                                            mIsAtEndOfLine, mGranularity);
     }
 
     uint64_t mID;
@@ -193,6 +198,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     int32_t mOffset;
     bool mIsSelectionCollapsed;
     bool mIsAtEndOfLine;
+    int32_t mGranularity;
   };
 
   struct SerializedFocus final : public DeferredEvent {
