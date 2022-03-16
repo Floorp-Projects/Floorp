@@ -12,6 +12,7 @@ const {
   RUNTIME_PREFERENCE,
 } = require("devtools/client/aboutdebugging/src/constants");
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
+const RootResourceCommand = require("devtools/shared/commands/root-resource/root-resource-command");
 
 const PREF_TYPES = {
   BOOL: "BOOL",
@@ -84,6 +85,10 @@ class ClientWrapper {
       os: description.os,
       version: description.version,
     };
+  }
+
+  createRootResourceCommand() {
+    return new RootResourceCommand({ rootFront: this.client.mainRoot });
   }
 
   async checkVersionCompatibility() {

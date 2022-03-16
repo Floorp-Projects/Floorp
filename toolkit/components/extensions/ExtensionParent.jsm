@@ -1426,6 +1426,95 @@ const DebugUtils = {
   },
 
   /**
+   * Determine if the extension does have a non-persistent background script
+   * (either an event page or a background service worker):
+   *
+   * Based on this the DevTools client will determine if this extension should provide
+   * to the extension developers a button to forcefully terminate the background
+   * script.
+   *
+   * @param {string} addonId
+   *   The id of the addon
+   *
+   * @returns {void|boolean}
+   *   - undefined => does not apply (no background script in the manifest)
+   *   - true => the background script is persistent.
+   *   - false => the background script is an event page or a service worker.
+   */
+  hasPersistentBackgroundScript(addonId) {
+    const policy = WebExtensionPolicy.getByID(addonId);
+
+    // The addon doesn't have any background script or we
+    // can't be sure yet.
+    if (
+      policy?.extension?.type !== "extension" ||
+      !policy?.extension?.manifest?.background
+    ) {
+      return undefined;
+    }
+
+    return policy.extension.persistentBackground;
+  },
+
+  /**
+   * Determine if the extension background page is running.
+   *
+   * Based on this the DevTools client will show the status of the background
+   * script in about:debugging.
+   *
+   * @param {string} addonId
+   *   The id of the addon
+   *
+   * @returns {void|boolean}
+   *   - undefined => does not apply (no background script in the manifest)
+   *   - true => the background script is running.
+   *   - false => the background script is stopped.
+   */
+  isBackgroundScriptRunning(addonId) {
+    const policy = WebExtensionPolicy.getByID(addonId);
+
+    // The addon doesn't have any background script or we
+    // can't be sure yet.
+    if (!(this.hasPersistentBackgroundScript(addonId) === false)) {
+      return undefined;
+    }
+
+    const views = policy?.extension?.views || [];
+    for (const view of views) {
+      if (
+        view.viewType === "background" ||
+        (view.viewType === "background_worker" && !view.unloaded)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  async terminateBackgroundScript(addonId) {
+    // Terminate the background if the extension does have
+    // a non-persistent background script (event page or background
+    // service worker).
+    if (this.hasPersistentBackgroundScript(addonId) === false) {
+      const policy = WebExtensionPolicy.getByID(addonId);
+      return policy.extension.terminateBackground();
+    }
+    throw Error(`Unable to terminate background script for ${addonId}`);
+  },
+
+  watchBackgroundScriptStatusUpdates(callback) {
+    const listener = (_evtName, addonId, isRunning) => {
+      callback(addonId, isRunning);
+    };
+    apiManager.on(`devtools:background-script-status`, listener);
+
+    return () => {
+      apiManager.off(`devtools:background-script-status`, listener);
+    };
+  },
+
+  /**
    * Retrieve a XUL browser element which has been configured to be able to connect
    * the devtools actor with the process where the extension is running.
    *

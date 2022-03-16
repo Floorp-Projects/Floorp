@@ -289,6 +289,10 @@ class RootResourceCommand {
     // but no resource will be notified.
     if (this.rootFront.traits.resources?.[resourceType]) {
       await this.rootFront.watchResources([resourceType]);
+    } else {
+      console.warn(
+        `Ignored watchRequest, resourceType "${resourceType}" not found in rootFront.traits.resources`
+      );
     }
     this._processingExistingResources.delete(resourceType);
   }
@@ -323,7 +327,9 @@ class RootResourceCommand {
   }
 }
 
-RootResourceCommand.TYPES = RootResourceCommand.prototype.TYPES = {};
+RootResourceCommand.TYPES = RootResourceCommand.prototype.TYPES = {
+  EXTENSIONS_BGSCRIPT_STATUS: "extensions-backgroundscript-status",
+};
 RootResourceCommand.ALL_TYPES = RootResourceCommand.prototype.ALL_TYPES = Object.values(
   RootResourceCommand.TYPES
 );

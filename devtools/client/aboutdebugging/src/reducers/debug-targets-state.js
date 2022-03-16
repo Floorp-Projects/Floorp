@@ -5,12 +5,15 @@
 "use strict";
 
 const {
+  EXTENSION_BGSCRIPT_STATUS_UPDATED,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_PROCESSES_SUCCESS,
   REQUEST_TABS_SUCCESS,
   REQUEST_WORKERS_SUCCESS,
   TEMPORARY_EXTENSION_RELOAD_FAILURE,
   TEMPORARY_EXTENSION_RELOAD_START,
+  TERMINATE_EXTENSION_BGSCRIPT_FAILURE,
+  TERMINATE_EXTENSION_BGSCRIPT_START,
   UNWATCH_RUNTIME_SUCCESS,
 } = require("devtools/client/aboutdebugging/src/constants");
 
@@ -26,14 +29,31 @@ function DebugTargetsState() {
   };
 }
 
-function updateTemporaryExtension(state, id, updatedDetails) {
-  return state.temporaryExtensions.map(extension => {
+function updateExtensionDetails(extensions, id, updatedDetails) {
+  // extensions is meant to be either state.installExtensions or state.temporaryExtensions.
+  return extensions.map(extension => {
     if (extension.id === id) {
       extension = Object.assign({}, extension);
+
       extension.details = Object.assign({}, extension.details, updatedDetails);
     }
     return extension;
   });
+}
+
+function updateTemporaryExtension(state, id, updatedDetails) {
+  return updateExtensionDetails(state.temporaryExtensions, id, updatedDetails);
+}
+
+function updateInstalledExtension(state, id, updatedDetails) {
+  return updateExtensionDetails(state.installedExtensions, id, updatedDetails);
+}
+
+function updateExtension(state, id, updatedDetails) {
+  return {
+    installedExtensions: updateInstalledExtension(state, id, updatedDetails),
+    temporaryExtensions: updateTemporaryExtension(state, id, updatedDetails),
+  };
 }
 
 function debugTargetsReducer(state = DebugTargetsState(), action) {
@@ -77,6 +97,51 @@ function debugTargetsReducer(state = DebugTargetsState(), action) {
         reloadError: null,
       });
       return Object.assign({}, state, { temporaryExtensions });
+    }
+    case TERMINATE_EXTENSION_BGSCRIPT_START: {
+      const { id } = action;
+      const { installedExtensions, temporaryExtensions } = updateExtension(
+        state,
+        id,
+        {
+          // Clear the last error if one was still set.
+          lastTerminateBackgroundScriptError: null,
+        }
+      );
+      return Object.assign({}, state, {
+        installedExtensions,
+        temporaryExtensions,
+      });
+    }
+    case TERMINATE_EXTENSION_BGSCRIPT_FAILURE: {
+      const { id, error } = action;
+      const { installedExtensions, temporaryExtensions } = updateExtension(
+        state,
+        id,
+        {
+          lastTerminateBackgroundScriptError: error.message,
+        }
+      );
+      return Object.assign({}, state, {
+        installedExtensions,
+        temporaryExtensions,
+      });
+    }
+    case EXTENSION_BGSCRIPT_STATUS_UPDATED: {
+      const { id, backgroundScriptStatus } = action;
+      const { installedExtensions, temporaryExtensions } = updateExtension(
+        state,
+        id,
+        {
+          backgroundScriptStatus,
+          // Clear the last error if one was still set.
+          lastTerminateBackgroundScriptError: null,
+        }
+      );
+      return Object.assign({}, state, {
+        installedExtensions,
+        temporaryExtensions,
+      });
     }
 
     default:

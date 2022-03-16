@@ -3655,12 +3655,12 @@
 # interfaces from the global until later.
 - name: dom.streams.readable_stream_default_controller.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.streams.readable_stream_default_reader.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.streams.byte_streams.enabled

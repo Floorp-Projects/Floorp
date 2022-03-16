@@ -46,6 +46,9 @@ const {
   TEMPORARY_EXTENSION_RELOAD_FAILURE,
   TEMPORARY_EXTENSION_RELOAD_START,
   TEMPORARY_EXTENSION_RELOAD_SUCCESS,
+  TERMINATE_EXTENSION_BGSCRIPT_FAILURE,
+  TERMINATE_EXTENSION_BGSCRIPT_SUCCESS,
+  TERMINATE_EXTENSION_BGSCRIPT_START,
   RUNTIMES,
 } = require("devtools/client/aboutdebugging/src/constants");
 
@@ -155,6 +158,22 @@ function removeTemporaryExtension(id) {
       await uninstallAddon(id);
     } catch (e) {
       console.error(e);
+    }
+  };
+}
+
+function terminateExtensionBackgroundScript(id) {
+  return async ({ dispatch, getState }) => {
+    dispatch({ type: TERMINATE_EXTENSION_BGSCRIPT_START, id });
+    const clientWrapper = getCurrentClient(getState().runtimes);
+
+    try {
+      const addonTargetFront = await clientWrapper.getAddon({ id });
+      await addonTargetFront.terminateBackgroundScript();
+      dispatch({ type: TERMINATE_EXTENSION_BGSCRIPT_SUCCESS, id });
+    } catch (e) {
+      const error = typeof e === "string" ? new Error(e) : e;
+      dispatch({ type: TERMINATE_EXTENSION_BGSCRIPT_FAILURE, id, error });
     }
   };
 }
@@ -311,5 +330,6 @@ module.exports = {
   requestProcesses,
   requestWorkers,
   startServiceWorker,
+  terminateExtensionBackgroundScript,
   unregisterServiceWorker,
 };
