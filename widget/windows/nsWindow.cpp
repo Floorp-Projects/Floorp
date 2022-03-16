@@ -4076,9 +4076,6 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     mLocalesChangedObserver = new LocalesChangedObserver(this);
   }
 
-  RECT windowRect;
-  ::GetClientRect(mWnd, &windowRect);
-
   // Try OMTC first.
   if (!mWindowRenderer && ShouldUseOffMainThreadCompositing()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
