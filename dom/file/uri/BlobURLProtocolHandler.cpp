@@ -87,7 +87,7 @@ struct DataInfo {
 
 // The mutex is locked whenever gDataTable is changed, or if gDataTable
 // is accessed off-main-thread.
-static StaticMutex sMutex;
+static StaticMutex sMutex MOZ_UNANNOTATED;
 
 // All changes to gDataTable must happen on the main thread, while locking
 // sMutex. Reading from gDataTable on the main thread may happen without

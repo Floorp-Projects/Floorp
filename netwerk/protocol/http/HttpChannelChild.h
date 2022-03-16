@@ -274,7 +274,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsCOMPtr<nsIInputStream> mAltDataInputStream;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
-  Mutex mBgChildMutex{"HttpChannelChild::BgChildMutex"};
+  Mutex mBgChildMutex MOZ_UNANNOTATED{"HttpChannelChild::BgChildMutex"};
 
   // Associated HTTP background channel
   RefPtr<HttpBackgroundChannelChild> mBgChild;
@@ -289,7 +289,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Target thread for delivering ODA.
   nsCOMPtr<nsIEventTarget> mODATarget;
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
-  Mutex mEventTargetMutex{"HttpChannelChild::EventTargetMutex"};
+  Mutex mEventTargetMutex MOZ_UNANNOTATED{"HttpChannelChild::EventTargetMutex"};
 
   TimeStamp mLastStatusReported;
 

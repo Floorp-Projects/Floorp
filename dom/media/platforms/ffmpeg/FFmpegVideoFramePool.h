@@ -131,7 +131,7 @@ class VideoFramePool final {
 
  private:
   // Protect mDMABufSurfaces pool access
-  Mutex mSurfaceLock;
+  Mutex mSurfaceLock MOZ_UNANNOTATED;
   nsTArray<RefPtr<VideoFrameSurfaceVAAPI>> mDMABufSurfaces;
   // We may fail to create texture over DMABuf memory due to driver bugs so
   // check that before we export first DMABuf video frame.

@@ -131,7 +131,7 @@ struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
 
   // The declarations of these statics live in nsThreadManager.cpp.
   static AutoNestedEventLoopAnnotation* sCurrent;
-  static StaticMutex sStackMutex;
+  static StaticMutex sStackMutex MOZ_UNANNOTATED;
 
   // We need this to avoid the inclusion of nsExceptionHandler.h here
   // which can include windows.h which disturbs some dom/media/gtest.

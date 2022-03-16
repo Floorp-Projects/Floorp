@@ -211,7 +211,7 @@ class GeckoMediaPluginServiceParent final
 
   // Synchronization for barrier that ensures we've loaded GMPs from
   // MOZ_GMP_PATH before allowing GetContentParentFrom() to proceed.
-  Monitor mInitPromiseMonitor;
+  Monitor mInitPromiseMonitor MOZ_UNANNOTATED;
   MozMonitoredPromiseHolder<GenericPromise> mInitPromise;
   bool mLoadPluginsFromDiskComplete;
 

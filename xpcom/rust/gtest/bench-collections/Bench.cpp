@@ -272,7 +272,7 @@ class BenchCollections : public ::testing::Test {
 
   // A mutex that protects all benchmark operations, ensuring that two
   // benchmarks never run concurrently.
-  static StaticMutex sValsMutex;
+  static StaticMutex sValsMutex MOZ_UNANNOTATED;
 };
 
 void** BenchCollections::sVals;

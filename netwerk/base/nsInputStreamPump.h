@@ -120,7 +120,7 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   bool mOffMainThread;
   // If true, OnStateStop() is executed off main thread. Set at creation.
   // Protects state/member var accesses across multiple threads.
-  mozilla::RecursiveMutex mMutex{"nsInputStreamPump"};
+  mozilla::RecursiveMutex mMutex MOZ_UNANNOTATED{"nsInputStreamPump"};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsInputStreamPump, NS_INPUT_STREAM_PUMP_IID)

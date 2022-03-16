@@ -236,7 +236,7 @@ class NowSingleton {
     // to use StaticMutex (which is not leak-checked), but StaticMutex can't
     // be a member variable.  So we have to have this separate variable and
     // pass it into the NowSingleton constructor.
-    static mozilla::StaticMutex mutex;
+    static mozilla::StaticMutex mutex MOZ_UNANNOTATED;
     static NowSingleton now(mutex);
     return now;
   }

@@ -64,7 +64,7 @@ class AtExitManager {
     void* param_;
   };
 
-  mozilla::Mutex lock_;
+  mozilla::Mutex lock_ MOZ_UNANNOTATED;
   std::stack<CallbackAndParam> stack_;
   AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
 

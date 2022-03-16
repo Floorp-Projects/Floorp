@@ -188,7 +188,7 @@ class ThreadTrampoline {
   mozilla::Tuple<std::decay_t<Args>...> args;
 
   // Protect the thread id during creation.
-  Mutex createMutex;
+  Mutex createMutex MOZ_UNANNOTATED;
 
   // Thread can access createMutex.
   friend class js::Thread;

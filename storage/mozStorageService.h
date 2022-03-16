@@ -116,7 +116,7 @@ class Service : public mozIStorageService,
    * can ensure that the state of sqlite3_enable_shared_cache is sane and 2)
    * synchronizing access to mLocaleCollation.
    */
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   struct AutoVFSRegistration {
     int Init(UniquePtr<sqlite3_vfs> aVFS);
@@ -136,7 +136,7 @@ class Service : public mozIStorageService,
   /**
    * Protects mConnections.
    */
-  Mutex mRegistrationMutex;
+  Mutex mRegistrationMutex MOZ_UNANNOTATED;
 
   /**
    * The list of connections we have created.  Modifications to it are

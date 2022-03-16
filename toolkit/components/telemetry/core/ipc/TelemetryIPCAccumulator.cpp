@@ -72,7 +72,7 @@ StaticAutoPtr<nsTArray<ChildEventData>> gChildEvents;
 // a normal Mutex would show up as a leak in BloatView.  StaticMutex
 // also has the "OffTheBooks" property, so it won't show as a leak
 // in BloatView.
-static StaticMutex gTelemetryIPCAccumulatorMutex;
+static StaticMutex gTelemetryIPCAccumulatorMutex MOZ_UNANNOTATED;
 
 namespace {
 

@@ -62,7 +62,7 @@ class OffscreenCanvasDisplayHelper final {
                         gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize,
                         bool aNeedsPremult, gl::OriginPos aOriginPos) const;
 
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
   HTMLCanvasElement* MOZ_NON_OWNING_REF mCanvasElement;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<gfx::SourceSurface> mFrontBufferSurface;

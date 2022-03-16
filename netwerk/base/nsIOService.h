@@ -232,7 +232,7 @@ class nsIOService final : public nsIIOService,
   nsCategoryCache<nsIChannelEventSink> mChannelEventSinks{
       NS_CHANNEL_EVENT_SINK_CATEGORY};
 
-  Mutex mMutex{"nsIOService::mMutex"};
+  Mutex mMutex MOZ_UNANNOTATED{"nsIOService::mMutex"};
   nsTArray<int32_t> mRestrictedPortList;
 
   uint32_t mTotalRequests{0};

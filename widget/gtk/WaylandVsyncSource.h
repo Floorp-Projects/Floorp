@@ -73,7 +73,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
                           TimeStamp aVsyncTimestamp);
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   bool mIsShutdown;
   bool mVsyncEnabled;
   bool mMonitorEnabled;

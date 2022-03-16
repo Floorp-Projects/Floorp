@@ -1596,7 +1596,7 @@ class BufferWriter final : public nsIInputStreamCallback {
 
   // All the members of this class are touched on the owning thread only. The
   // monitor is only used to communicate when there is more data to read.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIAsyncInputStream> mAsyncInputStream;

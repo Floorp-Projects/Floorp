@@ -82,7 +82,7 @@ class SeekableStreamWrapper final : public nsIAsyncInputStream,
   nsCOMPtr<nsICloneableInputStream> mOriginal;
 
   // This mutex guards `mCurrent`.
-  Mutex mMutex{"SeekableStreamWrapper"};
+  Mutex mMutex MOZ_UNANNOTATED{"SeekableStreamWrapper"};
   nsCOMPtr<nsIInputStream> mCurrent;
 };
 

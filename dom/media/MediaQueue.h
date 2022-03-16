@@ -179,7 +179,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
     }
   }
 
-  mutable RecursiveMutex mRecursiveMutex;
+  mutable RecursiveMutex mRecursiveMutex MOZ_UNANNOTATED;
   MediaEventProducer<RefPtr<T>> mPopFrontEvent;
   MediaEventProducer<RefPtr<T>> mPushEvent;
   MediaEventProducer<void> mFinishEvent;

@@ -131,7 +131,7 @@ class LazyIdleThread final : public nsIThread,
   /**
    * Protects data that is accessed on both threads.
    */
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   /**
    * Touched on both threads but set before mThread is created. Used to direct

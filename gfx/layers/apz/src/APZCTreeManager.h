@@ -774,7 +774,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * mRootNode instance variable, as that is considered part of the APZC tree
    * management state.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
-  mutable mozilla::RecursiveMutex mTreeLock;
+  mutable mozilla::RecursiveMutex mTreeLock MOZ_UNANNOTATED;
   RefPtr<HitTestingTreeNode> mRootNode;
 
   /*
@@ -796,7 +796,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo,
    * mFixedPositionInfo, and mStickyPositionInfo.
    */
-  mutable mozilla::Mutex mMapLock;
+  mutable mozilla::Mutex mMapLock MOZ_UNANNOTATED;
 
   /**
    * Helper structure to store a bunch of things in mApzcMap so that they can
@@ -1003,7 +1003,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   // protected by the mTestDataLock.
   std::unordered_map<LayersId, UniquePtr<APZTestData>, LayersId::HashFn>
       mTestData;
-  mutable mozilla::Mutex mTestDataLock;
+  mutable mozilla::Mutex mTestDataLock MOZ_UNANNOTATED;
 
   // This must only be touched on the controller thread.
   float mDPI;
@@ -1015,7 +1015,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   // the generation is bumped up on the sampler theread which is per
   // APZCTreeManager.
   ScrollGenerationCounter mScrollGenerationCounter;
-  mozilla::Mutex mScrollGenerationLock;
+  mozilla::Mutex mScrollGenerationLock MOZ_UNANNOTATED;
 
 #if defined(MOZ_WIDGET_ANDROID)
  private:

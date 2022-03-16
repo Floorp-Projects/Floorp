@@ -59,7 +59,7 @@ class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
 
   nsCOMPtr<nsISupports> mCopierCtx;
 
-  mozilla::Mutex mLock{"nsAsyncStreamCopier.mLock"};
+  mozilla::Mutex mLock MOZ_UNANNOTATED{"nsAsyncStreamCopier.mLock"};
 
   nsAsyncCopyMode mMode{NS_ASYNCCOPY_VIA_READSEGMENTS};
   uint32_t mChunkSize;

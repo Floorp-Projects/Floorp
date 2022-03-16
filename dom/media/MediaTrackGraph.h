@@ -733,7 +733,7 @@ class SourceMediaTrack : public MediaTrack {
 
   // This must be acquired *before* MediaTrackGraphImpl's lock, if they are
   // held together.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   // protected by mMutex
   float mVolume = 1.0;
   UniquePtr<TrackData> mUpdateTrack;

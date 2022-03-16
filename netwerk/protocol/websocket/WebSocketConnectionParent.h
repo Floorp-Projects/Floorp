@@ -59,7 +59,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
   nsCOMPtr<nsISupports> mSecurityInfo;
   Atomic<bool> mClosed{false};
-  Mutex mMutex{"WebSocketConnectionParent::mMutex"};
+  Mutex mMutex MOZ_UNANNOTATED{"WebSocketConnectionParent::mMutex"};
 };
 
 }  // namespace net

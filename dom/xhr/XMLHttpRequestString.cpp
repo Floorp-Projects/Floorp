@@ -82,7 +82,7 @@ class XMLHttpRequestStringBuffer final {
 
   nsString& UnsafeData() { return mData; }
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // The following member variable is protected by mutex.
   nsString mData;
