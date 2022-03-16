@@ -569,8 +569,8 @@ void nsCaret::PaintCaret(DrawTarget& aDrawTarget, nsIFrame* aForFrame,
 }
 
 NS_IMETHODIMP
-nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel,
-                                int16_t aReason) {
+nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel, int16_t aReason,
+                                int32_t aAmount) {
   // Note that aDomSel, per the comment below may not be the same as our
   // selection, but that's OK since if that is the case, it wouldn't have
   // mattered what IsVisible() returns here, so we just opt for checking

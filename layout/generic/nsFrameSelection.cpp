@@ -729,6 +729,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     SetChangeReasons(nsISelectionListener::KEYPRESS_REASON);
   }
 
+  mCaretMoveAmount = aAmount;
+
   AutoPrepareFocusRange prep(sel, false);
 
   // we must keep this around and revalidate it when its just UP/DOWN
@@ -2170,6 +2172,7 @@ void nsFrameSelection::EndBatchChanges(const char* aRequesterFuncName,
 
   if (mBatching.mCounter == 0 && mBatching.mChangesDuringBatching) {
     AddChangeReasons(aReasons);
+    mCaretMoveAmount = eSelectNoAmount;
     mBatching.mChangesDuringBatching = false;
     // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
@@ -2182,6 +2185,7 @@ nsresult nsFrameSelection::NotifySelectionListeners(
   if (index >= 0 && mDomSelections[index]) {
     RefPtr<Selection> selection = mDomSelections[index];
     selection->NotifySelectionListeners();
+    mCaretMoveAmount = eSelectNoAmount;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
