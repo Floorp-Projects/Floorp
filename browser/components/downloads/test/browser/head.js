@@ -235,6 +235,7 @@ async function task_addDownloads(aItems) {
       canceled:
         item.state == DownloadsCommon.DOWNLOAD_CANCELED ||
         item.state == DownloadsCommon.DOWNLOAD_PAUSED,
+      deleted: item.deleted ?? false,
       error:
         item.state == DownloadsCommon.DOWNLOAD_FAILED
           ? new Error("Failed.")

@@ -114,6 +114,13 @@ add_task(async function test_download_deleteFile() {
     "There should be a download in the list"
   );
 
+  ok(
+    !DownloadsView.richListBox.selectedItem._shell.isCommandEnabled(
+      "downloadsCmd_deleteFile"
+    ),
+    "Delete file command should be disabled"
+  );
+
   DownloadsPanel.hidePanel();
   await hiddenPromise;
 });

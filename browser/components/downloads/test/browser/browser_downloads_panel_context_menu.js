@@ -282,22 +282,22 @@ const TestCasesNewMimetypesPrefEnabled = [
 
 const TestCasesDeletedFile = [
   {
-    name: "Deleted PDF download with improvements pref enabled",
+    name: "Download with file deleted and improvements pref enabled",
     prefEnabled: true,
-    deleted: true,
     downloads: [
       {
         state: DownloadsCommon.DOWNLOAD_FINISHED,
-        contentType: "application/pdf",
+        contentType: "text/plain",
         target: {},
         source: {
           referrerInfo: exampleRefInfo,
         },
+        deleted: true,
       },
     ],
     expected: {
       menu: [
-        MENU_ITEMS.alwaysOpenInSystemViewer,
+        MENU_ITEMS.alwaysOpenSimilarFiles,
         MENU_ITEMS.openReferrer,
         MENU_ITEMS.copyLocation,
         MENU_ITEMS.separator,
@@ -338,6 +338,12 @@ add_task(async function test_setUp() {
   info(
     "Created downloaded unknownExtension file at:" +
       TestFiles.unknownExtension.path
+  );
+  TestFiles.nonexistentFile = new FileUtils.File(
+    PathUtils.join(gDownloadDir, "nonexistent")
+  );
+  info(
+    "Created nonexistent downloaded file at:" + TestFiles.nonexistentFile.path
   );
 });
 
@@ -409,7 +415,6 @@ async function testDownloadContextMenu({
   downloads = [],
   expected,
   prefEnabled,
-  deleted,
 }) {
   info(
     `Setting browser.download.improvements_to_download_panel to ${prefEnabled}`
@@ -421,19 +426,9 @@ async function testDownloadContextMenu({
   // prepare downloads
   await prepareDownloads(downloads, overrideExtension);
   let downloadList = await Downloads.getList(Downloads.PUBLIC);
-  let all = await downloadList.getAll();
-  for (let dl of all) {
-    info("Download succeeded? " + dl.succeeded);
-    if (deleted) {
-      let { path } = dl.target;
-      await IOUtils.setPermissions(path, 0o660);
-      await IOUtils.remove(path, { ignoreAbsent: true });
-      await dl.removePartialData();
-      await dl.refresh();
-      await dl.finalize();
-    }
-    info("Download target exists? " + dl.target.exists);
-  }
+  let [firstDownload] = await downloadList.getAll();
+  info("Download succeeded? " + firstDownload.succeeded);
+  info("Download target exists? " + firstDownload.target.exists);
 
   // open panel
   await task_openPanel();
@@ -508,6 +503,10 @@ async function prepareDownloads(downloads, overrideExtension = null) {
   for (let props of downloads) {
     info(JSON.stringify(props));
     if (props.state !== DownloadsCommon.DOWNLOAD_FINISHED) {
+      continue;
+    }
+    if (props.deleted) {
+      props.target = TestFiles.nonexistentFile;
       continue;
     }
     switch (props.contentType) {
