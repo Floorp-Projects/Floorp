@@ -163,7 +163,8 @@
 }
 
 :focus-visible {
-  outline: 1px auto;
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 /* Inert subtrees */
