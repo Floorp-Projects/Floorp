@@ -360,8 +360,6 @@ var DownloadsCommon = {
    *        2 - Remove the download from both session list and history.
    */
   async deleteDownloadFiles(download, clearHistory = 0) {
-    let { succeeded } = download;
-    let { path } = download.target;
     if (clearHistory > 1) {
       try {
         await PlacesUtils.history.remove(download.source.url);
@@ -373,18 +371,10 @@ var DownloadsCommon = {
       let list = await Downloads.getList(Downloads.ALL);
       await list.remove(download);
     }
-    if (succeeded) {
-      // Temp files are made "read-only" by DownloadIntegration.downloadDone, so
-      // reset the permission bits to read/write. This won't be necessary after
-      // bug 1733587 since Downloads won't ever be temporary.
-      await IOUtils.setPermissions(path, 0o660);
-      await IOUtils.remove(path, { ignoreAbsent: true });
+    await download.manuallyRemoveData();
+    if (clearHistory < 2) {
+      DownloadHistory.updateMetaData(download).catch(Cu.reportError);
     }
-    // For clearHistory of 0 or 1, we need to remove part data before refresh.
-    // So we'll do it in this order rather than download.finalize(true)
-    await download.removePartialData();
-    await download.refresh();
-    await download.finalize();
   },
 
   /**
