@@ -51,12 +51,6 @@ class CustomTabRobot {
         onView(withText("Powered by $appName")).check(matches(isDisplayed()))
     }
 
-    fun clickOpenInFocusButton() {
-        openInFocusButton
-            .check(matches(isDisplayed()))
-            .perform(click())
-    }
-
     fun closeCustomTab() {
         closeCustomTabButton
             .check(matches(isDisplayed()))
@@ -75,7 +69,16 @@ class CustomTabRobot {
         }
     }
 
-    class Transition
+    class Transition {
+        fun clickOpenInFocusButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            openInFocusButton
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+    }
 }
 
 fun customTab(interact: CustomTabRobot.() -> Unit): CustomTabRobot.Transition {

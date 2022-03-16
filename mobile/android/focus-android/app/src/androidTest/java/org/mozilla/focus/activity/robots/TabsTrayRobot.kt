@@ -16,14 +16,17 @@ import org.hamcrest.Matchers.allOf
 import org.mozilla.focus.R
 
 class TabsTrayRobot {
-    fun verifyTabsOrder(vararg tabTitle: String) {
+    fun verifyTabsOrderAndCorespondingCloseButton(vararg tabTitle: String) {
         for (tab in tabTitle.indices) {
             onView(withId(R.id.sessions)).check(
                 matches(
                     hasDescendant(
                         allOf(
                             hasDescendant(
-                                withText(tabTitle[tab])
+                                allOf(
+                                    withText(tabTitle[tab]),
+                                    hasSibling(withId(R.id.close_button))
+                                )
                             ),
                             withParentIndex(tab)
                         )

@@ -3,11 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.helpers
 
+import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.net.Uri
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.KeyEvent
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -25,7 +33,9 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
+import org.mozilla.focus.utils.IntentUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -382,5 +392,33 @@ object TestHelper {
             .edit()
             .putBoolean("use-gecko", isKlarBuild)
             .commit()
+    }
+
+    @Suppress("Deprecation")
+    fun createCustomTabIntent(
+        pageUrl: String,
+        customMenuItemLabel: String = "",
+        customActionButtonDescription: String = ""
+    ): Intent {
+        val appContext = InstrumentationRegistry.getInstrumentation()
+            .targetContext
+            .applicationContext
+        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), IntentUtils.defaultIntentPendingFlags)
+        val customTabsIntent = CustomTabsIntent.Builder()
+            .addMenuItem(customMenuItemLabel, pendingIntent)
+            .addDefaultShareMenuItem()
+            .setActionButton(createTestBitmap(), customActionButtonDescription, pendingIntent, true)
+            .setToolbarColor(Color.MAGENTA)
+            .build()
+        customTabsIntent.intent.data = Uri.parse(pageUrl)
+        customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
+        return customTabsIntent.intent
+    }
+
+    private fun createTestBitmap(): Bitmap {
+        val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.GREEN)
+        return bitmap
     }
 }

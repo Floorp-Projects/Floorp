@@ -6,18 +6,9 @@
 
 package org.mozilla.focus.activity
 
-import android.app.PendingIntent
-import android.content.ComponentName
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.launchActivity
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -32,11 +23,11 @@ import org.mozilla.focus.activity.robots.customTab
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
+import org.mozilla.focus.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
-import org.mozilla.focus.utils.IntentUtils
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -120,7 +111,7 @@ class CustomTabTest {
             progressBar.waitUntilGone(waitingTime)
             verifyPageURL(customTabPage)
             openCustomTabMenu()
-            clickOpenInFocusButton()
+        }.clickOpenInFocusButton() {
         }
 
         browserScreen {
@@ -128,29 +119,5 @@ class CustomTabTest {
             mDevice.pressBack()
             verifyPageURL(browserPage)
         }
-    }
-
-    @Suppress("Deprecation")
-    private fun createCustomTabIntent(pageUrl: String): Intent {
-        val appContext = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .applicationContext
-        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), IntentUtils.defaultIntentPendingFlags)
-        val customTabsIntent = CustomTabsIntent.Builder()
-            .addMenuItem(MENU_ITEM_LABEL, pendingIntent)
-            .addDefaultShareMenuItem()
-            .setActionButton(createTestBitmap(), ACTION_BUTTON_DESCRIPTION, pendingIntent, true)
-            .setToolbarColor(Color.MAGENTA)
-            .build()
-        customTabsIntent.intent.data = Uri.parse(pageUrl)
-        customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
-        return customTabsIntent.intent
-    }
-
-    private fun createTestBitmap(): Bitmap {
-        val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.GREEN)
-        return bitmap
     }
 }
