@@ -42,7 +42,7 @@ struct OffThreadTask {
     self->markDone(token);
   }
 
-  js::Monitor monitor MOZ_UNANNOTATED;
+  js::Monitor monitor;
   OffThreadToken* token;
 };
 

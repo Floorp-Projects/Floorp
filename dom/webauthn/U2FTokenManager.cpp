@@ -141,7 +141,7 @@ class U2FPrefManager final : public nsIObserver {
         Preferences::GetBool(PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
   }
 
-  Mutex mPrefMutex MOZ_UNANNOTATED;
+  Mutex mPrefMutex;
   bool mSoftTokenEnabled;
   int mSoftTokenCounter;
   bool mUsbTokenEnabled;

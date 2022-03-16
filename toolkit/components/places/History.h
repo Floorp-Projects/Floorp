@@ -177,12 +177,12 @@ class History final : public BaseHistory,
   bool mShuttingDown;
   // This mutex guards mShuttingDown and should be acquired on the helper
   // thread.
-  Mutex mShuttingDownMutex MOZ_UNANNOTATED;
+  Mutex mShuttingDownMutex;
   // Code running in the helper thread can acquire this mutex to block shutdown
   // from proceeding until done, otherwise it may be impossible to get
   // statements to execute and an insert operation could be interrupted in the
   // middle.
-  Mutex mBlockShutdownMutex MOZ_UNANNOTATED;
+  Mutex mBlockShutdownMutex;
 
   // Allow private access from the helper thread to acquire mutexes.
   friend class InsertVisitedURIs;

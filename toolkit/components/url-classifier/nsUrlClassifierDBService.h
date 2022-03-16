@@ -251,7 +251,7 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
 
   // Pending lookups are stored in a queue for processing.  The queue
   // is protected by mPendingLookupLock.
-  mozilla::Mutex mPendingLookupLock MOZ_UNANNOTATED;
+  mozilla::Mutex mPendingLookupLock;
 
   class PendingLookup {
    public:

@@ -170,7 +170,7 @@ class nsIDNService final : public nsIIDNService,
   // These members can only be updated on the main thread and
   // read on any thread. Therefore, acquiring the mutex is required
   // only for threads other than the main thread.
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"IDNService"};
+  mozilla::Mutex mLock{"IDNService"};
 
   // guarded by mLock
   nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist;

@@ -148,7 +148,7 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   static Atomic<HangMonitorChild*, SequentiallyConsistent> sInstance;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   // Main thread-only.
   bool mSentReport;
@@ -282,7 +282,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
 
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   // Must be accessed with mMonitor held.
   RefPtr<HangMonitoredProcess> mProcess;
@@ -290,7 +290,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   // Map from plugin ID to crash dump ID. Protected by
   // mBrowserCrashDumpHashLock.
   nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
-  Mutex mBrowserCrashDumpHashLock MOZ_UNANNOTATED;
+  Mutex mBrowserCrashDumpHashLock;
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory;
 };
 

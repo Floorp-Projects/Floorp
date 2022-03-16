@@ -278,7 +278,7 @@ class imgRequest final : public nsIStreamListener,
   bool mIsDeniedCrossSiteCORSRequest;
   bool mIsCrossSiteNoCORSRequest;
 
-  mutable mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mutable mozilla::Mutex mMutex;
 
   // Member variables protected by mMutex. Note that *all* flags in our bitfield
   // are protected by mMutex; if you're adding a new flag that isn'protected, it

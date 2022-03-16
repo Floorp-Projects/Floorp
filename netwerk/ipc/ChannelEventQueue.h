@@ -190,10 +190,10 @@ class ChannelEventQueue final {
   nsISupports* mOwner;
 
   // For atomic mEventQueue operation and state update
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // To guarantee event execution order among threads
-  RecursiveMutex mRunningMutex MOZ_UNANNOTATED;
+  RecursiveMutex mRunningMutex;
 
   friend class AutoEventEnqueuer;
 };

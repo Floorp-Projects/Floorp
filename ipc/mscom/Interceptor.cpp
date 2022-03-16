@@ -64,7 +64,7 @@ class LiveSet final {
   }
 
  private:
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   nsRefPtrHashtable<nsPtrHashKey<IUnknown>, IWeakReference> mLiveSet;
 };
 

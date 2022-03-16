@@ -32,7 +32,7 @@ namespace mozilla {
 
 // -
 
-static StaticMutex sContextSetLock MOZ_UNANNOTATED;
+static StaticMutex sContextSetLock;
 
 static std::unordered_set<HostWebGLContext*>& DeferredStaticContextSet() {
   static std::unordered_set<HostWebGLContext*> sContextSet;

@@ -66,7 +66,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
   // the main thread while the ::LowMemoryCallback() method is called by an
   // external thread. All functions called from those must acquire a lock on
   // this mutex before accessing the object's fields to prevent races.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   nsCOMPtr<nsITimer> mTimer;
   nsAutoHandle mLowMemoryHandle;
   HANDLE mWaitHandle;

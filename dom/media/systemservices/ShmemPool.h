@@ -169,7 +169,7 @@ class ShmemPool final {
                                         &aRes.mShmem));
   }
   const PoolType mPoolType;
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   size_t mPoolFree;
   bool mErrorLogged;
 #ifdef DEBUG

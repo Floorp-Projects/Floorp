@@ -58,7 +58,7 @@ class ODoHService : public nsIDNSListener,
   nsresult UpdateODoHConfigFromHTTPSRR();
   nsresult UpdateODoHConfigFromURI();
 
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
+  mozilla::Mutex mLock;
   Atomic<bool, Relaxed> mQueryODoHConfigInProgress;
   nsCString mODoHProxyURI;
   nsCString mODoHTargetHost;

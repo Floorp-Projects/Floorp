@@ -152,7 +152,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   // mMutex protects certain members on 3 threads:
   // MediaManager, Cameras IPC and MediaTrackGraph.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // Current state of this source.
   // Set under mMutex on the owning thread. Accessed under one of the two.

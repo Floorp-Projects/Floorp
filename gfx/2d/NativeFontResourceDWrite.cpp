@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace gfx {
 
-static StaticMutex sFontFileStreamsMutex MOZ_UNANNOTATED;
+static StaticMutex sFontFileStreamsMutex;
 static uint64_t sNextFontFileKey = 0;
 static std::unordered_map<uint64_t, IDWriteFontFileStream*> sFontFileStreams;
 

@@ -68,7 +68,7 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   void calculateNetworkId(void);
   bool findMac(char* gateway);
 
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   nsCString mNetworkId;
   nsTArray<nsCString> mDnsSuffixList;
   nsTArray<mozilla::net::NetAddr> mDNSResolvers;

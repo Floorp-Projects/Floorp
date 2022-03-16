@@ -86,7 +86,7 @@ class MetadataDecodingTask final : public IDecodingTask {
   virtual ~MetadataDecodingTask() {}
 
   /// Mutex protecting access to mDecoder.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   NotNull<RefPtr<Decoder>> mDecoder;
 };

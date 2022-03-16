@@ -54,7 +54,7 @@ struct StorageWithTArray {
 };
 
 class LockingWithMutex {
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 
  protected:
   LockingWithMutex() : mMutex("LockingWithMutex::mMutex") {}

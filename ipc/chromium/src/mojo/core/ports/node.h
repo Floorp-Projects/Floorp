@@ -287,7 +287,7 @@ class Node {
   // Because UserMessage events may execute arbitrary user code during
   // destruction, it is also important to ensure that such events are never
   // destroyed while this (or any individual Port) lock is held.
-  mozilla::Mutex ports_lock_ MOZ_UNANNOTATED{"Ports Lock"};
+  mozilla::Mutex ports_lock_{"Ports Lock"};
   std::unordered_map<LocalPortName, RefPtr<Port>> ports_;
 
   // Maps a peer port name to a list of PortRefs for all local ports which have

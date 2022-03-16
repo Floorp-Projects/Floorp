@@ -199,7 +199,7 @@ const nsACString& nsStandardURL::nsSegmentEncoder::EncodeSegment(
 //----------------------------------------------------------------------------
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-static StaticMutex gAllURLsMutex MOZ_UNANNOTATED;
+static StaticMutex gAllURLsMutex;
 static LinkedList<nsStandardURL> gAllURLs;
 #endif
 

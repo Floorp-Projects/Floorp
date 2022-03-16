@@ -300,7 +300,7 @@ class ThreadWedger : public mozilla::Runnable {
   }
 
  private:
-  mozilla::ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
+  mozilla::ReentrantMonitor mReentrantMonitor;
   bool unwedged;
 };
 

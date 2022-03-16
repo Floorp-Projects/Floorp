@@ -106,7 +106,7 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
   ListenerHash mListeners;
 
   // To serialize interesting methods.
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
+  mozilla::Mutex mLock;
 };
 
 #endif /* __nsconsoleservice_h__ */

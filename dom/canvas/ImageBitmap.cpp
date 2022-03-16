@@ -1475,7 +1475,7 @@ class CreateImageBitmapFromBlob final : public DiscardableRunnable,
   // This is called on the main-thread only.
   nsresult GetMimeTypeAsync();
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // The access to this object is protected by mutex but is always nullified on
   // the owning thread.

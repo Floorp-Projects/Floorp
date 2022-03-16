@@ -197,7 +197,7 @@ class BufferRecycleBin final {
 
   // This protects mRecycledBuffers, mRecycledBufferSize, mRecycledTextures
   // and mRecycledTextureSizes
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
   // We should probably do something to prune this list on a timer so we don't
   // eat excess memory while video is paused...
@@ -251,7 +251,7 @@ class ImageContainerListener final {
 
   ~ImageContainerListener();
 
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   ImageContainer* mImageContainer;
 };
 
@@ -543,7 +543,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
 
   // RecursiveMutex to protect thread safe access to the "current
   // image", and any other state which is shared between threads.
-  RecursiveMutex mRecursiveMutex MOZ_UNANNOTATED;
+  RecursiveMutex mRecursiveMutex;
 
   RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
 

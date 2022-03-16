@@ -205,8 +205,7 @@ class nsGIOInputStream final : public nsIInputStream {
   bool mDirOpen{false};
   MountOperationResult mMountRes =
       MountOperationResult::MOUNT_OPERATION_SUCCESS;
-  mozilla::Monitor mMonitorMountInProgress MOZ_UNANNOTATED{
-      "GIOInputStream::MountFinished"};
+  mozilla::Monitor mMonitorMountInProgress{"GIOInputStream::MountFinished"};
   gint mMountErrorCode{};
 };
 

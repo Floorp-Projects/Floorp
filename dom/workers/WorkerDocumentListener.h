@@ -31,7 +31,7 @@ class WorkerDocumentListener final {
  private:
   ~WorkerDocumentListener();
 
-  Mutex mMutex MOZ_UNANNOTATED;  // protects mWorkerRef
+  Mutex mMutex;  // protects mWorkerRef
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 };
 
