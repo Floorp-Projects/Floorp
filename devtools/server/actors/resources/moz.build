@@ -14,6 +14,7 @@ DevToolsModules(
     "css-messages.js",
     "document-event.js",
     "error-messages.js",
+    "extensions-backgroundscript-status.js",
     "index.js",
     "network-events-content.js",
     "network-events-stacktraces.js",

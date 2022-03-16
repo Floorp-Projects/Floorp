@@ -40,6 +40,11 @@ loader.lazyRequireGetter(
   true
 );
 
+const BGSCRIPT_STATUSES = {
+  RUNNING: "RUNNING",
+  STOPPED: "STOPPED",
+};
+
 /**
  * Creates the actor that represents the addon in the parent process, which connects
  * itself to a WebExtensionTargetActor counterpart which is created in the extension
@@ -79,9 +84,11 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       const persistentBackgroundScript = ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
         addonId
       );
+      const backgroundScriptStatus = this._getBackgroundScriptStatus();
 
       return {
         actor: this.actorID,
+        backgroundScriptStatus,
         // Note that until the policy becomes active,
         // getTarget/connectToFrame will fail attaching to the web extension:
         // https://searchfox.org/mozilla-central/rev/526a5089c61db85d4d43eb0e46edaf1f632e853a/toolkit/components/extensions/WebExtensionPolicy.cpp#551-553
@@ -251,6 +258,20 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     // Private Methods
+    _getBackgroundScriptStatus() {
+      const isRunning = ExtensionParent.DebugUtils.isBackgroundScriptRunning(
+        this.addonId
+      );
+      // The background script status doesn't apply to this addon (e.g. the addon
+      // type doesn't have any code, like staticthemes/langpacks/dictionaries, or
+      // the extension does not have a background script at all).
+      if (isRunning === undefined) {
+        return undefined;
+      }
+
+      return isRunning ? BGSCRIPT_STATUSES.RUNNING : BGSCRIPT_STATUSES.STOPPED;
+    },
+
     get _mm() {
       return (
         this._browser &&

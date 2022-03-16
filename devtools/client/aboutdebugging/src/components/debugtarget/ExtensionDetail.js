@@ -30,6 +30,7 @@ const Message = createFactory(
 );
 
 const {
+  EXTENSION_BGSCRIPT_STATUSES,
   MESSAGE_LEVEL,
   RUNTIMES,
 } = require("devtools/client/aboutdebugging/src/constants");
@@ -164,6 +165,52 @@ class ExtensionDetail extends PureComponent {
     );
   }
 
+  renderBackgroundScriptStatus() {
+    // The status of the background script is only relevant if it is
+    // not persistent.
+    const { persistentBackgroundScript } = this.props.target.details;
+    if (!(persistentBackgroundScript === false)) {
+      return null;
+    }
+
+    const { backgroundScriptStatus } = this.props.target.details;
+
+    let status;
+    let statusLocalizationId;
+    let statusClassName;
+
+    if (backgroundScriptStatus === EXTENSION_BGSCRIPT_STATUSES.RUNNING) {
+      status = `extension-backgroundscript__status--running`;
+      statusLocalizationId = `about-debugging-extension-backgroundscript-status-running`;
+      statusClassName = `extension-backgroundscript__status--running`;
+    } else {
+      status = `extension-backgroundscript__status--stopped`;
+      statusLocalizationId = `about-debugging-extension-backgroundscript-status-stopped`;
+      statusClassName = `extension-backgroundscript__status--stopped`;
+    }
+
+    return Localized(
+      {
+        id: "about-debugging-extension-backgroundscript",
+        attrs: { label: true },
+      },
+      FieldPair({
+        label: "Background Script",
+        value: Localized(
+          {
+            id: statusLocalizationId,
+          },
+          dom.span(
+            {
+              className: `extension-backgroundscript__status qa-extension-backgroundscript-status ${statusClassName}`,
+            },
+            status
+          )
+        ),
+      })
+    );
+  }
+
   render() {
     return dom.section(
       {
@@ -176,6 +223,7 @@ class ExtensionDetail extends PureComponent {
         this.renderExtensionId(),
         this.renderUUID(),
         this.renderManifest(),
+        this.renderBackgroundScriptStatus(),
         this.props.children
       )
     );
