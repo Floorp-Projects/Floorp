@@ -10,13 +10,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// Load the shared Redux helpers into this compartment.
-/* import-globals-from ../../../shared/test/shared-redux-head.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this
-);
-
 var {
   censusDisplays,
   censusState,
