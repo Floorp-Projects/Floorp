@@ -16,7 +16,7 @@
           var span = doc.createElement("span");
           span.appendChild(doc.createTextNode("foo"));
           div.appendChild(span);
-          div.style.outlineWidth = 0; // remove the focus outline
+          div.style.outline = "none"; // remove the focus outline
           i.style.position = "absolute";
           document.body.clientWidth;
           document.documentElement.removeAttribute("class");
