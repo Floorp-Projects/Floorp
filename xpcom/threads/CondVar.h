@@ -87,19 +87,21 @@ class OffTheBooksCondVar : BlockingResourceBase {
    * AssertCurrentThreadOwnsMutex
    * @see Mutex::AssertCurrentThreadOwns
    **/
-  void AssertCurrentThreadOwnsMutex() { mLock->AssertCurrentThreadOwns(); }
+  void AssertCurrentThreadOwnsMutex() const ASSERT_CAPABILITY(mLock) {
+    mLock->AssertCurrentThreadOwns();
+  }
 
   /**
    * AssertNotCurrentThreadOwnsMutex
    * @see Mutex::AssertNotCurrentThreadOwns
    **/
-  void AssertNotCurrentThreadOwnsMutex() {
+  void AssertNotCurrentThreadOwnsMutex() const ASSERT_CAPABILITY(!mLock) {
     mLock->AssertNotCurrentThreadOwns();
   }
 
 #else
-  void AssertCurrentThreadOwnsMutex() {}
-  void AssertNotCurrentThreadOwnsMutex() {}
+  void AssertCurrentThreadOwnsMutex() const ASSERT_CAPABILITY(mLock) {}
+  void AssertNotCurrentThreadOwnsMutex() const ASSERT_CAPABILITY(!mLock) {}
 
 #endif  // ifdef DEBUG
 

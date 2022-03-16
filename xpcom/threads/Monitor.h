@@ -21,16 +21,16 @@ namespace mozilla {
  * to instead use the RAII wrappers MonitorAutoLock and
  * MonitorAutoUnlock.
  */
-class Monitor {
+class CAPABILITY Monitor {
  public:
   explicit Monitor(const char* aName)
       : mMutex(aName), mCondVar(mMutex, "[Monitor.mCondVar]") {}
 
   ~Monitor() = default;
 
-  void Lock() { mMutex.Lock(); }
-  [[nodiscard]] bool TryLock() { return mMutex.TryLock(); }
-  void Unlock() { mMutex.Unlock(); }
+  void Lock() CAPABILITY_ACQUIRE() { mMutex.Lock(); }
+  [[nodiscard]] bool TryLock() TRY_ACQUIRE(true) { return mMutex.TryLock(); }
+  void Unlock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
 
   void Wait() { mCondVar.Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mCondVar.Wait(aDuration); }
@@ -38,19 +38,75 @@ class Monitor {
   void Notify() { mCondVar.Notify(); }
   void NotifyAll() { mCondVar.NotifyAll(); }
 
-  void AssertCurrentThreadOwns() const { mMutex.AssertCurrentThreadOwns(); }
-
-  void AssertNotCurrentThreadOwns() const {
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
+    mMutex.AssertCurrentThreadOwns();
+  }
+  void AssertNotCurrentThreadOwns() const ASSERT_CAPABILITY(!this) {
     mMutex.AssertNotCurrentThreadOwns();
   }
 
  private:
-  Monitor();
-  Monitor(const Monitor&);
-  Monitor& operator=(const Monitor&);
+  Monitor() = delete;
+  Monitor(const Monitor&) = delete;
+  Monitor& operator=(const Monitor&) = delete;
 
   Mutex mMutex;
   CondVar mCondVar;
+};
+
+/**
+ * MonitorSingleWriter
+ *
+ * Monitor where a single writer exists, so that reads from the same thread
+ * will not generate data races or consistency issues.
+ *
+ * When possible, use MonitorAutoLock/MonitorAutoUnlock to lock/unlock this
+ * monitor within a scope, instead of calling Lock/Unlock directly.
+ *
+ * This requires an object implementing Mutex's SingleWriterLockOwner, so
+ * we can do correct-thread checks.
+ */
+
+class MonitorSingleWriter : public Monitor {
+ public:
+  // aOwner should be the object that contains the mutex, typically.  We
+  // will use that object (which must have a lifetime the same or greater
+  // than this object) to verify that we're running on the correct thread,
+  // typically only in DEBUG builds
+  explicit MonitorSingleWriter(const char* aName, SingleWriterLockOwner* aOwner)
+      : Monitor(aName)
+#ifdef DEBUG
+        ,
+        mOwner(aOwner)
+#endif
+  {
+    MOZ_COUNT_CTOR(MonitorSingleWriter);
+    MOZ_ASSERT(mOwner);
+  }
+
+  MOZ_COUNTED_DTOR(MonitorSingleWriter)
+
+  void AssertOnWritingThread() const ASSERT_CAPABILITY(this) {
+    MOZ_ASSERT(mOwner->OnWritingThread());
+  }
+  void AssertOnWritingThreadOrHeld() const ASSERT_CAPABILITY(this) {
+#ifdef DEBUG
+    if (!mOwner->OnWritingThread()) {
+      AssertCurrentThreadOwns();
+    }
+#endif
+  }
+
+ private:
+#ifdef DEBUG
+  SingleWriterLockOwner* mOwner MOZ_UNSAFE_REF(
+      "This is normally the object that contains the MonitorSingleWriter, so "
+      "we don't want to hold a reference to ourselves");
+#endif
+
+  MonitorSingleWriter() = delete;
+  MonitorSingleWriter(const MonitorSingleWriter&) = delete;
+  MonitorSingleWriter& operator=(const MonitorSingleWriter&) = delete;
 };
 
 /**
@@ -60,30 +116,79 @@ class Monitor {
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-class MOZ_STACK_CLASS MonitorAutoLock {
+namespace detail {
+template <typename T>
+class SCOPED_CAPABILITY MOZ_STACK_CLASS BaseMonitorAutoLock {
  public:
-  explicit MonitorAutoLock(Monitor& aMonitor) : mMonitor(&aMonitor) {
+  explicit BaseMonitorAutoLock(T& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
+      : mMonitor(&aMonitor) {
     mMonitor->Lock();
   }
 
-  ~MonitorAutoLock() { mMonitor->Unlock(); }
-
+  ~BaseMonitorAutoLock() CAPABILITY_RELEASE() { mMonitor->Unlock(); }
   void Wait() { mMonitor->Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mMonitor->Wait(aDuration); }
 
   void Notify() { mMonitor->Notify(); }
   void NotifyAll() { mMonitor->NotifyAll(); }
 
+  // Assert that aLock is the monitor passed to the constructor and that the
+  // current thread owns the monitor.  In coding patterns such as:
+  //
+  // void LockedMethod(const BaseAutoLock<T>& aProofOfLock)
+  // {
+  //   aProofOfLock.AssertOwns(mMonitor);
+  //   ...
+  // }
+  //
+  // Without this assertion, it could be that mMonitor is not actually
+  // locked. It's possible to have code like:
+  //
+  // BaseAutoLock lock(someMonitor);
+  // ...
+  // BaseAutoUnlock unlock(someMonitor);
+  // ...
+  // LockedMethod(lock);
+  //
+  // and in such a case, simply asserting that the monitor pointers match is not
+  // sufficient; monitor ownership must be asserted as well.
+  //
+  // Note that if you are going to use the coding pattern presented above, you
+  // should use this method in preference to using AssertCurrentThreadOwns on
+  // the mutex you expected to be held, since this method provides stronger
+  // guarantees.
+  void AssertOwns(const T& aMonitor) const ASSERT_CAPABILITY(aMonitor) {
+    MOZ_ASSERT(&aMonitor == mMonitor);
+    mMonitor->AssertCurrentThreadOwns();
+  }
+
  private:
-  MonitorAutoLock();
-  MonitorAutoLock(const MonitorAutoLock&);
-  MonitorAutoLock& operator=(const MonitorAutoLock&);
+  BaseMonitorAutoLock() = delete;
+  BaseMonitorAutoLock(const BaseMonitorAutoLock&) = delete;
+  BaseMonitorAutoLock& operator=(const BaseMonitorAutoLock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
   friend class MonitorAutoUnlock;
 
-  Monitor* mMonitor;
+ protected:
+  T* mMonitor;
 };
+}  // namespace detail
+typedef detail::BaseMonitorAutoLock<Monitor> MonitorAutoLock;
+typedef detail::BaseMonitorAutoLock<MonitorSingleWriter>
+    MonitorSingleWriterAutoLock;
+
+// clang-format off
+// Use if we've done AssertOnWritingThread(), and then later need to take the
+// lock to write to a protected member. Instead of
+//    MutexSingleWriterAutoLock lock(mutex)
+// use
+//    MutexSingleWriterAutoLockOnThread(lock, mutex)
+// clang-format on
+#define MonitorSingleWriterAutoLockOnThread(lock, monitor) \
+  PUSH_IGNORE_THREAD_SAFETY                                \
+  MonitorSingleWriterAutoLock lock(monitor);               \
+  POP_THREAD_SAFETY
 
 /**
  * Unlock the monitor for the lexical scope instances of this class
@@ -92,26 +197,99 @@ class MOZ_STACK_CLASS MonitorAutoLock {
  * The monitor must be locked by the current thread when instances of
  * this class are created.
  */
-class MOZ_STACK_CLASS MonitorAutoUnlock {
+namespace detail {
+template <typename T>
+class MOZ_STACK_CLASS SCOPED_CAPABILITY BaseMonitorAutoUnlock {
  public:
-  explicit MonitorAutoUnlock(Monitor& aMonitor) : mMonitor(&aMonitor) {
+  explicit BaseMonitorAutoUnlock(T& aMonitor) SCOPED_UNLOCK_RELEASE(aMonitor)
+      : mMonitor(&aMonitor) {
     mMonitor->Unlock();
   }
 
-  explicit MonitorAutoUnlock(MonitorAutoLock& aMonitorLock)
-      : mMonitor(aMonitorLock.mMonitor) {
-    mMonitor->Unlock();
-  }
-
-  ~MonitorAutoUnlock() { mMonitor->Lock(); }
+  ~BaseMonitorAutoUnlock() SCOPED_UNLOCK_REACQUIRE() { mMonitor->Lock(); }
 
  private:
-  MonitorAutoUnlock();
-  MonitorAutoUnlock(const MonitorAutoUnlock&);
-  MonitorAutoUnlock& operator=(const MonitorAutoUnlock&);
+  BaseMonitorAutoUnlock() = delete;
+  BaseMonitorAutoUnlock(const BaseMonitorAutoUnlock&) = delete;
+  BaseMonitorAutoUnlock& operator=(const BaseMonitorAutoUnlock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
+  T* mMonitor;
+};
+}  // namespace detail
+typedef detail::BaseMonitorAutoUnlock<Monitor> MonitorAutoUnlock;
+typedef detail::BaseMonitorAutoUnlock<MonitorSingleWriter>
+    MonitorSingleWriterAutoUnlock;
+
+/**
+ * Lock the monitor for the lexical scope instances of this class are
+ * bound to (except for MonitorAutoUnlock in nested scopes).
+ *
+ * The monitor must be unlocked when instances of this class are
+ * created.
+ */
+class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleaseableMonitorAutoLock {
+ public:
+  explicit ReleaseableMonitorAutoLock(Monitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
+      : mMonitor(&aMonitor) {
+    mMonitor->Lock();
+    mLocked = true;
+  }
+
+  ~ReleaseableMonitorAutoLock() CAPABILITY_RELEASE() {
+    if (mLocked) {
+      mMonitor->Unlock();
+    }
+  }
+
+  void Wait() { mMonitor->Wait(); }
+  CVStatus Wait(TimeDuration aDuration) {
+    MOZ_ASSERT(mLocked);
+    return mMonitor->Wait(aDuration);
+  }
+
+  void Notify() {
+    MOZ_ASSERT(mLocked);
+    mMonitor->Notify();
+  }
+  void NotifyAll() {
+    MOZ_ASSERT(mLocked);
+    mMonitor->NotifyAll();
+  }
+
+  // Allow dropping the lock prematurely; for example to support something like:
+  // clang-format off
+  // MonitorAutoLock lock(mMonitor);
+  // ...
+  // if (foo) {
+  //   lock.Unlock();
+  //   MethodThatCantBeCalledWithLock()
+  //   return;
+  // }
+  // clang-format on
+  void Unlock() CAPABILITY_RELEASE() {
+    MOZ_ASSERT(mLocked);
+    mMonitor->Unlock();
+    mLocked = false;
+  }
+  void Lock() CAPABILITY_ACQUIRE() {
+    MOZ_ASSERT(!mLocked);
+    mMonitor->Lock();
+    mLocked = true;
+  }
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
+    mMonitor->AssertCurrentThreadOwns();
+  }
+
+ private:
+  bool mLocked;
   Monitor* mMonitor;
+
+  ReleaseableMonitorAutoLock() = delete;
+  ReleaseableMonitorAutoLock(const ReleaseableMonitorAutoLock&) = delete;
+  ReleaseableMonitorAutoLock& operator=(const ReleaseableMonitorAutoLock&) =
+      delete;
+  static void* operator new(size_t) noexcept(true);
 };
 
 }  // namespace mozilla
