@@ -225,6 +225,8 @@ class HomeFragment : Fragment() {
             ::dispatchModeChanges
         )
 
+        components.appStore.dispatch(AppAction.ModeChange(currentMode.getCurrentMode()))
+
         lifecycleScope.launch(IO) {
             if (requireContext().settings().showPocketRecommendationsFeature) {
                 val categories = components.core.pocketStoriesService.getStories()
