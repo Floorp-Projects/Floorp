@@ -43,6 +43,11 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
     dispatch(Actions.reloadTemporaryExtension(target.id));
   }
 
+  terminateBackgroundScript() {
+    const { dispatch, target } = this.props;
+    dispatch(Actions.terminateExtensionBackgroundScript(target.id));
+  }
+
   remove() {
     const { dispatch, target } = this.props;
     dispatch(Actions.removeTemporaryExtension(target.id));
@@ -75,6 +80,58 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
     );
   }
 
+  renderTerminateBackgroundScriptError() {
+    const { lastTerminateBackgroundScriptError } = this.props.target.details;
+
+    if (!lastTerminateBackgroundScriptError) {
+      return null;
+    }
+
+    return Message(
+      {
+        className: "qa-temporary-extension-terminate-backgroundscript-error",
+        level: MESSAGE_LEVEL.ERROR,
+        key: "terminate-backgroundscript-error",
+      },
+      DetailsLog(
+        {
+          type: MESSAGE_LEVEL.ERROR,
+        },
+        dom.p(
+          {
+            className: "technical-text",
+          },
+          lastTerminateBackgroundScriptError
+        )
+      )
+    );
+  }
+
+  renderTerminateBackgroundScriptButton() {
+    const { persistentBackgroundScript } = this.props.target.details;
+
+    // For extensions with a non persistent background script
+    // also include a "terminate background script" action.
+    if (persistentBackgroundScript !== false) {
+      return null;
+    }
+
+    return Localized(
+      {
+        id: "about-debugging-tmp-extension-terminate-bgscript-button",
+      },
+      dom.button(
+        {
+          className:
+            "default-button default-button--micro " +
+            "qa-temporary-extension-terminate-bgscript-button",
+          onClick: e => this.terminateBackgroundScript(),
+        },
+        "Terminate Background Script"
+      )
+    );
+  }
+
   render() {
     return [
       dom.div(
@@ -82,6 +139,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
           className: "toolbar toolbar--right-align",
           key: "actions",
         },
+        this.renderTerminateBackgroundScriptButton(),
         Localized(
           {
             id: "about-debugging-tmp-extension-reload-button",
@@ -112,6 +170,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
         )
       ),
       this.renderReloadError(),
+      this.renderTerminateBackgroundScriptError(),
     ];
   }
 }

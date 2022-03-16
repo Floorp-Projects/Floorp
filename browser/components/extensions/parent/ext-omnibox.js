@@ -12,7 +12,70 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionSearchHandler.jsm"
 );
 
-this.omnibox = class extends ExtensionAPI {
+this.omnibox = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onInputStarted({ fire }) {
+      let { extension } = this;
+      let listener = eventName => {
+        fire.sync();
+      };
+      extension.on(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
+      return {
+        unregister() {
+          extension.off(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onInputCancelled({ fire }) {
+      let { extension } = this;
+      let listener = eventName => {
+        fire.sync();
+      };
+      extension.on(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
+      return {
+        unregister() {
+          extension.off(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onInputEntered({ fire }) {
+      let { extension } = this;
+      let listener = (eventName, text, disposition) => {
+        fire.sync(text, disposition);
+      };
+      extension.on(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
+      return {
+        unregister() {
+          extension.off(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onInputChanged({ fire }) {
+      let { extension } = this;
+      let listener = (eventName, text, id) => {
+        fire.sync(text, id);
+      };
+      extension.on(ExtensionSearchHandler.MSG_INPUT_CHANGED, listener);
+      return {
+        unregister() {
+          extension.off(ExtensionSearchHandler.MSG_INPUT_CHANGED, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   onManifestEntry(entryName) {
     let { extension } = this;
     let { manifest } = extension;
@@ -32,7 +95,6 @@ this.omnibox = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let { extension } = context;
     return {
       omnibox: {
         setDefaultSuggestion: suggestion => {
@@ -49,47 +111,30 @@ this.omnibox = class extends ExtensionAPI {
 
         onInputStarted: new EventManager({
           context,
-          name: "omnibox.onInputStarted",
-          register: fire => {
-            let listener = eventName => {
-              fire.sync();
-            };
-            extension.on(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
-            return () => {
-              extension.off(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
-            };
-          },
+          module: "omnibox",
+          event: "onInputStarted",
+          extensionApi: this,
         }).api(),
 
         onInputCancelled: new EventManager({
           context,
-          name: "omnibox.onInputCancelled",
-          register: fire => {
-            let listener = eventName => {
-              fire.sync();
-            };
-            extension.on(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
-            return () => {
-              extension.off(
-                ExtensionSearchHandler.MSG_INPUT_CANCELLED,
-                listener
-              );
-            };
-          },
+          module: "omnibox",
+          event: "onInputCancelled",
+          extensionApi: this,
         }).api(),
 
         onInputEntered: new EventManager({
           context,
-          name: "omnibox.onInputEntered",
-          register: fire => {
-            let listener = (eventName, text, disposition) => {
-              fire.sync(text, disposition);
-            };
-            extension.on(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
-            return () => {
-              extension.off(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
-            };
-          },
+          module: "omnibox",
+          event: "onInputEntered",
+          extensionApi: this,
+        }).api(),
+
+        onInputChanged: new EventManager({
+          context,
+          module: "omnibox",
+          event: "onInputChanged",
+          extensionApi: this,
         }).api(),
 
         // Internal APIs.
@@ -105,20 +150,6 @@ this.omnibox = class extends ExtensionAPI {
             // has already invalidated the callback when asynchronously providing suggestions.
           }
         },
-
-        onInputChanged: new EventManager({
-          context,
-          name: "omnibox.onInputChanged",
-          register: fire => {
-            let listener = (eventName, text, id) => {
-              fire.sync(text, id);
-            };
-            extension.on(ExtensionSearchHandler.MSG_INPUT_CHANGED, listener);
-            return () => {
-              extension.off(ExtensionSearchHandler.MSG_INPUT_CHANGED, listener);
-            };
-          },
-        }).api(),
       },
     };
   }

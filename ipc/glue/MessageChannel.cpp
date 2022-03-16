@@ -2113,6 +2113,8 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
         !profiler_is_locked_on_current_thread()) {
       // The current timestamp must be given to the `IPCMarker` payload.
       [[maybe_unused]] const TimeStamp now = TimeStamp::Now();
+      bool isThreadBeingProfiled =
+          profiler_thread_is_being_profiled_for_markers();
       PROFILER_MARKER(
           "IPC", IPC,
           mozilla::MarkerOptions(
@@ -2123,11 +2125,15 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
               // will appear in the main thread's IPC track. Profiler analysis
               // UI correlates all the IPC markers from different threads and
               // generates processed markers.
-              profiler_thread_is_being_profiled_for_markers()
-                  ? mozilla::MarkerThreadId::CurrentThread()
-                  : mozilla::MarkerThreadId::MainThread()),
+              isThreadBeingProfiled ? mozilla::MarkerThreadId::CurrentThread()
+                                    : mozilla::MarkerThreadId::MainThread()),
           IPCMarker, now, now, pid, aMessage.seqno(), aMessage.type(), mSide,
-          aDirection, MessagePhase::Endpoint, aMessage.is_sync());
+          aDirection, MessagePhase::Endpoint, aMessage.is_sync(),
+          // aOriginThreadId: If the thread is being profiled, do not include a
+          // thread ID, as it's the same as the markers. Only include this field
+          // when the marker is being sent from another thread.
+          isThreadBeingProfiled ? mozilla::MarkerThreadId{}
+                                : mozilla::MarkerThreadId::CurrentThread());
     }
   }
 }

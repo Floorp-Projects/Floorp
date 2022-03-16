@@ -13,6 +13,8 @@ const extensionTargetDetails = {
   // actor ID for this extention.
   actor: PropTypes.string.isRequired,
   location: PropTypes.string.isRequired,
+  // error message forwarded from the WebExtensions internals if terminating the background script failed.
+  lastTerminateBackgroundScriptError: PropTypes.string,
   // manifestURL points to the manifest.json file. This URL is only valid when debugging
   // local extensions so it might be null.
   manifestURL: PropTypes.string,

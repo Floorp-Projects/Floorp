@@ -393,6 +393,7 @@ devtools.jar:
     content/aboutdebugging/src/components/debugtarget/DebugTargetItem.css (aboutdebugging/src/components/debugtarget/DebugTargetItem.css)
     content/aboutdebugging/src/components/debugtarget/DebugTargetList.css (aboutdebugging/src/components/debugtarget/DebugTargetList.css)
     content/aboutdebugging/src/components/debugtarget/DebugTargetPane.css (aboutdebugging/src/components/debugtarget/DebugTargetPane.css)
+    content/aboutdebugging/src/components/debugtarget/ExtensionDetail.css (aboutdebugging/src/components/debugtarget/ExtensionDetail.css)
     content/aboutdebugging/src/components/debugtarget/FieldPair.css (aboutdebugging/src/components/debugtarget/FieldPair.css)
     content/aboutdebugging/src/components/debugtarget/ServiceWorkerAction.css (aboutdebugging/src/components/debugtarget/ServiceWorkerAction.css)
     content/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection.css (aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection.css)

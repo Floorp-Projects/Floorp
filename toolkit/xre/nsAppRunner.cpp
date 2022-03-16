@@ -5941,7 +5941,15 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   mScopedXPCOM = nullptr;
 
 #if defined(XP_WIN)
-  mozilla::widget::StopAudioSession();
+  bool wantAudio = true;
+#  ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    wantAudio = false;
+  }
+#  endif
+  if (MOZ_LIKELY(wantAudio)) {
+    mozilla::widget::StopAudioSession();
+  }
 #endif
 
   // unlock the profile after ScopedXPCOMStartup object (xpcom)

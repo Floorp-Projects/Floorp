@@ -48,11 +48,13 @@ function toComponentData(extensions) {
     const type = DEBUG_TARGETS.EXTENSION;
     const {
       actor,
+      backgroundScriptStatus,
       iconDataURL,
       iconURL,
       id,
       manifestURL,
       name,
+      persistentBackgroundScript,
       warnings,
     } = extension;
     const icon =
@@ -68,8 +70,10 @@ function toComponentData(extensions) {
       type,
       details: {
         actor,
+        backgroundScriptStatus,
         location,
         manifestURL,
+        persistentBackgroundScript,
         uuid,
         warnings: warnings || [],
       },

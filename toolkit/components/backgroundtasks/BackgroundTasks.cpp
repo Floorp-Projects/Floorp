@@ -11,6 +11,7 @@
 #include "nsXULAppAPI.h"
 #include "SpecialSystemDirectory.h"
 
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/LateWriteChecks.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -46,7 +47,8 @@ void BackgroundTasks::Shutdown() {
     return;
   }
 
-  if (sSingleton->mProfD) {
+  if (sSingleton->mProfD &&
+      !EnvHasValue("MOZ_BACKGROUNDTASKS_NO_REMOVE_PROFILE")) {
     AutoSuspendLateWriteChecks suspend;
 
     // Log that the temporary profile is being removed.

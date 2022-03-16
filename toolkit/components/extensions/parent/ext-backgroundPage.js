@@ -89,6 +89,23 @@ class BackgroundPage extends HiddenExtensionPage {
       // to addListener that the background script has finished loading.
       await Promise.all(context.listenerPromises);
       context.listenerPromises = null;
+
+      // Notify devtools when the background scripts is started or stopped
+      // (used to show the current status in about:debugging).
+      extensions.emit(
+        `devtools:background-script-status`,
+        extension.id,
+        true /* isRunning */
+      );
+      context.callOnClose({
+        close() {
+          extensions.emit(
+            `devtools:background-script-status`,
+            extension.id,
+            false /* isRunning */
+          );
+        },
+      });
     }
 
     if (extension.persistentListeners) {
@@ -98,6 +115,10 @@ class BackgroundPage extends HiddenExtensionPage {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
+    // TODO(Bug ToBeFiled): in some corner case we may end up emitting
+    // background-script-started even if context was not defined,
+    // at a first glance it seems this should emit "background-script-aborted"
+    // instead when that is the case.
     extension.emit("background-script-started");
   }
 
@@ -179,6 +200,23 @@ class BackgroundWorker {
       // to be handled.
       await Promise.all(context.listenerPromises);
       context.listenerPromises = null;
+
+      // Notify devtools when the background scripts is started or stopped
+      // (used to show the current status in about:debugging).
+      extensions.emit(
+        `devtools:background-script-status`,
+        extension.id,
+        true /* isRunning */
+      );
+      context.callOnClose({
+        close() {
+          extensions.emit(
+            `devtools:background-script-status`,
+            extension.id,
+            false /* isRunning */
+          );
+        },
+      });
     }
 
     if (extension.persistentListeners) {
@@ -188,6 +226,10 @@ class BackgroundWorker {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
+    // TODO(Bug ToBeFiled): in some corner case we may end up emitting
+    // background-script-started even if context was not defined,
+    // at a first glance it seems this should emit "background-script-aborted"
+    // instead when that is the case.
     extension.emit("background-script-started");
   }
 
