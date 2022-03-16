@@ -30,6 +30,7 @@ import org.mozilla.fenix.utils.Settings
 @Suppress("ComplexMethod", "LongParameterList")
 @VisibleForTesting
 internal fun normalModeAdapterItems(
+    settings: Settings,
     topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
@@ -50,23 +51,23 @@ internal fun normalModeAdapterItems(
         items.add(AdapterItem.ExperimentDefaultBrowserCard)
     }
 
-    if (topSites.isNotEmpty()) {
+    if (settings.showTopSitesFeature && topSites.isNotEmpty()) {
         items.add(AdapterItem.TopSitePager(topSites))
     }
 
-    if (recentTabs.isNotEmpty()) {
+    if (settings.showRecentTabsFeature && recentTabs.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentTabsHeader)
         items.add(AdapterItem.RecentTabItem)
     }
 
-    if (recentBookmarks.isNotEmpty()) {
+    if (settings.showRecentBookmarksFeature && recentBookmarks.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentBookmarksHeader)
         items.add(AdapterItem.RecentBookmarks)
     }
 
-    if (recentVisits.isNotEmpty()) {
+    if (settings.historyMetadataUIFeature && recentVisits.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentVisitsHeader)
         items.add(AdapterItem.RecentVisitsItems)
@@ -80,7 +81,7 @@ internal fun normalModeAdapterItems(
         showCollections(collections, expandedCollections, items)
     }
 
-    if (pocketStories.isNotEmpty()) {
+    if (settings.showPocketRecommendationsFeature && pocketStories.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.PocketStoriesItem)
         items.add(AdapterItem.PocketCategoriesItem)
@@ -148,8 +149,9 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     return items
 }
 
-private fun AppState.toAdapterList(): List<AdapterItem> = when (mode) {
+private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when (mode) {
     is Mode.Normal -> normalModeAdapterItems(
+        settings,
         topSites,
         collections,
         expandedCollections,
@@ -219,6 +221,6 @@ class SessionControlView(
 
         if (shouldReportMetrics) interactor.reportSessionMetrics(state)
 
-        sessionControlAdapter.submitList(state.toAdapterList())
+        sessionControlAdapter.submitList(state.toAdapterList(view.context.settings()))
     }
 }
