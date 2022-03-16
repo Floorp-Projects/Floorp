@@ -9,24 +9,6 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
-async function waitUntilScreenshot() {
-  const { Downloads } = require("resource://gre/modules/Downloads.jsm");
-  const list = await Downloads.getList(Downloads.ALL);
-
-  return new Promise(function(resolve) {
-    const view = {
-      onDownloadAdded: download => {
-        download.whenSucceeded().then(() => {
-          resolve(download.target.path);
-          list.removeView(view);
-        });
-      },
-    };
-
-    list.addView(view);
-  });
-}
-
 addRDMTask(TEST_URL, async function({ ui }) {
   const { toolWindow } = ui;
   const { store, document } = toolWindow;
