@@ -763,7 +763,6 @@ fn prepare_interned_prim_for_render(
             let pic = &mut store.pictures[pic_index.0];
 
             if pic.prepare_for_render(
-                frame_context,
                 frame_state,
                 data_stores,
             ) {
