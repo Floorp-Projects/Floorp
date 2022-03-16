@@ -159,7 +159,7 @@ class VRManager : nsIObserver {
   bool mFrameStarted;
   uint32_t mTaskInterval;
   RefPtr<nsITimer> mTaskTimer;
-  mozilla::Monitor mCurrentSubmitTaskMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mCurrentSubmitTaskMonitor;
   RefPtr<CancelableRunnable> mCurrentSubmitTask;
   uint64_t mLastSubmittedFrameId;
   uint64_t mLastStartedFrame;

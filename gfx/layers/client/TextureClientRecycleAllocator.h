@@ -130,7 +130,7 @@ class TextureClientRecycleAllocator : public ITextureClientRecycleAllocator {
 
   // stack is good from Graphics cache usage point of view.
   std::stack<RefPtr<TextureClientHolder> > mPooledClients;
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   bool mIsDestroyed;
 };
 

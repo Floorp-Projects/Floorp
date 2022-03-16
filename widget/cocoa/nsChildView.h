@@ -543,7 +543,7 @@ class nsChildView final : public nsBaseWidget {
   // Held while the compositor (or WR renderer) thread is compositing.
   // Protects from tearing down the view during compositing and from presenting
   // half-composited layers to the screen.
-  mozilla::Mutex mCompositingLock MOZ_UNANNOTATED;
+  mozilla::Mutex mCompositingLock;
 
   mozilla::ViewRegion mNonDraggableRegion;
 

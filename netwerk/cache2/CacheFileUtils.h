@@ -131,7 +131,7 @@ class DetailedCacheHitTelemetry {
   static const uint32_t kHitRateBuckets = 20;
 
   // Protects sRecordCnt, sHitStats and Telemetry::Accumulated() calls.
-  static StaticMutex sLock MOZ_UNANNOTATED;
+  static StaticMutex sLock;
 
   // Counter of samples that is compared against kTotalSamplesReportLimit.
   static uint32_t sRecordCnt;
@@ -203,7 +203,7 @@ class CachePerfStats {
     MMA mShortAvg;
   };
 
-  static StaticMutex sLock MOZ_UNANNOTATED;
+  static StaticMutex sLock;
 
   static PerfData sData[LAST];
   static uint32_t sCacheSlowCnt;
@@ -228,7 +228,7 @@ class CacheFileLock final {
  private:
   ~CacheFileLock() = default;
 
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheFile.mLock"};
+  mozilla::Mutex mLock{"CacheFile.mLock"};
 };
 
 }  // namespace CacheFileUtils

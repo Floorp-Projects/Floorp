@@ -53,7 +53,7 @@ class nsStringBundleBase : public nsIStringBundle, public nsIMemoryReporter {
   void RegisterMemoryReporter();
 
   nsCString mPropertiesURL;
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   bool mAttemptedLoad;
   bool mLoaded;
 

@@ -209,7 +209,7 @@ class CrashStatsLogForwarder : public mozilla::gfx::LogForwarder {
   CrashReporter::Annotation mCrashCriticalKey;
   uint32_t mMaxCapacity;
   int32_t mIndex;
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 CrashStatsLogForwarder::CrashStatsLogForwarder(CrashReporter::Annotation aKey)

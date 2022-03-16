@@ -103,7 +103,7 @@ class SubstitutingProtocolHandler {
   nsCString mScheme;
   Maybe<uint32_t> mFlags;
 
-  RWLock mSubstitutionsLock MOZ_UNANNOTATED;
+  RWLock mSubstitutionsLock;
   nsTHashMap<nsCStringHashKey, SubstitutionEntry> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
 

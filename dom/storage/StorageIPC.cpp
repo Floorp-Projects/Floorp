@@ -849,7 +849,7 @@ class SyncLoadCacheHelper : public LocalStorageCacheBridge {
   }
 
  private:
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   nsCString mSuffix, mOrigin;
   nsTArray<nsString>* mKeys;
   nsTArray<nsString>* mValues;

@@ -33,7 +33,7 @@ class MOZ_STACK_CLASS SynchronousTask {
   }
 
  private:
-  ReentrantMonitor mMonitor MOZ_UNANNOTATED;
+  ReentrantMonitor mMonitor;
   ReentrantMonitorAutoEnter mAutoEnter;
   bool mDone;
 };

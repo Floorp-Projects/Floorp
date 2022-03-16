@@ -631,7 +631,7 @@ static bool malloc_initialized;
 static Atomic<bool, SequentiallyConsistent> malloc_initialized;
 #endif
 
-static StaticMutex gInitLock MOZ_UNANNOTATED = {STATIC_MUTEX_INIT};
+static StaticMutex gInitLock = {STATIC_MUTEX_INIT};
 
 // ***************************************************************************
 // Statistics data structures.
@@ -803,7 +803,7 @@ class AddressRadixTree {
   static_assert(kBitsAtLevel1 + (kHeight - 1) * kBitsPerLevel == Bits,
                 "AddressRadixTree parameters don't work out");
 
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   void** mRoot;
 
  public:
@@ -979,7 +979,7 @@ struct arena_t {
   arena_id_t mId;
 
   // All operations on this arena require that lock be locked.
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
   arena_stats_t mStats;
 
@@ -1204,7 +1204,7 @@ class ArenaCollection {
 
   inline arena_t* GetDefault() { return mDefaultArena; }
 
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
  private:
   inline arena_t* GetByIdInternal(arena_id_t aArenaId, bool aIsPrivate);
@@ -1222,7 +1222,7 @@ static ArenaCollection gArenas;
 static AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)> gChunkRTree;
 
 // Protects chunk-related data structures.
-static Mutex chunks_mtx MOZ_UNANNOTATED;
+static Mutex chunks_mtx;
 
 // Trees of chunks that were previously allocated (trees differ only in node
 // ordering).  These are used when allocating chunks, in an attempt to re-use
@@ -1232,7 +1232,7 @@ static RedBlackTree<extent_node_t, ExtentTreeSzTrait> gChunksBySize;
 static RedBlackTree<extent_node_t, ExtentTreeTrait> gChunksByAddress;
 
 // Protects huge allocation-related data structures.
-static Mutex huge_mtx MOZ_UNANNOTATED;
+static Mutex huge_mtx;
 
 // Tree of chunks that are stand-alone huge allocations.
 static RedBlackTree<extent_node_t, ExtentTreeTrait> huge;
@@ -1252,7 +1252,7 @@ static void* base_pages;
 static void* base_next_addr;
 static void* base_next_decommitted;
 static void* base_past_addr;  // Addr immediately past base_pages.
-static Mutex base_mtx MOZ_UNANNOTATED;
+static Mutex base_mtx;
 static size_t base_mapped;
 static size_t base_committed;
 

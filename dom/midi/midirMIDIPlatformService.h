@@ -47,7 +47,7 @@ class midirMIDIPlatformService : public MIDIPlatformService {
   // midir has its own internal threads and we can't execute jobs directly on
   // them, instead we forward them to the background thread the service was
   // created in.
-  static StaticMutex gBackgroundThreadMutex MOZ_UNANNOTATED;
+  static StaticMutex gBackgroundThreadMutex;
   static nsCOMPtr<nsIThread> gBackgroundThread;
 };
 

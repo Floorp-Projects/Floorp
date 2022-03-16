@@ -71,7 +71,7 @@ class VolatileBuffer {
    * buffer.  Other member variables are read-only except in Init() and the
    * destructor.
    */
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   void* mBuf;
   size_t mSize;

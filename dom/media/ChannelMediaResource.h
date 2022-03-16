@@ -186,7 +186,7 @@ class ChannelMediaResource
     void Revoke();
 
    private:
-    Mutex mMutex MOZ_UNANNOTATED;
+    Mutex mMutex;
     // mResource should only be modified on the main thread with the lock.
     // So it can be read without lock on the main thread or on other threads
     // with the lock.

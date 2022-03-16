@@ -1101,7 +1101,7 @@ class Manager::CachePutAllAction final : public DBAction {
   nsTArray<nsID> mDeletedBodyIdList;
 
   // accessed from any thread while mMutex locked
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   nsTArray<nsCOMPtr<nsISupports>> mCopyContextList;
 
   Maybe<CacheDirectoryMetadata> mDirectoryMetadata;

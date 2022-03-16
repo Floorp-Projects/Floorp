@@ -423,7 +423,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   // will be handled by the TimerManager.
   TaskQueue incoming_queue_;
   // Protect access to incoming_queue_.
-  mozilla::Mutex incoming_queue_lock_ MOZ_UNANNOTATED;
+  mozilla::Mutex incoming_queue_lock_;
 
   RunState* state_;
   int run_depth_base_;

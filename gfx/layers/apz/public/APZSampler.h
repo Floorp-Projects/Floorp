@@ -112,19 +112,19 @@ class APZSampler {
   // StaticAutoPtr wrapper on sWindowIdMap to avoid a static initializer for the
   // unordered_map. This also avoids the initializer/memory allocation in cases
   // where we're not using WebRender.
-  static StaticMutex sWindowIdLock MOZ_UNANNOTATED;
+  static StaticMutex sWindowIdLock;
   static StaticAutoPtr<std::unordered_map<uint64_t, RefPtr<APZSampler>>>
       sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
   // Lock used to protected mSamplerThreadId
-  mutable Mutex mThreadIdLock MOZ_UNANNOTATED;
+  mutable Mutex mThreadIdLock;
   // If WebRender is enabled, this holds the thread id of the render backend
   // thread (which is the sampler thread) for the compositor associated with
   // this APZSampler instance.
   Maybe<PlatformThreadId> mSamplerThreadId;
 
-  Mutex mSampleTimeLock MOZ_UNANNOTATED;
+  Mutex mSampleTimeLock;
   // Can only be accessed or modified while holding mSampleTimeLock.
   SampleTime mSampleTime;
 };

@@ -1522,7 +1522,7 @@ class nsAsyncBridgeRequest final : public nsPACManCallback {
 
   friend class nsProtocolProxyService;
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   CondVar mCondVar;
 
   nsresult mStatus{NS_OK};

@@ -43,7 +43,7 @@ class SandboxTestingParent : public PSandboxTestingParent {
   void Bind(Endpoint<PSandboxTestingParent>&& aEnd);
 
   UniquePtr<SandboxTestingThread> mThread;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   bool mShutdownDone;
 };
 

@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace FilePreferences {
 
-static StaticMutex sMutex MOZ_UNANNOTATED;
+static StaticMutex sMutex;
 
 static bool sBlockUNCPaths = false;
 typedef nsTArray<nsString> WinPaths;
