@@ -4,14 +4,7 @@
 "use strict";
 
 // via xpcshell.ini
-/* import-globals-from ../../../shared/test/shared-redux-head.js */
-
-var { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
-
-var Services = require("Services");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+/* import-globals-from ../../../shared/test/shared-head.js */
 
 Services.prefs.setBoolPref("devtools.testing", true);
 Services.prefs.setBoolPref("devtools.debugger.log", true);
