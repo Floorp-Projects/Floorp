@@ -14,37 +14,46 @@
 using namespace mozilla::dom;
 using namespace mozilla;
 
-bool L10nOverlays::IsAttrNameLocalizable(
-    const nsAtom* nameAtom, Element* aElement,
-    nsTArray<nsString>* aExplicitlyAllowed) {
-  nsAutoString name;
-  nameAtom->ToString(name);
-
-  if (aExplicitlyAllowed->Contains(name)) {
-    return true;
+/**
+ * Check if attribute is allowed for the given element.
+ *
+ * This method is used by the sanitizer when the translation markup contains DOM
+ * attributes, or when the translation has traits which map to DOM attributes.
+ *
+ * `aExplicitlyAllowed` can be passed as a list of attributes explicitly allowed
+ * on this element.
+ */
+static bool IsAttrNameLocalizable(
+    const nsAtom* aAttrName, Element* aElement,
+    const nsTArray<nsString>& aExplicitlyAllowed) {
+  if (!aExplicitlyAllowed.IsEmpty()) {
+    nsAutoString name;
+    aAttrName->ToString(name);
+    if (aExplicitlyAllowed.Contains(name)) {
+      return true;
+    }
   }
 
   nsAtom* elemName = aElement->NodeInfo()->NameAtom();
-
   uint32_t nameSpace = aElement->NodeInfo()->NamespaceID();
 
   if (nameSpace == kNameSpaceID_XHTML) {
     // Is it a globally safe attribute?
-    if (nameAtom == nsGkAtoms::title || nameAtom == nsGkAtoms::aria_label ||
-        nameAtom == nsGkAtoms::aria_valuetext) {
+    if (aAttrName == nsGkAtoms::title || aAttrName == nsGkAtoms::aria_label ||
+        aAttrName == nsGkAtoms::aria_valuetext) {
       return true;
     }
 
     // Is it allowed on this element?
     if (elemName == nsGkAtoms::a) {
-      return nameAtom == nsGkAtoms::download;
+      return aAttrName == nsGkAtoms::download;
     }
     if (elemName == nsGkAtoms::area) {
-      return nameAtom == nsGkAtoms::download || nameAtom == nsGkAtoms::alt;
+      return aAttrName == nsGkAtoms::download || aAttrName == nsGkAtoms::alt;
     }
     if (elemName == nsGkAtoms::input) {
       // Special case for value on HTML inputs with type button, reset, submit
-      if (nameAtom == nsGkAtoms::value) {
+      if (aAttrName == nsGkAtoms::value) {
         HTMLInputElement* input = HTMLInputElement::FromNode(aElement);
         if (input) {
           auto type = input->ControlType();
@@ -55,50 +64,52 @@ bool L10nOverlays::IsAttrNameLocalizable(
           }
         }
       }
-      return nameAtom == nsGkAtoms::alt || nameAtom == nsGkAtoms::placeholder;
+      return aAttrName == nsGkAtoms::alt || aAttrName == nsGkAtoms::placeholder;
     }
     if (elemName == nsGkAtoms::menuitem) {
-      return nameAtom == nsGkAtoms::label;
+      return aAttrName == nsGkAtoms::label;
     }
     if (elemName == nsGkAtoms::menu) {
-      return nameAtom == nsGkAtoms::label;
+      return aAttrName == nsGkAtoms::label;
     }
     if (elemName == nsGkAtoms::optgroup) {
-      return nameAtom == nsGkAtoms::label;
+      return aAttrName == nsGkAtoms::label;
     }
     if (elemName == nsGkAtoms::option) {
-      return nameAtom == nsGkAtoms::label;
+      return aAttrName == nsGkAtoms::label;
     }
     if (elemName == nsGkAtoms::track) {
-      return nameAtom == nsGkAtoms::label;
+      return aAttrName == nsGkAtoms::label;
     }
     if (elemName == nsGkAtoms::img) {
-      return nameAtom == nsGkAtoms::alt;
+      return aAttrName == nsGkAtoms::alt;
     }
     if (elemName == nsGkAtoms::textarea) {
-      return nameAtom == nsGkAtoms::placeholder;
+      return aAttrName == nsGkAtoms::placeholder;
     }
     if (elemName == nsGkAtoms::th) {
-      return nameAtom == nsGkAtoms::abbr;
+      return aAttrName == nsGkAtoms::abbr;
     }
 
   } else if (nameSpace == kNameSpaceID_XUL) {
     // Is it a globally safe attribute?
-    if (nameAtom == nsGkAtoms::accesskey || nameAtom == nsGkAtoms::aria_label ||
-        nameAtom == nsGkAtoms::aria_valuetext || nameAtom == nsGkAtoms::label ||
-        nameAtom == nsGkAtoms::title || nameAtom == nsGkAtoms::tooltiptext) {
+    if (aAttrName == nsGkAtoms::accesskey ||
+        aAttrName == nsGkAtoms::aria_label ||
+        aAttrName == nsGkAtoms::aria_valuetext ||
+        aAttrName == nsGkAtoms::label || aAttrName == nsGkAtoms::title ||
+        aAttrName == nsGkAtoms::tooltiptext) {
       return true;
     }
 
     // Is it allowed on this element?
     if (elemName == nsGkAtoms::description) {
-      return nameAtom == nsGkAtoms::value;
+      return aAttrName == nsGkAtoms::value;
     }
     if (elemName == nsGkAtoms::key) {
-      return nameAtom == nsGkAtoms::key || nameAtom == nsGkAtoms::keycode;
+      return aAttrName == nsGkAtoms::key || aAttrName == nsGkAtoms::keycode;
     }
     if (elemName == nsGkAtoms::label) {
-      return nameAtom == nsGkAtoms::value;
+      return aAttrName == nsGkAtoms::value;
     }
   }
 
@@ -130,14 +141,17 @@ void L10nOverlays::OverlayAttributes(
     Element* aToElement, ErrorResult& aRv) {
   nsTArray<nsString> explicitlyAllowed;
 
-  nsAutoString l10nAttrs;
-  aToElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nattrs, l10nAttrs);
-
-  HTMLSplitOnSpacesTokenizer tokenizer(l10nAttrs, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsAString& token = tokenizer.nextToken();
-    if (!token.IsEmpty() && !explicitlyAllowed.Contains(token)) {
-      explicitlyAllowed.AppendElement(token);
+  {
+    nsAutoString l10nAttrs;
+    if (aToElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nattrs,
+                            l10nAttrs)) {
+      HTMLSplitOnSpacesTokenizer tokenizer(l10nAttrs, ',');
+      while (tokenizer.hasMoreTokens()) {
+        const nsAString& token = tokenizer.nextToken();
+        if (!token.IsEmpty() && !explicitlyAllowed.Contains(token)) {
+          explicitlyAllowed.AppendElement(token);
+        }
+      }
     }
   }
 
@@ -146,13 +160,12 @@ void L10nOverlays::OverlayAttributes(
     const nsAttrName* attrName = aToElement->GetAttrNameAt(i - 1);
 
     if (IsAttrNameLocalizable(attrName->LocalName(), aToElement,
-                              &explicitlyAllowed) &&
+                              explicitlyAllowed) &&
         (aTranslation.IsNull() ||
          !aTranslation.Value().Contains(attrName,
                                         AttributeNameValueComparator()))) {
-      nsAutoString name;
-      attrName->LocalName()->ToString(name);
-      aToElement->RemoveAttribute(name, aRv);
+      RefPtr<nsAtom> localName = attrName->LocalName();
+      aToElement->UnsetAttr(localName, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
@@ -166,7 +179,7 @@ void L10nOverlays::OverlayAttributes(
 
   for (auto& attribute : aTranslation.Value()) {
     RefPtr<nsAtom> nameAtom = NS_Atomize(attribute.mName);
-    if (IsAttrNameLocalizable(nameAtom, aToElement, &explicitlyAllowed)) {
+    if (IsAttrNameLocalizable(nameAtom, aToElement, explicitlyAllowed)) {
       NS_ConvertUTF8toUTF16 value(attribute.mValue);
       if (!aToElement->AttrValueIs(kNameSpaceID_None, nameAtom, value,
                                    eCaseMatters)) {
