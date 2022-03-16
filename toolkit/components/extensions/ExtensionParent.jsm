@@ -1456,6 +1456,42 @@ const DebugUtils = {
     return policy.extension.persistentBackground;
   },
 
+  /**
+   * Determine if the extension background page is running.
+   *
+   * Based on this the DevTools client will show the status of the background
+   * script in about:debugging.
+   *
+   * @param {string} addonId
+   *   The id of the addon
+   *
+   * @returns {void|boolean}
+   *   - undefined => does not apply (no background script in the manifest)
+   *   - true => the background script is running.
+   *   - false => the background script is stopped.
+   */
+  isBackgroundScriptRunning(addonId) {
+    const policy = WebExtensionPolicy.getByID(addonId);
+
+    // The addon doesn't have any background script or we
+    // can't be sure yet.
+    if (!(this.hasPersistentBackgroundScript(addonId) === false)) {
+      return undefined;
+    }
+
+    const views = policy?.extension?.views || [];
+    for (const view of views) {
+      if (
+        view.viewType === "background" ||
+        (view.viewType === "background_worker" && !view.unloaded)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
   async terminateBackgroundScript(addonId) {
     // Terminate the background if the extension does have
     // a non-persistent background script (event page or background
@@ -1465,6 +1501,17 @@ const DebugUtils = {
       return policy.extension.terminateBackground();
     }
     throw Error(`Unable to terminate background script for ${addonId}`);
+  },
+
+  watchBackgroundScriptStatusUpdates(callback) {
+    const listener = (_evtName, addonId, isRunning) => {
+      callback(addonId, isRunning);
+    };
+    apiManager.on(`devtools:background-script-status`, listener);
+
+    return () => {
+      apiManager.off(`devtools:background-script-status`, listener);
+    };
   },
 
   /**

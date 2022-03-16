@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  EXTENSION_BGSCRIPT_STATUS_UPDATED,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_PROCESSES_SUCCESS,
   REQUEST_TABS_SUCCESS,
@@ -119,6 +120,22 @@ function debugTargetsReducer(state = DebugTargetsState(), action) {
         id,
         {
           lastTerminateBackgroundScriptError: error.message,
+        }
+      );
+      return Object.assign({}, state, {
+        installedExtensions,
+        temporaryExtensions,
+      });
+    }
+    case EXTENSION_BGSCRIPT_STATUS_UPDATED: {
+      const { id, backgroundScriptStatus } = action;
+      const { installedExtensions, temporaryExtensions } = updateExtension(
+        state,
+        id,
+        {
+          backgroundScriptStatus,
+          // Clear the last error if one was still set.
+          lastTerminateBackgroundScriptError: null,
         }
       );
       return Object.assign({}, state, {
