@@ -162,3 +162,32 @@ add_task(async function test_json_ld_parse() {
     ]
   );
 });
+
+add_task(async function test_microdata_lazy_image() {
+  await verifyItems(
+    `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <title>Product Info 1</title>
+      </head>
+      <body itemprop="badprop">
+        <div itemscope itemtype="https://schema.org/Product">
+          <img itemprop="image" src="lazy-load.gif" data-src="bon-echo-microwave-17in.jpg" />
+          <a href="microwave.html" itemprop="url">
+            <span itemprop="name">Bon Echo Microwave</span>
+          </a>
+        </div>
+      </body>
+      </html>
+    `,
+    [
+      {
+        "@type": "Product",
+        image: BASE_URL + "/bon-echo-microwave-17in.jpg",
+        url: BASE_URL + "/microwave.html",
+        name: "Bon Echo Microwave",
+      },
+    ]
+  );
+});

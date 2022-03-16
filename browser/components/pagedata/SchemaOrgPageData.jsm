@@ -163,11 +163,20 @@ function parseMicrodataProp(propElement) {
     case "audio":
     case "embed":
     case "iframe":
-    case "img":
     case "source":
     case "track":
     case "video":
       return parseUrl(propElement, "src");
+    case "img":
+      // Some pages may be using a lazy loading approach to images, putting a
+      // temporary image in "src" while the real image is in a differently
+      // named attribute. So far we found "content" and "data-src" are common
+      // names for that attribute.
+      return (
+        parseUrl(propElement, "content") ||
+        parseUrl(propElement, "data-src") ||
+        parseUrl(propElement, "src")
+      );
     case "object":
       return parseUrl(propElement, "data");
     case "a":
