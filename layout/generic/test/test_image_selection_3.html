@@ -1,0 +1,48 @@
+<!doctype html>
+<title>Test for bug 1754459</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+  /* This avoids the draggable image check that our code does to avoid handling the mousedown. */
+  img { pointer-events: none }
+</style>
+<div id="block">
+  Some text <img width="100" height="100" id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyAQMAAACQ%2B%2Bz9AAAAA1BMVEUA%2FwA0XsCoAAAAD0lEQVQoFWNgGAWjYGgCAAK8AAEb3eOQAAAAAElFTkSuQmCC"> and more.
+</div>
+<script>
+const image = document.getElementById("image");
+const block = document.getElementById("block");
+const selection = window.getSelection();
+
+function clickOnImage(x, y) {
+  synthesizeMouse(image, x, y, {});
+}
+
+add_task(async function test_click_pointer_events_none() {
+  await SimpleTest.promiseFocus(window);
+  clickOnImage(10, 10);
+  ok(selection.isCollapsed, "Should be collapsed");
+  is(selection.focusNode, block, "Should be at block");
+  is(selection.focusOffset, 1, "Should be at start of image");
+
+  clickOnImage(60, 10);
+  ok(selection.isCollapsed, "Should be collapsed");
+  is(selection.focusNode, block, "Should be at block");
+  is(selection.focusOffset, 2, "Should be at end of image");
+});
+
+add_task(async function test_click_pointer_events_none_vertical() {
+  block.style.writingMode = "vertical-lr";
+  block.getBoundingClientRect();
+  clickOnImage(10, 10);
+  ok(selection.isCollapsed, "Should be collapsed");
+  is(selection.focusNode, block, "Should be at start of image");
+  is(selection.focusOffset, 1, "Should be at start of image");
+
+  clickOnImage(10, 60);
+  ok(selection.isCollapsed, "Should be collapsed");
+  is(selection.focusNode, block, "Should be at block");
+  is(selection.focusOffset, 2, "Should be at end of image");
+});
+</script>

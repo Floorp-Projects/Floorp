@@ -5638,21 +5638,45 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
   return DrillDownToSelectionFrame(aFrame, true, aFlags);
 }
 
-// Use frame edge for grid, flex, table, and non-draggable & non-editable
-// image frames.
+// Use frame edge for grid, flex, table, and non-editable images. Choose the
+// edge based on the point position past the frame rect. If past the middle,
+// caret should be at end, otherwise at start. This behavior matches Blink.
+//
+// TODO(emilio): Can we use this code path for other replaced elements other
+// than images? Or even all other frames? We only get there when we didn't find
+// selectable children... At least one XUL test fails if we make this apply to
+// XUL labels. Also, editable images need _not_ to use the frame edge, see
+// below.
 static bool UseFrameEdge(nsIFrame* aFrame) {
   if (aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame()) {
     return true;
   }
-  if (static_cast<nsImageFrame*>(do_QueryFrame(aFrame))) {
-    return !nsContentUtils::ContentIsDraggable(aFrame->GetContent()) &&
-           !aFrame->GetContent()->IsEditable();
+  const nsImageFrame* image = do_QueryFrame(aFrame);
+  if (image && !aFrame->GetContent()->IsEditable()) {
+    // Editable images are a special-case because editing relies on clicking on
+    // an editable image selecting it, for it to show resizers.
+    return true;
   }
   return false;
 }
 
-static FrameTarget LastResortFrameTargetForFrame(nsIFrame* aFrame) {
-  return {aFrame, UseFrameEdge(aFrame), false};
+static FrameTarget LastResortFrameTargetForFrame(nsIFrame* aFrame,
+                                                 const nsPoint& aPoint) {
+  if (!UseFrameEdge(aFrame)) {
+    return {aFrame, false, false};
+  }
+  const auto& rect = aFrame->GetRectRelativeToSelf();
+  nscoord reference;
+  nscoord middle;
+  if (aFrame->GetWritingMode().IsVertical()) {
+    reference = aPoint.y;
+    middle = rect.Height() / 2;
+  } else {
+    reference = aPoint.x;
+    middle = rect.Width() / 2;
+  }
+  const bool afterFrame = reference > middle;
+  return {aFrame, true, afterFrame};
 }
 
 // GetSelectionClosestFrame is the helper function that calculates the closest
@@ -5661,7 +5685,8 @@ static FrameTarget LastResortFrameTargetForFrame(nsIFrame* aFrame) {
 // restricted environments.
 // Cannot handle overlapping frames correctly, so it should receive the output
 // of GetFrameForPoint
-// Guaranteed to return a valid FrameTarget
+// Guaranteed to return a valid FrameTarget.
+// aPoint is relative to aFrame.
 static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
                                             const nsPoint& aPoint,
                                             uint32_t aFlags) {
@@ -5685,7 +5710,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     }
   }
 
-  return LastResortFrameTargetForFrame(aFrame);
+  return LastResortFrameTargetForFrame(aFrame, aPoint);
 }
 
 static nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame,
