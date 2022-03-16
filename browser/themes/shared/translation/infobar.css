@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 notification[value="translation"] .messageImage {
   list-style-image: url(chrome://browser/skin/translation-16.png) !important;
   -moz-image-region: rect(0, 32px, 16px, 16px);

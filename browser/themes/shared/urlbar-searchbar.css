@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 :root {
   --toolbar-field-border-color: hsla(240,5%,5%,.25);
   --toolbar-field-focus-border-color: var(--focus-outline-color);

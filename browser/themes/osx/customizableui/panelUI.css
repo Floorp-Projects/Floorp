@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import "chrome://browser/skin/customizableui/panelUI.inc.css";
+@import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
@@ -22,11 +22,11 @@
 #permission-popup,
 #protections-popup,
 #appMenu-notification-popup {
-  margin-top: -1px; /* Overrides value from panelUI.inc.css */
+  margin-top: -1px; /* Overrides value from panelUI-shared.css */
 }
 
 #BMB_bookmarksPopup {
-  margin-top: -4px; /* Overrides value from panelUI.inc.css */
+  margin-top: -4px; /* Overrides value from panelUI-shared.css */
 }
 
 .panel-subview-body {
