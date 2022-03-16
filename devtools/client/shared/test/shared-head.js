@@ -1343,20 +1343,6 @@ function pushPref(preferenceName, value) {
   return SpecialPowers.pushPrefEnv(options);
 }
 
-/**
- * Lookup the provided dotted path ("prop1.subprop2.myProp") in the provided object.
- *
- * @param {Object} obj
- *        Object to expand.
- * @param {String} path
- *        Dotted path to use to expand the object.
- * @return {?} anything that is found at the provided path in the object.
- */
-function lookupPath(obj, path) {
-  const segments = path.split(".");
-  return segments.reduce((prev, current) => prev[current], obj);
-}
-
 var closeToolbox = async function() {
   await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
 };
