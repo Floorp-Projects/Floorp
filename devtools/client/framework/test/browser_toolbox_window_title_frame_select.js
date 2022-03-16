@@ -19,6 +19,20 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 
+/**
+ * Wait for a given toolbox to get its title updated.
+ */
+function waitForTitleChange(toolbox) {
+  return new Promise(resolve => {
+    toolbox.topWindow.addEventListener("message", function onmessage(event) {
+      if (event.data.name == "set-host-title") {
+        toolbox.topWindow.removeEventListener("message", onmessage);
+        resolve();
+      }
+    });
+  });
+}
+
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
