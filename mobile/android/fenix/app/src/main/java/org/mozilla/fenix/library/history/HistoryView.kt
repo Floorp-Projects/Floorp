@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.library.history
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -21,7 +23,8 @@ import org.mozilla.fenix.theme.ThemeManager
  */
 class HistoryView(
     container: ViewGroup,
-    val interactor: HistoryInteractor
+    val interactor: HistoryInteractor,
+    val onZeroItemsLoaded: () -> Unit
 ) : LibraryPageView(container), UserInteractionHandler {
 
     val binding = ComponentHistoryBinding.inflate(
@@ -31,8 +34,20 @@ class HistoryView(
     var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
         private set
 
-    val historyAdapter = HistoryAdapter(interactor)
+    val historyAdapter = HistoryAdapter(interactor).apply {
+        addLoadStateListener {
+            adapterItemCount = itemCount
+            Log.d("hehehaha", "adapterItemCount = $adapterItemCount")
+            if (it.source.refresh is LoadState.NotLoading &&
+                it.append.endOfPaginationReached &&
+                itemCount < 1
+            ) {
+                onZeroItemsLoaded.invoke()
+            }
+        }
+    }
     private val layoutManager = LinearLayoutManager(container.context)
+    private var adapterItemCount: Int? = null
 
     init {
         binding.historyList.apply {
@@ -61,7 +76,7 @@ class HistoryView(
 
         historyAdapter.updatePendingDeletionIds(state.pendingDeletionIds)
 
-        updateEmptyState(state.pendingDeletionIds.size != historyAdapter.itemCount)
+        updateEmptyState(state.pendingDeletionIds.size != adapterItemCount)
 
         historyAdapter.updateMode(state.mode)
         val first = layoutManager.findFirstVisibleItemPosition()

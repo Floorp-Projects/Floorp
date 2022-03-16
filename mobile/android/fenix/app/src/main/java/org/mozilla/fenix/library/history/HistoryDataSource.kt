@@ -11,8 +11,7 @@ import org.mozilla.fenix.components.history.HistoryDB
 import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryDataSource(
-    private val historyProvider: PagedHistoryProvider,
-    private val onZeroItemsLoaded: () -> Unit
+    private val historyProvider: PagedHistoryProvider
 ) : PagingSource<Int, History>() {
 
     // having any value but null creates visual glitches in case or swipe to refresh and immediate
@@ -26,9 +25,6 @@ class HistoryDataSource(
             positionWithOffset(offset)
         }
         val nextOffset = if (historyItems.isEmpty()) {
-            if (params.key == null) {
-                onZeroItemsLoaded.invoke()
-            }
             null
         } else {
             (offset + historyItems.size) + 1

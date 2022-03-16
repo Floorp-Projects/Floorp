@@ -99,7 +99,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         )
         _historyView = HistoryView(
             binding.historyLayout,
-            historyInteractor
+            historyInteractor,
+            onZeroItemsLoaded = { viewModel.userHasHistory.value = false }
         )
 
         return view

@@ -13,20 +13,15 @@ import kotlinx.coroutines.flow.Flow
 import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryViewModel(historyProvider: PagedHistoryProvider) : ViewModel() {
-    var history: Flow<PagingData<History>>
     var userHasHistory = MutableLiveData(true)
-
-    init {
-        history = Pager(
-            PagingConfig(PAGE_SIZE),
-            null
-        ) {
-            HistoryDataSource(
-                historyProvider = historyProvider,
-                onZeroItemsLoaded = { userHasHistory.value = false }
-            )
-        }.flow
-    }
+    var history: Flow<PagingData<History>> = Pager(
+        PagingConfig(PAGE_SIZE),
+        null
+    ) {
+        HistoryDataSource(
+            historyProvider = historyProvider
+        )
+    }.flow
 
     companion object {
         private const val PAGE_SIZE = 25
