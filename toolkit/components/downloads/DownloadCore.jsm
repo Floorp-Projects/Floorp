@@ -177,6 +177,15 @@ Download.prototype = {
   canceled: false,
 
   /**
+   * Downloaded files can be deleted from within Firefox, e.g. via the context
+   * menu. Currently Firefox does not track file moves (see bug 1746386), so if
+   * a download's target file stops existing we have to assume it's "moved or
+   * missing." To distinguish files intentionally deleted within Firefox from
+   * files that are moved/missing, we mark them as "deleted" with this property.
+   */
+  deleted: false,
+
+  /**
    * When the download fails, this is set to a DownloadError instance indicating
    * the cause of the failure.  If the download has been completed successfully
    * or has been canceled, this property is null.  This property is reset to
@@ -941,6 +950,7 @@ Download.prototype = {
           if (this.currentBytes != 0 || this.hasPartialData) {
             this.currentBytes = 0;
             this.hasPartialData = false;
+            this.target.refreshPartFileState();
             this._notifyChange();
           }
         } finally {
@@ -1121,6 +1131,36 @@ Download.prototype = {
     });
 
     return promise;
+  },
+
+  /**
+   * Deletes all file data associated with a download, preserving the download
+   * object itself and updating it for download views.
+   */
+  async manuallyRemoveData() {
+    let { path } = this.target;
+    if (this.succeeded) {
+      // Temp files are made "read-only" by DownloadIntegration.downloadDone, so
+      // reset the permission bits to read/write. This won't be necessary after
+      // bug 1733587 since Downloads won't ever be temporary.
+      await IOUtils.setPermissions(path, 0o660);
+      await IOUtils.remove(path, { ignoreAbsent: true });
+    }
+    this.deleted = true;
+    await this.cancel();
+    await this.removePartialData();
+    // We need to guarantee that the UI is refreshed irrespective of what state
+    // the download is in when this is called, to ensure the download doesn't
+    // wind up stuck displaying as if it exists when it actually doesn't. And
+    // that means updating this.target.partFileExists no matter what.
+    await this.target.refreshPartFileState();
+    await this.refresh();
+    // The above methods will sometimes call _notifyChange, but not always. It
+    // depends on whether the download is `succeeded`, `stopped`, `canceled`,
+    // etc. Since this method needs to update the UI and can be invoked on any
+    // download as long as its target has some file on the system, we need to
+    // call _notifyChange no matter what state the download is in.
+    this._notifyChange();
   },
 
   /**

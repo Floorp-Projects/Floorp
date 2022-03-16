@@ -230,9 +230,9 @@ var DownloadsViewUI = {
       : {};
 
     // Hide the "Delete" item if there's no file data to delete.
-    contextMenu.querySelector(".downloadDeleteFileMenuItem").hidden = !(
-      download.target?.exists || download.target?.partFileExists
-    );
+    contextMenu.querySelector(".downloadDeleteFileMenuItem").hidden =
+      download.deleted ||
+      !(download.target?.exists || download.target?.partFileExists);
 
     // Hide the "Go To Download Page" item if there's no referrer. Ideally the
     // Downloads API will require a referrer (see bug 1723712) to create a
@@ -739,7 +739,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       // The download is not in progress, so we update the user interface based
       // on other properties. The order in which we check the properties of the
       // Download object is the same used by stateOfDownload.
-      if (this.download.succeeded) {
+      if (this.download.deleted) {
+        this.showDeletedOrMissing();
+      } else if (this.download.succeeded) {
         DownloadsCommon.log(
           "_updateStateInner, target exists? ",
           this.download.target.path,
@@ -781,10 +783,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         } else {
           // This is a completed download, but the target file does not exist
           // anymore, so the main action of opening the file is unavailable.
-          this.element.removeAttribute("exists");
-          let label = DownloadsCommon.strings.fileMovedOrMissing;
-          this.showStatusWithDetails(label, label);
-          this.hideButton();
+          this.showDeletedOrMissing();
         }
       } else if (this.download.error) {
         if (this.download.error.becauseBlockedByParentalControls) {
@@ -939,6 +938,16 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     );
   },
 
+  showDeletedOrMissing() {
+    this.element.removeAttribute("exists");
+    let label =
+      DownloadsCommon.strings[
+        this.download.deleted ? "fileDeleted" : "fileMovedOrMissing"
+      ];
+    this.showStatusWithDetails(label, label);
+    this.hideButton();
+  },
+
   /**
    * Shows the appropriate unblock dialog based on the verdict, and executes the
    * action selected by the user in the dialog, which may involve unblocking,
@@ -1044,7 +1053,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_show":
       case "downloadsCmd_deleteFile":
         let { target } = this.download;
-        return target.exists || target.partFileExists;
+        return (
+          !this.download.deleted && (target.exists || target.partFileExists)
+        );
 
       case "downloadsCmd_delete":
       case "cmd_delete":
@@ -1075,7 +1086,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   downloadsCmd_cancel() {
     // This is the correct way to avoid race conditions when cancelling.
     this.download.cancel().catch(() => {});
-    this.download.removePartialData().catch(Cu.reportError);
+    this.download
+      .removePartialData()
+      .catch(Cu.reportError)
+      .finally(() => this.download.target.refresh());
   },
 
   downloadsCmd_confirmBlock() {
