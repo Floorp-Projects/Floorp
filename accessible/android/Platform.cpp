@@ -111,7 +111,8 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
 }
 
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed) {
+                               bool aIsSelectionCollapsed,
+                               int32_t aGranularity) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 

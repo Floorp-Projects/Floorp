@@ -10,7 +10,9 @@
    AXTextStateChangeTypeSelectionExtend, AXTextSelectionDirectionUnknown,
    AXTextSelectionDirectionPrevious, AXTextSelectionDirectionNext,
    AXTextSelectionDirectionDiscontiguous, AXTextSelectionGranularityUnknown,
-   AXTextSelectionGranularityCharacter, AXTextSelectionGranularityWord */
+   AXTextSelectionDirectionBeginning, AXTextSelectionDirectionEnd,
+   AXTextSelectionGranularityCharacter, AXTextSelectionGranularityWord,
+   AXTextSelectionGranularityLine */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -37,6 +39,8 @@ const AXTextEditTypeTyping = 3;
 
 // AXTextSelectionDirection enum values
 const AXTextSelectionDirectionUnknown = 0;
+const AXTextSelectionDirectionBeginning = 1;
+const AXTextSelectionDirectionEnd = 2;
 const AXTextSelectionDirectionPrevious = 3;
 const AXTextSelectionDirectionNext = 4;
 const AXTextSelectionDirectionDiscontiguous = 5;
@@ -45,6 +49,7 @@ const AXTextSelectionDirectionDiscontiguous = 5;
 const AXTextSelectionGranularityUnknown = 0;
 const AXTextSelectionGranularityCharacter = 1;
 const AXTextSelectionGranularityWord = 2;
+const AXTextSelectionGranularityLine = 3;
 
 function getNativeInterface(accDoc, id) {
   return findAccessibleChildByID(accDoc, id).nativeInterface.QueryInterface(
