@@ -135,6 +135,13 @@ pub struct ScaleOffset {
 }
 
 impl ScaleOffset {
+    pub fn new(sx: f32, sy: f32, tx: f32, ty: f32) -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(sx, sy),
+            offset: Vector2D::new(tx, ty),
+        }
+    }
+
     pub fn identity() -> Self {
         ScaleOffset {
             scale: Vector2D::new(1.0, 1.0),
