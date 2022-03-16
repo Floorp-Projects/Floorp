@@ -93,7 +93,7 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message">Abas que você não usa há duas semanas são movidas para cá. Você pode</string>
+    <string name="tab_tray_inactive_onboarding_message">Abas que você não usa há duas semanas são movidas para cá.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">desativar nas configurações</string>
 
@@ -651,7 +651,7 @@
     <string name="preferences_inactive_tabs">Mover abas antigas para inativas</string>
 
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Abas que você não usa há duas semanas são movidas para a seção de inativas.</string>
+    <string name="preferences_inactive_tabs_title">Mover abas que você não usa há duas semanas para a seção de inativas</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1421,7 +1421,7 @@
     <string name="preferences_logins_add_login">Adicionar conta</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronização de contas</string>
+    <string name="preferences_passwords_sync_logins">Sincronizar contas</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sincronizar contas entre dispositivos</string>
     <!-- Preference to access list of saved logins -->
@@ -1478,11 +1478,11 @@
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">Configurar agora</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
-    <string name="logins_biometric_prompt_message_pin">Desbloqueie seu dispositivo</string>
+    <string name="logins_biometric_prompt_message_pin">Desbloquear dispositivo</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Zoom em todos os sites</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Ativar permite zoom com movimento de pinça com dois dedos, mesmo em sites que tentam impedir esse gesto.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Permitir zoom com movimento de pinça com dois dedos, mesmo em sites que tentam impedir este gesto.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
@@ -1555,7 +1555,7 @@
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Mais tarde</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
-    <string name="credit_cards_biometric_prompt_message_pin">Desbloqueie seu dispositivo</string>
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloquear dispositivo</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Desbloqueie para usar informações armazenadas de cartões de crédito</string>
