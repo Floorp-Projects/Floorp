@@ -8,6 +8,7 @@
 #define mozilla_Mutex_h
 
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/ThreadSafety.h"
 #include "mozilla/PlatformMutex.h"
 #include "nsISupports.h"
 
@@ -33,7 +34,8 @@ namespace mozilla {
  * include leak checking.  Sometimes you want to intentionally "leak" a mutex
  * until shutdown; in these cases, OffTheBooksMutex is for you.
  */
-class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
+class CAPABILITY OffTheBooksMutex : public detail::MutexImpl,
+                                    BlockingResourceBase {
  public:
   /**
    * @param aName A name which can reference this lock
@@ -60,24 +62,24 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
   /**
    * Lock this mutex.
    **/
-  void Lock() { this->lock(); }
+  void Lock() CAPABILITY_ACQUIRE() { this->lock(); }
 
   /**
    * Try to lock this mutex, returning true if we were successful.
    **/
-  [[nodiscard]] bool TryLock() { return this->tryLock(); }
+  [[nodiscard]] bool TryLock() TRY_ACQUIRE(true) { return this->tryLock(); }
 
   /**
    * Unlock this mutex.
    **/
-  void Unlock() { this->unlock(); }
+  void Unlock() CAPABILITY_RELEASE() { this->unlock(); }
 
   /**
    * Assert that the current thread owns this mutex in debug builds.
    *
    * Does nothing in non-debug builds.
    **/
-  void AssertCurrentThreadOwns() const {}
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {}
 
   /**
    * Assert that the current thread does not own this mutex.
@@ -87,25 +89,24 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
    *
    * It is therefore mostly useful as documentation.
    **/
-  void AssertNotCurrentThreadOwns() const {}
+  void AssertNotCurrentThreadOwns() const ASSERT_CAPABILITY(!this) {}
 
 #else
-  void Lock();
-  [[nodiscard]] bool TryLock();
-  void Unlock();
+  void Lock() CAPABILITY_ACQUIRE();
 
-  void AssertCurrentThreadOwns() const;
+  [[nodiscard]] bool TryLock() TRY_ACQUIRE(true);
+  void Unlock() CAPABILITY_RELEASE();
 
-  void AssertNotCurrentThreadOwns() const {
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this);
+  void AssertNotCurrentThreadOwns() const ASSERT_CAPABILITY(!this) {
     // FIXME bug 476536
   }
-
 #endif  // ifndef DEBUG
 
  private:
-  OffTheBooksMutex();
-  OffTheBooksMutex(const OffTheBooksMutex&);
-  OffTheBooksMutex& operator=(const OffTheBooksMutex&);
+  OffTheBooksMutex() = delete;
+  OffTheBooksMutex(const OffTheBooksMutex&) = delete;
+  OffTheBooksMutex& operator=(const OffTheBooksMutex&) = delete;
 
   friend class OffTheBooksCondVar;
 
@@ -128,9 +129,85 @@ class Mutex : public OffTheBooksMutex {
   MOZ_COUNTED_DTOR(Mutex)
 
  private:
-  Mutex();
-  Mutex(const Mutex&);
-  Mutex& operator=(const Mutex&);
+  Mutex() = delete;
+  Mutex(const Mutex&) = delete;
+  Mutex& operator=(const Mutex&) = delete;
+};
+
+/**
+ * MutexSingleWriter
+ *
+ * Mutex where a single writer exists, so that reads from the same thread
+ * will not generate data races or consistency issues.
+ *
+ * When possible, use MutexAutoLock/MutexAutoUnlock to lock/unlock this
+ * mutex within a scope, instead of calling Lock/Unlock directly.
+ *
+ * This requires an object implementing Mutex's SingleWriterLockOwner, so
+ * we can do correct-thread checks.
+ */
+// Subclass this in the object owning the mutex
+class SingleWriterLockOwner {
+ public:
+  SingleWriterLockOwner() = default;
+  ~SingleWriterLockOwner() = default;
+
+  virtual bool OnWritingThread() const = 0;
+};
+
+class MutexSingleWriter : public OffTheBooksMutex {
+ public:
+  // aOwner should be the object that contains the mutex, typically.  We
+  // will use that object (which must have a lifetime the same or greater
+  // than this object) to verify that we're running on the correct thread,
+  // typically only in DEBUG builds
+  explicit MutexSingleWriter(const char* aName, SingleWriterLockOwner* aOwner)
+      : OffTheBooksMutex(aName)
+#ifdef DEBUG
+        ,
+        mOwner(aOwner)
+#endif
+  {
+    MOZ_COUNT_CTOR(MutexSingleWriter);
+    MOZ_ASSERT(mOwner);
+  }
+
+  MOZ_COUNTED_DTOR(MutexSingleWriter)
+
+  /**
+   * Statically assert that we're on the only thread that modifies data
+   * guarded by this Mutex.  This allows static checking for the pattern of
+   * having a single thread modify a set of data, and read it (under lock)
+   * on other threads, and reads on the thread that modifies it doesn't
+   * require a lock.  This doesn't solve the issue of some data under the
+   * Mutex following this pattern, and other data under the mutex being
+   * written from multiple threads.
+   *
+   * We could set the writing thread and dynamically check it in debug
+   * builds, but this doesn't.  We could also use thread-safety/capability
+   * system to provide direct thread assertions.
+   **/
+  void AssertOnWritingThread() const ASSERT_CAPABILITY(this) {
+    MOZ_ASSERT(mOwner->OnWritingThread());
+  }
+  void AssertOnWritingThreadOrHeld() const ASSERT_CAPABILITY(this) {
+#ifdef DEBUG
+    if (!mOwner->OnWritingThread()) {
+      AssertCurrentThreadOwns();
+    }
+#endif
+  }
+
+ private:
+#ifdef DEBUG
+  SingleWriterLockOwner* mOwner MOZ_UNSAFE_REF(
+      "This is normally the object that contains the MonitorSingleWriter, so "
+      "we don't want to hold a reference to ourselves");
+#endif
+
+  MutexSingleWriter() = delete;
+  MutexSingleWriter(const MutexSingleWriter&) = delete;
+  MutexSingleWriter& operator=(const MutexSingleWriter&) = delete;
 };
 
 namespace detail {
@@ -145,7 +222,7 @@ class MOZ_RAII BaseAutoUnlock;
  * MUCH PREFERRED to bare calls to Mutex.Lock and Unlock.
  */
 template <typename T>
-class MOZ_RAII BaseAutoLock {
+class MOZ_RAII SCOPED_CAPABILITY BaseAutoLock {
  public:
   /**
    * Constructor
@@ -155,9 +232,9 @@ class MOZ_RAII BaseAutoLock {
    * @param aLock A valid mozilla::Mutex* returned by
    *              mozilla::Mutex::NewMutex.
    **/
-  explicit BaseAutoLock(T aLock) : mLock(aLock) { mLock.Lock(); }
+  explicit BaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock) : mLock(aLock) { mLock.Lock(); }
 
-  ~BaseAutoLock(void) { mLock.Unlock(); }
+  ~BaseAutoLock(void) CAPABILITY_RELEASE() { mLock.Unlock(); }
 
   // Assert that aLock is the mutex passed to the constructor and that the
   // current thread owns the mutex.  In coding patterns such as:
@@ -184,15 +261,15 @@ class MOZ_RAII BaseAutoLock {
   // should use this method in preference to using AssertCurrentThreadOwns on
   // the mutex you expected to be held, since this method provides stronger
   // guarantees.
-  void AssertOwns(const T& aMutex) const {
+  void AssertOwns(const T& aMutex) const ASSERT_CAPABILITY(aMutex) {
     MOZ_ASSERT(&aMutex == &mLock);
     mLock.AssertCurrentThreadOwns();
   }
 
  private:
-  BaseAutoLock();
-  BaseAutoLock(BaseAutoLock&);
-  BaseAutoLock& operator=(BaseAutoLock&);
+  BaseAutoLock() = delete;
+  BaseAutoLock(BaseAutoLock&) = delete;
+  BaseAutoLock& operator=(BaseAutoLock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
   friend class BaseAutoUnlock<T>;
@@ -205,7 +282,89 @@ BaseAutoLock(MutexType&) -> BaseAutoLock<MutexType&>;
 }  // namespace detail
 
 typedef detail::BaseAutoLock<Mutex&> MutexAutoLock;
+typedef detail::BaseAutoLock<MutexSingleWriter&> MutexSingleWriterAutoLock;
 typedef detail::BaseAutoLock<OffTheBooksMutex&> OffTheBooksMutexAutoLock;
+
+// Use if we've done AssertOnWritingThread(), and then later need to take the
+// lock to write to a protected member. Instead of
+//    MutexSingleWriterAutoLock lock(mutex)
+// use
+//    MutexSingleWriterAutoLockOnThread(lock, mutex)
+#define MutexSingleWriterAutoLockOnThread(lock, mutex) \
+  PUSH_IGNORE_THREAD_SAFETY                            \
+  MutexSingleWriterAutoLock lock(mutex);               \
+  POP_THREAD_SAFETY
+
+namespace detail {
+/**
+ * ReleaseableMutexAutoLock
+ * Acquires the Mutex when it enters scope, and releases it when it leaves
+ * scope. Allows calling Unlock (and Lock) as an alternative to
+ * MutexAutoUnlock; this can avoid an extra lock/unlock pair.
+ *
+ */
+template <typename T>
+class MOZ_RAII SCOPED_CAPABILITY ReleaseableBaseAutoLock {
+ public:
+  /**
+   * Constructor
+   * The constructor aquires the given lock.  The destructor
+   * releases the lock.
+   *
+   * @param aLock A valid mozilla::Mutex& returned by
+   *              mozilla::Mutex::NewMutex.
+   **/
+  explicit ReleaseableBaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock)
+      : BaseAutoLock<T>(aLock) {
+    mLock.Lock();
+    mLocked = true;
+  }
+
+  ~ReleaseableBaseAutoLock(void) CAPABILITY_RELEASE() {
+    if (!mLocked) {
+      mLock.Unlock();
+    }
+  }
+
+  void AssertOwns(const T& aMutex) const ASSERT_CAPABILITY(mLock) {
+    MOZ_ASSERT(&aMutex == &mLock);
+    mLock.AssertCurrentThreadOwns();
+  }
+
+  // Allow dropping the lock prematurely; for example to support something like:
+  // clang-format off
+  // MutexAutoLock lock(mMutex);
+  // ...
+  // if (foo) {
+  //   lock.Unlock();
+  //   MethodThatCantBeCalledWithLock()
+  //   return;
+  // }
+  // clang-format on
+  void Unlock() CAPABILITY_RELEASE() {
+    mLock.Unlock();
+    mLocked = false;
+  }
+  void Lock() CAPABILITY_ACQUIRE() {
+    mLock.Lock();
+    mLocked = true;
+  }
+
+ private:
+  ReleaseableBaseAutoLock() = delete;
+  ReleaseableBaseAutoLock(ReleaseableBaseAutoLock&) = delete;
+  ReleaseableBaseAutoLock& operator=(ReleaseableBaseAutoLock&) = delete;
+  static void* operator new(size_t) noexcept(true);
+
+  bool mLocked;
+  T mLock;
+};
+
+template <typename MutexType>
+ReleaseableBaseAutoLock(MutexType&) -> ReleaseableBaseAutoLock<MutexType&>;
+}  // namespace detail
+
+typedef detail::ReleaseableBaseAutoLock<Mutex&> ReleaseableMutexAutoLock;
 
 namespace detail {
 /**
@@ -216,21 +375,25 @@ namespace detail {
  * MUCH PREFERRED to bare calls to Mutex.Unlock and Lock.
  */
 template <typename T>
-class MOZ_RAII BaseAutoUnlock {
+class MOZ_RAII SCOPED_CAPABILITY BaseAutoUnlock {
  public:
-  explicit BaseAutoUnlock(T aLock) : mLock(aLock) { mLock.Unlock(); }
+  explicit BaseAutoUnlock(T aLock) SCOPED_UNLOCK_RELEASE(aLock) : mLock(aLock) {
+    mLock.Unlock();
+  }
 
-  explicit BaseAutoUnlock(BaseAutoLock<T>& aAutoLock) : mLock(aAutoLock.mLock) {
+  explicit BaseAutoUnlock(BaseAutoLock<T>& aAutoLock)
+      /* CAPABILITY_RELEASE(aAutoLock.mLock) */
+      : mLock(aAutoLock.mLock) {
     NS_ASSERTION(mLock, "null lock");
     mLock->Unlock();
   }
 
-  ~BaseAutoUnlock() { mLock.Lock(); }
+  ~BaseAutoUnlock() SCOPED_UNLOCK_REACQUIRE() { mLock.Lock(); }
 
  private:
-  BaseAutoUnlock();
-  BaseAutoUnlock(BaseAutoUnlock&);
-  BaseAutoUnlock& operator=(BaseAutoUnlock&);
+  BaseAutoUnlock() = delete;
+  BaseAutoUnlock(BaseAutoUnlock&) = delete;
+  BaseAutoUnlock& operator=(BaseAutoUnlock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
   T mLock;
@@ -241,6 +404,7 @@ BaseAutoUnlock(MutexType&) -> BaseAutoUnlock<MutexType&>;
 }  // namespace detail
 
 typedef detail::BaseAutoUnlock<Mutex&> MutexAutoUnlock;
+typedef detail::BaseAutoUnlock<MutexSingleWriter&> MutexSingleWriterAutoUnlock;
 typedef detail::BaseAutoUnlock<OffTheBooksMutex&> OffTheBooksMutexAutoUnlock;
 
 namespace detail {
@@ -252,21 +416,21 @@ namespace detail {
  * MUCH PREFERRED to bare calls to Mutex.TryLock and Unlock.
  */
 template <typename T>
-class MOZ_RAII BaseAutoTryLock {
+class MOZ_RAII SCOPED_CAPABILITY BaseAutoTryLock {
  public:
-  explicit BaseAutoTryLock(T& aLock)
+  explicit BaseAutoTryLock(T& aLock) CAPABILITY_ACQUIRE(aLock)
       : mLock(aLock.TryLock() ? &aLock : nullptr) {}
 
-  ~BaseAutoTryLock() {
+  ~BaseAutoTryLock() CAPABILITY_RELEASE() {
     if (mLock) {
       mLock->Unlock();
+      mLock = nullptr;
     }
   }
 
   explicit operator bool() const { return mLock; }
 
  private:
-  BaseAutoTryLock() = delete;
   BaseAutoTryLock(BaseAutoTryLock&) = delete;
   BaseAutoTryLock& operator=(BaseAutoTryLock&) = delete;
   static void* operator new(size_t) noexcept(true);
