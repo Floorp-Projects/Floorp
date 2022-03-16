@@ -97,9 +97,10 @@ void nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval) {
   }
 }
 
+/* static */
 bool nsPluginArray::ForceNoPlugins() {
-  return StaticPrefs::pdfjs_disabled() &&
-         !nsContentUtils::ShouldResistFingerprinting(mWindow->GetExtantDoc());
+  return StaticPrefs::pdfjs_disabled() ||
+         nsContentUtils::ShouldResistFingerprinting();
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPluginArray)
