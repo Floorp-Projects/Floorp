@@ -16,6 +16,7 @@ import mozilla.components.support.utils.WebURLFinder
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
 private const val MIME_TYPE_TEXT_HTML = "text/html"
+private const val MIME_TYPE_TEXT_URL = "text/x-moz-url"
 
 /**
  * A clipboard utility class that allows copying and pasting links/text to & from the clipboard
@@ -32,11 +33,12 @@ class ClipboardHandler(val context: Context) {
      */
     var text: String?
         get() {
-            if (!clipboard.isPrimaryClipEmpty() &&
-                (
-                    clipboard.isPrimaryClipPlainText() ||
-                        clipboard.isPrimaryClipHtmlText()
-                    )
+            if (clipboard.isPrimaryClipEmpty()) {
+                return null
+            }
+            if (clipboard.isPrimaryClipPlainText() ||
+                clipboard.isPrimaryClipHtmlText() ||
+                clipboard.isPrimaryClipUrlText()
             ) {
                 return firstSafePrimaryClipItemText
             }
@@ -82,6 +84,9 @@ class ClipboardHandler(val context: Context) {
 
     private fun ClipboardManager.isPrimaryClipHtmlText() =
         primaryClipDescription?.hasMimeType(MIME_TYPE_TEXT_HTML) ?: false
+
+    private fun ClipboardManager.isPrimaryClipUrlText() =
+        primaryClipDescription?.hasMimeType(MIME_TYPE_TEXT_URL) ?: false
 
     private fun ClipboardManager.isPrimaryClipEmpty() = primaryClip?.itemCount == 0
 
