@@ -554,7 +554,8 @@ bool HTMLEditor::UpdateMetaCharsetWithTransaction(
 
 NS_IMETHODIMP HTMLEditor::NotifySelectionChanged(Document* aDocument,
                                                  Selection* aSelection,
-                                                 int16_t aReason) {
+                                                 int16_t aReason,
+                                                 int32_t aAmount) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -593,8 +594,8 @@ NS_IMETHODIMP HTMLEditor::NotifySelectionChanged(Document* aDocument,
     updater->OnSelectionChange();
   }
 
-  nsresult rv =
-      EditorBase::NotifySelectionChanged(aDocument, aSelection, aReason);
+  nsresult rv = EditorBase::NotifySelectionChanged(aDocument, aSelection,
+                                                   aReason, aAmount);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::NotifySelectionChanged() failed");
   return rv;

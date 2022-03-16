@@ -226,7 +226,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       int32_t caretOffset = event->GetCaretOffset();
       MOXTextMarkerDelegate* delegate =
           [MOXTextMarkerDelegate getOrCreateForDoc:aEvent->Document()];
-      [delegate setCaretOffset:eventTarget at:caretOffset];
+      [delegate setCaretOffset:eventTarget
+                            at:caretOffset
+               moveGranularity:event->GetGranularity()];
       if (event->IsSelectionCollapsed()) {
         // If the selection is collapsed, invalidate our text selection cache.
         [delegate setSelectionFrom:eventTarget
