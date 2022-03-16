@@ -207,11 +207,11 @@ static inline uint32_t MakeFrameDescriptor(uint32_t frameSize, FrameType type,
 // Returns the JSScript associated with the topmost JIT frame.
 JSScript* GetTopJitJSScript(JSContext* cx);
 
-#ifdef JS_CODEGEN_MIPS32
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM64)
 uint8_t* alignDoubleSpill(uint8_t* pointer);
 #else
 inline uint8_t* alignDoubleSpill(uint8_t* pointer) {
-  // This is NO-OP on non-MIPS platforms.
+  // This is a no-op on most platforms.
   return pointer;
 }
 #endif
