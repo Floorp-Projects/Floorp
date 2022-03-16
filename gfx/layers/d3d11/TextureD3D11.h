@@ -509,7 +509,7 @@ class SyncObjectD3D11Client : public SyncObjectClient {
   explicit SyncObjectD3D11Client(SyncHandle aSyncHandle);
   bool Init(ID3D11Device* aDevice, bool aFallible);
   bool SynchronizeInternal(ID3D11Device* aDevice, bool aFallible);
-  Mutex mSyncLock;
+  Mutex mSyncLock MOZ_UNANNOTATED;
   RefPtr<ID3D11Texture2D> mSyncTexture;
   std::vector<ID3D11Texture2D*> mSyncedTextures;
 

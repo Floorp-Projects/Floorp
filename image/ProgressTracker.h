@@ -226,7 +226,7 @@ class ProgressTracker : public mozilla::SupportsWeakPtr {
   RefPtr<RenderBlockingRunnable> mRunnable;
 
   // mMutex protects access to mImage and mEventTarget.
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
 
   // mImage is a weak ref; it should be set to null when the image goes out of
   // scope.

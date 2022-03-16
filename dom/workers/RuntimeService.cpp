@@ -1586,7 +1586,7 @@ class CrashIfHangingRunnable : public WorkerControlRunnable {
   void PostDispatch(WorkerPrivate* aWorkerPrivate,
                     bool aDispatchResult) override {}
 
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   nsCString mMsg;
   FlippedOnce<false> mHasMsg;
 };

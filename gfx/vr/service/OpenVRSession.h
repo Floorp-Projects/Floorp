@@ -102,7 +102,7 @@ class OpenVRSession : public VRSession {
   void StopHapticTimer();
   RefPtr<nsITimer> mHapticTimer;
   RefPtr<VRThread> mHapticThread;
-  mozilla::Mutex mControllerHapticStateMutex;
+  mozilla::Mutex mControllerHapticStateMutex MOZ_UNANNOTATED;
   UniquePtr<OpenVRControllerMapper> mControllerMapper;
 };
 

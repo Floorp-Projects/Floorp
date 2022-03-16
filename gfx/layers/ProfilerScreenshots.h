@@ -101,7 +101,7 @@ class ProfilerScreenshots final {
   // threads, protected by mMutex.
   nsTArray<RefPtr<gfx::DataSourceSurface>> mAvailableSurfaces;
   // Protects mAvailableSurfaces.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   // The total number of surfaces created. If encoding is fast enough to happen
   // entirely in the time between two calls to SubmitScreenshot, this should
   // never exceed 1.

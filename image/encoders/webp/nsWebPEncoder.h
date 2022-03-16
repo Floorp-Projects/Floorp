@@ -58,6 +58,6 @@ class nsWebPEncoder final : public imgIEncoder {
   // append-only while we read from it (that it is not realloced) and to
   // ensure that only one thread dispatches a callback for each call to
   // AsyncWait.
-  ReentrantMonitor mReentrantMonitor;
+  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
 };
 #endif  // mozilla_image_encoders_webp_nsWebPEncoder_h

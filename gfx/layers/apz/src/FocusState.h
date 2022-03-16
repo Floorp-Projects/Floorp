@@ -138,7 +138,7 @@ class FocusState final {
  private:
   // All methods should hold this lock, since this class is accessed via both
   // the updater and controller threads.
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
 
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<LayersId, FocusTarget, LayersId::HashFn> mFocusTree;

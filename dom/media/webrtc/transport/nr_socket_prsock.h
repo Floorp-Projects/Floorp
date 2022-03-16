@@ -283,7 +283,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
   // STS thread executor
   void recv_callback_s(RefPtr<nr_udp_message> msg);
 
-  ReentrantMonitor monitor_;  // protects err_and state_
+  ReentrantMonitor monitor_ MOZ_UNANNOTATED;  // protects err_and state_
   bool err_;
   NrSocketIpcState state_;
 

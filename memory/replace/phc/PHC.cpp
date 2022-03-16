@@ -676,7 +676,7 @@ class GMut {
 
  public:
   // The mutex that protects the other members.
-  static Mutex sMutex;
+  static Mutex sMutex MOZ_UNANNOTATED;
 
   GMut()
       : mRNG(RandomSeed<0>(), RandomSeed<1>()),

@@ -148,7 +148,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   bool mBootstrappedTimingsSet{false};
   TimingStruct mBootstrappedTimings;
 
-  Mutex mCallbacksLock{"nsHttpConnection::mCallbacksLock"};
+  Mutex mCallbacksLock MOZ_UNANNOTATED{"nsHttpConnection::mCallbacksLock"};
   nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;
 
   nsTArray<HttpTrafficCategory> mTrafficCategory;

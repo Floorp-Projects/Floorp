@@ -499,7 +499,7 @@ class nsCocoaUtils {
   /**
    * Lock protecting |sVideoCapturePromises| and |sAudioCapturePromises|.
    */
-  static StaticMutex sMediaCaptureMutex;
+  static StaticMutex sMediaCaptureMutex MOZ_UNANNOTATED;
 };
 
 #endif  // nsCocoaUtils_h_

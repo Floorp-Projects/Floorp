@@ -173,12 +173,12 @@ class nsTimerImpl {
   mozilla::TimeStamp mTimeout;
 
   RefPtr<nsITimer> mITimer;
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   Callback mCallback;
   // Counter because in rare cases we can Fire reentrantly
   unsigned int mFiring;
 
-  static mozilla::StaticMutex sDeltaMutex;
+  static mozilla::StaticMutex sDeltaMutex MOZ_UNANNOTATED;
   static double sDeltaSum;
   static double sDeltaSumSquared;
   static double sDeltaNum;

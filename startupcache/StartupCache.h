@@ -217,7 +217,7 @@ class StartupCache : public nsIMemoryReporter {
   nsTArray<decltype(mTable)> mOldTables;
   nsCOMPtr<nsIFile> mFile;
   loader::AutoMemMap mCacheData;
-  Mutex mTableLock;
+  Mutex mTableLock MOZ_UNANNOTATED;
 
   nsCOMPtr<nsIObserverService> mObserverService;
   RefPtr<StartupCacheListener> mListener;

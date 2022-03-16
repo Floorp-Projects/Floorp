@@ -530,8 +530,8 @@ class ScriptPreloader : public nsIObserver,
   // instance.
   AutoMemMap* mCacheData;
 
-  Monitor mMonitor;
-  Monitor mSaveMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mSaveMonitor MOZ_UNANNOTATED;
 };
 
 }  // namespace mozilla

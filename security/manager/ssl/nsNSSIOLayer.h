@@ -338,7 +338,7 @@ class nsSSLIOLayerHelpers {
   uint16_t mVersionFallbackLimit;
 
  private:
-  mozilla::Mutex mutex;
+  mozilla::Mutex mutex MOZ_UNANNOTATED;
   nsCOMPtr<nsIObserver> mPrefObserver;
   uint32_t mTlsFlags;
 };

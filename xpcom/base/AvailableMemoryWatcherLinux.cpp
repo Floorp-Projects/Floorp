@@ -51,7 +51,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 
   // We might tell polling to start/stop from our polling thread
   // or from the main thread during ::Observe().
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // Polling interval to check for low memory. In high memory scenarios,
   // default to 5000 ms between each check.

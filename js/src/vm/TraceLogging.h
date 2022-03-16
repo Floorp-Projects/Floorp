@@ -446,7 +446,7 @@ class TraceLoggerThreadState {
 
   // Mutex to guard the data structures used to hold the payload data:
   // textIdPayloads, payloadDictionary & dictionaryData.
-  Mutex lock;
+  Mutex lock MOZ_UNANNOTATED;
 
   TraceLoggerThreadState() : lock(js::mutexid::TraceLoggerThreadState) {}
 

@@ -28,7 +28,7 @@ class MultiWriterQueueReaderLocking_Mutex {
   void Unlock() { mMutex.Unlock(); };
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 };
 
 // Reader non-locking strategy, trusting that PopAll will never be called

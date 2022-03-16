@@ -39,7 +39,7 @@ class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar {
 
   ChannelHashtable mRealChannels;
   ParentChannelHashtable mParentChannels;
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
 
   static StaticRefPtr<RedirectChannelRegistrar> gSingleton;
 };

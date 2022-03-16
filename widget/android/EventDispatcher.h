@@ -77,7 +77,7 @@ class EventDispatcher final
 
   using ListenersMap = nsClassHashtable<nsStringHashKey, ListenersList>;
 
-  Mutex mLock{"mozilla::widget::EventDispatcher"};
+  Mutex mLock MOZ_UNANNOTATED{"mozilla::widget::EventDispatcher"};
   ListenersMap mListenersMap;
 
   using IterateEventsCallback =

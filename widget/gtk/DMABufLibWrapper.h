@@ -153,7 +153,7 @@ class nsGbmLib {
 
   static void* sGbmLibHandle;
   static void* sXf86DrmLibHandle;
-  static mozilla::StaticMutex sDRILock;
+  static mozilla::StaticMutex sDRILock MOZ_UNANNOTATED;
   static bool sLibLoaded;
 };
 

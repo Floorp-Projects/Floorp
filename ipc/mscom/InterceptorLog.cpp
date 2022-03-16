@@ -92,7 +92,7 @@ class Logger final {
 
   nsCOMPtr<nsIFile> mLogFileName;
   nsCOMPtr<nsIOutputStream> mLogFile;  // Only accessed by mThread
-  Mutex mMutex;                        // Guards mThread and mEntries
+  Mutex mMutex MOZ_UNANNOTATED;        // Guards mThread and mEntries
   nsCOMPtr<nsIThread> mThread;
   nsTArray<nsCString> mEntries;
 };

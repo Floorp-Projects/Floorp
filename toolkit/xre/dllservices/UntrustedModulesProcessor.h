@@ -150,8 +150,8 @@ class UntrustedModulesProcessor final : public nsIObserver {
  private:
   RefPtr<LazyIdleThread> mThread;
 
-  Mutex mUnprocessedMutex;
-  Mutex mModuleCacheMutex;
+  Mutex mUnprocessedMutex MOZ_UNANNOTATED;
+  Mutex mModuleCacheMutex MOZ_UNANNOTATED;
 
   // The members in this group are protected by mUnprocessedMutex
   UnprocessedModuleLoads mUnprocessedModuleLoads;

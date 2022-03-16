@@ -84,7 +84,7 @@ namespace js {
 template <typename T>
 class ExclusiveData {
  protected:
-  mutable Mutex lock_;
+  mutable Mutex lock_ MOZ_UNANNOTATED;
   mutable T value_;
 
   ExclusiveData(const ExclusiveData&) = delete;
@@ -280,7 +280,7 @@ class ExclusiveWaitableData : public ExclusiveData<T> {
  */
 template <typename T>
 class RWExclusiveData {
-  mutable Mutex lock_;
+  mutable Mutex lock_ MOZ_UNANNOTATED;
   mutable ConditionVariable cond_;
   mutable T value_;
   mutable int readers_;

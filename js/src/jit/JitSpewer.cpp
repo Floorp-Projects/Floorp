@@ -33,7 +33,7 @@ using namespace js::jit;
 
 class IonSpewer {
  private:
-  Mutex outputLock_;
+  Mutex outputLock_ MOZ_UNANNOTATED;
   Fprinter jsonOutput_;
   bool firstFunction_;
   bool asyncLogging_;
