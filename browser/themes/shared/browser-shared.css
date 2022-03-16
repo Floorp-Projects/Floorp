@@ -2,10 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include downloads/indicator.inc.css
-%include addons/extension-controlled.inc.css
+@import url("chrome://browser/skin/downloads/indicator.css");
+@import url("chrome://browser/skin/addons/extension-controlled.css");
+@import url("chrome://browser/skin/places/places-tooltip.css");
+@import url("chrome://browser/skin/toolbarbuttons.css");
+@import url("chrome://browser/skin/toolbarbutton-icons.css");
+@import url("chrome://browser/skin/menupanel.css");
+@import url("chrome://browser/skin/urlbar-searchbar.css");
+@import url("chrome://browser/skin/identity-block/identity-block.css");
+@import url("chrome://browser/skin/notification-icons.css");
+@import url("chrome://browser/skin/addon-notification.css");
+@import url("chrome://browser/skin/urlbarView.css");
+@import url("chrome://browser/skin/translation/infobar.css");
+@import url("chrome://browser/skin/autocomplete.css");
+@import url("chrome://browser/skin/places/editBookmarkPanel.css");
+@import url("chrome://browser/skin/sidebar.css");
+@import url("chrome://browser/skin/tabs.css");
+@import url("chrome://browser/skin/fullscreen/warning.css");
+@import url("chrome://browser/skin/ctrlTab.css");
+@import url("chrome://browser/skin/customizableui/customizeMode.css");
+@import url("chrome://browser/skin/UITour.css");
+@import url("chrome://browser/skin/contextmenu.css");
 
-%filter substitution
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 :root {
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
@@ -169,10 +189,6 @@ panel .text-link:-moz-lwtheme:not(:hover) {
 :root[sessionrestored] #nav-bar:-moz-lwtheme {
   transition: var(--ext-theme-background-transition);
 }
-
-/* Places tooltips */
-
-%include places/places-tooltip.inc.css
 
 /* Bookmark toolbar */
 

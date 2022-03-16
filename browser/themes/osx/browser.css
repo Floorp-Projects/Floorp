@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace html url("http://www.w3.org/1999/xhtml");
+@import url("chrome://browser/skin/browser-shared.css");
+@import url("chrome://browser/skin/browser-custom-colors.css");
 
-%include ../shared/browser.inc.css
-%include ../shared/browser-custom-colors.inc.css
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;
@@ -186,10 +186,6 @@
   margin-top: -8px;
 }
 
-%include ../shared/toolbarbuttons.inc.css
-%include ../shared/toolbarbutton-icons.inc.css
-%include ../shared/menupanel.inc.css
-
 /* Inactive elements are faded out on OSX */
 .toolbarbutton-1:not(:hover):-moz-window-inactive,
 .bookmark-item:not(:hover):-moz-window-inactive,
@@ -198,8 +194,6 @@
 }
 
 /* Address bar */
-
-%include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
   :root:not(:-moz-lwtheme) #urlbar {
@@ -246,17 +240,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-inline: 0 5px;
 }
 
-%include ../shared/identity-block/identity-block.inc.css
-%include ../shared/notification-icons.inc.css
-%include ../shared/addon-notification.inc.css
-
-/* Address bar results view */
-
-%include ../shared/urlbarView.inc.css
-
 /* ----- AUTOCOMPLETE ----- */
-
-%include ../shared/autocomplete.inc.css
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid #C7C7C7;
@@ -274,7 +258,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 /* Bookmarking panel */
 
-%include ../shared/places/editBookmarkPanel.inc.css
 
 /* The following elements come from editBookmarkPanel.inc.xhtml. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that
@@ -356,8 +339,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
-%include ../shared/sidebar.inc.css
-
 #browser {
   --sidebar-border-color: hsla(240, 5%, 5%, .1);
 }
@@ -389,8 +370,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 #tabbrowser-tabbox {
   margin: 0;
 }
-
-%include ../shared/tabs.inc.css
 
 .tab-label {
   margin-block: 1px 0;
@@ -442,10 +421,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   color: SelectedItemText !important;
 }
 
-/* Translation */
-
-%include ../shared/translation/infobar.inc.css
-
 /* Status panel */
 
 #statuspanel-label {
@@ -480,9 +455,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-left: 1em;
 }
 
-%include ../shared/fullscreen/warning.inc.css
-%include ../shared/ctrlTab.inc.css
-
 /* On mac, the popup notification contents are indented by default and so
   the default closebutton margins from notification.css require adjustment */
 
@@ -490,14 +462,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-inline-end: -6px;
   margin-top: -7px;
 }
-
-/* Customization mode */
-
-%include ../shared/customizableui/customizeMode.inc.css
-
-/* End customization mode */
-
-%include ../shared/UITour.inc.css
 
 #UITourTooltipDescription {
   font-size: 1.18rem;

@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://browser/skin/browser-shared.css");
+
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-%include ../shared/browser.inc.css
 /**
- * We intentionally do not include browser-custom-colors.inc.css,
+ * We intentionally do not include browser-custom-colors.css,
  * instead choosing to fall back to system colours and transparencies
  * in order to accomodate the wider variety of system themes on that
  * platform.
@@ -108,14 +109,7 @@ menuitem.bookmark-item {
   margin-top: -12px;
 }
 
-%include ../shared/toolbarbuttons.inc.css
-%include ../shared/toolbarbutton-icons.inc.css
-%include ../shared/menupanel.inc.css
-
 /* Address bar */
-
-%include ../shared/urlbar-searchbar.inc.css
-
 #urlbar,
 #searchbar {
   font-size: 1.05em;
@@ -131,13 +125,7 @@ menuitem.bookmark-item {
   --toolbar-field-border-color: ThreeDShadow;
 }
 
-%include ../shared/identity-block/identity-block.inc.css
-%include ../shared/notification-icons.inc.css
-%include ../shared/addon-notification.inc.css
-
 /* Address bar results view */
-
-%include ../shared/urlbarView.inc.css
 
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-action-color: -moz-nativehyperlinktext;
@@ -145,25 +133,14 @@ menuitem.bookmark-item {
   --autocomplete-popup-highlight-color: SelectedItemText;
 }
 
-/* Translation infobar */
-
-%include ../shared/translation/infobar.inc.css
-
 /* AutoComplete */
-
-%include ../shared/autocomplete.inc.css
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
 }
 
-/* Bookmarking panel */
-
-%include ../shared/places/editBookmarkPanel.inc.css
-
 /* Content area */
 
-%include ../shared/sidebar.inc.css
 
 #browser {
   --sidebar-border-color: ThreeDShadow;
@@ -178,8 +155,6 @@ menuitem.bookmark-item {
 }
 
 /* Tabstrip */
-
-%include ../shared/tabs.inc.css
 
 #tabbrowser-tabs {
   /* override the global style to allow the selected tab to be above the nav-bar */
@@ -255,16 +230,6 @@ menuitem.bookmark-item {
   margin-left: 1em;
 }
 
-%include ../shared/fullscreen/warning.inc.css
-%include ../shared/ctrlTab.inc.css
-
-/* Customization mode */
-
-%include ../shared/customizableui/customizeMode.inc.css
-
-/* End customization mode */
-
-%include ../shared/UITour.inc.css
 
 #UITourHighlight {
   /* Below are some fixes for people without an X compositor on Linux.
@@ -294,8 +259,6 @@ menuitem.bookmark-item {
   margin-inline-start: -10px;
   margin-bottom: -10px;
 }
-
-%include ../shared/contextmenu.inc.css
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left {
   /* override toolkit/themes/linux/global/menu.css */
