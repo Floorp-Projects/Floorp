@@ -2,7 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// Test Source Text content fetching
+/**
+ * This test focus on asserting the source content displayed in CodeMirror
+ * when we open a source from the SourceTree (or by any other means).
+ *
+ * The source content is being fetched from the server only on-demand.
+ * The main shortcoming is about sources being GC-ed. This only happens
+ * when we open the debugger on an already loaded page.
+ * When we (re)load a page while the debugger is opened, sources are never GC-ed.
+ * There are also specifics related to HTML page having inline scripts.
+ * Also, as this data is fetched on-demand, there is a loading prompt
+ * being displayed while the source is being fetched from the server.
+ */
 
 "use strict";
 
