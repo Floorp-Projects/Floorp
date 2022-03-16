@@ -120,7 +120,7 @@ class nsBufferedInputStream final : public nsBufferedStream,
   NS_IMETHOD Fill() override;
   NS_IMETHOD Flush() override { return NS_OK; }  // no-op for input streams
 
-  mozilla::Mutex mMutex{"nsBufferedInputStream::mMutex"};
+  mozilla::Mutex mMutex MOZ_UNANNOTATED{"nsBufferedInputStream::mMutex"};
 
   // This value is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;

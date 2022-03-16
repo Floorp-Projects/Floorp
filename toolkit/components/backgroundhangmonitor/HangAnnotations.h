@@ -52,7 +52,7 @@ class BackgroundHangAnnotators {
   BackgroundHangAnnotations GatherAnnotations();
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   std::set<BackgroundHangAnnotator*> mAnnotators;
 };
 

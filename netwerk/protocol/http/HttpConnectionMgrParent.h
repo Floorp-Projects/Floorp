@@ -34,7 +34,7 @@ class HttpConnectionMgrParent final : public PHttpConnectionMgrParent,
 
   bool mShutDown{false};
   static uint32_t sListenerId;
-  static StaticMutex sLock;
+  static StaticMutex sLock MOZ_UNANNOTATED;
   static nsTHashMap<uint32_t, nsCOMPtr<nsIHttpUpgradeListener>>
       sHttpUpgradeListenerMap;
 };

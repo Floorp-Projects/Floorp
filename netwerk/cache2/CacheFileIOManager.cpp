@@ -564,7 +564,7 @@ class ShutdownEvent : public Runnable {
   }
 
  protected:
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
   bool mNotified{false};
 };
 
@@ -4197,7 +4197,7 @@ class SizeOfHandlesRunnable : public Runnable {
   }
 
  private:
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
   bool mMonitorNotified;
   mozilla::MallocSizeOf mMallocSizeOf;
   CacheFileHandles const& mHandles;

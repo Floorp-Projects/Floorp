@@ -3011,7 +3011,7 @@ class PreferencesWriter final {
   static Atomic<int> sPendingWriteCount;
 
   // See PWRunnable::Run for details on why we need this lock.
-  static StaticMutex sWritingToFile;
+  static StaticMutex sWritingToFile MOZ_UNANNOTATED;
 };
 
 Atomic<PrefSaveData*> PreferencesWriter::sPendingWriteData(nullptr);
@@ -5360,7 +5360,7 @@ static void InitAlwaysPref(const nsCString& aName, T* aCache,
 }
 
 static Atomic<bool> sOncePrefRead(false);
-static StaticMutex sOncePrefMutex;
+static StaticMutex sOncePrefMutex MOZ_UNANNOTATED;
 
 namespace StaticPrefs {
 

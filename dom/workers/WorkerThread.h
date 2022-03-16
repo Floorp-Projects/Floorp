@@ -48,7 +48,7 @@ class WorkerThreadFriendKey {
 class WorkerThread final : public nsThread {
   class Observer;
 
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
   CondVar mWorkerPrivateCondVar;
 
   // Protected by nsThread::mLock.

@@ -867,7 +867,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                                                nsAtom* aLanguage = nullptr) = 0;
 
   // Protects mFontFamilies.
-  mozilla::Mutex mFontFamiliesMutex;
+  mozilla::Mutex mFontFamiliesMutex MOZ_UNANNOTATED;
 
   // canonical family name ==> family entry (unique, one name per family entry)
   FontFamilyTable mFontFamilies;

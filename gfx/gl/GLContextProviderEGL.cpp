@@ -1211,7 +1211,7 @@ GLContext* GLContextProviderEGL::GetGlobalContext() { return nullptr; }
 
 // -
 
-static StaticMutex sMutex;
+static StaticMutex sMutex MOZ_UNANNOTATED;
 static StaticRefPtr<GLLibraryEGL> gDefaultEglLibrary;
 
 RefPtr<GLLibraryEGL> DefaultEglLibrary(nsACString* const out_failureId) {

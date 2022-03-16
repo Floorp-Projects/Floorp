@@ -554,7 +554,7 @@ class nsWSAdmissionManager {
   FailDelayManager mFailures;
 
   static nsWSAdmissionManager* sManager;
-  static StaticMutex sLock;
+  static StaticMutex sLock MOZ_UNANNOTATED;
 };
 
 nsWSAdmissionManager* nsWSAdmissionManager::sManager;

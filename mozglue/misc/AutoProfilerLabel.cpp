@@ -44,7 +44,7 @@ class MOZ_RAII AutoProfilerLabelData {
   };
 
   // Mutex protecting access to the following static members.
-  static Mutex sAPLMutex;
+  static Mutex sAPLMutex MOZ_UNANNOTATED;
 
   static ProfilerLabelEnter sEnter;
   static ProfilerLabelExit sExit;

@@ -1368,7 +1368,7 @@ class Connection final : public CachingDatabaseConnection {
  * origin, so we need to queue a runnable and wait our turn.)
  */
 class Connection::InitTemporaryOriginHelper final : public Runnable {
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
   const OriginMetadata mOriginMetadata;
   nsString mOriginDirectoryPath;
   nsresult mIOThreadResultCode;
@@ -2614,7 +2614,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   static QuotaClient* sInstance;
 
-  Mutex mShadowDatabaseMutex;
+  Mutex mShadowDatabaseMutex MOZ_UNANNOTATED;
   bool mShutdownRequested;
 
  public:

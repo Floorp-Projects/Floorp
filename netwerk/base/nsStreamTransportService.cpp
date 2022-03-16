@@ -48,7 +48,7 @@ class nsInputStreamTransport : public nsITransport,
  private:
   virtual ~nsInputStreamTransport() = default;
 
-  Mutex mMutex{"nsInputStreamTransport::mMutex"};
+  Mutex mMutex MOZ_UNANNOTATED{"nsInputStreamTransport::mMutex"};
 
   // This value is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;

@@ -132,7 +132,7 @@ class nsCertOverrideService final : public nsICertOverrideService,
  private:
   ~nsCertOverrideService();
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   bool mDisableAllSecurityCheck;
   nsCOMPtr<nsIFile> mSettingsFile;
   nsTHashtable<nsCertOverrideEntry> mSettingsTable;

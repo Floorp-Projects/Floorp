@@ -126,7 +126,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   Atomic<bool> mCanceled;
 
  protected:
-  mutable ::mozilla::Mutex mMutex;
+  mutable ::mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
@@ -236,7 +236,7 @@ class RememberCertErrorsTable {
   }
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   static RememberCertErrorsTable* sInstance;
 };

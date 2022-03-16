@@ -112,7 +112,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
   // Used to make sure we are not going to release the
   // instance on the worker thread, while we are in the
   // process of forwarding a call from the main thread.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 };
 
 // A WorkerRunnable subclass used to call an ExtensionEventListener

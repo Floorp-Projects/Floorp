@@ -209,7 +209,7 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
   // possibility of DMD reports and/or running on a low-end phone.
   static const uint32_t kTimeoutLengthMS = 180000;
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   bool mIsRegistrationBlocked;
 
   StrongReportersTable* mStrongReporters;

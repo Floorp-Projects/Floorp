@@ -63,7 +63,7 @@ class PresentationData {
   std::vector<RawId> mUnassignedBufferIds;
   std::vector<RawId> mAvailableBufferIds;
   std::vector<RawId> mQueuedBufferIds;
-  Mutex mBuffersLock;
+  Mutex mBuffersLock MOZ_UNANNOTATED;
 
   PresentationData(RawId aDeviceId, RawId aQueueId,
                    already_AddRefed<layers::WebRenderImageHost> aImageHost,

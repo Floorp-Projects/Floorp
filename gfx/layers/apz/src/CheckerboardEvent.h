@@ -198,7 +198,7 @@ class CheckerboardEvent final {
    * Monitor that needs to be acquired before touching mBufferedProperties
    * or mRendertraceInfo.
    */
-  mutable Monitor mRendertraceLock;
+  mutable Monitor mRendertraceLock MOZ_UNANNOTATED;
   /**
    * A circular buffer to store some properties. This is used before the
    * checkerboarding actually starts, so that we have some data on what

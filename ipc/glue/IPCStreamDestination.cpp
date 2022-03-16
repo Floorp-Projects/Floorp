@@ -185,7 +185,7 @@ class IPCStreamDestination::DelayedStartInputStream final
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 
   // This protects mDestination: any method can be called by any thread.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   class HelperRunnable;
 };

@@ -46,7 +46,7 @@ class SimpleMap {
   }
 
  private:
-  Mutex mMutex;  // To protect mMap.
+  Mutex mMutex MOZ_UNANNOTATED;  // To protect mMap.
   AutoTArray<Element, 16> mMap;
 };
 

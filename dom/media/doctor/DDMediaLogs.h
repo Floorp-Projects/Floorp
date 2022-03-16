@@ -175,7 +175,7 @@ struct DDMediaLogs {
   nsTArray<DDObjectLink> mObjectLinks;
 
   // Protects members below.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // Processing thread.
   nsCOMPtr<nsIThread> mThread;

@@ -50,7 +50,7 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
   uint32_t mMaxItems;
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
-  ReentrantMonitor mMonitor;
+  ReentrantMonitor mMonitor MOZ_UNANNOTATED;
   nsString mAppUserModelId;
 
   bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);

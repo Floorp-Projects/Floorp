@@ -122,4 +122,12 @@ struct MOZ_RAII AutoLock {
 
 using MutexAutoLock = AutoLock<Mutex>;
 
+// These allow automation to flag added Mutexes/Monitors that haven't been
+// annotated.  MOZ_UNANNOTATED is applied to legacy instances that haven't
+// been annotated yet.  MOZ_ANNOTATED is applied to instances we have
+// annotated in the (rare) case where there are no GUARDED_BY() annotations
+// for the instance.
+#define MOZ_UNANNOTATED
+#define MOZ_ANNOTATED
+
 #endif
