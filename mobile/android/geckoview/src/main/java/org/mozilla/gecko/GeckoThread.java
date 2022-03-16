@@ -709,6 +709,7 @@ public class GeckoThread extends Thread {
     final String startupEnv = "MOZ_PROFILER_STARTUP=";
     final String intervalEnv = "MOZ_PROFILER_STARTUP_INTERVAL=";
     final String capacityEnv = "MOZ_PROFILER_STARTUP_ENTRIES=";
+    final String filtersEnv = "MOZ_PROFILER_STARTUP_FILTERS=";
     boolean isStartupProfiling = false;
     // Putting default values for now, but they can be overwritten.
     // Keep these values in sync with profiler defaults.
@@ -727,6 +728,10 @@ public class GeckoThread extends Thread {
     // scMinimumNumberOfChunks * 2 * scExpectedMaximumStackSize / scBytesPerEntry
     // and this is: 4 * 2 * 64 * 1024 / 8 = 65536 (~512 kb)
     final int minCapacity = 65536;
+
+    // Set the default value of no filters - an empty array - which is safer than using null.
+    // If we find a user provided value, this will be overwritten.
+    String[] filters = new String[0];
 
     // Looping the environment variable list to check known variable names.
     for (final String envItem : env) {
@@ -766,11 +771,13 @@ public class GeckoThread extends Thread {
         } catch (final NumberFormatException err) {
           // Failed to parse. Do nothing and just use the default value.
         }
+      } else if (envItem.startsWith(filtersEnv)) {
+        filters = envItem.substring(filtersEnv.length()).split(",");
       }
     }
 
     if (isStartupProfiling) {
-      GeckoJavaSampler.start(interval, capacity);
+      GeckoJavaSampler.start(filters, interval, capacity);
     }
   }
 
