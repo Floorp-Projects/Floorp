@@ -1067,9 +1067,14 @@ function findSourceNodeWithText(dbg, text) {
 }
 
 async function expandAllSourceNodes(dbg, treeNode) {
+  const onContextMenu = waitForContextMenu(dbg);
   rightClickEl(dbg, treeNode);
-  await waitForContextMenu(dbg);
+  const menupopup = await onContextMenu;
+  const onHidden = new Promise(resolve => {
+    menupopup.addEventListener("popuphidden", resolve, { once: true });
+  });
   selectContextMenuItem(dbg, "#node-menu-expand-all");
+  await onHidden;
 }
 
 /**
