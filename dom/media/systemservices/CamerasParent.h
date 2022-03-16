@@ -72,7 +72,8 @@ class CamerasParent final : public PCamerasParent,
 
   static already_AddRefed<CamerasParent> Create();
 
-  // Messages received form the child. These run on the IPC/PBackground thread.
+  // Messages received from the child. These run on the IPC/PBackground thread.
+  mozilla::ipc::IPCResult RecvPCamerasConstructor();
   mozilla::ipc::IPCResult RecvAllocateCapture(
       const CaptureEngine& aEngine, const nsCString& aUnique_idUTF8,
       const uint64_t& aWindowID) override;
