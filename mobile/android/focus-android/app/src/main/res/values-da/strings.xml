@@ -492,7 +492,37 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Velkommen til %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Privat browsing på næste niveau, når du ønsker det</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Når inkognito møder usynlig</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s er en browser med indbygget beskyttelse af dit privatliv og med ekstra stærk beskyttelse mod sporing og cookies.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Browse som om det aldrig skete</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ét tryk sletter din browsinghistorik og dine cookies - og forhindrer reklamer i at følge efter dig.</string>
+    <string name="onboarding_history_description2">Ét tryk sletter din browsinghistorik og dine cookies - og forhindrer reklamer i at følge efter dig.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Beskyttelse af privatlivet til enhver situation</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Hvis dine behov for beskyttelse af dit privatliv ændrer sig, så er det nemt at ændre indstillingerne.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Afslut rundvisningen</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Styrk dit privatliv</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Tag privat browsing til næste niveau. Bloker reklamer og andet indhold, der kan spore din færden på nettet og gøre det langsommere at hente sider.</string>

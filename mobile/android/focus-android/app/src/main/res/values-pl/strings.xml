@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Przeglądaj bez żadnego śladu</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
+
+    <string name="onboarding_history_description2">Jedno stuknięcie usuwa historię przeglądania i ciasteczka — i uniemożliwia reklamom śledzenie Cię w Internecie.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Prywatność pasująca do każdej sytuacji</string>

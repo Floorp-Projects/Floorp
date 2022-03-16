@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Selaa niin kuin sitä ei koskaan olisi tapahtunut</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Yksi napautus poistaa selaushistoriasi ja evästeet — ja estää mainoksia seuraamasta sinua.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Yksi napautus poistaa selaushistoriasi ja evästeet — ja estää mainoksia seuraamasta sinua.</string>
+
+    <string name="onboarding_history_description2">Yksi napautus poistaa selaushistoriasi ja evästeet — ja estää mainoksia seuraamasta sinua.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Yksityisyyttä joka sopii kaikkiin tilanteisiin</string>

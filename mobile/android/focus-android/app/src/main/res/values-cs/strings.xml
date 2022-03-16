@@ -508,7 +508,9 @@
     <string name="onboarding_history_title">Prohlížejte bez obav</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Jediné klepnutí vymaže historii vašeho prohlížení včetně cookies, čímž váš ochrání před sledujícími reklamami.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jediné klepnutí vymaže historii vašeho prohlížení včetně cookies, čímž vás ochrání před sledujícími reklamami.</string>
+
+    <string name="onboarding_history_description2">Jediné klepnutí vymaže historii vašeho prohlížení včetně cookies, čímž vás ochrání před sledujícími reklamami.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Soukromí pro každou situaci</string>

@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Hiç yaşanmamış gibi gezin</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Tek dokunuşla gezinti geçmişinizi ve çerezlerinizi silebilirsiniz. Üstelik reklamlar sizi izleyemez.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Tek dokunuşla gezinti geçmişinizi ve çerezlerinizi silebilirsiniz. Üstelik reklamlar sizi izleyemez.</string>
+
+    <string name="onboarding_history_description2">Tek dokunuşla gezinti geçmişinizi ve çerezlerinizi silebilirsiniz. Üstelik reklamlar sizi izleyemez.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Her duruma uygun gizlilik</string>
