@@ -141,7 +141,7 @@ mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
 
   QM_TRY_INSPECT(const auto& principal,
                  PrincipalInfoToPrincipal(aPrincipalInfo),
-                 IPC_FAIL_NO_REASON(this));
+                 IPC_FAIL(this, "PrincipalInfoToPrincipal failed!"));
 
   Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey,
                         aOldValue.AsString(), aNewValue.AsString(),
