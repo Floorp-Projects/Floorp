@@ -467,7 +467,7 @@ void RunTestsSocket(SandboxTestingChild* child) {
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
 #else   // XP_UNIX
-  child->ReportNoTests();
+    child->ReportNoTests();
 #endif  // XP_UNIX
 }
 
@@ -524,7 +524,7 @@ void RunTestsRDD(SandboxTestingChild* child) {
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
 #  endif
-#else     // XP_UNIX
+#else  // XP_UNIX
   child->ReportNoTests();
 #endif
 }
@@ -575,7 +575,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
   /* The Mac GMP process requires access to the window server */
   RunMacTestWindowServer(child, true /* aShouldHaveAccess */);
 #  endif           // XP_MACOSX
-#else     // XP_UNIX
+#else              // XP_UNIX
   child->ReportNoTests();
 #endif
 }
@@ -609,7 +609,7 @@ void RunTestsUtility(SandboxTestingChild* child) {
     return -1;
   });
 #else              // XP_UNIX
-  child->ReportNoTests();
+    child->ReportNoTests();
 #endif             // XP_MACOSX
 }
 
