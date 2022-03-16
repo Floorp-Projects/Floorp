@@ -1840,9 +1840,12 @@ void LoadInfo::SetReservedClientInfo(const ClientInfo& aClientInfo) {
   MOZ_DIAGNOSTIC_ASSERT(mInitialClientInfo.isNothing());
   // Treat assignments of the same value as a no-op.  The emplace below
   // will normally assert when overwriting an existing value.
-  if (mReservedClientInfo.isSome() &&
-      mReservedClientInfo.ref() == aClientInfo) {
-    return;
+  if (mReservedClientInfo.isSome()) {
+    if (mReservedClientInfo.ref() == aClientInfo) {
+      return;
+    }
+    MOZ_DIAGNOSTIC_ASSERT(false, "mReservedClientInfo already set");
+    mReservedClientInfo.reset();
   }
   mReservedClientInfo.emplace(aClientInfo);
 }
