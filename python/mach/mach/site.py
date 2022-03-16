@@ -808,12 +808,7 @@ class PythonVirtualenv:
 
         normalized_venv_root = os.path.normpath(self.prefix)
         # Path to virtualenv's "site-packages" directory for provided sysconfig path
-        path = os.path.join(normalized_venv_root, relative_path)
-        local_folder = os.path.join(normalized_venv_root, "local")
-        # Hack around https://github.com/pypa/virtualenv/issues/2208
-        if path.startswith(local_folder):
-            path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
-        return path
+        return os.path.join(normalized_venv_root, relative_path)
 
     def site_packages_dirs(self):
         return [
