@@ -66,6 +66,7 @@ class RaptorRunner(MozbuildObject):
         self.device_name = kwargs["device_name"]
         self.enable_marionette_trace = kwargs["enable_marionette_trace"]
         self.browsertime_visualmetrics = kwargs["browsertime_visualmetrics"]
+        self.clean = kwargs["clean"]
 
         if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
             self.binary_path = None
@@ -178,6 +179,7 @@ class RaptorRunner(MozbuildObject):
             "enable_marionette_trace": self.enable_marionette_trace,
             "browsertime_visualmetrics": self.browsertime_visualmetrics,
             "mozbuild_path": get_state_dir(),
+            "clean": self.clean,
         }
 
         sys.path.insert(0, os.path.join(self.topsrcdir, "tools", "browsertime"))

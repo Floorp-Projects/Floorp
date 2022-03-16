@@ -429,6 +429,13 @@ def create_parser(mach_interface=False):
         default=False,
         help="Enable marionette tracing",
     )
+    add_arg(
+        "--clean",
+        dest="clean",
+        action="store_true",
+        default=False,
+        help="Clean the python virtualenv (remove, and rebuild) for Raptor before running tests.",
+    )
 
     add_logging_group(parser)
     return parser
