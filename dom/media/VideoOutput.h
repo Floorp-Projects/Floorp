@@ -213,7 +213,7 @@ class VideoOutput : public DirectMediaTrackListener {
     }
   }
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   TimeStamp mLastFrameTime;
   // Once the frame is forced to black, we initialize mBlackImage for use in any
   // following forced-black frames.

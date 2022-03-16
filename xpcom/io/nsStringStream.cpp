@@ -144,7 +144,7 @@ class nsStringInputStream final : public nsIStringInputStream,
   RefPtr<StreamBufferSource> mSource;
   size_t mOffset = 0;
 
-  mozilla::ReentrantMonitor mMon MOZ_UNANNOTATED{"nsStringInputStream"};
+  mozilla::ReentrantMonitor mMon{"nsStringInputStream"};
 };
 
 nsresult nsStringInputStream::Init(nsCString&& aString) {

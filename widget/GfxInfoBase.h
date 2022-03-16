@@ -170,7 +170,7 @@ class GfxInfoBase : public nsIGfxInfo,
   bool BuildFeatureStateLog(JSContext* aCx, const gfx::FeatureState& aFeature,
                             JS::MutableHandle<JS::Value> aOut);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 }  // namespace widget

@@ -207,8 +207,7 @@ class nsHttpResponseHead {
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
-  mutable RecursiveMutex mRecursiveMutex MOZ_UNANNOTATED{
-      "nsHttpResponseHead.mRecursiveMutex"};
+  mutable RecursiveMutex mRecursiveMutex{"nsHttpResponseHead.mRecursiveMutex"};
   // During VisitHeader we sould not allow cal to SetHeader.
   bool mInVisitHeaders{false};
 

@@ -78,7 +78,7 @@ class ConsoleReportCollector final : public nsIConsoleReportCollector {
     const CopyableTArray<nsString> mStringParams;
   };
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // protected by mMutex
   nsTArray<PendingReport> mPendingReports;

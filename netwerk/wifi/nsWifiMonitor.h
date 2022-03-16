@@ -65,7 +65,7 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver {
 
   nsTArray<nsWifiListener> mListeners;
 
-  mozilla::ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
+  mozilla::ReentrantMonitor mReentrantMonitor;
 
 #ifdef XP_WIN
   mozilla::UniquePtr<WinWifiScanner> mWinWifiScanner;

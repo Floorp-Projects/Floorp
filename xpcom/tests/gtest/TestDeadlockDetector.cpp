@@ -159,7 +159,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity3DeathTest))
 static int Sanity4_Child() {
   DisableCrashReporter();
 
-  mozilla::ReentrantMonitor m1 MOZ_UNANNOTATED("dd.sanity4.m1");
+  mozilla::ReentrantMonitor m1("dd.sanity4.m1");
   MUTEX m2("dd.sanity4.m2");
   m1.Enter();
   m2.Lock();
@@ -182,7 +182,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity4DeathTest)) {
 static int Sanity5_Child() {
   DisableCrashReporter();
 
-  mozilla::RecursiveMutex m1 MOZ_UNANNOTATED("dd.sanity4.m1");
+  mozilla::RecursiveMutex m1("dd.sanity4.m1");
   MUTEX m2("dd.sanity4.m2");
   m1.Lock();
   m2.Lock();

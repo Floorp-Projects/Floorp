@@ -174,7 +174,7 @@ class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   static StaticDataMutex<TelemetryImpl*> sTelemetry;
   AutoHashtable<SlowSQLEntryType> mPrivateSQL;
   AutoHashtable<SlowSQLEntryType> mSanitizedSQL;
-  Mutex mHashMutex MOZ_UNANNOTATED;
+  Mutex mHashMutex;
   Atomic<bool, SequentiallyConsistent> mCanRecordBase;
   Atomic<bool, SequentiallyConsistent> mCanRecordExtended;
 

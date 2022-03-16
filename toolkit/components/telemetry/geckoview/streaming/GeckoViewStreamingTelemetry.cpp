@@ -36,7 +36,7 @@ void SendBatch(const StaticMutexAutoLock& aLock);
 // Topic on which we flush the batch.
 static const char* const kApplicationBackgroundTopic = "application-background";
 
-static StaticMutex gMutex MOZ_UNANNOTATED;
+static StaticMutex gMutex;
 
 // -- The following state is accessed across threads.
 // -- Do not touch these if you do not hold gMutex.

@@ -81,7 +81,7 @@ SandboxReporter::~SandboxReporter() {
 
 /* static */
 SandboxReporter* SandboxReporter::Singleton() {
-  static StaticMutex sMutex MOZ_UNANNOTATED;
+  static StaticMutex sMutex;
   StaticMutexAutoLock lock(sMutex);
 
   if (sSingleton == nullptr) {

@@ -67,7 +67,7 @@ class ProtectedRegionTree {
     }
   };
 
-  Mutex lock MOZ_UNANNOTATED;
+  Mutex lock;
   LifoAlloc alloc;
   SplayTree<Region, Region> tree;
 

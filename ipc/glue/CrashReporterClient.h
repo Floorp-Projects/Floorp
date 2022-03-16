@@ -40,7 +40,7 @@ class CrashReporterClient {
   ~CrashReporterClient();
 
  private:
-  static StaticMutex sLock MOZ_UNANNOTATED;
+  static StaticMutex sLock;
   static StaticRefPtr<CrashReporterClient> sClientSingleton;
 };
 

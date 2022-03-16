@@ -83,8 +83,7 @@ class TRRQuery : public AHostResolver {
   RefPtr<nsHostResolver> mHostResolver;
   RefPtr<nsHostRecord> mRecord;
 
-  Mutex mTrrLock
-      MOZ_UNANNOTATED;  // lock when accessing the mTrrA[AAA] pointers
+  Mutex mTrrLock;  // lock when accessing the mTrrA[AAA] pointers
   RefPtr<mozilla::net::TRR> mTrrA;
   RefPtr<mozilla::net::TRR> mTrrAAAA;
   RefPtr<mozilla::net::TRR> mTrrByType;

@@ -392,7 +392,7 @@ class MediaFormatReader final
     // as those can be read outside the TaskQueue.
     // They are only written on the TaskQueue however, as such mMutex doesn't
     // need to be held when those members are read on the TaskQueue.
-    Mutex mMutex MOZ_UNANNOTATED;
+    Mutex mMutex;
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
     nsCString mDescription;

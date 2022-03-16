@@ -367,7 +367,7 @@ class nsSocketTransport final : public nsASocketHandler,
   // the exception of some specific methods (XXX).
 
   // protects members in this section.
-  Mutex mLock MOZ_UNANNOTATED{"nsSocketTransport.mLock"};
+  Mutex mLock{"nsSocketTransport.mLock"};
   LockedPRFileDesc mFD;
   nsrefcnt mFDref{0};        // mFD is closed when mFDref goes to zero.
   bool mFDconnected{false};  // mFD is available to consumer when TRUE.

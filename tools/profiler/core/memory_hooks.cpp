@@ -278,7 +278,7 @@ class AllocationTracker {
 
  private:
   AllocationSet mAllocations;
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 static AllocationTracker* gAllocationTracker;

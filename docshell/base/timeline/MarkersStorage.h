@@ -40,7 +40,7 @@ class MarkersStorage : public LinkedListElement<MarkersStorage> {
   Mutex& GetLock();
 
  private:
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 };
 
 }  // namespace mozilla

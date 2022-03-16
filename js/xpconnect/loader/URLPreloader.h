@@ -308,7 +308,7 @@ class URLPreloader final : public nsIMemoryReporter {
   // from the last session's cache file.
   HashType mCachedURLs;
 
-  Monitor mMonitor MOZ_UNANNOTATED{"[URLPreloader::mMutex]"};
+  Monitor mMonitor{"[URLPreloader::mMutex]"};
 };
 
 }  // namespace mozilla

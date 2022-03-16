@@ -94,7 +94,7 @@ class VsyncSource {
  private:
   void UpdateVsyncStatus();
 
-  Mutex mDispatcherLock MOZ_UNANNOTATED;
+  Mutex mDispatcherLock;
   bool mRefreshTimerNeedsVsync;
   nsTArray<RefPtr<CompositorVsyncDispatcher>>
       mEnabledCompositorVsyncDispatchers;

@@ -69,7 +69,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   bool RoutingFromKernel(nsTArray<nsCString>& aHash);
   bool RoutingTable(nsTArray<nsCString>& aHash);
 
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   nsCString mNetworkId;
   nsTArray<nsCString> mDNSSuffixList;
 

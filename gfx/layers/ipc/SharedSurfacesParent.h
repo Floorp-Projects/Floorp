@@ -91,7 +91,7 @@ class SharedSurfacesParent final {
   static void ExpireMap(
       nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired);
 
-  static StaticMonitor sMonitor MOZ_UNANNOTATED;
+  static StaticMonitor sMonitor;
 
   static StaticAutoPtr<SharedSurfacesParent> sInstance;
 

@@ -128,7 +128,7 @@ class CookiePersistentStorage final : public CookieStorage {
   TimeStamp mEndInitDBConn;
   nsTArray<CookieDomainTuple> mReadArray;
 
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   Atomic<bool> mInitialized;
   Atomic<bool> mInitializedDBConn;
