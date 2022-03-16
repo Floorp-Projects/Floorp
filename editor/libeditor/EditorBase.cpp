@@ -2178,7 +2178,8 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
 
 NS_IMETHODIMP EditorBase::NotifySelectionChanged(Document* aDocument,
                                                  Selection* aSelection,
-                                                 int16_t aReason) {
+                                                 int16_t aReason,
+                                                 int32_t aAmount) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
