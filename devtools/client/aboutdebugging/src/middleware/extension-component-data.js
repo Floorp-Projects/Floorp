@@ -53,6 +53,7 @@ function toComponentData(extensions) {
       id,
       manifestURL,
       name,
+      persistentBackgroundScript,
       warnings,
     } = extension;
     const icon =
@@ -70,6 +71,7 @@ function toComponentData(extensions) {
         actor,
         location,
         manifestURL,
+        persistentBackgroundScript,
         uuid,
         warnings: warnings || [],
       },
