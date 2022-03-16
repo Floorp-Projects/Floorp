@@ -58,11 +58,12 @@ add_task(async function test_tab_key_nav() {
       EventUtils.synthesizeKey("KEY_Tab", {}, content);
       await new Promise(resolve => content.requestAnimationFrame(resolve));
       // The following line can help with focus trap debugging:
-      // await new Promise(resolve => content.window.setTimeout(resolve, 2000));
+      // await new Promise(resolve => content.window.setTimeout(resolve, 500));
     }
     async function shiftTab() {
       EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true }, content);
       await new Promise(resolve => content.requestAnimationFrame(resolve));
+      // await new Promise(resolve => content.window.setTimeout(resolve, 500));
     }
 
     // Getting focused shadow DOM element itself instead of shadowRoot,
@@ -87,7 +88,6 @@ add_task(async function test_tab_key_nav() {
     }
     // Ensure the test starts in a valid state
     firstElement.focus();
-    info(`what is our navigator platform ${content.window.navigator.platform}`);
     // Assert that we tab navigate correctly
     for (let expectedSelector of expectedElementsInOrder) {
       let expectedElement = getElementFromOrderedArray(expectedSelector);
@@ -98,11 +98,7 @@ add_task(async function test_tab_key_nav() {
       ) {
         continue;
       }
-      expectedElement = Cu.waiveXrays(expectedElement);
-      info(`expectedElement className ${expectedElement.className}`);
       let actualElem = getFocusedElement();
-      actualElem = Cu.waiveXrays(actualElem);
-      info(`actualElement className ${actualElem.className}`);
       is(
         actualElem,
         expectedElement,
@@ -111,37 +107,7 @@ add_task(async function test_tab_key_nav() {
       await tab();
     }
 
-    // The following block is needed to get back to document
-    // after tabbing to browser chrome.
-    // This focus trap in browser chrome is a testing artifact we’re fixing below.
-    if (getFocusedElement().tagName === "BODY") {
-      firstElement.focus();
-    }
-
-    // Assert that we tab navigate correctly after looping through chrome elements
-    for (let expectedSelector of expectedElementsInOrder) {
-      let expectedElement = getElementFromOrderedArray(expectedSelector);
-      // By default, MacOS will skip over certain text controls, such as links.
-      if (
-        content.window.navigator.platform.toLowerCase().includes("mac") &&
-        expectedElement.tagName === "A"
-      ) {
-        continue;
-      }
-      let actualElement = getFocusedElement();
-      is(
-        actualElement,
-        expectedElement,
-        "Actual focused element should equal the expected focused element"
-      );
-      await tab();
-    }
-    // The following block is needed to get back to document
-    // after tabbing to browser chrome.
-    // This focus trap in browser chrome is a testing artifact we’re fixing below.
-    if (getFocusedElement().tagName === "BODY") {
-      lastElement.focus();
-    }
+    lastElement.focus();
 
     // Assert that we shift + tab navigate correctly starting from the last ordered element
     for (let expectedSelector of expectedElementsInOrder.reverse()) {
