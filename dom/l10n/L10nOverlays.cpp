@@ -40,7 +40,8 @@ static bool IsAttrNameLocalizable(
   if (nameSpace == kNameSpaceID_XHTML) {
     // Is it a globally safe attribute?
     if (aAttrName == nsGkAtoms::title || aAttrName == nsGkAtoms::aria_label ||
-        aAttrName == nsGkAtoms::aria_valuetext) {
+        aAttrName == nsGkAtoms::aria_valuetext ||
+        aAttrName == nsGkAtoms::aria_description) {
       return true;
     }
 

@@ -41,7 +41,6 @@ export const VariationsCircle = props => {
                 name="variationSelect"
                 className="sr-only input"
                 onClick={setVariation}
-                data-l10n-attrs="aria-description"
               />
             </Localized>
             <Localized text={label}>
@@ -174,7 +173,6 @@ export function Colorways(props) {
                     checked={colorwayId === id}
                     className="sr-only input"
                     onClick={handleColorwayClick}
-                    data-l10n-attrs="aria-description"
                     data-l10n-args={JSON.stringify({
                       colorwayName: label,
                     })}
