@@ -1059,8 +1059,7 @@ const VariationsCircle = props => {
     checked: activeTheme === null || activeTheme === void 0 ? void 0 : activeTheme.includes(id),
     name: "variationSelect",
     className: "sr-only input",
-    onClick: setVariation,
-    "data-l10n-attrs": "aria-description"
+    onClick: setVariation
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -1172,7 +1171,6 @@ function Colorways(props) {
     checked: colorwayId === id,
     className: "sr-only input",
     onClick: handleColorwayClick,
-    "data-l10n-attrs": "aria-description",
     "data-l10n-args": JSON.stringify({
       colorwayName: label
     }),
@@ -1233,8 +1231,7 @@ const Themes = props => {
     name: "theme",
     checked: theme === props.activeTheme,
     className: "sr-only input",
-    onClick: props.handleAction,
-    "data-l10n-attrs": "aria-description"
+    onClick: props.handleAction
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `icon ${theme === props.activeTheme ? " selected" : ""} ${theme}`
   }), label && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
