@@ -108,7 +108,6 @@ EXPORTS.mozilla = [
     "TemplateLib.h",
     "TextUtils.h",
     "ThreadLocal.h",
-    "ThreadSafety.h",
     "ThreadSafeWeakPtr.h",
     "ToString.h",
     "Tuple.h",
