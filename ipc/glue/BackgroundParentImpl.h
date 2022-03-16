@@ -254,7 +254,10 @@ class BackgroundParentImpl : public PBackgroundParent,
       PServiceWorkerManagerParent* aActor) override;
 
   PCamerasParent* AllocPCamerasParent() override;
-
+#ifdef MOZ_WEBRTC
+  mozilla::ipc::IPCResult RecvPCamerasConstructor(
+      PCamerasParent* aActor) override;
+#endif
   bool DeallocPCamerasParent(PCamerasParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvShutdownServiceWorkerRegistrar() override;

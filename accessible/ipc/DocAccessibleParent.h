@@ -108,7 +108,7 @@ class DocAccessibleParent : public RemoteAccessible,
       const LayoutDeviceIntRect& aCaretRect,
 #endif
       const int32_t& aOffset, const bool& aIsSelectionCollapsed,
-      const bool& aIsAtEndOfLine) final;
+      const bool& aIsAtEndOfLine, const int32_t& aGranularity) final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(
       const uint64_t& aID, const nsString& aStr, const int32_t& aStart,

@@ -111,11 +111,11 @@ void ProxyStateChangeEvent(RemoteAccessible* aProxy, uint64_t aState,
 }
 
 void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                         bool aIsSelectionCollapsed) {
+                         bool aIsSelectionCollapsed, int32_t aGranularity) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   MOXTextMarkerDelegate* delegate =
       [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
-  [delegate setCaretOffset:aTarget at:aOffset];
+  [delegate setCaretOffset:aTarget at:aOffset moveGranularity:aGranularity];
   if (aIsSelectionCollapsed) {
     // If selection is collapsed, invalidate selection.
     [delegate setSelectionFrom:aTarget at:aOffset to:aTarget at:aOffset];

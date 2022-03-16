@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
     // synthesizing the key press.  So, we don't need to check whether a
     // notification actually comes here.
     let selectionListener = {
-      notifySelectionChanged(aDocument, aSelection, aReason) {
+      notifySelectionChanged(aDocument, aSelection, aReason, aAmount) {
         ok(true, "selectionStart: " + textarea.selectionStart);
         ok(true, "selectionEnd: " + textarea.selectionEnd);
       },

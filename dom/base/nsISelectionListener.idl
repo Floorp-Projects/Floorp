@@ -24,9 +24,21 @@ interface nsISelectionListener : nsISupports
   // of Selection API or Range API.
   const short JS_REASON=256;
 
+  // Values of nsSelectionAmount.
+  // Reflects the granularity in which the selection caret has moved.
+  const long CHARACTER_AMOUNT = 0;
+  const long CLUSTER_AMOUNT = 1;
+  const long WORD_AMOUNT = 2;
+  const long WORDNOSPACE_AMOUNT = 3;
+  const long LINE_AMOUNT = 4;
+  const long BEGINLINE_AMOUNT = 5;
+  const long ENDLINE_AMOUNT = 6;
+  const long NO_AMOUNT = 7;
+  const long PARAGRAPH_AMOUNT = 8;
+
   [can_run_script]
   void notifySelectionChanged(in Document doc, in Selection sel,
-                              in short reason);
+                              in short reason, in long amount);
 };
 
 %{C++

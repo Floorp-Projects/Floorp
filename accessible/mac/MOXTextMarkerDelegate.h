@@ -15,6 +15,7 @@
   AXTextMarkerRangeRef mSelection;
   AXTextMarkerRef mCaret;
   AXTextMarkerRef mPrevCaret;
+  int32_t mCaretMoveGranularity;
 }
 
 + (id)getOrCreateForDoc:(mozilla::a11y::Accessible*)aDoc;
@@ -30,7 +31,9 @@
                       to:(mozilla::a11y::Accessible*)endContainer
                       at:(int32_t)endOffset;
 
-- (void)setCaretOffset:(mozilla::a11y::Accessible*)container at:(int32_t)offset;
+- (void)setCaretOffset:(mozilla::a11y::Accessible*)container
+                    at:(int32_t)offset
+       moveGranularity:(int32_t)granularity;
 
 - (NSDictionary*)selectionChangeInfo;
 

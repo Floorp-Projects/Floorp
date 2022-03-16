@@ -3198,6 +3198,8 @@ void Selection::NotifySelectionListeners() {
     reason |= nsISelectionListener::JS_REASON;
   }
 
+  int32_t amount = static_cast<int32_t>(frameSelection->GetCaretMoveAmount());
+
   if (mNotifyAutoCopy) {
     AutoCopyListener::OnSelectionChange(doc, *this, reason);
   }
@@ -3218,7 +3220,7 @@ void Selection::NotifySelectionListeners() {
     //
     // This can go away once
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
-    MOZ_KnownLive(listener)->NotifySelectionChanged(doc, this, reason);
+    MOZ_KnownLive(listener)->NotifySelectionChanged(doc, this, reason, amount);
   }
 }
 
