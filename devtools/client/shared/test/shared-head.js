@@ -157,129 +157,6 @@ try {
 // Force devtools to be initialized so menu items and keyboard shortcuts get installed
 require("devtools/client/framework/devtools-browser");
 
-/**
- * Observer code to register the test actor in every DevTools server which
- * starts registering its own actors.
- *
- * We require immediately the highlighter test actor file, because it will force to load and
- * register the front and the spec for HighlighterTestActor. Normally specs and fronts are
- * in separate files registered in specs/index.js. But here to simplify the
- * setup everything is in the same file and we force to load it here.
- *
- * DevToolsServer will emit "devtools-server-initialized" after finishing its
- * initialization. We watch this observable to add our custom actor.
- *
- * As a single test may create several DevTools servers, we keep the observer
- * alive until the test ends.
- *
- * To avoid leaks, the observer needs to be removed at the end of each test.
- * The test cleanup will send the async message "remove-devtools-highlightertestactor-observer",
- * we listen to this message to cleanup the observer.
- */
-function highlighterTestActorBootstrap() {
-  const HIGHLIGHTER_TEST_ACTOR_URL =
-    "chrome://mochitests/content/browser/devtools/client/shared/test/highlighter-test-actor.js";
-
-  const { require: _require } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
-  );
-  _require(HIGHLIGHTER_TEST_ACTOR_URL);
-
-  /* eslint-disable-next-line no-shadow */
-  const Services = _require("Services");
-
-  const actorRegistryObserver = subject => {
-    const actorRegistry = subject.wrappedJSObject;
-    actorRegistry.registerModule(HIGHLIGHTER_TEST_ACTOR_URL, {
-      prefix: "highlighterTest",
-      constructor: "HighlighterTestActor",
-      type: { target: true },
-    });
-  };
-  Services.obs.addObserver(
-    actorRegistryObserver,
-    "devtools-server-initialized"
-  );
-
-  const unloadListener = () => {
-    Services.cpmm.removeMessageListener(
-      "remove-devtools-testactor-observer",
-      unloadListener
-    );
-    Services.obs.removeObserver(
-      actorRegistryObserver,
-      "devtools-server-initialized"
-    );
-  };
-  Services.cpmm.addMessageListener(
-    "remove-devtools-testactor-observer",
-    unloadListener
-  );
-}
-
-if (isMochitest) {
-  const highlighterTestActorBootstrapScript =
-    "data:,(" + highlighterTestActorBootstrap + ")()";
-  Services.ppmm.loadProcessScript(
-    highlighterTestActorBootstrapScript,
-    // Load this script in all processes (created or to be created)
-    true
-  );
-
-  registerCleanupFunction(() => {
-    Services.ppmm.broadcastAsyncMessage("remove-devtools-testactor-observer");
-    Services.ppmm.removeDelayedProcessScript(
-      highlighterTestActorBootstrapScript
-    );
-  });
-}
-
-/**
- * Spawn an instance of the highlighter test actor for the given toolbox
- *
- * @param {Toolbox} toolbox
- * @param {Object} options
- * @param {Function} options.target: Optional target to get the highlighterTestFront for.
- *        If not provided, the top level target will be used.
- * @returns {HighlighterTestFront}
- */
-async function getHighlighterTestFront(toolbox, { target } = {}) {
-  // Loading the Inspector panel in order to overwrite the TestActor getter for the
-  // highlighter instance with a method that points to the currently visible
-  // Box Model Highlighter managed by the Inspector panel.
-  const inspector = await toolbox.loadTool("inspector");
-
-  const highlighterTestFront = await (target || toolbox.target).getFront(
-    "highlighterTest"
-  );
-  // Override the highligher getter with a method to return the active box model
-  // highlighter. Adaptation for multi-process scenarios where there can be multiple
-  // highlighters, one per process.
-  highlighterTestFront.highlighter = () => {
-    return inspector.highlighters.getActiveHighlighter(
-      inspector.highlighters.TYPES.BOXMODEL
-    );
-  };
-  return highlighterTestFront;
-}
-
-/**
- * Spawn an instance of the highlighter test actor for the given tab, when we need the
- * highlighter test front before opening or without a toolbox.
- *
- * @param {Tab} tab
- * @returns {HighlighterTestFront}
- */
-async function getHighlighterTestFrontWithoutToolbox(tab) {
-  const commands = await CommandsFactory.forTab(tab);
-  // Initialize the TargetCommands which require some async stuff to be done
-  // before being fully ready. This will define the `targetCommand.targetFront` attribute.
-  await commands.targetCommand.startListening();
-
-  const targetFront = commands.targetCommand.targetFront;
-  return targetFront.getFront("highlighterTest");
-}
-
 // All tests are asynchronous
 if (isMochitest) {
   waitForExplicitFinish();
@@ -423,6 +300,129 @@ async function safeCloseBrowserConsole({ clearOutput = false } = {}) {
 }
 
 /**
+ * Observer code to register the test actor in every DevTools server which
+ * starts registering its own actors.
+ *
+ * We require immediately the highlighter test actor file, because it will force to load and
+ * register the front and the spec for HighlighterTestActor. Normally specs and fronts are
+ * in separate files registered in specs/index.js. But here to simplify the
+ * setup everything is in the same file and we force to load it here.
+ *
+ * DevToolsServer will emit "devtools-server-initialized" after finishing its
+ * initialization. We watch this observable to add our custom actor.
+ *
+ * As a single test may create several DevTools servers, we keep the observer
+ * alive until the test ends.
+ *
+ * To avoid leaks, the observer needs to be removed at the end of each test.
+ * The test cleanup will send the async message "remove-devtools-highlightertestactor-observer",
+ * we listen to this message to cleanup the observer.
+ */
+function highlighterTestActorBootstrap() {
+  const HIGHLIGHTER_TEST_ACTOR_URL =
+    "chrome://mochitests/content/browser/devtools/client/shared/test/highlighter-test-actor.js";
+
+  const { require: _require } = ChromeUtils.import(
+    "resource://devtools/shared/loader/Loader.jsm"
+  );
+  _require(HIGHLIGHTER_TEST_ACTOR_URL);
+
+  /* eslint-disable-next-line no-shadow */
+  const Services = _require("Services");
+
+  const actorRegistryObserver = subject => {
+    const actorRegistry = subject.wrappedJSObject;
+    actorRegistry.registerModule(HIGHLIGHTER_TEST_ACTOR_URL, {
+      prefix: "highlighterTest",
+      constructor: "HighlighterTestActor",
+      type: { target: true },
+    });
+  };
+  Services.obs.addObserver(
+    actorRegistryObserver,
+    "devtools-server-initialized"
+  );
+
+  const unloadListener = () => {
+    Services.cpmm.removeMessageListener(
+      "remove-devtools-testactor-observer",
+      unloadListener
+    );
+    Services.obs.removeObserver(
+      actorRegistryObserver,
+      "devtools-server-initialized"
+    );
+  };
+  Services.cpmm.addMessageListener(
+    "remove-devtools-testactor-observer",
+    unloadListener
+  );
+}
+
+if (isMochitest) {
+  const highlighterTestActorBootstrapScript =
+    "data:,(" + highlighterTestActorBootstrap + ")()";
+  Services.ppmm.loadProcessScript(
+    highlighterTestActorBootstrapScript,
+    // Load this script in all processes (created or to be created)
+    true
+  );
+
+  registerCleanupFunction(() => {
+    Services.ppmm.broadcastAsyncMessage("remove-devtools-testactor-observer");
+    Services.ppmm.removeDelayedProcessScript(
+      highlighterTestActorBootstrapScript
+    );
+  });
+}
+
+/**
+ * Spawn an instance of the highlighter test actor for the given toolbox
+ *
+ * @param {Toolbox} toolbox
+ * @param {Object} options
+ * @param {Function} options.target: Optional target to get the highlighterTestFront for.
+ *        If not provided, the top level target will be used.
+ * @returns {HighlighterTestFront}
+ */
+async function getHighlighterTestFront(toolbox, { target } = {}) {
+  // Loading the Inspector panel in order to overwrite the TestActor getter for the
+  // highlighter instance with a method that points to the currently visible
+  // Box Model Highlighter managed by the Inspector panel.
+  const inspector = await toolbox.loadTool("inspector");
+
+  const highlighterTestFront = await (target || toolbox.target).getFront(
+    "highlighterTest"
+  );
+  // Override the highligher getter with a method to return the active box model
+  // highlighter. Adaptation for multi-process scenarios where there can be multiple
+  // highlighters, one per process.
+  highlighterTestFront.highlighter = () => {
+    return inspector.highlighters.getActiveHighlighter(
+      inspector.highlighters.TYPES.BOXMODEL
+    );
+  };
+  return highlighterTestFront;
+}
+
+/**
+ * Spawn an instance of the highlighter test actor for the given tab, when we need the
+ * highlighter test front before opening or without a toolbox.
+ *
+ * @param {Tab} tab
+ * @returns {HighlighterTestFront}
+ */
+async function getHighlighterTestFrontWithoutToolbox(tab) {
+  const commands = await CommandsFactory.forTab(tab);
+  // Initialize the TargetCommands which require some async stuff to be done
+  // before being fully ready. This will define the `targetCommand.targetFront` attribute.
+  await commands.targetCommand.startListening();
+
+  const targetFront = commands.targetCommand.targetFront;
+  return targetFront.getFront("highlighterTest");
+}
+
+/**
  * Returns a Promise that resolves when all the targets are fully attached.
  *
  * @param {TargetCommand} targetCommand
@@ -446,7 +446,7 @@ function waitForAllTargetsToBeAttached(targetCommand) {
  *   - {Boolean} waitForLoad Wait for the page in the new tab to load. (Defaults to true.)
  * @return a promise that resolves to the tab object when the url is loaded
  */
-var addTab = async function(url, options = {}) {
+async function addTab(url, options = {}) {
   info("Adding a new tab with URL: " + url);
 
   const {
@@ -476,14 +476,14 @@ var addTab = async function(url, options = {}) {
   }
 
   return tab;
-};
+}
 
 /**
  * Remove the given tab.
  * @param {Object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
-var removeTab = async function(tab) {
+async function removeTab(tab) {
   info("Removing tab.");
 
   const { gBrowser } = tab.ownerDocument.defaultView;
@@ -492,7 +492,7 @@ var removeTab = async function(tab) {
   await onClose;
 
   info("Tab removed and finished closing");
-};
+}
 
 /**
  * Alias for navigateTo which will reuse the current URI of the provided browser
@@ -926,6 +926,13 @@ function isServerTargetSwitchingEnabled() {
   return Services.prefs.getBoolPref(TARGET_SWITCHING_PREF);
 }
 
+/**
+ * Enables server target switching
+ */
+async function enableTargetSwitching() {
+  await pushPref(TARGET_SWITCHING_PREF, true);
+}
+
 function isEveryFrameTargetEnabled() {
   return Services.prefs.getBoolPref(
     "devtools.every-frame-target.enabled",
@@ -940,13 +947,13 @@ function isEveryFrameTargetEnabled() {
  * @return A promise that is resolved once the tab and inspector have loaded
  *         with an object: { tab, toolbox, inspector, highlighterTestFront }.
  */
-var openInspectorForURL = async function(url, hostType) {
+async function openInspectorForURL(url, hostType) {
   const tab = await addTab(url);
   const { inspector, toolbox, highlighterTestFront } = await openInspector(
     hostType
   );
   return { tab, inspector, toolbox, highlighterTestFront };
-};
+}
 
 async function getActiveInspector() {
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
@@ -1165,7 +1172,7 @@ function loadHelperScript(filePath) {
  * @param {String} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves with the toolbox, when it has been opened.
  */
-var openToolboxForTab = async function(tab, toolId, hostType) {
+async function openToolboxForTab(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
@@ -1188,7 +1195,7 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Toolbox opened and focused");
 
   return toolbox;
-};
+}
 
 /**
  * Add a new tab and open the toolbox in it.
@@ -1198,10 +1205,10 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
-var openNewTabAndToolbox = async function(url, toolId, hostType) {
+async function openNewTabAndToolbox(url, toolId, hostType) {
   const tab = await addTab(url);
   return openToolboxForTab(tab, toolId, hostType);
-};
+}
 
 /**
  * Close a tab and if necessary, the toolbox that belongs to it
@@ -1209,7 +1216,7 @@ var openNewTabAndToolbox = async function(url, toolId, hostType) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
+async function closeTabAndToolbox(tab = gBrowser.selectedTab) {
   if (TabDescriptorFactory.isKnownTab(tab)) {
     await gDevTools.closeToolboxForTab(tab);
   }
@@ -1217,7 +1224,7 @@ var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
   await removeTab(tab);
 
   await new Promise(resolve => setTimeout(resolve, 0));
-};
+}
 
 /**
  * Close a toolbox and the current tab.
@@ -1225,10 +1232,10 @@ var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeToolboxAndTab = async function(toolbox) {
+async function closeToolboxAndTab(toolbox) {
   await toolbox.destroy();
   await removeTab(gBrowser.selectedTab);
-};
+}
 
 /**
  * Waits until a predicate returns true.
@@ -1343,9 +1350,9 @@ function pushPref(preferenceName, value) {
   return SpecialPowers.pushPrefEnv(options);
 }
 
-var closeToolbox = async function() {
+async function closeToolbox() {
   await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
-};
+}
 
 /**
  * Clean the logical clipboard content. This method only clears the OS clipboard on
@@ -1361,13 +1368,6 @@ function emptyClipboard() {
  */
 function isWindows() {
   return Services.appinfo.OS === "WINNT";
-}
-
-/**
- * Enables server target switching
- */
-async function enableTargetSwitching() {
-  await pushPref(TARGET_SWITCHING_PREF, true);
 }
 
 /**
@@ -1499,7 +1499,6 @@ async function unregisterAllServiceWorkers(client) {
  *           - {Int} g: The green component of the pixel
  *           - {Int} b: The blue component of the pixel
  */
-
 function colorAt(image, x, y) {
   // Create a test canvas element.
   const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -1874,7 +1873,7 @@ async function waitForNextTopLevelDomCompleteResource(commands) {
  *
  * @param {BrowsingContext} context
  **/
-const waitForPresShell = function(context) {
+function waitForPresShell(context) {
   return SpecialPowers.spawn(context, [], async () => {
     const winUtils = SpecialPowers.getDOMWindowUtils(content);
     await ContentTaskUtils.waitForCondition(() => {
@@ -1885,7 +1884,7 @@ const waitForPresShell = function(context) {
       }
     }, "Waiting for a valid presShell");
   });
-};
+}
 
 /**
  * In tests using Fluent localization, it is preferable to match DOM elements using
