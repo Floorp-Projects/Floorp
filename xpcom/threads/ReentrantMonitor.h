@@ -14,8 +14,8 @@
 #endif  // defined( MOZILLA_INTERNAL_API) && !defined(DEBUG)
 
 #include "mozilla/BlockingResourceBase.h"
-#include "mozilla/ThreadSafety.h"
 #include "nsISupports.h"
+
 //
 // Provides:
 //
@@ -34,7 +34,7 @@ namespace mozilla {
  * When possible, use ReentrantMonitorAutoEnter to hold this monitor within a
  * scope, instead of calling Enter/Exit directly.
  **/
-class CAPABILITY ReentrantMonitor : BlockingResourceBase {
+class ReentrantMonitor : BlockingResourceBase {
  public:
   /**
    * ReentrantMonitor
@@ -70,20 +70,19 @@ class CAPABILITY ReentrantMonitor : BlockingResourceBase {
    * Enter
    * @see prmon.h
    **/
-  void Enter() CAPABILITY_ACQUIRE() { PR_EnterMonitor(mReentrantMonitor); }
+  void Enter() { PR_EnterMonitor(mReentrantMonitor); }
 
   /**
    * Exit
    * @see prmon.h
    **/
-  void Exit() CAPABILITY_RELEASE() { PR_ExitMonitor(mReentrantMonitor); }
+  void Exit() { PR_ExitMonitor(mReentrantMonitor); }
 
   /**
    * Wait
    * @see prmon.h
    **/
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT) {
-    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mReentrantMonitor);
 #  ifdef MOZILLA_INTERNAL_API
     AUTO_PROFILER_THREAD_SLEEP;
 #  endif  // MOZILLA_INTERNAL_API
@@ -93,8 +92,8 @@ class CAPABILITY ReentrantMonitor : BlockingResourceBase {
   }
 
 #else  // ifndef DEBUG
-  void Enter() CAPABILITY_ACQUIRE();
-  void Exit() CAPABILITY_RELEASE();
+  void Enter();
+  void Exit();
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT);
 
 #endif  // ifndef DEBUG
@@ -122,7 +121,7 @@ class CAPABILITY ReentrantMonitor : BlockingResourceBase {
    * AssertCurrentThreadIn
    * @see prmon.h
    **/
-  void AssertCurrentThreadIn() ASSERT_CAPABILITY(mReentrantMonitor) {
+  void AssertCurrentThreadIn() {
     PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mReentrantMonitor);
   }
 
@@ -130,13 +129,13 @@ class CAPABILITY ReentrantMonitor : BlockingResourceBase {
    * AssertNotCurrentThreadIn
    * @see prmon.h
    **/
-  void AssertNotCurrentThreadIn() EXCLUDES(mReentrantMonitor) {
+  void AssertNotCurrentThreadIn() {
     // FIXME bug 476536
   }
 
 #else
-  void AssertCurrentThreadIn() ASSERT_CAPABILITY(mReentrantMonitor) {}
-  void AssertNotCurrentThreadIn() EXCLUDES(mReentrantMonitor) {}
+  void AssertCurrentThreadIn() {}
+  void AssertNotCurrentThreadIn() {}
 
 #endif  // ifdef DEBUG
 
@@ -158,7 +157,7 @@ class CAPABILITY ReentrantMonitor : BlockingResourceBase {
  *
  * MUCH PREFERRED to bare calls to ReentrantMonitor.Enter and Exit.
  */
-class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoEnter {
+class MOZ_STACK_CLASS ReentrantMonitorAutoEnter {
  public:
   /**
    * Constructor
@@ -168,13 +167,13 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoEnter {
    * @param aReentrantMonitor A valid mozilla::ReentrantMonitor*.
    **/
   explicit ReentrantMonitorAutoEnter(
-      mozilla::ReentrantMonitor& aReentrantMonitor) CAPABILITY_ACQUIRE(aReentrantMonitor)
+      mozilla::ReentrantMonitor& aReentrantMonitor)
       : mReentrantMonitor(&aReentrantMonitor) {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
     mReentrantMonitor->Enter();
   }
 
-  ~ReentrantMonitorAutoEnter(void) CAPABILITY_RELEASE() { mReentrantMonitor->Exit(); }
+  ~ReentrantMonitorAutoEnter(void) { mReentrantMonitor->Exit(); }
 
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT) {
     return mReentrantMonitor->Wait(aInterval);
@@ -201,7 +200,7 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoEnter {
  *
  * MUCH PREFERRED to bare calls to ReentrantMonitor.Exit and Enter.
  */
-class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoExit {
+class MOZ_STACK_CLASS ReentrantMonitorAutoExit {
  public:
   /**
    * Constructor
@@ -213,7 +212,6 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoExit {
    *                 must be already locked.
    **/
   explicit ReentrantMonitorAutoExit(ReentrantMonitor& aReentrantMonitor)
-      EXCLUSIVE_RELEASE(aReentrantMonitor)
       : mReentrantMonitor(&aReentrantMonitor) {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
     mReentrantMonitor->AssertCurrentThreadIn();
@@ -222,16 +220,13 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoExit {
 
   explicit ReentrantMonitorAutoExit(
       ReentrantMonitorAutoEnter& aReentrantMonitorAutoEnter)
-      EXCLUSIVE_RELEASE(aReentrantMonitorAutoEnter.mReentrantMonitor)
       : mReentrantMonitor(aReentrantMonitorAutoEnter.mReentrantMonitor) {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
     mReentrantMonitor->AssertCurrentThreadIn();
     mReentrantMonitor->Exit();
   }
 
-  ~ReentrantMonitorAutoExit(void) EXCLUSIVE_RELEASE() {
-    mReentrantMonitor->Enter();
-  }
+  ~ReentrantMonitorAutoExit(void) { mReentrantMonitor->Enter(); }
 
  private:
   ReentrantMonitorAutoExit();

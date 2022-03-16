@@ -10,7 +10,6 @@
 #define BaseProfilerDetail_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/PlatformRWLock.h"
