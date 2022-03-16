@@ -829,6 +829,8 @@ class nsFrameSelection final {
     return retval;
   }
 
+  nsSelectionAmount GetCaretMoveAmount() { return mCaretMoveAmount; }
+
   bool IsUserSelectionReason() const {
     return (mSelectionChangeReasons &
             (nsISelectionListener::DRAG_REASON |
@@ -1047,6 +1049,7 @@ class nsFrameSelection final {
   int16_t mSelectionChangeReasons = nsISelectionListener::NO_REASON;
   // For visual display purposes.
   int16_t mDisplaySelection = nsISelectionController::SELECTION_OFF;
+  nsSelectionAmount mCaretMoveAmount = eSelectNoAmount;
 
   struct Caret {
     // Hint to tell if the selection is at the end of this line or beginning of
