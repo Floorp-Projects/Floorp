@@ -1088,19 +1088,20 @@ NS_IMETHODIMP CamerasParent::BlockShutdown(nsIAsyncShutdownClient*) {
 CamerasParent::CamerasParent()
     : mName(GetNewName()),
       mShmemPool(CaptureEngine::MaxEngine),
+      mPBackgroundEventTarget(GetCurrentSerialEventTarget()),
       mChildIsAlive(true),
       mDestroyed(false),
       mWebRTCAlive(true) {
-  LOG("CamerasParent: %p", this);
-  StaticMutexAutoLock slock(sMutex);
-
-  if (sNumOfCamerasParents++ == 0) {
-    sThreadMonitor = new Monitor("CamerasParent::sThreadMonitor");
-  }
-
-  mPBackgroundEventTarget = GetCurrentSerialEventTarget();
   MOZ_ASSERT(mPBackgroundEventTarget != nullptr,
              "GetCurrentThreadEventTarget failed");
+  LOG("CamerasParent: %p", this);
+  {
+    StaticMutexAutoLock slock(sMutex);
+
+    if (sNumOfCamerasParents++ == 0) {
+      sThreadMonitor = new Monitor("CamerasParent::sThreadMonitor");
+    }
+  }
 
   LOG("Spinning up WebRTC Cameras Thread");
 

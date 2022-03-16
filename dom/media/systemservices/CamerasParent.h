@@ -137,30 +137,29 @@ class CamerasParent final : public PCamerasParent,
   static nsString GetNewName();
 
   // sEngines will be accessed by VideoCapture thread only
-  // sNumOfCamerasParent, sNumOfOpenCamerasParentEngines, and
+  // sNumOfCamerasParents, sNumOfOpenCamerasParentEngines, and
   // sVideoCaptureThread will be accessed by main thread / PBackground thread /
   // VideoCapture thread
-  // sNumOfCamerasParent and sThreadMonitor create & delete are protected by
+  // sNumOfCamerasParents and sThreadMonitor create & delete are protected by
   // sMutex
   // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by
   // sThreadMonitor
   static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;
+  static StaticMutex sMutex;
+  static Monitor* sThreadMonitor;
+  // video processing thread - where webrtc.org capturer code runs
+  static base::Thread* sVideoCaptureThread;
+
   nsTArray<CallbackHelper*> mCallbacks;
   nsString mName;
 
   // image buffers
   ShmemPool mShmemPool;
 
-  // PBackground parent thread
-  nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;
-
-  static StaticMutex sMutex;
-  static Monitor* sThreadMonitor;
-
-  // video processing thread - where webrtc.org capturer code runs
-  static base::Thread* sVideoCaptureThread;
+  // PBackgroundParent thread
+  const nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;
 
   // Shutdown handling
   bool mChildIsAlive;
