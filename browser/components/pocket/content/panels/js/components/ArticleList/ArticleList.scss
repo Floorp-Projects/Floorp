@@ -10,6 +10,10 @@
     &:hover {
       text-decoration: none;
       background-color: #ECECEE;
+
+      @include theme_dark {
+        background-color: #2B2A33;
+      }
     }
   }
 
@@ -29,6 +33,10 @@
     line-height: 1.27em;
     color: #15141A;
     margin: 0 0 4px;
+
+    @include theme_dark {
+      color: #FBFBFE;
+    }
   }
 
   .stp_article_list_publisher {
@@ -38,5 +46,9 @@
     line-height: 1.27em;
     color: #52525E;
     margin: 4px 0 0;
+
+    @include theme_dark {
+      color: #CFCFD8;
+    }
   }
 }

@@ -9,6 +9,10 @@
     font-style: normal;
     font-weight: 600;
     line-height: 1.27em;
+
+    @include theme_dark {
+      color: #F0F0F4;
+    }
   }
 
   &.stp_button_primary {
@@ -22,6 +26,11 @@
     justify-content: center;
     line-height: 1.27em;
     padding: 6px 12px;
+
+    @include theme_dark {
+      background: #00DDFF;
+      color: #15141A;
+    }
   }
 
   &.stp_button_secondary {
@@ -34,6 +43,11 @@
     font-weight: 600;
     line-height: 1.27em;
     padding: 6px 12px;
+
+    @include theme_dark {
+      background: #2B2A33;
+      color: #FBFBFE;
+    }
   }
 }
 

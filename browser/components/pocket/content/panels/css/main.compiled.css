@@ -394,6 +394,9 @@ a:active {
 body {
   font: menu;
 }
+body.theme_dark {
+  color: #FBFBFE;
+}
 
 hr {
   margin: 12px -8px;
@@ -1979,6 +1982,13 @@ button {
   padding: 20px;
   width: 260px;
 }
+#stp_style_guide #dark_mode_toggle {
+  text-align: end;
+}
+body.theme_dark #stp_style_guide {
+  background: #42414c;
+}
+
 #stp_style_guide .stp_superheader {
   margin: 0;
 }
@@ -2041,9 +2051,17 @@ button {
   margin-bottom: 8px;
   padding: 4px 8px;
 }
+body.theme_dark .stp_popular_topics .stp_popular_topic {
+  background: #2B2A33;
+}
+
 .stp_popular_topics .stp_popular_topic .stp_popular_topic_link {
   color: #000;
 }
+body.theme_dark .stp_popular_topics .stp_popular_topic .stp_popular_topic_link {
+  color: #FBFBFE;
+}
+
 .stp_popular_topics .stp_popular_topic .stp_popular_topic_link::after {
   content: " >";
 }
@@ -2061,6 +2079,10 @@ button {
   text-decoration: none;
   background-color: #ECECEE;
 }
+body.theme_dark .stp_article_list .stp_article_list_link:hover {
+  background-color: #2B2A33;
+}
+
 .stp_article_list .stp_article_list_thumb,
 .stp_article_list .stp_article_list_thumb_placeholder {
   width: 40px;
@@ -2077,6 +2099,10 @@ button {
   color: #15141A;
   margin: 0 0 4px;
 }
+body.theme_dark .stp_article_list .stp_article_list_header {
+  color: #FBFBFE;
+}
+
 .stp_article_list .stp_article_list_publisher {
   font-style: normal;
   font-weight: normal;
@@ -2084,6 +2110,9 @@ button {
   line-height: 1.27em;
   color: #52525E;
   margin: 4px 0 0;
+}
+body.theme_dark .stp_article_list .stp_article_list_publisher {
+  color: #CFCFD8;
 }
 
 .stp_header {
@@ -2100,6 +2129,9 @@ button {
   height: 32px;
   width: 121px;
 }
+body.theme_dark .stp_header .stp_header_logo {
+  background: url(../img/pocketlogo-dark.svg) bottom center no-repeat;
+}
 
 .stp_button {
   cursor: pointer;
@@ -2113,6 +2145,10 @@ button {
   font-weight: 600;
   line-height: 1.27em;
 }
+body.theme_dark .stp_button.stp_button_text {
+  color: #F0F0F4;
+}
+
 .stp_button.stp_button_primary {
   align-items: center;
   background: #0060DF;
@@ -2125,6 +2161,11 @@ button {
   line-height: 1.27em;
   padding: 6px 12px;
 }
+body.theme_dark .stp_button.stp_button_primary {
+  background: #00DDFF;
+  color: #15141A;
+}
+
 .stp_button.stp_button_secondary {
   align-items: center;
   background: #F0F0F4;
@@ -2135,6 +2176,10 @@ button {
   font-weight: 600;
   line-height: 1.27em;
   padding: 6px 12px;
+}
+body.theme_dark .stp_button.stp_button_secondary {
+  background: #2B2A33;
+  color: #FBFBFE;
 }
 
 .stp_button_wide .stp_button {

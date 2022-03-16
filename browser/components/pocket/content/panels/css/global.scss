@@ -1,5 +1,17 @@
+// Mixins
+
+@mixin theme_dark {
+  @at-root body.theme_dark & { 
+    @content;
+  }
+}
+
 body {
   font: menu;
+
+  &.theme_dark {
+    color: #FBFBFE;
+  }
 }
 
 hr {
