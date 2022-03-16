@@ -39,19 +39,6 @@ class L10nOverlays {
 
  private:
   /**
-   * Check if attribute is allowed for the given element.
-   *
-   * This method is used by the sanitizer when the translation markup contains
-   * DOM attributes, or when the translation has traits which map to DOM
-   * attributes.
-   *
-   * `aExplicitlyAllowed` can be passed as a list of attributes explicitly
-   * allowed on this element.
-   */
-  static bool IsAttrNameLocalizable(const nsAtom* nameAtom, Element* aElement,
-                                    nsTArray<nsString>* aExplicitlyAllowed);
-
-  /**
    * Create a text node from text content of an Element.
    */
   static already_AddRefed<nsINode> CreateTextNodeFromTextContent(
