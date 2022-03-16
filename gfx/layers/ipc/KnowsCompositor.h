@@ -144,6 +144,14 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mWebRenderBackend;
   }
 
+  bool UsingHardwareWebRender() const {
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+               layers::LayersBackend::LAYERS_WR &&
+           lock.ref().mTextureFactoryIdentifier.mWebRenderBackend ==
+               WebRenderBackend::HARDWARE;
+  }
+
   bool UsingSoftwareWebRender() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mParentBackend ==

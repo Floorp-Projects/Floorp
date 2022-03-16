@@ -333,7 +333,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       }
     }
 
-    if (StaticPrefs::media_wmf_no_copy_nv12_textures() && mDXVA2Manager &&
+    if (StaticPrefs::media_wmf_no_copy_nv12_textures() &&
+        mKnowsCompositor->UsingHardwareWebRender() && mDXVA2Manager &&
         mDXVA2Manager->IsD3D11() && XRE_IsGPUProcess()) {
       mNoCopyNV12Texture = true;
       const int kOutputBufferSize = 10;
