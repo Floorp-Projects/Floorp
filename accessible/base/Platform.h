@@ -104,10 +104,11 @@ void ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
 void ProxyFocusEvent(RemoteAccessible* aTarget,
                      const LayoutDeviceIntRect& aCaretRect);
 void ProxyCaretMoveEvent(RemoteAccessible* aTarget,
-                         const LayoutDeviceIntRect& aCaretRect);
+                         const LayoutDeviceIntRect& aCaretRect,
+                         int32_t aGranularity);
 #else
 void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                         bool aIsSelectionCollapsed);
+                         bool aIsSelectionCollapsed, int32_t aGranularity);
 #endif
 void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,

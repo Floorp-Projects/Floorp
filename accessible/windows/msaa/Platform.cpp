@@ -172,7 +172,8 @@ void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
 }
 
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget,
-                               const LayoutDeviceIntRect& aCaretRect) {
+                               const LayoutDeviceIntRect& aCaretRect,
+                               int32_t aGranularity) {
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   MsaaAccessible::FireWinEvent(aTarget,
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);

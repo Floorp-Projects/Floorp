@@ -224,7 +224,7 @@ async function synthKeyAndTestValueChanged(
   );
 }
 
-async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
+async function focusIntoInput(accDoc, inputId, innerContainerId) {
   let selectionId = innerContainerId ? innerContainerId : inputId;
   let input = getNativeInterface(accDoc, inputId);
   ok(!input.getAttributeValue("AXFocused"), "input is not focused");
@@ -249,6 +249,11 @@ async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
   ]);
   input.setAttributeValue("AXFocused", true);
   await events;
+}
+
+async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
+  let selectionId = innerContainerId ? innerContainerId : inputId;
+  await focusIntoInput(accDoc, inputId, innerContainerId);
 
   async function testTextInput(
     synthKey,
@@ -337,14 +342,14 @@ async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
     { AXTextStateChangeType: AXTextStateChangeTypeSelectionMove }
   );
   await synthKeyAndTestSelectionChanged(
-    "KEY_Home",
-    { shiftKey: true },
+    "KEY_ArrowLeft",
+    { shiftKey: true, metaKey: true },
     selectionId,
     "hello ",
     {
       AXTextStateChangeType: AXTextStateChangeTypeSelectionExtend,
-      AXTextSelectionDirection: AXTextSelectionDirectionPrevious,
-      AXTextSelectionGranularity: AXTextSelectionGranularityWord,
+      AXTextSelectionDirection: AXTextSelectionDirectionBeginning,
+      AXTextSelectionGranularity: AXTextSelectionGranularityLine,
     }
   );
   await synthKeyAndTestSelectionChanged(
@@ -372,7 +377,8 @@ addAccessibleTask(
   `<a href="#">link</a> <input id="input">`,
   async (browser, accDoc) => {
     await focusIntoInputAndType(accDoc, "input");
-  }
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
 );
 
 // Test content editable
@@ -390,15 +396,6 @@ addAccessibleTask(
   }
 );
 
-// Test text input in iframe
-addAccessibleTask(
-  `<a href="#">link</a> <input id="input">`,
-  async (browser, accDoc) => {
-    await focusIntoInputAndType(accDoc, "input");
-  },
-  { iframe: true }
-);
-
 // Test input that gets role::EDITCOMBOBOX
 addAccessibleTask(`<input type="text" id="box">`, async (browser, accDoc) => {
   const box = getNativeInterface(accDoc, "box");
@@ -410,3 +407,48 @@ addAccessibleTask(`<input type="text" id="box">`, async (browser, accDoc) => {
   );
   await focusIntoInputAndType(accDoc, "box");
 });
+
+// Test multiline caret control in a text area
+addAccessibleTask(
+  `<textarea id="input" cols="15">one two three four five six seven eight</textarea>`,
+  async (browser, accDoc) => {
+    await focusIntoInput(accDoc, "input");
+
+    await synthKeyAndTestSelectionChanged("KEY_ArrowRight", null, "input", "", {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      AXTextSelectionDirection: AXTextSelectionDirectionNext,
+      AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+    });
+
+    await synthKeyAndTestSelectionChanged("KEY_ArrowDown", null, "input", "", {
+      AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+      AXTextSelectionDirection: AXTextSelectionDirectionNext,
+      AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+    });
+
+    await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowLeft",
+      { metaKey: true },
+      "input",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionBeginning,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+
+    await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowRight",
+      { metaKey: true },
+      "input",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionEnd,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
