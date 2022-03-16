@@ -7,7 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 TEST_HARNESS_FILES.xpcshell.devtools.client.shared.test += [
-    "test/shared-redux-head.js",
+    "test/shared-head.js",
 ]
 
 DIRS += [
