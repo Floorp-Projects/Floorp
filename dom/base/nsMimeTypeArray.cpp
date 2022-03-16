@@ -79,10 +79,9 @@ void nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& retval) {
   }
 }
 
-/* static */
 bool nsMimeTypeArray::ForceNoPlugins() {
-  return StaticPrefs::pdfjs_disabled() ||
-         nsContentUtils::ShouldResistFingerprinting();
+  return StaticPrefs::pdfjs_disabled() &&
+         !nsContentUtils::ShouldResistFingerprinting(mWindow->GetExtantDoc());
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
