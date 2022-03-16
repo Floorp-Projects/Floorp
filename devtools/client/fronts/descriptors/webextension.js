@@ -36,6 +36,10 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
     this.traits = json.traits || {};
   }
 
+  get backgroundScriptStatus() {
+    return this._form.backgroundScriptStatus;
+  }
+
   get debuggable() {
     return this._form.debuggable;
   }
@@ -74,6 +78,10 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
 
   get name() {
     return this._form.name;
+  }
+
+  get persistentBackgroundScript() {
+    return this._form.persistentBackgroundScript;
   }
 
   get temporarilyInstalled() {

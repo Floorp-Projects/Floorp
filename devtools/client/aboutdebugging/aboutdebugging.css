@@ -23,6 +23,7 @@
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetItem.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetList.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/DebugTargetPane.css";
+@import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/ExtensionDetail.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/FieldPair.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/ServiceWorkerAction.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/debugtarget/TemporaryExtensionInstallSection.css";

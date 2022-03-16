@@ -718,7 +718,8 @@ struct IPCMarker {
       mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int32_t aOtherPid,
       int32_t aMessageSeqno, IPC::Message::msgid_t aMessageType,
       mozilla::ipc::Side aSide, mozilla::ipc::MessageDirection aDirection,
-      mozilla::ipc::MessagePhase aPhase, bool aSync) {
+      mozilla::ipc::MessagePhase aPhase, bool aSync,
+      mozilla::MarkerThreadId aOriginThreadId) {
     using namespace mozilla::ipc;
     // This payload still streams a startTime and endTime property because it
     // made the migration to MarkerTiming on the front-end easier.
@@ -737,6 +738,15 @@ struct IPCMarker {
                                : mozilla::MakeStringSpan("receiving"));
     aWriter.StringProperty("phase", IPCPhaseToString(aPhase));
     aWriter.BoolProperty("sync", aSync);
+    if (!aOriginThreadId.IsUnspecified()) {
+      // Tech note: If `ToNumber()` returns a uint64_t, the conversion to
+      // int64_t is "implementation-defined" before C++20. This is acceptable
+      // here, because this is a one-way conversion to a unique identifier
+      // that's used to visually separate data by thread on the front-end.
+      aWriter.IntProperty(
+          "threadId",
+          static_cast<int64_t>(aOriginThreadId.ThreadId().ToNumber()));
+    }
   }
   static mozilla::MarkerSchema MarkerTypeDisplay() {
     return mozilla::MarkerSchema::SpecialFrontendLocation{};

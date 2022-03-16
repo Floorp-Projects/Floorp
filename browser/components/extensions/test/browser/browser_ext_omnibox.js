@@ -6,11 +6,11 @@ const { UrlbarTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
+const keyword = "VeryUniqueKeywordThatDoesNeverMatchAnyTestUrl";
+
 add_task(async function() {
   // This keyword needs to be unique to prevent history entries from unrelated
   // tests from appearing in the suggestions list.
-  let keyword = "VeryUniqueKeywordThatDoesNeverMatchAnyTestUrl";
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       omnibox: {
@@ -367,4 +367,71 @@ add_task(async function() {
 
   await extension2.unload();
   await extension.unload();
+});
+
+add_task(async function test_omnibox_event_page() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "eventpage@omnibox" } },
+      omnibox: {
+        keyword: keyword,
+      },
+      background: { persistent: false },
+    },
+    background() {
+      browser.omnibox.onInputStarted.addListener(() => {
+        browser.test.sendMessage("onInputStarted");
+      });
+      browser.omnibox.onInputEntered.addListener(() => {});
+      browser.omnibox.onInputChanged.addListener(() => {});
+      browser.omnibox.onInputCancelled.addListener(() => {});
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  const EVENTS = [
+    "onInputStarted",
+    "onInputEntered",
+    "onInputChanged",
+    "onInputCancelled",
+  ];
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "omnibox", event, {
+      primed: false,
+    });
+  }
+
+  // test events waken background
+  await extension.terminateBackground();
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "omnibox", event, {
+      primed: true,
+    });
+  }
+
+  // Activate the keyword by typing a space.
+  // Expect onInputStarted to fire.
+  gURLBar.focus();
+  gURLBar.value = keyword;
+  EventUtils.sendString(" ");
+
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("onInputStarted");
+  ok(true, "persistent event woke background");
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "omnibox", event, {
+      primed: false,
+    });
+  }
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });

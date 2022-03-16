@@ -18,6 +18,11 @@ const webExtensionDescriptorSpec = generateActorSpec({
       response: { addon: RetVal("json") },
     },
 
+    terminateBackgroundScript: {
+      request: {},
+      response: {},
+    },
+
     // @backward-compat { version 70 } The method is now called getTarget
     connect: {
       request: {},
