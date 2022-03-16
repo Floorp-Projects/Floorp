@@ -98,7 +98,7 @@ class DecodePool final : public nsIObserver {
   bool mShuttingDown = false;
 
   // mMutex protects mIOThread.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   nsCOMPtr<nsIThread> mIOThread;
 };
 

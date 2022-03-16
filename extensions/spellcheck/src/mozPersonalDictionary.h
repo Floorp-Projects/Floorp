@@ -51,8 +51,8 @@ class mozPersonalDictionary final : public mozIPersonalDictionary,
   bool mSavePending;
 
   nsCOMPtr<nsIFile> mFile;
-  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
-  mozilla::Monitor mMonitorSave MOZ_UNANNOTATED;
+  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitorSave;
   nsTHashSet<nsString> mDictionaryTable;
   nsTHashSet<nsString> mIgnoreTable;
 

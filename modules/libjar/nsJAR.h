@@ -164,7 +164,7 @@ class nsZipReaderCache : public nsIZipReaderCache,
  protected:
   virtual ~nsZipReaderCache();
 
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
+  mozilla::Mutex mLock;
   uint32_t mCacheSize;
   ZipsHashtable mZips;
 

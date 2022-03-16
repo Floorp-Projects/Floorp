@@ -146,7 +146,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   void UpdateMouseMovedRecently(const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex MOZ_UNANNOTATED;  // protects all other fields
+  Mutex mMutex;  // protects all other fields
   Representation mOnscreenRepresentation;
   Representation mOffscreenRepresentation;
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
@@ -381,7 +381,7 @@ class NativeLayerCA : public NativeLayer {
   void ForAllRepresentations(F aFn);
 
   // Controls access to all fields of this class.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface

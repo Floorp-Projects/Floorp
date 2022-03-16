@@ -37,7 +37,7 @@ class nsThreadPool final : public mozilla::Runnable, public nsIThreadPool {
   nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags);
 
   nsCOMArray<nsIThread> mThreads;
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   mozilla::CondVar mEventsAvailable;
   mozilla::EventQueue mEvents;
   uint32_t mThreadLimit;

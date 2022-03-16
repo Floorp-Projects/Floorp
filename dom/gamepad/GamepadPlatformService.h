@@ -141,7 +141,7 @@ class GamepadPlatformService final {
 
   // This mutex protects mChannelParents from race condition
   // between background and monitor thread
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
 };

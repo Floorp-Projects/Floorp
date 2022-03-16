@@ -1497,7 +1497,7 @@ class ConnectionPool final {
   };
 
   // This mutex guards mDatabases, see below.
-  Mutex mDatabasesMutex MOZ_UNANNOTATED;
+  Mutex mDatabasesMutex;
 
   nsTArray<IdleThreadInfo> mIdleThreads;
   nsTArray<IdleDatabaseInfo> mIdleDatabases;
@@ -6592,7 +6592,7 @@ nsresult DispatchAndReturnFileReferences(
   *aMemRefCnt = -1;
   *aDBRefCnt = -1;
 
-  mozilla::Monitor monitor MOZ_ANNOTATED(__func__);
+  mozilla::Monitor monitor(__func__);
   bool waiting = true;
 
   auto lambda = [&] {
@@ -6758,7 +6758,7 @@ class DeserializeIndexValueHelper final : public Runnable {
     lock.Notify();
   }
 
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   const int64_t mIndexID;
   const KeyPath& mKeyPath;
@@ -21682,7 +21682,7 @@ class FileHelper::ReadCallback final : public nsIInputStreamCallback {
  private:
   ~ReadCallback() = default;
 
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
   mozilla::CondVar mCondVar;
   bool mInputAvailable;
 };

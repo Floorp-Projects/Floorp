@@ -143,7 +143,7 @@ class HRTFDatabaseLoader {
   nsAutoRef<HRTFDatabase> m_hrtfDatabase;
 
   // Holding a m_threadLock is required when accessing m_databaseLoaderThread.
-  mozilla::Mutex m_threadLock MOZ_UNANNOTATED;
+  mozilla::Mutex m_threadLock;
   PRThread* m_databaseLoaderThread;
 
   float m_databaseSampleRate;

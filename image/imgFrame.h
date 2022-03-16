@@ -219,7 +219,7 @@ class imgFrame {
   // Thread-safe mutable data, protected by mMonitor.
   //////////////////////////////////////////////////////////////////////////////
 
-  mutable Monitor mMonitor MOZ_UNANNOTATED;
+  mutable Monitor mMonitor;
 
   /**
    * Used for rasterized images, this contains the raw pixel data.

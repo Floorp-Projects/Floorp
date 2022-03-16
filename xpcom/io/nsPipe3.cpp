@@ -342,7 +342,7 @@ class nsPipe final : public nsIPipe {
   // in mInputList as a weak ref.
   RefPtr<nsPipeInputStream> mOriginalInput;
 
-  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
+  ReentrantMonitor mReentrantMonitor;
   nsSegmentedBuffer mBuffer;
 
   // The maximum number of segments to allow to be buffered in advance

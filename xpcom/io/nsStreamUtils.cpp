@@ -463,7 +463,7 @@ class nsAStreamCopier : public nsIInputStreamCallback,
   nsCOMPtr<nsIAsyncInputStream> mAsyncSource;
   nsCOMPtr<nsIAsyncOutputStream> mAsyncSink;
   nsCOMPtr<nsIEventTarget> mTarget;
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   nsAsyncCopyCallbackFun mCallback;
   nsAsyncCopyProgressFun mProgressCallback;
   void* mClosure;

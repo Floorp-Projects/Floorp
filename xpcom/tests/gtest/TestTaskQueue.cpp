@@ -29,7 +29,7 @@ TEST(TaskQueue, EventOrder)
   bool errored = false;
   int counter = 0;
   int sync = 0;
-  Monitor monitor MOZ_UNANNOTATED("TaskQueue::EventOrder::monitor");
+  Monitor monitor("TaskQueue::EventOrder::monitor");
 
   // We expect task1 happens before task3.
   for (int i = 0; i < 10000; ++i) {

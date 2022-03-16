@@ -38,7 +38,7 @@ DMABUFSurfaceImage::~DMABUFSurfaceImage() {
 }
 
 StaticRefPtr<GLContext> sSnapshotContext;
-static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
+static StaticMutex sSnapshotContextMutex;
 
 already_AddRefed<gfx::SourceSurface> DMABUFSurfaceImage::GetAsSourceSurface() {
   if (!sSnapshotContext) {

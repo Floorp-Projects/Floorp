@@ -119,7 +119,7 @@ class HLSDemuxer::HLSDemuxerCallbacksSupport
     mDemuxer = nullptr;
   }
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
  private:
   ~HLSDemuxerCallbacksSupport() {}

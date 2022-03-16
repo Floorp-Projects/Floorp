@@ -68,7 +68,7 @@ class nsJPEGEncoder final : public imgIEncoder {
   // another reads from it.  We lock to ensure that the buffer remains
   // append-only while we read from it (that it is not realloced) and to ensure
   // that only one thread dispatches a callback for each call to AsyncWait.
-  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
+  ReentrantMonitor mReentrantMonitor;
 };
 
 #endif  // mozilla_image_encoders_jpeg_nsJPEGEncoder_h

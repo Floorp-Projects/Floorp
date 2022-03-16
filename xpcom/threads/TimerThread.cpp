@@ -98,7 +98,7 @@ class TimerEventAllocator {
 
   ArenaAllocator<4096> mPool;
   FreeEntry* mFirstFree;
-  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mMonitor;
 
  public:
   TimerEventAllocator()

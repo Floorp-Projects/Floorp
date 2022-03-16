@@ -1172,7 +1172,7 @@ class MozPromise : public MozPromiseBase {
   };
 
   const char* mCreationSite;  // For logging
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   ResolveOrRejectValue mValue;
   bool mUseSynchronousTaskDispatch = false;
   bool mUseDirectTaskDispatch = false;

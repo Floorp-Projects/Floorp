@@ -116,12 +116,12 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   nsresult MaybeEnableIntermediatePreloadingHealer();
 
   // mLoadableCertsLoadedMonitor protects mLoadableCertsLoaded.
-  mozilla::Monitor mLoadableCertsLoadedMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mLoadableCertsLoadedMonitor;
   bool mLoadableCertsLoaded;
   nsresult mLoadableCertsLoadedResult;
 
   // mMutex protects all members that are accessed from more than one thread.
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 
   // The following members are accessed from more than one thread:
 

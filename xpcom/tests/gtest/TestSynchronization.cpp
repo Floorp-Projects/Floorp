@@ -218,13 +218,13 @@ TEST(Synchronization, CondVarSanity)
 //
 TEST(Synchronization, AutoLock)
 {
-  Mutex l1 MOZ_UNANNOTATED("autolock");
+  Mutex l1("autolock");
   MutexAutoLock autol1(l1);
 
   l1.AssertCurrentThreadOwns();
 
   {
-    Mutex l2 MOZ_UNANNOTATED("autolock2");
+    Mutex l2("autolock2");
     MutexAutoLock autol2(l2);
 
     l1.AssertCurrentThreadOwns();
@@ -239,7 +239,7 @@ TEST(Synchronization, AutoLock)
 //
 TEST(Synchronization, AutoTryLock)
 {
-  Mutex l1 MOZ_UNANNOTATED("autotrylock");
+  Mutex l1("autotrylock");
   MutexAutoTryLock autol1(l1);
 
   EXPECT_TRUE(autol1);
@@ -252,7 +252,7 @@ TEST(Synchronization, AutoTryLock)
   l1.AssertCurrentThreadOwns();
 
   {
-    Mutex l2 MOZ_UNANNOTATED("autotrylock2");
+    Mutex l2("autotrylock2");
     MutexAutoTryLock autol3(l2);
 
     EXPECT_TRUE(autol3);
@@ -268,8 +268,8 @@ TEST(Synchronization, AutoTryLock)
 //
 TEST(Synchronization, AutoUnlock)
 {
-  Mutex l1 MOZ_UNANNOTATED("autounlock");
-  Mutex l2 MOZ_UNANNOTATED("autounlock2");
+  Mutex l1("autounlock");
+  Mutex l2("autounlock2");
 
   l1.Lock();
   l1.AssertCurrentThreadOwns();
