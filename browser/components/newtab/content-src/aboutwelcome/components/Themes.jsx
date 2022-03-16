@@ -30,7 +30,6 @@ export const Themes = props => {
                       checked={theme === props.activeTheme}
                       className="sr-only input"
                       onClick={props.handleAction}
-                      data-l10n-attrs="aria-description"
                     />
                   </Localized>
                   <div
