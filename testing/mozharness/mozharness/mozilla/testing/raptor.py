@@ -530,6 +530,18 @@ class Raptor(
                     "help": "Enable marionette tracing",
                 },
             ],
+            [
+                ["--clean"],
+                {
+                    "action": "store_true",
+                    "dest": "clean",
+                    "default": False,
+                    "help": (
+                        "Clean the python virtualenv (remove, and rebuild) for "
+                        "Raptor before running tests."
+                    ),
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -648,6 +660,7 @@ class Raptor(
         self.browsertime_video = False
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
         self.browser_cycles = self.config.get("browser_cycles")
+        self.clean = self.config.get("clean")
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -986,6 +999,9 @@ class Raptor(
         # If virtualenv already exists, just add to path and don't re-install.
         # We need it in-path to import jsonschema later when validating output for perfherder.
         _virtualenv_path = self.config.get("virtualenv_path")
+
+        if self.clean:
+            rmtree(_virtualenv_path)
 
         if self.run_local and os.path.exists(_virtualenv_path):
             self.info("Virtualenv already exists, skipping creation")
