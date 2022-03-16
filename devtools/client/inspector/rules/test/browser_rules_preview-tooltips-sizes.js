@@ -49,8 +49,11 @@ add_task(async function() {
   );
 
   // Retrieve the element for the background url on which the image preview will appear.
-  const backgroundPropertySpan = getRuleViewProperty(view, "#target", "background")
-    .valueSpan;
+  const backgroundPropertySpan = getRuleViewProperty(
+    view,
+    "#target",
+    "background"
+  ).valueSpan;
   const backgroundUrlElement = backgroundPropertySpan.querySelector(
     ".theme-link"
   );
