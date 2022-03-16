@@ -198,13 +198,11 @@ nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
   MOZ_ASSERT(!sVideoCaptureThread ||
              sVideoCaptureThread->thread_id() != PlatformThread::CurrentId());
 
-  while (mChildIsAlive && mWebRTCAlive &&
-         (!sVideoCaptureThread || !sVideoCaptureThread->IsRunning())) {
+  while (mChildIsAlive && mWebRTCAlive && !sVideoCaptureThread) {
     sThreadMonitor->Wait();
   }
-  if (!sVideoCaptureThread || !sVideoCaptureThread->IsRunning()) {
-    LOG("Can't dispatch to video capture thread: thread not present or not "
-        "running");
+  if (!sVideoCaptureThread) {
+    LOG("Can't dispatch to video capture thread: thread not present");
     return NS_ERROR_FAILURE;
   }
   sVideoCaptureThread->message_loop()->PostTask(event.forget());
@@ -230,9 +228,7 @@ void CamerasParent::StopVideoCapture() {
         }
         nsresult rv = NS_DispatchToMainThread(NewRunnableFrom([self, thread]() {
           if (thread) {
-            if (thread->IsRunning()) {
-              thread->Stop();
-            }
+            thread->Stop();
             delete thread;
           }
           nsresult rv = MustGetShutdownBarrier()->RemoveBlocker(self);
