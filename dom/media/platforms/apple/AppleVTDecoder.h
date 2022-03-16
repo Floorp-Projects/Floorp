@@ -112,7 +112,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   // not required and so input samples on mTaskQueue need not be processed.
   Atomic<bool> mIsFlushing;
   // Protects mReorderQueue and mPromise.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   ReorderQueue mReorderQueue;
   MozMonitoredPromiseHolder<DecodePromise> mPromise;
 

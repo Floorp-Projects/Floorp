@@ -106,8 +106,9 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
 
   static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
 
-  Mutex mMutex;  // Protects mGMPThread, mPluginCrashHelpers,
-                 // mGMPThreadShutdown and some members in derived classes.
+  Mutex mMutex MOZ_UNANNOTATED;  // Protects mGMPThread, mPluginCrashHelpers,
+                                 // mGMPThreadShutdown and some members in
+                                 // derived classes.
 
   const nsCOMPtr<nsISerialEventTarget> mMainThread;
 

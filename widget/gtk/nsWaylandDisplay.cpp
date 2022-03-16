@@ -29,7 +29,7 @@ namespace widget {
 // where is wayland interface used as we need to dispatch waylands events
 // there.
 static RefPtr<nsWaylandDisplay> gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
-static StaticMutex gWaylandDisplayArrayWriteMutex;
+static StaticMutex gWaylandDisplayArrayWriteMutex MOZ_UNANNOTATED;
 
 // Dispatch events to Compositor/Render queues
 void WaylandDispatchDisplays() {

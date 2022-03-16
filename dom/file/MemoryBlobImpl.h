@@ -97,7 +97,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     // sDataOwners and sMemoryReporterRegistered may only be accessed while
     // holding sDataOwnerMutex!  You also must hold the mutex while touching
     // elements of the linked list that DataOwner inherits from.
-    static mozilla::StaticMutex sDataOwnerMutex;
+    static mozilla::StaticMutex sDataOwnerMutex MOZ_UNANNOTATED;
     static mozilla::StaticAutoPtr<mozilla::LinkedList<DataOwner> > sDataOwners;
     static bool sMemoryReporterRegistered;
 

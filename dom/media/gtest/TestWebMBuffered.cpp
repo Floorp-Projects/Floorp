@@ -21,7 +21,7 @@ static const int64_t gEndOffsets[] = {501, 772, 1244, 1380, 1543, 2015};
 
 TEST(WebMBuffered, BasicTests)
 {
-  ReentrantMonitor dummy("dummy");
+  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
 
   nsTArray<WebMTimeDataOffset> mapping;
@@ -60,7 +60,7 @@ static void ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer) {
 
 TEST(WebMBuffered, RealData)
 {
-  ReentrantMonitor dummy("dummy");
+  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
 
   nsTArray<uint8_t> webmData;
@@ -82,7 +82,7 @@ TEST(WebMBuffered, RealData)
 
 TEST(WebMBuffered, RealDataAppend)
 {
-  ReentrantMonitor dummy("dummy");
+  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
   nsTArray<WebMTimeDataOffset> mapping;
 

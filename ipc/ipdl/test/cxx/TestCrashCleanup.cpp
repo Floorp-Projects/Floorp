@@ -37,7 +37,7 @@ void DeleteTheWorld() {
 
   // needs to be synchronous to avoid affecting event ordering on
   // the main thread
-  Mutex mutex("TestCrashCleanup.DeleteTheWorld.mutex");
+  Mutex mutex MOZ_UNANNOTATED("TestCrashCleanup.DeleteTheWorld.mutex");
   CondVar cvar(mutex, "TestCrashCleanup.DeleteTheWorld.cvar");
 
   MutexAutoLock lock(mutex);

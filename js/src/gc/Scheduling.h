@@ -945,7 +945,7 @@ class MemoryTracker {
 
   size_t getAndRemoveEntry(const Key<Cell>& key, LockGuard<Mutex>& lock);
 
-  Mutex mutex;
+  Mutex mutex MOZ_UNANNOTATED;
 
   // Map containing the allocated size associated with (cell, use) pairs.
   GCMap gcMap;

@@ -194,7 +194,8 @@ class DataStorage : public nsIObserver {
                         nsTArray<DataStorageItem>* aItems,
                         const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex;  // This mutex protects access to the following members:
+  Mutex mMutex
+      MOZ_UNANNOTATED;  // This mutex protects access to the following members:
   DataStorageTable mPersistentDataTable;
   DataStorageTable mTemporaryDataTable;
   DataStorageTable mPrivateDataTable;
@@ -208,7 +209,8 @@ class DataStorage : public nsIObserver {
 
   mozilla::Atomic<bool> mInitCalled;  // Indicates that Init() has been called.
 
-  Monitor mReadyMonitor;  // Do not acquire this at the same time as mMutex.
+  Monitor mReadyMonitor
+      MOZ_UNANNOTATED;  // Do not acquire this at the same time as mMutex.
   bool mReady;  // Indicates that saved data has been read and Get can proceed.
 
   const nsString mFilename;

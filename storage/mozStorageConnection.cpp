@@ -265,7 +265,7 @@ class UnlockNotification {
   }
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   CondVar mCondVar;
   bool mSignaled;
 };

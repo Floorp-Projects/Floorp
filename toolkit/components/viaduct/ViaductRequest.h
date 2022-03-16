@@ -43,7 +43,7 @@ class ViaductRequest final : public nsIStreamListener,
   nsCOMPtr<nsITimer> mConnectTimeoutTimer;
   nsCOMPtr<nsITimer> mReadTimeoutTimer;
   appservices::httpconfig::protobuf::Response mResponse;
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   ~ViaductRequest();
 };
 

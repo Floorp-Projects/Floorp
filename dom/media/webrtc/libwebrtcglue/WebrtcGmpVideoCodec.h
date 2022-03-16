@@ -279,7 +279,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   uint32_t mMaxPayloadSize;
   webrtc::CodecSpecificInfo mCodecSpecificInfo;
   // Protects mCallback
-  Mutex mCallbackMutex;
+  Mutex mCallbackMutex MOZ_UNANNOTATED;
   webrtc::EncodedImageCallback* mCallback;
   Maybe<uint64_t> mCachedPluginId;
   const std::string mPCHandle;
@@ -430,7 +430,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   nsTArray<UniquePtr<GMPDecodeData>> mQueuedFrames;
   GMPVideoHost* mHost;
   // Protects mCallback
-  Mutex mCallbackMutex;
+  Mutex mCallbackMutex MOZ_UNANNOTATED;
   webrtc::DecodedImageCallback* mCallback;
   Maybe<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;

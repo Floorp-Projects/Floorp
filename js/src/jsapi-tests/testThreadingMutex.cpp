@@ -10,7 +10,7 @@
 #include "vm/MutexIDs.h"
 
 BEGIN_TEST(testThreadingMutex) {
-  js::Mutex mutex(js::mutexid::TestMutex);
+  js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
   mutex.lock();
   mutex.unlock();
   return true;
@@ -18,14 +18,14 @@ BEGIN_TEST(testThreadingMutex) {
 END_TEST(testThreadingMutex)
 
 BEGIN_TEST(testThreadingLockGuard) {
-  js::Mutex mutex(js::mutexid::TestMutex);
+  js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
   js::LockGuard<js::Mutex> guard(mutex);
   return true;
 }
 END_TEST(testThreadingLockGuard)
 
 BEGIN_TEST(testThreadingUnlockGuard) {
-  js::Mutex mutex(js::mutexid::TestMutex);
+  js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
   js::LockGuard<js::Mutex> guard(mutex);
   js::UnlockGuard<js::Mutex> unguard(guard);
   return true;

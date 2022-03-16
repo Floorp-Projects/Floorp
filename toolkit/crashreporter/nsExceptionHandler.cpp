@@ -251,7 +251,7 @@ static bool sIncludeContextHeap = false;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer;  // chrome process has this
-static StaticMutex processMapLock;
+static StaticMutex processMapLock MOZ_UNANNOTATED;
 static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;

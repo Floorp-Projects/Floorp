@@ -47,7 +47,7 @@ class nsPrinterWin final : public nsPrinterBase {
   // see threading issues with multiple drivers. This Mutex is used to lock
   // around all calls to DeviceCapabilitiesW, DocumentPropertiesW and
   // CreateICW/DCW, to hopefully prevent these issues.
-  mutable mozilla::Mutex mDriverMutex{"nsPrinterWin::Driver"};
+  mutable mozilla::Mutex mDriverMutex MOZ_UNANNOTATED{"nsPrinterWin::Driver"};
 };
 
 #endif  // nsPrinterWin_h_

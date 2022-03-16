@@ -111,7 +111,7 @@ class MessageLoop::EventTarget : public nsISerialEventTarget,
     mLoop = nullptr;
   }
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   MessageLoop* mLoop;
 };
 

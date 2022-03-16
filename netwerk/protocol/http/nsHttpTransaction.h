@@ -300,7 +300,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   };
 
-  Mutex mLock{"transaction lock"};
+  Mutex mLock MOZ_UNANNOTATED{"transaction lock"};
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mTransportSink;

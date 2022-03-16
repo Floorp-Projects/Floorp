@@ -45,7 +45,7 @@ class BrowserProcessSubThread : public base::Thread {
   // This lock protects |browser_threads_|.  Do not read or modify that array
   // without holding this lock.  Do not block while holding this lock.
 
-  static StaticMutex sLock;
+  static StaticMutex sLock MOZ_UNANNOTATED;
 
   // An array of the ChromeThread objects.  This array is protected by |lock_|.
   // The threads are not owned by this array.  Typically, the threads are owned

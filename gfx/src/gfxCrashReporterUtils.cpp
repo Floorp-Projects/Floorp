@@ -27,7 +27,7 @@
 namespace mozilla {
 
 static nsTArray<nsCString>* gFeaturesAlreadyReported = nullptr;
-static StaticMutex gFeaturesAlreadyReportedMutex;
+static StaticMutex gFeaturesAlreadyReportedMutex MOZ_UNANNOTATED;
 
 class ObserverToDestroyFeaturesAlreadyReported final : public nsIObserver {
  public:

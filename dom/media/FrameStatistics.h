@@ -171,7 +171,7 @@ class FrameStatistics {
   ~FrameStatistics() = default;
 
   // ReentrantMonitor to protect access of playback statistics.
-  mutable ReentrantMonitor mReentrantMonitor;
+  mutable ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED;
 
   FrameStatisticsData mFrameStatisticsData;
 };

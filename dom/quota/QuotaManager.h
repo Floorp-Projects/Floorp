@@ -597,7 +597,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // Accesses to mQuotaManagerShutdownSteps must be protected by mQuotaMutex.
   nsCString mQuotaManagerShutdownSteps;
 
-  mutable mozilla::Mutex mQuotaMutex;
+  mutable mozilla::Mutex mQuotaMutex MOZ_UNANNOTATED;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
 

@@ -941,7 +941,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 
   if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice() &&
       mSyncObject) {
-    static StaticMutex sMutex;
+    static StaticMutex sMutex MOZ_UNANNOTATED;
     // Ensure that we only ever attempt to synchronise via the sync object
     // serially as when using the same D3D11 device for multiple video decoders
     // it can lead to deadlocks.

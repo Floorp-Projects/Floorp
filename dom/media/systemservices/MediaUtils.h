@@ -225,7 +225,7 @@ void Await(already_AddRefed<nsIEventTarget> aPool,
            RejectFunction&& aRejectFunction) {
   RefPtr<TaskQueue> taskQueue =
       new TaskQueue(std::move(aPool), "MozPromiseAwait");
-  Monitor mon(__func__);
+  Monitor mon MOZ_UNANNOTATED(__func__);
   bool done = false;
 
   aPromise->Then(
@@ -256,7 +256,7 @@ Await(already_AddRefed<nsIEventTarget> aPool,
       RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise) {
   RefPtr<TaskQueue> taskQueue =
       new TaskQueue(std::move(aPool), "MozPromiseAwait");
-  Monitor mon(__func__);
+  Monitor mon MOZ_UNANNOTATED(__func__);
   bool done = false;
 
   typename MozPromise<ResolveValueType, RejectValueType,
@@ -400,7 +400,7 @@ class AsyncBlockers {
     mPromise->Resolve(true, __func__);
     mResolved = true;
   }
-  Mutex mLock;  // protects mBlockers and mResolved.
+  Mutex mLock MOZ_UNANNOTATED;  // protects mBlockers and mResolved.
   std::map<void*, bool> mBlockers;
   bool mResolved = false;
   const RefPtr<GenericPromise::Private> mPromise;

@@ -121,7 +121,7 @@ struct nsWebBrowserPersist::OutputData {
   nsCOMPtr<nsIURI> mFile;
   nsCOMPtr<nsIURI> mOriginalLocation;
   nsCOMPtr<nsIOutputStream> mStream;
-  Mutex mStreamMutex;
+  Mutex mStreamMutex MOZ_UNANNOTATED;
   int64_t mSelfProgress;
   int64_t mSelfProgressMax;
   bool mCalcFileExt;
