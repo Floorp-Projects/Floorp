@@ -31,6 +31,20 @@ function testNavigationState(inspector, elms, focused, activedescendant) {
 }
 
 /**
+ * Lookup the provided dotted path ("prop1.subprop2.myProp") in the provided object.
+ *
+ * @param {Object} obj
+ *        Object to expand.
+ * @param {String} path
+ *        Dotted path to use to expand the object.
+ * @return {?} anything that is found at the provided path in the object.
+ */
+function lookupPath(obj, path) {
+  const segments = path.split(".");
+  return segments.reduce((prev, current) => prev[current], obj);
+}
+
+/**
  * Execute a keyboard event and check that the state is as expected (focused element, aria
  * attribute etc...).
  *
