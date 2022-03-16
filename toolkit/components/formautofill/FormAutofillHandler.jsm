@@ -422,7 +422,10 @@ class FormAutofillSection {
 
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
-      let value = profile[fieldDetail.fieldName] || "";
+      let value =
+        profile[`${fieldDetail.fieldName}-formatted`] ||
+        profile[fieldDetail.fieldName] ||
+        "";
 
       // Skip the field that is null
       if (!element) {
@@ -732,6 +735,12 @@ class FormAutofillSection {
       option.hasAttribute("selected")
     );
     element.value = selected ? selected.value : element.options[0].value;
+    element.dispatchEvent(
+      new element.ownerGlobal.Event("input", { bubbles: true })
+    );
+    element.dispatchEvent(
+      new element.ownerGlobal.Event("change", { bubbles: true })
+    );
   }
 }
 
@@ -1071,7 +1080,14 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     );
   }
 
-  creditCardExpDateTransformer(profile) {
+  /**
+   * Handles credit card expiry date transformation when
+   * the expiry date exists in a cc-exp field.
+   *
+   * @param {object} profile
+   * @memberof FormAutofillCreditCardSection
+   */
+  creditCardExpiryDateTransformer(profile) {
     if (!profile["cc-exp"]) {
       return;
     }
@@ -1145,23 +1161,31 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     }
   }
 
-  creditCardExpMonthTransformer(profile) {
-    if (!profile["cc-exp-month"]) {
-      return;
-    }
-
-    let detail = this.getFieldDetailByName("cc-exp-month");
-    if (!detail) {
-      return;
-    }
-
-    let element = detail.elementWeakRef.get();
-
+  /**
+   * Handles credit card expiry date transformation when the expiry date exists in
+   * the separate cc-exp-month and cc-exp-year fields
+   *
+   * @param {object} profile
+   * @memberof FormAutofillCreditCardSection
+   */
+  creditCardExpMonthAndYearTransformer(profile) {
+    const getInputElementByField = (field, self) => {
+      if (!field) {
+        return null;
+      }
+      let detail = self.getFieldDetailByName(field);
+      if (!detail) {
+        return null;
+      }
+      let element = detail.elementWeakRef.get();
+      return element.tagName === "INPUT" ? element : null;
+    };
+    let month = getInputElementByField("cc-exp-month", this);
     // If the expiration month element is an input,
     // then we examine any placeholder to see if we should format the expiration month
     // as a zero padded string in order to autofill correctly.
-    if (element.tagName === "INPUT") {
-      let placeholder = element.placeholder;
+    if (month) {
+      let placeholder = month.placeholder;
 
       // Checks for 'MM' placeholder and converts the month to a two digit string.
       let result = /(?<!.)mm(?!.)/i.test(placeholder);
@@ -1169,6 +1193,22 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
         profile["cc-exp-month-formatted"] = profile["cc-exp-month"]
           .toString()
           .padStart(2, "0");
+      }
+    }
+
+    let year = getInputElementByField("cc-exp-year", this);
+    // If the expiration year element is an input,
+    // then we examine any placeholder to see if we should format the expiration year
+    // as a zero padded string in order to autofill correctly.
+    if (year) {
+      let placeholder = year.placeholder;
+
+      // Checks for 'YY'|'AA'|'JJ' placeholder and converts the year to a two digit string using the last two digits.
+      let result = /(?<!.)(yy|aa|jj)(?!.)/i.test(placeholder);
+      if (result) {
+        profile["cc-exp-year-formatted"] = profile["cc-exp-year"]
+          .toString()
+          .substring(2);
       }
     }
   }
@@ -1206,8 +1246,8 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     // This ensures that the expiry value that is cached in the matchSelectOptions
     // matches the expiry value that is stored in the profile ensuring that autofill works
     // correctly when dealing with option elements.
-    this.creditCardExpDateTransformer(profile);
-    this.creditCardExpMonthTransformer(profile);
+    this.creditCardExpiryDateTransformer(profile);
+    this.creditCardExpMonthAndYearTransformer(profile);
     this.matchSelectOptions(profile);
     this.adaptFieldMaxLength(profile);
   }

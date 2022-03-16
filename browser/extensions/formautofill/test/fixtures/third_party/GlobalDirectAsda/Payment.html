@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global.direct.asda.com</title>
+</head>
+
+<body>
+  <form action="/1/Payments/HandleCreditCardRequestV2?mode=13534" method="post" id="paymentFrm" novalidate="novalidate">
+    <div class="clearfix" id="secureContainer" data-culture="en-GB" data-direction="ltr">
+      <div class="form-horizontal">
+        <div class="form-group has-error has-feedback">
+
+          <label for="cardNum" class="col-sm-4 col-xs-12 control-label fcap paylabel">Card number<div data-show="true"
+              class="glyphicon glyphicon-star astrsk"></div></label>
+          <div class="col-sm-8 col-xs-12 fval" id="CreditCardCell" data-cc-valid="false">
+            <input aria-label="Card number" autocomplete="off" class="form-control input-validation-error"
+              data-type="unknown" data-type-id="1" data-val="true" data-val-luhn="Card number not valid"
+              data-val-luhn-allowempty="False" data-val-luhn-allowspaces="False" data-val-required="Card number"
+              id="cardNum" name="PaymentData.cardNum" pattern="[0-9]{13,16}" placeholder="Card number" type="tel"
+              value="" aria-required="true"><span class="glyphicon glyphicon-remove form-control-feedback"
+              aria-hidden="true"></span>
+            <div id="cardTypeInfo">
+              <div class="isvisa pm_visa pm_general"></div>
+              <div class="ismastercard pm_mastercard pm_general"></div>
+              <div class="isamex pm_amex pm_general"></div>
+              <div class="ismaestro pm_maestro pm_general"></div>
+              <div class="isjcb pm_jcb pm_general"></div>
+              <div class="isdiners pm_diners pm_general"></div>
+              <div class="isdiscover pm_discover pm_general"></div>
+              <div class="ismir pm_mir pm_general"></div>
+              <div class="isdefault pm_default pm_general"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cardExpiryMonth" class="col-sm-4 col-xs-12 control-label fcap  paylabel">Expiry date<div
+              data-show="true" class="glyphicon glyphicon-star astrsk"></div></label>
+          <div class="col-sm-8 col-xs-12 fval">
+            <div class="row" id="expDateRow">
+
+              <div class="col-xs-6">
+                <div class="FSelect">
+                  <div class="arrow"></div>
+                  <div class="FCurValue">Month</div><select aria-label="Month" class="form-control"
+                    data-tooltip-special-pos="top left;bottom left" data-val="true"
+                    data-val-datemustbeequalorgreaterthancurrentdate="The credit card expiration date you provided has already expired."
+                    data-val-required="Expiry date" data-widget="lightcombobox" id="cardExpiryMonth"
+                    name="PaymentData.cardExpiryMonth" data-rendered="true" aria-required="true">
+                    <option selected="selected" value="">Month</option>
+                    <option value="1">01</option>
+                    <option value="2">02</option>
+                    <option value="3">03</option>
+                    <option value="4">04</option>
+                    <option value="5">05</option>
+                    <option value="6">06</option>
+                    <option value="7">07</option>
+                    <option value="8">08</option>
+                    <option value="9">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="col-xs-6">
+                <div class="FSelect">
+                  <div class="arrow"></div>
+                  <div class="FCurValue">Year</div><select aria-label="Year" class="form-control"
+                    data-tooltip-special-pos="top right;bottom right" data-val="true"
+                    data-val-datemustbeequalorgreaterthancurrentdate="The credit card expiration date you provided has already expired."
+                    data-val-required="Expiry date" data-widget="lightcombobox" id="cardExpiryYear"
+                    name="PaymentData.cardExpiryYear" data-rendered="true" aria-required="true">
+                    <option selected="selected" value="">Year</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
+                    <option value="2031">2031</option>
+                    <option value="2032">2032</option>
+                    <option value="2033">2033</option>
+                    <option value="2034">2034</option>
+                    <option value="2035">2035</option>
+                    <option value="2036">2036</option>
+                    <option value="2037">2037</option>
+                    <option value="2038">2038</option>
+                    <option value="2039">2039</option>
+                    <option value="2040">2040</option>
+                    <option value="2041">2041</option>
+                    <option value="2042">2042</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="cvvContainer" class="form-group">
+          <label for="cvdNumber" class="col-sm-4 col-xs-12 control-label fcap  paylabel">Security code<div
+              data-show="true" class="glyphicon glyphicon-star astrsk"></div></label>
+          <div class="col-sm-8 col-xs-12 fval">
+            <input aria-label="Security code" autocomplete="off" class="form-control" data-tt-pos="top" data-val="true"
+              data-val-cvvval="Please enter a valid CVV" data-val-cvvval-otherpropertyname=""
+              data-val-required="Security code" id="cvdNumber" name="PaymentData.cvdNumber" pattern="[0-9]{3,4}"
+              placeholder="CVV" type="tel" value="" aria-required="true">
+            <span id="cvvDescriptionContainer" data-toggle="tooltip" data-placement="top" title=""
+              data-original-title="The&nbsp;Security Code&nbsp;on your credit card or debit card is a 3 digit number on the back of your VISA®, MasterCard® and Discover® branded credit and debit cards. On your American Express® branded credit or debit card it is a 4 digit numeric code on the front of the card.">
+              <label tabindex="0" class="control-label" id="cvvInfo"> What is this?</label>
+              <label class="control-label secureinfolabel"><span class="secureInfo lazy"></span></label>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--#region Hidden Payment Parameters-->
+    <input type="hidden" name="PaymentData.checkoutV2" value="true">
+    <input type="hidden" name="PaymentData.cartToken" id="cartToken" value="045078e1-dafa-4d42-8e1a-a8a8dc3c2234">
+    <input type="hidden" name="PaymentData.gatewayId" id="gatewayId" value="2">
+    <input type="hidden" name="PaymentData.paymentMethodId" id="paymentMethodId" value="1">
+    <input type="hidden" name="PaymentData.machineId" id="machineId">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.createTransaction" id="createTransaction" value="true">
+    <input type="hidden" name="PaymentData.checkoutCDNEnabled" id="checkoutURL" value="value">
+    <input type="hidden" name="PaymentData.recapchaToken" id="recapchaToken">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.recapchaTime" id="recapchaTime">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.customerScreenColorDepth" id="customerScreenColorDepth">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.customerScreenWidth" id="customerScreenWidth">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.customerScreenHeight" id="customerScreenHeight">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.customerTimeZoneOffset" id="customerTimeZoneOffset">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.customerLanguage" id="customerLanguage">
+    <!--Needs to be updated by script-->
+    <input type="hidden" name="PaymentData.UrlStructureTokenEncoded" id="UrlStructureTokenEncoded"
+      value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbmNvZGVkTWVyY2hhbnRJZCI6IjhybzgiLCJDYXJ0VG9rZW4iOiIwNDUwNzhlMS1kYWZhLTRkNDItOGUxYS1hOGE4ZGMzYzIyMzQiLCJJc1JlcXVpcmVkVG9QYXlXaXRoRGVjb2RlZE1lcmNoYW50SWRBbmRUb2tlbkluVXJsIjpmYWxzZX0.NaxXTwl3w9OurCnPmosjy0P0kSvvs9JfY1OnRVI_w_4">
+    <!--#endregion-->
+  </form>
+</body>
+
+</html>

@@ -22,6 +22,10 @@ const DEFAULT_CREDITCARD_RECORD = {
   "cc-exp": "2025-01",
 };
 
+const getCCExpYearFormatted = () => {
+  return DEFAULT_CREDITCARD_RECORD["cc-exp-year"].toString().substring(2);
+};
+
 const FR_TESTCASES = [
   {
     description: "Use placeholder to adjust cc-exp format [mm/aa].",
@@ -86,6 +90,20 @@ const FR_TESTCASES = [
     expectedResult: [
       Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
         "cc-exp": "2025-01",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp-year field [aa].",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp-month">
+                <input autocomplete="cc-exp-year" placeholder="AA">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-year-formatted": getCCExpYearFormatted(),
       }),
     ],
   },
@@ -188,6 +206,20 @@ const DE_TESTCASES = [
     expectedResult: [
       Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
         "cc-exp": "2025-01",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp-year field [jj].",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp-month">
+                <input autocomplete="cc-exp-year" placeholder="JJ">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-year-formatted": getCCExpYearFormatted(),
       }),
     ],
   },
