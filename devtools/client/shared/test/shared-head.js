@@ -1231,38 +1231,6 @@ var closeToolboxAndTab = async function(toolbox) {
 };
 
 /**
- * Retrieve all tool ids compatible with a target created for the provided tab.
- *
- * @param {XULTab} tab
- *        The tab for which we want to get the list of supported toolIds
- * @return {Array<String>} array of tool ids
- */
-async function getSupportedToolIds(tab) {
-  info("Getting the entire list of tools supported in this tab");
-
-  let shouldDestroyToolbox = false;
-
-  // Get the toolbox for this tab, or create one if needed.
-  let toolbox = await gDevTools.getToolboxForTab(tab);
-  if (!toolbox) {
-    toolbox = await gDevTools.showToolboxForTab(tab);
-    shouldDestroyToolbox = true;
-  }
-
-  const toolIds = gDevTools
-    .getToolDefinitionArray()
-    .filter(def => def.isTargetSupported(toolbox.target))
-    .map(def => def.id);
-
-  if (shouldDestroyToolbox) {
-    // Only close the toolbox if it was explicitly created here.
-    await toolbox.destroy();
-  }
-
-  return toolIds;
-}
-
-/**
  * Waits until a predicate returns true.
  *
  * @param function predicate
