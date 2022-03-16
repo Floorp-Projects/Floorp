@@ -115,7 +115,7 @@ class HandlerProvider final : public IGeckoBackChannel,
                                 HRESULT* result);
 
   Atomic<uint32_t> mRefCnt;
-  Mutex mMutex;  // Protects mSerializer
+  Mutex mMutex MOZ_UNANNOTATED;  // Protects mSerializer
   const IID mTargetUnkIid;
   mscom::InterceptorTargetPtr<IUnknown>
       mTargetUnk;  // Constant, main thread only
@@ -136,7 +136,7 @@ class HandlerProvider final : public IGeckoBackChannel,
   // Used when the payload is built prior to marshaling the object by a bulk
   // fetch operation. See prebuildPayload().
   IA2PayloadPtr mPayload;
-  Mutex mPayloadMutex;  // Protects mPayload
+  Mutex mPayloadMutex MOZ_UNANNOTATED;  // Protects mPayload
 };
 
 }  // namespace a11y

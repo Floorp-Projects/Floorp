@@ -417,7 +417,7 @@ class imgLoader final : public imgILoader,
   // The imgRequest can have refs to them held on non-main thread, so we need
   // a mutex because we modify the uncached images set from the imgRequest
   // destructor.
-  Mutex mUncachedImagesMutex;
+  Mutex mUncachedImagesMutex MOZ_UNANNOTATED;
 
   static double sCacheTimeWeight;
   static uint32_t sCacheMaxSize;

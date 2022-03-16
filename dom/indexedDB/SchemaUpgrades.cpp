@@ -2842,7 +2842,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
     lock.Notify();
   }
 
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   StructuredCloneReadInfoParent& mCloneReadInfo;
   nsresult mStatus;
 };

@@ -964,7 +964,7 @@ class AsyncPanZoomController {
      updater thread. */
   RefPtr<GeckoContentController> mGeckoContentController;
   RefPtr<GestureEventListener> mGestureEventListener;
-  mutable Monitor mRefPtrMonitor;
+  mutable Monitor mRefPtrMonitor MOZ_UNANNOTATED;
 
   // This is a raw pointer to avoid introducing a reference cycle between
   // AsyncPanZoomController and APZCTreeManager. Since these objects don't
@@ -1013,7 +1013,7 @@ class AsyncPanZoomController {
   // be held before calling the CanScroll function of |mX| and |mY|. These
   // coupled relationships bring us the burden of taking care of when the
   // monitor should be held, so they should be decoupled in the future.
-  mutable RecursiveMutex mRecursiveMutex;
+  mutable RecursiveMutex mRecursiveMutex MOZ_UNANNOTATED;
 
  private:
   // Metadata of the container layer corresponding to this APZC. This is
@@ -1754,7 +1754,7 @@ class AsyncPanZoomController {
                                uint32_t aMagnitude);
 
   // Mutex protecting mCheckerboardEvent
-  Mutex mCheckerboardEventLock;
+  Mutex mCheckerboardEventLock MOZ_UNANNOTATED;
   // This is created when this APZC instance is first included as part of a
   // composite. If a checkerboard event takes place, this is destroyed at the
   // end of the event, and a new one is created on the next composite.

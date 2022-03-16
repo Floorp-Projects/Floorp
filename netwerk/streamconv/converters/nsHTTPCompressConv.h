@@ -101,7 +101,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
 
   Atomic<uint32_t, Relaxed> mDecodedDataLength{0};
 
-  mutable mozilla::Mutex mMutex{"nsHTTPCompressConv"};
+  mutable mozilla::Mutex mMutex MOZ_UNANNOTATED{"nsHTTPCompressConv"};
 };
 
 }  // namespace net

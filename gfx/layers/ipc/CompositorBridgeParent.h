@@ -696,8 +696,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   CompositorOptions mOptions;
 
-  mozilla::Monitor mPauseCompositionMonitor;
-  mozilla::Monitor mResumeCompositionMonitor;
+  mozilla::Monitor mPauseCompositionMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mResumeCompositionMonitor MOZ_UNANNOTATED;
 
   uint64_t mCompositorBridgeID;
   LayersId mRootLayerTreeID;

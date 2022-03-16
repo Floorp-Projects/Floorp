@@ -25,7 +25,7 @@ static malloc_table_t sFuncs;
 static intptr_t sFd = 0;
 static bool sStdoutOrStderr = false;
 
-static Mutex sMutex;
+static Mutex sMutex MOZ_UNANNOTATED;
 
 #ifndef _WIN32
 static void prefork() { sMutex.Lock(); }

@@ -26,7 +26,7 @@ class SyncRunnableBase : public Runnable {
   virtual void RunOnTargetThread() = 0;
 
  private:
-  mozilla::Monitor monitor;
+  mozilla::Monitor monitor MOZ_UNANNOTATED;
 };
 
 class NotifyObserverRunnable : public Runnable {

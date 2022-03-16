@@ -59,7 +59,7 @@ class CompositableInProcessManager final {
   static std::map<std::pair<base::ProcessId, uint64_t>,
                   RefPtr<WebRenderImageHost>>
       sCompositables;
-  static StaticMutex sMutex;
+  static StaticMutex sMutex MOZ_UNANNOTATED;
 
   static uint32_t sNamespace;
   static Atomic<uint32_t> sNextResourceId;

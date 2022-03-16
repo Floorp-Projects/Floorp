@@ -207,7 +207,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // NOTE: these members may be accessed from any thread (use mReentrantMonitor)
   //-------------------------------------------------------------------------
 
-  ReentrantMonitor mReentrantMonitor{"nsHttpConnectionMgr.mReentrantMonitor"};
+  ReentrantMonitor mReentrantMonitor MOZ_UNANNOTATED{
+      "nsHttpConnectionMgr.mReentrantMonitor"};
   // This is used as a flag that we're shut down, and no new events should be
   // dispatched.
   nsCOMPtr<nsIEventTarget> mSocketThreadTarget;

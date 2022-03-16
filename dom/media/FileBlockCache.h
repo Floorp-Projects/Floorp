@@ -140,7 +140,7 @@ class FileBlockCache : public MediaBlockCacheBase {
   // Mutex which controls access to mFD and mFDCurrentPos. Don't hold
   // mDataMutex while holding mFileMutex! mFileMutex must be owned
   // while accessing any of the following data fields or methods.
-  Mutex mFileMutex;
+  Mutex mFileMutex MOZ_UNANNOTATED;
   // Moves a block already committed to file.
   nsresult MoveBlockInFile(int32_t aSourceBlockIndex, int32_t aDestBlockIndex);
   // Seeks file pointer.
@@ -159,7 +159,7 @@ class FileBlockCache : public MediaBlockCacheBase {
   // and mFDCurrentPos. Don't hold mDataMutex while holding mFileMutex!
   // mDataMutex must be owned while accessing any of the following data
   // fields or methods.
-  Mutex mDataMutex;
+  Mutex mDataMutex MOZ_UNANNOTATED;
   // Ensures we either are running the event to preform IO, or an event
   // has been dispatched to preform the IO.
   // mDataMutex must be owned while calling this.

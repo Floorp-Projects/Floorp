@@ -263,7 +263,7 @@ class AsyncImagePipelineManager final {
 
   std::vector<std::pair<wr::RenderedFrameId, WebRenderPipelineInfoHolder>>
       mRenderSubmittedUpdates;
-  Mutex mRenderSubmittedUpdatesLock;
+  Mutex mRenderSubmittedUpdatesLock MOZ_UNANNOTATED;
 
   Atomic<uint64_t> mLastCompletedFrameId;
   std::vector<std::pair<wr::RenderedFrameId,

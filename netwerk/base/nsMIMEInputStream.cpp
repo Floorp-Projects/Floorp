@@ -86,7 +86,7 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
   nsCOMPtr<nsIInputStream> mStream;
   bool mStartedReading{false};
 
-  mozilla::Mutex mMutex{"nsMIMEInputStream::mMutex"};
+  mozilla::Mutex mMutex MOZ_UNANNOTATED{"nsMIMEInputStream::mMutex"};
 
   // This is protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;

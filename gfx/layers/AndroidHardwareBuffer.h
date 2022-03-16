@@ -223,7 +223,7 @@ class AndroidHardwareBufferManager {
   Monitor& GetMonitor() { return mMonitor; }
 
  private:
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   std::unordered_map<uint64_t, ThreadSafeWeakPtr<AndroidHardwareBuffer>>
       mBuffers;
 

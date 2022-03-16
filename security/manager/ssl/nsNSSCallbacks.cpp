@@ -104,7 +104,7 @@ class OCSPRequest final : public nsIStreamLoaderObserver, public nsIRunnable {
   // cancelled. This is how we know the closure in OnTimeout is valid. If the
   // timer fires before OnStreamComplete runs, it should be safe to not cancel
   // the request because necko has a strong reference to it.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   bool mNotifiedDone;
   nsCOMPtr<nsIStreamLoader> mLoader;
   const nsCString mAIALocation;

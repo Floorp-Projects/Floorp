@@ -191,7 +191,7 @@ class DrawTargetSkia : public DrawTarget {
   SkCanvas* mCanvas = nullptr;
   RefPtr<DataSourceSurface> mBackingSurface;
   RefPtr<SourceSurfaceSkia> mSnapshot;
-  Mutex mSnapshotLock;
+  Mutex mSnapshotLock MOZ_UNANNOTATED;
 
 #ifdef MOZ_WIDGET_COCOA
   friend class BorrowedCGContext;

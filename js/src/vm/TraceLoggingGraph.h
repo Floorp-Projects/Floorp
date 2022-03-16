@@ -82,7 +82,7 @@ class TraceLoggerGraphState {
 #endif
 
  public:
-  js::Mutex lock;
+  js::Mutex lock MOZ_UNANNOTATED;
 
  public:
   TraceLoggerGraphState()

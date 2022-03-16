@@ -83,7 +83,7 @@ class ReverbConvolver {
 
   // Background thread and synchronization
   base::Thread m_backgroundThread;
-  mozilla::Monitor m_backgroundThreadMonitor;
+  mozilla::Monitor m_backgroundThreadMonitor MOZ_UNANNOTATED;
   bool m_useBackgroundThreads;
   std::atomic<bool> m_wantsToExit;
   std::atomic<bool> m_moreInputBuffered;

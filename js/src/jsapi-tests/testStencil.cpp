@@ -336,7 +336,7 @@ BEGIN_TEST(testStencil_OffThread) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
 
-  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
   JS::OffThreadToken* token;
 
@@ -383,7 +383,7 @@ BEGIN_TEST(testStencil_OffThreadWithInstantiationStorage) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
 
-  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
   JS::OffThreadToken* token;
 
@@ -435,7 +435,7 @@ BEGIN_TEST(testStencil_OffThreadModule) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
 
-  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
   JS::OffThreadToken* token;
 
@@ -487,7 +487,7 @@ BEGIN_TEST(testStencil_OffThreadModuleWithInstantiationStorage) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
 
-  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
   JS::OffThreadToken* token;
 
@@ -571,7 +571,7 @@ BEGIN_TEST(testStencil_OffThreadDecode) {
   JS::OffThreadToken* token;
   {
     JS::DecodeOptions decodeOptions;
-    js::Monitor monitor(js::mutexid::ShellOffThreadState);
+    js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
     JS::TranscodeRange range(buffer.begin(), buffer.length());
 
     // Force off-thread even though if this is a small file.
@@ -650,7 +650,7 @@ BEGIN_TEST(testStencil_OffThreadDecodeWithInstantiationStorage) {
   JS::OffThreadToken* token;
   {
     JS::DecodeOptions decodeOptions;
-    js::Monitor monitor(js::mutexid::ShellOffThreadState);
+    js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
     JS::TranscodeRange range(buffer.begin(), buffer.length());
 
     // Force off-thread even though if this is a small file.
@@ -734,7 +734,7 @@ BEGIN_TEST(testStencil_OffThreadDecodeBorrow) {
   JS::OffThreadToken* token;
   {
     JS::DecodeOptions decodeOptions;
-    js::Monitor monitor(js::mutexid::ShellOffThreadState);
+    js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
     JS::TranscodeRange range(buffer.begin(), buffer.length());
 
     // Force off-thread even though if this is a small file.
@@ -824,7 +824,7 @@ BEGIN_TEST(testStencil_OffThreadDecodePinned) {
   JS::OffThreadToken* token;
   {
     JS::DecodeOptions decodeOptions;
-    js::Monitor monitor(js::mutexid::ShellOffThreadState);
+    js::Monitor monitor MOZ_UNANNOTATED(js::mutexid::ShellOffThreadState);
     JS::TranscodeRange range(pinnedBuffer, pinnedBufferSize);
 
     // Force off-thread even though if this is a small file.

@@ -110,7 +110,7 @@ TEST(ThreadPool, Parallelism)
   // We should wake up the idle thread and spawn a new thread so these 2 events
   // can run in parallel. We will time out if r1 and r2 run in sequence for r1
   // won't finish until r2 finishes.
-  Monitor mon("ThreadPool::Parallelism");
+  Monitor mon MOZ_UNANNOTATED("ThreadPool::Parallelism");
   bool done = false;
   nsCOMPtr<nsIRunnable> r1 = new Runnable1(mon, done);
   nsCOMPtr<nsIRunnable> r2 = new Runnable2(mon, done);

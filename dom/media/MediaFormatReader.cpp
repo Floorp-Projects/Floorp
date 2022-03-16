@@ -718,7 +718,7 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
   void BreakCycles() override {}
 
  private:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   const RefPtr<TaskQueue> mTaskQueue;
   const bool mGetSamplesMayBlock;
   const UniquePtr<TrackInfo> mInfo;

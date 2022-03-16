@@ -676,7 +676,7 @@ nsresult SerializeEventsArray(const EventRecordArray& events, JSContext* cx,
 // that, due to the nature of Telemetry, we cannot rely on having a
 // mutex initialized in InitializeGlobalState. Unfortunately, we
 // cannot make sure that no other function is called before this point.
-static StaticMutex gTelemetryEventsMutex;
+static StaticMutex gTelemetryEventsMutex MOZ_UNANNOTATED;
 
 void TelemetryEvent::InitializeGlobalState(bool aCanRecordBase,
                                            bool aCanRecordExtended) {

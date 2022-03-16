@@ -935,7 +935,7 @@ nsString ComputeWorkerPrivateId() {
 class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   // This mutex protects mWorkerPrivate and must be acquired *before* the
   // WorkerPrivate's mutex whenever they must both be held.
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   WorkerPrivate* mWorkerPrivate;
   nsIEventTarget* mWeakNestedEventTarget;
   nsCOMPtr<nsIEventTarget> mNestedEventTarget;

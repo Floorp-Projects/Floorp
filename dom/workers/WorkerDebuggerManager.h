@@ -34,7 +34,7 @@ class WorkerPrivate;
 
 class WorkerDebuggerManager final : public nsIObserver,
                                     public nsIWorkerDebuggerManager {
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // Protected by mMutex.
   nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>> mListeners;
