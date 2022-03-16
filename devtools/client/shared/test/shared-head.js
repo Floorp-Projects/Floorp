@@ -1371,20 +1371,6 @@ async function enableTargetSwitching() {
 }
 
 /**
- * Wait for a given toolbox to get its title updated.
- */
-function waitForTitleChange(toolbox) {
-  return new Promise(resolve => {
-    toolbox.topWindow.addEventListener("message", function onmessage(event) {
-      if (event.data.name == "set-host-title") {
-        toolbox.topWindow.removeEventListener("message", onmessage);
-        resolve();
-      }
-    });
-  });
-}
-
-/**
  * Create an HTTP server that can be used to simulate custom requests within
  * a test.  It is automatically cleaned up when the test ends, so no need to
  * call `destroy`.
