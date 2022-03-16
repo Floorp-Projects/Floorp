@@ -502,7 +502,7 @@ void RecursiveMutex::Unlock() {
   UnlockInternal();
 }
 
-void RecursiveMutex::AssertCurrentThreadIn() {
+void RecursiveMutex::AssertCurrentThreadIn() const {
   MOZ_ASSERT(IsAcquired() && mOwningThread == PR_GetCurrentThread());
 }
 
