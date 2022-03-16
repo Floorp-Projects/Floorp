@@ -146,7 +146,6 @@ class CamerasParent final : public PCamerasParent,
   // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by
   // sThreadMonitor
   static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
-  // Number of CamerasParents for which mWebRTCAlive is true.
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;
   static StaticMutex sMutex;
