@@ -74,7 +74,12 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     form() {
-      const policy = ExtensionParent.WebExtensionPolicy.getByID(this.addonId);
+      const { addonId } = this;
+      const policy = ExtensionParent.WebExtensionPolicy.getByID(addonId);
+      const persistentBackgroundScript = ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
+        addonId
+      );
+
       return {
         actor: this.actorID,
         // Note that until the policy becomes active,
@@ -85,11 +90,12 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         // iconDataURL is available after calling loadIconDataURL
         iconDataURL: this._iconDataURL,
         iconURL: this.addon.iconURL,
-        id: this.addonId,
+        id: addonId,
         isSystem: this.addon.isSystem,
         isWebExtension: this.addon.isWebExtension,
         manifestURL: policy && policy.getURL("manifest.json"),
         name: this.addon.name,
+        persistentBackgroundScript,
         temporarilyInstalled: this.addon.temporarilyInstalled,
         traits: {
           supportsReloadDescriptor: true,
@@ -196,10 +202,13 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       return this.reload();
     },
 
-    /** WebExtension Actor Methods **/
     async reload() {
       await this.addon.reload();
       return {};
+    },
+
+    async terminateBackgroundScript() {
+      await ExtensionParent.DebugUtils.terminateBackgroundScript(this.addonId);
     },
 
     // This function will be called from RootActor in case that the devtools client

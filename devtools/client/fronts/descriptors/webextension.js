@@ -76,6 +76,10 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
     return this._form.name;
   }
 
+  get persistentBackgroundScript() {
+    return this._form.persistentBackgroundScript;
+  }
+
   get temporarilyInstalled() {
     return this._form.temporarilyInstalled;
   }
