@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable no-useless-concat */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,14 +50,17 @@ var HeuristicsRegExp = {
       "address-level1": "land", // de-DE
       "additional-name": "apellido.?materno|lastlastname",
       "cc-name":
-        // eslint-disable-next-line prettier/prettier
-        "accountholdername" +
+        "accountholdername" + 
         "|titulaire", // fr-FR
       "cc-number": "(cc|kk)nr", // de-DE
-      "cc-exp-month": "(cc|kk)month", // de-DE
-      "cc-exp-year": "(cc|kk)year", // de-DE
-      // eslint-disable-next-line prettier/prettier
-      "cc-type": "type" + 
+      "cc-exp-month":
+        "month" + 
+        "|(cc|kk)month", // de-DE
+      "cc-exp-year":
+        "year" + 
+        "|(cc|kk)year", // de-DE
+      "cc-type":
+        "type" + 
         "|kartenmarke", // de-DE
     },
 

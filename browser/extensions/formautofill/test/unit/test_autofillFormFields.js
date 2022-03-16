@@ -304,7 +304,7 @@ const TESTCASES = [
   },
   {
     description:
-      "Fill credit card fields in a form without a placeholder on expiration month input field",
+      "Fill credit card fields in a form without a placeholder on expiration month and expiration year input fields",
     document: `<form>
               <input id="cc-number" autocomplete="cc-number">
               <input id="cc-name" autocomplete="cc-name">
@@ -319,6 +319,31 @@ const TESTCASES = [
       "cc-name": "test name",
       "cc-exp-month": 6,
       "cc-exp-year": 25,
+    },
+    expectedResult: {
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": "6",
+      "cc-exp-year": "25",
+    },
+  },
+  {
+    description:
+      "Fill credit card fields in a form with a placeholder on expiration year input field",
+    document: `<form>
+              <input id="cc-number" autocomplete="cc-number">
+              <input id="cc-name" autocomplete="cc-name">
+              <input id="cc-exp-month" autocomplete="cc-exp-month">
+              <input id="cc-exp-year" autocomplete="cc-exp-year" placeholder="YY">
+              </form>
+              `,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 2025,
     },
     expectedResult: {
       "cc-number": "4111111111111111",
@@ -460,6 +485,31 @@ const TESTCASES = [
       "cc-number-8": "",
       "cc-exp-month2": "",
       "cc-exp-year2": "",
+    },
+  },
+  {
+    description:
+      "Fill credit card fields in a form with placeholders on month and year and these inputs are type=tel",
+    document: `<form>
+              <input id="cardHolder">
+              <input id="cardNumber">
+              <input id="month" type="tel" name="month" placeholder="MM">
+              <input id="year" type="tel" name="year" placeholder="YY">
+              </form>
+              `,
+    focusedInputId: "cardHolder",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 2025,
+    },
+    expectedResult: {
+      cardHolder: "test name",
+      cardNumber: "4111111111111111",
+      month: "06",
+      year: "25",
     },
   },
 ];
@@ -753,11 +803,20 @@ function do_test(testcases, testFn) {
         let decryptHelper = async (cipherText, reauth) => {
           return OSKeyStore.decrypt(cipherText, false);
         };
-
         handler.collectFormFields();
 
         let focusedInput = doc.getElementById(testcase.focusedInputId);
-        handler.focusedInput = focusedInput;
+        try {
+          handler.focusedInput = focusedInput;
+        } catch (e) {
+          if (e.message.includes("WeakMap key must be an object")) {
+            throw new Error(
+              `Couldn't find the focusedInputId in the current form! Make sure focusedInputId exists in your test form! testcase description:${testcase.description}`
+            );
+          } else {
+            throw e;
+          }
+        }
 
         for (let section of handler.sections) {
           section._decrypt = decryptHelper;

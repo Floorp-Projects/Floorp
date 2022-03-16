@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - clear form button with select elements</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../formautofill_common.js"></script>
+  <script type="text/javascript" src="../../../../../../toolkit/components/satchel/test/satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: clear form button with select elements.
+
+<script>
+"use strict";
+const MOCK_ADDR_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "2 Harrison St\nline2\nline3",
+  tel: "+13453453456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+}, {
+  organization: "Tel org",
+  tel: "+12223334444",
+}];
+
+const MOCK_CC_STORAGE = [{
+  "cc-name": "John Doe",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
+
+initPopupListener();
+
+add_task(async function setup_storage() {
+  await addAddress(MOCK_ADDR_STORAGE[0]);
+  await addCreditCard(MOCK_CC_STORAGE[0]);
+  await addCreditCard(MOCK_CC_STORAGE[1]);
+});
+
+
+async function checkIsFormCleared(patch = {}) {
+  const form = document.getElementById("form1");
+
+  for (const elem of form.elements) {
+    const expectedValue = patch[elem.id] || "";
+    checkFieldValue(elem, expectedValue);
+    await checkFieldHighlighted(elem, false);
+    await checkFieldPreview(elem, "");
+  }
+}
+
+async function confirmClear(selector) {
+  info("Await for clearing input");
+  let promise = new Promise(resolve => {
+    let beforeInputFired = false;
+    let element = document.querySelector(selector);
+    info(`Which element are we clearing? ${element.id}`);
+    element.addEventListener("beforeinput", (event) => {
+      beforeInputFired = true;
+      ok(event instanceof InputEvent,
+         '"beforeinput" event should be dispatched with InputEvent interface');
+      is(event.cancelable, SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input"),
+         `"beforeinput" event should be cancelable unless it's disabled by the pref`);
+      is(event.bubbles, true,
+         '"beforeinput" event should always bubble');
+      is(event.inputType, "insertReplacementText",
+         'inputType value of "beforeinput" should be "insertReplacementText"');
+      is(event.data, "",
+         'data value of "beforeinput" should be empty string');
+      is(event.dataTransfer, null,
+         'dataTransfer value of "beforeinput" should be null');
+      is(event.getTargetRanges().length, 0,
+         'getTargetRanges() of "beforeinput" event should return empty array');
+    }, {once: true});
+    element.addEventListener("input", (event) => {
+      ok(beforeInputFired, `"beforeinput" event should've been fired before "input" on <${element.tagName} type="${element.type}">`);
+      ok(event instanceof InputEvent,
+         '"input" event should be dispatched with InputEvent interface');
+      is(event.cancelable, false,
+         '"input" event should be never cancelable');
+      is(event.bubbles, true,
+         '"input" event should always bubble');
+      is(event.inputType, "insertReplacementText",
+         'inputType value of "input" should be "insertReplacementText"');
+      is(event.data, "",
+         'data value of "input" should be empty string');
+      is(event.dataTransfer, null,
+         'dataTransfer value of "input" should be null');
+      is(event.getTargetRanges().length, 0,
+         'getTargetRanges() of "input" should return empty array');
+      resolve();
+    }, {once: true})
+  });
+  synthesizeKey("KEY_Enter");
+  await promise;
+}
+
+// tgiles: We need this task due to timing issues between focusAndWaitForFieldsIdentified and popupShownListener.
+// There's a 300ms delay in focusAndWaitForFieldsIdentified that can cause triggerPopupAndHoverItem to get out of sync
+// and cause the popup to appear before the test expects a popup to appear.
+
+// Without this task we end up either getting a consistent timeout or getting the following exception:
+// 0:20.55 GECKO(31108) JavaScript error: , line 0: uncaught exception: Checking selected index - timed out after 50 tries.
+// This exception appears if you attempt to create the expectPopup promise earlier than it currently is in triggetPopupAndHoverItem
+add_task(async function a_dummy_task() {
+  await triggerPopupAndHoverItem("#organization", 0);
+  await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
+
+  await triggerPopupAndHoverItem("#tel", 0);
+  await confirmClear("#tel");
+  await checkIsFormCleared({
+    "cc-exp-month": "MM",
+    "cc-exp-year": "YY"
+  });
+});
+
+add_task(async function clear_distinct_section() {
+  if (!(await canTestOSKeyStoreLogin())) {
+    todo(false, "Cannot test OS key store login on official builds.");
+    return;
+  }
+  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  await triggerPopupAndHoverItem("#cc-name", 0);
+  await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE[0]);
+  await osKeyStoreLoginShown;
+
+  for (const [id, val] of Object.entries(MOCK_CC_STORAGE[0])) {
+    const element = document.getElementById(id);
+    if (!element) {
+      return;
+    }
+    checkFieldValue(element, val);
+    await checkFieldHighlighted(element, true);
+  }
+
+  await triggerPopupAndHoverItem("#cc-name", 0);
+  await confirmClear("#cc-name");
+  await checkIsFormCleared({
+    "cc-exp-month": "MM",
+    "cc-exp-year": "YY"
+  });
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" autocomplete="organization"></label></p>
+    <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
+    <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
+    <p><label>country: <input id="country" autocomplete="country"></label></p>
+
+    <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <!-- NOTE: If you're going to write a test like this,
+      ensure that the selected option doesn't match the data that you're trying to autofill,
+      otherwise your test will wait forever for an event that will never fire.
+      I.e, if your saved cc-exp-month is 01, make sure your selected option ISN'T 01.
+    -->
+    <p><label>Expiration month: <select id="cc-exp-month" autocomplete="cc-exp-month">
+      <option value="MM" selected>MM</option>
+      <option value="1">01</option>
+      <option value="2">02</option>
+      <option value="3">03</option>
+      <option value="4">04</option>
+      <option value="5">05</option>
+      <option value="6">06</option>
+      <option value="7">07</option>
+      <option value="8">08</option>
+      <option value="9">09</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+      </select>
+    </label></p>
+    <!-- NOTE: If you're going to write a test like this,
+      ensure that the selected option doesn't match the data that you're trying to autofill,
+      otherwise your test will wait forever for an event that will never fire.
+      I.e, if your saved cc-exp-year is 2017, make sure your selected option ISN'T 2017.
+    -->
+    <p><label>Expiration year: <select id="cc-exp-year" autocomplete="cc-exp-year">
+      <option value="YY" selected>YY</option>
+      <option value="2017">2017</option>
+      <option value="2018">2018</option>
+      <option value="2019">2019</option>
+      <option value="2020">2020</option>
+      <option value="2021">2021</option>
+      <option value="2022">2022</option>
+      </select>
+    </label></p>
+    <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
