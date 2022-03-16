@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace html url("http://www.w3.org/1999/xhtml");
+@import url("chrome://browser/skin/browser-shared.css");
+@import url("chrome://browser/skin/browser-custom-colors.css");
+@import url("chrome://browser/skin/browser-aero.css");
 
-%include ../shared/browser.inc.css
-%include ../shared/browser-custom-colors.inc.css
-%filter substitution
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;
@@ -303,13 +303,7 @@ menuitem.bookmark-item {
 }
 
 
-%include ../shared/toolbarbuttons.inc.css
-%include ../shared/toolbarbutton-icons.inc.css
-%include ../shared/menupanel.inc.css
-
 /* Address bar */
-
-%include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
   :root:not(:-moz-lwtheme) #urlbar {
@@ -347,13 +341,7 @@ menuitem.bookmark-item {
   }
 }
 
-%include ../shared/identity-block/identity-block.inc.css
-%include ../shared/notification-icons.inc.css
-%include ../shared/addon-notification.inc.css
-
 /* Address bar results view */
-
-%include ../shared/urlbarView.inc.css
 
 @media (-moz-windows-default-theme: 0) {
   :root:not(:-moz-lwtheme) {
@@ -363,19 +351,11 @@ menuitem.bookmark-item {
 
 /* Autocomplete */
 
-%include ../shared/autocomplete.inc.css
-
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
 }
 
-/* Bookmarking panel */
-
-%include ../shared/places/editBookmarkPanel.inc.css
-
 /* Content area */
-
-%include ../shared/sidebar.inc.css
 
 #browser {
   --sidebar-border-color: ThreeDLightShadow;
@@ -387,8 +367,6 @@ menuitem.bookmark-item {
   min-height: 0;
   padding: 0;
 }
-
-%include ../shared/tabs.inc.css
 
 @media (-moz-windows-default-theme: 0) {
   /* For high contrast themes. */
@@ -410,10 +388,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: SelectedItemText !important;
   fill: SelectedItemText;
 }
-
-/* Translation infobar */
-
-%include ../shared/translation/infobar.inc.css
 
 /* Bookmarks roots menu-items */
 
@@ -473,15 +447,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-left: 1em;
 }
 
-%include ../shared/fullscreen/warning.inc.css
-%include ../shared/ctrlTab.inc.css
-
-/* Customization mode */
-
-%include ../shared/customizableui/customizeMode.inc.css
-
-/* End customization mode */
-
 /* Prevent window controls from overlapping the nav bar's shadow on the tab
  * bar. */
 #TabsToolbar > .titlebar-buttonbox-container {
@@ -500,8 +465,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* End private browsing and accessibility indicators */
 
-%include ../shared/UITour.inc.css
-
 #UITourTooltipButtons {
   /**
    * Override the --arrowpanel-padding so the background extends
@@ -510,8 +473,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-inline: -10px;
   margin-bottom: -10px;
 }
-
-%include ../shared/contextmenu.inc.css
 
 /* Make menu items larger when opened through touch. */
 #widget-overflow[touchmode] .toolbarbutton-1,
@@ -622,8 +583,6 @@ menupopup[touchmode] menuitem {
     margin-inline: 0;
   }
 }
-
-%include browser-aero.css
 
 .cui-widget-panelview[id^=PanelUI-webext-] {
   border-radius: var(--arrowpanel-border-radius);

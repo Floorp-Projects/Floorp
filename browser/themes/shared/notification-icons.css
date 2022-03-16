@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@namespace html url("http://www.w3.org/1999/xhtml");
+
 #notification-popup-box {
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
   -moz-context-properties: fill, fill-opacity;

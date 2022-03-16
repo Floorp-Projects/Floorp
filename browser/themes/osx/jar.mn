@@ -6,7 +6,8 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/browser.css
+  skin/classic/browser/browser.css
+  skin/classic/browser/browser-custom-colors.css     (../shared/browser-custom-colors.css)
   skin/classic/browser/pageInfo.css
   skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
   skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
