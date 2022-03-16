@@ -4,18 +4,11 @@
 /* import-globals-from ../../test/head.js */
 /* import-globals-from ../../../inspector/rules/test/head.js */
 /* import-globals-from ../../../inspector/test/shared-head.js */
-/* import-globals-from ../../../shared/test/shared-redux-head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
-  this
-);
-
-// Load the shared Redux helpers into this compartment.
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this
 );
 
