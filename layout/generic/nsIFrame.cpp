@@ -4747,17 +4747,23 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (!aMouseEvent->IsAlt()) {
+  const nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aMouseEvent, RelativeTo{this});
+
+  // When not using `alt`, and clicking on a draggable, but non-editable
+  // element, don't do anything, and let d&d handle the event.
+  //
+  // See bug 48876, bug 388659 and bug 55921 for context here.
+  //
+  // FIXME(emilio): The .Contains(pt) check looks a bit fishy. When would it be
+  // false given we're the event target? If it is needed, why not checking the
+  // actual draggable node rect instead?
+  if (!aMouseEvent->IsAlt() && GetRectRelativeToSelf().Contains(pt)) {
     for (nsIContent* content = mContent; content;
          content = content->GetFlattenedTreeParent()) {
       if (nsContentUtils::ContentIsDraggable(content) &&
           !content->IsEditable()) {
-        // coordinate stuff is the fix for bug #55921
-        if ((mRect - GetPosition())
-                .Contains(nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                    aMouseEvent, RelativeTo{this}))) {
-          return NS_OK;
-        }
+        return NS_OK;
       }
     }
   }
@@ -4816,9 +4822,9 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   if (aMouseEvent->IsControl()) {
     return NS_OK;
   }
-  bool control = aMouseEvent->IsMeta();
+  const bool control = aMouseEvent->IsMeta();
 #else
-  bool control = aMouseEvent->IsControl();
+  const bool control = aMouseEvent->IsControl();
 #endif
 
   RefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
@@ -4830,8 +4836,6 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
                                control);
   }
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aMouseEvent,
-                                                            RelativeTo{this});
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
 
   if (!offsets.content) {
@@ -4958,10 +4962,10 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   if (isPrimaryButtonDown && isEditor && !aMouseEvent->IsShift() &&
       (offsets.EndOffset() - offsets.StartOffset()) == 1) {
-    // A single node is selected and we aren't extending an existing
-    // selection, which means the user clicked directly on an object (either
-    // user-select: all or a non-text node without children).
-    // Therefore, disable selection extension during mouse moves.
+    // A single node is selected and we aren't extending an existing selection,
+    // which means the user clicked directly on an object (either
+    // `user-select: all` or a non-text node without children). Therefore,
+    // disable selection extension during mouse moves.
     // XXX This is a bit hacky; shouldn't editor be able to deal with this?
     fc->SetDragState(false);
   }
@@ -5403,17 +5407,13 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
 // The FrameTarget represents the closest frame to a point that can be selected
 // The frame is the frame represented, frameEdge says whether one end of the
 // frame is the result (in which case different handling is needed), and
-// afterFrame says which end is repersented if frameEdge is true
+// afterFrame says which end is represented if frameEdge is true
 struct FrameTarget {
-  FrameTarget(nsIFrame* aFrame, bool aFrameEdge, bool aAfterFrame)
-      : frame(aFrame), frameEdge(aFrameEdge), afterFrame(aAfterFrame) {}
+  explicit operator bool() const { return !!frame; }
 
-  static FrameTarget Null() { return FrameTarget(nullptr, false, false); }
-
-  bool IsNull() { return !frame; }
-  nsIFrame* frame;
-  bool frameEdge;
-  bool afterFrame;
+  nsIFrame* frame = nullptr;
+  bool frameEdge = false;
+  bool afterFrame = false;
 };
 
 // See function implementation for information
@@ -5467,7 +5467,7 @@ static FrameTarget GetSelectionClosestFrameForChild(nsIFrame* aChild,
     nsPoint pt = aPoint - aChild->GetOffsetTo(parent);
     return GetSelectionClosestFrame(aChild, pt, aFlags);
   }
-  return FrameTarget(aChild, false, false);
+  return FrameTarget{aChild, false, false};
 }
 
 // When the cursor needs to be at the beginning of a block, it shouldn't be
@@ -5498,7 +5498,7 @@ static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame, bool aEndFrame,
     if (result) return DrillDownToSelectionFrame(result, aEndFrame, aFlags);
   }
   // If the current frame has no targetable children, target the current frame
-  return FrameTarget(aFrame, true, aEndFrame);
+  return FrameTarget{aFrame, true, aEndFrame};
 }
 
 // This method finds the closest valid FrameTarget on a given line; if there is
@@ -5552,7 +5552,7 @@ static FrameTarget GetSelectionClosestFrameForLine(
   if (!closestFromIStart && !closestFromIEnd) {
     // We should only get here if there are no selectable frames on a line
     // XXX Do we need more elaborate handling here?
-    return FrameTarget::Null();
+    return FrameTarget();
   }
   if (closestFromIStart &&
       (!closestFromIEnd ||
@@ -5571,7 +5571,9 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
                                                     const nsPoint& aPoint,
                                                     uint32_t aFlags) {
   nsBlockFrame* bf = do_QueryFrame(aFrame);
-  if (!bf) return FrameTarget::Null();
+  if (!bf) {
+    return FrameTarget();
+  }
 
   // This code searches for the correct line
   nsBlockFrame::LineIterator end = bf->LinesEnd();
@@ -5625,14 +5627,32 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
   }
 
   do {
-    FrameTarget target =
-        GetSelectionClosestFrameForLine(bf, closestLine, aPoint, aFlags);
-    if (!target.IsNull()) return target;
+    if (auto target =
+            GetSelectionClosestFrameForLine(bf, closestLine, aPoint, aFlags)) {
+      return target;
+    }
     ++closestLine;
   } while (closestLine != end);
 
   // Fall back to just targeting the last targetable place
   return DrillDownToSelectionFrame(aFrame, true, aFlags);
+}
+
+// Use frame edge for grid, flex, table, and non-draggable & non-editable
+// image frames.
+static bool UseFrameEdge(nsIFrame* aFrame) {
+  if (aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame()) {
+    return true;
+  }
+  if (static_cast<nsImageFrame*>(do_QueryFrame(aFrame))) {
+    return !nsContentUtils::ContentIsDraggable(aFrame->GetContent()) &&
+           !aFrame->GetContent()->IsEditable();
+  }
+  return false;
+}
+
+static FrameTarget LastResortFrameTargetForFrame(nsIFrame* aFrame) {
+  return {aFrame, UseFrameEdge(aFrame), false};
 }
 
 // GetSelectionClosestFrame is the helper function that calculates the closest
@@ -5645,11 +5665,9 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
 static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
                                             const nsPoint& aPoint,
                                             uint32_t aFlags) {
-  {
-    // Handle blocks; if the frame isn't a block, the method fails
-    FrameTarget target =
-        GetSelectionClosestFrameForBlock(aFrame, aPoint, aFlags);
-    if (!target.IsNull()) return target;
+  // Handle blocks; if the frame isn't a block, the method fails
+  if (auto target = GetSelectionClosestFrameForBlock(aFrame, aPoint, aFlags)) {
+    return target;
   }
 
   if (nsIFrame* kid = aFrame->PrincipalChildList().FirstChild()) {
@@ -5662,19 +5680,12 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     }
     if (closest.mFrame) {
       if (SVGUtils::IsInSVGTextSubtree(closest.mFrame))
-        return FrameTarget(closest.mFrame, false, false);
+        return FrameTarget{closest.mFrame, false, false};
       return GetSelectionClosestFrameForChild(closest.mFrame, aPoint, aFlags);
     }
   }
 
-  // Use frame edge for grid, flex, table, and non-draggable & non-editable
-  // image frames.
-  const bool useFrameEdge =
-      aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame() ||
-      (static_cast<nsImageFrame*>(do_QueryFrame(aFrame)) &&
-       !nsContentUtils::ContentIsDraggable(aFrame->GetContent()) &&
-       !aFrame->GetContent()->IsEditable());
-  return FrameTarget(aFrame, useFrameEdge, false);
+  return LastResortFrameTargetForFrame(aFrame);
 }
 
 static nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame,
@@ -5748,19 +5759,21 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
 
     adjustedFrame = AdjustFrameForSelectionStyles(this);
 
-    // user-select: all needs special handling, because clicking on it
-    // should lead to the whole frame being selected
+    // `user-select: all` needs special handling, because clicking on it should
+    // lead to the whole frame being selected.
     if (adjustedFrame->Style()->UserSelect() == StyleUserSelect::All) {
-      nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
+      nsPoint adjustedPoint = aPoint + GetOffsetTo(adjustedFrame);
       return OffsetsForSingleFrame(adjustedFrame, adjustedPoint);
     }
 
     // For other cases, try to find a closest frame starting from the parent of
     // the unselectable frame
-    if (adjustedFrame != this) adjustedFrame = adjustedFrame->GetParent();
+    if (adjustedFrame != this) {
+      adjustedFrame = adjustedFrame->GetParent();
+    }
   }
 
-  nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
+  nsPoint adjustedPoint = aPoint + GetOffsetTo(adjustedFrame);
 
   FrameTarget closest =
       GetSelectionClosestFrame(adjustedFrame, adjustedPoint, aFlags);
