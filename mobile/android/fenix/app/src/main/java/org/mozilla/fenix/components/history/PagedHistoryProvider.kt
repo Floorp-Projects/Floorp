@@ -14,7 +14,6 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
-import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
 
 private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
@@ -78,7 +77,7 @@ interface PagedHistoryProvider {
      * @param numberOfItems How many items to fetch
      * @return list of [HistoryDB]
      */
-    fun getHistory(offset: Int, numberOfItems: Int): List<HistoryDB>
+    suspend fun getHistory(offset: Int, numberOfItems: Int): List<HistoryDB>
 }
 
 /**
@@ -112,38 +111,36 @@ class DefaultPagedHistoryProvider(
 
     @Volatile private var historyGroups: List<HistoryDB.Group>? = null
 
-    override fun getHistory(
+    override suspend fun getHistory(
         offset: Int,
         numberOfItems: Int
     ): List<HistoryDB> {
-        return runBlockingIncrement {
-            // We need to re-fetch all the history metadata if the offset resets back at 0
-            // in the case of a pull to refresh.
-            if (historyGroups == null || offset == 0) {
-                historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
-                    .asSequence()
-                    .sortedByDescending { it.createdAt }
-                    .filter { it.key.searchTerm != null }
-                    .groupBy { it.key.searchTerm!! }
-                    .map { (searchTerm, items) ->
-                        HistoryDB.Group(
-                            title = searchTerm,
-                            visitedAt = items.first().createdAt,
-                            items = items.map { it.toHistoryDBMetadata() }
-                        )
+        // We need to re-fetch all the history metadata if the offset resets back at 0
+        // in the case of a pull to refresh.
+        if (historyGroups == null || offset == 0) {
+            historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
+                .asSequence()
+                .sortedByDescending { it.createdAt }
+                .filter { it.key.searchTerm != null }
+                .groupBy { it.key.searchTerm!! }
+                .map { (searchTerm, items) ->
+                    HistoryDB.Group(
+                        title = searchTerm,
+                        visitedAt = items.first().createdAt,
+                        items = items.map { it.toHistoryDBMetadata() }
+                    )
+                }
+                .filter {
+                    if (historyImprovementFeatures) {
+                        it.items.size >= SEARCH_GROUP_MINIMUM_SITES
+                    } else {
+                        true
                     }
-                    .filter {
-                        if (historyImprovementFeatures) {
-                            it.items.size >= SEARCH_GROUP_MINIMUM_SITES
-                        } else {
-                            true
-                        }
-                    }
-                    .toList()
-            }
-
-            getHistoryAndSearchGroups(offset, numberOfItems)
+                }
+                .toList()
         }
+
+        return getHistoryAndSearchGroups(offset, numberOfItems)
     }
 
     /**
