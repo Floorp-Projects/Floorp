@@ -12,6 +12,7 @@
 
 #include "mozAccessible.h"
 #include "mozilla/Preferences.h"
+#include "nsISelectionListener.h"
 
 using namespace mozilla::a11y;
 
@@ -52,6 +53,8 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
     mGeckoDocAccessible = aDoc;
   }
 
+  mCaretMoveGranularity = nsISelectionListener::NO_AMOUNT;
+
   return self;
 }
 
@@ -76,11 +79,14 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
 }
 
 - (void)setCaretOffset:(mozilla::a11y::Accessible*)container
-                    at:(int32_t)offset {
+                    at:(int32_t)offset
+       moveGranularity:(int32_t)granularity {
   GeckoTextMarker caretMarker(container, offset);
 
   mPrevCaret = mCaret;
   mCaret = caretMarker.CreateAXTextMarker();
+  mCaretMoveGranularity = granularity;
+
   CFRetain(mCaret);
 }
 
@@ -146,21 +152,43 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
   }
 
   bool isForward = prevCaretMarker < caretMarker;
-  uint32_t deltaLength =
-      GeckoTextMarkerRange(isForward ? prevCaretMarker : caretMarker,
-                           isForward ? caretMarker : prevCaretMarker)
-          .Length();
+  int direction = isForward ? AXTextSelectionDirectionNext
+                            : AXTextSelectionDirectionPrevious;
+
+  int32_t granularity = AXTextSelectionGranularityUnknown;
+  switch (mCaretMoveGranularity) {
+    case nsISelectionListener::CHARACTER_AMOUNT:
+    case nsISelectionListener::CLUSTER_AMOUNT:
+      granularity = AXTextSelectionGranularityCharacter;
+      break;
+    case nsISelectionListener::WORD_AMOUNT:
+    case nsISelectionListener::WORDNOSPACE_AMOUNT:
+      granularity = AXTextSelectionGranularityWord;
+      break;
+    case nsISelectionListener::LINE_AMOUNT:
+      granularity = AXTextSelectionGranularityLine;
+      break;
+    case nsISelectionListener::BEGINLINE_AMOUNT:
+      direction = AXTextSelectionDirectionBeginning;
+      granularity = AXTextSelectionGranularityLine;
+      break;
+    case nsISelectionListener::ENDLINE_AMOUNT:
+      direction = AXTextSelectionDirectionEnd;
+      granularity = AXTextSelectionGranularityLine;
+      break;
+    case nsISelectionListener::PARAGRAPH_AMOUNT:
+      granularity = AXTextSelectionGranularityParagraph;
+      break;
+    default:
+      break;
+  }
 
   // Determine selection direction with marker comparison.
   // If the delta between the two markers is more than one, consider it
   // a word. Not accurate, but good enough for VO.
   [info addEntriesFromDictionary:@{
-    @"AXTextSelectionDirection" : isForward
-        ? @(AXTextSelectionDirectionNext)
-        : @(AXTextSelectionDirectionPrevious),
-    @"AXTextSelectionGranularity" : deltaLength == 1
-        ? @(AXTextSelectionGranularityCharacter)
-        : @(AXTextSelectionGranularityWord)
+    @"AXTextSelectionDirection" : @(direction),
+    @"AXTextSelectionGranularity" : @(granularity)
   }];
 
   return info;

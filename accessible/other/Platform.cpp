@@ -22,7 +22,8 @@ void a11y::ProxyEvent(RemoteAccessible*, uint32_t) {}
 void a11y::ProxyStateChangeEvent(RemoteAccessible*, uint64_t, bool) {}
 
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed) {}
+                               bool aIsSelectionCollapsed,
+                               int32_t aGranularity) {}
 
 void a11y::ProxyTextChangeEvent(RemoteAccessible*, const nsString&, int32_t,
                                 uint32_t, bool, bool) {}
