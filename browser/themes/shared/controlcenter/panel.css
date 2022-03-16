@@ -458,14 +458,6 @@ description#identity-popup-content-verifier,
 
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
-#protections-popup-sendReportView-footer {
-  display: flex;
-}
-
-#protections-popup-sendReportView-footer > button {
-  flex: 1;
-}
-
 #protections-popup-sendReportView-heading,
 #protections-popup-sendReportView-body {
   padding: var(--vertical-section-padding) var(--horizontal-padding);
@@ -1086,10 +1078,6 @@ description#identity-popup-content-verifier,
 #geo-access-indicator-item {
   font-size: 0.8em;
   color: var(--panel-description-color);
-}
-
-#protections-popup-sendReportView-footer > button {
-  flex: none;
 }
 
 .protections-popup-description > description {
