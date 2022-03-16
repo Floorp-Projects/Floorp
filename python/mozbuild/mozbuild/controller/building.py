@@ -1674,11 +1674,21 @@ class BuildDriver(MozbuildObject):
         if buildstatus_messages:
             line_handler("BUILDSTATUS TIERS configure")
             line_handler("BUILDSTATUS TIER_START configure")
-        status = self._run_command_in_objdir(
-            args=command,
-            line_handler=line_handler,
-            append_env=append_env,
-        )
+
+        env = os.environ.copy()
+        env.update(append_env)
+
+        with subprocess.Popen(
+            command,
+            cwd=self.topobjdir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        ) as process:
+            for line in process.stdout:
+                line_handler(line.rstrip())
+            status = process.wait()
         if buildstatus_messages:
             line_handler("BUILDSTATUS TIER_FINISH configure")
         if status:
