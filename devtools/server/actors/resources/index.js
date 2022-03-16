@@ -27,6 +27,8 @@ const TYPES = {
   INDEXED_DB: "indexed-db",
   LOCAL_STORAGE: "local-storage",
   SESSION_STORAGE: "session-storage",
+  // root types
+  EXTENSIONS_BGSCRIPT_STATUS: "extensions-backgroundscript-status",
 };
 exports.TYPES = TYPES;
 
@@ -169,7 +171,11 @@ const ParentProcessResources = augmentResourceDictionary({
 // They are meant to observe anything easily observable from the parent process
 // that isn't related to any particular context/target.
 // This is especially useful when you need to observe something without having to instantiate a Watcher actor.
-const RootResources = augmentResourceDictionary({});
+const RootResources = augmentResourceDictionary({
+  [TYPES.EXTENSIONS_BGSCRIPT_STATUS]: {
+    path: "devtools/server/actors/resources/extensions-backgroundscript-status",
+  },
+});
 exports.RootResources = RootResources;
 
 function augmentResourceDictionary(dict) {
