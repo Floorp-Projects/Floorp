@@ -6,9 +6,18 @@
 
 "use strict";
 
-// This shared-head.js file is used for multiple mochitest test directories in
-// devtools.
+// This shared-head.js file is used by most mochitests
+// and we start using it in xpcshell tests as well.
 // It contains various common helper functions.
+
+const isMochitest = "gTestPath" in this;
+const isXpcshell = !isMochitest;
+if (isXpcshell) {
+  // gTestPath isn't exposed to xpcshell tests
+  // _TEST_FILE is an array for a unique string
+  /* global _TEST_FILE */
+  this.gTestPath = _TEST_FILE[0];
+}
 
 const { Constructor: CC } = Components;
 
@@ -46,6 +55,12 @@ if (DEBUG_ALLOCATIONS) {
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
+
+// When loaded from xpcshell test, this file is loaded via xpcshell.ini's head property
+// and so it loaded first before anything else and isn't having access to Services global.
+// Whereas many head.js files from mochitest import this file via loadSubScript
+// and already expose Services as a global.
+var Services = this.Services || require("Services");
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
@@ -123,10 +138,12 @@ const URL_ROOT_MOCHI_8888 = CHROME_URL_ROOT.replace(
 const TARGET_SWITCHING_PREF = "devtools.target-switching.server.enabled";
 
 try {
-  Services.scriptloader.loadSubScript(
-    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
-    this
-  );
+  if (isMochitest) {
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
+      this
+    );
+  }
 } catch (e) {
   ok(
     false,
@@ -168,6 +185,7 @@ function highlighterTestActorBootstrap() {
   );
   _require(HIGHLIGHTER_TEST_ACTOR_URL);
 
+  /* eslint-disable-next-line no-shadow */
   const Services = _require("Services");
 
   const actorRegistryObserver = subject => {
@@ -199,18 +217,22 @@ function highlighterTestActorBootstrap() {
   );
 }
 
-const highlighterTestActorBootstrapScript =
-  "data:,(" + highlighterTestActorBootstrap + ")()";
-Services.ppmm.loadProcessScript(
-  highlighterTestActorBootstrapScript,
-  // Load this script in all processes (created or to be created)
-  true
-);
+if (isMochitest) {
+  const highlighterTestActorBootstrapScript =
+    "data:,(" + highlighterTestActorBootstrap + ")()";
+  Services.ppmm.loadProcessScript(
+    highlighterTestActorBootstrapScript,
+    // Load this script in all processes (created or to be created)
+    true
+  );
 
-registerCleanupFunction(() => {
-  Services.ppmm.broadcastAsyncMessage("remove-devtools-testactor-observer");
-  Services.ppmm.removeDelayedProcessScript(highlighterTestActorBootstrapScript);
-});
+  registerCleanupFunction(() => {
+    Services.ppmm.broadcastAsyncMessage("remove-devtools-testactor-observer");
+    Services.ppmm.removeDelayedProcessScript(
+      highlighterTestActorBootstrapScript
+    );
+  });
+}
 
 /**
  * Spawn an instance of the highlighter test actor for the given toolbox
@@ -258,8 +280,10 @@ async function getHighlighterTestFrontWithoutToolbox(tab) {
   return targetFront.getFront("highlighterTest");
 }
 
-// All test are asynchronous
-waitForExplicitFinish();
+// All tests are asynchronous
+if (isMochitest) {
+  waitForExplicitFinish();
+}
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
@@ -342,7 +366,7 @@ registerCleanupFunction(async function cleanup() {
 
   // Close any tab opened by the test.
   // There should be only one tab opened by default when firefox starts the test.
-  while (gBrowser.tabs.length > 1) {
+  while (isMochitest && gBrowser.tabs.length > 1) {
     await closeTabAndToolbox(gBrowser.selectedTab);
   }
 
