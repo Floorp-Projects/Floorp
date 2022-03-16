@@ -69,7 +69,7 @@ class IOActivityMonitor final : public nsINamed {
 
   Activities mActivities;
   // protects mActivities accesses
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
 };
 
 }  // namespace net

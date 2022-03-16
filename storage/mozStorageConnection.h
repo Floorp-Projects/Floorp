@@ -167,7 +167,7 @@ class Connection final : public mozIStorageConnection,
    *  - Connection.mConnectionClosed
    *  - AsyncExecuteStatements.mCancelRequested
    */
-  Mutex sharedAsyncExecutionMutex;
+  Mutex sharedAsyncExecutionMutex MOZ_UNANNOTATED;
 
   /**
    * Wraps the mutex that SQLite gives us from sqlite3_db_mutex.  This is public

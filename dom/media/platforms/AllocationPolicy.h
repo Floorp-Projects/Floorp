@@ -57,7 +57,7 @@ class GlobalAllocPolicy {
 
  private:
   // Protect access to Instance().
-  static StaticMutex sMutex;
+  static StaticMutex sMutex MOZ_UNANNOTATED;
 };
 
 /** This the actual base implementation underneath all AllocPolicy objects and
@@ -86,7 +86,7 @@ class AllocPolicyImpl : public AllocPolicy {
   void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
 
   const int mMaxDecoderLimit;
-  ReentrantMonitor mMonitor;
+  ReentrantMonitor mMonitor MOZ_UNANNOTATED;
   // The number of decoders available for creation.
   int mDecoderLimit;
   // Requests to acquire tokens.

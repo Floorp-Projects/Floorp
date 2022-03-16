@@ -75,7 +75,7 @@ class WindowSurfaceProvider final {
    * As nsWindow CleanupResources() call comes from Gtk/X11 we can't synchronize
    * that with WebRender so we use lock to synchronize the access.
    */
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   // WindowSurface needs to be re-created as underlying window was changed.
   mozilla::Atomic<bool> mWindowSurfaceValid;
 #ifdef MOZ_WAYLAND

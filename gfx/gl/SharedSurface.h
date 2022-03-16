@@ -150,7 +150,7 @@ class SurfaceFactory {
   const PartialSharedSurfaceDesc mDesc;
 
  protected:
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
  public:
   static UniquePtr<SurfaceFactory> Create(GLContext*, layers::TextureType);

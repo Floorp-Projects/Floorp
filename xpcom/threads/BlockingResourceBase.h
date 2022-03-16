@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Attributes.h"
 
 #include "nscore.h"
 #include "nsDebug.h"

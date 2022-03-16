@@ -71,7 +71,7 @@ StorageDBBridge::StorageDBBridge()
 
 class StorageDBThread::InitHelper final : public Runnable {
   nsCOMPtr<nsIEventTarget> mOwningThread;
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
   mozilla::CondVar mCondVar;
   nsString mProfilePath;
   nsresult mMainThreadResultCode;

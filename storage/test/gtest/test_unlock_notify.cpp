@@ -73,7 +73,7 @@ class DatabaseLocker : public mozilla::Runnable {
     do_check_success(monitor.Notify());
   }
 
-  mozilla::ReentrantMonitor monitor;
+  mozilla::ReentrantMonitor monitor MOZ_UNANNOTATED;
 
  protected:
   nsCOMPtr<nsIThread> mThread;

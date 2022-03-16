@@ -113,7 +113,7 @@ class InputStreamReader final : public nsIInputStreamCallback {
 
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 };
 
 NS_IMPL_ADDREF(InputStreamReader);

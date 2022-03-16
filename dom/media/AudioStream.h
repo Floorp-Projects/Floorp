@@ -329,7 +329,7 @@ class AudioStream final {
   soundtouch::SoundTouch* mTimeStretcher;
 
   // The monitor is held to protect all access to member variables below.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   const uint32_t mOutChannels;
   const AudioConfig::ChannelLayout::ChannelMap mChannelMap;

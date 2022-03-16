@@ -73,7 +73,7 @@ class DXVA2Manager {
                               const nsAString& aDriverVersionString);
 
  protected:
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
   DXVA2Manager();
 
   bool IsUnsupportedResolution(const uint32_t& aWidth, const uint32_t& aHeight,

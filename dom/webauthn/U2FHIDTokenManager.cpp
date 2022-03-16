@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-static StaticMutex gInstanceMutex;
+static StaticMutex gInstanceMutex MOZ_UNANNOTATED;
 static U2FHIDTokenManager* gInstance;
 static nsIThread* gPBackgroundThread;
 

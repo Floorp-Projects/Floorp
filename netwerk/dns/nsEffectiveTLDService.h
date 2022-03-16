@@ -56,7 +56,7 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
   mozilla::loader::AutoMemMap mDafsaMap;
 
   // Lock for mGraph and mDafsaMap
-  mozilla::RWLock mGraphLock;
+  mozilla::RWLock mGraphLock MOZ_UNANNOTATED;
 
   // Note that the cache entries here can record entries that were cached
   // successfully or unsuccessfully.  mResult must be checked before using an

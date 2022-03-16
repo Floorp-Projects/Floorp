@@ -25,7 +25,7 @@ class Monitor {
   friend class AutoLockMonitor;
   friend class AutoUnlockMonitor;
 
-  Mutex lock_;
+  Mutex lock_ MOZ_UNANNOTATED;
   ConditionVariable condVar_;
 
  public:

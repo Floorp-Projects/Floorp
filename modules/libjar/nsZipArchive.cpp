@@ -141,7 +141,7 @@ class ZipArchiveLogger {
   }
 
  private:
-  static StaticMutex sLock;
+  static StaticMutex sLock MOZ_UNANNOTATED;
   int mRefCnt;
   PRFileDesc* mFd;
 };

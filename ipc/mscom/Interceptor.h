@@ -167,10 +167,12 @@ class Interceptor final : public WeakReferenceSupport,
  private:
   InterceptorTargetPtr<IUnknown> mTarget;
   RefPtr<IInterceptorSink> mEventSink;
-  mozilla::Mutex mInterceptorMapMutex;  // Guards mInterceptorMap
+  mozilla::Mutex mInterceptorMapMutex
+      MOZ_UNANNOTATED;  // Guards mInterceptorMap
   // Using a nsTArray since the # of interfaces is not going to be very high
   nsTArray<MapEntry> mInterceptorMap;
-  mozilla::Mutex mStdMarshalMutex;  // Guards mStdMarshalUnk and mStdMarshal
+  mozilla::Mutex mStdMarshalMutex
+      MOZ_UNANNOTATED;  // Guards mStdMarshalUnk and mStdMarshal
   RefPtr<IUnknown> mStdMarshalUnk;
   IMarshal* mStdMarshal;  // WEAK
   static MOZ_THREAD_LOCAL(bool) tlsCreatingStdMarshal;

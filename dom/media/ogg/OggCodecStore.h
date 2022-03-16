@@ -29,7 +29,7 @@ class OggCodecStore {
   nsClassHashtable<nsUint32HashKey, OggCodecState> mCodecStates;
 
   // Protects the |mCodecStates| and the |mKnownStreams| members.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 };
 
 }  // namespace mozilla

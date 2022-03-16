@@ -43,7 +43,7 @@ class Event {
   }
 
  private:
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   bool mSignaled = false;
 };
 

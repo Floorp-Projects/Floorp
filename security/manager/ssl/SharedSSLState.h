@@ -62,7 +62,7 @@ class SharedSSLState {
   // True if any sockets have been created that use this shared data.
   // Requires synchronization between the socket and main threads for
   // reading/writing.
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
   bool mSocketCreated;
   bool mOCSPStaplingEnabled;
   bool mOCSPMustStapleEnabled;

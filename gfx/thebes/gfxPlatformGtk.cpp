@@ -845,10 +845,10 @@ class GtkVsyncSource final : public VsyncSource {
   // Owned by the vsync thread.
   RefPtr<gl::GLContextGLX> mGLContext;
   _XDisplay* mXDisplay;
-  Monitor mSetupLock;
+  Monitor mSetupLock MOZ_UNANNOTATED;
   base::Thread mVsyncThread;
   RefPtr<Runnable> mVsyncTask;
-  Monitor mVsyncEnabledLock;
+  Monitor mVsyncEnabledLock MOZ_UNANNOTATED;
   bool mVsyncEnabled;
 };
 

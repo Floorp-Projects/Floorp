@@ -189,7 +189,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   ~GeckoChildProcessHost();
   GeckoProcessType mProcessType;
   bool mIsFileContent;
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
   FilePath mProcessPath;
   // GeckoChildProcessHost holds the launch options so they can be set
   // up on the main thread using main-thread-only APIs like prefs, and
@@ -287,7 +287,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   static uint32_t sNextUniqueID;
   static StaticAutoPtr<LinkedList<GeckoChildProcessHost>>
       sGeckoChildProcessHosts;
-  static StaticMutex sMutex;
+  static StaticMutex sMutex MOZ_UNANNOTATED;
 };
 
 nsCOMPtr<nsIEventTarget> GetIPCLauncher();

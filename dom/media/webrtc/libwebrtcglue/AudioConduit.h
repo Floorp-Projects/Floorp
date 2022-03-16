@@ -246,7 +246,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed only on the Call thread.
   bool mDtmfEnabled;
 
-  mutable RWLock mLock;
+  mutable RWLock mLock MOZ_UNANNOTATED;
 
   // Call worker thread. All access to mCall->Call() happens here.
   const RefPtr<AbstractThread> mCallThread;
