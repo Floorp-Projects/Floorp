@@ -19,7 +19,7 @@ namespace layers {
 
 static bool sThreadAssertionsEnabled = true;
 static StaticRefPtr<nsISerialEventTarget> sControllerThread;
-static StaticMutex sControllerThreadMutex;
+static StaticMutex sControllerThreadMutex MOZ_UNANNOTATED;
 
 /*static*/
 void APZThreadUtils::SetThreadAssertionsEnabled(bool aEnabled) {

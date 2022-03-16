@@ -105,7 +105,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   nsTHashMap<nsIDPointerHashKey, nsFactoryEntry*> mFactories;
   nsTHashMap<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
-  mozilla::Monitor mLock;
+  mozilla::Monitor mLock MOZ_UNANNOTATED;
 
   mozilla::Maybe<EntryWrapper> LookupByCID(const nsID& aCID);
   mozilla::Maybe<EntryWrapper> LookupByCID(const mozilla::MonitorAutoLock&,

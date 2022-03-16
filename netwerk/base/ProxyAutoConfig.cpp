@@ -132,7 +132,7 @@ class PACResolver final : public nsIDNSListener,
   nsCOMPtr<nsIDNSRecord> mResponse;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
  private:
   ~PACResolver() = default;

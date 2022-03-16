@@ -108,7 +108,7 @@ namespace {
 // that, due to the nature of Telemetry, we cannot rely on having a
 // mutex initialized in InitializeGlobalState. Unfortunately, we
 // cannot make sure that no other function is called before this point.
-static StaticMutex gTelemetryOriginMutex;
+static StaticMutex gTelemetryOriginMutex MOZ_UNANNOTATED;
 
 typedef nsTArray<Tuple<const char*, const char*>> OriginHashesList;
 UniquePtr<OriginHashesList> gOriginHashesList;

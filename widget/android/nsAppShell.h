@@ -164,7 +164,7 @@ class nsAppShell : public nsBaseAppShell {
 
   class Queue {
    private:
-    mozilla::Monitor mMonitor;
+    mozilla::Monitor mMonitor MOZ_UNANNOTATED;
     mozilla::LinkedList<Event> mQueue;
 
    public:

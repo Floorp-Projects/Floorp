@@ -211,7 +211,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   // Find out state
   enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
 
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
 
   void ReadBlob(already_AddRefed<DataChannelConnection> aThis, uint16_t aStream,
                 nsIInputStream* aBlob);
@@ -349,7 +349,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
       bool LessThan(const RefPtr<DataChannel>& a1,
                     const RefPtr<DataChannel>& a2) const;
     };
-    mutable Mutex mMutex;
+    mutable Mutex mMutex MOZ_UNANNOTATED;
     ChannelArray mChannels;
   };
 
@@ -563,7 +563,7 @@ class DataChannel {
   nsTArray<UniquePtr<BufferedOutgoingMsg>>
       mBufferedData;  // GUARDED_BY(mConnection->mLock)
   nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
-  mutable Mutex mStatsLock;  // protects mTrafficCounters
+  mutable Mutex mStatsLock MOZ_UNANNOTATED;  // protects mTrafficCounters
   TrafficCounters mTrafficCounters;
 };
 

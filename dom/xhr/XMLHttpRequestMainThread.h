@@ -121,7 +121,7 @@ class ArrayBufferBuilder {
   static bool AreOverlappingRegions(const uint8_t* aStart1, uint32_t aLength1,
                                     const uint8_t* aStart2, uint32_t aLength2);
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   // All of these are protected by mMutex.
   uint8_t* mDataPtr;

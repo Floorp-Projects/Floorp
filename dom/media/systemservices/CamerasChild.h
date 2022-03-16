@@ -231,7 +231,7 @@ class CamerasChild final : public PCamerasChild {
 
   nsTArray<CapturerElement> mCallbacks;
   // Protects the callback arrays
-  Mutex mCallbackMutex;
+  Mutex mCallbackMutex MOZ_UNANNOTATED;
 
   bool mIPCIsAlive;
 
@@ -243,11 +243,11 @@ class CamerasChild final : public PCamerasChild {
   // request. The Notify on receiving the response will then unblock
   // both waiters and one will be guaranteed to get the wrong result.
   // Take this one before taking mReplyMonitor.
-  Mutex mRequestMutex;
+  Mutex mRequestMutex MOZ_UNANNOTATED;
   // Hold to wait for an async response to our calls *and* until the
   // user of LockAndDispatch<> has read the data out. This is done by
   // keeping the LockAndDispatch object alive.
-  Monitor mReplyMonitor;
+  Monitor mReplyMonitor MOZ_UNANNOTATED;
   // Async response valid?
   bool mReceivedReply;
   // Async responses data contents;

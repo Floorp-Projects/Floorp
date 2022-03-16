@@ -767,7 +767,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // not safe to just grab mMonitor from some thread and start monkeying with
   // the graph. Instead, communicate with the graph thread using provided
   // mechanisms such as the ControlMessage queue.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
   // regardless of the value of mLifecycleState).

@@ -77,7 +77,7 @@ static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
   // result from it, so we can't just dispatch and return, we have to wait
   // until the dispatched operation actually completes. So we also set up a
   // monitor to signal us when that happens, and block until then.
-  Monitor monitor("nsUpdateDriver SetupMacCommandLine");
+  Monitor monitor MOZ_UNANNOTATED("nsUpdateDriver SetupMacCommandLine");
 
   nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
       "UpdateDriverSetupMacCommandLine",

@@ -61,7 +61,7 @@ class Dashboard final : public nsIDashboard, public nsIDashboardEventNotifier {
       return data.IndexOf(temp);
     }
     nsTArray<LogData> data;
-    mozilla::Mutex lock;
+    mozilla::Mutex lock MOZ_UNANNOTATED;
   };
 
   bool mEnableLogging;

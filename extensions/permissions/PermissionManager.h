@@ -365,7 +365,7 @@ class PermissionManager final : public nsIPermissionManager,
 
  private:
   ~PermissionManager();
-  static StaticMutex sCreationMutex;
+  static StaticMutex sCreationMutex MOZ_UNANNOTATED;
 
   /**
    * Get all permissions for a given principal, which should not be isolated
@@ -534,7 +534,7 @@ class PermissionManager final : public nsIPermissionManager,
   // This monitor is used to ensure the database reading before any other
   // operation. The reading of the database happens OMT. See |State| to know the
   // steps of the database reading.
-  Monitor mMonitor;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   enum State {
     // Initial state. The database has not been read yet.

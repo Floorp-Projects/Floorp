@@ -65,7 +65,7 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   bool mCheckedNetworkId = false;
   bool mHasNetworkId = false;
 
-  Mutex mLock;
+  Mutex mLock MOZ_UNANNOTATED;
 };
 
 }  // namespace net

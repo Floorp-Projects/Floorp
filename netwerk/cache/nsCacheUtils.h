@@ -36,7 +36,7 @@ class nsShutdownThread : public mozilla::Runnable {
   static nsresult BlockingShutdown(nsIThread* aThread);
 
  private:
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
   bool mShuttingDown;
   nsCOMPtr<nsIThread> mThread;
 };

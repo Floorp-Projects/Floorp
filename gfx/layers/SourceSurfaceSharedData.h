@@ -326,7 +326,7 @@ class SourceSurfaceSharedData : public DataSourceSurface {
    */
   void CloseHandleInternal();
 
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
   int32_t mStride;
   int32_t mHandleCount;
   Maybe<IntRect> mDirtyRect;

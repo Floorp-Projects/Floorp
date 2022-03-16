@@ -173,7 +173,7 @@ class TimerHelper {
  private:
   TimeStamp mStart;
   RefPtr<nsITimer> mTimer;
-  mutable Monitor mMonitor;
+  mutable Monitor mMonitor MOZ_UNANNOTATED;
   uint32_t mBlockTime = 0;
   Maybe<uint32_t> mLastDelay;
   RefPtr<nsIEventTarget> mTarget;

@@ -73,7 +73,7 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
 
   bool CommitToScreen(const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   MozContainer* mContainer = nullptr;
   wl_surface* mWlSurface = nullptr;
@@ -147,7 +147,7 @@ class NativeLayerWayland final : public NativeLayer {
   void HandlePartialUpdate(const MutexAutoLock& aProofOfLock);
   void FrameCallbackHandler(wl_callback* aCallback, uint32_t aTime);
 
-  Mutex mMutex;
+  Mutex mMutex MOZ_UNANNOTATED;
 
   const RefPtr<SurfacePoolHandleWayland> mSurfacePoolHandle;
   const gfx::IntSize mSize;

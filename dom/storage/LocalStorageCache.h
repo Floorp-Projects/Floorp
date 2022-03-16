@@ -244,7 +244,7 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   Data mData[kDataSetCount];
 
   // This monitor is used to wait for full load of data.
-  mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
 
   // Flag that is initially false.  When the cache is about to work with
   // the database (i.e. it is persistent) this flags is set to true after

@@ -53,7 +53,7 @@ class nsAppShell : public nsBaseAppShell {
   HWND mEventWnd;
   bool mNativeCallbackPending;
 
-  Mutex mLastNativeEventScheduledMutex;
+  Mutex mLastNativeEventScheduledMutex MOZ_UNANNOTATED;
   TimeStamp mLastNativeEventScheduled;
   std::vector<MSG> mMsgsToRepost;
 };

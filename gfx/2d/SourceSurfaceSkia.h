@@ -67,7 +67,7 @@ class SourceSurfaceSkia : public DataSourceSurface {
   IntSize mSize;
   int32_t mStride;
   Atomic<DrawTargetSkia*> mDrawTarget;
-  Mutex mChangeMutex;
+  Mutex mChangeMutex MOZ_UNANNOTATED;
   bool mIsMapped;
 };
 

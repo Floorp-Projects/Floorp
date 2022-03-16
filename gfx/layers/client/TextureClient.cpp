@@ -472,7 +472,7 @@ void DeallocateTextureClient(TextureDeallocParams params) {
   if (ipdlThread && !ipdlThread->IsOnCurrentThread()) {
     if (params.syncDeallocation) {
       bool done = false;
-      ReentrantMonitor barrier("DeallocateTextureClient");
+      ReentrantMonitor barrier MOZ_UNANNOTATED("DeallocateTextureClient");
       ReentrantMonitorAutoEnter autoMon(barrier);
       ipdlThread->Dispatch(NewRunnableFunction(
           "DeallocateTextureClientSyncProxyRunnable",

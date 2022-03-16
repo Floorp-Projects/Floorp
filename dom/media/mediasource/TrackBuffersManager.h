@@ -514,7 +514,7 @@ class TrackBuffersManager final
   Atomic<EvictionState> mEvictionState;
 
   // Monitor to protect following objects accessed across multiple threads.
-  mutable Mutex mMutex;
+  mutable Mutex mMutex MOZ_UNANNOTATED;
   // mTaskQueue is only ever written after construction on the task queue.
   // As such, it can be accessed while on task queue without the need for the
   // mutex.

@@ -154,7 +154,7 @@ class TaskQueue : public AbstractThread,
 
   // Monitor that protects the queue, mIsRunning and
   // mDelayedRunnablesCancelPromise;
-  Monitor mQueueMonitor;
+  Monitor mQueueMonitor MOZ_UNANNOTATED;
 
   typedef struct TaskStruct {
     nsCOMPtr<nsIRunnable> event;

@@ -117,7 +117,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * Protects the shared state between control and worker threads.  This mutex
    * is always locked for a very short time, never during input/output.
    */
-  mozilla::Mutex mLock{"BackgroundFileSaver.mLock"};
+  mozilla::Mutex mLock MOZ_UNANNOTATED{"BackgroundFileSaver.mLock"};
 
   /**
    * True if the worker thread is already waiting to process a change in state.
