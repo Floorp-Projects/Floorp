@@ -567,4 +567,5 @@ asserts-if(Android,0-1000) load 1749190.html
 load 1745860.html
 pref(layout.accessiblecaret.enabled,true) load 1746989.html
 load 1752649.html
+load 1753779.html
 pref(layout.css.backdrop-filter.enabled,true) load 1755790.html
