@@ -118,6 +118,13 @@ struct ScriptedCaller {
   ScriptedCaller() : filenameIsURL(false), line(0) {}
 };
 
+// Describes the reasons we cannot compute compile args
+
+enum class CompileArgsError {
+  OutOfMemory,
+  NoCompiler,
+};
+
 // Describes all the parameters that control wasm compilation.
 
 struct CompileArgs;
@@ -136,17 +143,21 @@ struct CompileArgs : ShareableBase<CompileArgs> {
 
   FeatureArgs features;
 
-  // CompileArgs has two constructors:
+  // CompileArgs has three constructors:
   //
-  // - one through a factory function `build`, which checks that flags are
-  // consistent with each other.
+  // - two through a factory function `build`, which checks that flags are
+  // consistent with each other, and optionally reports any errors.
   // - one that gives complete access to underlying fields.
   //
   // You should use the first one in general, unless you have a very good
   // reason (i.e. no JSContext around and you know which flags have been used).
 
   static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller,
-                                 const FeatureOptions& options);
+                                 const FeatureOptions& options,
+                                 CompileArgsError* error);
+  static SharedCompileArgs buildAndReport(JSContext* cx,
+                                          ScriptedCaller&& scriptedCaller,
+                                          const FeatureOptions& options);
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),

@@ -255,7 +255,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     ScriptedCaller scriptedCaller;
     FeatureOptions options;
     SharedCompileArgs compileArgs =
-        CompileArgs::build(gCx, std::move(scriptedCaller), options);
+        CompileArgs::buildAndReport(gCx, std::move(scriptedCaller), options);
     if (!compileArgs) {
       return 0;
     }

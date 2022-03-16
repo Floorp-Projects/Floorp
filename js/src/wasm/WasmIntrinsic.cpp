@@ -99,7 +99,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
 
   // Initialize the compiler environment, choosing the best tier possible
   SharedCompileArgs compileArgs =
-      CompileArgs::build(cx, ScriptedCaller(), featureOptions);
+      CompileArgs::buildAndReport(cx, ScriptedCaller(), featureOptions);
   if (!compileArgs) {
     return false;
   }
