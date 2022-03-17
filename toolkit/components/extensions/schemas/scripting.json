@@ -174,7 +174,6 @@
           "runAt": {
             "$ref": "extensionTypes.RunAt",
             "optional": true,
-            "default": "document_idle",
             "description": "Specifies when JavaScript files are injected into the web page. The preferred and default value is <code>document_idle</code>."
           },
           "persistAcrossSessions": {
@@ -317,6 +316,37 @@
             "name": "callback",
             "type": "function",
             "description": "Invoked upon completion of the unregistration.",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "updateContentScripts",
+        "type": "function",
+        "description": "Updates one or more content scripts for this extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "scripts",
+            "type": "array",
+            "description": "Contains a list of scripts to be updated. If there are errors during script parsing/file validation, or if the IDs specified do not already exist, then no scripts are updated.",
+            "items": {
+              "type": "object",
+              "$import": "RegisteredContentScript",
+              "properties": {
+                "persistAcrossSessions": {
+                  "type": "boolean",
+                  "optional": true,
+                  "enum": [false],
+                  "description": "Specifies if this content script will persist into future sessions. This is currently NOT supported."
+                }
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked when scripts have been updated.",
             "parameters": []
           }
         ]
