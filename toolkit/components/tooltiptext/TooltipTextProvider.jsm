@@ -86,9 +86,10 @@ TooltipTextProvider.prototype = {
           } else if (files.length > TRUNCATED_FILE_COUNT + 1) {
             let xmoreStr = bundle.GetStringFromName("AndNMoreFiles");
             let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
-            let tmp = {};
-            ChromeUtils.import("resource://gre/modules/PluralForm.jsm", tmp);
-            let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace(
+            let { PluralForm } = ChromeUtils.import(
+              "resource://gre/modules/PluralForm.jsm"
+            );
+            let andXMoreStr = PluralForm.get(xmoreNum, xmoreStr).replace(
               "#1",
               xmoreNum
             );
