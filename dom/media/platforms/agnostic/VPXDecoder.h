@@ -200,6 +200,12 @@ class VPXDecoder : public MediaDataDecoder,
                             Codec aCodec);
 
   static void GetVPCCBox(MediaByteBuffer* aDestBox, const VPXStreamInfo& aInfo);
+  // Set extradata for a VP8/VP9 track, returning false if the codec was
+  // invalid.
+  static bool SetVideoInfo(VideoInfo* aDestInfo, const nsAString& aCodec);
+
+  static void SetChroma(VPXStreamInfo& aDestInfo, uint8_t chroma);
+  static void ReadVPCCBox(VPXStreamInfo& aDestInfo, MediaByteBuffer* aBox);
 
  private:
   ~VPXDecoder();

@@ -6,6 +6,7 @@
 
 #include "MP4Decoder.h"
 #include "H264.h"
+#include "VPXDecoder.h"
 #include "MP4Demuxer.h"
 #include "MediaContainerType.h"
 #include "PDMFactory.h"
@@ -96,13 +97,7 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
               "video/vp9"_ns, aType);
-      uint8_t profile = 0;
-      uint8_t level = 0;
-      uint8_t bitDepth = 0;
-      if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
-        trackInfo->GetAsVideoInfo()->mColorDepth =
-            gfx::ColorDepthForBitDepth(bitDepth);
-      }
+      VPXDecoder::SetVideoInfo(trackInfo->GetAsVideoInfo(), codec);
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
