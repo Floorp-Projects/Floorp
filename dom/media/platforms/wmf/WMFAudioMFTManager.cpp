@@ -103,18 +103,6 @@ WMFAudioMFTManager::~WMFAudioMFTManager() {
   MOZ_COUNT_DTOR(WMFAudioMFTManager);
 }
 
-const GUID& WMFAudioMFTManager::GetMFTGUID() {
-  MOZ_ASSERT(mStreamType != Unknown);
-  switch (mStreamType) {
-    case AAC:
-      return CLSID_CMSAACDecMFT;
-    case MP3:
-      return CLSID_CMP3DecMediaObject;
-    default:
-      return GUID_NULL;
-  };
-}
-
 const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
   MOZ_ASSERT(mStreamType != Unknown);
   switch (mStreamType) {
@@ -131,8 +119,10 @@ bool WMFAudioMFTManager::Init() {
   NS_ENSURE_TRUE(mStreamType != Unknown, false);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
-
-  HRESULT hr = decoder->Create(GetMFTGUID());
+  // Note: MP3 MFT isn't registered as supporting Float output, but it works.
+  // Find PCM output MFTs as this is the common type.
+  HRESULT hr = decoder->Create(MFT_CATEGORY_AUDIO_DECODER,
+                               GetMediaSubtypeGUID(), MFAudioFormat_PCM);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   // Setup input/output media types

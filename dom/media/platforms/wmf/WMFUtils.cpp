@@ -21,13 +21,6 @@
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/WindowsVersion.h"
 
-#ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
-// Some SDK versions don't define the AAC decoder CLSID.
-// {32D186A7-218F-4C75-8876-DD77273A8999}
-DEFINE_GUID(CLSID_CMSAACDecMFT, 0x32D186A7, 0x218F, 0x4C75, 0x88, 0x76, 0xDD,
-            0x77, 0x27, 0x3A, 0x89, 0x99);
-#endif
-
 namespace mozilla {
 
 using media::TimeUnit;

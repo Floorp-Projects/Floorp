@@ -16,6 +16,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "AOMDecoder.h"
 #include "WMF.h"
 #include "WMFAudioMFTManager.h"
 #include "WMFMediaDataDecoder.h"
@@ -36,8 +37,6 @@
 #include "prsystem.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
-
-extern const GUID CLSID_WebmMfVpxDec;
 
 namespace mozilla {
 
@@ -85,7 +84,19 @@ static bool IsRemoteAcceleratedCompositor(
          ident.mParentProcessType == GeckoProcessType_GPU;
 }
 
-static bool CanCreateMFTDecoder(const GUID& aGuid) {
+static bool CanCreateMFTDecoder(const GUID& aCategory, const GUID& aInSubtype) {
+  const GUID outSubtype = [&]() {
+    if (aCategory == MFT_CATEGORY_VIDEO_DECODER) {
+      // H264 decoder MFT doesn't always support NV12
+      if (aInSubtype == MFVideoFormat_H264) {
+        return GUID_NULL;
+      }
+      return MFVideoFormat_NV12;
+    } else {
+      return MFAudioFormat_PCM;
+    }
+  }();
+
   // The IMFTransform interface used by MFTDecoder is documented to require to
   // run on an MTA thread.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ee892371(v=vs.85).aspx#components
@@ -98,7 +109,8 @@ static bool CanCreateMFTDecoder(const GUID& aGuid) {
       return;
     }
     RefPtr<MFTDecoder> decoder(new MFTDecoder());
-    canCreateDecoder = SUCCEEDED(decoder->Create(aGuid));
+    canCreateDecoder =
+        SUCCEEDED(decoder->Create(aCategory, aInSubtype, outSubtype));
     wmf::MFShutdown();
   });
   return canCreateDecoder;
@@ -137,7 +149,9 @@ void WMFDecoderModule::Init() {
       WmfDecoderModuleMarkerAndLog("WMFInit VPx Pending",
                                    "Attempting to create MFT decoder for VPx");
 
-      sUsableVPXMFT = CanCreateMFTDecoder(CLSID_WebmMfVpxDec);
+      sUsableVPXMFT =
+          CanCreateMFTDecoder(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP80) &&
+          CanCreateMFTDecoder(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP90);
 
       WmfDecoderModuleMarkerAndLog("WMFInit VPx Initialized",
                                    "CanCreateMFTDecoder returned %s for VPx",
@@ -240,40 +254,48 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
-template <const GUID& aGuid>
+template <const GUID& aCategory, const GUID& aInSubtype>
 static bool CanCreateWMFDecoder() {
   static StaticMutex sMutex MOZ_UNANNOTATED;
   StaticMutexAutoLock lock(sMutex);
   static Maybe<bool> result;
   if (result.isNothing()) {
-    result.emplace(CanCreateMFTDecoder(aGuid));
+    result.emplace(CanCreateMFTDecoder(aCategory, aInSubtype));
   }
   return result.value();
 }
 
 /* static */
 bool WMFDecoderModule::HasH264() {
-  return CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>();
+  return CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_H264>();
 }
 
 /* static */
 bool WMFDecoderModule::HasVP8() {
-  return sUsableVPXMFT && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>();
+  return sUsableVPXMFT &&
+         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP80>();
 }
 
 /* static */
 bool WMFDecoderModule::HasVP9() {
-  return sUsableVPXMFT && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>();
+  return sUsableVPXMFT &&
+         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP90>();
+}
+
+/* static */
+bool WMFDecoderModule::HasAV1() {
+  return StaticPrefs::media_wmf_av1_enabled() &&
+         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_AV1>();
 }
 
 /* static */
 bool WMFDecoderModule::HasAAC() {
-  return CanCreateWMFDecoder<CLSID_CMSAACDecMFT>();
+  return CanCreateWMFDecoder<MFT_CATEGORY_AUDIO_DECODER, MFAudioFormat_AAC>();
 }
 
 /* static */
 bool WMFDecoderModule::HasMP3() {
-  return CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>();
+  return CanCreateWMFDecoder<MFT_CATEGORY_AUDIO_DECODER, MFAudioFormat_MP3>();
 }
 
 bool WMFDecoderModule::SupportsMimeType(
@@ -323,6 +345,10 @@ bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
     return true;
   }
   if (VPXDecoder::IsVP9(trackInfo.mMimeType) && WMFDecoderModule::HasVP9()) {
+    return true;
+  }
+
+  if (AOMDecoder::IsAV1(trackInfo.mMimeType) && WMFDecoderModule::HasAV1()) {
     return true;
   }
 

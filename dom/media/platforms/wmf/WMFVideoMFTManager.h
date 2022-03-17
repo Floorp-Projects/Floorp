@@ -97,7 +97,7 @@ class WMFVideoMFTManager : public MFTManager {
 
   nsCString mDXVAFailureReason;
 
-  enum StreamType { Unknown, H264, VP8, VP9 };
+  enum StreamType { Unknown, H264, VP8, VP9, AV1 };
 
   StreamType mStreamType;
 
@@ -110,13 +110,14 @@ class WMFVideoMFTManager : public MFTManager {
         return "VP8";
       case StreamType::VP9:
         return "VP9";
+      case StreamType::AV1:
+        return "AV1";
       default:
         MOZ_ASSERT(mStreamType == StreamType::Unknown);
         return "Unknown";
     }
   }
 
-  const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
 
   uint32_t mNullOutputCount = 0;
