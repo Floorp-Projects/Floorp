@@ -3364,10 +3364,8 @@ void MediaManager::Shutdown() {
   // Dispatch to mMediaThread so it can shut down mBackend.
   class ShutdownTask : public Runnable {
    public:
-    ShutdownTask(RefPtr<MediaManager> aManager, RefPtr<Runnable> aReply)
-        : mozilla::Runnable("ShutdownTask"),
-          mManager(std::move(aManager)),
-          mReply(std::move(aReply)) {}
+    explicit ShutdownTask(RefPtr<MediaManager> aManager)
+        : mozilla::Runnable("ShutdownTask"), mManager(std::move(aManager)) {}
 
    private:
     NS_IMETHOD
@@ -3385,19 +3383,12 @@ void MediaManager::Shutdown() {
       mManager->mBackend =
           nullptr;  // last reference, will invoke Shutdown() again
 
-      if (NS_FAILED(NS_DispatchToMainThread(mReply.forget()))) {
-        LOG("Will leak thread: DispatchToMainthread of reply runnable failed "
-            "in MediaManager shutdown");
-      }
-
       return NS_OK;
     }
     RefPtr<MediaManager> mManager;
-    RefPtr<Runnable> mReply;
   };
 
-  // Post ShutdownTask to execute on mMediaThread and pass in a lambda
-  // callback to be executed back on this thread once it is done.
+  // Post ShutdownTask to execute on mMediaThread.
 
   // note that this == sSingleton
 #ifdef DEBUG
@@ -3410,8 +3401,17 @@ void MediaManager::Shutdown() {
   // Release the backend (and call Shutdown()) from within the MediaManager
   // thread Don't use MediaManager::Dispatch() because we're
   // sHasMainThreadShutdown == true here!
-  auto shutdown = MakeRefPtr<ShutdownTask>(
-      this, media::NewRunnableFrom([]() {
+  auto shutdown = MakeRefPtr<ShutdownTask>(this);
+  MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(shutdown.forget()));
+  // Explicitly shut down the TaskQueue so that it releases its
+  // SharedThreadPool when all tasks have completed.  SharedThreadPool blocks
+  // XPCOM shutdown from proceeding beyond "xpcom-shutdown-threads" until all
+  // SharedThreadPools are released, but the nsComponentManager keeps a
+  // reference to the MediaManager for the nsIMediaManagerService until much
+  // later in shutdown.  This also provides additional assurance that no
+  // further tasks will be queued.
+  mMediaThread->BeginShutdown()->Then(
+      GetMainThreadSerialEventTarget(), __func__, [] {
         LOG("MediaManager shutdown lambda running, releasing MediaManager "
             "singleton");
         StaticMutexAutoLock lock(sSingletonMutex);
@@ -3420,11 +3420,7 @@ void MediaManager::Shutdown() {
             sSingleton->mShutdownBlocker);
 
         sSingleton = nullptr;
-        return NS_OK;
-      }));
-  MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(shutdown.forget()));
-  mMediaThread->BeginShutdown();
-  mMediaThread->AwaitShutdownAndIdle();
+      });
 }
 
 void MediaManager::SendPendingGUMRequest() {
