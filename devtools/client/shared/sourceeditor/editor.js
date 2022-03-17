@@ -182,6 +182,11 @@ function Editor(config) {
   this.config.extraKeys["Alt-B"] = false;
   this.config.extraKeys["Alt-F"] = false;
 
+  // Disable Ctrl/Cmd + U as it's used for "View Source". It's okay to disable Ctrl+U as
+  // the underlying command, `undoSelection`, isn't standard in input fields and isn't
+  // widely known.
+  this.config.extraKeys[Editor.accel("U")] = false;
+
   // Overwrite default config with user-provided, if needed.
   Object.keys(config).forEach(k => {
     if (k != "extraKeys") {
