@@ -118,7 +118,7 @@ BreakpointActor.prototype = {
    *            If the condition throws, this is the thrown message.
    */
   checkCondition: function(frame, condition) {
-    const completion = frame.eval(condition);
+    const completion = frame.eval(condition, { hideFromDebugger: true });
     if (completion) {
       if (completion.throw) {
         // The evaluation failed and threw
