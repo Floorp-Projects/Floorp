@@ -123,10 +123,12 @@ add_task(async function primary_pin() {
     1,
     "Primary button sets as default"
   );
-  Assert.equal(
-    mock.pinCurrentAppToTaskbar.callCount,
-    1,
-    "Primary button also pins"
-  );
+  if (AppConstants.platform == "win") {
+    Assert.equal(
+      mock.pinCurrentAppToTaskbar.callCount,
+      1,
+      "Primary button also pins"
+    );
+  }
   AssertHistogram(histogram, "accept");
 });
