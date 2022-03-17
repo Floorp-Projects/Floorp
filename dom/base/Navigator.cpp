@@ -488,7 +488,12 @@ nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
   return mPlugins;
 }
 
-bool Navigator::PdfViewerEnabled() { return !StaticPrefs::pdfjs_disabled(); }
+bool Navigator::PdfViewerEnabled() {
+  // We ignore pdfjs.disabled when resisting fingerprinting.
+  // See bug 1756280 for an explanation.
+  return !StaticPrefs::pdfjs_disabled() ||
+         nsContentUtils::ShouldResistFingerprinting(GetDocShell());
+}
 
 Permissions* Navigator::GetPermissions(ErrorResult& aRv) {
   if (!mWindow) {
