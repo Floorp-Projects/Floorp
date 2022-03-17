@@ -3874,10 +3874,18 @@ void QuotaManager::Shutdown() {
                             MutexAutoLock lock(quotaManager->mQuotaMutex);
 
                             annotation.AppendPrintf(
-                                "QM: %zu normal origin ops "
-                                "pending\nIntermediate "
-                                "steps:\n%s\n",
-                                gNormalOriginOps->Length(),
+                                "QM: %zu normal origin ops pending\n",
+                                gNormalOriginOps->Length());
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+                            for (const auto& op : *gNormalOriginOps) {
+                              nsCString name;
+                              op->GetName(name);
+                              annotation.AppendPrintf("Op: %s pending\n",
+                                                      name.get());
+                            }
+#endif
+                            annotation.AppendPrintf(
+                                "Intermediate steps:\n%s\n",
                                 quotaManager->mQuotaManagerShutdownSteps.get());
                           }
                         }
