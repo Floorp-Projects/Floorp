@@ -148,8 +148,6 @@ nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(CycleCollectedJSContext::Get() &&
-             CycleCollectedJSContext::Get()->MicroTaskLevel());
 
   NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
 

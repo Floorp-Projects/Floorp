@@ -241,8 +241,6 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::nsAutoMicroTask mt;
-
   mozilla::dom::AutoJSAPI jsapi;
   if (!jsapi.Init(globalObject)) {
     return NS_ERROR_FAILURE;
@@ -688,7 +686,6 @@ bool ModuleLoaderBase::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
 
   MOZ_ASSERT(moduleScript->ModuleRecord());
 
-  mozilla::nsAutoMicroTask mt;
   mozilla::dom::AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
     return false;
