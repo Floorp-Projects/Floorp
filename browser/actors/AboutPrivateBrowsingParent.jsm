@@ -31,6 +31,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
 
 // We only show the private search banner once per browser session.
@@ -164,6 +166,9 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
       }
       case "ShouldShowVPNPromo": {
         return BrowserUtils.shouldShowVPNPromo();
+      }
+      case "SpecialMessageActionDispatch": {
+        SpecialMessageActions.handleAction(aMessage.data, browser);
       }
     }
 

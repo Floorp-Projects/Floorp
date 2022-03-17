@@ -422,6 +422,29 @@
           "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Resets homepage pref and sections layout"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "description": "Object containing content rendered inside spotlight dialog"
+                }
+              },
+              "required": ["content"],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": ["SHOW_SPOTLIGHT"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": false,
+          "description": "Opens a spotlight dialog"
         }
       ]
     }
