@@ -11,10 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm",
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   waitForInitialNavigationCompleted:
@@ -43,20 +45,151 @@ class BrowsingContextModule extends Module {
     this.#contextListener.destroy();
   }
 
-  #getBrowsingContextInfo(browsingContext, options = {}) {
-    const { depth } = options;
+  /**
+   * An object that holds the WebDriver Bidi browsing context information.
+   *
+   * @typedef BrowsingContextInfo
+   *
+   * @property {string} context
+   *     The id of the browsing context.
+   * @property {string=} parent
+   *     The parent of the browsing context if it's the root browsing context
+   *     of the to be processed browsing context tree.
+   * @property {string} url
+   *     The current documents location.
+   * @property {Array<BrowsingContextInfo>=} children
+   *     List of child browsing contexts. Only set if maxDepth hasn't been
+   *     reached yet.
+   */
+
+  /**
+   * An object that holds the WebDriver Bidi browsing context tree information.
+   *
+   * @typedef BrowsingContextGetTreeResult
+   *
+   * @property {Array<BrowsingContextInfo>} contexts
+   *     List of child browsing contexts.
+   */
+
+  /**
+   * Returns a tree of all browsing contexts that are descendents of the
+   * given context, or all top-level contexts when no parent is provided.
+   *
+   * @param {Object=} options
+   * @param {number=} maxDepth
+   *     Depth of the browsing context tree to traverse. If not specified
+   *     the whole tree is returned.
+   * @param {string=} parent
+   *     Id of the parent browsing context.
+   *
+   * @returns {BrowsingContextGetTreeResult}
+   *     Tree of browsing context information.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  getTree(options = {}) {
+    const { maxDepth = null, parent: parentId = null } = options;
+
+    if (maxDepth !== null) {
+      assert.positiveInteger(
+        maxDepth,
+        `Expected "maxDepth" to be a positive integer, got ${maxDepth}`
+      );
+    }
+
+    let contexts;
+    if (parentId !== null) {
+      // With a parent id specified return the context info for itself
+      // and the full tree.
+
+      assert.string(
+        parentId,
+        `Expected "parent" to be a string, got ${parentId}`
+      );
+
+      // If the parent id is for a top-level browsing context get the browsing
+      // context via the unique id and the related content browser.
+      const browser = TabManager.getBrowserById(parentId);
+      contexts =
+        browser !== null
+          ? [browser.browsingContext]
+          : [this.#getBrowsingContext(parentId)];
+    } else {
+      // Return all top-level browsing contexts.
+      contexts = TabManager.browsers.map(browser => browser.browsingContext);
+    }
+
+    const contextsInfo = contexts.map(context => {
+      return this.#getBrowsingContextInfo(context, { maxDepth });
+    });
+
+    return { contexts: contextsInfo };
+  }
+
+  /**
+   * Retrieves a browsing context based on its id.
+   *
+   * @param {Number} contextId
+   *     Id of the browsing context.
+   * @returns {BrowsingContext=}
+   *     The browsing context or null if <var>contextId</var> is null.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  #getBrowsingContext(contextId) {
+    // The WebDriver BiDi specification expects null to be
+    // returned if no browsing context id has been specified.
+    if (contextId === null) {
+      return null;
+    }
+
+    const context = BrowsingContext.get(contextId);
+    if (context === null) {
+      throw new error.NoSuchFrameError(
+        `Browsing Context with id ${contextId} not found`
+      );
+    }
+
+    return context;
+  }
+
+  /**
+   * Get the WebDriver BiDi browsing context information.
+   *
+   * @param {BrowsingContext} context
+   *     The browsing context to get the information from.
+   * @param {Object=} options
+   * @param {boolean=} isRoot
+   *     Flag that indicates if this browsing context is the root of all the
+   *     browsing contexts to be returned. Defaults to true.
+   * @param {number=} maxDepth
+   *     Depth of the browsing context tree to traverse. If not specified
+   *     the whole tree is returned.
+   * @returns {BrowsingContextInfo}
+   *     The information about the browsing context.
+   */
+  #getBrowsingContextInfo(context, options = {}) {
+    const { isRoot = true, maxDepth = null } = options;
+
+    let children = null;
+    if (maxDepth === null || maxDepth > 0) {
+      children = context.children.map(context =>
+        this.#getBrowsingContextInfo(context, {
+          maxDepth: maxDepth === null ? maxDepth : maxDepth - 1,
+          isRoot: false,
+        })
+      );
+    }
 
     const contextInfo = {
-      context: TabManager.getIdForBrowsingContext(browsingContext),
-      url: browsingContext.currentURI.spec,
-      children: null,
+      context: TabManager.getIdForBrowsingContext(context),
+      url: context.currentURI.spec,
+      children,
     };
 
-    if (depth == 0) {
+    if (isRoot) {
       // Only emit the parent id for the top-most browsing context.
-      const parentId = TabManager.getIdForBrowsingContext(
-        browsingContext.parent
-      );
+      const parentId = TabManager.getIdForBrowsingContext(context.parent);
       contextInfo.parent = parentId;
     }
 
@@ -84,8 +217,7 @@ class BrowsingContextModule extends Module {
     });
 
     const contextInfo = this.#getBrowsingContextInfo(browsingContext, {
-      depth: 0,
-      maxDepth: 1,
+      maxDepth: 0,
     });
     this.emitProtocolEvent("browsingContext.contextCreated", contextInfo);
   };
