@@ -125,9 +125,38 @@
   <html:h1 data-l10n-id="language-and-appearance-header"/>
 </hbox>
 
-<!-- Fonts and Colors -->
+<!-- Colors -->
+<groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
+  <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
+
+  <hbox id="colorsSettings">
+    <hbox align="center" flex="1">
+      <description flex="1" control="colors" data-l10n-id="preferences-colors-description"/>
+      <button id="colors"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="preferences-colors-manage-button"
+              search-l10n-ids="
+                colors-page-override,
+                colors-page-override-option-always.label,
+                colors-page-override-option-auto.label,
+                colors-page-override-option-never.label,
+                colors-text-and-background,
+                colors-text-header,
+                colors-background,
+                colors-use-system,
+                colors-underline-links,
+                colors-links-header,
+                colors-unvisited-links,
+                colors-visited-links
+              "/>
+    </hbox>
+  </hbox>
+</groupbox>
+
+<!-- Fonts -->
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="fonts-and-colors-header"/></label>
+  <label><html:h2 data-l10n-id="preferences-fonts-header"/></label>
 
   <hbox id="fontSettings">
     <hbox align="center" flex="1">
@@ -220,30 +249,6 @@
                 fonts-default-sans-serif.label,
                 fonts-allow-own.label,
               " />
-    </hbox>
-  </hbox>
-  <hbox id="colorsSettings">
-    <spacer flex="1" />
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="colors"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="colors-settings"
-              search-l10n-ids="
-                colors-page-override,
-                colors-page-override-option-always.label,
-                colors-page-override-option-auto.label,
-                colors-page-override-option-never.label,
-                colors-text-and-background,
-                colors-text-header,
-                colors-background,
-                colors-use-system,
-                colors-underline-links,
-                colors-links-header,
-                colors-unvisited-links,
-                colors-visited-links
-              "/>
     </hbox>
   </hbox>
 </groupbox>

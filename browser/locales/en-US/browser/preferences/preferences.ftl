@@ -225,7 +225,15 @@ containers-remove-cancel-button = Don’t remove this Container
 
 language-and-appearance-header = Language and Appearance
 
-fonts-and-colors-header = Fonts and Colors
+preferences-colors-header = Colors
+
+preferences-colors-description = Override { -brand-short-name }’s default colors for text, website backgrounds, and links.
+
+preferences-colors-manage-button =
+    .label = Manage Colors…
+    .accesskey = C
+
+preferences-fonts-header = Fonts
 
 default-font = Default font
     .accesskey = D
@@ -235,10 +243,6 @@ default-font-size = Size
 advanced-fonts =
     .label = Advanced…
     .accesskey = A
-
-colors-settings =
-    .label = Colors…
-    .accesskey = C
 
 # Zoom is a noun, and the message is used as header for a group of options
 preferences-zoom-header = Zoom
