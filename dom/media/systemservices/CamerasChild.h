@@ -79,10 +79,9 @@ class CamerasSingleton {
     Mutex().AssertCurrentThreadOwns();
     return singleton().mCamerasChildThread;
   }
-
-  static bool InShutdown() { return singleton().mInShutdown; }
-
-  static void StartShutdown() { singleton().mInShutdown = true; }
+  // The mutex is not held because mCameras is known not to be modified
+  // concurrently when this is asserted.
+  static void AssertNoChild() { MOZ_ASSERT(!singleton().mCameras); }
 
  private:
   CamerasSingleton();
@@ -106,7 +105,6 @@ class CamerasSingleton {
   // will be before actual destruction.
   CamerasChild* mCameras;
   nsCOMPtr<nsIThread> mCamerasChildThread;
-  Atomic<bool> mInShutdown;
 };
 
 // Get a pointer to a CamerasChild object we can use to do IPC with.
