@@ -44,7 +44,7 @@ class GIOChannelParent final : public PGIOChannelParent,
 
   bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
                    const nsCString& aEntityID,
-                   const Maybe<IPCStream>& aUploadStream,
+                   const Maybe<mozilla::ipc::IPCStream>& aUploadStream,
                    const Maybe<LoadInfoArgs>& aLoadInfoArgs,
                    const uint32_t& aLoadFlags);
 

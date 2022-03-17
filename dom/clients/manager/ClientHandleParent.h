@@ -29,7 +29,7 @@ class ClientHandleParent final : public PClientHandleParent {
   MozPromiseRequestHolder<SourcePromise> mSourcePromiseRequestHolder;
 
   nsID mClientId;
-  PrincipalInfo mPrincipalInfo;
+  mozilla::ipc::PrincipalInfo mPrincipalInfo;
 
   // PClientHandleParent interface
   mozilla::ipc::IPCResult RecvTeardown() override;

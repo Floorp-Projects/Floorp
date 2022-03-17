@@ -1267,9 +1267,6 @@ def _subtreeUsesShmem(p):
 
 
 class Protocol(ipdl.ast.Protocol):
-    def cxxTypedefs(self):
-        return self.decl.cxxtypedefs
-
     def managerInterfaceType(self, ptr=False):
         return Type("mozilla::ipc::IProtocol", ptr=ptr)
 
@@ -1397,27 +1394,6 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
 
     def __init__(self):
         self.visitedTus = set()
-        # the set of typedefs that allow generated classes to
-        # reference known C++ types by their "short name" rather than
-        # fully-qualified name. e.g. |Foo| rather than |a::b::Foo|.
-        self.typedefs = []
-        self.typedefSet = set(
-            [
-                Typedef(Type("mozilla::ipc::ActorHandle"), "ActorHandle"),
-                Typedef(Type("base::ProcessId"), "ProcessId"),
-                Typedef(Type("mozilla::ipc::ProtocolId"), "ProtocolId"),
-                Typedef(Type("mozilla::ipc::Endpoint"), "Endpoint", ["FooSide"]),
-                Typedef(
-                    Type("mozilla::ipc::ManagedEndpoint"),
-                    "ManagedEndpoint",
-                    ["FooSide"],
-                ),
-                Typedef(Type("mozilla::UniquePtr"), "UniquePtr", ["T"]),
-                Typedef(
-                    Type("mozilla::ipc::ResponseRejectReason"), "ResponseRejectReason"
-                ),
-            ]
-        )
         self.protocolName = None
 
     def visitTranslationUnit(self, tu):
@@ -1426,7 +1402,6 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
             ipdl.ast.Visitor.visitTranslationUnit(self, tu)
             if not isinstance(tu, TranslationUnit):
                 TranslationUnit.upgrade(tu)
-            self.typedefs[:] = sorted(list(self.typedefSet))
 
     def visitInclude(self, inc):
         if inc.tu.filetype == "header":
@@ -1434,15 +1409,8 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
 
     def visitProtocol(self, pro):
         self.protocolName = pro.name
-        pro.decl.cxxtypedefs = self.typedefs
         Protocol.upgrade(pro)
         return ipdl.ast.Visitor.visitProtocol(self, pro)
-
-    def visitUsingStmt(self, using):
-        if using.decl.fullname is not None:
-            self.typedefSet.add(
-                Typedef(Type(using.decl.fullname), using.decl.shortname)
-            )
 
     def visitStructDecl(self, sd):
         if not isinstance(sd, StructDecl):
@@ -1474,9 +1442,6 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
             sd.packed_field_order = permutation
             StructDecl.upgrade(sd)
 
-        if sd.decl.fullname is not None:
-            self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
-
     def visitUnionDecl(self, ud):
         ud.decl.special = False
         newcomponents = []
@@ -1491,9 +1456,6 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
                 newcomponents.append(_UnionMember(ctype, ud))
         ud.components = newcomponents
         UnionDecl.upgrade(ud)
-
-        if ud.decl.fullname is not None:
-            self.typedefSet.add(Typedef(Type(ud.fqClassName()), ud.name))
 
     def visitDecl(self, decl):
         return _HybridDecl(decl.type, decl.progname, decl.attributes)
@@ -3463,12 +3425,28 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cppfile = None
         self.ns = None
         self.cls = None
-        self.includedActorTypedefs = []
         self.protocolCxxIncludes = []
         self.actorForwardDecls = []
         self.usingDecls = []
         self.externalIncludes = set()
         self.nonForwardDeclaredHeaders = set()
+        self.typedefSet = set(
+            [
+                Typedef(Type("mozilla::ipc::ActorHandle"), "ActorHandle"),
+                Typedef(Type("base::ProcessId"), "ProcessId"),
+                Typedef(Type("mozilla::ipc::ProtocolId"), "ProtocolId"),
+                Typedef(Type("mozilla::ipc::Endpoint"), "Endpoint", ["FooSide"]),
+                Typedef(
+                    Type("mozilla::ipc::ManagedEndpoint"),
+                    "ManagedEndpoint",
+                    ["FooSide"],
+                ),
+                Typedef(Type("mozilla::UniquePtr"), "UniquePtr", ["T"]),
+                Typedef(
+                    Type("mozilla::ipc::ResponseRejectReason"), "ResponseRejectReason"
+                ),
+            ]
+        )
 
     def lower(self, tu, clsname, cxxHeaderFile, cxxFile):
         self.clsname = clsname
@@ -3506,8 +3484,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for inc in tu.cxxIncludes:
             inc.accept(self)
 
+        for using in tu.builtinUsing:
+            using.accept(self)
         for using in tu.using:
             using.accept(self)
+        for su in tu.structsAndUnions:
+            su.accept(self)
 
         # this generates the actor's full impl in self.cls
         tu.protocol.accept(self)
@@ -3603,6 +3585,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         cf.addthing(traitsdefn)
 
     def visitUsingStmt(self, using):
+        if using.decl.fullname is not None:
+            self.typedefSet.add(
+                Typedef(Type(using.decl.fullname), using.decl.shortname)
+            )
+
         if using.header is None:
             return
 
@@ -3636,6 +3623,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 cxxinc.accept(self)
             for using in inc.tu.using:
                 using.accept(self)
+            for su in inc.tu.structsAndUnions:
+                su.accept(self)
         else:
             # Includes for protocols only include types explicitly exported by
             # those protocols.
@@ -3653,14 +3642,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.protocolCxxIncludes.append(_protocolHeaderName(ip, self.side))
 
             if ip.decl.fullname is not None:
-                self.includedActorTypedefs.append(
+                self.typedefSet.add(
                     Typedef(
                         Type(_actorName(ip.decl.fullname, self.side.title())),
                         _actorName(ip.decl.shortname, self.side.title()),
                     )
                 )
 
-                self.includedActorTypedefs.append(
+                self.typedefSet.add(
                     Typedef(
                         Type(
                             _actorName(ip.decl.fullname, _otherSide(self.side).title())
@@ -3668,6 +3657,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         _actorName(ip.decl.shortname, _otherSide(self.side).title()),
                     )
                 )
+
+    def visitStructDecl(self, sd):
+        if sd.decl.fullname is not None:
+            self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
+
+    def visitUnionDecl(self, ud):
+        if ud.decl.fullname is not None:
+            self.typedefSet.add(Typedef(Type(ud.fqClassName()), ud.name))
 
     def visitProtocol(self, p):
         self.hdrfile.addcode(
@@ -3725,9 +3722,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
 
         self.cls.addstmt(Label.PROTECTED)
-        for typedef in p.cxxTypedefs():
-            self.cls.addstmt(typedef)
-        for typedef in self.includedActorTypedefs:
+        for typedef in sorted(self.typedefSet):
             self.cls.addstmt(typedef)
 
         self.cls.addstmt(Whitespace.NL)
