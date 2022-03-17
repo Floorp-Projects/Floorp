@@ -3,6 +3,53 @@
     {
       "stash": {
         "blocked": [
+          "websigner@softplan.com.br:2.13.1",
+          "websigner@softplan.com.br:2.7.0",
+          "websigner@softplan.com.br:2.7.3",
+          "websigner@softplan.com.br:2.8.0",
+          "{78db226a-5912-4e93-9131-9451cf39e549}:0.0.1",
+          "websigner@softplan.com.br:2.14.2",
+          "websigner@softplan.com.br:2.7.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1647434307680,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1647455708203,
+      "id": "882bdc6e-d8ea-42d8-8c8c-17e13cff2341",
+      "last_modified": 1647455905378
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": []
+      },
+      "schema": 1647348483409,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1647434108889,
+      "id": "ec2716c4-9649-4782-93b5-4e66d0793e0e",
+      "last_modified": 1647434307625
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{cdef9c8a-fa00-4334-91c8-54a7d2424765}:1.0",
+          "{d2c01590-0add-481e-a2e2-673339d62fd3}:0.4",
+          "{07971367-aaa1-47e7-bff1-d80c6c8ce8ba}:0.6",
+          "{972f4d17-e8c7-44da-bffa-abe57b238a69}:0.2",
+          "{ee4fecd3-2e71-4517-bf26-500446b09d20}:1.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1647281954531,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1647347707957,
+      "id": "db2685c9-b525-460a-931b-78d95acc843e",
+      "last_modified": 1647347904463
+    },
+    {
+      "stash": {
+        "blocked": [
           "{45bd75b9-f91d-439c-a265-f18a23fdcc23}:1.1",
           "{45bd75b9-f91d-439c-a265-f18a23fdcc23}:0.1",
           "{9eb47e6e-8134-4b2a-afcf-cefd687c5078}:0.1",
