@@ -14585,7 +14585,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   }
 
   auto& wireframe = aWireframe.SetValue();
-  wireframe.mCanvasBackground = shell->GetCanvasBackground();
+  wireframe.mCanvasBackground = shell->ComputeCanvasBackground().mColor;
 
   FrameForPointOptions options;
   options.mBits += FrameForPointOption::IgnoreCrossDoc;
@@ -14619,14 +14619,18 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
       }
       bool drawImage = false;
       bool drawColor = false;
-      const nscolor color = nsCSSRendering::DetermineBackgroundColor(
-          pc, frame->Style(), frame, drawImage, drawColor);
-      if (drawImage &&
-          !frame->StyleBackground()->mImage.BottomLayer().mImage.IsNone()) {
-        return {color, WireframeRectType::Image};
-      }
-      if (drawColor) {
-        return {color, WireframeRectType::Background};
+      ComputedStyle* bgStyle = nullptr;
+      if (nsCSSRendering::FindBackground(frame, &bgStyle)) {
+        const nscolor color = nsCSSRendering::DetermineBackgroundColor(
+            pc, bgStyle, frame, drawImage, drawColor);
+        if (drawImage &&
+            !bgStyle->StyleBackground()->mImage.BottomLayer().mImage.IsNone()) {
+          return {color, WireframeRectType::Image};
+        }
+        if (drawColor && !frame->IsCanvasFrame()) {
+          // Canvas frame background already accounted for in mCanvasBackground.
+          return {color, WireframeRectType::Background};
+        }
       }
       return {0, WireframeRectType::Unknown};
     }();
