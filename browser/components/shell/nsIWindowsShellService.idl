@@ -119,10 +119,14 @@ interface nsIWindowsShellService : nsISupports
    * Determine where a given shortcut likely appears in the shell.
    *
    * Returns one of:
-   * - "StartMenu", Current User or All Users Start Menu, including pins
-   * - "Desktop", Current User or All Users Desktop
-   * - "Taskbar", Taskbar Pins
+   * - "StartMenu" or "StartMenuPrivate", Current User or All Users Start
+   *    Menu, including pins
+   * - "Desktop" or "DesktopPrivate", Current User or All Users Desktop
+   * - "Taskbar" or "TaskbarPrivate", Taskbar Pins
    * - "" otherwise
+   *
+   * If a Private Browsing shortcut was used to launch, the "Private"
+   * variant of one of the above entries will be returned.
    *
    * NOTE: This tries to avoid I/O, so paths are compared directly as
    * strings, which may not be accurate in all cases. It is intended

@@ -1856,8 +1856,9 @@ os.environment:
       - 1754656
     description: >
       Records how Firefox was started on Windows.
-      Currently will be one of "Desktop", "StartMenu" (including pins),
-      "Taskbar", "OtherShortcut", or "Other"
+      Currently will be one of "Desktop", "DesktopPrivate",
+      "StartMenu" (including pins), "StartMenuPrivate",
+      "Taskbar", "TaskbarPrivate", "OtherShortcut", or "Other"
     expires: never
     kind: string
     notification_emails:
@@ -1971,7 +1972,24 @@ os.environment:
     bug_numbers:
       - 1685213
       - 1725298
-    description: Whether this app was pinned to taskbar on startup
+    description: Whether the non-Private Browsing version of this app was pinned to taskbar on startup
+    expires: never
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - shong@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
+  is_taskbar_pinned_private:
+    bug_numbers:
+      - 1751038
+    description: Whether the Private Browsing version of this app was pinned to taskbar on startup
     expires: never
     kind: boolean
     notification_emails:
