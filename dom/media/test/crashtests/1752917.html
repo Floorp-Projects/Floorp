@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    window.addEventListener("load", () => {
+      const context = new AudioContext({})
+      const node = new DelayNode(context, {})
+      const abort = new AbortController()
+      let processor = context.createScriptProcessor(4096, 1, 26)
+      processor.addEventListener("audioprocess", () => {}, { "signal": abort.signal })
+      processor.connect(node.delayTime)
+      processor = undefined
+      SpecialPowers.forceGC()
+      abort.abort(undefined)
+    });
+  </script>
+</head>
+</html>

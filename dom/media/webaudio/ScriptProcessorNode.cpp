@@ -531,6 +531,11 @@ void ScriptProcessorNode::UpdateConnectedStatus() {
     MarkInactive();
   }
 
+  // MarkInactive above might have released this node, check if it has a track.
+  if (!mTrack) {
+    return;
+  }
+
   auto engine = static_cast<ScriptProcessorNodeEngine*>(mTrack->Engine());
   engine->GetSharedBuffers()->NotifyNodeIsConnected(isConnected);
 }
