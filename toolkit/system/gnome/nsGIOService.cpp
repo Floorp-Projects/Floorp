@@ -17,6 +17,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/net/DNS.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -407,6 +408,14 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
   // of installed applications on the system. We use generic
   // nsFlatpakHandlerApp which forwards launch call to the system.
   if (widget::ShouldUsePortal(widget::PortalKind::MimeHandler)) {
+    if (mozilla::net::IsLoopbackHostname(aURIScheme)) {
+      // When the user writes foo:1234, we try to handle it natively using
+      // GetAppForURIScheme, and if that fails, we carry on. On flatpak there's
+      // no way to know if an app has handlers or not. Some things like
+      // localhost:1234 are really unlikely to be handled by native
+      // apps, and we're much better off returning an error here instead.
+      return NS_ERROR_FAILURE;
+    }
     nsFlatpakHandlerApp* mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
