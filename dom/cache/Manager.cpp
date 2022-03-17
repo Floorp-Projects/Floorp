@@ -1581,6 +1581,8 @@ Result<SafeRefPtr<Manager>, nsresult> Manager::AcquireCreateIfNonExistent(
 void Manager::InitiateShutdown() {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
+  Factory::AbortAll();
+
   Factory::ShutdownAll();
 }
 
