@@ -493,7 +493,7 @@ void CamerasChild::ShutdownChild() {
   // Called with CamerasSingleton::Mutex() held
   if (CamerasSingleton::Thread()) {
     LOG(("PBackground thread exists, dispatching close"));
-    // Dispatch closing the IPC thread back to us when the
+    // The IPC thread is shut down on the main thread after the
     // BackgroundChild is closed.
     RefPtr<ShutdownRunnable> runnable = new ShutdownRunnable(
         NewRunnableMethod("nsIThread::Shutdown", CamerasSingleton::Thread(),
