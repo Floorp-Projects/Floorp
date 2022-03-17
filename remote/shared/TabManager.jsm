@@ -27,7 +27,7 @@ var TabManager = {
    *     All the found <xul:browser>s. Will return an empty array if
    *     no windows and tabs can be found.
    */
-  browsers() {
+  get browsers() {
     const browsers = [];
 
     for (const win of this.windows) {
