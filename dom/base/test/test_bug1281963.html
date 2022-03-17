@@ -15,48 +15,39 @@ https://bugzilla.mozilla.org/1281963
 
 <script class="testbody" type="application/javascript">
 
-// __setPref(key, value)__.
-// Set a pref value asynchronously, returning a promise that resolves
-// when it succeeds.
-let setPref = function(key, value) {
+let pushPref = function(key, value) {
   return SpecialPowers.pushPrefEnv({"set": [[key, value]]});
 };
 
-// Run a test to see that we don't expose the supported mimeTypes
-// or installed plugins when "privacy.resistFingerprinting" is active.
+let popPref = function() {
+  SpecialPowers.popPrefEnv();
+};
+
+// Run a test to see that we don't hide the hard-coded mimeTypes
+// or plugins when "privacy.resistFingerprinting" is active.
+// See bug 1756280.
 add_task(async function() {
-  let exampleMimeType = undefined,
-      examplePlugin = undefined;
-  // Disable fingerprinting resistance.
-  await setPref("privacy.resistFingerprinting", false);
-  // Depending on the testing platform, we may have at least
-  // one mimeType and plugin available.
-  exampleMimeType = navigator.mimeTypes[0];
-  examplePlugin = navigator.plugins[0];
+  for (let rfpEnabled of [true, false]) {
+    await pushPref("privacy.resistFingerprinting", rfpEnabled);
+    for (let pdfDisabled of [true, false]) {
+      await pushPref("pdfjs.disabled", pdfDisabled);
+      if (pdfDisabled && !rfpEnabled) {
+        is(navigator.mimeTypes.length, 0, "navigator.mimeTypes.length should be 0");
+        is(navigator.plugins.length, 0, "navigator.plugins.length should 0");
+      } else {
+        let exampleMimeType = navigator.mimeTypes[0];
+        let examplePlugin = navigator.plugins[0];
 
-  // First check that we can retrieve mimeType or plugin by name and that
-  // the array length is nonzero.
-  if (exampleMimeType) {
-    isnot(navigator.mimeTypes[exampleMimeType.type], undefined, "Should reveal mime type");
-    isnot(navigator.mimeTypes.length, 0, "navigator.mimeTypes.length should be nonzero");
-  }
-  if (examplePlugin) {
-    isnot(navigator.plugins[examplePlugin.name], undefined, "Should reveal plugin");
-    isnot(navigator.plugins.length, 0, "navigator.plugins.length should be nonzero");
-  }
+        isnot(navigator.mimeTypes[exampleMimeType.type], undefined, "Should reveal mime type");
+        is(navigator.mimeTypes.length, 2, "navigator.mimeTypes.length should be 2");
 
-  // Now test with fingerprinting resistance enabled
-  await setPref("privacy.resistFingerprinting", true);
-  if (exampleMimeType) {
-    is(navigator.mimeTypes[exampleMimeType.type], undefined, "Don't reveal mime type");
+        isnot(navigator.plugins[examplePlugin.name], undefined, "Should reveal plugin");
+        is(navigator.plugins.length, 5, "navigator.plugins.length should be nonzero");
+      }
+      await popPref();
+    }
+    await popPref();
   }
-  is(navigator.mimeTypes[0], undefined, "Don't reveal mime type");
-  is(navigator.mimeTypes.length, 0, "navigator.mimeTypes.length should be 0");
-  if (examplePlugin) {
-    is(navigator.plugins[examplePlugin.name], undefined, "Don't reveal plugin");
-  }
-  is(navigator.plugins[0], undefined, "Don't reveal plugin");
-  is(navigator.plugins.length, 0, "navigator.plugins.length should be 0");
 });
 
 </script>
