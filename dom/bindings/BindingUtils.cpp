@@ -80,7 +80,6 @@
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "ipc/ErrorIPCUtils.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/DocGroup.h"
 #include "nsXULElement.h"
 

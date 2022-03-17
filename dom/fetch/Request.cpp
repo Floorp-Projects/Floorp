@@ -20,7 +20,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WindowContext.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"
 
 #ifdef MOZ_DOM_STREAMS

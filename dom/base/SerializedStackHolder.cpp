@@ -8,11 +8,7 @@
 
 #include "js/SavedFrameAPI.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/Services.h"
 #include "nsJSPrincipals.h"
-#include "nsIObserverService.h"
-#include "xpcpublic.h"
 
 namespace mozilla::dom {
 

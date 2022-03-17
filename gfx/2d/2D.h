@@ -1009,6 +1009,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
 class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFont)
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(UnscaledFont)
 
   virtual ~UnscaledFont();
 
@@ -1060,6 +1061,7 @@ class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont> {
 class ScaledFont : public SupportsThreadSafeWeakPtr<ScaledFont> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(ScaledFont)
 
   virtual ~ScaledFont();
 
