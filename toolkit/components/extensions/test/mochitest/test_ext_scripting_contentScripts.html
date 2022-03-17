@@ -182,7 +182,7 @@ add_task(async function test_validate_registerContentScripts_params() {
               persistAcrossSessions: false,
             },
           ],
-          expectedError: `Attempt to register content script with id "script-1" more than once.`,
+          expectedError: `Script ID "script-1" found more than once in 'scripts' array.`,
         },
         {
           title: "empty id",
@@ -264,7 +264,7 @@ add_task(async function test_validate_registerContentScripts_persistAcrossSessio
 
       for (const { title, params, expectedError } of TEST_CASES) {
         try {
-          browser.scripting.registerContentScripts(params);
+          await browser.scripting.registerContentScripts(params);
           browser.test.fail("registration should not be allowed");
         } catch (err) {
           browser.test.assertTrue(
@@ -929,7 +929,7 @@ add_task(async function test_validate_unregisterContentScripts_params() {
       ];
 
       for (const { title, params, expectedError } of TEST_CASES) {
-        browser.test.assertRejects(
+        await browser.test.assertRejects(
           browser.scripting.unregisterContentScripts(params),
           expectedError,
           `${title} - got expected error`
@@ -984,7 +984,7 @@ add_task(async function test_unregisterContentScripts() {
       browser.test.assertEq(script3.id, scripts[2].id, "expected correct id");
 
       // No unregistration when unknown IDs are passed along with valid IDs.
-      browser.test.assertRejects(
+      await browser.test.assertRejects(
         browser.scripting.unregisterContentScripts({
           ids: [script2.id, "non-existent-id"],
         }),
@@ -1073,6 +1073,478 @@ add_task(async function test_unregisterContentScripts_twice_with_same_id() {
 
   await extension.startup();
   await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_validate_updateContentScripts_params() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "registered-script",
+        js: ["script-1.js"],
+        matches: ["*://test1.example.com/*"],
+        persistAcrossSessions: false,
+      };
+
+      const TEST_CASES = [
+        {
+          title: "invalid script ID",
+          params: [
+            {
+              id: "_invalid-id",
+            },
+          ],
+          expectedError: 'Invalid content script id.',
+        },
+        {
+          title: "empty script ID",
+          params: [
+            {
+              id: "",
+            },
+          ],
+          expectedError: 'Invalid content script id.',
+        },
+        {
+          title: "unknown script ID",
+          params: [
+            {
+              id: "unknown-id",
+            },
+          ],
+          expectedError: 'Content script with id "unknown-id" does not exist.',
+        },
+        {
+          title: "duplicate valid script IDs",
+          params: [
+            {
+              id: script.id,
+            },
+            {
+              id: script.id,
+            },
+          ],
+          expectedError: `Script ID "${script.id}" found more than once in 'scripts' array.`,
+        },
+        {
+          title: "empty matches",
+          params: [
+            {
+              id: script.id,
+              matches: [],
+            },
+          ],
+          expectedError: "matches must be specified.",
+        },
+        {
+          title: "one empty match",
+          params: [
+            {
+              id: script.id,
+              matches: [""],
+            },
+          ],
+          expectedError: "Invalid url pattern: ",
+        },
+        {
+          title: "invalid match",
+          params: [
+            {
+              id: script.id,
+              matches: ["not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "invalid match and valid match",
+          params: [
+            {
+              id: script.id,
+              matches: ["*://mochi.test/*", "not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "one empty value in excludeMatches",
+          params: [
+            {
+              id: script.id,
+              excludeMatches: [""],
+            },
+          ],
+          expectedError: "Invalid url pattern: ",
+        },
+        {
+          title: "invalid value in excludeMatches",
+          params: [
+            {
+              id: script.id,
+              excludeMatches: ["not-a-pattern"],
+            },
+          ],
+          expectedError: "Invalid url pattern: not-a-pattern",
+        },
+        {
+          title: "empty js",
+          params: [
+            {
+              id: script.id,
+              js: [],
+            },
+          ],
+          expectedError: "At least one js or css must be specified.",
+        },
+        {
+          title: "empty js and css",
+          params: [
+            {
+              id: script.id,
+              js: [],
+              css: [],
+            },
+          ],
+          expectedError: "At least one js or css must be specified.",
+        },
+      ];
+
+      // Register a valid script so that we can verify update params beyond
+      // script IDs.
+      await browser.scripting.registerContentScripts([script]);
+
+      for (const { title, params, expectedError } of TEST_CASES) {
+        await browser.test.assertRejects(
+          browser.scripting.updateContentScripts(params),
+          expectedError,
+          `${title} - got expected error`
+        );
+      }
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+      browser.test.assertEq(
+        JSON.stringify([
+          {
+            id: script.id,
+            allFrames: false,
+            matches: script.matches,
+            runAt: "document_idle",
+            persistAcrossSessions: false,
+            js: script.js,
+          },
+        ]),
+        JSON.stringify(scripts),
+        "expected script to not have been modified"
+      );
+
+      browser.test.sendMessage("background-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_updateContentScripts() {
+  let extension = makeExtension({
+    async background() {
+      const SCRIPT_ID = "script-to-update";
+
+      await browser.scripting.registerContentScripts([
+        {
+          id: SCRIPT_ID,
+          js: ["script-1.js"],
+          matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.onMessage.addListener(async (msg, params) => {
+        switch (msg) {
+          case "updateContentScripts": {
+            const {
+              title,
+              updateContentScriptsParams,
+              expectedRegisteredContentScript
+            } = params;
+
+            let result = await browser.scripting.updateContentScripts([
+              updateContentScriptsParams,
+            ]);
+            browser.test.assertEq(
+              undefined,
+              result,
+              `${title} - expected no return value`
+            );
+
+            let scripts = await browser.scripting.getRegisteredContentScripts();
+            browser.test.assertEq(
+              JSON.stringify([expectedRegisteredContentScript]),
+              JSON.stringify(scripts),
+              `${title} - expected registered script`
+            );
+
+            browser.test.sendMessage(`${msg}-done`);
+            break;
+          }
+
+          default:
+            browser.test.fail(`invalid message received: ${msg}`);
+        }
+      });
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script-1.js": () => {
+        browser.test.sendMessage(
+          `script-1 executed in ${location.pathname.split("/").pop()}`
+        );
+      },
+      "script-2.js": () => {
+        browser.test.sendMessage(
+          `script-2 executed in ${location.pathname.split("/").pop()}`
+        );
+      },
+      "script-3.js": () => {
+        browser.test.sendMessage(
+          `script-3 executed in ${location.pathname.split("/").pop()}`
+        );
+      },
+      "script-4.js": () => {
+        browser.test.sendMessage(
+          `script-4 executed in ${location.pathname.split("/").pop()}`
+        );
+      },
+      "style.css": "body { background-color: rgb(0, 255, 0); }",
+      "script-check-style.js": () => {
+        browser.test.assertEq(
+          "rgb(0, 255, 0)",
+          getComputedStyle(document.querySelector('body')).backgroundColor,
+          "expected background color"
+        );
+        browser.test.sendMessage(
+          `script-check-style executed in ${location.pathname.split("/").pop()}`
+        );
+      },
+    },
+  });
+
+  const SCRIPT_ID = "script-to-update";
+  const TEST_PAGE = "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html";
+
+  const runTestCase = async ({
+    title,
+      updateContentScriptsParams,
+      expectedRegisteredContentScript,
+      expectedMessages
+  }) => {
+    // Register content script and verify results.
+    extension.sendMessage("updateContentScripts", {
+      title,
+      updateContentScriptsParams,
+      expectedRegisteredContentScript,
+    });
+    await extension.awaitMessage("updateContentScripts-done");
+
+    let tab = await AppTestDelegate.openNewForegroundTab(
+      window,
+      TEST_PAGE,
+      true
+    );
+
+    await Promise.all(expectedMessages.map(msg => extension.awaitMessage(msg)));
+
+    await AppTestDelegate.removeTab(window, tab);
+  };
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  // Load a page that will trigger the content script initially registered.
+  let tab = await AppTestDelegate.openNewForegroundTab(window, TEST_PAGE, true);
+  await extension.awaitMessage("script-1 executed in file_contains_iframe.html");
+  await AppTestDelegate.removeTab(window, tab);
+
+  // Now, let's update this content script a few times.
+  await runTestCase({
+    title: "update ID only",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: false,
+      matches: ["*://test1.example.com/*"],
+      runAt: "document_idle",
+      persistAcrossSessions: false,
+      js: ["script-1.js"],
+    },
+    expectedMessages: ["script-1 executed in file_contains_iframe.html"],
+  });
+
+  await runTestCase({
+    title: "update js",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+      js: ["script-2.js"],
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: false,
+      matches: ["*://test1.example.com/*"],
+      runAt: "document_idle",
+      persistAcrossSessions: false,
+      js: ["script-2.js"],
+    },
+    expectedMessages: ["script-2 executed in file_contains_iframe.html"],
+  });
+
+  await runTestCase({
+    title: "update allFrames and matches",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+      matches: [
+        "*://test1.example.com/*",
+        "*://example.org/*",
+      ],
+      allFrames: true,
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: true,
+      matches: [
+        "*://test1.example.com/*",
+        "*://example.org/*",
+      ],
+      runAt: "document_idle",
+      persistAcrossSessions: false,
+      js: ["script-2.js"],
+    },
+    expectedMessages: [
+      "script-2 executed in file_contains_iframe.html",
+      "script-2 executed in file_contains_img.html",
+    ],
+  });
+
+  await runTestCase({
+    title: "update excludeMatches and js",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+      js: ["script-3.js"],
+      excludeMatches: ["*://test1.example.com/*"],
+      allFrames: true,
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: true,
+      matches: [
+        "*://test1.example.com/*",
+        "*://example.org/*",
+      ],
+      runAt: "document_idle",
+      persistAcrossSessions: false,
+      excludeMatches: ["*://test1.example.com/*"],
+      js: ["script-3.js"],
+    },
+    expectedMessages: [
+      "script-3 executed in file_contains_img.html",
+    ],
+  });
+
+  await runTestCase({
+    title: "update allFrames, excludeMatches, js and runAt",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+      allFrames: false,
+      excludeMatches: [],
+      js: ["script-4.js"],
+      runAt: "document_start",
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: false,
+      matches: [
+        "*://test1.example.com/*",
+        "*://example.org/*",
+      ],
+      runAt: "document_start",
+      persistAcrossSessions: false,
+      js: ["script-4.js"],
+    },
+    expectedMessages: [
+      "script-4 executed in file_contains_iframe.html",
+    ],
+  });
+
+  await runTestCase({
+    title: "update allFrames, css, js and runAt",
+    updateContentScriptsParams: {
+      id: SCRIPT_ID,
+      allFrames: true,
+      css: ["style.css"],
+      js: ["script-check-style.js"],
+      runAt: "document_idle",
+    },
+    expectedRegisteredContentScript: {
+      id: SCRIPT_ID,
+      allFrames: true,
+      matches: [
+        "*://test1.example.com/*",
+        "*://example.org/*",
+      ],
+      runAt: "document_idle",
+      persistAcrossSessions: false,
+      css: ["style.css"],
+      js: ["script-check-style.js"],
+    },
+    expectedMessages: [
+      "script-check-style executed in file_contains_iframe.html",
+      "script-check-style executed in file_contains_img.html",
+    ],
+  });
+
+  await extension.unload();
+});
+
+add_task(async function test_validate_updateContentScripts_persistAcrossSessions() {
+  let extension = makeExtension({
+    async background() {
+      const script = {
+        id: "script",
+        js: ["script.js"],
+        matches: ["*://mochi.test/*"],
+        persistAcrossSessions: false,
+      };
+
+      await browser.scripting.registerContentScripts([script]);
+
+      try {
+        await browser.scripting.updateContentScripts([
+          {
+            id: script.id,
+            persistAcrossSessions: true,
+          },
+        ]);
+        browser.test.fail("registration should not be allowed");
+      } catch (err) {
+        browser.test.assertTrue(
+          /persistAcrossSessions: Invalid value true/.test(err.message),
+          "got expected error"
+        );
+      }
+
+      browser.test.notifyPass("test-finished");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
   await extension.unload();
 });
 
