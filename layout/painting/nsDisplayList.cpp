@@ -4016,15 +4016,11 @@ nsRect nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect nsDisplayOutline::GetInnerRect() const {
-  nsRect* savedOutlineInnerRect =
-      mFrame->GetProperty(nsIFrame::OutlineInnerRectProperty());
-  if (savedOutlineInnerRect) {
+  if (nsRect* savedOutlineInnerRect =
+          mFrame->GetProperty(nsIFrame::OutlineInnerRectProperty())) {
     return *savedOutlineInnerRect;
   }
-
-  // FIXME bug 1221888
-  NS_ERROR("we should have saved a frame property");
-  return nsRect(nsPoint(), mFrame->GetSize());
+  return mFrame->GetRectRelativeToSelf();
 }
 
 void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {

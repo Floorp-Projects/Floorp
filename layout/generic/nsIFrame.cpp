@@ -9739,8 +9739,12 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
   }
 
   // Keep this code in sync with nsDisplayOutline::GetInnerRect.
-  SetOrUpdateRectValuedProperty(aFrame, nsIFrame::OutlineInnerRectProperty(),
-                                innerRect);
+  if (innerRect == aFrame->GetRectRelativeToSelf()) {
+    aFrame->RemoveProperty(nsIFrame::OutlineInnerRectProperty());
+  } else {
+    SetOrUpdateRectValuedProperty(aFrame, nsIFrame::OutlineInnerRectProperty(),
+                                  innerRect);
+  }
   const nscoord offset = outline->mOutlineOffset.ToAppUnits();
   nsRect outerRect(innerRect);
   bool useOutlineAuto = false;
