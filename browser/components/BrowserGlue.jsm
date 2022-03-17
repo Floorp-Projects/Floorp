@@ -2473,6 +2473,12 @@ BrowserGlue.prototype = {
                 winTaskbar.defaultGroupId
               )
             );
+            Services.telemetry.scalarSet(
+              "os.environment.is_taskbar_pinned_private",
+              await shellService.isCurrentAppPinnedToTaskbarAsync(
+                winTaskbar.defaultPrivateGroupId
+              )
+            );
           } catch (ex) {
             Cu.reportError(ex);
           }

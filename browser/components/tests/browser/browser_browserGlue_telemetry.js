@@ -16,6 +16,12 @@ add_task(function check_startup_pinned_telemetry() {
         false,
         "Pin set on win"
       );
+      TelemetryTestUtils.assertScalar(
+        scalars,
+        "os.environment.is_taskbar_pinned_private",
+        false,
+        "Pin private set on win"
+      );
       TelemetryTestUtils.assertScalarUnset(
         scalars,
         "os.environment.is_kept_in_dock"
@@ -25,6 +31,10 @@ add_task(function check_startup_pinned_telemetry() {
       TelemetryTestUtils.assertScalarUnset(
         scalars,
         "os.environment.is_taskbar_pinned"
+      );
+      TelemetryTestUtils.assertScalarUnset(
+        scalars,
+        "os.environment.is_taskbar_pinned_private"
       );
       TelemetryTestUtils.assertScalar(
         scalars,
@@ -37,6 +47,10 @@ add_task(function check_startup_pinned_telemetry() {
       TelemetryTestUtils.assertScalarUnset(
         scalars,
         "os.environment.is_taskbar_pinned"
+      );
+      TelemetryTestUtils.assertScalarUnset(
+        scalars,
+        "os.environment.is_taskbar_pinned_private"
       );
       TelemetryTestUtils.assertScalarUnset(
         scalars,
