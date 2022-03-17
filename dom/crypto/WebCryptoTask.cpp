@@ -21,6 +21,7 @@
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/RootedDictionary.h"
 
 // Template taken from security/nss/lib/util/templates.c
 // This (or SGN_EncodeDigestInfo) would ideally be exported
