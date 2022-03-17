@@ -827,25 +827,17 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
   }
 
   if (!aDryRun) {
-    auto rect = simplePath.AsRect();
-
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     int32_t appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
-    auto toReferenceFrame = aItem->ToReferenceFrame();
-    auto appRect = nsLayoutUtils::RoundGfxRectToAppRect(
-        Rect(0, 0, rect.width, rect.height), appUnitsPerCSSPixel);
-    appRect += toReferenceFrame;
+
+    auto rect = simplePath.AsRect();
+    auto appRect =
+        nsLayoutUtils::RoundGfxRectToAppRect(rect, appUnitsPerCSSPixel);
+    auto offset = aItem->ToReferenceFrame() - GetPosition();
+    appRect += offset;
     auto destRect = LayoutDeviceRect::FromAppUnits(appRect, appUnitsPerDevPx);
 
-    auto cssClip =
-        SVGUtils::GetClipRectForFrame(this, 0, 0, rect.width, rect.height);
-    auto appClip =
-        nsLayoutUtils::RoundGfxRectToAppRect(cssClip, appUnitsPerCSSPixel);
-    appClip += toReferenceFrame;
-    auto clipRect = LayoutDeviceRect::FromAppUnits(appClip, appUnitsPerDevPx);
-
     auto wrRect = wr::ToLayoutRect(destRect);
-    auto wrClipRect = wr::ToLayoutRect(clipRect);
 
     SVGContextPaint* contextPaint =
         SVGContextPaint::GetContextPaint(GetContent());
@@ -861,8 +853,7 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
         ((float)NS_GET_R(c)) / 255.0f, ((float)NS_GET_G(c)) / 255.0f,
         ((float)NS_GET_B(c)) / 255.0f, ((float)NS_GET_A(c)) / 255.0f * opacity};
 
-    aBuilder.PushRect(wrRect, wrClipRect, !aItem->BackfaceIsHidden(), true,
-                      color);
+    aBuilder.PushRect(wrRect, wrRect, !aItem->BackfaceIsHidden(), true, color);
   }
 
   return true;
