@@ -123,6 +123,12 @@ class TypedObject : public JSObject {
                                                HandleId id,
                                                ObjectOpResult& result);
 
+  template <typename T>
+  static T* create(JSContext* cx, gc::AllocKind allocKind,
+                   gc::InitialHeap heap);
+
+  void initDefault();
+
   bool loadValue(JSContext* cx, size_t offset, wasm::FieldType type,
                  MutableHandleValue vp);
 
@@ -131,21 +137,17 @@ class TypedObject : public JSObject {
   template <typename V>
   void visitReferences(V& visitor);
 
-  void initDefault();
-
  public:
-  // Creates a new struct typed object initialized to zero.
+  // Creates a new struct typed object initialized to zero. Reports if there
+  // is an out of memory error.
   static TypedObject* createStruct(JSContext* cx, HandleRttValue rtt,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 
   // Creates a new array typed object initialized to zero of specified length.
+  // Reports an error if length is too large, or if there is an out of memory.
   static TypedObject* createArray(JSContext* cx, HandleRttValue rtt,
-                                  uint32_t length,
+                                  uint32_t elementsLength,
                                   gc::InitialHeap heap = gc::DefaultHeap);
-
-  // Internal create used by JSObject
-  static TypedObject* create(JSContext* cx, js::gc::AllocKind kind,
-                             js::gc::InitialHeap heap, js::HandleShape shape);
 
   RttValue& rttValue() const {
     MOZ_ASSERT(rttValue_);
@@ -166,41 +168,50 @@ class TypedObject : public JSObject {
 using HandleTypedObject = Handle<TypedObject*>;
 using RootedTypedObject = Rooted<TypedObject*>;
 
+// Class for a typed object whose data is allocated in the malloc heap.
 class OutlineTypedObject : public TypedObject {
+ public:
+  using ArrayLength = uint32_t;
+
+ private:
   // Owned data pointer
   uint8_t* data_;
+
+ protected:
+  friend class TypedObject;
 
   static OutlineTypedObject* create(JSContext* cx, HandleRttValue rtt,
                                     size_t byteLength,
                                     gc::InitialHeap heap = gc::DefaultHeap);
+
+  uint8_t* outOfLineTypedMem() const { return data_; }
 
   void setArrayLength(uint32_t length) { *(uint32_t*)(data_) = length; }
 
  public:
   static const JSClass class_;
 
-  static OutlineTypedObject* createStruct(JSContext* cx, HandleRttValue rtt,
-                                          gc::InitialHeap heap);
-  static OutlineTypedObject* createArray(JSContext* cx, HandleRttValue rtt,
-                                         uint32_t length, gc::InitialHeap heap);
-
-  // JIT accessors.
-  static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
-
-  static constexpr size_t offsetOfArrayLength() { return 0; }
-  using ArrayLength = uint32_t;
-
-  uint8_t* outOfLineTypedMem() const { return data_; }
-
+  // The length of the array
   ArrayLength arrayLength() const {
     return *(ArrayLength*)(data_ + offsetOfArrayLength());
   }
 
+  // AllocKind for object creation
   static gc::AllocKind allocKind();
 
+  // JIT accessors
+  static constexpr size_t offsetOfData() {
+    return offsetof(OutlineTypedObject, data_);
+  }
+  static constexpr size_t offsetOfArrayLength() { return 0; }
+
+  // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
 };
+
+using HandleOutlineTypedObject = Handle<OutlineTypedObject*>;
+using RootedOutlineTypedObject = Rooted<OutlineTypedObject*>;
 
 // Helper to mark all locations that assume the type of the array length header
 // for a typed object.
@@ -209,45 +220,41 @@ class OutlineTypedObject : public TypedObject {
 
 // Class for a typed object whose data is allocated inline.
 class InlineTypedObject : public TypedObject {
-  friend class TypedObject;
-
   // Start of the inline data, which immediately follows the shape and type.
   uint8_t data_[1];
 
- public:
-  static const JSClass class_;
+ protected:
+  friend class TypedObject;
 
   static const size_t MaxInlineBytes =
       JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
 
- protected:
+  static InlineTypedObject* create(JSContext* cx, HandleRttValue rtt,
+                                   gc::InitialHeap heap = gc::DefaultHeap);
+
   uint8_t* inlineTypedMem() const { return (uint8_t*)&data_; }
 
  public:
+  static const JSClass class_;
+
+  // AllocKind for object creation
   static inline gc::AllocKind allocKindForRttValue(RttValue* rtt);
 
-  static bool canAccommodateType(HandleRttValue rtt) {
-    return rtt->kind() == wasm::TypeDefKind::Struct &&
-           rtt->typeDef().structType().size_ <= MaxInlineBytes;
-  }
-
+  // Check if the following byte size could be allocated in an InlineTypedObject
   static bool canAccommodateSize(size_t size) { return size <= MaxInlineBytes; }
 
-  uint8_t* inlineTypedMem(const JS::AutoRequireNoGC&) const {
-    return inlineTypedMem();
-  }
-
-  static void obj_trace(JSTracer* trc, JSObject* object);
-  static size_t obj_moved(JSObject* dst, JSObject* src);
-
+  // JIT accessors
   static size_t offsetOfDataStart() {
     return offsetof(InlineTypedObject, data_);
   }
 
-  static InlineTypedObject* createStruct(
-      JSContext* cx, HandleRttValue rtt,
-      gc::InitialHeap heap = gc::DefaultHeap);
+  // Tracing and finalization
+  static void obj_trace(JSTracer* trc, JSObject* object);
+  static size_t obj_moved(JSObject* dst, JSObject* src);
 };
+
+using HandleInlineTypedObject = Handle<InlineTypedObject*>;
+using RootedInlineTypedObject = Rooted<InlineTypedObject*>;
 
 inline bool IsTypedObjectClass(const JSClass* class_) {
   return class_ == &OutlineTypedObject::class_ ||
