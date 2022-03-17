@@ -1484,13 +1484,12 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
   JS::CompileOptions options(cx);
 
   // Introduction script will actually be computed and set when the script is
   // collected from offthread
   JS::RootedScript dummyIntroductionScript(cx);
-  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
+  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, &options,
                                              &dummyIntroductionScript);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1836,8 +1835,7 @@ already_AddRefed<nsIScriptGlobalObject> ScriptLoader::GetScriptGlobalObject(
 }
 
 nsresult ScriptLoader::FillCompileOptionsForRequest(
-    JSContext* aCx, ScriptLoadRequest* aRequest,
-    JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
+    JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
     JS::MutableHandle<JSScript*> aIntroductionScript) {
   // It's very important to use aRequest->mURI, not the final URI of the channel
   // aRequest ended up getting script data from, as the script filename.
@@ -1873,7 +1871,9 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
     aOptions->setSourceMapURL(aRequest->mSourceMapURL->get());
   }
   if (aRequest->mOriginPrincipal) {
-    nsIPrincipal* scriptPrin = nsContentUtils::ObjectPrincipal(aScopeChain);
+    nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+    nsIPrincipal* scriptPrin = globalObject->PrincipalOrNull();
+    MOZ_ASSERT(scriptPrin);
     bool subsumes = scriptPrin->Subsumes(aRequest->mOriginPrincipal);
     aOptions->setMutedErrors(!subsumes);
   }
@@ -2222,7 +2222,6 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   nsAutoMicroTask mt;
   AutoEntryScript aes(aGlobalObject, "EvaluateScript", true);
   JSContext* cx = aes.cx();
-  JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
 
   nsAutoCString profilerLabelString;
   aRequest->GetLoadContext()->GetProfilerLabel(profilerLabelString);
@@ -2235,8 +2234,8 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   JS::CompileOptions options(cx);
   JS::RootedScript introductionScript(cx);
-  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
-                                             &introductionScript);
+  nsresult rv =
+      FillCompileOptionsForRequest(cx, aRequest, &options, &introductionScript);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -2244,6 +2243,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   TRACE_FOR_TEST(aRequest->GetLoadContext()->GetScriptElement(),
                  "scriptloader_execute");
+  JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
   JSExecutionContext exec(cx, global, options, classicScriptValue,
                           introductionScript);
 
