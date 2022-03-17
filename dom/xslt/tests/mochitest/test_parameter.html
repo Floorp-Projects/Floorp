@@ -7,10 +7,10 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="content" style="display: none"></div>
+<div id="content" style="display: none"><p id="number">123</p><p id="string">abc</p></div>
 <pre id="test">
 <script>
-  var processor = new XSLTProcessor();
+  let processor = new XSLTProcessor();
 
   processor.setParameter(null, "test", "hello");
   is(processor.getParameter(null, "test"), "hello", "null namespace works");
@@ -25,6 +25,131 @@
   is(processor.getParameter(null, "test"), null, "removeParameter works");
 
   is(processor.getParameter(null, "not-here"), null, "nonexistant parameter");
+
+  let parser = new DOMParser();
+  const style =
+    `<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+                     xmlns:exslt="http://exslt.org/common">
+       <xsl:output method="html" />
+       <xsl:param name="test" />
+       <xsl:template match="/">
+         <p id="result"><xsl:value-of select="exslt:object-type($test)" /></p>
+       </xsl:template>
+     </xsl:stylesheet>`;
+  const styleDoc = parser.parseFromString(style, "text/xml");
+
+  const xml = `<root />`;
+  const sourceDoc = parser.parseFromString(xml, "text/xml");
+
+  function checkParameter(value, parameter) {
+    let valueType = typeof value;
+    switch (valueType) {
+      case "number":
+      case "boolean":
+      case "string":
+        is(typeof parameter, valueType, "Parameter has right type");
+        is(parameter, value, "Parameter has right value");
+        return;
+      case "object":
+        if (value instanceof Array || value instanceof NodeList) {
+          ok(parameter instanceof Array, "Parameter has right type");
+          ok(parameter.length == value.length &&
+             parameter.every((p, i) => value[i] === p),
+             "Parameter has right value");
+          return;
+        }
+
+        if (value instanceof Node) {
+          is(parameter, value, "Parameter has right value");
+          return;
+        }
+
+        if (value instanceof XPathResult) {
+          ok(parameter instanceof XPathResult, "Parameter has right type");
+          is(parameter.resultType, value.resultType, "Parameter has right inner type");
+          let valueProperty;
+          switch (value.resultType) {
+            case XPathResult.NUMBER_TYPE:
+              valueProperty = "numberValue";
+              break;
+            case XPathResult.BOOLEAN_TYPE:
+              valueProperty = "booleanValue";
+              break;
+            case XPathResult.STRING_TYPE:
+              valueProperty = "stringValue";
+              break;
+            case XPathResult.FIRST_ORDERED_NODE_TYPE:
+              valueProperty = "singleNodeValue";
+              break;
+            default:
+              ok(false, "Unexpected inner type");
+              return;
+          }
+          is(parameter[valueProperty], value[valueProperty], "Parameter has right value");
+          return;
+        }
+    }
+    ok(false, "Unexpected value");
+  }
+
+  function getXSLTType(value) {
+    let valueType = typeof value;
+    switch (valueType) {
+      case "number":
+      case "boolean":
+      case "string":
+        return valueType;
+      case "object":
+        if (value instanceof Array || value instanceof Node || value instanceof NodeList) {
+          return "node-set";
+        }
+        if (value instanceof XPathResult) {
+          switch (value.resultType) {
+            case XPathResult.NUMBER_TYPE:
+              return "number";
+            case XPathResult.BOOLEAN_TYPE:
+              return "boolean";
+            case XPathResult.STRING_TYPE:
+              return "string";
+            case XPathResult.FIRST_ORDERED_NODE_TYPE:
+              return "node-set";
+          }
+        }
+    }
+    ok(false, "Unexpected value");
+  }
+
+  function testParameter(value) {
+    let processor = new XSLTProcessor();
+
+    processor.setParameter(null, "test", value);
+    let parameter = processor.getParameter(null, "test");
+
+    checkParameter(value, parameter);
+
+    processor.importStylesheet(styleDoc);
+
+    let fragment = processor.transformToFragment(sourceDoc, document);
+
+    is(
+      fragment.getElementById("result").textContent,
+      getXSLTType(value),
+      "Global parameter has right type in XSLT."
+    );
+  }
+
+  testParameter(123);
+  testParameter(true);
+  testParameter("abcd");
+  testParameter([document]);
+  testParameter(document.documentElement.childNodes);
+  testParameter(document);
+  testParameter(document.evaluate("id('number')", document, null, XPathResult.NUMBER_TYPE));
+  testParameter(document.evaluate("/", document, null, XPathResult.BOOLEAN_TYPE));
+  testParameter(document.evaluate("id('string')", document, null, XPathResult.STRING_TYPE));
+  testParameter(
+    document.evaluate("/", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE)
+  );
 </script>
 </pre>
 </body>

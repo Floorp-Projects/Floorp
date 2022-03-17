@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-interface nsIVariant;
+typedef (unrestricted double or boolean or DOMString or Node or sequence<Node> or XPathResult) XSLTParameterValue;
 
 [Exposed=Window]
 interface XSLTProcessor {
@@ -58,19 +58,19 @@ interface XSLTProcessor {
     [Throws]
     void setParameter([LegacyNullToEmptyString] DOMString namespaceURI,
                       DOMString localName,
-                      any value);
+                      XSLTParameterValue value);
 
     /**
      * Gets a parameter if previously set by setParameter. Returns null
      * otherwise.
      *
-     * @param namespaceURI The namespaceURI of the XSLT parameter
-     * @param localName    The local name of the XSLT parameter
-     * @return nsIVariant  The value of the XSLT parameter
+     * @param namespaceURI    The namespaceURI of the XSLT parameter
+     * @param localName       The local name of the XSLT parameter
+     * @return ParameterValue The value of the XSLT parameter
      */
     [Throws]
-    nsIVariant? getParameter([LegacyNullToEmptyString] DOMString namespaceURI,
-                             DOMString localName);
+    XSLTParameterValue? getParameter([LegacyNullToEmptyString] DOMString namespaceURI,
+                                     DOMString localName);
     /**
      * Removes a parameter, if set. This will make the processor use the
      * default-value for the parameter as specified in the stylesheet.

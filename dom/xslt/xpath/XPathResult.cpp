@@ -34,7 +34,10 @@ XPathResult::XPathResult(const XPathResult& aResult)
       mContextNode(aResult.mContextNode),
       mCurrentPos(0),
       mResultType(aResult.mResultType),
-      mInvalidIteratorState(aResult.mInvalidIteratorState) {
+      mInvalidIteratorState(aResult.mInvalidIteratorState),
+      mBooleanResult(aResult.mBooleanResult),
+      mNumberResult(aResult.mNumberResult),
+      mStringResult(aResult.mStringResult) {
   if (mDocument) {
     mDocument->AddMutationObserver(this);
   }
@@ -62,8 +65,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(XPathResult)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPathResult)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPathResult)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 JSObject* XPathResult::WrapObject(JSContext* aCx,
@@ -252,16 +254,13 @@ nsresult XPathResult::GetExprResult(txAExprResult** aExprResult) {
   return NS_OK;
 }
 
-nsresult XPathResult::Clone(nsIXPathResult** aResult) {
-  *aResult = nullptr;
-
+already_AddRefed<XPathResult> XPathResult::Clone(ErrorResult& aError) {
   if (isIterator() && mInvalidIteratorState) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    return nullptr;
   }
 
-  NS_ADDREF(*aResult = new XPathResult(*this));
-
-  return NS_OK;
+  return do_AddRef(new XPathResult(*this));
 }
 
 }  // namespace dom
