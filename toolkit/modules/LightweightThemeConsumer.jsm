@@ -450,7 +450,6 @@ function _determineToolbarAndContentTheme(
   const kDark = 0;
   const kLight = 1;
   const kSystem = 2;
-  const kToolbar = 3; // Only valid for content theme
 
   const colors = aTheme?._processedColors;
   function prefValue(aColor, aIsForeground = false) {
@@ -516,7 +515,10 @@ function _determineToolbarAndContentTheme(
 
   let contentTheme = (function() {
     if (!aTheme) {
-      return kToolbar;
+      if (!DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME) {
+        return kLight;
+      }
+      return kSystem;
     }
     let themeValue = colorSchemeValue(
       aTheme.content_color_scheme || aTheme.color_scheme
@@ -524,18 +526,7 @@ function _determineToolbarAndContentTheme(
     if (themeValue !== null) {
       return themeValue;
     }
-    if (aHasDarkTheme) {
-      return aIsDarkTheme ? kDark : kLight;
-    }
-    if (colors.ntp_background) {
-      // We don't care about transparency here as ntp background can't have
-      // transparency (alpha channel is dropped).
-      return prefValue(colors.ntp_background);
-    }
-    if (colors.ntp_text) {
-      return prefValue(colors.ntp_text, /* aIsForeground = */ true);
-    }
-    return kToolbar;
+    return kSystem;
   })();
 
   Services.prefs.setIntPref("browser.theme.toolbar-theme", toolbarTheme);
