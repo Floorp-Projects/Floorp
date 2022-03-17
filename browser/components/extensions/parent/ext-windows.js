@@ -19,41 +19,69 @@ ChromeUtils.defineModuleGetter(
 
 var { promiseObserved } = ExtensionUtils;
 
-/**
- * An event manager API provider which listens for a DOM event in any browser
- * window, and calls the given listener function whenever an event is received.
- * That listener function receives a `fire` object, which it can use to dispatch
- * events to the extension, and a DOM event object.
- *
- * @param {BaseContext} context
- *        The extension context which the event manager belongs to.
- * @param {string} name
- *        The API name of the event manager, e.g.,"runtime.onMessage".
- * @param {string} event
- *        The name of the DOM event to listen for.
- * @param {function} listener
- *        The listener function to call when a DOM event is received.
- *
- * @returns {object} An injectable api for the new event.
- */
-function WindowEventManager(context, name, event, listener) {
-  let register = fire => {
-    let listener2 = (window, ...args) => {
-      if (context.canAccessWindow(window)) {
-        listener(fire, window, ...args);
-      }
-    };
+this.windows = class extends ExtensionAPIPersistent {
+  windowEventRegistrar(event, listener) {
+    let { extension } = this;
+    return ({ fire }) => {
+      let listener2 = (window, ...args) => {
+        if (extension.canAccessWindow(window)) {
+          listener(fire, window, ...args);
+        }
+      };
 
-    windowTracker.addListener(event, listener2);
-    return () => {
-      windowTracker.removeListener(event, listener2);
+      windowTracker.addListener(event, listener2);
+      return {
+        unregister() {
+          windowTracker.removeListener(event, listener2);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
     };
+  }
+
+  PERSISTENT_EVENTS = {
+    onCreated: this.windowEventRegistrar("domwindowopened", (fire, window) => {
+      fire.async(this.extension.windowManager.convert(window));
+    }),
+    onRemoved: this.windowEventRegistrar("domwindowclosed", (fire, window) => {
+      fire.async(windowTracker.getId(window));
+    }),
+    onFocusChanged({ fire }) {
+      let { extension } = this;
+      // Keep track of the last windowId used to fire an onFocusChanged event
+      let lastOnFocusChangedWindowId;
+
+      let listener = event => {
+        // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
+        // event when switching focus between two Firefox windows.
+        Promise.resolve().then(() => {
+          let windowId = Window.WINDOW_ID_NONE;
+          let window = Services.focus.activeWindow;
+          if (window && extension.canAccessWindow(window)) {
+            windowId = windowTracker.getId(window);
+          }
+          if (windowId !== lastOnFocusChangedWindowId) {
+            fire.async(windowId);
+            lastOnFocusChangedWindowId = windowId;
+          }
+        });
+      };
+      windowTracker.addListener("focus", listener);
+      windowTracker.addListener("blur", listener);
+      return {
+        unregister() {
+          windowTracker.removeListener("focus", listener);
+          windowTracker.removeListener("blur", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
   };
 
-  return new EventManager({ context, name, register }).api();
-}
-
-this.windows = class extends ExtensionAPI {
   getAPI(context) {
     let { extension } = context;
 
@@ -61,53 +89,25 @@ this.windows = class extends ExtensionAPI {
 
     return {
       windows: {
-        onCreated: WindowEventManager(
+        onCreated: new EventManager({
           context,
-          "windows.onCreated",
-          "domwindowopened",
-          (fire, window) => {
-            fire.async(windowManager.convert(window));
-          }
-        ),
+          module: "windows",
+          event: "onCreated",
+          extensionApi: this,
+        }).api(),
 
-        onRemoved: WindowEventManager(
+        onRemoved: new EventManager({
           context,
-          "windows.onRemoved",
-          "domwindowclosed",
-          (fire, window) => {
-            fire.async(windowTracker.getId(window));
-          }
-        ),
+          module: "windows",
+          event: "onRemoved",
+          extensionApi: this,
+        }).api(),
 
         onFocusChanged: new EventManager({
           context,
-          name: "windows.onFocusChanged",
-          register: fire => {
-            // Keep track of the last windowId used to fire an onFocusChanged event
-            let lastOnFocusChangedWindowId;
-
-            let listener = event => {
-              // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
-              // event when switching focus between two Firefox windows.
-              Promise.resolve().then(() => {
-                let windowId = Window.WINDOW_ID_NONE;
-                let window = Services.focus.activeWindow;
-                if (window && context.canAccessWindow(window)) {
-                  windowId = windowTracker.getId(window);
-                }
-                if (windowId !== lastOnFocusChangedWindowId) {
-                  fire.async(windowId);
-                  lastOnFocusChangedWindowId = windowId;
-                }
-              });
-            };
-            windowTracker.addListener("focus", listener);
-            windowTracker.addListener("blur", listener);
-            return () => {
-              windowTracker.removeListener("focus", listener);
-              windowTracker.removeListener("blur", listener);
-            };
-          },
+          module: "windows",
+          event: "onFocusChanged",
+          extensionApi: this,
         }).api(),
 
         get: function(windowId, getInfo) {
