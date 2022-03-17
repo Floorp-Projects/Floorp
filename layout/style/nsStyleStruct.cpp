@@ -555,18 +555,21 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
 
 nsChangeHint nsStyleOutline::CalcDifference(
     const nsStyleOutline& aNewData) const {
-  if (mActualOutlineWidth != aNewData.mActualOutlineWidth ||
-      (mActualOutlineWidth > 0 && mOutlineOffset != aNewData.mOutlineOffset)) {
+  const bool shouldPaintOutline = ShouldPaintOutline();
+  // We need the explicit 'outline-style: auto' check because
+  // 'outline-style: auto' effectively also changes 'outline-width'.
+  if (shouldPaintOutline != aNewData.ShouldPaintOutline() ||
+      mActualOutlineWidth != aNewData.mActualOutlineWidth ||
+      mOutlineStyle.IsAuto() != aNewData.mOutlineStyle.IsAuto() ||
+      (shouldPaintOutline && mOutlineOffset != aNewData.mOutlineOffset)) {
     return nsChangeHint_UpdateOverflow | nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }
 
   if (mOutlineStyle != aNewData.mOutlineStyle ||
       mOutlineColor != aNewData.mOutlineColor) {
-    if (mActualOutlineWidth > 0) {
-      return nsChangeHint_RepaintFrame;
-    }
-    return nsChangeHint_NeutralChange;
+    return shouldPaintOutline ? nsChangeHint_RepaintFrame
+                              : nsChangeHint_NeutralChange;
   }
 
   if (mOutlineWidth != aNewData.mOutlineWidth ||

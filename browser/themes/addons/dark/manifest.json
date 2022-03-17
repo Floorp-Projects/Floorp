@@ -58,6 +58,7 @@
       "tab_icon_overlay_fill": "rgb(251,251,254)"
     },
     "properties": {
+      "color_scheme": "dark",
       "panel_hover": "color-mix(in srgb, currentColor 9%, transparent)",
       "panel_active": "color-mix(in srgb, currentColor 14%, transparent)",
       "panel_active_darker": "color-mix(in srgb, currentColor 25%, transparent)",

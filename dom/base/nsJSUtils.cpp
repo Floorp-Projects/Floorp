@@ -142,43 +142,6 @@ bool nsJSUtils::IsScriptable(JS::Handle<JSObject*> aEvaluationGlobal) {
   return xpc::Scriptability::Get(aEvaluationGlobal).Allowed();
 }
 
-nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
-                                      JS::Handle<JSObject*> aModule) {
-  AUTO_PROFILER_LABEL("nsJSUtils::ModuleInstantiate", JS);
-
-  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(CycleCollectedJSContext::Get() &&
-             CycleCollectedJSContext::Get()->MicroTaskLevel());
-
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
-
-  if (!JS::ModuleInstantiate(aCx, aModule)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsJSUtils::ModuleEvaluate(JSContext* aCx,
-                                   JS::Handle<JSObject*> aModule,
-                                   JS::MutableHandle<JS::Value> aResult) {
-  AUTO_PROFILER_LABEL("nsJSUtils::ModuleEvaluate", JS);
-
-  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(CycleCollectedJSContext::Get() &&
-             CycleCollectedJSContext::Get()->MicroTaskLevel());
-
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
-
-  if (!JS::ModuleEvaluate(aCx, aModule, aResult)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
                               JS::MutableHandleVector<JSObject*> aScopeChain) {
   JS::RootedValue val(aCx);

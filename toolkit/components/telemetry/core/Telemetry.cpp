@@ -30,6 +30,9 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 #include "mozilla/Components.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/DebugOnly.h"
@@ -1133,6 +1136,12 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   if (XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
       XRE_IsSocketProcess()) {
     useTelemetry = true;
+  }
+#endif
+#ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Background tasks collect per-task metrics with Glean.
+    useTelemetry = false;
   }
 #endif
 

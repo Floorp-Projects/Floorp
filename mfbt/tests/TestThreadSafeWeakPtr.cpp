@@ -14,7 +14,6 @@ using mozilla::ThreadSafeWeakPtr;
 // SupportsThreadSafeWeakPtr<C>.
 class C : public SupportsThreadSafeWeakPtr<C> {
  public:
-  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(C)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(C)
 
   int mNum;
@@ -28,6 +27,13 @@ class C : public SupportsThreadSafeWeakPtr<C> {
   }
 
   void act() {}
+};
+
+// Test that declaring a ThreadSafeWeakPtr pointing to an incomplete type
+// builds.
+class Incomplete;
+class D {
+  ThreadSafeWeakPtr<Incomplete> mMember;
 };
 
 int main() {
