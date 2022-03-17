@@ -8,6 +8,7 @@
 #include "LockRequestChild.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"

@@ -11,6 +11,7 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PushManager.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
