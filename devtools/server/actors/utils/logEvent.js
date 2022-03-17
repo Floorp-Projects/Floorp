@@ -45,10 +45,14 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     return undefined;
   }
 
-  const completion = frame.evalWithBindings(expression, {
-    displayName,
-    ...bindings,
-  });
+  const completion = frame.evalWithBindings(
+    expression,
+    {
+      displayName,
+      ...bindings,
+    },
+    { hideFromDebugger: true }
+  );
 
   let value;
   if (!completion) {

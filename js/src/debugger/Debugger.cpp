@@ -386,6 +386,11 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
     options.setLineno(lineno);
   }
 
+  if (!JS_GetProperty(cx, opts, "hideFromDebugger", &v)) {
+    return false;
+  }
+  options.setHideFromDebugger(ToBoolean(v));
+
   return true;
 }
 
