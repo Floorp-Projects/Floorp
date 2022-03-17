@@ -39,6 +39,9 @@ Try to install it manually with:
 )
 
 RSTCHECK_FORMAT_REGEX = re.compile(r"(.*):(.*): \(.*/([0-9]*)\) (.*)$")
+IGNORE_NOT_REF_LINK_UPSTREAM_BUG = re.compile(
+    r"Hyperlink target (.*) is not referenced."
+)
 
 
 def setup(root, **lintargs):
@@ -95,13 +98,16 @@ def lint(files, config, **lintargs):
         for errors in all_errors.split("\n"):
             if len(errors) > 1:
                 filename, lineno, level, message = parse_with_split(errors)
-                res = {
-                    "path": filename,
-                    "message": message,
-                    "lineno": lineno,
-                    "level": "error" if int(level) >= 2 else "warning",
-                }
-                results.append(result.from_config(config, **res))
+                if not IGNORE_NOT_REF_LINK_UPSTREAM_BUG.match(message):
+                    # Ignore an upstream bug
+                    # https://github.com/myint/rstcheck/issues/19
+                    res = {
+                        "path": filename,
+                        "message": message,
+                        "lineno": lineno,
+                        "level": "error" if int(level) >= 2 else "warning",
+                    }
+                    results.append(result.from_config(config, **res))
         paths = paths[chunk_size:]
 
     return results
