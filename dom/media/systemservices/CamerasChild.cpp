@@ -198,21 +198,17 @@ bool CamerasChild::DispatchToParent(nsIRunnable* aRunnable,
   CamerasSingleton::Mutex().AssertCurrentThreadOwns();
   mReplyMonitor.AssertCurrentThreadOwns();
   CamerasSingleton::Thread()->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
-  // We can't see if the send worked, so we need to be able to bail
-  // out on shutdown (when it failed and we won't get a reply).
-  if (!mIPCIsAlive) {
-    return false;
-  }
   // Guard against spurious wakeups.
   mReceivedReply = false;
   // Wait for a reply
   do {
+    // If the parent has been shut down, then we won't receive a reply.
+    if (!mIPCIsAlive) {
+      return false;
+    }
     aMonitor.Wait();
-  } while (!mReceivedReply && mIPCIsAlive);
-  if (!mReplySuccess) {
-    return false;
-  }
-  return true;
+  } while (!mReceivedReply);
+  return mReplySuccess;
 }
 
 int CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
