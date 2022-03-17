@@ -45,3 +45,27 @@
   margin-block-start: calc(6 * var(--base-unit));
   margin-block-end: calc(2 * var(--base-unit));
 }
+
+@media (prefers-contrast) {
+  /* Color transitions (black <-> white) look bad in high contrast */
+  .sidebar-item {
+    transition: background 0s;
+  }
+
+  .sidebar-item--selected,
+  .sidebar-item--selected:hover {
+    background-color: ButtonText;
+  }
+
+  /* `color: inherit` should not be used in high contrast mode
+     otherwise the link inherits the <a> color from ua.css */
+  .sidebar-item__link,
+  .sidebar-item__link:hover {
+    color: ButtonText;
+  }
+
+  .sidebar-item--selected .sidebar-item__link,
+  .sidebar-item--selected .sidebar-item__link:hover {
+    color: ButtonFace;
+  }
+}
