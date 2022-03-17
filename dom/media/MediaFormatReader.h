@@ -77,6 +77,7 @@ class MediaFormatReader final
   typedef MozPromise<bool, MediaResult, IsExclusive> NotifyDataArrivedPromise;
 
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(MediaFormatReader)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaFormatReader)
 
   using TrackSet = EnumSet<TrackInfo::TrackType>;

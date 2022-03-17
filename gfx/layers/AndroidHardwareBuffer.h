@@ -87,6 +87,7 @@ class AndroidHardwareBufferApi final {
 class AndroidHardwareBuffer
     : public SupportsThreadSafeWeakPtr<AndroidHardwareBuffer> {
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(AndroidHardwareBuffer)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(AndroidHardwareBuffer)
 
   static already_AddRefed<AndroidHardwareBuffer> Create(
