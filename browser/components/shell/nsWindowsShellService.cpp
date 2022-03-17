@@ -33,6 +33,8 @@
 #include "WindowsDefaultBrowser.h"
 #include "WindowsUserChoice.h"
 #include "nsLocalFile.h"
+#include "nsIXULAppInfo.h"
+#include "nsINIParser.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -43,6 +45,9 @@
 // MinGW-w64 headers are missing PropVariantToString.
 #  include <propsys.h>
 PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
+#  define UNLEN 256
+#else
+#  include <Lmcons.h>  // For UNLEN
 #endif
 
 #include <objbase.h>
@@ -625,6 +630,104 @@ nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return regKey->Close();
+}
+
+/*
+ * Writes information about a shortcut to a shortcuts log in
+ * %PROGRAMDATA%\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38.
+ * (This is the same directory used for update staging.)
+ * For more on the shortcuts log format and purpose, consult
+ * /toolkit/mozapps/installer/windows/nsis/common.nsh.
+ *
+ * The shortcuts log created or appended here is named after
+ * the currently running application and current user SID.
+ * For example: Firefox_$SID_shortcuts.ini.
+ *
+ * If it does not exist, it will be created. If it exists
+ * and a matching shortcut named already exists in the file,
+ * a new one will not be appended.
+ */
+static nsresult WriteShortcutToLog(KNOWNFOLDERID aFolderId,
+                                   const nsAString& aShortcutName) {
+  // the section inside the shortcuts log
+  nsAutoCString section;
+  if (aFolderId == FOLDERID_CommonStartMenu ||
+      aFolderId == FOLDERID_StartMenu) {
+    section.Assign("STARTMENU");
+  } else if (aFolderId == FOLDERID_PublicDesktop ||
+             aFolderId == FOLDERID_Desktop) {
+    section.Assign("DESKTOP");
+  } else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIProperties> directoryService =
+      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> updRoot, parent, shortcutsLog;
+  rv = directoryService->Get(XRE_UPDATE_ROOT_DIR, NS_GET_IID(nsIFile),
+                             getter_AddRefs(updRoot));
+  rv = updRoot->GetParent(getter_AddRefs(parent));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parent->GetParent(getter_AddRefs(shortcutsLog));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString appName;
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1");
+  rv = appInfo->GetName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  auto userSid = GetCurrentUserStringSid();
+  if (!userSid) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  nsAutoString filename;
+  filename.AppendPrintf("%s_%ls_shortcuts.ini", appName.get(), userSid.get());
+  rv = shortcutsLog->Append(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsINIParser parser;
+  bool fileExists = false;
+  bool shortcutsLogEntryExists = false;
+  nsAutoCString keyName, shortcutName;
+  shortcutName = NS_ConvertUTF16toUTF8(aShortcutName);
+
+  shortcutsLog->IsFile(&fileExists);
+  // if the shortcuts log exists, find either an existing matching
+  // entry, or the next available shortcut index
+  if (fileExists) {
+    rv = parser.Init(shortcutsLog);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString iniShortcut;
+    // surely we'll never need more than 10 shortcuts in one section...
+    for (int i = 0; i < 10; i++) {
+      keyName.AssignLiteral("Shortcut");
+      keyName.AppendInt(i);
+      rv = parser.GetString(section.get(), keyName.get(), iniShortcut);
+      if (NS_FAILED(rv)) {
+        // we found an unused index
+        break;
+      } else if (iniShortcut.Equals(shortcutName)) {
+        shortcutsLogEntryExists = true;
+      }
+    }
+    // otherwise, this is safe to use
+  } else {
+    keyName.AssignLiteral("Shortcut0");
+  }
+
+  if (!shortcutsLogEntryExists) {
+    parser.SetString(section.get(), keyName.get(), shortcutName.get());
+    rv = parser.WriteToFile(shortcutsLog);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
