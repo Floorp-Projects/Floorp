@@ -3358,9 +3358,7 @@ void MediaManager::Shutdown() {
   // All that remains is shutting down the media thread.
   sHasShutdown = true;
 
-  // Because mMediaThread is not an nsThread, we must dispatch to it so it can
-  // clean up BackgroundChild. Continue stopping thread once this is done.
-
+  // Dispatch to mMediaThread so it can shut down mBackend.
   class ShutdownTask : public Runnable {
    public:
     ShutdownTask(RefPtr<MediaManager> aManager, RefPtr<Runnable> aReply)
@@ -3381,8 +3379,6 @@ void MediaManager::Shutdown() {
           mManager->mDeviceListChangeListener.DisconnectIfExists();
         }
       }
-      // must explicitly do this before dispatching the reply, since the reply
-      // may kill us with Stop()
       mManager->mBackend =
           nullptr;  // last reference, will invoke Shutdown() again
 
@@ -3399,10 +3395,6 @@ void MediaManager::Shutdown() {
 
   // Post ShutdownTask to execute on mMediaThread and pass in a lambda
   // callback to be executed back on this thread once it is done.
-  //
-  // The lambda callback "captures" the 'this' pointer for member access.
-  // This is safe since this is guaranteed to be here since sSingleton isn't
-  // cleared until the lambda function clears it.
 
   // note that this == sSingleton
 #ifdef DEBUG
@@ -3418,7 +3410,7 @@ void MediaManager::Shutdown() {
   auto shutdown = MakeRefPtr<ShutdownTask>(
       this, media::NewRunnableFrom([]() {
         LOG("MediaManager shutdown lambda running, releasing MediaManager "
-            "singleton and thread");
+            "singleton");
         StaticMutexAutoLock lock(sSingletonMutex);
         // Remove async shutdown blocker
         media::MustGetShutdownBarrier()->RemoveBlocker(
