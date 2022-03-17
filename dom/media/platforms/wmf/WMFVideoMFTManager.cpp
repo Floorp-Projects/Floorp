@@ -233,28 +233,58 @@ bool WMFVideoMFTManager::InitializeDXVA() {
 }
 
 MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
-  if (mStreamType != H264 ||
-      StaticPrefs::media_wmf_allow_unsupported_resolutions()) {
-    return NS_OK;
-  }
+  switch (mStreamType) {
+    case H264:
+      if (!StaticPrefs::media_wmf_allow_unsupported_resolutions()) {
+        // The WMF H.264 decoder is documented to have a minimum resolution
+        // 48x48 pixels for resolution, but we won't enable hw decoding for the
+        // resolution < 132 pixels. It's assumed the software decoder doesn't
+        // have this limitation, but it still might have maximum resolution
+        // limitation.
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
+        const bool Is4KCapable =
+            IsWin8OrLater() || IsWin7H264Decoder4KCapable();
+        static const int32_t MAX_H264_PIXEL_COUNT =
+            Is4KCapable ? 4096 * 2304 : 1920 * 1088;
+        const CheckedInt32 pixelCount =
+            CheckedInt32(mVideoInfo.mImage.width) * mVideoInfo.mImage.height;
 
-  // The WMF H.264 decoder is documented to have a minimum resolution 48x48
-  // pixels for resolution, but we won't enable hw decoding for the resolution <
-  // 132 pixels. It's assumed the software decoder doesn't have this limitation,
-  // but it still might have maximum resolution limitation.
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
-  const bool Is4KCapable = IsWin8OrLater() || IsWin7H264Decoder4KCapable();
-  static const int32_t MAX_H264_PIXEL_COUNT =
-      Is4KCapable ? 4096 * 2304 : 1920 * 1088;
-  const CheckedInt32 pixelCount =
-      CheckedInt32(mVideoInfo.mImage.width) * mVideoInfo.mImage.height;
+        if (!pixelCount.isValid() ||
+            pixelCount.value() > MAX_H264_PIXEL_COUNT) {
+          mIsValid = false;
+          return MediaResult(
+              NS_ERROR_DOM_MEDIA_FATAL_ERR,
+              RESULT_DETAIL("Can't decode H.264 stream because its "
+                            "resolution is out of the maximum limitation"));
+        }
+      }
+      break;
+    case VP9:
+      if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
+        // Read VP codec configuration to allow us to fail before decoding an
+        // unsupported sample.
+        VPXDecoder::VPXStreamInfo vpxInfo;
+        VPXDecoder::ReadVPCCBox(vpxInfo, mVideoInfo.mExtraData);
 
-  if (!pixelCount.isValid() || pixelCount.value() > MAX_H264_PIXEL_COUNT) {
-    mIsValid = false;
-    return MediaResult(
-        NS_ERROR_DOM_MEDIA_FATAL_ERR,
-        RESULT_DETAIL("Can't decode H.264 stream because its "
-                      "resolution is out of the maximum limitation"));
+        // Check for VPX MFT's supported profiles.
+        if (vpxInfo.mProfile != 0 && vpxInfo.mProfile != 2) {
+          return MediaResult(
+              NS_ERROR_DOM_MEDIA_FATAL_ERR,
+              RESULT_DETAIL("Can only decode VP9 streams in profiles 0 or 2."));
+        }
+
+        // Profiles 0 and 2 should always use 4:2:0, but in case we somehow get
+        // a compatible profile with incompatible subsampling, fail here.
+        if (!vpxInfo.mSubSampling_x || !vpxInfo.mSubSampling_y) {
+          return MediaResult(
+              NS_ERROR_DOM_MEDIA_FATAL_ERR,
+              RESULT_DETAIL(
+                  "Can't decode VP9 stream encoded in YUV 4:2:2 or 4:4:4."));
+        }
+      }
+      break;
+    default:
+      break;
   }
 
   return NS_OK;
