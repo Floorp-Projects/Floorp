@@ -84,6 +84,7 @@ class ModuleLoaderBase : public nsISupports {
  private:
   using GenericNonExclusivePromise = mozilla::GenericNonExclusivePromise;
   using GenericPromise = mozilla::GenericPromise;
+
   // Module map
   nsRefPtrHashtable<ModuleMapKey, GenericNonExclusivePromise::Private>
       mFetchingModules;
@@ -109,7 +110,10 @@ class ModuleLoaderBase : public nsISupports {
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
-  // Methods that must be overwritten by an extending class
+  // Methods that must be overwritten by an extending class. These are called
+  // internally by ModuleLoaderBase.
+
+ private:
   virtual void EnsureModuleHooksInitialized() {
     MOZ_ASSERT(false, "You must override EnsureModuleHooksInitialized");
   }
@@ -125,52 +129,67 @@ class ModuleLoaderBase : public nsISupports {
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) = 0;
 
+  // Public API methods.
+
+ public:
   bool HasPendingDynamicImports() const;
   void CancelDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
-  void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 #ifdef DEBUG
   bool HasDynamicImport(ModuleLoadRequest* aRequest) const;
 #endif
 
-  // Helper function to set up the global correctly for dynamic imports.
-  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
-
-  // Implements https://html.spec.whatwg.org/#run-a-module-script
-  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
-                          ScriptLoadRequest* aRequest);
-
-  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
-  void SetModuleFetchFinishedAndResumeWaitingRequests(
-      ModuleLoadRequest* aRequest, nsresult aResult);
-
-  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
-      nsIURI* aURL, nsIGlobalObject* aGlobal);
-  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-
-  JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
-  bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
-  static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
-                                                ModuleLoadRequest* aRequest);
-  static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
-                                          nsCOMArray<nsIURI>* aUrlsOut);
+  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
+      ScriptLoaderInterface* loader, LoadedScript* aScript,
+      const nsAString& aSpecifier);
   static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
                                        const nsAString& aSpecifier,
                                        uint32_t aLineNumber,
                                        uint32_t aColumnNumber,
                                        JS::MutableHandle<JS::Value> errorOut);
 
-  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-      ScriptLoaderInterface* loader, LoadedScript* aScript,
-      const nsAString& aSpecifier);
+  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+
+  void SetModuleFetchFinishedAndResumeWaitingRequests(
+      ModuleLoadRequest* aRequest, nsresult aResult);
+
+  nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);
+  bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
+
+  // Implements https://html.spec.whatwg.org/#run-a-module-script
+  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
+                          ScriptLoadRequest* aRequest);
+
+  void StartDynamicImport(ModuleLoadRequest* aRequest);
+  void ProcessDynamicImport(ModuleLoadRequest* aRequest);
+  void CancelAndClearDynamicImports();
+
+  // Protected methods for used by concrete implementation.
+
+ protected:
+  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
+      nsIURI* aURL, nsIGlobalObject* aGlobal);
+  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
+
+  // Internal methods.
+
+ private:
+  friend class JS::loader::ModuleLoadRequest;
+
+  // Helper function to set up the global correctly for dynamic imports.
+  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
+
+  JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
+  static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
+                                                ModuleLoadRequest* aRequest);
+  static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
+                                          nsCOMArray<nsIURI>* aUrlsOut);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
   RefPtr<GenericPromise> StartFetchingModuleAndDependencies(
       ModuleLoadRequest* aParent, nsIURI* aURI);
-
-  void StartDynamicImport(ModuleLoadRequest* aRequest);
 
   /**
    * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
@@ -209,10 +228,9 @@ class ModuleLoaderBase : public nsISupports {
                                   nsresult aResult,
                                   JS::Handle<JSObject*> aEvaluationPromise);
 
+  void RemoveDynamicImport(ModuleLoadRequest* aRequest);
+
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
-  nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);
-  void ProcessDynamicImport(ModuleLoadRequest* aRequest);
-  void CancelAndClearDynamicImports();
 
  public:
   static mozilla::LazyLogModule gCspPRLog;
