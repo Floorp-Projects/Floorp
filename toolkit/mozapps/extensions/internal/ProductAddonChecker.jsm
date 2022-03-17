@@ -26,7 +26,8 @@ var logger = Log.repository.getLogger("addons.productaddons");
 logger.manageLevelFromPref("extensions.logging.productaddons.level");
 
 /**
- * Number of milliseconds after which we need to cancel `downloadXMLWithRequest`.
+ * Number of milliseconds after which we need to cancel `downloadXMLWithRequest`
+ * and `conservativeFetch`.
  *
  * Bug 1087674 suggests that the XHR/ServiceRequest we use in
  * `downloadXMLWithRequest` may never terminate in presence of network nuisances
@@ -71,6 +72,7 @@ function getRequestStatus(request) {
 async function conservativeFetch(input) {
   return new Promise(function(resolve, reject) {
     const request = new ServiceRequest({ mozAnon: true });
+    request.timeout = TIMEOUT_DELAY_MS;
 
     request.onerror = () =>
       reject(new TypeError("NetworkError: Network request failed"));
