@@ -243,13 +243,14 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
   mozilla::nsAutoMicroTask mt;
 
-  mozilla::AutoAllowLegacyScriptExecution exemption;
-
-  mozilla::dom::AutoEntryScript aes(globalObject, "CompileModule", true);
+  mozilla::dom::AutoJSAPI jsapi;
+  if (!jsapi.Init(globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv;
   {
-    JSContext* cx = aes.cx();
+    JSContext* cx = jsapi.cx();
     JS::Rooted<JSObject*> module(cx);
 
     JS::CompileOptions options(cx);
@@ -284,9 +285,9 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)", aRequest,
            unsigned(rv)));
 
-      MOZ_ASSERT(aes.HasException());
+      MOZ_ASSERT(jsapi.HasException());
       JS::Rooted<JS::Value> error(cx);
-      if (!aes.StealException(&error)) {
+      if (!jsapi.StealException(&error)) {
         aRequest->mModuleScript = nullptr;
         return NS_ERROR_FAILURE;
       }
