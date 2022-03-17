@@ -28,11 +28,12 @@ function isPopupPaused(popupBrowsingContext) {
   });
 }
 
-async function openPopup(popupUrl, browser = gBrowser.selectedBrowser) {
+async function openPopup(dbg, popupUrl, browser = gBrowser.selectedBrowser) {
   const onPopupTabSelected = BrowserTestUtils.waitForEvent(
     gBrowser.tabContainer,
     "TabSelect"
   );
+  const onSwitchedHost = dbg.toolbox.once("host-changed");
   const popupBrowsingContext = await SpecialPowers.spawn(
     browser,
     [popupUrl],
@@ -47,6 +48,7 @@ async function openPopup(popupUrl, browser = gBrowser.selectedBrowser) {
     popupBrowsingContext,
     "The popup is the selected tab"
   );
+  await onSwitchedHost;
   return popupBrowsingContext;
 }
 
@@ -68,7 +70,7 @@ add_task(async function testPausedByBreakpoint() {
   const dbg = await initDebuggerWithAbsoluteURL(TEST_URI);
 
   info("Open the popup in order to be able to set a breakpoint");
-  const firstPopupBrowsingContext = await openPopup(POPUP_URL);
+  const firstPopupBrowsingContext = await openPopup(dbg, POPUP_URL);
 
   await waitForSource(dbg, POPUP_URL);
   const source = findSource(dbg, POPUP_URL);
@@ -80,7 +82,7 @@ add_task(async function testPausedByBreakpoint() {
   await closePopup(firstPopupBrowsingContext);
 
   info("Re-open the popup");
-  const popupBrowsingContext = await openPopup(POPUP_URL);
+  const popupBrowsingContext = await openPopup(dbg, POPUP_URL);
   await waitForPaused(dbg);
   is(
     await isPopupPaused(popupBrowsingContext),
@@ -112,7 +114,10 @@ add_task(async function testPausedByDebuggerStatement() {
   const dbg = await initDebuggerWithAbsoluteURL(TEST_URI);
 
   info("Open a popup with a debugger statement");
-  const popupBrowsingContext = await openPopup(POPUP_DEBUGGER_STATEMENT_URL);
+  const popupBrowsingContext = await openPopup(
+    dbg,
+    POPUP_DEBUGGER_STATEMENT_URL
+  );
   await waitForPaused(dbg);
   is(
     await isPopupPaused(popupBrowsingContext),
@@ -137,7 +142,7 @@ add_task(async function testPausedInTwoPopups() {
 
   info("Open the popup in order to be able to set a breakpoint");
   const browser = gBrowser.selectedBrowser;
-  const popupBrowsingContext = await openPopup(POPUP_URL);
+  const popupBrowsingContext = await openPopup(dbg, POPUP_URL);
 
   await waitForSource(dbg, POPUP_URL);
   const source = findSource(dbg, POPUP_URL);
@@ -149,7 +154,7 @@ add_task(async function testPausedInTwoPopups() {
   await closePopup(popupBrowsingContext);
 
   info("Open a first popup which will hit the breakpoint");
-  const firstPopupBrowsingContext = await openPopup(POPUP_URL);
+  const firstPopupBrowsingContext = await openPopup(dbg, POPUP_URL);
   await waitForPaused(dbg);
   const { targetCommand } = dbg.commands;
   const firstTarget = targetCommand
@@ -192,7 +197,7 @@ add_task(async function testPausedInTwoPopups() {
     types: [targetCommand.TYPES.FRAME],
     onAvailable,
   });
-  const secondPopupBrowsingContext = await openPopup(POPUP_URL, browser);
+  const secondPopupBrowsingContext = await openPopup(dbg, POPUP_URL, browser);
   info("Wait for second popup's target");
   const popupTarget = await onNewTarget;
   is(
@@ -245,7 +250,7 @@ add_task(async function testClosingOriginalTab() {
 
   info("Open a popup");
   const originalTab = gBrowser.selectedTab;
-  await openPopup("about:blank");
+  await openPopup(dbg, "about:blank");
   await wait(1000);
   const popupTab = gBrowser.selectedTab;
   gBrowser.selectedTab = originalTab;
