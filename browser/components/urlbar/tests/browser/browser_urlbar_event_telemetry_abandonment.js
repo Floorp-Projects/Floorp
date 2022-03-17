@@ -216,12 +216,8 @@ const tests = [
   },
 ];
 
-add_task(async function test() {
+add_task(async function init() {
   await PlacesUtils.history.clear();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.eventTelemetry.enabled", true]],
-  });
 
   // Create a new search engine and mark it as default
   let engine = await SearchTestUtils.promiseNewSearchEngine(
@@ -252,17 +248,23 @@ add_task(async function test() {
     return originalWaitForCondition(condition, msg, interval, maxTries);
   };
 
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-
   registerCleanupFunction(async function() {
     await Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.history.clear();
-    await UrlbarTestUtils.formHistory.clear(win);
     TestUtils.waitForCondition = originalWaitForCondition;
   });
+});
+
+async function doTest(eventTelemetryEnabled) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.eventTelemetry.enabled", eventTelemetryEnabled]],
+  });
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
 
   // This is not necessary after each loop, because assertEvents does it.
   Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
 
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
@@ -273,11 +275,36 @@ add_task(async function test() {
     // Always blur to ensure it's not accounted as an additional abandonment.
     win.gURLBar.setSearchMode({});
     win.gURLBar.blur();
-    TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
+    TelemetryTestUtils.assertEvents(eventTelemetryEnabled ? events : [], {
+      category: "urlbar",
+    });
+
+    // Scalars should be recorded regardless of `eventTelemetry.enabled`.
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "urlbar.engagement",
+      events.filter(e => e.method == "engagement").length || undefined
+    );
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "urlbar.abandonment",
+      events.filter(e => e.method == "abandonment").length || undefined
+    );
+
     await UrlbarTestUtils.formHistory.clear(win);
   }
 
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function enabled() {
+  await doTest(true);
+});
+
+add_task(async function disabled() {
+  await doTest(false);
 });
 
 /**

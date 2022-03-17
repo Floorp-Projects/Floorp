@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
+
+const TELEMETRY_SCALAR_ENGAGEMENT = "urlbar.engagement";
+const TELEMETRY_SCALAR_ABANDONMENT = "urlbar.abandonment";
+
 const NOTIFICATIONS = {
   QUERY_STARTED: "onQueryStarted",
   QUERY_RESULTS: "onQueryResults",
@@ -901,6 +905,13 @@ class TelemetryEvent {
       action,
       value,
       extra
+    );
+
+    Services.telemetry.scalarAdd(
+      method == "engagement"
+        ? TELEMETRY_SCALAR_ENGAGEMENT
+        : TELEMETRY_SCALAR_ABANDONMENT,
+      1
     );
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};

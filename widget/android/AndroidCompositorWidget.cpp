@@ -93,7 +93,8 @@ bool AndroidCompositorWidget::OnResumeComposition() {
 
   const int32_t width = ANativeWindow_getWidth(nativeWindow);
   const int32_t height = ANativeWindow_getHeight(nativeWindow);
-  mClientSize = LayoutDeviceIntSize(width, height);
+  mClientSize = LayoutDeviceIntSize(std::min(width, MOZ_WIDGET_MAX_SIZE),
+                                    std::min(height, MOZ_WIDGET_MAX_SIZE));
 
   ANativeWindow_release(nativeWindow);
 

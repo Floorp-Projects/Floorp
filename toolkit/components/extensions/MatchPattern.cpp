@@ -224,8 +224,8 @@ const nsCString& CookieInfo::RawHost() const {
  * MatchPattern
  *****************************************************************************/
 
-const char* PERMITTED_SCHEMES[] = {"http", "chrome", "https", "ws",   "wss",
-                                   "file", "ftp",   "data", "about" , "resource", "chrome", "moz-extension", "moz", nullptr};
+const char* PERMITTED_SCHEMES[] = {"http", "https", "ws",   "wss", "about", "moz-extension",
+                                   "file", "ftp",   "data", nullptr};
 
 // Known schemes that are followed by "://" instead of ":".
 const char* HOST_LOCATOR_SCHEMES[] = {
@@ -311,7 +311,7 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
     // Unrecognized schemes and some schemes such as about: and data: URIs
     // don't have hosts, so just match on the path.
     // And so, ignorePath doesn't make sense for these matchers.
-    aIgnorePath = true;
+    aIgnorePath = false;
   } else {
     if (!StringHead(tail, 2).EqualsLiteral("//")) {
       aRv.Throw(NS_ERROR_INVALID_ARG);

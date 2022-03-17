@@ -18,11 +18,11 @@ browser.jar:
   skin/classic/browser/lepton/userChrome.css       (lepton/userChrome.css)
   skin/classic/browser/motion/userChrome.css       (motion/userChrome.css)
 
-  content/builtin-themes/monochromatic/melt                      (melt/*.svg)
-  content/builtin-themes/monochromatic/manifest.json             (melt/manifest.json)
+  content/builtin-themes/melt                      (melt/*.svg)
+  content/builtin-themes/manifest.json             (melt/manifest.json)
 
-  content/builtin-themes/monochromatic/aria                      (aria/*.svg)
-  content/builtin-themes/monochromatic/aria/manifest.json        (aria/manifest.json)
+  content/builtin-themes/aria                      (aria/*.svg)
+  content/builtin-themes/aria/manifest.json        (aria/manifest.json)
 
-  content/builtin-themes/monochromatic/erua                      (erua/*.svg)
-  content/builtin-themes/monochromatic/manifest.json             (erua/manifest.json)
+  content/builtin-themes/erua                      (erua/*.svg)
+  content/builtin-themes/manifest.json             (erua/manifest.json)

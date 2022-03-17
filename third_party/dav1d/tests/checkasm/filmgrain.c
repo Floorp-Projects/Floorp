@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "src/levels.h"
-#include "src/film_grain.h"
+#include "src/filmgrain.h"
 #define UNIT_TEST 1
 #include "src/fg_apply_tmpl.c"
 
@@ -155,6 +155,7 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
 
     if (check_func(dsp->fgy_32x32xn, "fgy_32x32xn_%dbpc", BITDEPTH)) {
         ALIGN_STK_16(Dav1dFilmGrainData, fg_data, 16,);
+        ALIGN_STK_64(uint8_t, scaling, SCALING_SIZE,);
         fg_data[0].seed = rnd() & 0xFFFF;
 
 #if BITDEPTH == 16
@@ -163,7 +164,6 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
         const int bitdepth_max = 0xff;
 #endif
 
-        uint8_t scaling[SCALING_SIZE];
         entry grain_lut[GRAIN_HEIGHT + 1][GRAIN_WIDTH];
         fg_data[0].grain_scale_shift = rnd() & 3;
         fg_data[0].ar_coeff_shift = (rnd() & 3) + 6;
@@ -267,6 +267,7 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                            BITDEPTH, ss_name[layout_idx], csfl))
             {
                 ALIGN_STK_16(Dav1dFilmGrainData, fg_data, 1,);
+                ALIGN_STK_64(uint8_t, scaling, SCALING_SIZE,);
 
                 fg_data[0].seed = rnd() & 0xFFFF;
 
@@ -278,7 +279,6 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 const int uv_pl = rnd() & 1;
                 const int is_identity = rnd() & 1;
 
-                uint8_t scaling[SCALING_SIZE];
                 entry grain_lut[2][GRAIN_HEIGHT + 1][GRAIN_WIDTH];
                 fg_data[0].grain_scale_shift = rnd() & 3;
                 fg_data[0].ar_coeff_shift = (rnd() & 3) + 6;
@@ -368,7 +368,7 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                         checkasm_check_pixel_padded_align(c_dst, stride,
                                                           a_dst, stride,
                                                           w, h, "dst",
-                                                          32 >> ss_x, 2);
+                                                          32 >> ss_x, 4);
                     }
                 }
 
@@ -380,7 +380,7 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                         luma_src[y * PXSTRIDE(lstride) + x] &= bitdepth_max;
                     }
                 }
-                bench_new(a_dst, src, stride, fg_data, 32, scaling, grain_lut[1], 16,
+                bench_new(a_dst, src, stride, fg_data, 64 >> ss_x, scaling, grain_lut[1], 32 >> ss_y,
                           1, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
             }
         }

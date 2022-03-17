@@ -24,13 +24,13 @@ extension-floorp-edge-name=Optimized for vertical tabs
 extension-floorp-edge-description=Optimizes Floorp for vertical tabs. Make better use of your screen!
 
 extension-kanaze-aria-name= Kanaze Project -aria-
-extension-kanaze-aria-description=
+extension-kanaze-aria-description= aria の期間限定テーマ
 
 extension-kanaze-erua-name= Kanaze Project -erua-
-extension-kanaze-erua-description=
+extension-kanaze-erua-description= erua の期間限定テーマ
 
 extension-kanaze-melt-name= Kanaze Project -melt-
-extension-kanaze-melt-description=
+extension-kanaze-melt-description= melt の期間限定テーマ
 
 ## Colorway Themes
 ## These themes are variants of a colorway. The colorway is specified in the

@@ -1542,7 +1542,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
   if (aLoadData.mURI) {
     LOG_URI("  Load succeeded for URI: '%s', parsing", aLoadData.mURI);
   }
-  AUTO_PROFILER_LABEL("css::Loader::ParseSheet", LAYOUT_CSSParsing);
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR_RELEVANT_FOR_JS(LAYOUT_CSSParsing);
 
   ++mParsedSheetCount;
 

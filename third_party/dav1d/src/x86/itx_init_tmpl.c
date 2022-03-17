@@ -278,7 +278,27 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
 
     if (bpc > 10) return;
 
-#if BITDEPTH == 16
+#if BITDEPTH == 8
+    assign_itx16_fn( ,  4,  4, avx2);
+    assign_itx16_fn(R,  4,  8, avx2);
+    assign_itx16_fn(R,  4, 16, avx2);
+    assign_itx16_fn(R,  8,  4, avx2);
+    assign_itx16_fn( ,  8,  8, avx2);
+    assign_itx16_fn(R,  8, 16, avx2);
+    assign_itx2_fn (R,  8, 32, avx2);
+    assign_itx16_fn(R, 16,  4, avx2);
+    assign_itx16_fn(R, 16,  8, avx2);
+    assign_itx12_fn( , 16, 16, avx2);
+    assign_itx2_fn (R, 16, 32, avx2);
+    assign_itx1_fn (R, 16, 64, avx2);
+    assign_itx2_fn (R, 32,  8, avx2);
+    assign_itx2_fn (R, 32, 16, avx2);
+    assign_itx2_fn ( , 32, 32, avx2);
+    assign_itx1_fn (R, 32, 64, avx2);
+    assign_itx1_fn (R, 64, 16, avx2);
+    assign_itx1_fn (R, 64, 32, avx2);
+    assign_itx1_fn ( , 64, 64, avx2);
+#elif BITDEPTH == 16
     assign_itx16_bpc_fn( ,  4,  4, 10, avx2);
     assign_itx16_bpc_fn(R,  4,  8, 10, avx2);
     assign_itx16_bpc_fn(R,  4, 16, 10, avx2);

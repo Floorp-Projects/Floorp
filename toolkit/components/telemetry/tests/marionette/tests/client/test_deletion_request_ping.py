@@ -44,6 +44,23 @@ class TestDeletionRequestPing(TelemetryTestCase):
         # Turn Telemetry back on.
         self.enable_telemetry()
 
+        # Enabling telemetry resets the client ID,
+        # so we can wait for it to be set.
+        #
+        # **WARNING**
+        #
+        # This MUST NOT be used outside of telemetry tests to wait for that kind of signal.
+        # Reach out to the Telemetry Team if you have a need for that.
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            return self.marionette.execute_async_script(
+                """
+                let [resolve] = arguments;
+                Cu.import("resource://gre/modules/ClientID.jsm");
+                ClientID.getClientID().then(resolve);
+                """,
+                script_timeout=1000,
+            )
+
         # Close Firefox cleanly, collecting its "main"/"shutdown" ping.
         main_ping = self.wait_for_ping(self.restart_browser, MAIN_SHUTDOWN_PING)
 

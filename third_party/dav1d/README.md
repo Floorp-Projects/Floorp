@@ -2,11 +2,13 @@
 
 # dav1d
 
-**dav1d** is a new **AV1** cross-platform **d**ecoder, open-source, and focused on speed and correctness.
+**dav1d** is an **AV1** cross-platform **d**ecoder, open-source, and focused on speed and correctness.
+
+It is now battle-tested and production-ready and can be used everywhere.
 
 The canonical repository URL for this repo is https://code.videolan.org/videolan/dav1d
 
-This project is partially funded by the *Alliance for Open Media*/**AOM**.
+This project was partially funded by the *Alliance for Open Media*/**AOM**.
 
 ## Goal and Features
 
@@ -38,11 +40,11 @@ The plan is the following:
 9. Make high bit-depth fast on older mobile, by writing asm for ARMv7 chips,
 10. Make high bit-depth fast on desktop, by writing asm for AVX2 chips,
 11. Make high bit-depth fast on older desktop, by writing asm for SSSE3+ chips,
+12. Improve threading.
 
 ### On-going
-12. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
-13. Accelerate for less common architectures, like PPC, SSE2 or AVX-512.
-14. Improve threading.
+13. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
+14. Accelerate for less common architectures, like PPC, SSE2, RISC-V or AVX-512.
 
 ### After
 15. Use more GPU decoding, when possible.

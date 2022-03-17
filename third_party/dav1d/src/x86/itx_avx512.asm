@@ -242,15 +242,6 @@ SECTION .text
 
 %define o_base int8_permA+64*18
 %define o(x) (r5 - (o_base) + (x))
-
-%macro REPX 2-*
-    %xdefine %%f(x) %1
-%rep %0 - 1
-    %rotate 1
-    %%f(%1)
-%endrep
-%endmacro
-
 %define m(x) mangle(private_prefix %+ _ %+ x %+ SUFFIX)
 
 ; flags: 1 = swap, 2 = interleave (l), 4 = interleave (t), 8 = no_pack,

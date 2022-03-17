@@ -27,6 +27,15 @@ browser.jar:
   skin/classic/browser/lepton/userChrome.css       (lepton/userChrome.css)
   skin/classic/browser/motion/userChrome.css       (motion/userChrome.css)
 
+  content/builtin-themes/melt                      (melt/images/*.png)
+  content/builtin-themes/melt/manifest.json        (melt/manifest.json)
+
+  content/builtin-themes/aria                      (aria/images/*.png)
+  content/builtin-themes/aria/manifest.json        (aria/manifest.json)
+
+  content/builtin-themes/erua                      (erua/images/*.png)
+  content/builtin-themes/erua/manifest.json        (erua/manifest.json)
+
   content/builtin-themes/monochromatic/lush/soft                          (monochromatic/lush/soft/*.svg)
   content/builtin-themes/monochromatic/lush/soft/manifest.json            (monochromatic/lush/soft/manifest.json)
   content/builtin-themes/monochromatic/lush/balanced                      (monochromatic/lush/balanced/*.svg)

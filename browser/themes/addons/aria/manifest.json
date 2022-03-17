@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "version": "1.0",
+  "name": "Kanaze-aria-theme",
+  "homepage_url": "https://kazane.ablaze.one/",
+  "description": "Use a colorful appearance for buttons, menus, and windows.",
+  "icons": { "32": "icon.svg" },
+
+  "applications": {
+    "gecko": {
+      "id": "kanaze-aria@mozilla.org"
+    }
+  },
+  "theme": {
+    "images": {
+      "additional_backgrounds": [
+        "images/0.png"
+      ]
+    },
+    "properties": {
+      "additional_backgrounds_alignment": [
+        "right top"
+      ],
+      "additional_backgrounds_tiling": [
+        "repeat"
+      ]
+    },
+    "colors": {
+      "toolbar": "rgb(245, 255, 255, 0.9)",
+      "toolbar_text": "rgb(0, 0, 0)",
+      "frame": "rgb(215, 225, 234, 0.9)",
+      "tab_background_text": "rgb(0, 0, 0)",
+      "toolbar_field": "rgb(255, 255, 255,0.9)",
+      "toolbar_field_text": "rgb(0, 0, 0)",
+      "tab_line": "rgb(0, 200, 255)",
+      "popup": "rgb(245, 255, 255)",
+      "popup_text": "rgb(0, 0, 0)",
+      "tab_loading": "rgb(0, 200, 255)"
+    }
+  }
+}

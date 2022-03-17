@@ -7,7 +7,6 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest
 
-  skin/classic/browser/pocket-outline.svg                      (../shared/icons/pocket-outline.svg)
   skin/classic/browser/dino.js                                 (../shared/icons/dino.js)
   skin/classic/browser/index.css                               (../shared/icons/index.css)
   skin/classic/browser/dino.html                               (../shared/icons/dino.html)

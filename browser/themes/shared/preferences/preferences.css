@@ -399,10 +399,6 @@ line-height: 1.4em !important;
     }
   }
 
-  :root{
-    --in-content-sidebar-width:270px !important;
-  }
-
   .category::before {
     content: "";
     height: calc(100% - 24px) !important;
