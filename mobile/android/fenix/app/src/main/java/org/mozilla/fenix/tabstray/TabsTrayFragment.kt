@@ -131,10 +131,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         } else {
             TabsTrayState.Mode.Normal
         }
+        val initialPage = args.page
 
         tabsTrayStore = StoreProvider.get(this) {
             TabsTrayStore(
                 initialState = TabsTrayState(
+                    selectedPage = initialPage,
                     mode = initialMode,
                     focusGroupTabId = args.focusGroupTabId
                 ),

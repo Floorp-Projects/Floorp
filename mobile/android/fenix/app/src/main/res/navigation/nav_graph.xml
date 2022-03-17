@@ -162,6 +162,11 @@
             app:nullable="true"
             android:defaultValue="@null"
             app:argType="string" />
+        <argument
+            android:name="page"
+            android:defaultValue="NormalTabs"
+            app:argType="org.mozilla.fenix.tabstray.Page"
+            />
     </dialog>
 
     <fragment
