@@ -125,6 +125,55 @@
   <html:h1 data-l10n-id="language-and-appearance-header"/>
 </hbox>
 
+<!-- Website appearance -->
+<groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
+  <html:h2 data-l10n-id="preferences-web-appearance-header"/>
+  <html:div id="webAppearanceSettings">
+    <description data-l10n-id="preferences-web-appearance-description"/>
+    <html:div id="web-appearance-override-warning" class="info-box-container">
+      <html:div class="info-icon-container">
+        <image class="info-icon"></image>
+      </html:div>
+      <description data-l10n-id="preferences-web-appearance-override-warning">
+        <html:a class="text-link" data-l10n-name="colors-link" id="web-appearance-manage-colors-link" href="#"/>
+      </description>
+    </html:div>
+    <form xmlns="http://www.w3.org/1999/xhtml" id="web-appearance-chooser" autocomplete="off">
+      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-browser">
+        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
+        <div class="web-appearance-choice-footer">
+          <input type="radio" name="web-appearance" value="browser"
+          /><span data-l10n-id="preferences-web-appearance-choice-browser" />
+        </div>
+      </label>
+      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-system">
+        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
+        <div class="web-appearance-choice-footer">
+          <input type="radio" name="web-appearance" value="system"
+          /><span data-l10n-id="preferences-web-appearance-choice-system" />
+        </div>
+      </label>
+      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-light">
+        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
+        <div class="web-appearance-choice-footer">
+          <input type="radio" name="web-appearance" value="light"
+          /><span data-l10n-id="preferences-web-appearance-choice-light" />
+        </div>
+      </label>
+      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-dark">
+        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
+        <div class="web-appearance-choice-footer">
+          <input type="radio" name="web-appearance" value="dark"
+          /><span data-l10n-id="preferences-web-appearance-choice-dark" />
+        </div>
+      </label>
+    </form>
+    <html:div data-l10n-id="preferences-web-appearance-footer">
+      <html:a id="web-appearance-manage-themes-link" class="text-link" data-l10n-name="themes-link" href="about:addons" target="_blank" />
+    </html:div>
+  </html:div>
+</groupbox>
+
 <!-- Colors -->
 <groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
