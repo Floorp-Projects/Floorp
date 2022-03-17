@@ -9,9 +9,47 @@ interface nsIFile;
 [scriptable, uuid(fb9b59db-5a91-4e67-92b6-35e7d6e6d3fd)]
 interface nsIWindowsShellService : nsISupports
 {
-  void createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
-    in AString aDescription, in nsIFile aIconFile, in AString aAppUserModelId,
-    in nsIFile aTarget);
+  /*
+   * Creates a new shortcut (.lnk) file. This shortcut will be recorded in
+   * a new shortcuts log file located in %PROGRAMDATA%\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38
+   * that is named after the currently running application and current user, eg:
+   * Firefox_user123_shortcuts.ini.
+   *
+   * For reasons that we haven't been able to pin down, these shortcuts get created with
+   * extra metadata on them (KnownFolderDataBlock, SpecialFolderDataBlock) that cause
+   * the Windows ShellLink classes to improperly read their target path with certain
+   * parameters. This causes any 32-bit programs that read the links (such as our
+   * installer and uninstaller) to think that 64-bit installs are located in the 32-bit
+   * Program Files directory.
+   * See https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/6f2e7920-50a9-459d-bfdd-316e459e87c0/ishelllink-getpath-returns-wrong-folder-for-64-bit-application-when-called-from-32-bit-application
+   * for some additional discussion of this.
+   *
+   * @param aBinary Target file of the shortcut.
+   * @param aArguments Arguments to set for the shortcut. May be empty.
+   * @param aDescription The description of the shortcut. The string used here
+   *        shows up as the hover text of the shortcut in Explorer and on the
+   *        Taskbar (if the shortcut is pinned there).
+   * @param aIconFile The file containing the desired icon for the shortcut. This
+   *        can be the same file as aBinary.
+   * @param aIconIndex The index of the in aIconFile. Note that this is 0 based index
+   *        that IShellLinkW requires, _not_ a Resource ID that is sometimes used
+   *        for icons.
+   * @param aAppUserModelId The App User Model ID to set for the shortcut. This will
+   *        affect which icon on the Taskbar the application groups with when first
+   *        launched.
+   * @param aShortcutFolder The special Windows folder to create the shortcut in. One of:
+   *        CommonStartMenu, StartMenu, PublicDesktop, Desktop, or QuickLaunch.
+   * @param aShortcutName The filename of the shortcut within aShortcutFolder.
+   * @return The full native path to the created shortcut.
+   *
+   * @throws NS_ERROR_INVALID_ARG if an invalid shortcut folder is passed
+   * @throws NS_ERROR_FILE_NOT_FOUND if the shortcut file or shortcuts log cannot be
+   *         created or accessed
+   * @throws NS_ERROR_FAILURE for other types of failures
+   */
+  AString createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
+    in AString aDescription, in nsIFile aIconFile, in unsigned short aIconIndex,
+    in AString aAppUserModelId, in AString aShortcutFolder, in AString aShortcutName);
 
   /*
    * Pin the current app to the taskbar. If aPrivateBrowsing is true, the
@@ -20,10 +58,10 @@ interface nsIWindowsShellService : nsISupports
    *
    * This MUST only be used in response to an active request from the user.
    *
-   * Uses an existing shortcut on the Desktop or Start Menu, which would have
-   * been created by the installer (for All Users or Current User), in order
-   * to ensure that the pin is associated with this executable and AUMID for
-   * proper launching and grouping.
+   * If it exists, uses an existing shortcut on the Desktop or Start Menu,
+   * which would have been created by the installer (for All Users or
+   * Current User). If none can be found, one will be created with the correct
+   * AUMID for proper launching and grouping.
    *
    * NOTE: This method probably shouldn't be used on the main thread, it
    * performs blocking disk I/O.
