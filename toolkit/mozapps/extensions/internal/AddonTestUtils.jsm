@@ -32,10 +32,12 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
+  getAppInfo: "resource://testing-common/AppInfo.jsm",
   Management: "resource://gre/modules/Extension.jsm",
   ExtensionAddonObserver: "resource://gre/modules/Extension.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
+  updateAppInfo: "resource://testing-common/AppInfo.jsm",
   XPCShellContentUtils: "resource://testing-common/XPCShellContentUtils.jsm",
 });
 
@@ -44,12 +46,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "@mozilla.org/addons/addon-manager-startup;1",
     "amIAddonManagerStartup",
   ],
-});
-
-XPCOMUtils.defineLazyGetter(this, "AppInfo", () => {
-  let AppInfo = {};
-  ChromeUtils.import("resource://testing-common/AppInfo.jsm", AppInfo);
-  return AppInfo;
 });
 
 const PREF_DISABLE_SECURITY =
@@ -490,14 +486,14 @@ var AddonTestUtils = {
   },
 
   createAppInfo(ID, name, version, platformVersion = "1.0") {
-    AppInfo.updateAppInfo({
+    updateAppInfo({
       ID,
       name,
       version,
       platformVersion,
       crashReporter: true,
     });
-    this.appInfo = AppInfo.getAppInfo();
+    this.appInfo = getAppInfo();
   },
 
   getManifestURI(file) {

@@ -225,9 +225,10 @@ var TabModalPrompt = class {
     // when the domWindow, for which the prompt was created, generates
     // a "pagehide" event.
 
-    let tmp = {};
-    ChromeUtils.import("resource://gre/modules/CommonDialog.jsm", tmp);
-    this.Dialog = new tmp.CommonDialog(args, this.ui);
+    let { CommonDialog } = ChromeUtils.import(
+      "resource://gre/modules/CommonDialog.jsm"
+    );
+    this.Dialog = new CommonDialog(args, this.ui);
     this.Dialog.onLoad(null);
 
     // For content prompts display the tabprompt title that shows the prompt origin when

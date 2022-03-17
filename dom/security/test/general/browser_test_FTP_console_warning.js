@@ -2,12 +2,6 @@
 //   Ensure that FTP subresource loads trigger a warning in the webconsole.
 "use strict";
 
-function scopedCuImport(path) {
-  const scope = {};
-  ChromeUtils.import(path, scope);
-  return scope;
-}
-
 // These files don't actually exist, we are just looking for messages
 // that indicate that loading those files would have been blocked.
 var seen_files = ["a.html", "b.html", "c.html", "d.png"];

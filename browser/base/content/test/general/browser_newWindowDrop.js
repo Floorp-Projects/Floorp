@@ -211,9 +211,6 @@ async function drop(dragData, expectedURLs, ignoreFirstWindow = false) {
   let newWindowButton = document.getElementById("new-window-button");
   ok(newWindowButton, "New Window button exists");
 
-  let tmp = {};
-  ChromeUtils.import("resource://testing-common/TestUtils.jsm", tmp);
-
   let awaitDrop = BrowserTestUtils.waitForEvent(newWindowButton, "drop");
 
   let loadedPromises = expectedURLs.map(url =>

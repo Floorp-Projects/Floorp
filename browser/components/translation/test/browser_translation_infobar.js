@@ -4,12 +4,9 @@
 
 // tests the translation infobar, using a fake 'Translation' implementation.
 
-var tmp = {};
-ChromeUtils.import(
-  "resource:///modules/translation/TranslationParent.jsm",
-  tmp
+const { Translation, TranslationParent } = ChromeUtils.import(
+  "resource:///modules/translation/TranslationParent.jsm"
 );
-var { Translation, TranslationParent } = tmp;
 
 const kDetectLanguagePref = "browser.translation.detectLanguage";
 const kShowUIPref = "browser.translation.ui.show";

@@ -27,10 +27,8 @@ if (typeof Components != "undefined") {
   const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   this.ctypes = ctypes;
 
-  SharedAll = {};
-  ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
-    SharedAll
+  SharedAll = ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
   );
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
