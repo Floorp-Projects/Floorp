@@ -175,7 +175,7 @@ checkbox {
   100% {
     background-color: transparent;
     outline-color: transparent;
-   }
+  }
 }
 
 [data-subcategory] {
