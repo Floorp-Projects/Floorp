@@ -10,7 +10,6 @@
 #include "jit/loong64/Assembler-loong64.h"
 #include "jit/MoveResolver.h"
 #include "wasm/WasmBuiltins.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
 namespace jit {
@@ -1013,15 +1012,6 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
 
   void moveFloat32(FloatRegister src, FloatRegister dest) {
     as_fmov_s(dest, src);
-  }
-
-  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-    loadPtr(Address(WasmTlsReg,
-                    offsetof(wasm::TlsData, globalArea) + globalDataOffset),
-            dest);
-  }
-  void loadWasmPinnedRegsFromTls() {
-    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
   }
 
   // Instrumentation for entering and leaving the profiler.
