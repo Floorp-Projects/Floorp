@@ -14,6 +14,7 @@
 #include "nsStringStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsICloneableInputStream.h"
+#include "nsIEventTarget.h"
 #include "nsIPipe.h"
 
 namespace mozilla::dom {
