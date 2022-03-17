@@ -1066,10 +1066,10 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   }
 
  protected:
-  explicit OriginOperationBase(
-      nsIEventTarget* aOwningThread = GetCurrentEventTarget())
+  explicit OriginOperationBase(nsIEventTarget* aOwningThread,
+                               const char* aRunnableName)
       : BackgroundThreadObject(aOwningThread),
-        Runnable("dom::quota::OriginOperationBase"),
+        Runnable(aRunnableName),
         mResultCode(NS_OK),
         mState(State_Initial),
         mActorDestroyed(false),
@@ -1137,7 +1137,9 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
  public:
   FinalizeOriginEvictionOp(nsIEventTarget* aBackgroundThread,
                            nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks)
-      : OriginOperationBase(aBackgroundThread), mLocks(std::move(aLocks)) {
+      : OriginOperationBase(aBackgroundThread,
+                            "dom::quota::FinalizeOriginEvictionOp"),
+        mLocks(std::move(aLocks)) {
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
@@ -1176,9 +1178,11 @@ class NormalOriginOperationBase
   }
 
  protected:
-  NormalOriginOperationBase(const Nullable<PersistenceType>& aPersistenceType,
+  NormalOriginOperationBase(const char* aRunnableName,
+                            const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope, bool aExclusive)
-      : mPersistenceType(aPersistenceType),
+      : OriginOperationBase(GetCurrentEventTarget(), aRunnableName),
+        mPersistenceType(aPersistenceType),
         mOriginScope(aOriginScope),
         mExclusive(aExclusive) {
     AssertIsOnOwningThread();
@@ -1212,7 +1216,8 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
  public:
   SaveOriginAccessTimeOp(PersistenceType aPersistenceType,
                          const nsACString& aOrigin, int64_t aTimestamp)
-      : NormalOriginOperationBase(Nullable<PersistenceType>(aPersistenceType),
+      : NormalOriginOperationBase("dom::quota::SaveOriginAccessTimeOp",
+                                  Nullable<PersistenceType>(aPersistenceType),
                                   OriginScope::FromOrigin(aOrigin),
                                   /* aExclusive */ false),
         mTimestamp(aTimestamp) {
@@ -1285,8 +1290,8 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
   virtual void Init(Quota& aQuota);
 
  protected:
-  QuotaUsageRequestBase()
-      : NormalOriginOperationBase(Nullable<PersistenceType>(),
+  QuotaUsageRequestBase(const char* aRunnableName)
+      : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
                                   OriginScope::FromNull(),
                                   /* aExclusive */ false) {}
 
@@ -1393,8 +1398,8 @@ class QuotaRequestBase : public NormalOriginOperationBase,
   virtual void Init(Quota& aQuota);
 
  protected:
-  explicit QuotaRequestBase(bool aExclusive)
-      : NormalOriginOperationBase(Nullable<PersistenceType>(),
+  explicit QuotaRequestBase(const char* aRunnableName, bool aExclusive)
+      : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
                                   OriginScope::FromNull(), aExclusive) {}
 
   // Subclasses use this override to set the IPDL response value.
@@ -1433,13 +1438,17 @@ class InitializedRequestBase : public QuotaRequestBase {
   void Init(Quota& aQuota) override;
 
  protected:
-  InitializedRequestBase();
+  InitializedRequestBase(const char* aRunnableName);
 
  private:
   RefPtr<DirectoryLock> CreateDirectoryLock() override;
 };
 
 class StorageInitializedOp final : public InitializedRequestBase {
+ public:
+  StorageInitializedOp()
+      : InitializedRequestBase("dom::quota::StorageInitializedOp") {}
+
  private:
   ~StorageInitializedOp() = default;
 
@@ -1449,6 +1458,10 @@ class StorageInitializedOp final : public InitializedRequestBase {
 };
 
 class TemporaryStorageInitializedOp final : public InitializedRequestBase {
+ public:
+  TemporaryStorageInitializedOp()
+      : InitializedRequestBase("dom::quota::StorageInitializedOp") {}
+
  private:
   ~TemporaryStorageInitializedOp() = default;
 
@@ -1495,7 +1508,8 @@ class InitializeOriginRequestBase : public QuotaRequestBase {
   void Init(Quota& aQuota) override;
 
  protected:
-  InitializeOriginRequestBase(PersistenceType aPersistenceType,
+  InitializeOriginRequestBase(const char* aRunnableName,
+                              PersistenceType aPersistenceType,
                               const PrincipalInfo& aPrincipalInfo);
 };
 
@@ -1560,7 +1574,8 @@ class ResetOrClearOp final : public QuotaRequestBase {
 
 class ClearRequestBase : public QuotaRequestBase {
  protected:
-  explicit ClearRequestBase(bool aExclusive) : QuotaRequestBase(aExclusive) {
+  explicit ClearRequestBase(const char* aRunnableName, bool aExclusive)
+      : QuotaRequestBase(aRunnableName, aExclusive) {
     AssertIsOnOwningThread();
   }
 
@@ -8685,7 +8700,8 @@ nsresult TraverseRepositoryHelper::TraverseRepository(
 }
 
 GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
-    : mGetAll(aParams.get_AllUsageParams().getAll()) {
+    : QuotaUsageRequestBase("dom::quota::GetUsageOp"),
+      mGetAll(aParams.get_AllUsageParams().getAll()) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
 }
@@ -8791,7 +8807,9 @@ void GetUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 }
 
 GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
-    : mUsage(0), mFileUsage(0) {
+    : QuotaUsageRequestBase("dom::quota::GetOriginUsageOp"),
+      mUsage(0),
+      mFileUsage(0) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
 
@@ -8909,7 +8927,8 @@ void QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
   NoteActorDestroyed();
 }
 
-StorageNameOp::StorageNameOp() : QuotaRequestBase(/* aExclusive */ false) {
+StorageNameOp::StorageNameOp()
+    : QuotaRequestBase("dom::quota::StorageNameOp", /* aExclusive */ false) {
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
@@ -8941,8 +8960,9 @@ void StorageNameOp::GetResponse(RequestResponse& aResponse) {
   aResponse = storageNameResponse;
 }
 
-InitializedRequestBase::InitializedRequestBase()
-    : QuotaRequestBase(/* aExclusive */ false), mInitialized(false) {
+InitializedRequestBase::InitializedRequestBase(const char* aRunnableName)
+    : QuotaRequestBase(aRunnableName, /* aExclusive */ false),
+      mInitialized(false) {
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
@@ -8997,7 +9017,8 @@ void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
   aResponse = temporaryStorageInitializedResponse;
 }
 
-InitOp::InitOp() : QuotaRequestBase(/* aExclusive */ false) {
+InitOp::InitOp()
+    : QuotaRequestBase("dom::quota::InitOp", /* aExclusive */ false) {
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
@@ -9024,7 +9045,8 @@ void InitOp::GetResponse(RequestResponse& aResponse) {
 }
 
 InitTemporaryStorageOp::InitTemporaryStorageOp()
-    : QuotaRequestBase(/* aExclusive */ false) {
+    : QuotaRequestBase("dom::quota::InitTemporaryStorageOp",
+                       /* aExclusive */ false) {
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
@@ -9053,8 +9075,11 @@ void InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse) {
 }
 
 InitializeOriginRequestBase::InitializeOriginRequestBase(
-    const PersistenceType aPersistenceType, const PrincipalInfo& aPrincipalInfo)
-    : QuotaRequestBase(/* aExclusive */ false), mCreated(false) {
+    const char* aRunnableName, const PersistenceType aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo)
+    : QuotaRequestBase(aRunnableName,
+                       /* aExclusive */ false),
+      mCreated(false) {
   AssertIsOnOwningThread();
 
   auto principalMetadata =
@@ -9080,6 +9105,7 @@ void InitializeOriginRequestBase::Init(Quota& aQuota) {
 InitializePersistentOriginOp::InitializePersistentOriginOp(
     const RequestParams& aParams)
     : InitializeOriginRequestBase(
+          "dom::quota::InitializePersistentOriginOp",
           PERSISTENCE_TYPE_PERSISTENT,
           aParams.get_InitializePersistentOriginParams().principalInfo()) {
   AssertIsOnOwningThread();
@@ -9115,6 +9141,7 @@ void InitializePersistentOriginOp::GetResponse(RequestResponse& aResponse) {
 InitializeTemporaryOriginOp::InitializeTemporaryOriginOp(
     const RequestParams& aParams)
     : InitializeOriginRequestBase(
+          "dom::quota::InitializeTemporaryOriginOp",
           aParams.get_InitializeTemporaryOriginParams().persistenceType(),
           aParams.get_InitializeTemporaryOriginParams().principalInfo()) {
   AssertIsOnOwningThread();
@@ -9152,7 +9179,8 @@ void InitializeTemporaryOriginOp::GetResponse(RequestResponse& aResponse) {
 
 GetFullOriginMetadataOp::GetFullOriginMetadataOp(
     const GetFullOriginMetadataParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ false),
+    : QuotaRequestBase("dom::quota::GetFullOriginMetadataOp",
+                       /* aExclusive */ false),
       mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
                           aParams.principalInfo()),
                       aParams.persistenceType()) {
@@ -9190,7 +9218,8 @@ void GetFullOriginMetadataOp::GetResponse(RequestResponse& aResponse) {
 }
 
 ResetOrClearOp::ResetOrClearOp(bool aClear)
-    : QuotaRequestBase(/* aExclusive */ true), mClear(aClear) {
+    : QuotaRequestBase("dom::quota::ResetOrClearOp", /* aExclusive */ true),
+      mClear(aClear) {
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
@@ -9470,7 +9499,7 @@ nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
 }
 
 ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
-    : ClearRequestBase(/* aExclusive */ true),
+    : ClearRequestBase("dom::quota::ClearOriginOp", /* aExclusive */ true),
       mParams(aParams.get_ClearOriginParams().commonParams()),
       mMatchAll(aParams.get_ClearOriginParams().matchAll()) {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams);
@@ -9507,7 +9536,8 @@ void ClearOriginOp::GetResponse(RequestResponse& aResponse) {
 }
 
 ClearDataOp::ClearDataOp(const RequestParams& aParams)
-    : ClearRequestBase(/* aExclusive */ true), mParams(aParams) {
+    : ClearRequestBase("dom::quota::ClearDataOp", /* aExclusive */ true),
+      mParams(aParams) {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearDataParams);
 }
 
@@ -9526,7 +9556,7 @@ void ClearDataOp::GetResponse(RequestResponse& aResponse) {
 }
 
 ResetOriginOp::ResetOriginOp(const RequestParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ true) {
+    : QuotaRequestBase("dom::quota::ResetOriginOp", /* aExclusive */ true) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == RequestParams::TResetOriginParams);
 
@@ -9573,7 +9603,9 @@ void ResetOriginOp::GetResponse(RequestResponse& aResponse) {
 }
 
 PersistRequestBase::PersistRequestBase(const PrincipalInfo& aPrincipalInfo)
-    : QuotaRequestBase(/* aExclusive */ false), mPrincipalInfo(aPrincipalInfo) {
+    : QuotaRequestBase("dom::quota::PersistRequestBase",
+                       /* aExclusive */ false),
+      mPrincipalInfo(aPrincipalInfo) {
   AssertIsOnOwningThread();
 }
 
@@ -9732,7 +9764,7 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
 }
 
 EstimateOp::EstimateOp(const EstimateParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ false),
+    : QuotaRequestBase("dom::quota::EstimateOp", /* aExclusive */ false),
       mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
                           aParams.principalInfo()),
                       PERSISTENCE_TYPE_DEFAULT) {
@@ -9775,7 +9807,8 @@ void EstimateOp::GetResponse(RequestResponse& aResponse) {
 }
 
 ListOriginsOp::ListOriginsOp()
-    : QuotaRequestBase(/* aExclusive */ false), TraverseRepositoryHelper() {
+    : QuotaRequestBase("dom::quota::ListOriginsOp", /* aExclusive */ false),
+      TraverseRepositoryHelper() {
   AssertIsOnOwningThread();
 }
 
