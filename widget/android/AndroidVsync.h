@@ -25,7 +25,6 @@ class AndroidVsyncSupport;
  */
 class AndroidVsync final : public SupportsThreadSafeWeakPtr<AndroidVsync> {
  public:
-  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(AndroidVsync)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(AndroidVsync)
 
   static RefPtr<AndroidVsync> GetInstance();
