@@ -38,6 +38,84 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "protectionsPanelOpen" },
   },
   {
+    id: "PB_NEWTAB_FOCUS_PROMO",
+    template: "pb_newtab",
+    groups: ["pbNewtab"],
+    content: {
+      infoBody: "fluent:about-private-browsing-info-description-simplified",
+      infoEnabled: true,
+      infoIcon: "chrome://global/skin/icons/indicator-private-browsing.svg",
+      infoLinkText: "fluent:about-private-browsing-learn-more-link",
+      infoTitle: "",
+      infoTitleEnabled: false,
+      promoEnabled: true,
+      promoHeader: "fluent:about-private-browsing-focus-promo-header",
+      promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
+      promoLinkText: "fluent:about-private-browsing-focus-promo-cta",
+      promoLinkType: "button",
+      promoSectionStyle: "below-search",
+      promoTitle: "fluent:about-private-browsing-focus-promo-text",
+      promoTitleEnabled: true,
+      promoButton: {
+        action: {
+          type: "SHOW_SPOTLIGHT",
+          data: {
+            content: {
+              id: "FOCUS_PROMO",
+              template: "multistage",
+              modal: "tab",
+              metrics: "block",
+              backdrop: "transparent",
+              screens: [
+                {
+                  id: "DEFAULT_MODAL_UI",
+                  order: 0,
+                  content: {
+                    logo: {
+                      imageURL:
+                        "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
+                      height: "100px",
+                    },
+                    title: "Get Firefox Focus",
+                    subtitle: "Scan the QR Code to Download",
+                    primary_button: {
+                      label: "Email yourself a link",
+                      action: {
+                        type: "OPEN_URL",
+                        data: {
+                          args:
+                            "https://www.mozilla.org/firefox/mobile/get-app/",
+                          where: "tabshifted",
+                        },
+                      },
+                    },
+                    secondary_button: {
+                      label: "Close",
+                      action: {
+                        navigate: true,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    priority: 2,
+    frequency: {
+      custom: [
+        {
+          cap: 1,
+          period: 604800000, // Max 1 per week
+        },
+      ],
+      lifetime: 3,
+    },
+    targeting: "true",
+  },
+  {
     id: "PB_NEWTAB_INFO_SECTION",
     template: "pb_newtab",
     content: {

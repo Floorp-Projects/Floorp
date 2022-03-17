@@ -127,10 +127,6 @@ var whitelist = [
   // These files URLs are constructed programatically at run time.
   {
     file:
-      "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
-  },
-  {
-    file:
       "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
   },
   {

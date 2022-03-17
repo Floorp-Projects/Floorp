@@ -256,3 +256,7 @@ Action for enabling the Total Cookie Protection feature.
 
 Action for disabling the Total Cookie Protection feature and enabling an
 additional privacy section in about:preferences.
+
+### `SHOW_SPOTLIGHT`
+
+Action for opening a spotlight tab or window modal using the content passed to the dialog.
