@@ -1165,6 +1165,8 @@ ColorScheme LookAndFeel::ThemeDerivedColorSchemeForContent() {
       return ColorScheme::Dark;
     case 1:  // Light
       return ColorScheme::Light;
+    case 2:  // System
+      return SystemColorScheme();
     default:
       return ColorSchemeForChrome();
   }
@@ -1194,10 +1196,8 @@ void LookAndFeel::RecomputeColorSchemes() {
       case 2:
         return SystemColorScheme();
       default:
-        break;  // Use the browser theme.
+        return ThemeDerivedColorSchemeForContent();
     }
-
-    return ThemeDerivedColorSchemeForContent();
   }();
 }
 
