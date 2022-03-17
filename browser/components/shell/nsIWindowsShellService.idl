@@ -70,8 +70,8 @@ interface nsIWindowsShellService : nsISupports
    * shortcut refers to the current executable, if the paths differ due
    * to e.g. symlinks. This should be rare.
    *
-   * This will definitely fail on an OS before Windows 10 build 1809
-   * (October 2018 Update).
+   * This is fully supported on Windows 7, 8, and 11. On Windows 10, it will
+   * definitely fail on a version prior to build 1809 (October 2018 Update).
    *
    * @throws NS_ERROR_NOT_AVAILABLE
    *         if OS is not at least Windows 10 build 1809, or if creating the
