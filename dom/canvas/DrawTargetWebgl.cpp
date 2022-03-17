@@ -991,6 +991,19 @@ bool DrawTargetWebgl::SharedContext::SupportsPattern(const Pattern& aPattern) {
   }
 }
 
+// Whether a given composition operator is associative and thus allows drawing
+// into a separate layer that can be later composited back into the WebGL
+// context.
+static inline bool SupportsLayering(const DrawOptions& aOptions) {
+  switch (aOptions.mCompositionOp) {
+    case CompositionOp::OP_OVER:
+      // Layering is only supported for the default source-over composition op.
+      return true;
+    default:
+      return false;
+  }
+}
+
 // When a texture handle is no longer referenced, it must mark itself unused
 // by unlinking its owning surface.
 static void ReleaseTextureHandle(void* aPtr) {
@@ -1009,23 +1022,38 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
     return true;
   }
 
-  // If the shared context couldn't be claimed, then go directly to fallback
-  // drawing. If the WebGL context isn't up-to-date and can't be made so by
-  // flattening a layer to it, then go to the fallback to avoid expensive
-  // uploads.
-  if ((!mWebglValid && !mSkiaLayer) || !PrepareContext(aClipped)) {
-    if (!aAccelOnly) {
-      DrawRectFallback(aRect, aPattern, aOptions, aMaskColor, aTransformed,
-                       aClipped, aStrokeOptions);
+  // If we're already drawing directly to the WebGL context, then we want to
+  // continue to do so. However, if we're drawing into a Skia layer over the
+  // WebGL context, then we need to be careful to avoid repeatedly clearing
+  // and flushing the layer if we hit a drawing request that can be accelerated
+  // in between layered drawing requests, as clearing and flushing the layer
+  // can be significantly expensive when repeated. So when a Skia layer is
+  // active, if it is possible to continue drawing into the layer, then don't
+  // accelerate the drawing request.
+  if (mWebglValid ||
+      (mSkiaLayer && (aAccelOnly || !SupportsLayering(aOptions)))) {
+    // If we get here, either the WebGL context is being directly drawn to
+    // or we are going to flush the Skia layer to it before doing so. The shared
+    // context still needs to be claimed and prepared for drawing. If this
+    // fails, we just fall back to drawing with Skia below.
+    if (PrepareContext(aClipped)) {
+      // The shared context is claimed and the framebuffer is now valid, so try
+      // accelerated drawing.
+      return mSharedContext->DrawRectAccel(
+          aRect, aPattern, aOptions, aMaskColor, aHandle, aTransformed,
+          aClipped, aAccelOnly, aForceUpdate, aStrokeOptions);
     }
-    return false;
   }
 
-  // The shared context is claimed and the framebuffer is now valid, so try
-  // accelerated drawing.
-  return mSharedContext->DrawRectAccel(
-      aRect, aPattern, aOptions, aMaskColor, aHandle, aTransformed, aClipped,
-      aAccelOnly, aForceUpdate, aStrokeOptions);
+  // Either there is no valid WebGL target to draw into, or we failed to prepare
+  // it for drawing. The only thing we can do at this point is fall back to
+  // drawing with Skia. If the request explicitly requires accelerated drawing,
+  // then draw nothing before returning failure.
+  if (!aAccelOnly) {
+    DrawRectFallback(aRect, aPattern, aOptions, aMaskColor, aTransformed,
+                     aClipped, aStrokeOptions);
+  }
+  return false;
 }
 
 void DrawTargetWebgl::DrawRectFallback(const Rect& aRect,
@@ -2387,8 +2415,7 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 }
 
 void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
-  if (aOptions.mCompositionOp == CompositionOp::OP_OVER) {
-    // Layering is only supporting for the default source-over composition op.
+  if (SupportsLayering(aOptions)) {
     if (!mSkiaValid) {
       // If the Skia context needs initialization, clear it and enable layering.
       mSkiaValid = true;
