@@ -14,6 +14,10 @@ DIRS = [
 
 DEFINES["MOZ_APP_VERSION"] = '"%s"' % CONFIG["MOZ_APP_VERSION"]
 
+for var in ("MOZ_BACKGROUNDTASKS",):
+    if CONFIG[var]:
+        DEFINES[var] = True
+
 LOCAL_INCLUDES += [
     "/xpcom/build",
     "/xpcom/threads",
