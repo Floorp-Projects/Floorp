@@ -450,7 +450,69 @@ const validateFirstPartyDomain = details => {
   }
 };
 
-this.cookies = class extends ExtensionAPI {
+this.cookies = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onChanged({ fire }) {
+      let observer = (subject, topic, data) => {
+        let notify = (removed, cookie, cause) => {
+          cookie.QueryInterface(Ci.nsICookie);
+
+          if (this.extension.allowedOrigins.matchesCookie(cookie)) {
+            fire.async({
+              removed,
+              cookie: convertCookie({
+                cookie,
+                isPrivate: topic == "private-cookie-changed",
+              }),
+              cause,
+            });
+          }
+        };
+
+        // We do our best effort here to map the incompatible states.
+        switch (data) {
+          case "deleted":
+            notify(true, subject, "explicit");
+            break;
+          case "added":
+            notify(false, subject, "explicit");
+            break;
+          case "changed":
+            notify(true, subject, "overwrite");
+            notify(false, subject, "explicit");
+            break;
+          case "batch-deleted":
+            subject.QueryInterface(Ci.nsIArray);
+            for (let i = 0; i < subject.length; i++) {
+              let cookie = subject.queryElementAt(i, Ci.nsICookie);
+              if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
+                notify(true, cookie, "expired");
+              } else {
+                notify(true, cookie, "evicted");
+              }
+            }
+            break;
+        }
+      };
+
+      const { privateBrowsingAllowed } = this.extension;
+      Services.obs.addObserver(observer, "cookie-changed");
+      if (privateBrowsingAllowed) {
+        Services.obs.addObserver(observer, "private-cookie-changed");
+      }
+      return {
+        unregister() {
+          Services.obs.removeObserver(observer, "cookie-changed");
+          if (privateBrowsingAllowed) {
+            Services.obs.removeObserver(observer, "private-cookie-changed");
+          }
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
   getAPI(context) {
     let { extension } = context;
     let self = {
@@ -609,64 +671,9 @@ this.cookies = class extends ExtensionAPI {
 
         onChanged: new EventManager({
           context,
-          name: "cookies.onChanged",
-          register: fire => {
-            let observer = (subject, topic, data) => {
-              let notify = (removed, cookie, cause) => {
-                cookie.QueryInterface(Ci.nsICookie);
-
-                if (extension.allowedOrigins.matchesCookie(cookie)) {
-                  fire.async({
-                    removed,
-                    cookie: convertCookie({
-                      cookie,
-                      isPrivate: topic == "private-cookie-changed",
-                    }),
-                    cause,
-                  });
-                }
-              };
-
-              // We do our best effort here to map the incompatible states.
-              switch (data) {
-                case "deleted":
-                  notify(true, subject, "explicit");
-                  break;
-                case "added":
-                  notify(false, subject, "explicit");
-                  break;
-                case "changed":
-                  notify(true, subject, "overwrite");
-                  notify(false, subject, "explicit");
-                  break;
-                case "batch-deleted":
-                  subject.QueryInterface(Ci.nsIArray);
-                  for (let i = 0; i < subject.length; i++) {
-                    let cookie = subject.queryElementAt(i, Ci.nsICookie);
-                    if (
-                      !cookie.isSession &&
-                      cookie.expiry * 1000 <= Date.now()
-                    ) {
-                      notify(true, cookie, "expired");
-                    } else {
-                      notify(true, cookie, "evicted");
-                    }
-                  }
-                  break;
-              }
-            };
-
-            Services.obs.addObserver(observer, "cookie-changed");
-            if (context.privateBrowsingAllowed) {
-              Services.obs.addObserver(observer, "private-cookie-changed");
-            }
-            return () => {
-              Services.obs.removeObserver(observer, "cookie-changed");
-              if (context.privateBrowsingAllowed) {
-                Services.obs.removeObserver(observer, "private-cookie-changed");
-              }
-            };
-          },
+          module: "cookies",
+          event: "onChanged",
+          extensionApi: this,
         }).api(),
       },
     };
