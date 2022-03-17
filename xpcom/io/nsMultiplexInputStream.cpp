@@ -1390,6 +1390,8 @@ nsMultiplexInputStream::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
 
 void nsMultiplexInputStream::AsyncWaitCompleted(
     int64_t aLength, const MutexAutoLock& aProofOfLock) {
+  mLock.AssertCurrentThreadOwns();
+
   nsCOMPtr<nsIInputStreamLengthCallback> callback;
   callback.swap(mAsyncWaitLengthCallback);
 

@@ -3256,9 +3256,9 @@ static void MaybeAnnotateDumperError(const ClientInfo& aClientInfo,
 #endif
 }
 
-static void OnChildProcessDumpRequested(void* aContext,
-                                        const ClientInfo& aClientInfo,
-                                        const xpstring& aFilePath) {
+static void OnChildProcessDumpRequested(
+    void* aContext, const ClientInfo& aClientInfo,
+    const xpstring& aFilePath) NO_THREAD_SAFETY_ANALYSIS {
   nsCOMPtr<nsIFile> minidump;
 
   // Hold the mutex until the current dump request is complete, to
@@ -3303,8 +3303,8 @@ static void OnChildProcessDumpRequested(void* aContext,
   }
 }
 
-static void OnChildProcessDumpWritten(void* aContext,
-                                      const ClientInfo& aClientInfo) {
+static void OnChildProcessDumpWritten(
+    void* aContext, const ClientInfo& aClientInfo) NO_THREAD_SAFETY_ANALYSIS {
   ProcessId pid = aClientInfo.pid();
   ChildProcessData* pd = pidToMinidump->GetEntry(pid);
   MOZ_ASSERT(pd);

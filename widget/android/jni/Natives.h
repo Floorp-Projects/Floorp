@@ -599,9 +599,11 @@ class MOZ_HEAP_CLASS NativeWeakPtrControlBlock final {
     return nativeImpl;
   }
 
+  PUSH_IGNORE_THREAD_SAFETY
   void Lock() const { mLock.ReadLock(); }
 
   void Unlock() const { mLock.ReadUnlock(); }
+  POP_THREAD_SAFETY
 
 #if defined(DEBUG)
   // This is kind of expensive, so we only support it in debug builds.

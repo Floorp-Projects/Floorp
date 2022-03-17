@@ -980,11 +980,13 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
    * If no owner is given, then the user should avoid modifying any state on
    * the face so as not to invalidate the prior owner's modification.
    */
+  PUSH_IGNORE_THREAD_SAFETY
   bool Lock(void* aOwner = nullptr) {
     mLock.Lock();
     return !aOwner || mLastLockOwner.exchange(aOwner) == aOwner;
   }
   void Unlock() { mLock.Unlock(); }
+  POP_THREAD_SAFETY
 
   /** Should be called when a lock owner is destroyed so that we don't have
    * a dangling pointer to a destroyed owner.

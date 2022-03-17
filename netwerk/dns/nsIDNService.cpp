@@ -399,7 +399,7 @@ class MOZ_STACK_CLASS MutexSettableAutoUnlock final {
  public:
   MutexSettableAutoUnlock() = default;
 
-  void Acquire(mozilla::Mutex& aMutex) {
+  void Acquire(mozilla::Mutex& aMutex) NO_THREAD_SAFETY_ANALYSIS {
     MOZ_ASSERT(!mMutex);
     mMutex = &aMutex;
     mMutex->Lock();
