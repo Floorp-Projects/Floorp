@@ -29,6 +29,7 @@
 #include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
+#include "nsIInputStream.h"
 
 // Undefine the macro of CreateFile to avoid FileCreatorHelper#CreateFile being
 // replaced by FileCreatorHelper#CreateFileW.
