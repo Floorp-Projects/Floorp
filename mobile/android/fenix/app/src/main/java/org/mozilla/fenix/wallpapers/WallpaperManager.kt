@@ -17,7 +17,6 @@ import android.view.View
 import android.widget.ImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.perf.runBlockingIncrement
@@ -33,7 +32,6 @@ class WallpaperManager(
     private val settings: Settings,
     private val downloader: WallpaperDownloader,
     private val fileManager: WallpaperFileManager,
-    private val crashReporter: CrashReporter,
     allWallpapers: List<Wallpaper> = availableWallpapers
 ) {
     val logger = Logger("WallpaperManager")
@@ -63,7 +61,6 @@ class WallpaperManager(
             if (bitmap == null) {
                 val message = "Could not load wallpaper bitmap. Resetting to default."
                 logger.error(message)
-                crashReporter.submitCaughtException(NullPointerException(message))
                 currentWallpaper = defaultWallpaper
                 wallpaperContainer.visibility = View.GONE
                 return

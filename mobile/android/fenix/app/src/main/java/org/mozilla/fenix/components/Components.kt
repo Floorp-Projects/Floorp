@@ -159,8 +159,7 @@ class Components(private val context: Context) {
             WallpaperManager(
                 settings,
                 WallpaperDownloader(context, core.client),
-                WallpaperFileManager(context.filesDir),
-                analytics.crashReporter,
+                WallpaperFileManager(context.filesDir)
             )
         }
     }
