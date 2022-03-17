@@ -225,7 +225,41 @@ containers-remove-cancel-button = Don’t remove this Container
 
 language-and-appearance-header = Language and Appearance
 
-fonts-and-colors-header = Fonts and Colors
+preferences-web-appearance-header = Website appearance
+
+preferences-web-appearance-description = Some websites adapt their color scheme based on your preferences. Choose which color scheme you’d like to use for those sites.
+
+preferences-web-appearance-choice-browser = { -brand-short-name } theme
+preferences-web-appearance-choice-system = System theme
+preferences-web-appearance-choice-light = Light
+preferences-web-appearance-choice-dark = Dark
+
+preferences-web-appearance-choice-tooltip-browser =
+  .title = Match your { -brand-short-name } theme settings for website backgrounds and content.
+preferences-web-appearance-choice-tooltip-system =
+  .title = Match your system settings for website backgrounds and content.
+preferences-web-appearance-choice-tooltip-light =
+  .title = Use a light appearance for website backgrounds and content.
+preferences-web-appearance-choice-tooltip-dark =
+  .title = Use a dark appearance for website backgrounds and content.
+
+# This can appear when using windows HCM or "Override colors: always" without
+# system colors.
+preferences-web-appearance-override-warning = Your color selections are overriding website appearance. <a data-l10n-name="colors-link">Manage colors</a>
+
+# This message contains one link. It can be moved within the sentence as needed
+# to adapt to your language, but should not be changed.
+preferences-web-appearance-footer = Manage { -brand-short-name } themes in <a data-l10n-name="themes-link">Extensions & Themes</a>
+
+preferences-colors-header = Colors
+
+preferences-colors-description = Override { -brand-short-name }’s default colors for text, website backgrounds, and links.
+
+preferences-colors-manage-button =
+    .label = Manage Colors…
+    .accesskey = C
+
+preferences-fonts-header = Fonts
 
 default-font = Default font
     .accesskey = D
@@ -235,10 +269,6 @@ default-font-size = Size
 advanced-fonts =
     .label = Advanced…
     .accesskey = A
-
-colors-settings =
-    .label = Colors…
-    .accesskey = C
 
 # Zoom is a noun, and the message is used as header for a group of options
 preferences-zoom-header = Zoom

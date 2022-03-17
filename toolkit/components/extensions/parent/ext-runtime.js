@@ -167,6 +167,16 @@ this.runtime = class extends ExtensionAPI {
             DevToolsShim.openBrowserConsole();
           }
         },
+
+        async internalWakeupBackground() {
+          if (
+            extension.manifest.background &&
+            !extension.manifest.background.service_worker &&
+            !extension.persistentBackground
+          ) {
+            await extension.wakeupBackground();
+          }
+        },
       },
     };
   }

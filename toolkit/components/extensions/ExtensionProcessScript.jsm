@@ -80,6 +80,7 @@ ExtensionManager = {
       "Extension:UnregisterContentScripts",
       this
     );
+    Services.cpmm.addMessageListener("Extension:UpdateContentScripts", this);
 
     this.updateStubExtensions();
 
@@ -296,6 +297,26 @@ ExtensionManager = {
                 policy.unregisterContentScript(script);
                 registeredContentScripts.delete(scriptId);
               }
+            }
+          }
+          break;
+        }
+
+        case "Extension:UpdateContentScripts": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+
+          if (policy) {
+            const registeredContentScripts = this.registeredContentScripts.get(
+              policy
+            );
+
+            for (const { scriptId, options } of data.scripts) {
+              const oldScript = registeredContentScripts.get(scriptId);
+              const newScript = new WebExtensionContentScript(policy, options);
+
+              policy.unregisterContentScript(oldScript);
+              policy.registerContentScript(newScript);
+              registeredContentScripts.set(scriptId, newScript);
             }
           }
           break;
