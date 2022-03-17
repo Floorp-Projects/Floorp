@@ -251,14 +251,14 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
   {
     JSContext* cx = aes.cx();
     JS::Rooted<JSObject*> module(cx);
-    JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
     JS::CompileOptions options(cx);
     JS::RootedScript introductionScript(cx);
-    rv = mLoader->FillCompileOptionsForRequest(cx, aRequest, global, &options,
+    rv = mLoader->FillCompileOptionsForRequest(cx, aRequest, &options,
                                                &introductionScript);
 
     if (NS_SUCCEEDED(rv)) {
+      JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
       rv = CompileOrFinishModuleScript(cx, global, options, aRequest, &module);
     }
 
