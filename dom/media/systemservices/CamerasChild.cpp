@@ -425,19 +425,6 @@ int CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id) {
   return dispatcher.ReturnValue();
 }
 
-void Shutdown(void) {
-  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-
-  CamerasChild* child = CamerasSingleton::Child();
-  if (!child) {
-    // We don't want to cause everything to get fired up if we're
-    // really already shut down.
-    LOG(("Shutdown when already shut down"));
-    return;
-  }
-  child->ShutdownAll();
-}
-
 class ShutdownRunnable : public Runnable {
  public:
   explicit ShutdownRunnable(already_AddRefed<Runnable>&& aReplyEvent)
@@ -457,23 +444,18 @@ class ShutdownRunnable : public Runnable {
   RefPtr<Runnable> mReplyEvent;
 };
 
-void CamerasChild::ShutdownAll() {
-  // Called with CamerasSingleton::Mutex() held
-  ShutdownParent();
-  ShutdownChild();
-}
+void Shutdown(void) {
+  // Called from both MediaEngineWebRTC::Shutdown() on the MediaManager thread
+  // and DeallocPCamerasChild() on the dedicated IPC thread.
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
 
-void CamerasChild::ShutdownParent() {
-  // Called with CamerasSingleton::Mutex() held
-  {
-    MonitorAutoLock monitor(mReplyMonitor);
-    mIPCIsAlive = false;
-    monitor.NotifyAll();
+  CamerasChild* child = CamerasSingleton::Child();
+  if (!child) {
+    // We don't want to cause everything to get fired up if we're
+    // really already shut down.
+    LOG(("Shutdown when already shut down"));
+    return;
   }
-}
-
-void CamerasChild::ShutdownChild() {
-  // Called with CamerasSingleton::Mutex() held
   if (CamerasSingleton::Thread()) {
     LOG(("PBackground thread exists, dispatching close"));
     // The IPC thread is shut down on the main thread after the

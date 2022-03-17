@@ -189,7 +189,6 @@ class CamerasChild final : public PCamerasChild {
                        char* unique_idUTF8,
                        const unsigned int unique_idUTF8Length,
                        bool* scary = nullptr);
-  void ShutdownAll();
   int EnsureInitialized(CaptureEngine aCapEngine);
 
   template <typename This>
@@ -224,8 +223,6 @@ class CamerasChild final : public PCamerasChild {
   void AddCallback(const CaptureEngine aCapEngine, const int capture_id,
                    FrameRelay* render);
   void RemoveCallback(const CaptureEngine aCapEngine, const int capture_id);
-  void ShutdownParent();
-  void ShutdownChild();
 
   nsTArray<CapturerElement> mCallbacks;
   // Protects the callback arrays
