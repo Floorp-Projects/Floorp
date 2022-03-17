@@ -218,7 +218,6 @@ class MediaManager final : public nsIMediaManagerService,
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
   media::Parent<media::NonE10s>* GetNonE10sParent();
-  MediaEngine* GetBackend();
 
   // If the window has not been destroyed, then return the
   // GetUserMediaWindowListener for this window.
@@ -365,6 +364,9 @@ class MediaManager final : public nsIMediaManagerService,
   // permission prompt and use the first appropriate device.
   void NotifyAllowed(const nsString& aCallID,
                      const LocalMediaDeviceSet& aDevices);
+
+  // Media thread only
+  MediaEngine* GetBackend();
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
