@@ -630,9 +630,11 @@ void Factory::ReleaseFTLibrary(FT_Library aFTLibrary) {
   FT_Done_FreeType(aFTLibrary);
 }
 
+PUSH_IGNORE_THREAD_SAFETY
 void Factory::LockFTLibrary(FT_Library aFTLibrary) { mFTLock.Lock(); }
 
 void Factory::UnlockFTLibrary(FT_Library aFTLibrary) { mFTLock.Unlock(); }
+POP_THREAD_SAFETY
 
 FT_Face Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName,
                            int aFaceIndex) {

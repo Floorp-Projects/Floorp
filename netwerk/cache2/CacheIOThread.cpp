@@ -493,6 +493,7 @@ void CacheIOThread::ThreadFunc() {
 }
 
 void CacheIOThread::LoopOneLevel(uint32_t aLevel) {
+  mMonitor.AssertCurrentThreadOwns();
   EventQueue events = std::move(mEventQueue[aLevel]);
   EventQueue::size_type length = events.Length();
 

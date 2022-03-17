@@ -131,6 +131,7 @@ void WaylandVsyncSource::MaybeUpdateSource(
 
 void WaylandVsyncSource::Refresh(const MutexAutoLock& aProofOfLock) {
   LOG("WaylandVsyncSource::Refresh fps %f\n", GetFPS(mVsyncRate));
+  mMutex.AssertCurrentThreadOwns();
 
   if (!(mContainer || mNativeLayerRoot) || !mMonitorEnabled || !mVsyncEnabled ||
       mCallbackRequested) {

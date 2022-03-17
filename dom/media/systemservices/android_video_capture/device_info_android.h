@@ -46,7 +46,8 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
                                 char* productUniqueIdUTF8 = 0,
                                 uint32_t productUniqueIdUTF8Length = 0,
                                 pid_t* pid = 0);
-  virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8);
+  virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(_apiLock);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(
       const char* /*deviceUniqueIdUTF8*/, const char* /*dialogTitleUTF8*/,

@@ -2692,6 +2692,7 @@ void CacheIndex::BuildIndex(const StaticMutexAutoLock& aProofOfLock) {
   if (!mDirEnumerator) {
     {
       // Do not do IO under the lock.
+      sLock.AssertCurrentThreadOwns();
       StaticMutexAutoUnlock unlock(sLock);
       rv = SetupDirectoryEnumerator();
     }
@@ -2719,6 +2720,7 @@ void CacheIndex::BuildIndex(const StaticMutexAutoLock& aProofOfLock) {
     nsCOMPtr<nsIFile> file;
     {
       // Do not do IO under the lock.
+      sLock.AssertCurrentThreadOwns();
       StaticMutexAutoUnlock unlock(sLock);
       rv = mDirEnumerator->GetNextFile(getter_AddRefs(file));
 
@@ -2926,6 +2928,7 @@ void CacheIndex::UpdateIndex(const StaticMutexAutoLock& aProofOfLock) {
   LOG(("CacheIndex::UpdateIndex()"));
 
   MOZ_ASSERT(mPendingUpdates.Count() == 0);
+  sLock.AssertCurrentThreadOwns();
 
   nsresult rv;
 

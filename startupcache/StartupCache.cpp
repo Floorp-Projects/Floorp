@@ -363,7 +363,7 @@ bool StartupCache::HasEntry(const char* id) {
 }
 
 nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
-                                 uint32_t* length) {
+                                 uint32_t* length) NO_THREAD_SAFETY_ANALYSIS {
   AUTO_PROFILER_LABEL("StartupCache::GetBuffer", OTHER);
 
   NS_ASSERTION(NS_IsMainThread(),
@@ -450,7 +450,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
 
 // Makes a copy of the buffer, client retains ownership of inbuf.
 nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
-                                 uint32_t len) {
+                                 uint32_t len) NO_THREAD_SAFETY_ANALYSIS {
   NS_ASSERTION(NS_IsMainThread(),
                "Startup cache only available on main thread");
   if (StartupCache::gShutdownInitiated) {
@@ -469,7 +469,10 @@ nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
   if (!mTableLock.TryLock()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  auto lockGuard = MakeScopeExit([&] { mTableLock.Unlock(); });
+  auto lockGuard = MakeScopeExit([&] {
+    mTableLock.AssertCurrentThreadOwns();
+    mTableLock.Unlock();
+  });
 
   // putNew returns false on alloc failure - in the very unlikely event we hit
   // that and aren't going to crash elsewhere, there's no reason we need to

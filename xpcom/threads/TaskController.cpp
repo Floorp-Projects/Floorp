@@ -605,6 +605,7 @@ uint64_t TaskController::PendingMainthreadTaskCountIncludingSuspended() {
 
 bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
+  mGraphMutex.AssertCurrentThreadOwns();
   // Block to make it easier to jump to our cleanup.
   bool taskRan = false;
   do {
@@ -674,6 +675,8 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
 
 bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
+  mGraphMutex.AssertCurrentThreadOwns();
+
   nsCOMPtr<nsIThread> mainIThread;
   NS_GetMainThread(getter_AddRefs(mainIThread));
 

@@ -231,6 +231,7 @@ struct ToCubebFormat<AUDIO_FORMAT_S16> {
 
 template <typename Function, typename... Args>
 int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
+  mMonitor.AssertCurrentThreadOwns();
   MonitorAutoUnlock mon(mMonitor);
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
