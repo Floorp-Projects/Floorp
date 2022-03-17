@@ -8995,6 +8995,11 @@
     value: true
     mirror: once
 
+-   name: media.wmf.av1.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
+
 #endif  # MOZ_WMF
 
 - name: media.decoder-doctor.testing

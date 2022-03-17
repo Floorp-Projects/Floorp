@@ -43,6 +43,7 @@ class WMFDecoderModule : public PlatformDecoderModule {
   static bool HasH264();
   static bool HasVP8();
   static bool HasVP9();
+  static bool HasAV1();
   static bool HasAAC();
   static bool HasMP3();
 

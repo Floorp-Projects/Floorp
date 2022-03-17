@@ -22,12 +22,17 @@ class MFTDecoder final {
 
   MFTDecoder();
 
-  // Creates the MFT. First thing to do as part of setup.
+  // Creates the MFT by querying a category and media subtype.
+  // First thing to do as part of setup.
   //
   // Params:
-  //  - aMFTClsID the clsid used by CoCreateInstance to instantiate the
-  //    decoder MFT.
-  HRESULT Create(const GUID& aMFTClsID);
+  //  - aCategory the GUID of the MFT category to use.
+  //  - aInSubType the GUID of the input MFT media type to use.
+  //    GUID_NULL may be used as a wildcard.
+  //  - aOutSubType the GUID of the output MFT media type to use.
+  //    GUID_NULL may be used as a wildcard.
+  HRESULT Create(const GUID& aCategory, const GUID& aInSubtype,
+                 const GUID& aOutSubtype);
 
   // Sets the input and output media types. Call after Init().
   //
@@ -46,6 +51,9 @@ class MFTDecoder final {
 
   // Returns the MFT's IMFAttributes object for an output stream.
   already_AddRefed<IMFAttributes> GetOutputStreamAttributes();
+
+  // Retrieves the media type being input.
+  HRESULT GetInputMediaType(RefPtr<IMFMediaType>& aMediaType);
 
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.
