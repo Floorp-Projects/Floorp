@@ -201,6 +201,9 @@ nsresult DataStorage::Init() {
   // This is a backstop for xpcshell and other cases where
   // profile-before-change might not get sent.
   os->AddObserver(this, "xpcom-shutdown-threads", false);
+  // On mobile, if the app is backgrounded, it may be killed. Observe this
+  // notification to kick off an asynchronous write to avoid losing data.
+  os->AddObserver(this, "application-background", false);
 
   return NS_OK;
 }
@@ -634,13 +637,14 @@ DataStorage::Writer::Run() {
       return rv;
     }
   }
+
   nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file,
-                                   PR_CREATE_FILE | PR_TRUNCATE | PR_WRONLY);
+  rv =
+      NS_NewSafeLocalFileOutputStream(getter_AddRefs(outputStream), file,
+                                      PR_CREATE_FILE | PR_TRUNCATE | PR_WRONLY);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
   // When the output stream is null, it means we don't have a profile.
   if (!outputStream) {
     return NS_OK;
@@ -656,6 +660,16 @@ DataStorage::Writer::Run() {
     }
     remaining -= written;
     ptr += written;
+  }
+
+  nsCOMPtr<nsISafeOutputStream> safeOutputStream =
+      do_QueryInterface(outputStream);
+  if (!safeOutputStream) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = safeOutputStream->Finish();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // Observed by tests.
@@ -779,6 +793,16 @@ DataStorage::Observe(nsISupports* /*aSubject*/, const char* aTopic,
       taskQueueToAwait->AwaitShutdownAndIdle();
     }
     ShutdownTimer();
+  }
+
+  // On mobile, if the app is backgrounded, it may be killed. Kick off an
+  // asynchronous write to avoid losing data.
+  if (strcmp(aTopic, "application-background") == 0) {
+    MutexAutoLock lock(mMutex);
+    if (!mShuttingDown) {
+      nsresult rv = AsyncWriteData(lock);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    }
   }
 
   return NS_OK;
