@@ -180,7 +180,12 @@ void ModuleLoadRequest::LoadFailed() {
 }
 
 void ModuleLoadRequest::LoadFinished() {
-  mLoader->ProcessLoadedModuleTree(this);
+  RefPtr<ModuleLoadRequest> request(this);
+  if (IsTopLevel() && IsDynamicImport()) {
+    mLoader->RemoveDynamicImport(request);
+  }
+
+  mLoader->ProcessLoadedModuleTree(request);
 
   mLoader = nullptr;
 }

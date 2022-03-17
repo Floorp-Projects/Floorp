@@ -2516,7 +2516,7 @@ bool ScriptLoader::HasPendingRequests() {
          !mLoadedAsyncRequests.isEmpty() ||
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
          !mDeferRequests.isEmpty() ||
-         !mModuleLoader->mDynamicImportRequests.isEmpty() ||
+         mModuleLoader->HasPendingDynamicImports() ||
          !mPendingChildLoaders.IsEmpty();
   // mOffThreadCompilingRequests are already being processed.
 }
@@ -2982,13 +2982,7 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     if (modReq->IsDynamicImport()) {
       MOZ_ASSERT(modReq->IsTopLevel());
       if (aRequest->isInList()) {
-        RefPtr<ScriptLoadRequest> req =
-            mModuleLoader->mDynamicImportRequests.Steal(aRequest);
-        modReq->Cancel();
-        // FinishDynamicImport must happen exactly once for each dynamic import
-        // request. If the load is aborted we do it when we remove the request
-        // from mDynamicImportRequests.
-        mModuleLoader->FinishDynamicImportAndReject(modReq, aResult);
+        mModuleLoader->CancelDynamicImport(modReq, aResult);
       }
     } else {
       MOZ_ASSERT(!modReq->IsTopLevel());
@@ -3223,17 +3217,17 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   // inserting the request in the array. However it's an unlikely case
   // so if you see this assertion it is likely something else that is
   // wrong, especially if you see it more than once.
-  NS_ASSERTION(mDeferRequests.Contains(aRequest) ||
-                   mLoadingAsyncRequests.Contains(aRequest) ||
-                   mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
-                   mXSLTRequests.Contains(aRequest) ||
-                   mModuleLoader->mDynamicImportRequests.Contains(aRequest) ||
-                   (aRequest->IsModuleRequest() &&
-                    !aRequest->AsModuleRequest()->IsTopLevel() &&
-                    !aRequest->isInList()) ||
-                   mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
-                   mParserBlockingRequest == aRequest,
-               "aRequest should be pending!");
+  NS_ASSERTION(
+      mDeferRequests.Contains(aRequest) ||
+          mLoadingAsyncRequests.Contains(aRequest) ||
+          mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
+          mXSLTRequests.Contains(aRequest) ||
+          (aRequest->IsModuleRequest() &&
+           (mModuleLoader->HasDynamicImport(aRequest->AsModuleRequest()) ||
+            !aRequest->AsModuleRequest()->IsTopLevel())) ||
+          mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
+          mParserBlockingRequest == aRequest,
+      "aRequest should be pending!");
 
   nsCOMPtr<nsIURI> uri;
   rv = channel->GetOriginalURI(getter_AddRefs(uri));
