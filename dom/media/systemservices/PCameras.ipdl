@@ -85,8 +85,6 @@ parent:
   // transfers frame back
   async ReleaseFrame(Shmem s);
 
-  // Ask parent to delete us
-  async AllDone();
   // setup camera engine
   async EnsureInitialized(CaptureEngine engine);
 };
