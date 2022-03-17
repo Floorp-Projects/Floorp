@@ -149,7 +149,7 @@ template <class T = int>
 class LockAndDispatch {
  public:
   LockAndDispatch(CamerasChild* aCamerasChild, const char* aRequestingFunc,
-                  nsIRunnable* aRunnable, const T& aFailureValue,
+                  nsIRunnable* aRunnable, T aFailureValue,
                   const T& aSuccessValue)
       : mCamerasChild(aCamerasChild),
         mRequestingFunc(aRequestingFunc),
