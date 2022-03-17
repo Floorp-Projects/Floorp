@@ -377,7 +377,7 @@ Data structures
    * - ``nsClassHashtable``
      - ``nsClassHashtable.h``
      -
-     - Adaptation of nsTHashtable, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
+     - Adaptation of nsTHashtable, see :ref:`XPCOM Hashtable Guide`
    * - ``nsCOMArray``
      - ``nsCOMArray.h``
      -
@@ -385,7 +385,7 @@ Data structures
    * - ``nsDataHashtable``
      - ``nsClassHashtable.h``
      - ``std::unordered_map``
-     - Adaptation of ``nsTHashtable``, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
+     - Adaptation of ``nsTHashtable``, see :ref:`XPCOM Hashtable Guide`
    * - ``nsDeque``
      - ``nsDeque.h``
      - ``std::deque<void *>``
@@ -401,7 +401,7 @@ Data structures
    * - ``nsInterfaceHashtable``
      - ``nsInterfaceHashtable.h``
      - ``std::unordered_map``
-     - Adaptation of ``nsTHashtable``, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
+     - Adaptation of ``nsTHashtable``, see :ref:`XPCOM Hashtable Guide`
    * - ``mozilla::LinkedList``
      - ``mozilla/LinkedList.h``
      - ``std::list``
@@ -409,7 +409,7 @@ Data structures
    * - ``nsRef PtrHashtable``
      - ``nsRefPtrHashtable.h``
      - ``std::unordered_map``
-     - Adaptation of ``nsTHashtable``, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
+     - Adaptation of ``nsTHashtable``, see :ref:`XPCOM Hashtable Guide`
    * - ``mozilla::SegmentedVector``
      - ``mozilla/SegmentedVector.h``
      - ``std::deque`` w/o O(1) pop_front
@@ -425,7 +425,7 @@ Data structures
    * - ``nsTHashtable``
      - ``nsTHashtable.h``
      - ``std::unordered_{map,set}``
-     - See `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__,  you probably want a subclass
+     - See :ref:`XPCOM Hashtable Guide`,  you probably want a subclass
    * - ``nsTObserverArray``
      - ``nsTObserverArray.h``
      -
