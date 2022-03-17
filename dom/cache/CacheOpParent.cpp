@@ -225,7 +225,7 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
   // Only checking for match/matchAll.
   nsILoadInfo::CrossOriginEmbedderPolicy loadingCOEP =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
-  Maybe<PrincipalInfo> principalInfo;
+  Maybe<mozilla::ipc::PrincipalInfo> principalInfo;
   switch (mOpArgs.type()) {
     case CacheOpArgs::TCacheMatchArgs: {
       loadingCOEP =
@@ -254,10 +254,11 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
   // skip checking if the request has no principal for same-origin/same-site
   // checking.
   if (principalInfo.isNothing() ||
-      principalInfo.ref().type() != PrincipalInfo::TContentPrincipalInfo) {
+      principalInfo.ref().type() !=
+          mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
     return;
   }
-  const ContentPrincipalInfo& contentPrincipalInfo =
+  const mozilla::ipc::ContentPrincipalInfo& contentPrincipalInfo =
       principalInfo.ref().get_ContentPrincipalInfo();
 
   for (auto it = aResponses.cbegin(); it != aResponses.cend(); ++it) {
@@ -288,11 +289,11 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     // checking.
     if (it->mValue.principalInfo().isNothing() ||
         it->mValue.principalInfo().ref().type() !=
-            PrincipalInfo::TContentPrincipalInfo) {
+            mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
       continue;
     }
 
-    const ContentPrincipalInfo& responseContentPrincipalInfo =
+    const mozilla::ipc::ContentPrincipalInfo& responseContentPrincipalInfo =
         it->mValue.principalInfo().ref().get_ContentPrincipalInfo();
 
     const auto& corp =
