@@ -24,7 +24,11 @@ this.backgroundPage = class extends ExtensionAPI {
 
       runtime: {
         getBackgroundPage() {
-          return context.cloneScope.Promise.resolve(getBackgroundPage());
+          return context.childManager
+            .callParentAsyncFunction("runtime.internalWakeupBackground", [])
+            .then(() => {
+              return context.cloneScope.Promise.resolve(getBackgroundPage());
+            });
         },
       },
     };
