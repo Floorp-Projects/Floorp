@@ -89,9 +89,13 @@ class ModuleLoaderBase : public nsISupports {
       mFetchingModules;
   nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
 
+  // List of dynamic imports that are currently being loaded.
+  ScriptLoadRequestList mDynamicImportRequests;
+
  protected:
-  virtual ~ModuleLoaderBase();
   RefPtr<ScriptLoaderInterface> mLoader;
+
+  virtual ~ModuleLoaderBase();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -101,7 +105,6 @@ class ModuleLoaderBase : public nsISupports {
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
   using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
   using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
-  ScriptLoadRequestList mDynamicImportRequests;
 
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
@@ -121,6 +124,13 @@ class ModuleLoaderBase : public nsISupports {
   // Create a module load request for a static module import.
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) = 0;
+
+  bool HasPendingDynamicImports() const;
+  void CancelDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
+  void RemoveDynamicImport(ModuleLoadRequest* aRequest);
+#ifdef DEBUG
+  bool HasDynamicImport(ModuleLoadRequest* aRequest) const;
+#endif
 
   // Helper function to set up the global correctly for dynamic imports.
   nsresult EvaluateModule(ScriptLoadRequest* aRequest);
