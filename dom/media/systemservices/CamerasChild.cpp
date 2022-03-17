@@ -29,8 +29,7 @@ namespace mozilla::camera {
 CamerasSingleton::CamerasSingleton()
     : mCamerasMutex("CamerasSingleton::mCamerasMutex"),
       mCameras(nullptr),
-      mCamerasChildThread(nullptr),
-      mInShutdown(false) {
+      mCamerasChildThread(nullptr) {
   LOG(("CamerasSingleton: %p", this));
 }
 
@@ -429,8 +428,6 @@ int CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id) {
 void Shutdown(void) {
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
 
-  CamerasSingleton::StartShutdown();
-
   CamerasChild* child = CamerasSingleton::Child();
   if (!child) {
     // We don't want to cause everything to get fired up if we're
@@ -538,16 +535,7 @@ CamerasChild::CamerasChild()
 
 CamerasChild::~CamerasChild() {
   LOG(("~CamerasChild: %p", this));
-
-  if (!CamerasSingleton::InShutdown()) {
-    OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-    // In normal circumstances we've already shut down and the
-    // following does nothing. But on fatal IPC errors we will
-    // get destructed immediately, and should not try to reach
-    // the parent.
-    ShutdownChild();
-  }
-
+  CamerasSingleton::AssertNoChild();
   MOZ_COUNT_DTOR(CamerasChild);
 }
 
