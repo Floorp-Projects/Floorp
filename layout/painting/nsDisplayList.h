@@ -2680,11 +2680,6 @@ class nsDisplayItem {
   const nsRect& GetBuildingRect() const { return mBuildingRect; }
 
   void SetBuildingRect(const nsRect& aBuildingRect) {
-    if (aBuildingRect == mBuildingRect) {
-      // Avoid unnecessary paint rect recompution when the
-      // building rect is staying the same.
-      return;
-    }
     mBuildingRect = aBuildingRect;
   }
 
