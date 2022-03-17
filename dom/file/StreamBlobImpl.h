@@ -8,7 +8,9 @@
 #define mozilla_dom_StreamBlobImpl_h
 
 #include "BaseBlobImpl.h"
+#include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"
+#include "nsICloneableInputStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -65,12 +67,12 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
  private:
   // Blob constructor.
-  StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
+  StreamBlobImpl(already_AddRefed<nsICloneableInputStream> aInputStream,
                  const nsAString& aContentType, uint64_t aLength,
                  const nsAString& aBlobImplType);
 
   // File constructor.
-  StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
+  StreamBlobImpl(already_AddRefed<nsICloneableInputStream> aInputStream,
                  const nsAString& aName, const nsAString& aContentType,
                  int64_t aLastModifiedDate, uint64_t aLength,
                  const nsAString& aBlobImplType);
@@ -79,7 +81,7 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
   void MaybeRegisterMemoryReporter();
 
-  nsCOMPtr<nsIInputStream> mInputStream;
+  nsCOMPtr<nsICloneableInputStream> mInputStream;
 
   nsString mBlobImplType;
 
