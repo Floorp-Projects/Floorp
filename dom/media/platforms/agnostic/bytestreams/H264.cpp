@@ -1277,6 +1277,8 @@ bool H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
     bw.WriteUE(1);  // chroma_format_idc -> always set to 4:2:0 chroma format
     bw.WriteUE(0);  // bit_depth_luma_minus8 -> always 8 bits here
     bw.WriteUE(0);  // bit_depth_chroma_minus8 -> always 8 bits here
+    bw.WriteBit(false);  // qpprime_y_zero_transform_bypass_flag
+    bw.WriteBit(false);  // seq_scaling_matrix_present_flag
   }
 
   bw.WriteBits(br.ReadBits(11),
