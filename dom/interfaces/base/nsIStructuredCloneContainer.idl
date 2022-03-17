@@ -51,14 +51,6 @@ interface nsIStructuredCloneContainer : nsISupports
   jsval deserializeToJsval();
 
   /**
-   * Deserialize the object this container holds, returning it wrapped as
-   * an nsIVariant.
-   * Main thread only!
-   */
-  [implicit_jscontext]
-  nsIVariant deserializeToVariant();
-
-  /**
    * Get this structured clone container's data as a base-64-encoded string.
    */
   AString getDataAsBase64();

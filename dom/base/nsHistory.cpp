@@ -118,24 +118,7 @@ void nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     return;
   }
 
-  nsCOMPtr<nsIVariant> variant;
-  doc->GetStateObject(getter_AddRefs(variant));
-
-  if (variant) {
-    aRv = variant->GetAsJSVal(aResult);
-
-    if (aRv.Failed()) {
-      return;
-    }
-
-    if (!JS_WrapValue(aCx, aResult)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    return;
-  }
-
-  aResult.setNull();
+  aRv = doc->GetStateObject(aResult);
 }
 
 void nsHistory::Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
