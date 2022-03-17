@@ -277,7 +277,7 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleaseableMonitorAutoLock {
     mMonitor->Lock();
     mLocked = true;
   }
-  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(mMonitor) {
     mMonitor->AssertCurrentThreadOwns();
   }
 
