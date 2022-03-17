@@ -19,9 +19,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
-#include "nsIObserverService.h"
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 

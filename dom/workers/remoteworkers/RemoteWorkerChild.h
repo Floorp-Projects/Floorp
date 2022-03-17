@@ -49,6 +49,8 @@ class RemoteWorkerChild final
   friend class ServiceWorkerOp;
 
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(RemoteWorkerChild)
+
   MOZ_DECLARE_REFCOUNTED_TYPENAME(RemoteWorkerChild)
 
   explicit RemoteWorkerChild(const RemoteWorkerData& aData);

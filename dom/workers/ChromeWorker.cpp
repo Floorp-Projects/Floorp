@@ -6,7 +6,6 @@
 
 #include "ChromeWorker.h"
 
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "nsContentUtils.h"
 #include "WorkerPrivate.h"

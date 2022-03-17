@@ -227,6 +227,7 @@ class SmartMockCubebStream
     : public MockCubebStream,
       public SupportsThreadSafeWeakPtr<SmartMockCubebStream> {
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(SmartMockCubebStream)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SmartMockCubebStream)
   SmartMockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
                        cubeb_stream_params* aInputStreamParams,
