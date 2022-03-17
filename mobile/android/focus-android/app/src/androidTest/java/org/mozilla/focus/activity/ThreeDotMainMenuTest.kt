@@ -36,6 +36,8 @@ class ThreeDotMainMenuTest {
     fun startWebServer() {
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
+        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
+        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         webServer.start()
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
@@ -79,9 +81,10 @@ class ThreeDotMainMenuTest {
     @SmokeTest
     @Test
     fun shareTabTest() {
-        /* Go to a webpage */
+        val pageUrl = webServer.url("").toString()
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) {
+        }.loadPage(pageUrl) {
             progressBar.waitUntilGone(waitingTime)
         }.openMainMenu {
         }.openShareScreen {
@@ -93,8 +96,10 @@ class ThreeDotMainMenuTest {
     @SmokeTest
     @Test
     fun findInPageTest() {
+        val pageUrl = webServer.url("").toString()
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) {
+        }.loadPage(pageUrl) {
             progressBar.waitUntilGone(waitingTime)
         }.openMainMenu {
         }.openFindInPage {
@@ -112,17 +117,20 @@ class ThreeDotMainMenuTest {
     @SmokeTest
     @Test
     fun switchDesktopModeTest() {
+        val pageUrl = webServer.url("").toString()
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) {
+        }.loadPage(pageUrl) {
             progressBar.waitUntilGone(waitingTime)
-            verifyPageContent("Tab 1")
+            verifyPageContent("mobile-site")
         }.openMainMenu {
         }.switchDesktopSiteMode {
             progressBar.waitUntilGone(waitingTime)
-            verifyPageContent("Tab 1")
+            verifyPageContent("desktop-site")
         }.openMainMenu {
             verifyRequestDesktopSiteIsEnabled(true)
         }.switchDesktopSiteMode {
+            verifyPageContent("mobile-site")
         }.openMainMenu {
             verifyRequestDesktopSiteIsEnabled(false)
         }

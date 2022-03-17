@@ -2,14 +2,28 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
 </head>
+<title>Tab 1</title>
 <body>
-
     <h1 id="content">Tab 1</h1>
 
     <a href="tab2.html" id="tab2">Tab 2</a>
 
     <a href="tab3.html" id="tab3">Tab 3</a>
 
+    <!-- here we display if the page is in mobile or desktop view mode -->
+    <p id="viewMode"></p>
 </body>
+<script>
+window.mobileCheck = function() {
+  let check = false;
+  (function(a){
+    if (a.includes("Android"))
+        check = true;
+  }) (navigator.userAgent)
+  return check;
+};
+document.getElementById('viewMode').textContent=mobileCheck()? "mobile-site":"desktop-site";
+</script>
 </html>
