@@ -14,7 +14,6 @@
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
-
 MFTDecoder::MFTDecoder() {
   memset(&mInputStreamInfo, 0, sizeof(MFT_INPUT_STREAM_INFO));
   memset(&mOutputStreamInfo, 0, sizeof(MFT_OUTPUT_STREAM_INFO));
@@ -23,13 +22,52 @@ MFTDecoder::MFTDecoder() {
 MFTDecoder::~MFTDecoder() {}
 
 HRESULT
-MFTDecoder::Create(const GUID& aMFTClsID) {
+MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
+                   const GUID& aOutSubtype) {
   // Note: IMFTransform is documented to only be safe on MTA threads.
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
-  // Create the IMFTransform to do the decoding.
+
+  // Use video by default, but select audio if necessary.
+  const GUID major = aCategory == MFT_CATEGORY_AUDIO_DECODER
+                         ? MFMediaType_Audio
+                         : MFMediaType_Video;
+
+  // Ignore null GUIDs to allow searching for all decoders supporting
+  // just one input or output type.
+  auto createInfo = [&major](const GUID& subtype) -> MFT_REGISTER_TYPE_INFO* {
+    if (IsEqualGUID(subtype, GUID_NULL)) {
+      return nullptr;
+    }
+
+    MFT_REGISTER_TYPE_INFO* info = new MFT_REGISTER_TYPE_INFO();
+    info->guidMajorType = major;
+    info->guidSubtype = subtype;
+    return info;
+  };
+  const MFT_REGISTER_TYPE_INFO* inInfo = createInfo(aInSubtype);
+  const MFT_REGISTER_TYPE_INFO* outInfo = createInfo(aOutSubtype);
+
+  // Request a decoder from the Windows API.
   HRESULT hr;
-  hr = CoCreateInstance(
-      aMFTClsID, nullptr, CLSCTX_INPROC_SERVER,
+  IMFActivate** acts = nullptr;
+  UINT32 actsNum = 0;
+
+  hr = wmf::MFTEnumEx(aCategory, MFT_ENUM_FLAG_SORTANDFILTER, inInfo, outInfo,
+                      &acts, &actsNum);
+  delete inInfo;
+  delete outInfo;
+  NS_ENSURE_TRUE(actsNum > 0, WINCODEC_ERR_COMPONENTNOTFOUND);
+
+  auto guard = MakeScopeExit([&] {
+    for (int i = 0; i < actsNum; i++) {
+      acts[i]->Release();
+    }
+  });
+
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  // Create the IMFTransform to do the decoding.
+  hr = acts[0]->ActivateObject(
       IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -342,6 +380,13 @@ MFTDecoder::Flush() {
   mDiscontinuity = true;
 
   return S_OK;
+}
+
+HRESULT
+MFTDecoder::GetInputMediaType(RefPtr<IMFMediaType>& aMediaType) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+  NS_ENSURE_TRUE(mDecoder, E_POINTER);
+  return mDecoder->GetInputCurrentType(0, getter_AddRefs(aMediaType));
 }
 
 HRESULT

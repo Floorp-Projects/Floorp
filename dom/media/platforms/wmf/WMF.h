@@ -32,12 +32,6 @@
 #  undef max
 #endif
 
-// Some SDK versions don't define the AAC decoder CLSID.
-#ifndef CLSID_CMSAACDecMFT
-extern "C" const CLSID CLSID_CMSAACDecMFT;
-#  define WMF_MUST_DEFINE_AAC_MFT_CLSID
-#endif
-
 namespace mozilla {
 namespace wmf {
 
