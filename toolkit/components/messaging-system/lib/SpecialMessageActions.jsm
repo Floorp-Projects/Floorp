@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UITour: "resource:///modules/UITour.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
 });
 
 const SpecialMessageActions = {
@@ -174,7 +175,7 @@ const SpecialMessageActions = {
    * Messaging System interactions.
    *
    * @param {{type: string, data?: any}} action User action defined in message JSON.
-   * @param browser {Browser} The browser most relvant to the message.
+   * @param browser {Browser} The browser most relevant to the message.
    */
   async handleAction(action, browser) {
     const window = browser.ownerGlobal;
@@ -323,6 +324,9 @@ const SpecialMessageActions = {
           "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
           true
         );
+        break;
+      case "SHOW_SPOTLIGHT":
+        Spotlight.showSpotlightDialog(browser, action.data);
         break;
       default:
         throw new Error(
