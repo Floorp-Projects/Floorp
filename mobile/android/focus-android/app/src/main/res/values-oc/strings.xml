@@ -489,7 +489,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">La benvenguda a %1$s !</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Començar de navegar</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Refortissètz vòstra vida privada</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Passatz a un nivèl mai naut de navegacion privada. Oblidetz las reclamas e los autres contenguts que pòdon vos traçar de sites en sites e rendon pesucas las paginas.</string>
