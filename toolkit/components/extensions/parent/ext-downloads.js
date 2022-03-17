@@ -609,27 +609,58 @@ const queryHelper = query => {
   });
 };
 
-function downloadEventManagerAPI(context, name, event, listener) {
-  let register = fire => {
-    const handler = (what, item) => {
-      if (context.privateBrowsingAllowed || !item.incognito) {
-        listener(fire, what, item);
-      }
-    };
-    let registerPromise = DownloadMap.getDownloadList().then(() => {
-      DownloadMap.on(event, handler);
-    });
-    return () => {
-      registerPromise.then(() => {
-        DownloadMap.off(event, handler);
+this.downloads = class extends ExtensionAPIPersistent {
+  downloadEventRegistrar(event, listener) {
+    let { extension } = this;
+    return ({ fire }) => {
+      const handler = (what, item) => {
+        if (extension.privateBrowsingAllowed || !item.incognito) {
+          listener(fire, what, item);
+        }
+      };
+      let registerPromise = DownloadMap.getDownloadList().then(() => {
+        DownloadMap.on(event, handler);
       });
+      return {
+        unregister() {
+          registerPromise.then(() => {
+            DownloadMap.off(event, handler);
+          });
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
     };
+  }
+
+  PERSISTENT_EVENTS = {
+    onChanged: this.downloadEventRegistrar("change", (fire, what, item) => {
+      let changes = {};
+      const noundef = val => (val === undefined ? null : val);
+      DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
+        if (item[fld] != item.prechange[fld]) {
+          changes[fld] = {
+            previous: noundef(item.prechange[fld]),
+            current: noundef(item[fld]),
+          };
+        }
+      });
+      if (Object.keys(changes).length) {
+        changes.id = item.id;
+        fire.async(changes);
+      }
+    }),
+
+    onCreated: this.downloadEventRegistrar("create", (fire, what, item) => {
+      fire.async(item.serialize());
+    }),
+
+    onErased: this.downloadEventRegistrar("erase", (fire, what, item) => {
+      fire.async(item.id);
+    }),
   };
 
-  return new EventManager({ context, name, register }).api();
-}
-
-this.downloads = class extends ExtensionAPI {
   getAPI(context) {
     let { extension } = context;
     return {
@@ -1243,45 +1274,26 @@ this.downloads = class extends ExtensionAPI {
         //   ...
         // }
 
-        onChanged: downloadEventManagerAPI(
+        onChanged: new EventManager({
           context,
-          "downloads.onChanged",
-          "change",
-          (fire, what, item) => {
-            let changes = {};
-            const noundef = val => (val === undefined ? null : val);
-            DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
-              if (item[fld] != item.prechange[fld]) {
-                changes[fld] = {
-                  previous: noundef(item.prechange[fld]),
-                  current: noundef(item[fld]),
-                };
-              }
-            });
-            if (Object.keys(changes).length) {
-              changes.id = item.id;
-              fire.async(changes);
-            }
-          }
-        ),
+          module: "downloads",
+          event: "onChanged",
+          extensionApi: this,
+        }).api(),
 
-        onCreated: downloadEventManagerAPI(
+        onCreated: new EventManager({
           context,
-          "downloads.onCreated",
-          "create",
-          (fire, what, item) => {
-            fire.async(item.serialize());
-          }
-        ),
+          module: "downloads",
+          event: "onCreated",
+          extensionApi: this,
+        }).api(),
 
-        onErased: downloadEventManagerAPI(
+        onErased: new EventManager({
           context,
-          "downloads.onErased",
-          "erase",
-          (fire, what, item) => {
-            fire.async(item.id);
-          }
-        ),
+          module: "downloads",
+          event: "onErased",
+          extensionApi: this,
+        }).api(),
 
         onDeterminingFilename: ignoreEvent(
           context,

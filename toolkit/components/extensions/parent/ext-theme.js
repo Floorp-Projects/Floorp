@@ -352,6 +352,11 @@ class Theme {
           styles.backgroundsTiling = tiling.join(",");
           break;
         }
+        case "color_scheme":
+        case "content_color_scheme": {
+          styles[property] = val;
+          break;
+        }
         default: {
           if (
             this.experiment &&

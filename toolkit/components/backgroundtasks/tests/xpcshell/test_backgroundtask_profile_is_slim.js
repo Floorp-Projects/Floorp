@@ -86,9 +86,6 @@ const expected = [
     condition:
       AppConstants.platform == "win" || AppConstants.platform == "macosx",
   },
-  // Bug 1757229.
-  { relPath: "ShutdownDuration.json" },
-  { relPath: "Telemetry.ShutdownTime.txt" },
   // TODO: verify that directory is empty.
   { relPath: "cache2", isDirectory: true },
   // Bug 1757252.

@@ -138,6 +138,8 @@ add_task(async function search_for_password_show_passwordGroup() {
       child.id == "paneGeneral" ||
       child.id == "startupGroup" ||
       child.id == "languagesGroup" ||
+      child.id == "webAppearanceGroup" ||
+      child.id == "colorsGroup" ||
       child.id == "fontsGroup" ||
       child.id == "zoomGroup" ||
       child.id == "downloadsGroup" ||

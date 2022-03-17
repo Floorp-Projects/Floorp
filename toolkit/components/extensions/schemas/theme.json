@@ -303,6 +303,16 @@
                 },
                 "maxItems": 15,
                 "optional": true
+              },
+              "color_scheme": {
+                "optional": true,
+                "type": "string",
+                "enum": ["auto", "light", "dark", "system"]
+              },
+              "content_color_scheme": {
+                "optional": true,
+                "type": "string",
+                "enum": ["auto", "light", "dark", "system"]
               }
             },
             "additionalProperties": { "type": "string" }

@@ -29,6 +29,8 @@
       return (255 << 24 | b << 16 | g << 8 | r) >>> 0;
     }
 
+    const WHITE_NSCOLOR = nscolor(255, 255, 255);
+
     const RED_RGB = "rgb(255, 0, 0)";
     const RED_NSCOLOR = nscolor(255, 0, 0);
     const GREEN_RGB = "rgb(0, 255, 0)";
@@ -77,13 +79,8 @@
         </html>
       `,
       expectedWireframe: {
-        canvasBackground: 0,
+        canvasBackground: RED_NSCOLOR,
         rects: [{
-          color: RED_NSCOLOR,
-          height: 500,
-          width: 500,
-          type: "background",
-        }, {
           color: BLACK_NSCOLOR,
           height: 12,
           type: "text",
@@ -95,8 +92,6 @@
         <html>
         <style>
           body {
-            width: 500px;
-            height: 500px;
             background-color: ${RED_RGB};
             color: ${BLACK_RGB};
             overflow: hidden;
@@ -119,11 +114,6 @@
       expectedWireframe: {
         canvasBackground: RED_NSCOLOR,
         rects: [{
-          color: RED_NSCOLOR,
-          height: 500,
-          width: 500,
-          type: "background",
-        }, {
           color: GREEN_NSCOLOR,
           height: 20,
           width: 20,
@@ -141,8 +131,6 @@
         <html>
         <style>
           body {
-            width: 500px;
-            height: 500px;
             background-color: ${RED_RGB};
             color: ${BLACK_RGB};
             overflow: hidden;
@@ -173,11 +161,6 @@
       expectedWireframe: {
         canvasBackground: RED_NSCOLOR,
         rects: [{
-          color: RED_NSCOLOR,
-          height: 500,
-          width: 500,
-          type: "background",
-        }, {
           color: 0,
           height: 50,
           width: 50,
@@ -232,11 +215,6 @@
       expectedWireframe: {
         canvasBackground: RED_NSCOLOR,
         rects: [{
-          color: RED_NSCOLOR,
-          height: 500,
-          width: 500,
-          type: "background",
-        }, {
           color: 0,
           height: 50,
           width: 50,
@@ -252,6 +230,37 @@
           type: "text",
         }]
       },
+    }, {
+      // Bug 1759919 - Transformed items incorrectly causing us to not keep hit
+      // testing stuff.
+      html: `
+        <!doctype html>
+        <style>:root { background-color: white; } body { margin: 0 }</style>
+        <div style="transform: rotate(90deg); width: 20px; height: 20px; overflow: clip;">
+          <div style="width: 100%; height: 100%; background-color: blue;"></div>
+        </div>
+        <div style="transform: rotate(90deg); width: 20px; height: 20px; overflow: clip;">
+          <div style="width: 100%; height: 100%; background-color: red;"></div>
+        </div>
+      `,
+      expectedWireframe: {
+        canvasBackground: WHITE_NSCOLOR,
+        rects: [{
+          color: RED_NSCOLOR,
+          height: 20,
+          width: 20,
+          x: 0,
+          y: 0,
+          type: "background",
+        }, {
+          color: BLUE_NSCOLOR,
+          height: 20,
+          width: 20,
+          x: 0,
+          y: 20,
+          type: "background",
+        }],
+      }
     }];
 
     /**
