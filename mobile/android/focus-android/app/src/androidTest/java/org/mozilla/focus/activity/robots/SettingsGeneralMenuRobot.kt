@@ -22,6 +22,7 @@ import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertFalse
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.EspressoHelper.hasCousin
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -31,13 +32,15 @@ class SettingsGeneralMenuRobot {
         const val ACTION_REQUEST_ROLE = "android.app.role.action.REQUEST_ROLE"
     }
 
-    fun verifyGeneralSettingsItems() {
-        defaultBrowserSwitch.check(matches(isDisplayed()))
+    fun verifyGeneralSettingsItems(defaultBrowserSwitchState: Boolean = false) {
+        verifyThemesList()
         languageMenuButton().check(matches(isDisplayed()))
+        defaultBrowserSwitch().check(matches(isDisplayed()))
+        assertDefaultBrowserSwitchState(defaultBrowserSwitchState)
     }
 
     fun clickSetDefaultBrowser() {
-        defaultBrowserSwitch
+        defaultBrowserSwitch()
             .check(matches(isDisplayed()))
             .perform(click())
     }
@@ -112,7 +115,35 @@ class SettingsGeneralMenuRobot {
     }
 }
 
-private val defaultBrowserSwitch = onView(withText("Make $appName default browser"))
+private fun defaultBrowserSwitch() = onView(withText("Make $appName default browser"))
+
+private fun assertDefaultBrowserSwitchState(enabled: Boolean) {
+    if (enabled) {
+        defaultBrowserSwitch()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withId(R.id.switch_widget),
+                            isChecked()
+                        )
+                    )
+                )
+            )
+    } else {
+        defaultBrowserSwitch()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withId(R.id.switch_widget),
+                            isNotChecked()
+                        )
+                    )
+                )
+            )
+    }
+}
 
 private val openWithDialogTitle = mDevice.findObject(
     UiSelector()
