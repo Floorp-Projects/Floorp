@@ -414,14 +414,17 @@ class LeaveDebuggeeNoExecute;
 class MOZ_RAII EvalOptions {
   JS::UniqueChars filename_;
   unsigned lineno_ = 1;
+  bool hideFromDebugger_ = false;
 
  public:
   EvalOptions() = default;
   ~EvalOptions() = default;
   const char* filename() const { return filename_.get(); }
   unsigned lineno() const { return lineno_; }
+  bool hideFromDebugger() const { return hideFromDebugger_; }
   [[nodiscard]] bool setFilename(JSContext* cx, const char* filename);
   void setLineno(unsigned lineno) { lineno_ = lineno; }
+  void setHideFromDebugger(bool hide) { hideFromDebugger_ = hide; }
 };
 
 /*
