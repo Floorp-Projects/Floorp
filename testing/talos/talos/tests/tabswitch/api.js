@@ -12,7 +12,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTab.jsm"
 );
 
-let context = {};
 let TalosParentProfiler;
 
 /**
@@ -216,11 +215,9 @@ async function test(window) {
     return;
   }
 
-  ChromeUtils.import(
-    "resource://talos-powers/TalosParentProfiler.jsm",
-    context
-  );
-  TalosParentProfiler = context.TalosParentProfiler;
+  TalosParentProfiler = ChromeUtils.import(
+    "resource://talos-powers/TalosParentProfiler.jsm"
+  ).TalosParentProfiler;
 
   let testURLs = [];
 

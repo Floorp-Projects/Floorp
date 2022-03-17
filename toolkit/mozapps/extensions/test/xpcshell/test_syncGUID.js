@@ -4,10 +4,8 @@
 
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
 this.__defineGetter__("XPIProvider", function() {
-  let scope = {};
   return ChromeUtils.import(
-    "resource://gre/modules/addons/XPIProvider.jsm",
-    scope
+    "resource://gre/modules/addons/XPIProvider.jsm"
   ).XPIProvider;
 });
 

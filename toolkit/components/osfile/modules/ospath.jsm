@@ -29,17 +29,15 @@ if (typeof Components == "undefined") {
   }
   module.exports = Path;
 } else {
-  let Scope = {};
-  ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
-    Scope
+  let Scope = ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
   );
 
-  let Path = {};
+  let Path;
   if (Scope.OS.Constants.Win) {
-    ChromeUtils.import("resource://gre/modules/osfile/ospath_win.jsm", Path);
+    Path = ChromeUtils.import("resource://gre/modules/osfile/ospath_win.jsm");
   } else {
-    ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm", Path);
+    Path = ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm");
   }
 
   this.EXPORTED_SYMBOLS = [];
