@@ -20,7 +20,6 @@ import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
-import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.History
@@ -248,10 +247,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PreferenceToggled -> EventWrapper(
             { Events.preferenceToggled.record(it) },
             { Events.preferenceToggledKeys.valueOf(it) }
-        )
-        is Event.CustomizeHomePreferenceToggled -> EventWrapper(
-            { CustomizeHome.preferenceToggled.record(it) },
-            { CustomizeHome.preferenceToggledKeys.valueOf(it) }
         )
         is Event.HistoryOpened -> EventWrapper<NoExtraKeys>(
             { History.opened.record(it) }

@@ -1574,6 +1574,7 @@ customize_home:
       A user toggles the preference for the home screen items.
     extra_keys:
       preference_key:
+        type: string
         description: |
           The preference key for the boolean (true/false) preference the user
           toggled.
@@ -1581,6 +1582,7 @@ customize_home:
           We currently track: most_visited_sites, jump_back_in,
           recently_visited, recently_saved, pocket, and contile.
       enabled:
+        type: boolean
         description: "Whether or not the preference is *now* enabled"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/21095
