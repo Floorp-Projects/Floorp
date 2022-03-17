@@ -208,8 +208,8 @@ nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
 
 void CamerasParent::StopVideoCapture() {
   LOG("%s", __PRETTY_FUNCTION__);
-  // We are called from the main thread (xpcom-shutdown) or
-  // from PBackground (when the Actor shuts down).
+  // Called when the actor is destroyed.
+  ipc::AssertIsOnBackgroundThread();
   // Shut down the WebRTC stack (on the capture thread)
   RefPtr<CamerasParent> self(this);
   DebugOnly<nsresult> rv =
@@ -1044,17 +1044,6 @@ void CamerasParent::StopIPC() {
   mDestroyed = true;
 }
 
-mozilla::ipc::IPCResult CamerasParent::RecvAllDone() {
-  LOG("%s", __PRETTY_FUNCTION__);
-  // Don't try to send anything to the child now
-  mChildIsAlive = false;
-  IProtocol* mgr = Manager();
-  if (!Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(mgr);
-  }
-  return IPC_OK();
-}
-
 void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
   // No more IPC from here
   LOG("%s", __PRETTY_FUNCTION__);
@@ -1072,7 +1061,13 @@ nsString CamerasParent::GetNewName() {
 }
 
 NS_IMETHODIMP CamerasParent::BlockShutdown(nsIAsyncShutdownClient*) {
-  StopVideoCapture();
+  mPBackgroundEventTarget->Dispatch(
+      NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() {
+        // Send__delete() can return failure if AddBlocker() registered this
+        // CamerasParent while RecvPCamerasConstructor() called Send__delete()
+        // because it noticed that AppShutdown had started.
+        (void)Send__delete__(self);
+      }));
   return NS_OK;
 }
 

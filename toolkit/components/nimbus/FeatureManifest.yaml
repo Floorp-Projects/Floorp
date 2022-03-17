@@ -165,14 +165,6 @@ abouthomecache:
       type: boolean
       fallbackPref: browser.startup.homepage.abouthome_cache.enabled
       description: Is the feature enabled?
-firefox100:
-  description: Firefox User-Agent version
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    firefoxVersion:
-      type: int
-      description: Firefox version to spoof (or `0` to use default version)
 newtab:
   description: "The about:newtab page"
   hasExposure: true
