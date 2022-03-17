@@ -238,7 +238,7 @@ TEST(Synchronization, AutoLock)
 // AutoTryLock tests
 //
 TEST(Synchronization, AutoTryLock)
-{
+NO_THREAD_SAFETY_ANALYSIS {
   Mutex l1 MOZ_UNANNOTATED("autotrylock");
   MutexAutoTryLock autol1(l1);
 

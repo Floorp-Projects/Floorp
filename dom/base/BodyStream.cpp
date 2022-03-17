@@ -505,6 +505,7 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
                                   JS::HandleObject aStream, nsresult aError) {
 #endif
   AssertIsOnOwningThread();
+  mMutex.AssertCurrentThreadOwns();
 
   // Nothing to do.
   if (mState == eClosed) {
@@ -752,6 +753,7 @@ void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
                                         const MutexAutoLock& aProofOfLock,
                                         ReadableStream* aStream) {
   AssertIsOnOwningThread();
+  mMutex.AssertCurrentThreadOwns();
   MOZ_DIAGNOSTIC_ASSERT(mState != eClosed);
 
   ReleaseObjects(aProofOfLock);
@@ -769,6 +771,7 @@ void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
                                         const MutexAutoLock& aProofOfLock,
                                         JS::HandleObject aStream) {
   AssertIsOnOwningThread();
+  mMutex.AssertCurrentThreadOwns();
   MOZ_DIAGNOSTIC_ASSERT(mState != eClosed);
 
   ReleaseObjects(aProofOfLock);

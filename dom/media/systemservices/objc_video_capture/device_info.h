@@ -44,7 +44,8 @@ class DeviceInfoIos : public DeviceInfoImpl {
 
   int32_t GetOrientation(const char* deviceUniqueIdUTF8, VideoRotation& orientation) override;
 
-  int32_t CreateCapabilityMap(const char* device_unique_id_utf8) override;
+  int32_t CreateCapabilityMap(const char* device_unique_id_utf8) override
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(_apiLock);
 
  private:
   std::map<std::string, VideoCaptureCapabilities> _capabilitiesMap;

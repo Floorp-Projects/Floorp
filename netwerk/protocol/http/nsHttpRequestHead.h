@@ -40,8 +40,11 @@ class nsHttpRequestHead {
   // copying headers. If you use it be careful to do it only under
   // nsHttpRequestHead lock!!!
   const nsHttpHeaderArray& Headers() const;
+
+  PUSH_IGNORE_THREAD_SAFETY
   void Enter() const { mRecursiveMutex.Lock(); }
   void Exit() const { mRecursiveMutex.Unlock(); }
+  POP_THREAD_SAFETY
 
   void SetHeaders(const nsHttpHeaderArray& aHeaders);
 

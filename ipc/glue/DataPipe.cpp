@@ -290,6 +290,8 @@ nsresult DataPipeBase::ProcessSegmentsInternal(
 
   while (*aProcessedCount < aCount) {
     DataPipeAutoLock lock(*mMutex);
+    mMutex->AssertCurrentThreadOwns();
+
     MOZ_LOG(gDataPipeLog, LogLevel::Verbose,
             ("ProcessSegments(%u of %u) %s", *aProcessedCount, aCount,
              Describe(lock).get()));

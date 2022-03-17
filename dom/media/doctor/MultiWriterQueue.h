@@ -24,8 +24,10 @@ class MultiWriterQueueReaderLocking_Mutex {
  public:
   MultiWriterQueueReaderLocking_Mutex()
       : mMutex("MultiWriterQueueReaderLocking_Mutex") {}
+  PUSH_IGNORE_THREAD_SAFETY
   void Lock() { mMutex.Lock(); };
   void Unlock() { mMutex.Unlock(); };
+  POP_THREAD_SAFETY
 
  private:
   Mutex mMutex MOZ_UNANNOTATED;

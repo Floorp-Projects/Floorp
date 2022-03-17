@@ -99,11 +99,13 @@ class SharedMutex {
 
   SharedMutex(const SharedMutex& aOther) = default;
 
-  operator Mutex&() { return *mMutex; }
+  operator Mutex&() RETURN_CAPABILITY(*mMutex) { return *mMutex; }
 
-  operator const Mutex&() const { return *mMutex; }
+  operator const Mutex&() const RETURN_CAPABILITY(*mMutex) { return *mMutex; }
 
-  void AssertCurrentThreadOwns() const { mMutex->AssertCurrentThreadOwns(); }
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(*mMutex) {
+    mMutex->AssertCurrentThreadOwns();
+  }
 };
 
 nsString ComputeWorkerPrivateId();

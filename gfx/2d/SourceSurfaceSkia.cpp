@@ -159,7 +159,8 @@ uint8_t* SourceSurfaceSkia::GetData() {
   return reinterpret_cast<uint8_t*>(pixmap.writable_addr());
 }
 
-bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface) {
+bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface)
+    NO_THREAD_SAFETY_ANALYSIS {
   mChangeMutex.Lock();
   aMappedSurface->mData = GetData();
   aMappedSurface->mStride = Stride();
@@ -171,7 +172,7 @@ bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface) {
   return isMapped;
 }
 
-void SourceSurfaceSkia::Unmap() {
+void SourceSurfaceSkia::Unmap() NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ASSERT(mIsMapped);
   mIsMapped = false;
   mChangeMutex.Unlock();
