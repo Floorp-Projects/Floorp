@@ -4,6 +4,7 @@
 "use strict";
 
 const isWin = AppConstants.platform == "win";
+const isMac = AppConstants.platform == "macosx";
 
 add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
   const sandbox = sinon.createSandbox();
@@ -20,6 +21,7 @@ add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
     ensureAppIsPinnedToDock: sandbox.stub(),
     isCurrentAppPinnedToTaskbarAsync: sandbox.stub(),
     pinCurrentAppToTaskbar: sandbox.stub(),
+    isAppInDock: false,
   };
 
   // Prefer the mocked implementation and fall back to the original version,
@@ -50,7 +52,7 @@ add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
     );
     Assert.equal(
       shell.ensureAppIsPinnedToDock.callCount,
-      count * !isWin,
+      count * isMac,
       `ensureAppIsPinnedToDock was ${message} by the action for not windows`
     );
   }
@@ -58,11 +60,13 @@ add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
 
   // Pretend the app is already pinned.
   shell.isCurrentAppPinnedToTaskbarAsync.resolves(true);
+  shell.isAppInDock = true;
   await test();
   check(1, "not called");
 
   // Pretend the app became unpinned.
   shell.isCurrentAppPinnedToTaskbarAsync.resolves(false);
+  shell.isAppInDock = false;
   await test();
   check(2, "called again");
 });
