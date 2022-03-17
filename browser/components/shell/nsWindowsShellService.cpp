@@ -36,6 +36,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsINIParser.h"
 #include "nsNativeAppSupportWin.h"
+#include "nsWindowsHelpers.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -58,6 +59,8 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 #include "mozilla/widget/WinTaskbar.h"
 
 #include <mbstring.h>
+
+#define PIN_TO_TASKBAR_SHELL_VERB 5386
 
 #undef ACCESS_READ
 
@@ -1005,9 +1008,84 @@ static nsresult GetMatchingShortcut(int aCSIDL, const nsAutoString& aAUMID,
 
   return result;
 }
+static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
+                                           nsAutoString aShortcutPath) {
+  // This is a less generalized version of the code from the NSIS
+  // Invoke Shell Verb plugin.
+  // https://nsis.sourceforge.io/Invoke_Shell_Verb_plugin
+  VARIANT dir;
+  RefPtr<Folder> folder = nullptr;
+  RefPtr<FolderItem> folderItem = nullptr;
+  RefPtr<FolderItemVerbs> verbs = nullptr;
+  RefPtr<FolderItemVerb> fiVerb = nullptr;
+  RefPtr<IShellDispatch> shellDisp = nullptr;
+  nsModuleHandle shellInst(LoadLibraryW(L"shell32.dll"));
+  wchar_t shortcutDir[MAX_PATH + 1], linkName[MAX_PATH + 1];
+  WCHAR verbName[100];
 
-static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
-                                           bool aPrivateBrowsing) {
+  // Pull the actual verb name that we need to use later
+  int rv = LoadStringW(shellInst.get(), PIN_TO_TASKBAR_SHELL_VERB, verbName,
+                       sizeof(verbName) / sizeof(verbName[0]));
+  if (!rv) return NS_ERROR_NOT_AVAILABLE;
+
+  HRESULT hr = CoCreateInstance(CLSID_Shell, NULL, CLSCTX_INPROC_SERVER,
+                                IID_IShellDispatch, getter_AddRefs(shellDisp));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+  wcscpy_s(shortcutDir, MAX_PATH + 1, aShortcutPath.get());
+  PathRemoveFileSpecW(shortcutDir);
+
+  dir.vt = VT_BSTR;
+  dir.bstrVal = shortcutDir;
+  hr = shellDisp->NameSpace(dir, getter_AddRefs(folder));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  wcscpy_s(linkName, MAX_PATH + 1, aShortcutPath.get());
+  PathStripPathW(linkName);
+  hr = folder->ParseName(linkName, getter_AddRefs(folderItem));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  hr = folderItem->Verbs(getter_AddRefs(verbs));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  long count;
+  hr = verbs->get_Count(&count);
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  int i;
+  VARIANT v;
+  v.vt = VT_I4;
+  BSTR name;
+  for (i = 0; i < count; ++i) {
+    v.lVal = i;
+    hr = verbs->Item(v, getter_AddRefs(fiVerb));
+    if (FAILED(hr) || fiVerb == nullptr) {
+      continue;
+    }
+
+    hr = fiVerb->get_Name(&name);
+    if (FAILED(hr)) {
+      continue;
+    }
+    if (!wcscmp((WCHAR*)name, verbName)) {
+      if (aCheckOnly) {
+        // we've done as much as we can without actually
+        // changing anything
+        return NS_OK;
+      }
+
+      hr = fiVerb->DoIt();
+      if (SUCCEEDED(hr)) {
+        return NS_OK;
+      }
+    }
+  }
+
+  // if we didn't return in the block above, something failed
+  return NS_ERROR_FAILURE;
+}
+
+static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
+                                            nsAutoString aShortcutPath) {
   // This enum is likely only used for Windows telemetry, INT_MAX is chosen to
   // avoid confusion with existing uses.
   enum PINNEDLISTMODIFYCALLER { PLMC_INT_MAX = INT_MAX };
@@ -1052,8 +1130,38 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     }
   };
 
-  // First available on 1809
-  if (!IsWin10Sep2018UpdateOrLater()) {
+  mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
+      ILCreateFromPathW(aShortcutPath.get()));
+  if (NS_WARN_IF(!path)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  IPinnedList3* pinnedList = nullptr;
+  HRESULT hr =
+      CoCreateInstance(CLSID_TaskbandPin, nullptr, CLSCTX_INPROC_SERVER,
+                       IID_IPinnedList3, (void**)&pinnedList);
+  if (FAILED(hr) || !pinnedList) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!aCheckOnly) {
+    hr =
+        pinnedList->vtbl->Modify(pinnedList, nullptr, path.get(), PLMC_INT_MAX);
+  }
+
+  pinnedList->vtbl->Release(pinnedList);
+
+  if (FAILED(hr)) {
+    return NS_ERROR_FAILURE;
+  } else {
+    return NS_OK;
+  }
+}
+
+static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
+                                           bool aPrivateBrowsing) {
+  if (IsWin10OrLater() && !IsWin10Sep2018UpdateOrLater()) {
+    // First available on 1809
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1087,9 +1195,9 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
   }
   if (shortcutPath.IsEmpty()) {
     if (aCheckOnly) {
-      // The other checks we do further down can only be done if
-      // a shortcut already exists. We don't want to do that in
-      // check only mode, so we just have to assume it will work...
+      // Later checks rely on a shortcut already existing.
+      // We don't want to create a shortcut in check only mode
+      // so the best we can do is assume those parts will work.
       return NS_OK;
     }
 
@@ -1141,31 +1249,10 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     }
   }
 
-  mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
-      ILCreateFromPathW(shortcutPath.get()));
-  if (NS_WARN_IF(!path)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  IPinnedList3* pinnedList = nullptr;
-  HRESULT hr =
-      CoCreateInstance(CLSID_TaskbandPin, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_IPinnedList3, (void**)&pinnedList);
-  if (FAILED(hr) || !pinnedList) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!aCheckOnly) {
-    hr =
-        pinnedList->vtbl->Modify(pinnedList, nullptr, path.get(), PLMC_INT_MAX);
-  }
-
-  pinnedList->vtbl->Release(pinnedList);
-
-  if (FAILED(hr)) {
-    return NS_ERROR_FAILURE;
+  if (IsWin10OrLater()) {
+    return PinCurrentAppToTaskbarWin10(aCheckOnly, shortcutPath);
   } else {
-    return NS_OK;
+    return PinCurrentAppToTaskbarWin7(aCheckOnly, shortcutPath);
   }
 }
 
