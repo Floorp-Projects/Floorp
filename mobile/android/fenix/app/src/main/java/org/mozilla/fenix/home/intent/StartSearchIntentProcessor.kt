@@ -7,6 +7,8 @@ package org.mozilla.fenix.home.intent
 import android.content.Intent
 import androidx.navigation.NavController
 import androidx.navigation.navOptions
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -27,7 +29,7 @@ class StartSearchIntentProcessor(
         return if (event != null) {
             val source = when (event) {
                 SEARCH_WIDGET -> {
-                    metrics.track(Event.SearchWidgetNewTabPressed)
+                    SearchWidget.newTabButton.record(NoExtras())
                     Event.PerformedSearch.SearchAccessPoint.WIDGET
                 }
                 STATIC_SHORTCUT_NEW_TAB,

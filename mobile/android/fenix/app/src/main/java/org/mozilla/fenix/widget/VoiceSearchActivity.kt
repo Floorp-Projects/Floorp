@@ -11,11 +11,11 @@ import android.os.StrictMode
 import android.speech.RecognizerIntent
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.support.locale.LocaleManager
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 
 /**
  * Launches voice recognition then uses it to start a new web search.
@@ -77,7 +77,7 @@ class VoiceSearchActivity : AppCompatActivity() {
                 }
             )
         }
-        metrics.track(Event.SearchWidgetVoiceSearchPressed)
+        SearchWidget.voiceButton.record(NoExtras())
 
         startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
     }

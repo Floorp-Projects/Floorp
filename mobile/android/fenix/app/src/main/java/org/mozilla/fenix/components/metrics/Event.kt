@@ -110,8 +110,6 @@ sealed class Event {
     object CollectionTabLongPressed : Event()
     object CollectionAddTabPressed : Event()
     object CollectionRenamePressed : Event()
-    object SearchWidgetNewTabPressed : Event()
-    object SearchWidgetVoiceSearchPressed : Event()
     object TabMediaPlay : Event()
     object TabMediaPause : Event()
     object MediaPlayState : Event()
