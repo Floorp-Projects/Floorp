@@ -194,7 +194,9 @@ using media::NewRunnableFrom;
 using media::NewTaskFrom;
 using media::Refcountable;
 
-static Atomic<bool> sHasShutdown;
+// Whether main thread actions of MediaManager shutdown (except for clearing
+// of sSingleton) have completed.
+static bool sHasMainThreadShutdown;
 
 struct DeviceState {
   DeviceState(RefPtr<LocalMediaDevice> aDevice,
@@ -744,7 +746,7 @@ class LocalTrackSource : public MediaStreamTrackSource {
       const MediaTrackConstraints& aConstraints,
       CallerType aCallerType) override {
     MOZ_ASSERT(NS_IsMainThread());
-    if (sHasShutdown || !mListener) {
+    if (sHasMainThreadShutdown || !mListener) {
       // Track has been stopped, or we are in shutdown. In either case
       // there's no observable outcome, so pretend we succeeded.
       return MediaStreamTrackSource::ApplyConstraintsPromise::CreateAndResolve(
@@ -1571,13 +1573,15 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
     }
   }
 
-  if (!domStream || (!audioTrackSource && !videoTrackSource) || sHasShutdown) {
+  if (!domStream || (!audioTrackSource && !videoTrackSource) ||
+      sHasMainThreadShutdown) {
     LOG("Returning error for getUserMedia() - no stream");
 
-    mHolder.Reject(MakeRefPtr<MediaMgrError>(
-                       MediaMgrError::Name::AbortError,
-                       sHasShutdown ? "In shutdown"_ns : "No stream."_ns),
-                   __func__);
+    mHolder.Reject(
+        MakeRefPtr<MediaMgrError>(
+            MediaMgrError::Name::AbortError,
+            sHasMainThreadShutdown ? "In shutdown"_ns : "No stream."_ns),
+        __func__);
     return;
   }
 
@@ -1779,7 +1783,7 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
 
   MozPromiseHolder<DeviceSetPromise> holder;
   RefPtr<DeviceSetPromise> promise = holder.Ensure(__func__);
-  if (sHasShutdown) {
+  if (sHasMainThreadShutdown) {
     // The media thread is no longer available but the result will not be
     // observable.  Resolve with an empty set, so that callers do not need to
     // handle rejection.
@@ -2159,7 +2163,8 @@ void MediaManager::StartupInit() {
 
 /* static */
 void MediaManager::Dispatch(already_AddRefed<Runnable> task) {
-  if (sHasShutdown) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (sHasMainThreadShutdown) {
     // Can't safely delete task here since it may have items with specific
     // thread-release requirements.
     // XXXkhuey well then who is supposed to delete it?! We don't signal
@@ -2220,7 +2225,7 @@ nsresult MediaManager::NotifyRecordingStatusChange(
 
 void MediaManager::DeviceListChanged() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (sHasShutdown) {
+  if (sHasMainThreadShutdown) {
     return;
   }
   // Invalidate immediately to provide an up-to-date device list for future
@@ -2437,7 +2442,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 
   MediaStreamConstraints c(aConstraintsPassedIn);  // use a modifiable copy
 
-  if (sHasShutdown) {
+  if (sHasMainThreadShutdown) {
     return StreamPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
                                   "In shutdown"),
@@ -3102,8 +3107,6 @@ MediaEngine* MediaManager::GetBackend() {
   // includes picture support for Android.
   // This IS called off main-thread.
   if (!mBackend) {
-    MOZ_RELEASE_ASSERT(
-        !sHasShutdown);  // we should never create a new backend in shutdown
 #if defined(MOZ_WEBRTC)
     mBackend = new MediaEngineWebRTC();
 #else
@@ -3300,7 +3303,7 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
 
 void MediaManager::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (sHasShutdown) {
+  if (sHasMainThreadShutdown) {
     return;
   }
 
@@ -3356,7 +3359,7 @@ void MediaManager::Shutdown() {
 
   // From main thread's point of view, shutdown is now done.
   // All that remains is shutting down the media thread.
-  sHasShutdown = true;
+  sHasMainThreadShutdown = true;
 
   // Dispatch to mMediaThread so it can shut down mBackend.
   class ShutdownTask : public Runnable {
@@ -3405,8 +3408,8 @@ void MediaManager::Shutdown() {
 #endif
 
   // Release the backend (and call Shutdown()) from within the MediaManager
-  // thread Don't use MediaManager::Dispatch() because we're sHasShutdown=true
-  // here!
+  // thread Don't use MediaManager::Dispatch() because we're
+  // sHasMainThreadShutdown == true here!
   auto shutdown = MakeRefPtr<ShutdownTask>(
       this, media::NewRunnableFrom([]() {
         LOG("MediaManager shutdown lambda running, releasing MediaManager "
@@ -3496,7 +3499,7 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    if (sHasShutdown) {
+    if (sHasMainThreadShutdown) {
       task->Denied(MediaMgrError::Name::AbortError, "In shutdown"_ns);
       return NS_OK;
     }
