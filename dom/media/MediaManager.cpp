@@ -3361,34 +3361,22 @@ void MediaManager::Shutdown() {
   // All that remains is shutting down the media thread.
   sHasMainThreadShutdown = true;
 
-  // Dispatch to mMediaThread so it can shut down mBackend.
-  class ShutdownTask : public Runnable {
-   public:
-    explicit ShutdownTask(RefPtr<MediaManager> aManager)
-        : mozilla::Runnable("ShutdownTask"), mManager(std::move(aManager)) {}
-
-   private:
-    NS_IMETHOD
-    Run() override {
-      LOG("MediaManager Thread Shutdown");
-      MOZ_ASSERT(MediaManager::IsInMediaThread());
-      // Must shutdown backend on MediaManager thread, since that's where we
-      // started it from!
-      {
-        if (mManager->mBackend) {
-          mManager->mBackend->Shutdown();  // idempotent
-          mManager->mDeviceListChangeListener.DisconnectIfExists();
+  // Release the backend (and call Shutdown()) from within mMediaThread.
+  // Don't use MediaManager::Dispatch() because we're
+  // sHasMainThreadShutdown == true here!
+  MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [self = RefPtr(this), this]() {
+        LOG("MediaManager Thread Shutdown");
+        MOZ_ASSERT(IsInMediaThread());
+        // Must shutdown backend on MediaManager thread, since that's
+        // where we started it from!
+        if (mBackend) {
+          mBackend->Shutdown();  // idempotent
+          mDeviceListChangeListener.DisconnectIfExists();
         }
-      }
-      mManager->mBackend =
-          nullptr;  // last reference, will invoke Shutdown() again
-
-      return NS_OK;
-    }
-    RefPtr<MediaManager> mManager;
-  };
-
-  // Post ShutdownTask to execute on mMediaThread.
+        // last reference, will invoke Shutdown() again
+        mBackend = nullptr;
+      })));
 
   // note that this == sSingleton
 #ifdef DEBUG
@@ -3398,11 +3386,6 @@ void MediaManager::Shutdown() {
   }
 #endif
 
-  // Release the backend (and call Shutdown()) from within the MediaManager
-  // thread Don't use MediaManager::Dispatch() because we're
-  // sHasMainThreadShutdown == true here!
-  auto shutdown = MakeRefPtr<ShutdownTask>(this);
-  MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(shutdown.forget()));
   // Explicitly shut down the TaskQueue so that it releases its
   // SharedThreadPool when all tasks have completed.  SharedThreadPool blocks
   // XPCOM shutdown from proceeding beyond "xpcom-shutdown-threads" until all
