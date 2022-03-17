@@ -622,6 +622,31 @@ ModuleLoaderBase::~ModuleLoaderBase() {
   LOG(("ModuleLoaderBase::~ModuleLoaderBase %p", this));
 }
 
+bool ModuleLoaderBase::HasPendingDynamicImports() const {
+  return !mDynamicImportRequests.isEmpty();
+}
+
+void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
+                                           nsresult aResult) {
+  RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
+  aRequest->Cancel();
+  // FinishDynamicImport must happen exactly once for each dynamic import
+  // request. If the load is aborted we do it when we remove the request
+  // from mDynamicImportRequests.
+  FinishDynamicImportAndReject(aRequest, aResult);
+}
+
+void ModuleLoaderBase::RemoveDynamicImport(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsDynamicImport());
+  mDynamicImportRequests.Remove(aRequest);
+}
+
+#ifdef DEBUG
+bool ModuleLoaderBase::HasDynamicImport(ModuleLoadRequest* aRequest) const {
+  return mDynamicImportRequests.Contains(aRequest);
+}
+#endif
+
 JS::Value ModuleLoaderBase::FindFirstParseError(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest);
 
