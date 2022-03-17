@@ -38,11 +38,6 @@ const THEME_IDS = [
     "firefox-compact-dark@mozilla.org",
   ],
   [
-    "kanaze-melt@floorp.ablaze.one",
-    "kanaze-aria@floorp.ablaze.one",
-    "kanaze-erua@floorp.ablaze.one",
-  ],
-  [
     "abstract-soft-colorway@mozilla.org",
     "abstract-balanced-colorway@mozilla.org",
     "abstract-bold-colorway@mozilla.org",
