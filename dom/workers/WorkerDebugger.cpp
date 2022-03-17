@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/PerformanceUtils.h"
