@@ -335,8 +335,7 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
 
   // profile should be 0,1,2 or 3.
   // See https://www.webmproject.org/vp9/profiles/
-  // We don't support more than profile 2
-  if (aProfile > 2) {
+  if (aProfile > 3) {
     // Invalid profile.
     return false;
   }

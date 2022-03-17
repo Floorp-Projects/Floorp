@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "BitReader.h"
-#include "ByteWriter.h"
+#include "BitWriter.h"
 #include "ImageContainer.h"
 #include "TimeUnits.h"
 #include "gfx2DGlue.h"
@@ -517,7 +517,7 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
 /* static */
 void VPXDecoder::GetVPCCBox(MediaByteBuffer* aDestBox,
                             const VPXStreamInfo& aInfo) {
-  ByteWriter<BigEndian> writer(*aDestBox);
+  BitWriter writer(aDestBox);
 
   int chroma = [&]() {
     if (aInfo.mSubSampling_x && aInfo.mSubSampling_y) {
@@ -534,18 +534,83 @@ void VPXDecoder::GetVPCCBox(MediaByteBuffer* aDestBox,
     return 1;
   }();
 
-  MOZ_ALWAYS_TRUE(writer.WriteU32(1 << 24));        // version & flag
-  MOZ_ALWAYS_TRUE(writer.WriteU8(aInfo.mProfile));  // profile
-  MOZ_ALWAYS_TRUE(writer.WriteU8(10));              // level set it to 1.0
-  MOZ_ALWAYS_TRUE(writer.WriteU8(
-      (0xF & aInfo.mBitDepth) << 4 | (0x7 & chroma) << 1 |
-      (0x1 & aInfo.mFullRange)));      // bitdepth (4 bits), chroma (3 bits),
-                                       // video full/restrice range (1 bit)
-  MOZ_ALWAYS_TRUE(writer.WriteU8(2));  // color primaries: unknown
-  MOZ_ALWAYS_TRUE(writer.WriteU8(2));  // transfer characteristics: unknown
-  MOZ_ALWAYS_TRUE(writer.WriteU8(2));  // matrix coefficient: unknown
-  MOZ_ALWAYS_TRUE(
-      writer.WriteU16(0));  // codecIntializationDataSize (must be 0 for VP9)
+  writer.WriteU8(1);        // version
+  writer.WriteBits(0, 24);  // flags
+
+  writer.WriteU8(aInfo.mProfile);  // profile
+  writer.WriteU8(10);              // level set it to 1.0
+
+  writer.WriteBits(aInfo.mBitDepth, 4);  // bitdepth
+  writer.WriteBits(chroma, 3);           // chroma
+  writer.WriteBit(aInfo.mFullRange);     // full/restricted range
+
+  // See VPXDecoder::VPXStreamInfo enums
+  writer.WriteU8(2);  // colour primaries: unspecified
+  writer.WriteU8(2);  // transfer characteristics: unspecified
+  writer.WriteU8(2);  // matrix coefficients: unspecified
+
+  writer.WriteBits(0,
+                   16);  // codecIntializationDataSize (must be 0 for VP8/VP9)
+}
+
+/* static */
+bool VPXDecoder::SetVideoInfo(VideoInfo* aDestInfo, const nsAString& aCodec) {
+  VPXDecoder::VPXStreamInfo info;
+  uint8_t level = 0;
+  uint8_t chroma = 1;
+  VideoColorSpace colorSpace;
+  if (!ExtractVPXCodecDetails(aCodec, info.mProfile, level, info.mBitDepth,
+                              chroma, colorSpace)) {
+    return false;
+  }
+
+  aDestInfo->mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
+  VPXDecoder::SetChroma(info, chroma);
+  info.mFullRange = colorSpace.mRangeId;
+  RefPtr<MediaByteBuffer> extraData = new MediaByteBuffer();
+  VPXDecoder::GetVPCCBox(extraData, info);
+  aDestInfo->mExtraData = extraData;
+  return true;
+}
+
+/* static */
+void VPXDecoder::SetChroma(VPXStreamInfo& aDestInfo, uint8_t chroma) {
+  switch (chroma) {
+    case 0:
+    case 1:
+      aDestInfo.mSubSampling_x = true;
+      aDestInfo.mSubSampling_y = true;
+      break;
+    case 2:
+      aDestInfo.mSubSampling_x = true;
+      aDestInfo.mSubSampling_y = false;
+      break;
+    case 3:
+      aDestInfo.mSubSampling_x = false;
+      aDestInfo.mSubSampling_y = false;
+      break;
+  }
+}
+
+/* static */
+void VPXDecoder::ReadVPCCBox(VPXStreamInfo& aDestInfo, MediaByteBuffer* aBox) {
+  BitReader reader(aBox);
+
+  reader.ReadBits(8);   // version
+  reader.ReadBits(24);  // flags
+  aDestInfo.mProfile = reader.ReadBits(8);
+  reader.ReadBits(8);  // level
+
+  aDestInfo.mBitDepth = reader.ReadBits(4);
+  SetChroma(aDestInfo, reader.ReadBits(3));
+  aDestInfo.mFullRange = reader.ReadBit();
+
+  reader.ReadBits(8);  // colour primaries
+  reader.ReadBits(8);  // transfer characteristics
+  reader.ReadBits(8);  // matrix coefficients
+
+  MOZ_ASSERT(reader.ReadBits(16) ==
+             0);  // codecInitializationDataSize (must be 0 for VP8/VP9)
 }
 
 }  // namespace mozilla

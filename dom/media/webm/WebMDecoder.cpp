@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "mozilla/Preferences.h"
+#include "VPXDecoder.h"
 #include "mozilla/StaticPrefs_media.h"
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
@@ -57,13 +58,7 @@ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
             "video/vp8"_ns, aType);
       }
       if (trackInfo) {
-        uint8_t profile = 0;
-        uint8_t level = 0;
-        uint8_t bitDepth = 0;
-        if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
-          trackInfo->GetAsVideoInfo()->mColorDepth =
-              gfx::ColorDepthForBitDepth(bitDepth);
-        }
+        VPXDecoder::SetVideoInfo(trackInfo->GetAsVideoInfo(), codec);
         tracks.AppendElement(std::move(trackInfo));
         continue;
       }
