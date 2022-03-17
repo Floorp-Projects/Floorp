@@ -33,4 +33,6 @@ add_task(async function test_OPEN_SPOTLIGHT_DIALOG() {
     pbNewTabMessage[0].content.promoButton.action.data,
     "Should be called with action.data"
   );
+
+  showSpotlightStub.restore();
 });
