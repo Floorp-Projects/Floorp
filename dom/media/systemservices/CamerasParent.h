@@ -95,7 +95,6 @@ class CamerasParent final : public PCamerasParent,
   mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine&,
                                           const int&) override;
   mozilla::ipc::IPCResult RecvReleaseFrame(mozilla::ipc::Shmem&&) override;
-  mozilla::ipc::IPCResult RecvAllDone() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvEnsureInitialized(const CaptureEngine&) override;
 
