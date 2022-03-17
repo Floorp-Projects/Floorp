@@ -994,11 +994,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           PropVariantClear(&pv);
         }
       }
+      HICON icon = ::LoadIconW(::GetModuleHandleW(nullptr),
+                               MAKEINTRESOURCEW(IDI_PBMODE));
+      SetBigIcon(icon);
+      SetSmallIcon(icon);
     }
-    HICON icon =
-        ::LoadIconW(::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_PBMODE));
-    SetBigIcon(icon);
-    SetSmallIcon(icon);
   }
 
   mDeviceNotifyHandle = InputDeviceUtils::RegisterNotification(mWnd);
