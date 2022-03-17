@@ -45,6 +45,8 @@
     <string name="preferences_nimbus_use_preview_collection">Use Nimbus Preview Collection (requires restart)</string>
     <!-- Label for enabling the Task Continuity feature -->
     <string name="preferences_debug_settings_task_continuity" translatable="false">Enable Task Continuity</string>
+    <!-- Label for enabling the Unified Search feature -->
+    <string name="preferences_debug_settings_unified_search" translatable="false">Enable Unified Search</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>

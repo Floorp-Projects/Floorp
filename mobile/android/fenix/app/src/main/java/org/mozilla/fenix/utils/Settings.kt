@@ -1291,6 +1291,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the Unified Search feature should be visible.
+     */
+    var showUnifiedSearchFeature by featureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_show_unified_search),
+        default = false,
+        featureFlag = FeatureFlags.unifiedSearchFeature
+    )
+
+    /**
      * Blocklist used to filter items from the home screen that have previously been removed.
      */
     var homescreenBlocklist by stringSetPreference(

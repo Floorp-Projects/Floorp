@@ -53,7 +53,7 @@ interface ToolbarInteractor {
 @Suppress("LongParameterList")
 class ToolbarView(
     private val context: Context,
-    settings: Settings,
+    private val settings: Settings,
     private val interactor: ToolbarInteractor,
     private val historyStorage: HistoryStorage?,
     private val isPrivate: Boolean,
@@ -152,7 +152,7 @@ class ToolbarView(
 
         val searchEngine = searchState.searchEngineSource.searchEngine
 
-        if (searchEngine != null) {
+        if (!settings.showUnifiedSearchFeature && searchEngine != null) {
             val iconSize =
                 context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
