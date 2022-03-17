@@ -532,7 +532,13 @@ function waitForLog(dbg, logValue) {
 }
 
 async function waitForPausedThread(dbg, thread) {
-  return waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
+  await waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
+  await waitForState(
+    dbg,
+    dbg.selectors.getCurrentThreadFrames,
+    "fetched frames"
+  );
+  await waitForLoadedScopes(dbg);
 }
 
 function isSelectedFrameSelected(dbg, state) {
