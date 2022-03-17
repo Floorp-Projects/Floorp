@@ -14,7 +14,9 @@ interface nsIWindowsShellService : nsISupports
     in nsIFile aTarget);
 
   /*
-   * Pin the current app to the taskbar
+   * Pin the current app to the taskbar. If aPrivateBrowsing is true, the
+   * Private Browsing version of the app (with a different icon and launch
+   * arguments) will be pinned instead.
    *
    * This MUST only be used in response to an active request from the user.
    *
@@ -41,7 +43,7 @@ interface nsIWindowsShellService : nsISupports
    * @throws NS_ERROR_FAILURE
    *         for unexpected errors
    */
-  void pinCurrentAppToTaskbar();
+  void pinCurrentAppToTaskbar(in bool aPrivateBrowsing);
 
   /*
    * Do a dry run of pinCurrentAppToTaskbar()
@@ -54,7 +56,7 @@ interface nsIWindowsShellService : nsISupports
    *
    * @throws same as pinCurrentAppToTaskbar()
    */
-  void checkPinCurrentAppToTaskbar();
+  void checkPinCurrentAppToTaskbar(in bool aPrivateBrowsing);
 
   /*
    * Search for the current executable among taskbar pins
@@ -73,7 +75,7 @@ interface nsIWindowsShellService : nsISupports
    *
    */
   [implicit_jscontext]
-  Promise isCurrentAppPinnedToTaskbarAsync();
+  Promise isCurrentAppPinnedToTaskbarAsync(in AString aumid);
 
   /*
    * Determine where a given shortcut likely appears in the shell.
