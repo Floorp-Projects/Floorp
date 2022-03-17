@@ -27,6 +27,11 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 class FirstRunTest {
     private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
+    private val firstTipText = getStringResource(R.string.tip_fresh_look)
+    private val secondTipText = getStringResource(R.string.tip_about_shortcuts)
+    private val thirdTipText = getStringResource(R.string.tip_explain_allowlist3)
+    private val fourthTipText = getStringResource(R.string.tip_disable_tracking_protection3)
+    private val fifthTipText = getStringResource(R.string.tip_request_desktop2)
 
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = true)
@@ -79,23 +84,23 @@ class FirstRunTest {
             skipFirstRun()
             closeSoftKeyboard()
             verifyTipsCarouselIsDisplayed(true)
-            verifyTipText(getStringResource(R.string.tip_fresh_look))
+            verifyTipText(firstTipText)
             scrollLeftTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_about_shortcuts))
+            verifyTipText(secondTipText)
             scrollLeftTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_explain_allowlist3))
+            verifyTipText(thirdTipText)
             scrollLeftTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_disable_tracking_protection3))
+            verifyTipText(fourthTipText)
             scrollLeftTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_request_desktop2))
+            verifyTipText(fifthTipText)
             scrollRightTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_disable_tracking_protection3))
+            verifyTipText(fourthTipText)
             scrollRightTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_explain_allowlist3))
+            verifyTipText(thirdTipText)
             scrollRightTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_about_shortcuts))
+            verifyTipText(secondTipText)
             scrollRightTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_fresh_look))
+            verifyTipText(firstTipText)
         }
     }
 
@@ -106,7 +111,7 @@ class FirstRunTest {
             skipFirstRun()
             closeSoftKeyboard()
             verifyTipsCarouselIsDisplayed(true)
-            verifyTipText(getStringResource(R.string.tip_fresh_look))
+            verifyTipText(firstTipText)
         }.clickLinkFromTips("Read more") {
             verifyPageURL("whats-new-firefox-focus-android")
         }
@@ -152,9 +157,9 @@ class FirstRunTest {
             skipFirstRun()
             closeSoftKeyboard()
             verifyTipsCarouselIsDisplayed(true)
-            verifyTipText(getStringResource(R.string.tip_fresh_look))
+            verifyTipText(firstTipText)
             scrollLeftTipsCarousel()
-            verifyTipText(getStringResource(R.string.tip_about_shortcuts))
+            verifyTipText(secondTipText)
         }
         searchScreen {
         }.loadPage(pageUrl) {
@@ -163,7 +168,7 @@ class FirstRunTest {
         homeScreen {
             closeSoftKeyboard()
             waitUntilSnackBarGone()
-            verifyTipText(getStringResource(R.string.tip_fresh_look))
+            verifyTipText(firstTipText)
         }
     }
 }
