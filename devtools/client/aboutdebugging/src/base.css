@@ -411,6 +411,30 @@ Form controls
   background: var(--button-active-background-color);
 }
 
+@media (prefers-contrast) {
+  .default-button,
+  .ghost-button,
+  .primary-button {
+    background-color: ButtonFace;
+    /* Add a border to make buttons visible in high contrast */
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  .ghost-button {
+    fill:  ButtonText;
+  }
+
+  :is(
+    .default-button,
+    .ghost-button,
+    .primary-button
+  ):enabled:is(:hover, :active) {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+}
+
 /* Photon ghost button. Icon button with no background */
 .ghost-button {
   background: transparent;
