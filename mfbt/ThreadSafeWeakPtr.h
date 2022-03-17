@@ -21,7 +21,6 @@
  * multiple threads, you can just use WeakPtr instead.
  *
  * When deriving from SupportsThreadSafeWeakPtr, you should add
- * MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(ClassName) and
  * MOZ_DECLARE_REFCOUNTED_TYPENAME(ClassName) to the public section of your
  * class, where ClassName is the name of your class.
  *
@@ -30,7 +29,6 @@
  *   class C : public SupportsThreadSafeWeakPtr<C>
  *   {
  *   public:
- *     MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(C)
  *     MOZ_DECLARE_REFCOUNTED_TYPENAME(C)
  *     void doStuff();
  *   };
@@ -65,58 +63,33 @@ namespace mozilla {
 
 template <typename T>
 class ThreadSafeWeakPtr;
+
 template <typename T>
 class SupportsThreadSafeWeakPtr;
 
-#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-#  define MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(T)  \
-    static const char* threadSafeWeakReferenceTypeName() { \
-      return "ThreadSafeWeakReference<" #T ">";            \
-    }
-#else
-#  define MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(T)
-#endif
-
 namespace detail {
+
+class SupportsThreadSafeWeakPtrBase {};
 
 // A shared weak reference that is used to track a SupportsThreadSafeWeakPtr
 // object. This object owns the reference count for the tracked object, and can
 // perform atomic refcount upgrades.
-template <typename T>
 class ThreadSafeWeakReference
-    : public external::AtomicRefCounted<ThreadSafeWeakReference<T>> {
+    : public external::AtomicRefCounted<ThreadSafeWeakReference> {
  public:
-  typedef T ElementType;
-
-  explicit ThreadSafeWeakReference(T* aPtr) : mPtr(aPtr) {}
+  explicit ThreadSafeWeakReference(SupportsThreadSafeWeakPtrBase* aPtr)
+      : mPtr(aPtr) {}
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-  const char* typeName() const {
-    // The first time this is called mPtr is null, so don't
-    // invoke any methods on mPtr.
-    return T::threadSafeWeakReferenceTypeName();
-  }
+  const char* typeName() const { return "ThreadSafeWeakReference"; }
   size_t typeSize() const { return sizeof(*this); }
 #endif
 
  private:
-  friend class mozilla::SupportsThreadSafeWeakPtr<T>;
+  template <typename U>
+  friend class mozilla::SupportsThreadSafeWeakPtr;
   template <typename U>
   friend class mozilla::ThreadSafeWeakPtr;
-
-  // Creates a new RefPtr to the tracked object.
-  already_AddRefed<T> getRefPtr() {
-    // Increment our strong reference count only if it is nonzero, meaning that
-    // the object is still alive.
-    MozRefCountType cnt = mStrongCnt.IncrementIfNonzero();
-    if (cnt == 0) {
-      return nullptr;
-    }
-
-    RefPtr<T> result{already_AddRefed(mPtr)};
-    detail::RefCountLogger::logAddRef(result.get(), cnt);
-    return result.forget();
-  }
 
   // Number of strong references to the underlying data structure.
   //
@@ -126,8 +99,8 @@ class ThreadSafeWeakReference
   RC<MozRefCountType, AtomicRefCount> mStrongCnt{0};
 
   // Raw pointer to the tracked object. It is never valid to read this value
-  // outside of `getRefPtr()`.
-  T* MOZ_NON_OWNING_REF mPtr;
+  // outside of `ThreadSafeWeakPtr::getRefPtr()`.
+  SupportsThreadSafeWeakPtrBase* MOZ_NON_OWNING_REF mPtr;
 };
 
 }  // namespace detail
@@ -143,20 +116,20 @@ class ThreadSafeWeakReference
 // Which will result in the following layout:
 //
 //   +--------------------+
-//   | MyType             | <========================================+
-//   +--------------------+                                          I
-//   | RefPtr mWeakRef  o===========> +-------------------------+    I
-//   | uint32_t mMyData   |           | ThreadSafeWeakReference |    I
-//   +--------------------+           +-------------------------+    I
-//                                    | RC mRefCount            |    I
-//                                    | RC mStrongCount         |    I
-//                                    | MyType* mPtr          o======+
-//                                    +-------------------------+
+//   | MyType             | <===============================================+
+//   +--------------------+                                                 I
+//   | RefPtr mWeakRef  o======> +-------------------------------------+    I
+//   | uint32_t mMyData   |      | ThreadSafeWeakReference             |    I
+//   +--------------------+      +-------------------------------------+    I
+//                               | RC mRefCount                        |    I
+//                               | RC mStrongCount                     |    I
+//                               | SupportsThreadSafeWeakPtrBase* mPtr o====+
+//                               +-------------------------------------+
 //
-// The mRefCount inherited from AtomicRefCounted<ThreadSafeWeakReference<T>> is
-// the weak count. This means MyType implicitly holds a weak reference, so if
-// the weak count ever hits 0, we know all strong *and* weak references are
-// gone, and it's safe to free the ThreadSafeWeakReference. MyType's AddRef and
+// The mRefCount inherited from AtomicRefCounted<ThreadSafeWeakReference> is the
+// weak count. This means MyType implicitly holds a weak reference, so if the
+// weak count ever hits 0, we know all strong *and* weak references are gone,
+// and it's safe to free the ThreadSafeWeakReference. MyType's AddRef and
 // Release implementations otherwise only manipulate mStrongCount.
 //
 // It's necessary to keep the counts in a separate allocation because we need
@@ -164,17 +137,16 @@ class ThreadSafeWeakReference
 // that weak references can still access all the state necessary to check if
 // they can be upgraded (mStrongCount).
 template <typename T>
-class SupportsThreadSafeWeakPtr {
+class SupportsThreadSafeWeakPtr : public detail::SupportsThreadSafeWeakPtrBase {
  protected:
-  typedef detail::ThreadSafeWeakReference<T> ThreadSafeWeakReference;
+  using ThreadSafeWeakReference = detail::ThreadSafeWeakReference;
 
   // The `this` pointer will not have subclasses initialized yet, but it will
   // also not be read until a weak pointer is upgraded, which should be after
   // this point.
-  SupportsThreadSafeWeakPtr()
-      : mWeakRef(new ThreadSafeWeakReference(static_cast<T*>(this))) {
-    static_assert(std::is_base_of_v<SupportsThreadSafeWeakPtr<T>, T>,
-                  "T must derive from SupportsThreadSafeWeakPtr<T>");
+  SupportsThreadSafeWeakPtr() : mWeakRef(new ThreadSafeWeakReference(this)) {
+    static_assert(std::is_base_of_v<SupportsThreadSafeWeakPtr, T>,
+                  "T must derive from SupportsThreadSafeWeakPtr");
   }
 
  public:
@@ -225,9 +197,7 @@ class SupportsThreadSafeWeakPtr {
 // A thread-safe variant of a weak pointer
 template <typename T>
 class ThreadSafeWeakPtr {
-  // Be careful to use the weak reference type T in the
-  // SupportsThreadSafeWeakPtr<T> definition.
-  typedef typename T::ThreadSafeWeakReference ThreadSafeWeakReference;
+  using ThreadSafeWeakReference = detail::ThreadSafeWeakReference;
 
  public:
   ThreadSafeWeakPtr() = default;
@@ -295,10 +265,19 @@ class ThreadSafeWeakPtr {
  private:
   // Gets a new strong reference of the proper type T to the tracked object.
   already_AddRefed<T> getRefPtr() const {
-    static_assert(std::is_base_of<typename ThreadSafeWeakReference::ElementType,
-                                  T>::value,
-                  "T must derive from ThreadSafeWeakReference::ElementType");
-    return mRef ? mRef->getRefPtr().template downcast<T>() : nullptr;
+    if (!mRef) {
+      return nullptr;
+    }
+    // Increment our strong reference count only if it is nonzero, meaning that
+    // the object is still alive.
+    MozRefCountType cnt = mRef->mStrongCnt.IncrementIfNonzero();
+    if (cnt == 0) {
+      return nullptr;
+    }
+
+    RefPtr<T> ptr = already_AddRefed<T>(static_cast<T*>(mRef->mPtr));
+    detail::RefCountLogger::logAddRef(ptr.get(), cnt);
+    return ptr.forget();
   }
 
   // A shared weak reference to an object. Note that this may be null so as to
