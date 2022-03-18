@@ -580,79 +580,8 @@ bool BaseCompiler::endFunction() {
 
   JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code");
   if (compilerEnv_.debugEnabled()) {
-    // The debug trap stub performs out-of-line filtering before jumping to the
-    // debug trap handler if necessary.  The trap handler returns directly to
-    // the breakable point.
-    //
-    // NOTE, the link register is live here on platforms that have LR.
-    //
-    // The scratch register is available here (as it was at the call site).
-    //
-    // It's useful for the debug trap stub to be compact, as every function gets
-    // one.
     JitSpew(JitSpew_Codegen, "# endFunction: start of debug trap stub");
-
-    Label L;
-    masm.bind(&debugTrapStub_);
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    {
-      ScratchPtr scratch(*this);
-
-      // Get the per-instance table of filtering bits.
-      masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()),
-                   scratch);
-
-      // Check the filter bit.  There is one bit per function in the module.
-      // Table elements are 32-bit because the masm makes that convenient.
-      masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
-                         Imm32(1 << (func_.index % 32)), &L);
-
-      // Fast path: return to the execution.
-      masm.ret();
-    }
-#elif defined(JS_CODEGEN_ARM64)
-    {
-      ScratchPtr scratch(*this);
-
-      // Logic as above, except abiret to jump to the LR directly
-      masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()),
-                   scratch);
-      masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
-                         Imm32(1 << (func_.index % 32)), &L);
-      masm.abiret();
-    }
-#elif defined(JS_CODEGEN_ARM)
-    {
-      // We must be careful not to use the SecondScratchRegister, which usually
-      // is LR, as LR is live here.  This means avoiding masm abstractions such
-      // as branchTestPtr.
-
-      static_assert(ScratchRegister != lr);
-      static_assert(Instance::offsetOfDebugFilter() < 0x1000);
-
-      ScratchRegisterScope tmp1(masm);
-      ScratchI32 tmp2(*this);
-      masm.ma_ldr(
-          DTRAddr(WasmTlsReg, DtrOffImm(Instance::offsetOfDebugFilter())),
-          tmp1);
-      masm.ma_mov(Imm32(func_.index / 32), tmp2);
-      masm.ma_ldr(DTRAddr(tmp1, DtrRegImmShift(tmp2, LSL, 0)), tmp2);
-      masm.ma_tst(tmp2, Imm32(1 << func_.index % 32), tmp1, Assembler::Always);
-      masm.ma_bx(lr, Assembler::Zero);
-    }
-#elif defined(JS_CODEGEN_MIPS64)
-    // TODO - also see insertBreakablePoint
-#elif defined(JS_CODEGEN_LOONG64)
-    // TODO - also see insertBreakablePoint
-#else
-    MOZ_CRASH("BaseCompiler platform hook: endFunction");
-#endif
-
-    // Jump to the debug trap handler.
-    masm.bind(&L);
-    masm.jump(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler()));
-
+    insertBreakpointStub();
     JitSpew(JitSpew_Codegen, "# endFunction: end of debug trap stub");
   }
 
@@ -667,15 +596,167 @@ bool BaseCompiler::endFunction() {
   return !masm.oom();
 }
 
-void BaseCompiler::popStackReturnValues(const ResultType& resultType) {
-  uint32_t bytes = ABIResultIter::MeasureStackBytes(resultType);
-  if (bytes == 0) {
-    return;
+//////////////////////////////////////////////////////////////////////////////
+//
+// Debugger API.
+
+void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
+#ifndef RABALDR_PIN_INSTANCE
+  fr.loadTlsPtr(WasmTlsReg);
+#endif
+
+  // The breakpoint code must call the breakpoint handler installed on the
+  // instance if it is not null.  There is one breakable point before
+  // every bytecode, and one at the beginning and at the end of the function.
+  //
+  // There are many constraints:
+  //
+  //  - Code should be read-only; we do not want to patch
+  //  - The breakpoint code should be as dense as possible, given the volume of
+  //    breakable points
+  //  - The handler-is-null case should be as fast as we can make it
+  //
+  // The scratch register is available here.
+  //
+  // An unconditional callout would be densest but is too slow.  The best
+  // balance results from an inline test for null with a conditional call.  The
+  // best code sequence is platform-dependent.
+  //
+  // The conditional call goes to a stub attached to the function that performs
+  // further filtering before calling the breakpoint handler.
+#if defined(JS_CODEGEN_X64)
+  // REX 83 MODRM OFFS IB
+  static_assert(Instance::offsetOfDebugTrapHandler() < 128);
+  masm.cmpq(Imm32(0),
+            Operand(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+
+  // 74 OFFS
+  Label L;
+  L.bind(masm.currentOffset() + 7);
+  masm.j(Assembler::Zero, &L);
+
+  // E8 OFFS OFFS OFFS OFFS
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+
+  // Branch destination
+  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+#elif defined(JS_CODEGEN_X86)
+  // 83 MODRM OFFS IB
+  static_assert(Instance::offsetOfDebugTrapHandler() < 128);
+  masm.cmpl(Imm32(0),
+            Operand(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+
+  // 74 OFFS
+  Label L;
+  L.bind(masm.currentOffset() + 7);
+  masm.j(Assembler::Zero, &L);
+
+  // E8 OFFS OFFS OFFS OFFS
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+
+  // Branch destination
+  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+#elif defined(JS_CODEGEN_ARM64)
+  ScratchPtr scratch(*this);
+  ARMRegister tmp(scratch, 64);
+  Label L;
+  masm.Ldr(tmp, MemOperand(
+                    Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+  masm.Cbz(tmp, &L);
+  masm.Bl(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+  masm.bind(&L);
+#elif defined(JS_CODEGEN_ARM)
+  ScratchPtr scratch(*this);
+  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler()),
+               scratch);
+  masm.ma_orr(scratch, scratch, SetCC);
+  masm.ma_bl(&debugTrapStub_, Assembler::NonZero);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+#elif defined(JS_CODEGEN_MIPS64)
+  // TODO - also see insertBreakpointStub()
+#elif defined(JS_CODEGEN_LOONG64)
+  // TODO - also see insertBreakpointStub()
+#else
+  MOZ_CRASH("BaseCompiler platform hook: insertBreakablePoint");
+#endif
+}
+
+void BaseCompiler::insertBreakpointStub() {
+  // The debug trap stub performs out-of-line filtering before jumping to the
+  // debug trap handler if necessary.  The trap handler returns directly to
+  // the breakable point.
+  //
+  // NOTE, the link register is live here on platforms that have LR.
+  //
+  // The scratch register is available here (as it was at the call site).
+  //
+  // It's useful for the debug trap stub to be compact, as every function gets
+  // one.
+
+  Label L;
+  masm.bind(&debugTrapStub_);
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  {
+    ScratchPtr scratch(*this);
+
+    // Get the per-instance table of filtering bits.
+    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()), scratch);
+
+    // Check the filter bit.  There is one bit per function in the module.
+    // Table elements are 32-bit because the masm makes that convenient.
+    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                       Imm32(1 << (func_.index % 32)), &L);
+
+    // Fast path: return to the execution.
+    masm.ret();
   }
-  Register target = ABINonArgReturnReg0;
-  Register temp = ABINonArgReturnReg1;
-  fr.loadIncomingStackResultAreaPtr(RegPtr(target));
-  fr.popStackResultsToMemory(target, bytes, temp);
+#elif defined(JS_CODEGEN_ARM64)
+  {
+    ScratchPtr scratch(*this);
+
+    // Logic as above, except abiret to jump to the LR directly
+    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()), scratch);
+    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                       Imm32(1 << (func_.index % 32)), &L);
+    masm.abiret();
+  }
+#elif defined(JS_CODEGEN_ARM)
+  {
+    // We must be careful not to use the SecondScratchRegister, which usually
+    // is LR, as LR is live here.  This means avoiding masm abstractions such
+    // as branchTestPtr.
+
+    static_assert(ScratchRegister != lr);
+    static_assert(Instance::offsetOfDebugFilter() < 0x1000);
+
+    ScratchRegisterScope tmp1(masm);
+    ScratchI32 tmp2(*this);
+    masm.ma_ldr(DTRAddr(WasmTlsReg, DtrOffImm(Instance::offsetOfDebugFilter())),
+                tmp1);
+    masm.ma_mov(Imm32(func_.index / 32), tmp2);
+    masm.ma_ldr(DTRAddr(tmp1, DtrRegImmShift(tmp2, LSL, 0)), tmp2);
+    masm.ma_tst(tmp2, Imm32(1 << func_.index % 32), tmp1, Assembler::Always);
+    masm.ma_bx(lr, Assembler::Zero);
+  }
+#elif defined(JS_CODEGEN_MIPS64)
+  // TODO - also see insertBreakablePoint()
+#elif defined(JS_CODEGEN_LOONG64)
+  // TODO - also see insertBreakablePoint()
+#else
+  MOZ_CRASH("BaseCompiler platform hook: endFunction");
+#endif
+
+  // Jump to the debug trap handler.
+  masm.bind(&L);
+  masm.jump(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler()));
 }
 
 void BaseCompiler::saveRegisterReturnValues(const ResultType& resultType) {
@@ -779,6 +860,17 @@ void BaseCompiler::restoreRegisterReturnValues(const ResultType& resultType) {
 //////////////////////////////////////////////////////////////////////////////
 //
 // Results and block parameters
+
+void BaseCompiler::popStackReturnValues(const ResultType& resultType) {
+  uint32_t bytes = ABIResultIter::MeasureStackBytes(resultType);
+  if (bytes == 0) {
+    return;
+  }
+  Register target = ABINonArgReturnReg0;
+  Register temp = ABINonArgReturnReg1;
+  fr.loadIncomingStackResultAreaPtr(RegPtr(target));
+  fr.popStackResultsToMemory(target, bytes, temp);
+}
 
 // TODO / OPTIMIZE (Bug 1316818): At the moment we use the Wasm
 // inter-procedure ABI for block returns, which allocates ReturnReg as the
