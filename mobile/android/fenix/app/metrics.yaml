@@ -615,6 +615,7 @@ search_shortcuts:
       A user selected a search shortcut engine to use
     extra_keys:
       engine:
+        type: string
         description: |
           The name of the built-in search engine the user selected as a string
     bugs:

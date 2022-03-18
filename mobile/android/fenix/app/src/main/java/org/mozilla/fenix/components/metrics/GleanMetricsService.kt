@@ -41,7 +41,6 @@ import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
-import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.StartOnHome
@@ -133,10 +132,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-        is Event.SearchShortcutSelected -> EventWrapper(
-            { SearchShortcuts.selected.record(it) },
-            { SearchShortcuts.selectedKeys.valueOf(it) }
         )
         is Event.LoginDialogPromptDisplayed -> EventWrapper<NoExtraKeys>(
             { LoginDialog.displayed.record(it) }

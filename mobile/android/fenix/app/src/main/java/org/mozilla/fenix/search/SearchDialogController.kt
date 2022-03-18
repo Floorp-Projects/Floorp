@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -191,8 +192,11 @@ class SearchDialogController(
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         focusToolbar()
         fragmentStore.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
-        val isCustom = searchEngine.type == SearchEngine.Type.CUSTOM
-        metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
+        val engine = when (searchEngine.type) {
+            SearchEngine.Type.CUSTOM -> "custom"
+            else -> searchEngine.name
+        }
+        SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(engine))
     }
 
     override fun handleSearchShortcutsButtonClicked() {
