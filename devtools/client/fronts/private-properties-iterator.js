@@ -38,14 +38,19 @@ class PrivatePropertiesIteratorFront extends FrontClassWithSpec(
       return result;
     }
 
+    // The result packet can have multiple properties that hold grips which we may need
+    // to turn into fronts.
+    const gripKeys = ["value", "getterValue", "get", "set"];
+
     result.privateProperties.forEach((item, i) => {
       if (item?.descriptor) {
-        result.privateProperties[
-          i
-        ].descriptor.value = getAdHocFrontOrPrimitiveGrip(
-          item.descriptor.value,
-          this
-        );
+        for (const gripKey of gripKeys) {
+          if (item.descriptor.hasOwnProperty(gripKey)) {
+            result.privateProperties[i].descriptor[
+              gripKey
+            ] = getAdHocFrontOrPrimitiveGrip(item.descriptor[gripKey], this);
+          }
+        }
       }
     });
     return result;
