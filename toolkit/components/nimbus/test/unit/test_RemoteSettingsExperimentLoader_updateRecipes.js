@@ -130,3 +130,21 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
 });
+
+add_task(async function test_updateRecipes_invalidRecipe() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  const loader = ExperimentFakes.rsLoader();
+  loader.manager = manager;
+
+  const badRecipe = ExperimentFakes.recipe("foo");
+  delete badRecipe.slug;
+
+  const onRecipe = sandbox.stub(manager, "onRecipe");
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
+  sandbox.stub(manager.store, "ready").resolves();
+  sandbox.stub(manager.store, "getAllActive").returns([]);
+
+  await loader.init();
+  ok(onRecipe.notCalled, "No recipes");
+});
