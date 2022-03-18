@@ -15,7 +15,6 @@
 }
 
 @media (-moz-windows-non-native-menus) {
-  :host,
   :root {
     /* Override some menu color variables for light browser themes. */
     --menuitem-hover-background-color: #e0e0e6;
@@ -37,24 +36,8 @@
   }
 
   /* Override the menu color variables for dark browser themes. */
-  :host(:-moz-lwtheme-brighttext),
-  :root:-moz-lwtheme-brighttext {
-    --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-    --menu-background-color: var(--dark-menu-background-color);
-    --menu-color: var(--dark-menu-color);
-    --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
-    --menu-disabled-color: var(--dark-menu-disabled-color);
-    --menu-border-color: var(--dark-menu-border-color);
-    --menu-icon-opacity: var(--dark-menu-icon-opacity);
-  }
-
-  /* We also need to override these color variables in situations where
-     -moz-lwtheme isn't used and the colors are selected based only on the
-     system color scheme. Some of these occur in-content (for example
-     about:preferences), but some do not (like the library/places window). */
   @media (prefers-color-scheme: dark) {
-    :host(:not(:-moz-lwtheme)),
-    :root:not(:-moz-lwtheme) {
+    :root {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
       --menu-background-color: var(--dark-menu-background-color);
       --menu-color: var(--dark-menu-color);
