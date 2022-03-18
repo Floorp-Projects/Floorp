@@ -332,8 +332,8 @@ add_task(async function test_getAllBranches_featureIdAccessor() {
   );
   branches.forEach(branch => {
     Assert.equal(
-      branch["test-feature"].featureId,
-      "test-feature",
+      branch.testFeature.featureId,
+      "testFeature",
       "Should use the experimentBranchAccessor proxy getter"
     );
   });

@@ -244,6 +244,7 @@ class _ExperimentManager {
       }
     }
 
+    dump(`*** *** call this._enroll recipe.slug = ${recipe.slug}\n`);
     return this._enroll(recipe, branch, source);
   }
 
@@ -282,10 +283,12 @@ class _ExperimentManager {
     }
 
     if (isRollout) {
+      dump(`*** *** store.addEnrollment rollout\n`);
       experiment.experimentType = "rollout";
       this.store.addEnrollment(experiment);
       this.setExperimentActive(experiment);
     } else {
+      dump(`*** *** store.addEnrollment non rollout\n`);
       this.store.addEnrollment(experiment);
       this.setExperimentActive(experiment);
     }
