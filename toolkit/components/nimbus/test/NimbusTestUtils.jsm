@@ -84,7 +84,7 @@ const ExperimentTestUtils = {
   async validateExperiment(experiment) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusExperiment.schema.json"
+        "resource://nimbus/schemas/NimbusExperiment.schema.json"
       )
     ).NimbusExperiment;
 
@@ -109,7 +109,7 @@ const ExperimentTestUtils = {
   async validateEnrollment(enrollment) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusEnrollment.schema.json"
+        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
     ).NimbusExperiment;
 
@@ -131,7 +131,7 @@ const ExperimentTestUtils = {
   async validateRollouts(rollout) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusEnrollment.schema.json"
+        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
     ).NimbusExperiment;
 
