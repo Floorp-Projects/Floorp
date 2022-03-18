@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Duyệt như chưa từng xảy ra</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
+
+    <string name="onboarding_history_description2">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Quyền riêng tư phù hợp với mọi tình huống</string>
