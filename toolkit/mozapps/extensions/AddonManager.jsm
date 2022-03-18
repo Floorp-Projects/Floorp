@@ -39,6 +39,7 @@ const PREF_EM_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_EM_STRICT_COMPATIBILITY = "extensions.strictCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 const PREF_SYS_ADDON_UPDATE_ENABLED = "extensions.systemAddon.update.enabled";
+const PREF_REMOTESETTINGS_DISABLED = "extensions.remoteSettings.disabled";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION =
   "extensions.webExtensionsMinPlatformVersion";
@@ -89,6 +90,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -108,7 +110,12 @@ Services.ppmm.loadProcessScript(
 
 const INTEGER = /^[1-9]\d*$/;
 
-var EXPORTED_SYMBOLS = ["AddonManager", "AddonManagerPrivate", "AMTelemetry"];
+var EXPORTED_SYMBOLS = [
+  "AddonManager",
+  "AddonManagerPrivate",
+  "AMTelemetry",
+  "AMRemoteSettings",
+];
 
 const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 
@@ -485,6 +492,7 @@ var gShutdownInProgress = false;
 var gBrowserUpdated = null;
 
 var AMTelemetry;
+var AMRemoteSettings;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -595,6 +603,9 @@ var AddonManagerInternal = {
       // Enable the addonsManager telemetry event category.
       AMTelemetry.init();
 
+      // Enable the AMRemoteSettings client.
+      AMRemoteSettings.init();
+
       // clear this for xpcshell test restarts
       for (let provider in this.telemetryDetails) {
         delete this.telemetryDetails[provider];
@@ -679,6 +690,9 @@ var AddonManagerInternal = {
         gWebExtensionsMinPlatformVersion
       );
       Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this);
+
+      // Watch for changes to PREF_REMOTESETTINGS_DISABLED.
+      Services.prefs.addObserver(PREF_REMOTESETTINGS_DISABLED, this);
 
       // Watch for language changes, refresh the addon cache when it changes.
       Services.obs.addObserver(this, INTL_LOCALES_CHANGED);
@@ -967,14 +981,18 @@ var AddonManagerInternal = {
 
     gRepoShutdownState = "pending";
     gShutdownInProgress = true;
+
     // Clean up listeners
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
     Services.prefs.removeObserver(PREF_EM_UPDATE_ENABLED, this);
     Services.prefs.removeObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
+    Services.prefs.removeObserver(PREF_REMOTESETTINGS_DISABLED, this);
 
     Services.obs.removeObserver(this, INTL_LOCALES_CHANGED);
+
+    AMRemoteSettings.shutdown();
 
     let savedError = null;
     // Only shut down providers if they've been started.
@@ -1106,6 +1124,14 @@ var AddonManagerInternal = {
         gWebExtensionsMinPlatformVersion = Services.prefs.getCharPref(
           PREF_MIN_WEBEXT_PLATFORM_VERSION
         );
+        break;
+      }
+      case PREF_REMOTESETTINGS_DISABLED: {
+        if (Services.prefs.getBoolPref(PREF_REMOTESETTINGS_DISABLED, false)) {
+          AMRemoteSettings.shutdown();
+        } else {
+          AMRemoteSettings.init();
+        }
         break;
       }
     }
@@ -4209,6 +4235,145 @@ var AddonManager = {
    */
   get beforeShutdown() {
     return gBeforeShutdownBarrier.client;
+  },
+};
+
+/**
+ * Manage AddonManager settings propagated over RemoteSettings synced data.
+ *
+ * - All managed AOM remote settings are expected to be part of the "addons-manager-settings"
+ *   collection and each entry has an unique id and a set of defined preferences controlled
+ *   (which are meant to also be enforced on the service side based on a JSONSchema that
+ *   enforce the controlled preferences and their expected type).
+ *
+ * - The expected controlled prefs for each entry are described in the RS_ENTRIES_MAP,
+ *   only the pref names listed in the map are going to be controlled by a remote settings
+ *   entry with the related unique string "id".
+ *
+ * - any preference not listed explicitly in the RS_ENTRIES_MAP will be ignored.
+ *
+ * JSONSchema of the expected entry in this collection:
+ *
+ * {
+ *   "type": "object",
+ *   "required": ["id"],
+ *   "additionalProperties": false,
+ *   "anyOf": [
+ *     {
+ *       "type": "object",
+ *       "properties": {
+ *         "id": { "const": "installTriggerDeprecation" }
+ *         "extensions.InstallTriggerImpl.enabled": { "type": "boolean"},
+ *         "extensions.InstallTrigger.enabled": { "type": "boolean" }
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ */
+AMRemoteSettings = {
+  // RemoteSettings collection id.
+  RS_COLLECTION: "addons-manager-settings",
+  // RemoteSettings entry id => array of controlled prefs.
+  RS_ENTRIES_MAP: {
+    installTriggerDeprecation: [
+      "extensions.InstallTriggerImpl.enabled",
+      "extensions.InstallTrigger.enabled",
+    ],
+  },
+
+  client: null,
+  onSync: null,
+  promiseStartup: null,
+
+  init() {
+    try {
+      if (!this.promiseStartup) {
+        // Creating a promise to resolved when the browser startup was completed,
+        // used to process the existing entries (if any) after the startup is completed
+        // and to only to it ones.
+        this.promiseStartup = new Promise(resolve => {
+          function observer() {
+            resolve();
+            Services.obs.removeObserver(
+              observer,
+              "browser-delayed-startup-finished"
+            );
+          }
+          Services.obs.addObserver(
+            observer,
+            "browser-delayed-startup-finished"
+          );
+        });
+      }
+
+      if (Services.prefs.getBoolPref(PREF_REMOTESETTINGS_DISABLED, false)) {
+        return;
+      }
+
+      if (!this.client) {
+        this.client = RemoteSettings(this.RS_COLLECTION);
+        this.onSync = this.processEntries.bind(this);
+        this.client.on("sync", this.onSync);
+        // Process existing entries if any, once the browser has been fully initialized.
+        this.promiseStartup.then(() => this.processEntries());
+      }
+    } catch (err) {
+      logger.error("Failure to initialize AddonManager RemoteSettings", err);
+    }
+  },
+
+  shutdown() {
+    try {
+      if (this.client) {
+        this.client.off("sync", this.onSync);
+        this.client = null;
+        this.onSync = null;
+      }
+      this.promiseStartup = null;
+    } catch (err) {
+      logger.error("Failure on shutdown AddonManager RemoteSettings", err);
+    }
+  },
+
+  async processEntries() {
+    const entries = await this.client.get({ syncIfEmpty: false }).catch(err => {
+      logger.error("Failure to process AddonManager RemoteSettings", err);
+      return [];
+    });
+
+    for (const entry of entries) {
+      logger.debug(`Processing AddonManager RemoteSettings "${entry.id}"`);
+
+      for (const [groupName, prefs] of Object.entries(this.RS_ENTRIES_MAP)) {
+        const data = entry[groupName];
+        if (!data) {
+          continue;
+        }
+
+        for (const pref of prefs) {
+          // Skip the pref if it is not included in the remote settings data.
+          if (!(pref in data)) {
+            continue;
+          }
+
+          try {
+            // Support for controlling boolean AddonManager settings.
+            if (typeof data[pref] == "boolean") {
+              logger.debug(
+                `Process AddonManager RemoteSettings "${entry.id}" - "${groupName}": ${pref}=${data[pref]}`
+              );
+              Services.prefs.setBoolPref(pref, data[pref]);
+            }
+          } catch (e) {
+            logger.error(
+              `Failed to process AddonManager RemoteSettings "${entry.id}" - "${groupName}": ${pref}`,
+              e
+            );
+          }
+        }
+      }
+    }
   },
 };
 
