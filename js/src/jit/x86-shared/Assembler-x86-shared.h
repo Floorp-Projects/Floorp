@@ -263,6 +263,10 @@ class CPUInfo {
     SetMaxEnabledSSEVersion(SSE4_1);
     avxEnabled = false;
   }
+  static void SetAVXDisabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
+    avxEnabled = false;
+  }
   static void SetAVXEnabled() {
     MOZ_ASSERT(!FlagsHaveBeenComputed());
     avxEnabled = true;
