@@ -2,14 +2,20 @@
 Add-on Manager
 ==============
 
-This is the nascent documentation of the Add-on Manager code.
+Overview docs
+-------------
 
-The public Add-on Manager interfaces are documented on MDN:
+.. toctree::
+   :maxdepth: 1
 
-https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager
+   AMRemoteSettings-overview
+   SystemAddons
+
+API References
+--------------
 
 .. toctree::
    :maxdepth: 1
 
    AddonManager
-   SystemAddons
+   AMRemoteSettings

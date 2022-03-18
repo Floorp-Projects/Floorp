@@ -1,0 +1,10 @@
+{
+  "installTriggerDeprecation": {
+    "extensions.InstallTrigger.enabled": {
+      "ui:widget": "radio"
+    },
+    "extensions.InstallTriggerImpl.enabled": {
+      "ui:widget": "radio"
+    }
+  }
+}
