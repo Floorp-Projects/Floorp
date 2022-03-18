@@ -472,7 +472,9 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
   Result<RefPtr<Element>, nsresult> maybeNewMetaElement =
       CreateAndInsertElement(
           WithTransaction::Yes, *nsGkAtoms::meta,
-          EditorDOMPoint(primaryHeadElement, 0), [&](Element& aMetaElement) {
+          EditorDOMPoint(primaryHeadElement, 0),
+          [&aCharacterSet](HTMLEditor&, Element& aMetaElement,
+                           const EditorDOMPoint&) {
             DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
                 kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
                 aMetaElement.IsInComposedDoc());
@@ -2957,7 +2959,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
     WithTransaction aWithTransaction, nsAtom& aTagName,
     const EditorDOMPoint& aPointToInsert,
-    const std::function<nsresult(Element&)>& aInitializer) {
+    const InitializeInsertingElement& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
@@ -2997,7 +2999,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
           NS_SUCCEEDED(rv),
           "EditorBase::MarkElementDirty() failed, but ignored");
       if (StaticPrefs::editor_initialize_element_before_connect()) {
-        rv = aInitializer(*newElement);
+        rv = aInitializer(*this, *newElement, aPointToInsert);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
         if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
                          NS_WARN_IF(Destroyed()))) {
@@ -3057,7 +3059,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
   }
 
   if (!StaticPrefs::editor_initialize_element_before_connect() && newElement) {
-    rv = aInitializer(*newElement);
+    rv = aInitializer(*this, *newElement, aPointToInsert);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
     if (MOZ_UNLIKELY(rv != NS_ERROR_EDITOR_DESTROYED &&
                      NS_WARN_IF(Destroyed()))) {
@@ -5074,7 +5076,7 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
 }
 
 Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
-    nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer) {
+    nsAtom& aTag, const InitializeInsertingElement& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsresult rv = DeleteSelectionAndPrepareToCreateNode();
@@ -5777,14 +5779,16 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
               WithTransaction::Yes, MOZ_KnownLive(*tagName),
               EditorDOMPoint(newBlock, 0u),
               // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-              [&](Element& aNewElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+              [&elementInPreviousBlock](
+                  HTMLEditor& aHTMLEditor, Element& aNewElement,
+                  const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                 // Clone all attributes.  Note that despite the method name,
                 // CloneAttributesWithTransaction does not create
                 // transactions in this case because aNewElement has not
                 // been connected yet.
                 // XXX Looks like that this clones id attribute too.
-                CloneAttributesWithTransaction(aNewElement,
-                                               *elementInPreviousBlock);
+                aHTMLEditor.CloneAttributesWithTransaction(
+                    aNewElement, *elementInPreviousBlock);
                 return NS_OK;
               });
       if (maybeNewElement.isErr()) {

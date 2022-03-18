@@ -2484,19 +2484,20 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
       DeleteSelectionAndCreateElement(
           *nsGkAtoms::blockquote,
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-          [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-            DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
-                kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
-                aBlockquoteElement.IsInComposedDoc());
-            NS_WARNING_ASSERTION(
-                NS_SUCCEEDED(rvIgnored),
-                nsPrintfCString(
-                    "Element::SetAttr(nsGkAtoms::type, \"cite\", %s) "
-                    "failed, but ignored",
-                    aBlockquoteElement.IsInComposedDoc() ? "true" : "false")
-                    .get());
-            return NS_OK;
-          });
+          [](HTMLEditor&, Element& aBlockquoteElement, const EditorDOMPoint&)
+              MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
+                    kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
+                    aBlockquoteElement.IsInComposedDoc());
+                NS_WARNING_ASSERTION(
+                    NS_SUCCEEDED(rvIgnored),
+                    nsPrintfCString(
+                        "Element::SetAttr(nsGkAtoms::type, \"cite\", %s) "
+                        "failed, but ignored",
+                        aBlockquoteElement.IsInComposedDoc() ? "true" : "false")
+                        .get());
+                return NS_OK;
+              });
   if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
                    NS_WARN_IF(Destroyed()))) {
     NS_WARNING(
@@ -2895,7 +2896,8 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // container element, the width-restricted body.
   Result<RefPtr<Element>, nsresult> spanElementOrError =
       DeleteSelectionAndCreateElement(
-          *nsGkAtoms::span, [](Element& aSpanElement) {
+          *nsGkAtoms::span,
+          [](HTMLEditor&, Element& aSpanElement, const EditorDOMPoint&) {
             // Add an attribute on the pre node so we'll know it's a quotation.
             DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
                 kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns,
@@ -2908,6 +2910,8 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                     aSpanElement.IsInComposedDoc() ? "true" : "false")
                     .get());
             // Allow wrapping on spans so long lines get wrapped to the screen.
+            // TODO: Refer the insertion point because aSpanElement may not have
+            //       been inserted into the parent element yet.
             if (aSpanElement.GetParent() &&
                 aSpanElement.GetParent()->IsHTMLElement(nsGkAtoms::body)) {
               DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
@@ -3159,7 +3163,8 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
       DeleteSelectionAndCreateElement(
           *nsGkAtoms::blockquote,
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-          [&](Element& aBlockquoteElement) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+          [&aCitation](HTMLEditor&, Element& aBlockquoteElement,
+                       const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             // Try to set type=cite.  Ignore it if this fails.
             DebugOnly<nsresult> rvIgnored = aBlockquoteElement.SetAttr(
                 kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
