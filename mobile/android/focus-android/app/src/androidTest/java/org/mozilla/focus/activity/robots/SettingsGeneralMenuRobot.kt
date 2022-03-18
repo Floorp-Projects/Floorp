@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.activity.robots
 
+import android.os.Build
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
@@ -46,22 +47,22 @@ class SettingsGeneralMenuRobot {
     }
 
     fun verifyAndroidDefaultAppsMenuAppears() {
-        intended(IntentMatchers.hasAction(ACTION_REQUEST_ROLE))
+        // method used to assert the default apps menu on API 24 and above
+        when (Build.VERSION.SDK_INT) {
+            in Build.VERSION_CODES.N..Build.VERSION_CODES.P ->
+                assertTrue(
+                    mDevice.findObject(UiSelector().resourceId("com.android.settings:id/list"))
+                        .waitForExists(waitingTime)
+                )
+            in Build.VERSION_CODES.Q..Build.VERSION_CODES.R ->
+                intended(IntentMatchers.hasAction(ACTION_REQUEST_ROLE))
+        }
     }
 
-    fun verifyOpenWithDialog() {
-        openWithDialogTitle.waitForExists(waitingTime)
-        assertTrue(openWithDialogTitle.exists())
-        assertTrue(openWithList.exists())
-    }
-
-    fun selectAlwaysOpenWithFocus() {
+    fun selectFocusDefaultBrowser() {
+        // method used to set default browser on API 30 and above
         mDevice.findObject(UiSelector().text(appName)).click()
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("android:id/button_always")
-                .enabled(true)
-        ).click()
+        mDevice.findObject(UiSelector().textContains("Set as default")).click()
     }
 
     fun verifySwitchIsToggled(checked: Boolean) {

@@ -14,6 +14,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.StringsHelper.EN_FRENCH_LOCALE
@@ -125,17 +126,25 @@ class SettingsGeneralTest {
     @SmokeTest
     @Test
     fun changeDefaultBrowserTest() {
+        val supportPageUrl = "https://support.mozilla.org/en-US/kb/set-firefox-focus-default-browser-android"
+
         homeScreen {
         }.openMainMenu {
         }.openSettings {
         }.openGeneralSettingsMenu {
             clickSetDefaultBrowser()
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                verifyOpenWithDialog()
-                selectAlwaysOpenWithFocus()
-                verifySwitchIsToggled(true)
+                browserScreen {
+                    verifyPageURL(supportPageUrl)
+                }
             } else {
                 verifyAndroidDefaultAppsMenuAppears()
+                // for API 24 to 28 we'll skip these steps because the switch doesn't update after
+                // returning from Default apps settings, not reproducing manually
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    selectFocusDefaultBrowser()
+                    verifySwitchIsToggled(true)
+                }
             }
         }
     }
