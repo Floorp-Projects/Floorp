@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
+import org.robolectric.annotation.Config
 import java.io.IOException
 import java.io.OutputStream
 
@@ -25,15 +26,40 @@ import java.io.OutputStream
 class ThumbnailDiskCacheTest {
 
     @Test
-    fun `Writing and reading bitmap bytes`() {
+    fun `Writing and reading bitmap bytes for sdk higher than 29`() {
         val cache = ThumbnailDiskCache()
         val request = ImageLoadRequest("123", 100)
 
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
             Assert.assertEquals(
-                @Suppress("DEPRECATION")
-                // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
+                Bitmap.CompressFormat.WEBP_LOSSY,
+                it.arguments[0] as Bitmap.CompressFormat
+            )
+            Assert.assertEquals(90, it.arguments[1] as Int) // Quality
+
+            val stream = it.arguments[2] as OutputStream
+            stream.write("Hello World".toByteArray())
+            true
+        }
+
+        cache.putThumbnailBitmap(testContext, request.id, bitmap)
+
+        val data = cache.getThumbnailData(testContext, request)
+        assertNotNull(data!!)
+        Assert.assertEquals("Hello World", String(data))
+    }
+
+    @Config(sdk = [29])
+    @Test
+    fun `Writing and reading bitmap bytes for sdk lower or equal to 29`() {
+        val cache = ThumbnailDiskCache()
+        val request = ImageLoadRequest("123", 100)
+
+        val bitmap: Bitmap = mock()
+        `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
+            Assert.assertEquals(
+                @Suppress("DEPRECATION") // not deprecated in sdk 29
                 Bitmap.CompressFormat.WEBP,
                 it.arguments[0] as Bitmap.CompressFormat
             )
