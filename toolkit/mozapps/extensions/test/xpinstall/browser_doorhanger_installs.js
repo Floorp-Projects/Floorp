@@ -1461,6 +1461,9 @@ add_task(async function() {
       ["extensions.strictCompatibility", true],
       ["extensions.install.requireSecureOrigin", false],
       ["security.dialog_enable_delay", 0],
+      // These tests currently depends on InstallTrigger.install.
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
     ],
   });
 

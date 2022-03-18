@@ -1,6 +1,9 @@
 // ----------------------------------------------------------------------------
 // Tests that calling InstallTrigger.startSoftwareUpdate works
 function test() {
+  // This test depends on InstallTrigger.startSoftwareUpdate availability.
+  setInstallTriggerPrefs();
+
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
