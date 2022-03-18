@@ -29,7 +29,7 @@
       "button_background_hover": "rgb(255, 255, 255)",
       "frame_inactive": "rgb(255, 255, 255)",
       "icons_attention": "rgb(0, 0, 0)",
-      "icons": "rgb(255, 255, 255)",
+       "icons": "rgb(0, 0, 0)",
       "ntp_background": "rgb(224, 224, 224)",
       "ntp_text": "rgb(0, 26, 12)",
       "popup_border": "rgb(216, 216, 216)",
