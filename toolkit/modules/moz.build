@@ -183,6 +183,7 @@ EXTRA_JS_MODULES += [
     "InlineSpellCheckerContent.jsm",
     "Integration.jsm",
     "JSONFile.jsm",
+    "JsonSchema.jsm",
     "KeywordUtils.jsm",
     "LayoutUtils.jsm",
     "Log.jsm",
