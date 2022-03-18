@@ -36,6 +36,10 @@ function check_channel(subject) {
 let gPrivateWin;
 async function test() {
   waitForExplicitFinish(); // have to call this ourselves because we're async.
+
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first_pbm", false]],
   });

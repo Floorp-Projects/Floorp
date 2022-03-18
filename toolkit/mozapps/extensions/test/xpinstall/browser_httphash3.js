@@ -2,6 +2,9 @@
 // Tests that the HTTPS hash is ignored when InstallTrigger is passed a hash.
 // This verifies bug 591070
 function test() {
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

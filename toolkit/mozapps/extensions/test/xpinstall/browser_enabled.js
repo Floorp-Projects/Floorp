@@ -1,5 +1,14 @@
 "use strict";
 
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
+    ],
+  });
+});
+
 // Test whether an InstallTrigger.enabled is working
 add_task(async function test_enabled() {
   await BrowserTestUtils.openNewForegroundTab(
