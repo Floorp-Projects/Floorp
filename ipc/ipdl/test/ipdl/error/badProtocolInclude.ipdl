@@ -5,5 +5,5 @@ include protocol IDONTEXIST;
 // error: nonexistent protocol ^^^
 
 protocol badProtocolInclude {
-child: Msg();
+child: async Msg();
 };
