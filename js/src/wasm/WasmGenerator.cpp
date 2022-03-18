@@ -1211,24 +1211,10 @@ SharedModule ModuleGenerator::finishModule(
     return nullptr;
   }
 
-  // See Module debugCodeClaimed_ comments for why we need to make a separate
-  // debug copy.
-
-  UniqueBytes debugUnlinkedCode;
-  UniqueLinkData debugLinkData;
   const ShareableBytes* debugBytecode = nullptr;
   if (compilerEnv_->debugEnabled()) {
     MOZ_ASSERT(mode() == CompileMode::Once);
     MOZ_ASSERT(tier() == Tier::Debug);
-
-    debugUnlinkedCode = js::MakeUnique<Bytes>();
-    if (!debugUnlinkedCode || !debugUnlinkedCode->resize(masm_.bytesNeeded())) {
-      return nullptr;
-    }
-
-    masm_.executableCopy(debugUnlinkedCode->begin());
-
-    debugLinkData = std::move(linkData_);
     debugBytecode = &bytecode;
   }
 
@@ -1238,8 +1224,7 @@ SharedModule ModuleGenerator::finishModule(
   MutableModule module = js_new<Module>(
       *code, std::move(moduleEnv_->imports), std::move(moduleEnv_->exports),
       std::move(dataSegments), std::move(moduleEnv_->elemSegments),
-      std::move(customSections), std::move(debugUnlinkedCode),
-      std::move(debugLinkData), debugBytecode);
+      std::move(customSections), debugBytecode);
   if (!module) {
     return nullptr;
   }

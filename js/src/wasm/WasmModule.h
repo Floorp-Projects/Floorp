@@ -91,17 +91,8 @@ class Module : public JS::WasmModule {
   const ElemSegmentVector elemSegments_;
   const CustomSectionVector customSections_;
 
-  // These fields are only meaningful when code_->metadata().debugEnabled.
-  // `debugCodeClaimed_` is set to false initially and then to true when
-  // `code_` is already being used for an instance and can't be shared because
-  // it may be patched by the debugger. Subsequent instances must then create
-  // copies by linking the `debugUnlinkedCode_` using `debugLinkData_`.
-  // This could all be removed if debugging didn't need to perform
-  // per-instance code patching.
+  // This field is only meaningful when code_->metadata().debugEnabled.
 
-  mutable Atomic<bool> debugCodeClaimed_;
-  const UniqueConstBytes debugUnlinkedCode_;
-  const UniqueLinkData debugLinkData_;
   const SharedBytes debugBytecode_;
 
   // This field is set during tier-2 compilation and cleared on success or
@@ -147,7 +138,6 @@ class Module : public JS::WasmModule {
   bool initSegments(JSContext* cx, HandleWasmInstanceObject instance,
                     HandleWasmMemoryObject memory,
                     const ValVector& globalImportValues) const;
-  SharedCode getDebugEnabledCode() const;
 
   class Tier2GeneratorTaskImpl;
 
@@ -155,8 +145,6 @@ class Module : public JS::WasmModule {
   Module(const Code& code, ImportVector&& imports, ExportVector&& exports,
          DataSegmentVector&& dataSegments, ElemSegmentVector&& elemSegments,
          CustomSectionVector&& customSections,
-         UniqueConstBytes debugUnlinkedCode = nullptr,
-         UniqueLinkData debugLinkData = nullptr,
          const ShareableBytes* debugBytecode = nullptr,
          bool loggingDeserialized = false)
       : code_(&code),
@@ -165,14 +153,9 @@ class Module : public JS::WasmModule {
         dataSegments_(std::move(dataSegments)),
         elemSegments_(std::move(elemSegments)),
         customSections_(std::move(customSections)),
-        debugCodeClaimed_(false),
-        debugUnlinkedCode_(std::move(debugUnlinkedCode)),
-        debugLinkData_(std::move(debugLinkData)),
         debugBytecode_(debugBytecode),
         loggingDeserialized_(loggingDeserialized),
         testingTier2Active_(false) {
-    MOZ_ASSERT_IF(metadata().debugEnabled,
-                  debugUnlinkedCode_ && debugLinkData_);
     initGCMallocBytesExcludingCode();
   }
   ~Module() override;
