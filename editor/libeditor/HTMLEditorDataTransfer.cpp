@@ -2896,8 +2896,8 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // container element, the width-restricted body.
   Result<RefPtr<Element>, nsresult> spanElementOrError =
       DeleteSelectionAndCreateElement(
-          *nsGkAtoms::span,
-          [](HTMLEditor&, Element& aSpanElement, const EditorDOMPoint&) {
+          *nsGkAtoms::span, [](HTMLEditor&, Element& aSpanElement,
+                               const EditorDOMPoint& aPointToInsert) {
             // Add an attribute on the pre node so we'll know it's a quotation.
             DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
                 kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns,
@@ -2910,10 +2910,7 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                     aSpanElement.IsInComposedDoc() ? "true" : "false")
                     .get());
             // Allow wrapping on spans so long lines get wrapped to the screen.
-            // TODO: Refer the insertion point because aSpanElement may not have
-            //       been inserted into the parent element yet.
-            if (aSpanElement.GetParent() &&
-                aSpanElement.GetParent()->IsHTMLElement(nsGkAtoms::body)) {
+            if (aPointToInsert.IsContainerHTMLElement(nsGkAtoms::body)) {
               DebugOnly<nsresult> rvIgnored = aSpanElement.SetAttr(
                   kNameSpaceID_None, nsGkAtoms::style,
                   nsLiteralString(u"white-space: pre-wrap; display: block; "
