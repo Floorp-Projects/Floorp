@@ -135,13 +135,7 @@ class _ExperimentManager {
     }
   }
 
-  _checkUnseenEnrollments(
-    enrollments,
-    sourceToCheck,
-    recipeMismatches,
-    invalidRecipes,
-    invalidBranches
-  ) {
+  _checkUnseenEnrollments(enrollments, sourceToCheck, recipeMismatches) {
     for (const enrollment of enrollments) {
       const { slug, source } = enrollment;
       if (sourceToCheck !== source) {
@@ -150,16 +144,9 @@ class _ExperimentManager {
       if (!this.sessions.get(source)?.has(slug)) {
         log.debug(`Stopping study for recipe ${slug}`);
         try {
-          let reason;
-          if (recipeMismatches.includes(slug)) {
-            reason = "targeting-mismatch";
-          } else if (invalidRecipes.includes(slug)) {
-            reason = "invalid-recipe";
-          } else if (invalidBranches.includes(slug)) {
-            reason = "invalid-branch";
-          } else {
-            reason = "recipe-not-seen";
-          }
+          let reason = recipeMismatches.includes(slug)
+            ? "targeting-mismatch"
+            : "recipe-not-seen";
           this.unenroll(slug, reason);
         } catch (err) {
           Cu.reportError(err);
@@ -174,10 +161,7 @@ class _ExperimentManager {
    * @param {string} sourceToCheck
    * @param {object} options Extra context used in telemetry reporting
    */
-  onFinalize(
-    sourceToCheck,
-    { recipeMismatches = [], invalidRecipes = [], invalidBranches = [] } = {}
-  ) {
+  onFinalize(sourceToCheck, { recipeMismatches } = { recipeMismatches: [] }) {
     if (!sourceToCheck) {
       throw new Error("When calling onFinalize, you must specify a source.");
     }
@@ -186,16 +170,12 @@ class _ExperimentManager {
     this._checkUnseenEnrollments(
       activeExperiments,
       sourceToCheck,
-      recipeMismatches,
-      invalidRecipes,
-      invalidBranches
+      recipeMismatches
     );
     this._checkUnseenEnrollments(
       activeRollouts,
       sourceToCheck,
-      recipeMismatches,
-      invalidRecipes,
-      invalidBranches
+      recipeMismatches
     );
 
     this.sessions.delete(sourceToCheck);
@@ -264,7 +244,6 @@ class _ExperimentManager {
       }
     }
 
-    dump(`*** *** call this._enroll recipe.slug = ${recipe.slug}\n`);
     return this._enroll(recipe, branch, source);
   }
 
@@ -303,12 +282,10 @@ class _ExperimentManager {
     }
 
     if (isRollout) {
-      dump(`*** *** store.addEnrollment rollout\n`);
       experiment.experimentType = "rollout";
       this.store.addEnrollment(experiment);
       this.setExperimentActive(experiment);
     } else {
-      dump(`*** *** store.addEnrollment non rollout\n`);
       this.store.addEnrollment(experiment);
       this.setExperimentActive(experiment);
     }

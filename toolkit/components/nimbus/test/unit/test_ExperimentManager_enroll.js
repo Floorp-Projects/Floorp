@@ -58,8 +58,6 @@ add_task(async function test_add_to_store() {
     NormandyTestUtils.isUuid(experiment.enrollmentId),
     "should add a valid enrollmentId"
   );
-
-  manager.unenroll("foo", "test-cleanup");
 });
 
 add_task(async function test_add_rollout_to_store() {
@@ -93,8 +91,6 @@ add_task(async function test_add_rollout_to_store() {
     "should choose a branch from the recipe.branches"
   );
   Assert.equal(experiment.isRollout, true, "should have .isRollout");
-
-  manager.unenroll("rollout-slug", "test-cleanup");
 });
 
 add_task(
@@ -129,8 +125,6 @@ add_task(
       true,
       "should call sendEnrollmentTelemetry after an enrollment"
     );
-
-    manager.unenroll("foo", "test-cleanup");
   }
 );
 
@@ -201,16 +195,14 @@ add_task(async function test_setRolloutActive_sendEnrollmentTelemetry_called() {
     "Should send telemetry with expected values"
   );
 
-  manager.unenroll("rollout", "test-cleanup");
-
   globalSandbox.restore();
 });
 
-// /**
-//  * Failure cases:
-//  * - slug conflict
-//  * - group conflict
-//  */
+/**
+ * Failure cases:
+ * - slug conflict
+ * - group conflict
+ */
 
 add_task(async function test_failure_name_conflict() {
   const manager = ExperimentFakes.manager();
@@ -237,8 +229,6 @@ add_task(async function test_failure_name_conflict() {
     true,
     "should send failure telemetry if a conflicting experiment exists"
   );
-
-  manager.unenroll("foo", "test-cleanup");
 });
 
 add_task(async function test_failure_group_conflict() {
@@ -286,8 +276,6 @@ add_task(async function test_failure_group_conflict() {
     true,
     "should send failure telemetry if a feature conflict exists"
   );
-
-  manager.unenroll("foo", "test-cleanup");
 });
 
 add_task(async function test_rollout_failure_group_conflict() {
@@ -321,8 +309,6 @@ add_task(async function test_rollout_failure_group_conflict() {
     true,
     "should send failure telemetry if a feature conflict exists"
   );
-
-  manager.unenroll("rollout-enrollment", "test-cleanup");
 });
 
 add_task(async function test_rollout_experiment_no_conflict() {
@@ -350,8 +336,6 @@ add_task(async function test_rollout_experiment_no_conflict() {
     manager.sendFailureTelemetry.notCalled,
     "Should send failure telemetry if a feature conflict exists"
   );
-
-  manager.unenroll("rollout-enrollment", "test-cleanup");
 });
 
 add_task(async function test_sampling_check() {
@@ -508,8 +492,6 @@ add_task(async function test_forceEnroll_cleanup() {
     "Enrolled in forced experiment"
   );
 
-  manager.unenroll(`optin-${forcedRecipe.slug}`, "test-cleanup");
-
   sandbox.restore();
 });
 
@@ -567,7 +549,6 @@ add_task(async function test_featuremanifest_enum() {
     "Enrollment was validated and stored"
   );
 
-  manager.unenroll(recipe.slug, "test-cleanup");
   manager = ExperimentFakes.manager();
   await manager.onStartup();
 
@@ -601,28 +582,20 @@ add_task(async function test_featureIds_is_stored() {
   const recipe = ExperimentFakes.recipe("featureIds");
   // Ensure we get enrolled
   recipe.bucketConfig.count = recipe.bucketConfig.total;
-  const store = ExperimentFakes.store();
-  const manager = ExperimentFakes.manager(store);
+  const manager = ExperimentFakes.manager();
 
   await manager.onStartup();
 
-  const {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(recipe, { manager });
-
-  await enrollmentPromise;
+  await manager.enroll(recipe, "test_featureIds_is_stored");
 
   Assert.ok(manager.store.addEnrollment.calledOnce, "experiment is stored");
   let [enrollment] = manager.store.addEnrollment.firstCall.args;
   Assert.ok("featureIds" in enrollment, "featureIds is stored");
   Assert.deepEqual(
     enrollment.featureIds,
-    ["testFeature"],
+    ["test-feature"],
     "Has expected value"
   );
-
-  await doExperimentCleanup();
 });
 
 add_task(async function experiment_and_rollout_enroll_and_cleanup() {
