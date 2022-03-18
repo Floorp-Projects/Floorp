@@ -13,6 +13,7 @@ const { ExperimentAPI, NimbusFeatures } = ChromeUtils.import(
 const SINGLE_FEATURE_RECIPE = {
   appId: "firefox-desktop",
   appName: "firefox_desktop",
+  application: "firefox-desktop",
   arguments: {},
   branches: [
     {
