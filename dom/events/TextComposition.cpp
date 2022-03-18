@@ -734,7 +734,7 @@ bool TextComposition::HasEditor() const {
   return mEditorBaseWeak && mEditorBaseWeak->IsAlive();
 }
 
-RawRangeBoundary TextComposition::GetStartRef() const {
+RawRangeBoundary TextComposition::FirstIMESelectionStartRef() const {
   RefPtr<EditorBase> editorBase = GetEditorBase();
   if (!editorBase) {
     return RawRangeBoundary();
@@ -795,7 +795,7 @@ RawRangeBoundary TextComposition::GetStartRef() const {
   return firstRange ? firstRange->StartRef().AsRaw() : RawRangeBoundary();
 }
 
-RawRangeBoundary TextComposition::GetEndRef() const {
+RawRangeBoundary TextComposition::LastIMESelectionEndRef() const {
   RefPtr<EditorBase> editorBase = GetEditorBase();
   if (!editorBase) {
     return RawRangeBoundary();
