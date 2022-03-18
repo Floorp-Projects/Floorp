@@ -48,6 +48,10 @@
           "target": {
             "$ref": "InjectionTarget",
             "description": "Details specifying the target into which to inject the script."
+          },
+          "world": {
+            "$ref": "ExecutionWorld",
+            "optional": true
           }
         }
       },
@@ -139,6 +143,12 @@
             "items": { "type": "string" }
           }
         }
+      },
+      {
+        "id": "ExecutionWorld",
+        "type": "string",
+        "enum": ["ISOLATED"],
+        "description": "The JavaScript world for a script to execute within. We currently only support the <code>'ISOLATED'</code> world."
       },
       {
         "id": "RegisteredContentScript",
