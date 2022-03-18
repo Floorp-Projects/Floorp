@@ -6802,7 +6802,7 @@
   # Changing these prefs requires a restart.
 -   name: javascript.options.wasm_simd_avx
     type: bool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: always
 #endif
 #endif
