@@ -241,17 +241,6 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
 
     profiler_shutdown(IsFastShutdown::Yes);
 
-#ifdef MOZ_BACKGROUNDTASKS
-    // We must unlock the profile, or else the lock file `parent.lock`
-    // will prevent removing the directory, allowing potential later
-    // writes to succeed.  But `UnlockProfile()` is not idempotent so
-    // we can't push the unlock into `Shutdown()` directly.
-    if (mozilla::BackgroundTasks::IsUsingTemporaryProfile()) {
-      UnlockProfile();
-    }
-    mozilla::BackgroundTasks::Shutdown();
-#endif
-
     DoImmediateExit(sExitCode);
   } else if (aPhase == sLateWriteChecksPhase) {
 #ifdef XP_MACOSX

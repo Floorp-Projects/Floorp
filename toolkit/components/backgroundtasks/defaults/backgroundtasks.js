@@ -25,3 +25,8 @@ pref("devtools.debugger.prompt-connection", false);
 // Background tasks do not persist the cookie database: they should
 // not be using cookies for network requests.
 pref("network.cookie.noPersistentStorage", true);
+
+// Background tasks don't need to worry about perceived performance. We disable
+// fast shutdown to reduce the risk of open file handles preventing cleanup of
+// the temporary profile directory.
+pref("toolkit.shutdown.fastShutdownStage", 0);
