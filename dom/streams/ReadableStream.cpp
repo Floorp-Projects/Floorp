@@ -427,7 +427,8 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
   // callback executes.
   Result<RefPtr<Promise>, nsresult> returnResult =
       sourceCancelPromise->ThenWithCycleCollectedArgs(
-          [](JSContext*, JS::HandleValue, RefPtr<Promise> newPromise) {
+          [](JSContext*, JS::HandleValue, ErrorResult&,
+             RefPtr<Promise> newPromise) {
             newPromise->MaybeResolveWithUndefined();
             return newPromise.forget();
           },
