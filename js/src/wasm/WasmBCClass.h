@@ -198,6 +198,10 @@ struct BaseCompiler final {
   // generation and only used by the caller.
   FuncOffsets offsets_;
 
+  // We call this address from the breakable point when the breakpoint handler
+  // is not null.
+  NonAssertingLabel debugTrapStub_;
+
   // BaselineCompileFunctions() "lends" us the StkVector to use in this
   // BaseCompiler object, and that is installed in |stk_| in our constructor.
   // This is so as to avoid having to malloc/free the vector's contents at

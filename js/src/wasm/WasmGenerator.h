@@ -212,7 +212,6 @@ class MOZ_STACK_CLASS ModuleGenerator {
   CallSiteTargetVector callSiteTargets_;
   uint32_t lastPatchedCallSite_;
   uint32_t startOfUnpatchedCallsites_;
-  CodeOffsetVector debugTrapFarJumps_;
 
   // Parallel compilation
   bool parallel_;

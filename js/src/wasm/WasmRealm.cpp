@@ -70,7 +70,7 @@ bool wasm::Realm::registerInstance(JSContext* cx,
 
   if (instance.debugEnabled() &&
       instance.realm()->debuggerObservesAllExecution()) {
-    instance.debug().ensureEnterFrameTrapsState(cx, true);
+    instance.debug().ensureEnterFrameTrapsState(cx, &instance, true);
   }
 
   {

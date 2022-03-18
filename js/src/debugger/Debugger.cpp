@@ -3252,7 +3252,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
       }
 
       bool enableTrap = observing == Debugger::Observing;
-      instance->debug().ensureEnterFrameTrapsState(cx, enableTrap);
+      instance->debug().ensureEnterFrameTrapsState(cx, instance, enableTrap);
     }
   }
 

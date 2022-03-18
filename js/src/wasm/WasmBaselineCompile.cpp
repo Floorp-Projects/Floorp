@@ -576,6 +576,85 @@ bool BaseCompiler::endFunction() {
   if (!generateOutOfLineCode()) {
     return false;
   }
+  JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code");
+
+  JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code");
+  if (compilerEnv_.debugEnabled()) {
+    // The debug trap stub performs out-of-line filtering before jumping to the
+    // debug trap handler if necessary.  The trap handler returns directly to
+    // the breakable point.
+    //
+    // NOTE, the link register is live here on platforms that have LR.
+    //
+    // The scratch register is available here (as it was at the call site).
+    //
+    // It's useful for the debug trap stub to be compact, as every function gets
+    // one.
+    JitSpew(JitSpew_Codegen, "# endFunction: start of debug trap stub");
+
+    Label L;
+    masm.bind(&debugTrapStub_);
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    {
+      ScratchPtr scratch(*this);
+
+      // Get the per-instance table of filtering bits.
+      masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()),
+                   scratch);
+
+      // Check the filter bit.  There is one bit per function in the module.
+      // Table elements are 32-bit because the masm makes that convenient.
+      masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                         Imm32(1 << (func_.index % 32)), &L);
+
+      // Fast path: return to the execution.
+      masm.ret();
+    }
+#elif defined(JS_CODEGEN_ARM64)
+    {
+      ScratchPtr scratch(*this);
+
+      // Logic as above, except abiret to jump to the LR directly
+      masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugFilter()),
+                   scratch);
+      masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                         Imm32(1 << (func_.index % 32)), &L);
+      masm.abiret();
+    }
+#elif defined(JS_CODEGEN_ARM)
+    {
+      // We must be careful not to use the SecondScratchRegister, which usually
+      // is LR, as LR is live here.  This means avoiding masm abstractions such
+      // as branchTestPtr.
+
+      static_assert(ScratchRegister != lr);
+      static_assert(Instance::offsetOfDebugFilter() < 0x1000);
+
+      ScratchRegisterScope tmp1(masm);
+      ScratchI32 tmp2(*this);
+      masm.ma_ldr(
+          DTRAddr(WasmTlsReg, DtrOffImm(Instance::offsetOfDebugFilter())),
+          tmp1);
+      masm.ma_mov(Imm32(func_.index / 32), tmp2);
+      masm.ma_ldr(DTRAddr(tmp1, DtrRegImmShift(tmp2, LSL, 0)), tmp2);
+      masm.ma_tst(tmp2, Imm32(1 << func_.index % 32), tmp1, Assembler::Always);
+      masm.ma_bx(lr, Assembler::Zero);
+    }
+#elif defined(JS_CODEGEN_MIPS64)
+    // TODO - also see insertBreakablePoint
+#elif defined(JS_CODEGEN_LOONG64)
+    // TODO - also see insertBreakablePoint
+#else
+    MOZ_CRASH("BaseCompiler platform hook: endFunction");
+#endif
+
+    // Jump to the debug trap handler.
+    masm.bind(&L);
+    masm.jump(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler()));
+
+    JitSpew(JitSpew_Codegen, "# endFunction: end of debug trap stub");
+  }
 
   offsets_.end = masm.currentOffset();
 

@@ -269,7 +269,88 @@ void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
 #ifndef RABALDR_PIN_INSTANCE
   fr.loadTlsPtr(WasmTlsReg);
 #endif
-  masm.nopPatchableToCall(CallSiteDesc(iter_.lastOpcodeOffset(), kind));
+
+  // The breakpoint code must call the breakpoint handler installed on the
+  // instance if it is not null.  There is one breakable point before
+  // every bytecode, and one at the beginning and at the end of the function.
+  //
+  // There are many constraints:
+  //
+  //  - Code should be read-only; we do not want to patch
+  //  - The breakpoint code should be as dense as possible, given the volume of
+  //    breakable points
+  //  - The handler-is-null case should be as fast as we can make it
+  //
+  // The scratch register is available here.
+  //
+  // An unconditional callout would be densest but is too slow.  The best
+  // balance results from an inline test for null with a conditional call.  The
+  // best code sequence is platform-dependent.
+  //
+  // The conditional call goes to a stub attached to the function that performs
+  // further filtering before calling the breakpoint handler.
+#if defined(JS_CODEGEN_X64)
+  // REX 83 MODRM OFFS IB
+  static_assert(Instance::offsetOfDebugTrapHandler() < 128);
+  masm.cmpq(Imm32(0),
+            Operand(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+
+  // 74 OFFS
+  Label L;
+  L.bind(masm.currentOffset() + 7);
+  masm.j(Assembler::Zero, &L);
+
+  // E8 OFFS OFFS OFFS OFFS
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+
+  // Branch destination
+  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+#elif defined(JS_CODEGEN_X86)
+  // 83 MODRM OFFS IB
+  static_assert(Instance::offsetOfDebugTrapHandler() < 128);
+  masm.cmpl(Imm32(0),
+            Operand(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+
+  // 74 OFFS
+  Label L;
+  L.bind(masm.currentOffset() + 7);
+  masm.j(Assembler::Zero, &L);
+
+  // E8 OFFS OFFS OFFS OFFS
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+
+  // Branch destination
+  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+#elif defined(JS_CODEGEN_ARM64)
+  ScratchPtr scratch(*this);
+  ARMRegister tmp(scratch, 64);
+  Label L;
+  masm.Ldr(tmp, MemOperand(
+                    Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler())));
+  masm.Cbz(tmp, &L);
+  masm.Bl(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+  masm.bind(&L);
+#elif defined(JS_CODEGEN_ARM)
+  ScratchPtr scratch(*this);
+  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfDebugTrapHandler()),
+               scratch);
+  masm.ma_orr(scratch, scratch, SetCC);
+  masm.ma_bl(&debugTrapStub_, Assembler::NonZero);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+#elif defined(JS_CODEGEN_MIPS64)
+  // TODO - also see endFunction()
+#elif defined(JS_CODEGEN_LOONG64)
+  // TODO - also see endFunction()
+#else
+  MOZ_CRASH("BaseCompiler platform hook: insertBreakablePoint");
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
