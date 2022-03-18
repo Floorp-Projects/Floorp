@@ -15941,7 +15941,7 @@
     "description": "HTML document compat mode (quirks mode)"
   },
   "BFCACHE_COMBO": {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["sefeng@mozilla.com"],
     "bug_numbers": [1531917],
