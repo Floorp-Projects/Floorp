@@ -299,7 +299,7 @@ add_task(async function test_onFinalize_unenroll() {
     experimentType: "unittest",
     userFacingName: "foo",
     userFacingDescription: "foo",
-    lastSeen: Date.now().toLocaleString(),
+    lastSeen: new Date().toJSON(),
     source: "test",
   });
   await manager.store.addEnrollment(recipe0);
@@ -347,7 +347,7 @@ add_task(async function test_onFinalize_unenroll_mismatch() {
     experimentType: "unittest",
     userFacingName: "foo",
     userFacingDescription: "foo",
-    lastSeen: Date.now().toLocaleString(),
+    lastSeen: new Date().toJSON(),
     source: "test",
   });
   await manager.store.addEnrollment(recipe0);
