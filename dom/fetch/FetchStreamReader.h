@@ -22,8 +22,12 @@ class ReadableStream;
 class ReadableStreamDefaultReader;
 class WeakWorkerRef;
 
-class FetchStreamReader final : public nsIOutputStreamCallback,
-                                public PromiseNativeHandler {
+class FetchStreamReader final : public nsIOutputStreamCallback
+#ifndef MOZ_DOM_STREAMS
+    ,
+                                public PromiseNativeHandler
+#endif
+{
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
@@ -36,11 +40,18 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
                          FetchStreamReader** aStreamReader,
                          nsIInputStream** aInputStream);
 
+#ifdef MOZ_DOM_STREAMS
+  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                  ErrorResult& aRv);
+  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
+                  ErrorResult& aRv);
+#else
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
+#endif
 
   // Idempotently close the output stream and null out all state. If aCx is
   // provided, the reader will also be canceled.  aStatus must be a DOM error
