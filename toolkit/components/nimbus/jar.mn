@@ -7,3 +7,4 @@ toolkit.jar:
   res/nimbus/lib/ (./lib/*.jsm)
   res/nimbus/ExperimentAPI.jsm (./ExperimentAPI.jsm)
   res/nimbus/FeatureManifest.js (FeatureManifest.js)
+  res/nimbus/schemas/ (./schemas/*.schema.json)
