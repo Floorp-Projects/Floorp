@@ -240,11 +240,6 @@ check_and_add_gcc_warning(
     when=depends(c_compiler)(lambda c: c.type == "clang" and c.version < "6.0"),
 )
 
-# Turn on clang thread-safety analysis
-check_and_add_gcc_warning(
-    "-Wthread-safety",
-    when=depends(c_compiler)(lambda c: c.type == "clang"),
-)
 
 # Please keep these last in this file
 add_old_configure_assignment("_WARNINGS_CFLAGS", warnings_flags.cflags)
