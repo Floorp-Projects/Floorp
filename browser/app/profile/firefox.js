@@ -32,6 +32,9 @@ pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 
+//カスタム検索エンジン
+pref("browser.urlbar.update2.engineAliasRefresh", true);
+
 //デフォルトブラウザーのチェック無効
 pref("browser.shell.checkDefaultBrowser", false);
 
