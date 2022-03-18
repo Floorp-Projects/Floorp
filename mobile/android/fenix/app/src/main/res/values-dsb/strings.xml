@@ -133,6 +133,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">Sedła: %d</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Synchronizěrowane rejtariki pokazaś</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Synchronizěrowany rěd</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Wótwónoźeś</string>
@@ -242,7 +246,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s wykno źěli, což w adresowem pólu ze swójeju pytnicu zapódajośo.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Dalšne informacije</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Dalšne informacije</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Z %s pytaś</string>
@@ -806,6 +810,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Cośo napšawdu toś ten zarědnik wulašowaś?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s wubrane zapiski wulašujo.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Pśetergnuś</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Zarědnik pśidaś</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -862,6 +868,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANULĚROWAŚ</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Pytańske wuraze zapódaś</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">K nastajenjam</string>
@@ -873,8 +882,16 @@
     <string name="phone_feature_recommended">Dopórucony</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Sedłowe pšawa lašowaś</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">W pórěźe</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Pśetergnuś</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Sedłowe pšawo lašowaś</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">W pórěźe</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Pśetergnuś</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Pšawa na wšych sedłach lašowaś</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -973,6 +990,11 @@
 
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Pokazaś</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">W pórěźe</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Pśetergnuś</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Zběrka %d</string>
@@ -1135,30 +1157,30 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview jo něnto Firefox Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview jo něnto Firefox Nightly</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly se kuždu noc aktualizěrujo a ma eksperimentelne nowe funkcije.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly se kuždu noc aktualizěrujo a ma eksperimentelne nowe funkcije.
         Móžo mjenjej stabilny byś. Ześěgniśo naš betawobglědowak za stabilnjejše dožywjenje.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Wobstarajśo se Firefox za Android Beta</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Wobstarajśo se Firefox za Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly jo pśeśěgnjony</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly jo pśeśěgnjony</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Toś to nałoženje wěstotne aktualizacije wěcej njedostawa. Pśestańśo toś to nałoženje wužywaá a wužywajśo město togo nowy Nightly.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Toś to nałoženje wěstotne aktualizacije wěcej njedostawa. Pśestańśo toś to nałoženje wužywaá a wužywajśo město togo nowy Nightly.
         \n\nAby swóje cytańske znamjenja, pśizjawjenja a historiju do drugego nałoženja pśenosował, załožćo konto Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Pśejźćo k nowemu Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Pśejźćo k nowemu Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly jo pśeśěgnjony</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly jo pśeśěgnjony</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Toś to nałoženje wěstotne aktualizacije wěcej njedostawa. Wobstarajśo se nowy Nightly a pśestańśo toś to nałoženje wužywaś.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Toś to nałoženje wěstotne aktualizacije wěcej njedostawa. Wobstarajśo se nowy Nightly a pśestańśo toś to nałoženje wužywaś.
         \n\nAby swóje cytańske znamjenja, pśizjawjenja a historiju do drugego nałoženja pśenosował, załožćo konto Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Wobstarajśo se nowy Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Wobstarajśo se nowy Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1651,6 +1673,8 @@
     <string name="login_deletion_confirmation">Cośo napšawdu toś to pśizjawjenje lašowaś?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Lašowaś</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Pśetergnuś</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Pśizjawjeńske nastajenja</string>
     <!--  The editable text field for a login's web address. -->

@@ -1187,6 +1187,10 @@
     <string name="onboarding_header">La benvenguda a %s !</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sincronizar Firefox entre vòstres aparelhs</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sincronizatz %1$s entre aparelhs</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Importatz vòstres marcapaginas, vòstre istoric e vòstres senhals dins %1$s sus aqueste aparelh.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Se connectar</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1195,6 +1199,8 @@
     <string name="onboarding_tracking_protection_header_3">Confidencialitat totjorn renfortida</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox empacha automaticament las entrepresas de vos pistar secrètament pel web.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s empacha automaticament las entrepresas de vos pistar secrètament pel web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estandard (per defaut)</string>
     <!-- text for standard blocking option button description -->

@@ -133,6 +133,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d webhely</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Összes szinkronizált lap megtekintése</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Szinkronizált eszköz</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Eltávolítás</string>
@@ -245,7 +249,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">A %s minden a címsávba írt szöveget meg fog osztani az alapértelmezett keresőszolgáltatással.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">További tudnivalók</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">További tudnivalók</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s keresés</string>
@@ -398,7 +402,7 @@
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Egyéni kiegészítőgyűjtemény</string>
     <!-- Button caption to confirm the add-on collection configuration -->
-    <string name="customize_addon_collection_ok">OK</string>
+    <string name="customize_addon_collection_ok">Rendben</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Mégse</string>
     <!-- Hint displayed on input field for custom collection name -->
@@ -811,6 +815,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Biztos, hogy törölni szeretné ezt a mappát?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">A(z) %s törölni fogja a kiválasztott elemeket.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Mégse</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Mappa hozzáadása</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -867,6 +873,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">VISSZAVONÁS</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Adja meg a keresési kifejezéseket</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Ugrás a beállításokhoz</string>
@@ -878,8 +887,16 @@
     <string name="phone_feature_recommended">Ajánlott</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Engedélyek törlése</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">Rendben</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Mégse</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Engedély törlése</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">Rendben</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Mégse</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Engedélyek törlése az összes oldalon</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -979,6 +996,11 @@
 
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Nézet</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">Rendben</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Mégse</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">%d. gyűjtemény</string>
@@ -1147,31 +1169,31 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">A Firefox Preview most már a Firefox Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">A Firefox Preview most már a Firefox Nightly</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">A Firefox Nightly minden éjjel frissül, és kísérleti, új funkciókkal rendelkezik.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">A Firefox Nightly minden éjjel frissül, és kísérleti, új funkciókkal rendelkezik.
         Viszont lehet, hogy kevésbe stabil. Töltse le a béta böngészőnkét a stabilabb élményért.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Firefox for Android Beta letöltése</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Firefox for Android Beta letöltése</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">A Firefox Nightly elköltözött</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">A Firefox Nightly elköltözött</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Ez az alkalmazás többé nem fog biztonsági frissítéseket kapni. Fejezze be az alkalmazás használatát, és váltson az új Nightlyra.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ez az alkalmazás többé nem fog biztonsági frissítéseket kapni. Fejezze be az alkalmazás használatát, és váltson az új Nightlyra.
         \n\nA könyvjelzők, bejelentkezések és előzmények átviteléhez a másik alkalmazásba, hozzon létre egy Firefox-fiókot.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Váltás az új Nightlyra</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Váltás az új Nightlyra</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">A Firefox Nightly elköltözött</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">A Firefox Nightly elköltözött</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ez az alkalmazás többé nem fog biztonsági frissítéseket kapni. Szerezze be az új Nightlyt, és fejezze be az alkalmazás használatát.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ez az alkalmazás többé nem fog biztonsági frissítéseket kapni. Szerezze be az új Nightlyt, és fejezze be az alkalmazás használatát.
         \n\nA könyvjelzők, bejelentkezések és előzmények átviteléhez a másik alkalmazásba, hozzon létre egy Firefox-fiókot.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Szerezze be az új Nightlyt</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Szerezze be az új Nightlyt</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1663,6 +1685,8 @@
     <string name="login_deletion_confirmation">Biztos, hogy törölni szeretné ezt a bejelentkezést?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Törlés</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Mégse</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Bejelentkezési lehetőségek</string>
     <!--  The editable text field for a login's web address. -->
@@ -1741,7 +1765,7 @@
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Legnépszerűbb webhely neve</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
+	<string name="top_sites_rename_dialog_ok">Rendben</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Mégse</string>
 
