@@ -54,10 +54,10 @@ class InstrumentWriter(object):
     def set(self, stack):
         stack.insert(0, threading.current_thread().name)
         stack = self._check_stack(stack)
-        self.queue.put(("set", threading.current_thread().native_id, time.time(), stack))
+        self.queue.put(("set", threading.current_thread().ident, time.time(), stack))
 
     def pause(self):
-        self.queue.put(("pause", threading.current_thread().native_id, time.time(), None))
+        self.queue.put(("pause", threading.current_thread().ident, time.time(), None))
 
     def _check_stack(self, stack):
         assert isinstance(stack, (tuple, list))
@@ -82,8 +82,8 @@ class Instrument(object):
     def __enter__(self):
         assert self.instrument_proc is None
         assert self.queue is None
-        self.queue = multiprocessing.Queue()
         mp = mpcontext.get_context()
+        self.queue = mp.Queue()
         self.instrument_proc = mp.Process(target=self.run)
         self.instrument_proc.start()
         return InstrumentWriter(self.queue)
