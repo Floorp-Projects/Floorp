@@ -56,9 +56,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
     return mTimingData->WorkerStartHighRes(mPerformance);
   }
 
-  DOMHighResTimeStamp FetchStart() const {
-    return mTimingData->FetchStartHighRes(mPerformance);
-  }
+  DOMHighResTimeStamp FetchStart() const;
 
   DOMHighResTimeStamp RedirectStart(Maybe<nsIPrincipal*>& aSubjectPrincipal,
                                     bool aEnsureSameOriginAndIgnoreTAO) const {

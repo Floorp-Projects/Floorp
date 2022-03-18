@@ -41,6 +41,13 @@ PerformanceResourceTiming::PerformanceResourceTiming(
 
 PerformanceResourceTiming::~PerformanceResourceTiming() = default;
 
+DOMHighResTimeStamp PerformanceResourceTiming::FetchStart() const {
+  if (mTimingData->TimingAllowed()) {
+    return mTimingData->FetchStartHighRes(mPerformance);
+  }
+  return StartTime();
+}
+
 DOMHighResTimeStamp PerformanceResourceTiming::StartTime() const {
   // Force the start time to be the earliest of:
   //  - RedirectStart
