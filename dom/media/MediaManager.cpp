@@ -2016,13 +2016,10 @@ NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
 
 /* static */
 StaticRefPtr<MediaManager> MediaManager::sSingleton;
-/* static */
-StaticMutex MediaManager::sSingletonMutex;
 
 #ifdef DEBUG
 /* static */
 bool MediaManager::IsInMediaThread() {
-  StaticMutexAutoLock lock(sSingletonMutex);
   return sSingleton && sSingleton->mMediaThread->IsOnCurrentThread();
 }
 #endif
@@ -2056,10 +2053,9 @@ static void ForeachObservedPref(const Function& aFunction) {
 // Guaranteed never to return nullptr.
 /* static */
 MediaManager* MediaManager::Get() {
-  StaticMutexAutoLock lock(sSingletonMutex);
-  if (!sSingleton) {
-    MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
+  if (!sSingleton) {
     static int timesCreated = 0;
     timesCreated++;
     MOZ_RELEASE_ASSERT(timesCreated == 1);
@@ -2122,7 +2118,7 @@ MediaManager* MediaManager::Get() {
 
 /* static */
 MediaManager* MediaManager::GetIfExists() {
-  StaticMutexAutoLock lock(sSingletonMutex);
+  MOZ_ASSERT(NS_IsMainThread() || IsInMediaThread());
   return sSingleton;
 }
 
@@ -3379,12 +3375,7 @@ void MediaManager::Shutdown() {
       })));
 
   // note that this == sSingleton
-#ifdef DEBUG
-  {
-    StaticMutexAutoLock lock(sSingletonMutex);
-    MOZ_ASSERT(this == sSingleton);
-  }
-#endif
+  MOZ_ASSERT(this == sSingleton);
 
   // Explicitly shut down the TaskQueue so that it releases its
   // SharedThreadPool when all tasks have completed.  SharedThreadPool blocks
@@ -3397,7 +3388,6 @@ void MediaManager::Shutdown() {
       GetMainThreadSerialEventTarget(), __func__, [] {
         LOG("MediaManager shutdown lambda running, releasing MediaManager "
             "singleton");
-        StaticMutexAutoLock lock(sSingletonMutex);
         // Remove async shutdown blocker
         media::MustGetShutdownBarrier()->RemoveBlocker(
             sSingleton->mShutdownBlocker);
