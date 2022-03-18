@@ -11,6 +11,9 @@ const {
   NimbusFeatures,
   ExperimentAPI,
 } = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
+const { ExperimentTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
@@ -64,6 +67,7 @@ const REMOTE_CONFIGURATION_FOO = ExperimentFakes.recipe("foo-rollout", {
   branches: [
     {
       slug: "foo-rollout-branch",
+      ratio: 1,
       features: [
         {
           featureId: "foo",
@@ -81,6 +85,7 @@ const REMOTE_CONFIGURATION_BAR = ExperimentFakes.recipe("bar-rollout", {
   branches: [
     {
       slug: "bar-rollout-branch",
+      ratio: 1,
       features: [
         {
           featureId: "bar",
@@ -125,6 +130,10 @@ add_task(async function test_remote_fetch_and_ready() {
   const setExperimentInactiveStub = sandbox.stub(
     TelemetryEnvironment,
     "setExperimentInactive"
+  );
+
+  registerCleanupFunction(
+    ExperimentTestUtils.addTestFeatures(fooInstance, barInstance)
   );
 
   Assert.equal(
@@ -292,6 +301,11 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
   const featureBar = new ExperimentFeature("bar", {
     foo: { description: "mochitests" },
   });
+
+  registerCleanupFunction(
+    ExperimentTestUtils.addTestFeatures(featureFoo, featureBar)
+  );
+
   let fooCleanup = await ExperimentFakes.enrollWithRollout(
     {
       featureId: "foo",

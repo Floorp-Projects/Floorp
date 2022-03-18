@@ -15,6 +15,10 @@ add_task(async function test_onStartup_setExperimentActive_called() {
   sandbox.stub(manager, "setExperimentActive");
   sandbox.stub(manager.store, "init").resolves();
   sandbox.stub(manager.store, "getAll").returns(experiments);
+  sandbox
+    .stub(manager.store, "get")
+    .callsFake(slug => experiments.find(expt => expt.slug === slug));
+  sandbox.stub(manager.store, "set");
 
   const active = ["foo", "bar"].map(ExperimentFakes.experiment);
 
@@ -51,6 +55,10 @@ add_task(async function test_onStartup_setRolloutActive_called() {
 
   const active = ["foo", "bar"].map(ExperimentFakes.rollout);
   sandbox.stub(manager.store, "getAll").returns(active);
+  sandbox
+    .stub(manager.store, "get")
+    .callsFake(slug => active.find(e => e.slug === slug));
+  sandbox.stub(manager.store, "set");
 
   await manager.onStartup();
 
@@ -82,16 +90,16 @@ add_task(async function test_startup_unenroll() {
   await enrollmentPromise;
 
   const manager = ExperimentFakes.manager(store);
-  const unenrollStub = sandbox.stub(manager, "unenroll");
+  const unenrollSpy = sandbox.spy(manager, "unenroll");
 
   await manager.onStartup();
 
   Assert.ok(
-    unenrollStub.calledOnce,
+    unenrollSpy.calledOnce,
     "Unenrolled from active experiment if user opt out is true"
   );
   Assert.ok(
-    unenrollStub.calledWith("startup_unenroll", "studies-opt-out"),
+    unenrollSpy.calledWith("startup_unenroll", "studies-opt-out"),
     "Called unenroll for expected recipe"
   );
 
@@ -150,6 +158,8 @@ add_task(async function test_onRecipe_enroll() {
     true,
     "should add recipe to the store"
   );
+
+  manager.unenroll(fooRecipe.slug, "test-cleanup");
 });
 
 add_task(async function test_onRecipe_update() {
@@ -177,6 +187,8 @@ add_task(async function test_onRecipe_update() {
     true,
     "should call .updateEnrollment() if the recipe has already been enrolled"
   );
+
+  manager.unenroll(fooRecipe.slug, "test-cleanup");
 });
 
 add_task(async function test_onRecipe_rollout_update() {
