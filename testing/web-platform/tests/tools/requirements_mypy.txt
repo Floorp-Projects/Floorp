@@ -8,5 +8,5 @@ types-PyYAML==6.0.4
 types-requests==2.27.11
 types-setuptools==57.4.9
 types-six==1.16.11
-types-ujson==4.2.0
+types-ujson==4.2.1
 typing-extensions==4.1.1
