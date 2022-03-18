@@ -454,7 +454,7 @@ using MutableMetadata = RefPtr<Metadata>;
 using SharedMetadata = RefPtr<const Metadata>;
 
 struct MetadataTier {
-  explicit MetadataTier(Tier tier) : tier(tier) {}
+  explicit MetadataTier(Tier tier) : tier(tier), debugTrapOffset(0) {}
 
   const Tier tier;
 
@@ -470,7 +470,7 @@ struct MetadataTier {
 #endif
 
   // Debug information, not serialized.
-  Uint32Vector debugTrapFarJumpOffsets;
+  uint32_t debugTrapOffset;
 
   FuncExport& lookupFuncExport(uint32_t funcIndex,
                                size_t* funcExportIndex = nullptr);

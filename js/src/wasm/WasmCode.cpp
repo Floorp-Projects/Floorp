@@ -568,7 +568,6 @@ uint8_t* MetadataTier::serialize(uint8_t* cursor) const {
   cursor = trapSites.serialize(cursor);
   cursor = SerializeVector(cursor, funcImports);
   cursor = SerializeVector(cursor, funcExports);
-  MOZ_ASSERT(debugTrapFarJumpOffsets.empty());
   return cursor;
 }
 
@@ -582,7 +581,6 @@ uint8_t* MetadataTier::serialize(uint8_t* cursor) const {
       (cursor = trapSites.deserialize(cursor)) &&
       (cursor = DeserializeVector(cursor, &funcImports)) &&
       (cursor = DeserializeVector(cursor, &funcExports));
-  MOZ_ASSERT(debugTrapFarJumpOffsets.empty());
   return cursor;
 }
 
@@ -936,9 +934,6 @@ bool MetadataTier::clone(const MetadataTier& src) {
     return false;
   }
   if (!callSites.appendAll(src.callSites)) {
-    return false;
-  }
-  if (!debugTrapFarJumpOffsets.appendAll(src.debugTrapFarJumpOffsets)) {
     return false;
   }
 #ifdef ENABLE_WASM_EXCEPTIONS
