@@ -136,6 +136,9 @@ void HTMLEditor::AutoSelectionRestorer::Abort() {
  * HTMLEditor
  *****************************************************************************/
 
+HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
+    [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
+
 HTMLEditor::HTMLEditor()
     : mCRInParagraphCreatesParagraph(false),
       mIsObjectResizingEnabled(
