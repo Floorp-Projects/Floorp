@@ -25,7 +25,7 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
 
-  PromiseNativeThenHandlerBase(Promise& aPromise) : mPromise(&aPromise) {}
+  PromiseNativeThenHandlerBase(Promise* aPromise) : mPromise(aPromise) {}
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
@@ -113,8 +113,12 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
    * @param aArgs The custom arguments to be passed to the both callbacks. The
    * handler class will grab them to make them live long enough and to allow
    * cycle collection.
+   *
+   * XXX(krosylight): ideally there should be two signatures, with or without a
+   * promise parameter. Unfortunately doing so confuses the compiler and errors
+   * out, because nothing prevents promise from being ResolveCallback.
    */
-  NativeThenHandler(Promise& aPromise, ResolveCallback&& aOnResolve,
+  NativeThenHandler(Promise* aPromise, ResolveCallback&& aOnResolve,
                     RejectCallback&& aOnReject, Args&&... aArgs)
       : PromiseNativeThenHandlerBase(aPromise),
         mOnResolve(std::forward<ResolveCallback>(aOnResolve)),
@@ -182,7 +186,7 @@ Promise::ThenCatchWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
   }
 
   auto* handler = new (fallible) HandlerType(
-      *promise, std::forward<ResolveCallback>(aOnResolve),
+      promise, std::forward<ResolveCallback>(aOnResolve),
       std::forward<RejectCallback>(aOnReject), std::forward<Args>(aArgs)...);
 
   if (!handler) {
