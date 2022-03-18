@@ -2,6 +2,9 @@
 // Tests installing an add-on from a local file with file origins disabled.
 // This should be blocked by the origin allowed check.
 function test() {
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   // prompt prior to download
   SpecialPowers.pushPrefEnv({
     set: [["extensions.postDownloadThirdPartyPrompt", false]],

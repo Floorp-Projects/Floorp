@@ -2,6 +2,9 @@
 // Test whether passing a simple string to InstallTrigger.install throws an
 // exception
 function test() {
+  // This test depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   waitForExplicitFinish();
 
   var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "amosigned.xpi"));

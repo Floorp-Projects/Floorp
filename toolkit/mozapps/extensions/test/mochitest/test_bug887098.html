@@ -16,6 +16,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
   /* globals $,evalRef */
 
   async function loaded() {
+    if (!SpecialPowers.Services.prefs.getBoolPref("extensions.InstallTrigger.enabled") ||
+        !SpecialPowers.Services.prefs.getBoolPref("extensions.InstallTriggerImpl.enabled")) {
+      ok(true, "InstallTrigger is not enabled");
+      SimpleTest.finish();
+      return;
+    }
+
     // Bug 1703215: Using SpecialPowers causes about:mozilla to be loaded in the wrong
     // process, hence we have to flip the pref and don't enforce IPC based Principal Vetting.
     await SpecialPowers.pushPrefEnv({

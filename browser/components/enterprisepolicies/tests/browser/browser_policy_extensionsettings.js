@@ -33,6 +33,17 @@ function promisePopupNotificationShown(name) {
   });
 }
 
+add_setup(async function ensureInstallTriggerEnabled() {
+  // Once InstallTrigger is removed, the tests targeting InstallTrigger should
+  // be removed or adapted to don't use InstallTrigger.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
+    ],
+  });
+});
+
 add_task(async function test_install_source_blocked_link() {
   await setupPolicyEngineWithJson({
     policies: {

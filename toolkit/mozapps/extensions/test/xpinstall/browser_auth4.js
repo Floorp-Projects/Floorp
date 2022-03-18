@@ -2,6 +2,9 @@
 var gNewTab;
 
 function test() {
+  // This test depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   // Turn off the authentication dialog blocking for this test.
   Services.prefs.setBoolPref(
     "network.auth.non-web-content-triggered-resources-http-auth-allow",

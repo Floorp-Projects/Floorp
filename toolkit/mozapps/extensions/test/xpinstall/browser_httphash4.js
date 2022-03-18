@@ -2,6 +2,9 @@
 // Test that hashes are ignored in the headers of HTTP requests
 // This verifies bug 591070
 function test() {
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
