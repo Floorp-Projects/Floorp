@@ -231,23 +231,29 @@ void Promise::Then(JSContext* aCx,
   aRetval.setObject(*retval);
 }
 
+static void SettlePromise(Promise* aSettlingPromise, Promise* aCallbackPromise,
+                          ErrorResult& aRv) {
+  if (aRv.Failed()) {
+    aSettlingPromise->MaybeReject(std::move(aRv));
+    return;
+  }
+  if (aCallbackPromise) {
+    aSettlingPromise->MaybeResolve(aCallbackPromise);
+  } else {
+    aSettlingPromise->MaybeResolveWithUndefined();
+  }
+}
+
 void PromiseNativeThenHandlerBase::ResolvedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   RefPtr<Promise> promise = CallResolveCallback(aCx, aValue, aRv);
-  if (aRv.Failed()) {
-    mPromise->MaybeReject(std::move(aRv));
-    return;
-  }
-  if (promise) {
-    mPromise->MaybeResolve(promise);
-  } else {
-    mPromise->MaybeResolveWithUndefined();
-  }
+  SettlePromise(mPromise, promise, aRv);
 }
 
 void PromiseNativeThenHandlerBase::RejectedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
-  mPromise->MaybeReject(aValue);
+  RefPtr<Promise> promise = CallRejectCallback(aCx, aValue, aRv);
+  SettlePromise(mPromise, promise, aRv);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
