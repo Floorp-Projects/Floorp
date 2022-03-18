@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head><script>
+function done() {
+  let video = document.querySelector("video");
+  let canvas = document.querySelector("canvas");
+  let context = canvas.getContext("2d");
+  context.drawImage(video, 30, 50, video.videoWidth, video.videoHeight);
+  document.documentElement.removeAttribute("class");
+}
+</script></head>
+<body bgcolor="gray">
+  <video src="video_rotation_90.mp4" onended="done()" autoplay="true"></video>
+  <canvas width="60" height="100"></canvas>
+</body>
+</html>
