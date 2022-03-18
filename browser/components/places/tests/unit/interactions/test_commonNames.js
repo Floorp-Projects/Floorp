@@ -36,6 +36,8 @@ add_task(async function setup() {
  * Tests that we return site_name page data as a common name.
  */
 add_task(async function fromMetadata() {
+  let actor = {};
+  PageDataService.lockEntry(actor, TEST_URL1);
   PageDataService.pageDataDiscovered({
     url: TEST_URL1,
     siteName: "Test Example",
@@ -43,6 +45,7 @@ add_task(async function fromMetadata() {
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL1], () =>
     Snapshots.add({ url: TEST_URL1 })
   );
+  PageDataService.unlockEntry(actor, TEST_URL1);
 
   let snapshot = await Snapshots.get(TEST_URL1);
   Assert.equal(
@@ -80,6 +83,8 @@ add_task(async function customName_noMetadata() {
  * CommonNames.jsm.
  */
 add_task(async function customName_withMetadata() {
+  let actor = {};
+  PageDataService.lockEntry(actor, TEST_URL3);
   PageDataService.pageDataDiscovered({
     url: TEST_URL3,
     siteName: "Test Example 2",
@@ -87,6 +92,7 @@ add_task(async function customName_withMetadata() {
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL3], () =>
     Snapshots.add({ url: TEST_URL3 })
   );
+  PageDataService.unlockEntry(actor, TEST_URL3);
 
   let snapshot = await Snapshots.get(TEST_URL3);
   Assert.equal(

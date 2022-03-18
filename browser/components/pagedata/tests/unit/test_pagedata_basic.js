@@ -35,9 +35,10 @@ add_task(async function test_pageDataDiscovered_notifies() {
   let pageData = await promise;
   Assert.equal(
     pageData.url,
-    "https://www.mozilla.org/",
+    url,
     "Should have notified data for the expected url"
   );
+
   Assert.deepEqual(
     pageData,
     {
@@ -53,9 +54,47 @@ add_task(async function test_pageDataDiscovered_notifies() {
     "Should have returned the correct product data"
   );
 
+  Assert.equal(
+    PageDataService.getCached(url),
+    null,
+    "Should not have cached the data as there was no actor locking."
+  );
+
+  let actor = {};
+  PageDataService.lockEntry(actor, url);
+
+  PageDataService.pageDataDiscovered({
+    url,
+    date: 32453456,
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        name: "Bolts",
+        price: { value: 276 },
+      },
+    },
+  });
+
+  // Should now be in the cache.
   Assert.deepEqual(
     PageDataService.getCached(url),
-    pageData,
-    "Should return the same pageData from the cache as was notified."
+    {
+      url,
+      date: 32453456,
+      data: {
+        [PageDataSchema.DATA_TYPE.PRODUCT]: {
+          name: "Bolts",
+          price: { value: 276 },
+        },
+      },
+    },
+    "Should have cached the data"
+  );
+
+  PageDataService.unlockEntry(actor, url);
+
+  Assert.equal(
+    PageDataService.getCached(url),
+    null,
+    "Should have dropped the data from the cache."
   );
 });
