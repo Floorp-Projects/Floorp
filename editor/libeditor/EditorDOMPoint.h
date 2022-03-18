@@ -617,6 +617,17 @@ class EditorDOMPointBase final {
   }
 
   /**
+   * ParentPoint() returns a point whose child is the container.
+   */
+  MOZ_NEVER_INLINE_DEBUG SelfType ParentPoint() const {
+    MOZ_ASSERT(mParent);
+    if (MOZ_UNLIKELY(!mParent) || !mParent->IsContent()) {
+      return SelfType();
+    }
+    return SelfType(ContainerAsContent());
+  }
+
+  /**
    * NextPoint() and PreviousPoint() returns next/previous DOM point in
    * the container.
    */
