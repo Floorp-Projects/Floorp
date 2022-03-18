@@ -91,8 +91,6 @@ const expected = [
   // Bug 1757252.
   { relPath: "cert9.db" },
   { relPath: "compatibility.ini" },
-  // Bug 1675829.
-  { relPath: "cookies.sqlite" },
   { relPath: "crashes", isDirectory: true },
   { relPath: "data", isDirectory: true },
   // Bug 1757252.
