@@ -32,7 +32,6 @@ import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.Preferences
@@ -602,30 +601,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
             { VoiceSearch.tapped.record(it) }
-        )
-        is Event.OnboardingPrivacyNotice -> EventWrapper<NoExtraKeys>(
-            { Onboarding.privacyNotice.record(it) }
-        )
-        is Event.OnboardingManualSignIn -> EventWrapper<NoExtraKeys>(
-            { Onboarding.fxaManualSignin.record(it) }
-        )
-        is Event.OnboardingAutoSignIn -> EventWrapper<NoExtraKeys>(
-            { Onboarding.fxaAutoSignin.record(it) }
-        )
-        is Event.OnboardingFinish -> EventWrapper<NoExtraKeys>(
-            { Onboarding.finish.record(it) }
-        )
-        is Event.OnboardingTrackingProtection -> EventWrapper(
-            { Onboarding.prefToggledTrackingProt.record(it) },
-            { Onboarding.prefToggledTrackingProtKeys.valueOf(it) }
-        )
-        is Event.OnboardingThemePicker -> EventWrapper(
-            { Onboarding.prefToggledThemePicker.record(it) },
-            { Onboarding.prefToggledThemePickerKeys.valueOf(it) }
-        )
-        is Event.OnboardingToolbarPosition -> EventWrapper(
-            { Onboarding.prefToggledToolbarPosition.record(it) },
-            { Onboarding.prefToggledToolbarPositionKeys.valueOf(it) }
         )
 
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(

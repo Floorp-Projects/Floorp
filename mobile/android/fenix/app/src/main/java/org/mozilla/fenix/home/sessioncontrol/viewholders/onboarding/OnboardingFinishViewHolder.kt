@@ -6,10 +6,10 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.OnboardingFinishBinding
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingFinishViewHolder(
@@ -21,7 +21,7 @@ class OnboardingFinishViewHolder(
         val binding = OnboardingFinishBinding.bind(view)
         binding.finishButton.setOnClickListener {
             interactor.onStartBrowsingClicked()
-            it.context.components.analytics.metrics.track(Event.OnboardingFinish)
+            Onboarding.finish.record(NoExtras())
         }
     }
 

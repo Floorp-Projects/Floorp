@@ -6,9 +6,8 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.Event.OnboardingToolbarPosition.Position
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.OnboardingToolbarPositionPickerBinding
 import org.mozilla.fenix.ext.asActivity
@@ -17,8 +16,6 @@ import org.mozilla.fenix.onboarding.OnboardingRadioButton
 import org.mozilla.fenix.utils.view.addToRadioGroup
 
 class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-    private val metrics = view.context.components.analytics.metrics
 
     init {
         val binding = OnboardingToolbarPositionPickerBinding.bind(view)
@@ -39,29 +36,47 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         radio.updateRadioValue(true)
 
         radioBottomToolbar.onClickListener {
-            metrics.track(Event.OnboardingToolbarPosition(Position.BOTTOM))
+            Onboarding.prefToggledToolbarPosition.record(
+                Onboarding.PrefToggledToolbarPositionExtra(
+                    Position.BOTTOM.name
+                )
+            )
 
             itemView.context.asActivity()?.recreate()
         }
 
         binding.toolbarBottomImage.setOnClickListener {
-            metrics.track(Event.OnboardingToolbarPosition(Position.BOTTOM))
+            Onboarding.prefToggledToolbarPosition.record(
+                Onboarding.PrefToggledToolbarPositionExtra(
+                    Position.BOTTOM.name
+                )
+            )
 
             radioBottomToolbar.performClick()
         }
 
         radioTopToolbar.onClickListener {
-            metrics.track(Event.OnboardingToolbarPosition(Position.TOP))
+            Onboarding.prefToggledToolbarPosition.record(
+                Onboarding.PrefToggledToolbarPositionExtra(
+                    Position.TOP.name
+                )
+            )
             itemView.context.asActivity()?.recreate()
         }
 
         binding.toolbarTopImage.setOnClickListener {
-            metrics.track(Event.OnboardingToolbarPosition(Position.TOP))
+            Onboarding.prefToggledToolbarPosition.record(
+                Onboarding.PrefToggledToolbarPositionExtra(
+                    Position.TOP.name
+                )
+            )
             radioTopToolbar.performClick()
         }
     }
 
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_toolbar_position_picker
+        // Position of the toolbar used for telemetry
+        enum class Position { TOP, BOTTOM }
     }
 }

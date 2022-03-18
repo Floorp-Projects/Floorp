@@ -17,7 +17,6 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
-import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
@@ -183,10 +182,6 @@ sealed class Event {
     object StudiesSettings : Event()
     object VoiceSearchTapped : Event()
     object SearchWidgetInstalled : Event()
-    object OnboardingAutoSignIn : Event()
-    object OnboardingManualSignIn : Event()
-    object OnboardingPrivacyNotice : Event()
-    object OnboardingFinish : Event()
     object ChangedToDefaultBrowser : Event()
     object DefaultBrowserNotifTapped : Event()
 
@@ -294,27 +289,6 @@ sealed class Event {
 
     data class TopSiteContileClick(val position: Int, val source: Source) : Event() {
         enum class Source { NEWTAB }
-    }
-
-    data class OnboardingToolbarPosition(val position: Position) : Event() {
-        enum class Position { TOP, BOTTOM }
-
-        override val extras: Map<Onboarding.prefToggledToolbarPositionKeys, String>?
-            get() = hashMapOf(Onboarding.prefToggledToolbarPositionKeys.position to position.name)
-    }
-
-    data class OnboardingTrackingProtection(val setting: Setting) : Event() {
-        enum class Setting { STRICT, STANDARD }
-
-        override val extras: Map<Onboarding.prefToggledTrackingProtKeys, String>?
-            get() = hashMapOf(Onboarding.prefToggledTrackingProtKeys.setting to setting.name)
-    }
-
-    data class OnboardingThemePicker(val theme: Theme) : Event() {
-        enum class Theme { LIGHT, DARK, FOLLOW_DEVICE }
-
-        override val extras: Map<Onboarding.prefToggledThemePickerKeys, String>?
-            get() = mapOf(Onboarding.prefToggledThemePickerKeys.theme to theme.name)
     }
 
     data class PreferenceToggled(

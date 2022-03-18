@@ -6,9 +6,8 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.Event.OnboardingTrackingProtection.Setting
 import org.mozilla.fenix.databinding.OnboardingTrackingProtectionBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -50,14 +49,20 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         standardTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
-            itemView.context.components.analytics.metrics
-                .track(Event.OnboardingTrackingProtection(Setting.STANDARD))
+            Onboarding.prefToggledTrackingProt.record(
+                Onboarding.PrefToggledTrackingProtExtra(
+                    Settings.STANDARD.name
+                )
+            )
         }
 
         strictTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
-            itemView.context.components.analytics.metrics
-                .track(Event.OnboardingTrackingProtection(Setting.STRICT))
+            Onboarding.prefToggledTrackingProt.record(
+                Onboarding.PrefToggledTrackingProtExtra(
+                    Settings.STRICT.name
+                )
+            )
         }
     }
 
@@ -77,5 +82,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_tracking_protection
+        // Tracking protection policy types used for telemetry
+        enum class Settings { STRICT, STANDARD }
     }
 }

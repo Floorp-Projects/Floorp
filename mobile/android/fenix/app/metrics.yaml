@@ -507,6 +507,7 @@ onboarding:
       The toolbar position preference was chosen from the onboarding card.
     extra_keys:
       position:
+        type: string
         description: |
           A string that indicates the position of the toolbar TOP or BOTTOM.
           Default: BOTTOM
@@ -534,6 +535,7 @@ onboarding:
       The tracking protection preference was chosen from the onboarding card.
     extra_keys:
       setting:
+        type: string
         description: |
           A string that indicates the Tracking Protection policy STANDARD
           or STRICT. Default: Toggle ON, STANDARD
@@ -561,6 +563,7 @@ onboarding:
       The device theme was chosen using the theme picker onboarding card.
     extra_keys:
       theme:
+        type: string
         description: |
           A string that indicates the theme LIGHT, DARK, or FOLLOW DEVICE.
           Default: FOLLOW DEVICE

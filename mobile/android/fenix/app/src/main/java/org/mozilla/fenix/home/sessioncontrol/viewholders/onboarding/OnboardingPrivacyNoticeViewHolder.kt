@@ -6,10 +6,10 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.OnboardingPrivacyNoticeBinding
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingPrivacyNoticeViewHolder(
@@ -25,7 +25,7 @@ class OnboardingPrivacyNoticeViewHolder(
         binding.descriptionText.text = view.context.getString(R.string.onboarding_privacy_notice_description2, appName)
 
         binding.readButton.setOnClickListener {
-            it.context.components.analytics.metrics.track(Event.OnboardingPrivacyNotice)
+            Onboarding.privacyNotice.record(NoExtras())
             interactor.onReadPrivacyNoticeClicked()
         }
     }

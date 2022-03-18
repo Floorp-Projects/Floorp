@@ -9,9 +9,15 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.databinding.OnboardingFinishBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -19,6 +25,9 @@ import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingFinishViewHolderTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var binding: OnboardingFinishBinding
     private lateinit var interactor: OnboardingInteractor
@@ -36,5 +45,9 @@ class OnboardingFinishViewHolderTest {
 
         binding.finishButton.performClick()
         verify { interactor.onStartBrowsingClicked() }
+        // Check if the event was recorded
+        assertTrue(Onboarding.finish.testHasValue())
+        assertEquals(1, Onboarding.finish.testGetValue().size)
+        assertNull(Onboarding.finish.testGetValue().single().extra)
     }
 }
