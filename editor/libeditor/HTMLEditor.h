@@ -1494,6 +1494,7 @@ class HTMLEditor final : public EditorBase,
   using InitializeInsertingElement =
       std::function<nsresult(HTMLEditor& aHTMLEditor, Element& aNewElement,
                              const EditorDOMPoint& aPointToInsert)>;
+  static InitializeInsertingElement DoNothingForNewElement;
 
   /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
@@ -1524,8 +1525,7 @@ class HTMLEditor final : public EditorBase,
   CreateAndInsertElement(
       WithTransaction aWithTransaction, nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
-      const InitializeInsertingElement& aInitializer =
-          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
+      const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
@@ -1573,8 +1573,7 @@ class HTMLEditor final : public EditorBase,
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
-      const InitializeInsertingElement& aInitializer =
-          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
+      const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
@@ -3455,8 +3454,7 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   DeleteSelectionAndCreateElement(
       nsAtom& aTag,
-      const InitializeInsertingElement& aInitializer =
-          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
+      const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if
