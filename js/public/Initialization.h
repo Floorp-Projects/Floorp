@@ -179,7 +179,7 @@ extern JS_PUBLIC_API void JS_ShutDown(void);
 namespace JS {
 // Enable support for AVX instructions in the JIT/Wasm backend on x86/x64
 // platforms. Must be called before JS_Init*.
-void SetAVXEnabled();
+void SetAVXEnabled(bool enabled);
 }  // namespace JS
 #endif
 

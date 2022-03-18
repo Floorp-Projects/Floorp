@@ -203,7 +203,11 @@ AssemblerX86Shared::DoubleCondition AssemblerX86Shared::InvertCondition(
 CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;
 CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
 bool CPUInfo::avxPresent = false;
+#ifdef ENABLE_WASM_AVX
+bool CPUInfo::avxEnabled = true;
+#else
 bool CPUInfo::avxEnabled = false;
+#endif
 bool CPUInfo::popcntPresent = false;
 bool CPUInfo::bmi1Present = false;
 bool CPUInfo::bmi2Present = false;

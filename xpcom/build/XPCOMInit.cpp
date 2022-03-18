@@ -256,9 +256,7 @@ static void InitializeJS() {
     (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
   // Update static engine preferences, such as AVX, before
   // `JS_InitWithFailureDiagnostic` is called.
-  if (mozilla::StaticPrefs::javascript_options_wasm_simd_avx()) {
-    JS::SetAVXEnabled();
-  }
+  JS::SetAVXEnabled(mozilla::StaticPrefs::javascript_options_wasm_simd_avx());
 #endif
 
   const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
