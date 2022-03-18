@@ -360,6 +360,78 @@ TEST_F(APZCBasicTester, MultipleSmoothScrollsSmooth) {
   }
 }
 
+class APZCSmoothScrollTester : public APZCBasicTester {
+ public:
+  // Test that a smooth scroll animation correctly handles its destination
+  // being updated by a relative scroll delta.
+  void TestSmoothScrollDestinationUpdate() {
+    // Set up scroll frame. Starting scroll position is (0, 0).
+    ScrollMetadata metadata;
+    FrameMetrics& metrics = metadata.GetMetrics();
+    metrics.SetScrollableRect(CSSRect(0, 0, 100, 10000));
+    metrics.SetLayoutViewport(CSSRect(0, 0, 100, 100));
+    metrics.SetZoom(CSSToParentLayerScale(1.0));
+    metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+    metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+    metrics.SetIsRootContent(true);
+    apzc->SetFrameMetrics(metrics);
+
+    // Start smooth scroll via main-thread request.
+    nsTArray<ScrollPositionUpdate> scrollUpdates;
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewPureRelativeScroll(
+        ScrollOrigin::Other, ScrollMode::Smooth,
+        CSSPoint::ToAppUnits(CSSPoint(0, 1000))));
+    metadata.SetScrollUpdates(scrollUpdates);
+    metrics.SetScrollGeneration(scrollUpdates.LastElement().GetGeneration());
+    apzc->NotifyLayersUpdated(metadata, false, true);
+
+    // Sample the smooth scroll animation until we get past y=500.
+    apzc->AssertStateIsSmoothScroll();
+    float y = 0;
+    while (y < 500) {
+      SampleAnimationOneFrame();
+      y = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    }
+
+    // Send a relative scroll of y = -400.
+    scrollUpdates.Clear();
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewRelativeScroll(
+        CSSPoint::ToAppUnits(CSSPoint(0, 500)),
+        CSSPoint::ToAppUnits(CSSPoint(0, 100))));
+    metadata.SetScrollUpdates(scrollUpdates);
+    metrics.SetScrollGeneration(scrollUpdates.LastElement().GetGeneration());
+    apzc->NotifyLayersUpdated(metadata, false, false);
+
+    // Verify the relative scroll was applied but didn't cancel the animation.
+    float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_EQ(y2, y - 400);
+    apzc->AssertStateIsSmoothScroll();
+
+    // Sample the animation again and check that it respected the relative
+    // scroll.
+    SampleAnimationOneFrame();
+    float y3 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_GT(y3, y2);
+    ASSERT_LT(y3, 500);
+
+    // Continue animation until done and check that it ended up at a correctly
+    // adjusted destination.
+    apzc->AdvanceAnimationsUntilEnd();
+    float y4 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_EQ(y4, 600);  // 1000 (initial destination) - 400 (relative scroll)
+  }
+};
+
+TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateBezier) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", false);
+  TestSmoothScrollDestinationUpdate();
+}
+
+TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateMsd) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
+  TestSmoothScrollDestinationUpdate();
+}
+
 TEST_F(APZCBasicTester, ZoomAndScrollableRectChangeAfterZoomChange) {
   // We want to check that a small scrollable rect change (which causes us to
   // reclamp our scroll position, including in the sampled state) does not move

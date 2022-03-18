@@ -327,6 +327,11 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     EXPECT_EQ(FLING, mState);
   }
 
+  void AssertStateIsSmoothScroll() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(SMOOTH_SCROLL, mState);
+  }
+
   void AssertStateIsSmoothMsdScroll() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     EXPECT_EQ(SMOOTHMSD_SCROLL, mState);
