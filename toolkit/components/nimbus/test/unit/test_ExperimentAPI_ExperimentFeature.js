@@ -455,15 +455,31 @@ add_task(async function test_onUpdate_before_store_ready() {
 add_task(async function test_ExperimentFeature_test_ready_late() {
   const { manager, sandbox } = await setupForExperimentFeature();
   const stub = sandbox.stub();
-  sandbox
-    .stub(manager.store, "getAllRollouts")
-    .returns([ExperimentFakes.rollout("foo")]);
-  await manager.onStartup();
 
   const featureInstance = new ExperimentFeature(
     "test-feature",
     FAKE_FEATURE_MANIFEST
   );
+
+  const rollout = ExperimentFakes.rollout("foo", {
+    branch: {
+      slug: "slug",
+      features: [
+        {
+          featureId: featureInstance.featureId,
+          value: {
+            title: "hello",
+            enabled: true,
+          },
+        },
+      ],
+    },
+  });
+
+  sandbox.stub(manager.store, "getAllRollouts").returns([rollout]);
+
+  await manager.onStartup();
+
   featureInstance.onUpdate(stub);
 
   await featureInstance.ready();
