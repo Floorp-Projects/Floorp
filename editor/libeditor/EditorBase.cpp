@@ -142,6 +142,11 @@ using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 /*****************************************************************************
  * mozilla::EditorBase
  *****************************************************************************/
+template EditorDOMPoint EditorBase::GetFirstIMESelectionStartPoint() const;
+template EditorRawDOMPoint EditorBase::GetFirstIMESelectionStartPoint() const;
+template EditorDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
+template EditorRawDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
+
 template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointAtCaret);
@@ -3443,14 +3448,18 @@ void EditorBase::EndUpdateViewBatch(const char* aRequesterFuncName) {
 
 TextComposition* EditorBase::GetComposition() const { return mComposition; }
 
-EditorRawDOMPoint EditorBase::GetCompositionStartPoint() const {
-  return mComposition ? EditorRawDOMPoint(mComposition->GetStartRef())
-                      : EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetFirstIMESelectionStartPoint() const {
+  return mComposition
+             ? EditorDOMPointType(mComposition->FirstIMESelectionStartRef())
+             : EditorDOMPointType();
 }
 
-EditorRawDOMPoint EditorBase::GetCompositionEndPoint() const {
-  return mComposition ? EditorRawDOMPoint(mComposition->GetEndRef())
-                      : EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetLastIMESelectionEndPoint() const {
+  return mComposition
+             ? EditorDOMPointType(mComposition->LastIMESelectionEndRef())
+             : EditorDOMPointType();
 }
 
 bool EditorBase::IsIMEComposing() const {

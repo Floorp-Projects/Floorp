@@ -233,11 +233,13 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       "EditorBase::OnStartToHandleTopLevelEditSubAction() failed");
 
   // Remember where our selection was before edit action took place:
-  if (GetCompositionStartPoint().IsSet()) {
+  const auto atCompositionStart =
+      GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
+  if (atCompositionStart.IsSet()) {
     // If there is composition string, let's remember current composition
     // range.
     TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
-        GetCompositionStartPoint(), GetCompositionEndPoint());
+        atCompositionStart, GetLastIMESelectionEndPoint<EditorRawDOMPoint>());
   } else {
     // Get the selection location
     // XXX This may occur so that I think that we shouldn't throw exception
@@ -522,7 +524,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         //       causes running mutation event listeners which are really
         //       expensive.
         // Adjust end of composition string if there is composition string.
-        EditorDOMPoint pointToAdjust(GetCompositionEndPoint());
+        auto pointToAdjust = GetLastIMESelectionEndPoint<EditorDOMPoint>();
         if (!pointToAdjust.IsInContentNode()) {
           // Otherwise, adjust current selection start point.
           pointToAdjust = EditorBase::GetStartPoint(SelectionRef());
@@ -1127,7 +1129,8 @@ EditActionResult HTMLEditor::HandleInsertText(
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    EditorRawDOMPoint compositionStartPoint = GetCompositionStartPoint();
+    auto compositionStartPoint =
+        GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
     if (!compositionStartPoint.IsSet()) {
       compositionStartPoint = pointToInsert;
     }
@@ -1146,7 +1149,7 @@ EditActionResult HTMLEditor::HandleInsertText(
       return EditActionHandled(rv);
     }
 
-    EditorRawDOMPoint compositionEndPoint = GetCompositionEndPoint();
+    auto compositionEndPoint = GetLastIMESelectionEndPoint<EditorRawDOMPoint>();
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
@@ -1158,8 +1161,8 @@ EditActionResult HTMLEditor::HandleInsertText(
       return EditActionHandled(rv);
     }
 
-    compositionStartPoint = GetCompositionStartPoint();
-    compositionEndPoint = GetCompositionEndPoint();
+    compositionStartPoint = GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
+    compositionEndPoint = GetLastIMESelectionEndPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!compositionStartPoint.IsSet()) ||
         NS_WARN_IF(!compositionEndPoint.IsSet())) {
       // Mutation event listener has changed the DOM tree...
