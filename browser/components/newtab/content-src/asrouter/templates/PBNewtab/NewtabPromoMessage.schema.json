@@ -70,11 +70,13 @@
     },
     "promoImageLarge": {
       "type": "string",
-      "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off."
+      "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off.",
+      "format": "uri"
     },
     "promoImageSmall": {
       "type": "string",
-      "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off."
+      "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
+      "format": "uri"
     }
   }
 }
