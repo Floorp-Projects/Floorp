@@ -79,7 +79,7 @@ class SearchTest {
         }.openMainMenu {
         }.openSettings {
         }.openSearchSettingsMenu {
-            verifySearchSuggestionsEnabled(true)
+            verifySearchSuggestionsSwitchState(true)
         }
     }
 
@@ -98,7 +98,7 @@ class SearchTest {
         }.openMainMenu {
         }.openSettings {
         }.openSearchSettingsMenu {
-            verifySearchSuggestionsEnabled(false)
+            verifySearchSuggestionsSwitchState(false)
         }
     }
 
