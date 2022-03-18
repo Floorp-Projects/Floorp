@@ -835,7 +835,8 @@ bool DebuggerFrame::incrementStepperCounter(JSContext* cx,
   wasm::Instance* instance = referent.asWasmDebugFrame()->instance();
   wasm::DebugFrame* wasmFrame = referent.asWasmDebugFrame();
   // Single stepping toggled off->on.
-  if (!instance->debug().incrementStepperCount(cx, wasmFrame->funcIndex())) {
+  if (!instance->debug().incrementStepperCount(cx, instance,
+                                               wasmFrame->funcIndex())) {
     return false;
   }
 
@@ -869,7 +870,8 @@ void DebuggerFrame::decrementStepperCounter(JS::GCContext* gcx,
   wasm::Instance* instance = referent.asWasmDebugFrame()->instance();
   wasm::DebugFrame* wasmFrame = referent.asWasmDebugFrame();
   // Single stepping toggled on->off.
-  instance->debug().decrementStepperCount(gcx, wasmFrame->funcIndex());
+  instance->debug().decrementStepperCount(gcx, instance,
+                                          wasmFrame->funcIndex());
 }
 
 void DebuggerFrame::decrementStepperCounter(JS::GCContext* gcx,

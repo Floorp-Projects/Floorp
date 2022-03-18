@@ -490,6 +490,9 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::Indirect:
       case CallSiteDesc::IndirectFast:
       case CallSiteDesc::Symbolic:
+      case CallSiteDesc::Breakpoint:
+      case CallSiteDesc::EnterFrame:
+      case CallSiteDesc::LeaveFrame:
         break;
       case CallSiteDesc::Func: {
         if (funcIsCompiled(target.funcIndex())) {
@@ -524,31 +527,6 @@ bool ModuleGenerator::linkCallSites() {
         }
 
         masm_.patchCall(callerOffset, p->value());
-        break;
-      }
-      case CallSiteDesc::Breakpoint:
-      case CallSiteDesc::EnterFrame:
-      case CallSiteDesc::LeaveFrame: {
-        Uint32Vector& jumps = metadataTier_->debugTrapFarJumpOffsets;
-        if (jumps.empty() || !InRange(jumps.back(), callerOffset)) {
-          Offsets offsets;
-          offsets.begin = masm_.currentOffset();
-          CodeOffset jumpOffset = masm_.farJumpWithPatch();
-          offsets.end = masm_.currentOffset();
-          if (masm_.oom()) {
-            return false;
-          }
-          if (!metadataTier_->codeRanges.emplaceBack(CodeRange::FarJumpIsland,
-                                                     offsets)) {
-            return false;
-          }
-          if (!debugTrapFarJumps_.emplaceBack(jumpOffset)) {
-            return false;
-          }
-          if (!jumps.emplaceBack(offsets.begin)) {
-            return false;
-          }
-        }
         break;
       }
     }
@@ -953,9 +931,7 @@ bool ModuleGenerator::finishCodegen() {
                        funcCodeRange(far.funcIndex).funcUncheckedCallEntry());
   }
 
-  for (CodeOffset farJump : debugTrapFarJumps_) {
-    masm_.patchFarJump(farJump, debugTrapCodeOffset_);
-  }
+  metadataTier_->debugTrapOffset = debugTrapCodeOffset_;
 
   // None of the linking or far-jump operations should emit masm metadata.
 
@@ -1014,13 +990,6 @@ bool ModuleGenerator::finishMetadataTier() {
     }
   }
 
-  last = 0;
-  for (uint32_t debugTrapFarJumpOffset :
-       metadataTier_->debugTrapFarJumpOffsets) {
-    MOZ_ASSERT(debugTrapFarJumpOffset >= last);
-    last = debugTrapFarJumpOffset;
-  }
-
   // Try notes should be sorted so that the end of ranges are in rising order
   // so that the innermost catch handler is chosen.
 #  ifdef ENABLE_WASM_EXCEPTIONS
@@ -1040,7 +1009,6 @@ bool ModuleGenerator::finishMetadataTier() {
   metadataTier_->codeRanges.shrinkStorageToFit();
   metadataTier_->callSites.shrinkStorageToFit();
   metadataTier_->trapSites.shrinkStorageToFit();
-  metadataTier_->debugTrapFarJumpOffsets.shrinkStorageToFit();
 #ifdef ENABLE_WASM_EXCEPTIONS
   metadataTier_->tryNotes.shrinkStorageToFit();
 #endif

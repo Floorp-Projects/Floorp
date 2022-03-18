@@ -1327,7 +1327,8 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       code_(std::move(code)),
       memory_(memory),
       tables_(std::move(tables)),
-      maybeDebug_(std::move(maybeDebug))
+      maybeDebug_(std::move(maybeDebug)),
+      debugFilter_(nullptr)
 #ifdef ENABLE_WASM_GC
       ,
       hasGcTypes_(false)
@@ -1386,6 +1387,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   valueBoxClass_ = &WasmValueBox::class_;
   resetInterrupt(cx);
   jumpTable_ = code_->tieringJumpTable();
+  debugFilter_ = nullptr;
   addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
@@ -1437,6 +1439,17 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   pendingException_ = nullptr;
   pendingExceptionTag_ = nullptr;
 #endif
+
+  // Add debug filtering table.
+  if (metadata().debugEnabled) {
+    size_t numBytes = (metadata().debugFuncReturnTypes.length() + 7) >> 3;
+    debugFilter_ = (uint32_t*)js_calloc(
+        AlignBytes(numBytes, sizeof(uint32_t)) / sizeof(uint32_t),
+        sizeof(uint32_t));
+    if (!debugFilter_) {
+      return false;
+    }
+  }
 
   // Add observer if our memory base may grow
   if (memory_ && memory_->movingGrowable() &&
@@ -1599,6 +1612,10 @@ Instance::~Instance() {
     }
   }
 
+  if (debugFilter_) {
+    js_free(debugFilter_);
+  }
+
   // Any pending exceptions should have been consumed.
 #ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
@@ -1617,6 +1634,22 @@ bool Instance::isInterrupted() const {
 void Instance::resetInterrupt(JSContext* cx) {
   interrupt_ = false;
   stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+}
+
+bool Instance::debugFilter(uint32_t funcIndex) const {
+  return (debugFilter_[funcIndex / sizeof(uint32_t)] >>
+          funcIndex % sizeof(uint32_t)) &
+         1;
+}
+
+void Instance::setDebugFilter(uint32_t funcIndex, bool value) {
+  if (value) {
+    debugFilter_[funcIndex / sizeof(uint32_t)] |=
+        (1 << funcIndex % sizeof(uint32_t));
+  } else {
+    debugFilter_[funcIndex / sizeof(uint32_t)] &=
+        ~(1 << funcIndex % sizeof(uint32_t));
+  }
 }
 
 size_t Instance::memoryMappedSize() const {
