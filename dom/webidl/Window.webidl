@@ -543,7 +543,7 @@ partial interface Window {
    * be something like a WebIDL namespace, but we don't support
    * JS-implemented static things yet.  See bug 863952.
    */
-  [Replaceable]
+  [Replaceable, Deprecated="InstallTriggerDeprecated"]
   readonly attribute InstallTriggerImpl? InstallTrigger;
 
   /**
