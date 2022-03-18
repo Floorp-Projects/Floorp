@@ -468,7 +468,8 @@ EditActionResult TextEditor::HandleInsertText(
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    EditorRawDOMPoint compositionStartPoint = GetCompositionStartPoint();
+    EditorRawDOMPoint compositionStartPoint =
+        GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
     if (!compositionStartPoint.IsSet()) {
       compositionStartPoint = FindBetterInsertionPoint(atStartOfSelection);
       NS_WARNING_ASSERTION(

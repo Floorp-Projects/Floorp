@@ -137,8 +137,8 @@ class TextComposition final {
    * app.  If there is no composition string the DOM tree, these return
    * unset range boundaries.
    */
-  RawRangeBoundary GetStartRef() const;
-  RawRangeBoundary GetEndRef() const;
+  RawRangeBoundary FirstIMESelectionStartRef() const;
+  RawRangeBoundary LastIMESelectionEndRef() const;
 
   /**
    * The offset of composition string in the text node.  If composition string
