@@ -161,6 +161,22 @@ const TESTS = [
     nonAdUrls: ["https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images"],
   },
   {
+    title: "DuckDuckGo expected organic code",
+    trackingUrl: "https://duckduckgo.com/?q=test&t=h_&ia=news",
+    expectedSearchCountEntry: "duckduckgo.in-content:organic:none",
+    expectedAdKey: "duckduckgo:organic",
+    adUrls: ["https://duckduckgo.com/y.js?ad_provider=foo"],
+    nonAdUrls: ["https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images"],
+  },
+  {
+    title: "DuckDuckGo expected organic code 2",
+    trackingUrl: "https://duckduckgo.com/?q=test&t=hz&ia=news",
+    expectedSearchCountEntry: "duckduckgo.in-content:organic:none",
+    expectedAdKey: "duckduckgo:organic",
+    adUrls: ["https://duckduckgo.com/y.js?ad_provider=foo"],
+    nonAdUrls: ["https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images"],
+  },
+  {
     title: "DuckDuckGo organic no code",
     trackingUrl: "https://duckduckgo.com/?q=test&ia=news",
     expectedSearchCountEntry: "duckduckgo.in-content:organic:none",
