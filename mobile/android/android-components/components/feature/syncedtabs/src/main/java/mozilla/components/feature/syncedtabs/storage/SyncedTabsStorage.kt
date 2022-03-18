@@ -20,27 +20,26 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * A storage that listens to the [BrowserStore] changes to synchronize the local tabs state
- * with [RemoteTabsStorage].
+ * with [RemoteTabsStorage] and then synchronize with [accountManager].
  *
  * @param accountManager Account manager used to retrieve synced tabs.
  * @param store Browser store to observe for state changes.
  * @param tabsStorage Storage layer for tabs to sync.
- * @param debounceMillis Length to debounce rapid changes for storing.
- * @param onStoreComplete Callback for action to take after tabs are stored.
- * Note that this will be debounced by [debounceMillis].
+ * @param debounceMillis Length to debounce rapid changes for storing and syncing.
  */
 class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage(),
     private val debounceMillis: Long = 1000L,
-    private val onStoreComplete: () -> Unit = {}
 ) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
 
@@ -63,7 +62,10 @@ class SyncedTabsStorage(
                 .debounce(debounceMillis)
                 .collect { tabs ->
                     tabsStorage.store(tabs)
-                    onStoreComplete()
+                    accountManager.syncNow(
+                        reason = SyncReason.User,
+                        customEngineSubset = listOf(SyncEngine.Tabs)
+                    )
                 }
         }
     }

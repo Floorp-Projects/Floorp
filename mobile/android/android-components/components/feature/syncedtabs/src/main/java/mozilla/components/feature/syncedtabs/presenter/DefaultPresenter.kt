@@ -101,7 +101,10 @@ internal class DefaultPresenter(
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            CoroutineScope(Dispatchers.Main).launch { controller.refreshSyncedTabs() }
+            CoroutineScope(Dispatchers.Main).launch {
+                controller.syncAccount()
+                controller.refreshSyncedTabs()
+            }
         }
 
         override fun onAuthenticationProblems() {

@@ -30,7 +30,9 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -72,13 +74,11 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `listens to browser store changes, stores state changes, and calls onStoreComplete`() = runBlockingTest {
-        val onStoreComplete: () -> Unit = mock()
         val feature = SyncedTabsStorage(
             accountManager,
             store,
             tabsStorage,
             debounceMillis = 0,
-            onStoreComplete = onStoreComplete
         )
         feature.start()
 
@@ -92,7 +92,9 @@ class SyncedTabsStorageTest {
                 // Private tab is absent.
             )
         )
-        verify(onStoreComplete, times(2)).invoke()
+        verify(accountManager, times(2)).syncNow(
+            SyncReason.User, false, listOf(SyncEngine.Tabs)
+        )
     }
 
     @Test

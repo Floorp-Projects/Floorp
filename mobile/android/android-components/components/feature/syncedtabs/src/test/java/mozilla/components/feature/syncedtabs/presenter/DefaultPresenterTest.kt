@@ -155,6 +155,7 @@ class DefaultPresenterTest {
         presenter.accountObserver.onAuthenticated(mock(), mock())
         shadowOf(getMainLooper()).idle()
 
+        verify(controller).syncAccount()
         verify(controller).refreshSyncedTabs()
     }
 
