@@ -75,6 +75,13 @@ class BackgroundTasks final : public nsIBackgroundTasks {
   nsresult CreateTemporaryProfileDirectoryImpl(const nsCString& aInstallHash,
                                                nsIFile** aFile);
 
+  /*
+   * Iterates children of `aRoot` and removes unlocked profiles matching
+   * `aPrefix`.
+   */
+  static nsresult RemoveStaleTemporaryProfileDirectories(
+      nsIFile* const aRoot, const nsCString& aPrefix);
+
   virtual ~BackgroundTasks() = default;
 };
 
