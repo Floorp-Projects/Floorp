@@ -833,6 +833,54 @@ def wasm_simd(value, jit_enabled, simulator, cranelift_enabled, target):
 set_config("ENABLE_WASM_SIMD", wasm_simd)
 set_define("ENABLE_WASM_SIMD", wasm_simd)
 
+
+# Support for Intel AVX instruction.
+#
+# AVX is exclusively used in WebAssembly SIMD instructions at the moment:
+# set direct dependency on "--enable-wasm-simd".
+# =====================================================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-simd", "--enable-simulator", target)
+def default_wasm_avx(is_nightly, wasm_simd_enabled, simulator, target):
+    if not wasm_simd_enabled:
+        return
+
+    if simulator:
+        return
+
+    if target.cpu in ("x86_64", "x86"):
+        return is_nightly
+
+
+option(
+    "--enable-wasm-avx",
+    default=default_wasm_avx,
+    help="{Enable|Disable} AVX support for WebAssembly SIMD",
+)
+
+
+@depends("--enable-wasm-avx", "--enable-wasm-simd", "--enable-simulator", target)
+def wasm_avx(value, wasm_simd_enabled, simulator, target):
+    if not value:
+        return
+
+    if not wasm_simd_enabled:
+        die("--enable-wasm-avx requires --enable-wasm-simd")
+
+    if simulator:
+        die("--enable-wasm-avx is not supported for simulators")
+
+    if target.cpu in ("x86_64", "x86"):
+        return True
+
+    die("--enable-wasm-avx only possible when targeting the x86_64/x86 jits")
+
+
+set_config("ENABLE_WASM_AVX", wasm_avx)
+set_define("ENABLE_WASM_AVX", wasm_avx)
+
+
 # Wormhole opcodes are Intel-only.  They are private to Firefox, but we need them for some
 # experiments on release and so they ride the trains.
 
