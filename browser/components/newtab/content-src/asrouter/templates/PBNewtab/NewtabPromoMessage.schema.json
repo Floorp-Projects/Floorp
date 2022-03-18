@@ -30,8 +30,7 @@
     },
     "infoLinkUrl": {
       "type": "string",
-      "description": "URL for the info section link.",
-      "format": "moz-url-format"
+      "description": "URL for the info section link."
     },
     "promoEnabled": {
       "type": "boolean",
@@ -60,8 +59,7 @@
     },
     "promoLinkUrl": {
       "type": "string",
-      "description": "URL for link in the promo box.",
-      "format": "moz-url-format"
+      "description": "URL for link in the promo box."
     },
     "promoLinkType": {
       "type": "string",
@@ -70,13 +68,11 @@
     },
     "promoImageLarge": {
       "type": "string",
-      "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off.",
-      "format": "uri"
+      "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off."
     },
     "promoImageSmall": {
       "type": "string",
-      "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
-      "format": "uri"
+      "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off."
     }
   }
 }

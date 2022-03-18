@@ -165,12 +165,8 @@ add_task(async function test_getExperiment_feature() {
   const expected = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "treatment",
+      value: { title: "hi" },
       features: [{ featureId: "cfr", enabled: true, value: null }],
-      feature: {
-        featureId: "unused-feature-id-for-legacy-support",
-        enabled: false,
-        value: {},
-      },
     },
   });
 
@@ -332,8 +328,8 @@ add_task(async function test_getAllBranches_featureIdAccessor() {
   );
   branches.forEach(branch => {
     Assert.equal(
-      branch.testFeature.featureId,
-      "testFeature",
+      branch["test-feature"].featureId,
+      "test-feature",
       "Should use the experimentBranchAccessor proxy getter"
     );
   });
