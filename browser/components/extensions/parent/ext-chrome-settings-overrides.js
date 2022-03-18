@@ -339,7 +339,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           extension.startupReason
         );
     }
-    if (disable && item?.enabled) {
+    // Ensure the item is disabled.  If addSetting was called above,
+    // Item may be null, and enabled may be undefined.
+    if (disable && item?.enabled !== false) {
       item = await ExtensionSettingsStore.disable(
         extension.id,
         DEFAULT_SEARCH_STORE_TYPE,
@@ -367,7 +369,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         // This is a hack because we don't have the browser of
         // the actual install. This means the popup might show
         // in a different window. Will be addressed in a followup bug.
-        browser: windowTracker.topWindow.gBrowser.selectedBrowser,
+        // As well, we still notify if no topWindow exists to support
+        // testing from xpcshell.
+        browser: windowTracker.topWindow?.gBrowser.selectedBrowser,
+        id: extension.id,
         name: extension.name,
         icon: extension.iconURL,
         currentEngine: defaultEngine.name,
@@ -476,7 +481,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           Services.search.defaultEngine = Services.search.getEngineByName(
             engineName
           );
-        } else {
+        } else if (extension.startupReason == "ADDON_ENABLE") {
           // This extension has precedence, but is not in control.  Ask the user.
           await this.promptDefaultSearch(engineName);
         }
