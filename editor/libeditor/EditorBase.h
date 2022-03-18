@@ -1628,12 +1628,14 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * GetCompositionStartPoint() and GetCompositionEndPoint() returns start and
-   * end point of composition string if there is.  Otherwise, returns non-set
-   * DOM point.
+   * GetFirstIMESelectionStartPoint() and GetLastIMESelectionEndPoint() returns
+   * start of first IME selection range or end of last IME selection range if
+   * there is.  Otherwise, returns non-set DOM point.
    */
-  EditorRawDOMPoint GetCompositionStartPoint() const;
-  EditorRawDOMPoint GetCompositionEndPoint() const;
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetFirstIMESelectionStartPoint() const;
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetLastIMESelectionEndPoint() const;
 
   /**
    * IsSelectionRangeContainerNotContent() returns true if one of container

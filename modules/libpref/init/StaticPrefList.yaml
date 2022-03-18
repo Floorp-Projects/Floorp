@@ -9845,6 +9845,15 @@
   value: false
   mirror: always
 
+# If we should not store "persistent" cookies at all, i.e., make the
+# "persistent" storage be like "private" storage.  This value is only read when
+# instantiating persistent storage for the cookie service, which usually only
+# happens when the cookie service singleton is created.
+- name: network.cookie.noPersistentStorage
+  type: bool
+  value: false
+  mirror: always
+
 # If we should attempt to race the cache and network.
 - name: network.http.rcwn.enabled
   type: bool
