@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
+  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -271,6 +272,10 @@ class _Interactions {
       updated_at: now,
     };
     this.#interactions.set(browser, interaction);
+
+    // Lock any potential page data in memory until we've decided if this page
+    // needs to become a snapshot or not.
+    PageDataService.lockEntry(this, docInfo.url);
 
     // Only reset the time if this is being loaded in the active tab of the
     // active window.
@@ -614,10 +619,14 @@ class InteractionsStore {
    *
    * @returns {Promise}
    */
-  updateSnapshots() {
+  async updateSnapshots() {
     let urls = [...this.#potentialSnapshots];
     this.#potentialSnapshots.clear();
-    return Snapshots.updateSnapshots(urls);
+    await Snapshots.updateSnapshots(urls);
+
+    for (let url of urls) {
+      PageDataService.unlockEntry(Interactions, url);
+    }
   }
 
   /**

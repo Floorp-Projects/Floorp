@@ -37,7 +37,7 @@ add_task(async function test_pagedata_no_data() {
         "http://graphics8.nytimes.com/images/2012/02/19/us/19whitney-span/19whitney-span-articleLarge.jpg",
       data: {},
     },
-    "Should have returned the right data data"
+    "Should have returned the right data"
   );
 
   Assert.equal(

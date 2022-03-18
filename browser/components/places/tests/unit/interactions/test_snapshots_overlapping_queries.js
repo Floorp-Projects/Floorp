@@ -494,6 +494,10 @@ add_task(async function test_query_numerous_revisit() {
 add_task(async function test_query_pagedata() {
   await reset_interactions_snapshots();
 
+  // Simulate a browser keeping the page data cached.
+  let actor = {};
+  PageDataService.lockEntry(actor, "https://example.com/1/");
+
   // Register some page data.
   PageDataService.pageDataDiscovered({
     url: "https://example.com/1/",
@@ -523,6 +527,8 @@ add_task(async function test_query_pagedata() {
     ]);
     await Snapshots.add({ url: "https://example.com/1/" });
   }
+
+  PageDataService.unlockEntry(actor, "https://example.com/1/");
 
   let snapshot = await Snapshots.queryOverlapping(context_url);
   Assert.equal(snapshot.length, 1, "One shapshot should be found");

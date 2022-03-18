@@ -14,6 +14,10 @@ const TEST_URL2 = "https://example.com/12345";
 const TEST_IMAGE_URL = "https://example.com/dummy.png";
 
 add_task(async function pageImage() {
+  // Simulate the interactions service locking page data into the cache.
+  PageDataService.lockEntry(Interactions, TEST_URL1);
+  PageDataService.lockEntry(Interactions, TEST_URL2);
+
   // Register some page data.
   PageDataService.pageDataDiscovered({
     url: TEST_URL1,
