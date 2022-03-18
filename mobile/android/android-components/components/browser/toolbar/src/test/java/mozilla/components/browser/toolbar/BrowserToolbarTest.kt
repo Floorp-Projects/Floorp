@@ -434,7 +434,7 @@ class BrowserToolbarTest {
     }
 
     @Test
-    fun `add edit action will be forwarded to edit toolbar`() {
+    fun `add edit action start will be forwarded to edit toolbar`() {
         val toolbar = BrowserToolbar(testContext)
 
         val edit: EditToolbar = mock()
@@ -444,9 +444,25 @@ class BrowserToolbarTest {
             // Do nothing
         }
 
-        toolbar.addEditAction(action)
+        toolbar.addEditActionStart(action)
 
-        verify(edit).addEditAction(action)
+        verify(edit).addEditActionStart(action)
+    }
+
+    @Test
+    fun `add edit action end will be forwarded to edit toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        val edit: EditToolbar = mock()
+        toolbar.edit = edit
+
+        val action = BrowserToolbar.Button(mock(), "QR code scanner") {
+            // Do nothing
+        }
+
+        toolbar.addEditActionEnd(action)
+
+        verify(edit).addEditActionEnd(action)
     }
 
     @Test
@@ -509,6 +525,19 @@ class BrowserToolbarTest {
         toolbar.invalidateActions()
 
         verify(display).invalidateActions()
+    }
+
+    @Test
+    fun `invalidate actions is forwarded to edit toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        val edit: EditToolbar = mock()
+        toolbar.edit = edit
+
+        verify(edit, never()).invalidateActions()
+
+        toolbar.invalidateActions()
+
+        verify(edit).invalidateActions()
     }
 
     @Test

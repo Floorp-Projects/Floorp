@@ -155,7 +155,12 @@ interface Toolbar {
     /**
      * Adds an action to be displayed in edit mode.
      */
-    fun addEditAction(action: Action)
+    fun addEditActionStart(action: Action)
+
+    /**
+     * Adds an action to be displayed in edit mode.
+     */
+    fun addEditActionEnd(action: Action)
 
     /**
      * Casts this toolbar to an Android View object.

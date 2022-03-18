@@ -310,10 +310,17 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
-     * Adds an action to be displayed on the right of the URL in edit mode.
+     * Adds an action to be displayed at the start of the URL in edit mode.
      */
-    override fun addEditAction(action: Toolbar.Action) {
-        edit.addEditAction(action)
+    override fun addEditActionStart(action: Toolbar.Action) {
+        edit.addEditActionStart(action)
+    }
+
+    /**
+     * Adds an action to be displayed at the end of the URL in edit mode.
+     */
+    override fun addEditActionEnd(action: Toolbar.Action) {
+        edit.addEditActionEnd(action)
     }
 
     /**

@@ -34,6 +34,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * Removed reflective access to non-public SDK APIs controlling the sensitivity of the gesture detector following which sparingly and for very short time a pinch/spread to zoom gesture might be identified first as a scroll gesture and move the toolbar a little before snapping to it's original position.
+  * ⚠️ **This is a breaking change**: Replaced `addEditAction` in `BrowserToolbar` with `addEditActionStart` and `addEditActionEnd` to add actions to the left and right of the URL in edit mode. [#11890](https://github.com/mozilla-mobile/android-components/issues/11890)
 
 * **feature-session**
    * 🆕 New `ScreenOrientationFeature` to enable support for setting a requested screen orientation as part of supporting the ScreenOrientation web APIs.

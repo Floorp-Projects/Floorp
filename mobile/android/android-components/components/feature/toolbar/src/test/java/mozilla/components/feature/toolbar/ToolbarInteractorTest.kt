@@ -89,7 +89,11 @@ class ToolbarInteractorTest {
             fail()
         }
 
-        override fun addEditAction(action: Toolbar.Action) {
+        override fun addEditActionStart(action: Toolbar.Action) {
+            fail()
+        }
+
+        override fun addEditActionEnd(action: Toolbar.Action) {
             fail()
         }
 

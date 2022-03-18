@@ -88,7 +88,8 @@ class CustomTabSessionTitleObserverTest {
         override fun removePageAction(action: Toolbar.Action) = Unit
         override fun addNavigationAction(action: Toolbar.Action) = Unit
         override fun removeNavigationAction(action: Toolbar.Action) = Unit
-        override fun addEditAction(action: Toolbar.Action) = Unit
+        override fun addEditActionStart(action: Toolbar.Action) = Unit
+        override fun addEditActionEnd(action: Toolbar.Action) = Unit
         override fun setOnEditListener(listener: Toolbar.OnEditListener) = Unit
         override fun displayMode() = Unit
         override fun editMode() = Unit

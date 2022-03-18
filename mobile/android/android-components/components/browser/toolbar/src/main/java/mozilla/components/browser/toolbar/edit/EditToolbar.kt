@@ -40,13 +40,16 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
  * Sub-component of the browser toolbar responsible for allowing the user to edit the URL ("edit mode").
  *
  * Structure:
- * +------+---------------------------+---------+------+
- * | icon |           url             | actions | exit |
- * +------+---------------------------+---------+------+
+ * +------+--------------------+---------------------------+------------------+------+
+ * | icon | edit actions start |           url             | edit actions end | exit |
+ * +------+--------------------+---------------------------+------------------+------+
  *
  * - icon: Optional icon that will be shown in front of the URL.
- * - url: Editable URL of the currently displayed website
- * - actions: Optional action icons injected by other components (e.g. barcode scanner)
+ * - edit actions start: Optional action icons injected by other components in front of the URL
+ * (e.g. search engines).
+ * - url: Editable URL of the currently displayed website.
+ * - edit actions end: Optional action icons injected by other components after the URL
+ * (e.g. barcode scanner).
  * - exit: Button that switches back to display mode or invoke an app-defined callback.
  */
 @Suppress("LargeClass")
@@ -87,9 +90,10 @@ class EditToolbar internal constructor(
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal val views = EditToolbarViews(
-        background = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_background),
-        icon = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_edit_icon),
-        editActions = rootView.findViewById<ActionContainer>(R.id.mozac_browser_toolbar_edit_actions),
+        background = rootView.findViewById(R.id.mozac_browser_toolbar_background),
+        icon = rootView.findViewById(R.id.mozac_browser_toolbar_edit_icon),
+        editActionsStart = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_start),
+        editActionsEnd = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_end),
         clear = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_clear_view).apply {
             setOnClickListener {
                 onClear()
@@ -232,11 +236,16 @@ class EditToolbar internal constructor(
     }
 
     internal fun invalidateActions() {
-        views.editActions.invalidateActions()
+        views.editActionsStart.invalidateActions()
+        views.editActionsEnd.invalidateActions()
     }
 
-    internal fun addEditAction(action: Toolbar.Action) {
-        views.editActions.addAction(action)
+    internal fun addEditActionStart(action: Toolbar.Action) {
+        views.editActionsStart.addAction(action)
+    }
+
+    internal fun addEditActionEnd(action: Toolbar.Action) {
+        views.editActionsEnd.addAction(action)
     }
 
     /**
@@ -327,7 +336,8 @@ class EditToolbar internal constructor(
 internal class EditToolbarViews(
     val background: ImageView,
     val icon: ImageView,
-    val editActions: ActionContainer,
+    val editActionsStart: ActionContainer,
+    val editActionsEnd: ActionContainer,
     val clear: ImageView,
     val url: InlineAutocompleteEditText
 )
