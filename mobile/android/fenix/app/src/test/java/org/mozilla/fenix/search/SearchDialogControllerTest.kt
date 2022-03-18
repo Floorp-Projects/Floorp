@@ -48,6 +48,7 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalAddonsManagementFragment
 import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalSearchEngineFragment
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
@@ -393,6 +394,15 @@ class SearchDialogControllerTest {
         spyController.handleCameraPermissionsNeeded()
 
         verify { dialogBuilder.show() }
+    }
+
+    @Test
+    fun `GIVEN search settings menu item WHEN search selector menu item is tapped THEN show search engine settings`() {
+        val controller = spyk(createController())
+
+        controller.handleMenuItemTapped(SearchSelectorMenu.Item.SearchSettings)
+
+        verify { controller.handleClickSearchEngineSettings() }
     }
 
     private fun createController(

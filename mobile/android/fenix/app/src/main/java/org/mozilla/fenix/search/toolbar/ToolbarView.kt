@@ -24,14 +24,15 @@ import org.mozilla.fenix.utils.Settings
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
- * to respond to user interaction on the [ToolbarView]
+ * to respond to user interaction on the [ToolbarView].
  */
 interface ToolbarInteractor {
 
     /**
      * Called when a user hits the return key while [ToolbarView] has focus.
-     * @param url the text inside the [ToolbarView] when committed
-     * @param fromHomeScreen true if the toolbar has been opened from home screen
+     *
+     * @param url The text inside the [ToolbarView] when committed.
+     * @param fromHomeScreen True if the toolbar has been opened from home screen.
      */
     fun onUrlCommitted(url: String, fromHomeScreen: Boolean = false)
 
@@ -42,9 +43,17 @@ interface ToolbarInteractor {
 
     /**
      * Called whenever the text inside the [ToolbarView] changes
-     * @param text the current text displayed by [ToolbarView]
+     *
+     * @param text The current text displayed by [ToolbarView].
      */
     fun onTextChanged(text: String)
+
+    /**
+     * Called when an user taps on a search selector menu item.
+     *
+     * @param item The [SearchSelectorMenu.Item] that was tapped.
+     */
+    fun onMenuItemTapped(item: SearchSelectorMenu.Item)
 }
 
 /**

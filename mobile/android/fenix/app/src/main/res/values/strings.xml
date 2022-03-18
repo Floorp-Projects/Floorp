@@ -238,6 +238,8 @@
     <string name="search_engine_suggestions_title">Search %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Search directly from the address bar</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Search settings</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->

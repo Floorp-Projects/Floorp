@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.search.SearchEngine
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 
 class SearchDialogInteractorTest {
 
@@ -110,6 +111,17 @@ class SearchDialogInteractorTest {
 
         verify {
             searchController.handleCameraPermissionsNeeded()
+        }
+    }
+
+    @Test
+    fun onMenuItemTapped() {
+        val item = SearchSelectorMenu.Item.SearchSettings
+
+        interactor.onMenuItemTapped(item)
+
+        verify {
+            searchController.handleMenuItemTapped(item)
         }
     }
 }

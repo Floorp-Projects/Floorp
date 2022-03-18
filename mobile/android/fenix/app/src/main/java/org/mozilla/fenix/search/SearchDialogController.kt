@@ -28,6 +28,7 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
@@ -47,6 +48,11 @@ interface SearchController {
     fun handleSearchShortcutsButtonClicked()
     fun handleCameraPermissionsNeeded()
     fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine)
+
+    /**
+     * @see [ToolbarInteractor.onMenuItemTapped]
+     */
+    fun handleMenuItemTapped(item: SearchSelectorMenu.Item)
 }
 
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -232,6 +238,13 @@ class SearchDialogController(
     override fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine) {
         clearToolbar()
         handleSearchShortcutEngineSelected(searchEngine)
+    }
+
+    override fun handleMenuItemTapped(item: SearchSelectorMenu.Item) {
+        when (item) {
+            SearchSelectorMenu.Item.SearchSettings -> handleClickSearchEngineSettings()
+            is SearchSelectorMenu.Item.SearchEngine -> handleSearchShortcutEngineSelected(item.searchEngine)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

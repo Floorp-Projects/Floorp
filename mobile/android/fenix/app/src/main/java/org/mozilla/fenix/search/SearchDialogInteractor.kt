@@ -7,6 +7,7 @@ package org.mozilla.fenix.search
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import org.mozilla.fenix.search.awesomebar.AwesomeBarInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.search.toolbar.ToolbarInteractor
 
 /**
@@ -56,6 +57,10 @@ class SearchDialogInteractor(
 
     override fun onExistingSessionSelected(tabId: String) {
         searchController.handleExistingSessionSelected(tabId)
+    }
+
+    override fun onMenuItemTapped(item: SearchSelectorMenu.Item) {
+        searchController.handleMenuItemTapped(item)
     }
 
     fun onCameraPermissionsNeeded() {
