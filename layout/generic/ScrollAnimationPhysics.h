@@ -15,9 +15,21 @@ namespace mozilla {
 
 class ScrollAnimationPhysics {
  public:
+  // Update the animation to have |aDestination| as its new destination.
+  // The animation's current position remains unchanged, and the shape
+  // of the animation curve is recomputed between the current position
+  // and the new destination.
+  // This is used in cases where an input event that would cause another
+  // animation of this kind is received while this animation is running.
   virtual void Update(const TimeStamp& aTime, const nsPoint& aDestination,
                       const nsSize& aCurrentVelocity) = 0;
 
+  // Shift both the current position and the destination of the animation
+  // by |aShiftDelta|. The progress of the animation along its animation
+  // curve is unchanged.
+  // This is used in cases where the main thread changes the scroll offset
+  // (e.g. via scrollBy()) but we want the "momentum" represented by the
+  // animation to be preserved.
   virtual void ApplyContentShift(const CSSPoint& aShiftDelta) = 0;
 
   // Get the velocity at a point in time in nscoords/sec.
