@@ -108,7 +108,6 @@ class CookieService final : public nsICookieService,
   void InitCookieStorages();
   void CloseCookieStorages();
 
-  void EnsureReadComplete(bool aInitDBConn);
   nsresult NormalizeHost(nsCString& aHost);
   static bool GetTokenValue(nsACString::const_char_iterator& aIter,
                             nsACString::const_char_iterator& aEndIter,
@@ -150,8 +149,8 @@ class CookieService final : public nsICookieService,
 
   // we have two separate Cookie Storages: one for normal browsing and one for
   // private browsing.
-  RefPtr<CookiePersistentStorage> mPersistentStorage;
-  RefPtr<CookiePrivateStorage> mPrivateStorage;
+  RefPtr<CookieStorage> mPersistentStorage;
+  RefPtr<CookieStorage> mPrivateStorage;
 };
 
 }  // namespace net

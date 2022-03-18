@@ -362,6 +362,7 @@ NS_IMPL_ISUPPORTS(CloseCookieDBListener, mozIStorageCompletionCallback)
 already_AddRefed<CookiePersistentStorage> CookiePersistentStorage::Create() {
   RefPtr<CookiePersistentStorage> storage = new CookiePersistentStorage();
   storage->Init();
+  storage->Activate();
 
   return storage.forget();
 }
@@ -1690,7 +1691,7 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
       static_cast<nsICookie::schemeType>(schemeMap));
 }
 
-void CookiePersistentStorage::EnsureReadComplete() {
+void CookiePersistentStorage::EnsureInitialized() {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool isAccumulated = false;
