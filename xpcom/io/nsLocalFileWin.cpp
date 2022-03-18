@@ -2315,14 +2315,9 @@ nsLocalFile::Remove(bool aRecursive) {
         return rv;
       }
 
-      bool more = false;
-      while (NS_SUCCEEDED(dirEnum->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsISupports> item;
-        dirEnum->GetNext(getter_AddRefs(item));
-        nsCOMPtr<nsIFile> file = do_QueryInterface(item);
-        if (file) {
-          file->Remove(aRecursive);
-        }
+      nsCOMPtr<nsIFile> file;
+      while (NS_SUCCEEDED(dirEnum->GetNextFile(getter_AddRefs(file))) && file) {
+        file->Remove(aRecursive);
       }
     }
     if (RemoveDirectoryW(mWorkingPath.get()) == 0) {
