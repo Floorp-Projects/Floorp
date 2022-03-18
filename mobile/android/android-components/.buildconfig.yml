@@ -115,6 +115,10 @@ projects:
     path: components/feature/search
     description: 'Feature implementation connecting an engine implementation with the search module.'
     publish: true
+  feature-serviceworker:
+    path: components/feature/serviceworker
+    description: 'Feature that adds support for service workers when using GeckoEngine.'
+    publish: true
   feature-session:
     path: components/feature/session
     description: 'Feature implementation connecting an engine implementation with the session module.'

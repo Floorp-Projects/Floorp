@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.activity.ActivityDelegate
 import mozilla.components.concept.engine.activity.OrientationDelegate
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
+import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -210,6 +211,15 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      */
     fun unregisterScreenOrientationDelegate(): Unit =
         throw UnsupportedOperationException("This engine does not have support for an Activity delegate.")
+
+    /**
+     * Registers a [ServiceWorkerDelegate] to be notified of service workers events and requests.
+     *
+     * @param serviceWorkerDelegate [ServiceWorkerDelegate] responding to all service workers events and requests.
+     */
+    fun registerServiceWorkerDelegate(
+        serviceWorkerDelegate: ServiceWorkerDelegate
+    ): Unit = throw UnsupportedOperationException("Service workers support not available in this engine")
 
     /**
      * Fetch a list of trackers logged for a given [session] .

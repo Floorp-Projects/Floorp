@@ -11,6 +11,7 @@ import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
+import mozilla.components.browser.engine.gecko.serviceworker.GeckoServiceWorkerDelegate
 import mozilla.components.browser.engine.gecko.util.SpeculativeEngineSession
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionObserver
 import mozilla.components.browser.engine.gecko.webextension.mockNativeWebExtension
@@ -24,6 +25,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -2091,6 +2093,21 @@ class GeckoEngineTest {
 
         engine.unregisterScreenOrientationDelegate()
         verify(orientationController).delegate = null
+    }
+
+    @Test
+    fun `registerServiceWorkerDelegate sets delegate`() {
+        val delegate = mock<ServiceWorkerDelegate>()
+        val runtime = GeckoRuntime.getDefault(testContext)
+        val settings = DefaultSettings()
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = settings)
+
+        engine.registerServiceWorkerDelegate(delegate)
+        val result = runtime.serviceWorkerDelegate as GeckoServiceWorkerDelegate
+
+        assertEquals(delegate, result.delegate)
+        assertEquals(runtime, result.runtime)
+        assertEquals(settings, result.engineSettings)
     }
 
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {
