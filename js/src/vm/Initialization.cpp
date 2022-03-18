@@ -329,7 +329,13 @@ JS_PUBLIC_API bool JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
 
 #if defined(ENABLE_WASM_SIMD) && \
     (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
-void JS::SetAVXEnabled() { js::jit::CPUInfo::SetAVXEnabled(); }
+void JS::SetAVXEnabled(bool enabled) {
+  if (enabled) {
+    js::jit::CPUInfo::SetAVXEnabled();
+  } else {
+    js::jit::CPUInfo::SetAVXDisabled();
+  }
+}
 #endif
 
 JS_PUBLIC_API void JS::DisableJitBackend() {

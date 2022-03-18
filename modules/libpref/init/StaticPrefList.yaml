@@ -5840,6 +5840,10 @@
     type: bool
     value: @IS_NIGHTLY_BUILD@
     mirror: once
+-   name: gfx.webrender.dcomp-video-vp-scaling-win
+    type: bool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.
@@ -6798,7 +6802,7 @@
   # Changing these prefs requires a restart.
 -   name: javascript.options.wasm_simd_avx
     type: bool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: always
 #endif
 #endif
