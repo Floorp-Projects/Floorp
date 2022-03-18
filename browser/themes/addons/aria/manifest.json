@@ -14,7 +14,7 @@
   "theme": {
     "images": {
       "additional_backgrounds": [
-        "images/0.png"
+        "0.png"
       ]
     },
     "properties": {

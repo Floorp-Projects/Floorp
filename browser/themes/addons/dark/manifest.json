@@ -19,6 +19,7 @@
       "toolbar": "rgb(53, 55, 58)",
       "toolbar_text": "rgb(255, 255, 255)",
       "frame": "rgb(39, 39, 39)",
+      "tab_background_separator": "rgb(32, 33, 36)",
       "tab_background_text": "rgb(255, 255, 255)",
       "toolbar_field": "rgb(255, 255, 255)",
       "toolbar_field_text": "rgb(255, 255, 255)",
