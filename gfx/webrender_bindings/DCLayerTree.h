@@ -117,7 +117,8 @@ class DCLayerTree {
   ID3D11VideoProcessorEnumerator* GetVideoProcessorEnumerator() const {
     return mVideoProcessorEnumerator;
   }
-  bool EnsureVideoProcessor(const gfx::IntSize& aVideoSize);
+  bool EnsureVideoProcessor(const gfx::IntSize& aInputSize,
+                            const gfx::IntSize& aOutputSize);
 
   DCSurface* GetSurface(wr::NativeSurfaceId aId) const;
 
@@ -154,7 +155,8 @@ class DCLayerTree {
   RefPtr<ID3D11VideoContext> mVideoContext;
   RefPtr<ID3D11VideoProcessor> mVideoProcessor;
   RefPtr<ID3D11VideoProcessorEnumerator> mVideoProcessorEnumerator;
-  gfx::IntSize mVideoSize;
+  gfx::IntSize mVideoInputSize;
+  gfx::IntSize mVideoOutputSize;
 
   bool mDebugCounter;
   bool mDebugVisualRedrawRegions;
@@ -272,13 +274,15 @@ class DCSurfaceVideo : public DCSurface {
   DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree);
 
   void AttachExternalImage(wr::ExternalImageId aExternalImage);
+  gfx::Matrix CalculateSwapChainSize(const gfx::Matrix& aTransform);
+  void PresentVideo();
 
   DCSurfaceVideo* AsDCSurfaceVideo() override { return this; }
 
  protected:
   DXGI_FORMAT GetSwapChainFormat();
-  bool CreateVideoSwapChain(RenderTextureHost* aTexture);
-  bool CallVideoProcessorBlt(RenderTextureHost* aTexture);
+  bool CreateVideoSwapChain();
+  bool CallVideoProcessorBlt();
   void ReleaseDecodeSwapChainResources();
 
   RefPtr<ID3D11VideoProcessorOutputView> mOutputView;
@@ -286,9 +290,11 @@ class DCSurfaceVideo : public DCSurface {
   RefPtr<IDXGISwapChain1> mVideoSwapChain;
   RefPtr<IDXGIDecodeSwapChain> mDecodeSwapChain;
   HANDLE mSwapChainSurfaceHandle;
+  gfx::IntSize mVideoSize;
   gfx::IntSize mSwapChainSize;
   DXGI_FORMAT mSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
   bool mFailedYuvSwapChain = false;
+  RefPtr<RenderTextureHost> mRenderTextureHost;
   RefPtr<RenderTextureHost> mPrevTexture;
 };
 
