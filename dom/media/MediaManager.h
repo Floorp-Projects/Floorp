@@ -21,7 +21,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
@@ -392,8 +391,10 @@ class MediaManager final : public nsIMediaManagerService,
   // ONLY accessed from MediaManagerThread
   RefPtr<MediaEngine> mBackend;
 
+  // Accessed only on main thread and mMediaThread.
+  // Set before mMediaThread is created, and cleared on main thread after last
+  // mMediaThread task is run.
   static StaticRefPtr<MediaManager> sSingleton;
-  static StaticMutex sSingletonMutex MOZ_UNANNOTATED;
 
   // Connect/Disconnect on media thread only
   MediaEventListener mDeviceListChangeListener;
