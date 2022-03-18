@@ -58,6 +58,7 @@ interface InstallTriggerImpl {
    *         A callback to call as each installation succeeds or fails
    * @return true if the installations were successfully started
    */
+  [Deprecated="InstallTriggerInstallDeprecated"]
   boolean install(record<DOMString, (DOMString or InstallTriggerData)> installs,
                   optional InstallTriggerCallback callback);
 
@@ -74,6 +75,7 @@ interface InstallTriggerImpl {
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
+  [Deprecated="InstallTriggerInstallDeprecated"]
   boolean installChrome(unsigned short type, DOMString url, DOMString skin);
 
   /**
@@ -87,5 +89,6 @@ interface InstallTriggerImpl {
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
+  [Deprecated="InstallTriggerInstallDeprecated"]
   boolean startSoftwareUpdate(DOMString url, optional unsigned short flags);
 };
