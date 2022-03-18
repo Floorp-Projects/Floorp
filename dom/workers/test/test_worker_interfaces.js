@@ -333,6 +333,12 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "WorkerNavigator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WritableStream", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WritableStreamDefaultController", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WritableStreamDefaultWriter", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
 ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!
 
