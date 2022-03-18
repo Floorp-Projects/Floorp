@@ -19,6 +19,8 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -26,6 +28,7 @@ import androidx.test.espresso.web.sugar.Web
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import junit.framework.AssertionFailedError
 import okhttp3.mockwebserver.MockResponse
 import okio.Buffer
 import org.hamcrest.Matchers
@@ -413,6 +416,14 @@ object TestHelper {
         customTabsIntent.intent.data = Uri.parse(pageUrl)
         customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
         return customTabsIntent.intent
+    }
+
+    fun assertNativeAppOpens(appPackageName: String) {
+        try {
+            intended(toPackage(appPackageName))
+        } catch (e: AssertionFailedError) {
+            e.printStackTrace()
+        }
     }
 
     private fun createTestBitmap(): Bitmap {

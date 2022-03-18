@@ -161,6 +161,8 @@ class BrowserRobot {
 
     fun clickOpenLinksInAppsCancelButton() = openLinksInAppsCancelButton.click()
 
+    fun clickOpenLinksInAppsOpenButton() = openLinksInAppsOpenButton.click()
+
     fun clickDropDownForm() {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
             .waitForExists(waitingTime)
@@ -489,7 +491,14 @@ private val openLinksInAppsMessage = mDevice.findObject(UiSelector().resourceId(
 
 private val openLinksInAppsCancelButton = mDevice.findObject(UiSelector().textContains("CANCEL"))
 
-private val openLinksInAppsOpenButton = mDevice.findObject(UiSelector().textContains("OPEN"))
+private val openLinksInAppsOpenButton =
+    mDevice.findObject(
+        UiSelector()
+            .index(1)
+            .textContains("OPEN")
+            .className("android.widget.Button")
+            .packageName(packageName)
+    )
 
 private val currentDate = LocalDate.now()
 private val currentDay = currentDate.dayOfMonth
