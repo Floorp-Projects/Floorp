@@ -135,7 +135,13 @@ class _ExperimentManager {
     }
   }
 
-  _checkUnseenEnrollments(enrollments, sourceToCheck, recipeMismatches) {
+  _checkUnseenEnrollments(
+    enrollments,
+    sourceToCheck,
+    recipeMismatches,
+    invalidRecipes,
+    invalidBranches
+  ) {
     for (const enrollment of enrollments) {
       const { slug, source } = enrollment;
       if (sourceToCheck !== source) {
@@ -144,9 +150,16 @@ class _ExperimentManager {
       if (!this.sessions.get(source)?.has(slug)) {
         log.debug(`Stopping study for recipe ${slug}`);
         try {
-          let reason = recipeMismatches.includes(slug)
-            ? "targeting-mismatch"
-            : "recipe-not-seen";
+          let reason;
+          if (recipeMismatches.includes(slug)) {
+            reason = "targeting-mismatch";
+          } else if (invalidRecipes.includes(slug)) {
+            reason = "invalid-recipe";
+          } else if (invalidBranches.includes(slug)) {
+            reason = "invalid-branch";
+          } else {
+            reason = "recipe-not-seen";
+          }
           this.unenroll(slug, reason);
         } catch (err) {
           Cu.reportError(err);
@@ -161,7 +174,10 @@ class _ExperimentManager {
    * @param {string} sourceToCheck
    * @param {object} options Extra context used in telemetry reporting
    */
-  onFinalize(sourceToCheck, { recipeMismatches } = { recipeMismatches: [] }) {
+  onFinalize(
+    sourceToCheck,
+    { recipeMismatches = [], invalidRecipes = [], invalidBranches = [] } = {}
+  ) {
     if (!sourceToCheck) {
       throw new Error("When calling onFinalize, you must specify a source.");
     }
@@ -170,12 +186,16 @@ class _ExperimentManager {
     this._checkUnseenEnrollments(
       activeExperiments,
       sourceToCheck,
-      recipeMismatches
+      recipeMismatches,
+      invalidRecipes,
+      invalidBranches
     );
     this._checkUnseenEnrollments(
       activeRollouts,
       sourceToCheck,
-      recipeMismatches
+      recipeMismatches,
+      invalidRecipes,
+      invalidBranches
     );
 
     this.sessions.delete(sourceToCheck);
