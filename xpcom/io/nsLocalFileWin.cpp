@@ -3080,8 +3080,8 @@ nsLocalFile::Contains(nsIFile* aInFile, bool* aResult) {
     aInFile->GetPath(inFilePath);
   }
 
-  // make sure that the |aInFile|'s path has a trailing separator.
-  if (inFilePath.Length() >= myFilePathLen &&
+  // Make sure that the |aInFile|'s path has a trailing separator.
+  if (inFilePath.Length() > myFilePathLen &&
       inFilePath[myFilePathLen] == L'\\') {
     if (_wcsnicmp(myFilePath.get(), inFilePath.get(), myFilePathLen) == 0) {
       *aResult = true;
