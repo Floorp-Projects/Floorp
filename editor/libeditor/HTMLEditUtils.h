@@ -507,10 +507,10 @@ class HTMLEditUtils final {
     // XXX Assuming it's not in an empty text node because it's unrealistic edge
     //     case.
     bool maybeStartOfAnchor = aPoint.IsStartOfContainer();
-    for (EditorRawDOMPoint point(aPoint.GetContainer());
+    for (EditorRawDOMPoint point(aPoint.ContainerAsContent());
          point.IsSet() && (maybeStartOfAnchor ? point.IsStartOfContainer()
                                               : point.IsAtLastContent());
-         point.Set(point.GetContainer())) {
+         point = point.ParentPoint()) {
       if (HTMLEditUtils::IsLink(point.GetContainer())) {
         // Now, we're at start or end of <a href>.
         if (aFoundLinkElement) {
