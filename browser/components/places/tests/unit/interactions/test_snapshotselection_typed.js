@@ -24,6 +24,10 @@ add_task(async () => {
     { url: TEST_URL3, created_at: now - 3000 },
   ]);
 
+  // Simulate a browser keeping this page data cached.
+  let actor = {};
+  PageDataService.lockEntry(actor, TEST_URL1);
+
   PageDataService.pageDataDiscovered({
     url: TEST_URL1,
     data: {
@@ -38,6 +42,8 @@ add_task(async () => {
   await Snapshots.add({ url: TEST_URL1 });
   await Snapshots.add({ url: TEST_URL2 });
   await Snapshots.add({ url: TEST_URL3 });
+
+  PageDataService.unlockEntry(actor, TEST_URL1);
 
   let selector = new SnapshotSelector({ count: 5 });
 

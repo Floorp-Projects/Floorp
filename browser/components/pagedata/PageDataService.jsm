@@ -147,6 +147,110 @@ class HiddenBrowserManager {
 }
 
 /**
+ * @typedef {object} CacheEntry
+ *   An entry in the page data cache.
+ * @property {PageData | null} pageData
+ *   The data or null if there is no known data.
+ * @property {Set} actors
+ *   The actors that maintain an interest in keeping the entry cached.
+ */
+
+/**
+ * A cache of page data kept in memory. By default any discovered data from
+ * browsers is kept in memory until the browser element is destroyed but other
+ * actors may register an interest in keeping an entry alive beyond that.
+ */
+class PageDataCache {
+  /**
+   * The contents of the cache. Keyed on page url.
+   *
+   * @type {Map<string, CacheEntry>}
+   */
+  #cache = new Map();
+
+  /**
+   * Creates or updates an entry in the cache. If no actor has registered any
+   * interest in keeping this page's data in memory then this will do nothing.
+   *
+   * @param {string} url
+   *   The url of the page.
+   * @param {PageData|null} pageData
+   *   The current page data for the page.
+   */
+  set(url, pageData) {
+    let entry = this.#cache.get(url);
+
+    if (entry) {
+      entry.pageData = pageData;
+    }
+  }
+
+  /**
+   * Gets any cached data for the url.
+   *
+   * @param {string} url
+   *   The url of the page.
+   * @returns {PageData | null}
+   *   The page data if some is known.
+   */
+  get(url) {
+    let entry = this.#cache.get(url);
+    return entry?.pageData ?? null;
+  }
+
+  /**
+   * Adds a lock to an entry. This can be called before we have discovered the
+   * data for the url.
+   *
+   * @param {object} actor
+   *   Ensures the entry stays in memory until unlocked by this actor.
+   * @param {string} url
+   *   The url of the page.
+   */
+  lockData(actor, url) {
+    let entry = this.#cache.get(url);
+    if (entry) {
+      entry.actors.add(actor);
+    } else {
+      this.#cache.set(url, {
+        pageData: undefined,
+        actors: new Set([actor]),
+      });
+    }
+  }
+
+  /**
+   * Removes a lock from an entry.
+   *
+   * @param {object} actor
+   *   The lock to remove.
+   * @param {string | undefined} [url]
+   *   The url of the page or undefined to unlock all urls locked by this actor.
+   */
+  unlockData(actor, url) {
+    let entries = [];
+    if (url) {
+      let entry = this.#cache.get(url);
+      if (!entry) {
+        return;
+      }
+
+      entries.push([url, entry]);
+    } else {
+      entries = [...this.#cache];
+    }
+
+    for (let [entryUrl, entry] of entries) {
+      if (entry.actors.delete(actor)) {
+        if (entry.actors.size == 0) {
+          this.#cache.delete(entryUrl);
+        }
+      }
+    }
+  }
+}
+
+/**
  * @typedef {object} PageData
  *   A set of discovered from a page. Other than the `data` property this is the
  *   schema at `browser/components/pagedata/schemas/general.schema.json`.
@@ -166,13 +270,11 @@ class HiddenBrowserManager {
 
 const PageDataService = new (class PageDataService extends EventEmitter {
   /**
-   * Caches page data discovered from browsers. The key is the url of the data.
+   * Caches page data discovered from browsers.
    *
-   * TODO: Currently the cache never expires.
-   *
-   * @type {Map<string, PageData>}
+   * @type {PageDataCache}
    */
-  #pageDataCache = new Map();
+  #pageDataCache = new PageDataCache();
 
   /**
    * The number of currently running background fetches.
@@ -205,6 +307,13 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    * @type {WeakMap<Browser, (actor: PageDataParent) => void>}
    */
   #backgroundBrowsers = new WeakMap();
+
+  /**
+   * Tracks windows that have browsers with entries in the cache.
+   *
+   * @type {Map<Window, Set<Browser>>}
+   */
+  #trackedWindows = new Map();
 
   /**
    * Constructs the service.
@@ -271,6 +380,68 @@ const PageDataService = new (class PageDataService extends EventEmitter {
   }
 
   /**
+   * Starts tracking for when a browser is destroyed.
+   *
+   * @param {Browser} browser
+   *   The browser to track.
+   */
+  #trackBrowser(browser) {
+    let window = browser.ownerGlobal;
+
+    let browsers = this.#trackedWindows.get(window);
+    if (browsers) {
+      browsers.add(browser);
+
+      // This window is already being tracked, no need to add listeners.
+      return;
+    }
+
+    browsers = new Set([browser]);
+    this.#trackedWindows.set(window, browsers);
+
+    window.addEventListener("unload", () => {
+      for (let closedBrowser of browsers) {
+        this.unlockEntry(closedBrowser);
+      }
+
+      this.#trackedWindows.delete(window);
+    });
+
+    window.addEventListener("TabClose", ({ target: tab }) => {
+      // Unlock any entries locked by this browser.
+      let closedBrowser = tab.linkedBrowser;
+      this.unlockEntry(closedBrowser);
+      browsers.delete(closedBrowser);
+    });
+  }
+
+  /**
+   * Requests that any page data for this url is retained in memory until
+   * unlocked. By calling this you are committing to later call `unlockEntry`
+   * with the same `actor` and `url` parameters.
+   *
+   * @param {object} actor
+   *   The actor requesting the lock.
+   * @param {string} url
+   *   The url of the page to lock.
+   */
+  lockEntry(actor, url) {
+    this.#pageDataCache.lockData(actor, url);
+  }
+
+  /**
+   * Notifies that an actor is no longer interested in a url.
+   *
+   * @param {object} actor
+   *   The actor that requested the lock.
+   * @param {string | undefined} [url]
+   *   The url of the page or undefined to unlock all urls locked by this actor.
+   */
+  unlockEntry(actor, url) {
+    this.#pageDataCache.unlockData(actor, url);
+  }
+
+  /**
    * Called when the content process signals that a page is ready for data
    * collection.
    *
@@ -308,6 +479,10 @@ const PageDataService = new (class PageDataService extends EventEmitter {
     try {
       let data = await actor.collectPageData();
       if (data) {
+        // Keep this data alive until the browser is destroyed.
+        this.#trackBrowser(browser);
+        this.lockEntry(browser, data.url);
+
         this.pageDataDiscovered(data);
       }
     } catch (e) {
@@ -346,7 +521,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    *   page has not been successfully checked for data recently.
    */
   getCached(url) {
-    return this.#pageDataCache.get(url) ?? null;
+    return this.#pageDataCache.get(url);
   }
 
   /**

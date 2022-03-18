@@ -88,10 +88,6 @@ add_task(async function test_queueOrder() {
   // will be in a known order. This isn't guaranteed by the API though.
   Assert.deepEqual(results, pageDataResults);
 
-  for (let pageData of pageDataResults) {
-    Assert.deepEqual(PageDataService.getCached(pageData.url), pageData);
-  }
-
   delete PageDataService.fetchPageData;
 });
 

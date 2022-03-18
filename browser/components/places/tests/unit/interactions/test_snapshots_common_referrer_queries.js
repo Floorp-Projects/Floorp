@@ -327,6 +327,13 @@ add_task(
   async function test_query_common_referrer_multiple_interactions_page_data() {
     await reset_interactions_snapshots();
 
+    // Simulate the interactions service locking this page data.
+    PageDataService.lockEntry(Interactions, "https://example.com/product_a");
+
+    // The snapshot actually gets created manually so also lock as if by a browser.
+    let actor = {};
+    PageDataService.lockEntry(actor, "https://example.com/product_a");
+
     // Register some page data.
     PageDataService.pageDataDiscovered({
       url: "https://example.com/product_a",
@@ -372,6 +379,7 @@ add_task(
     await create_interaction_and_snapshot({
       url: "https://example.com/product_a",
     });
+    PageDataService.unlockEntry(actor, "https://example.com/product_a");
 
     // Add an interaction with a single referrers
     await addInteractions([
