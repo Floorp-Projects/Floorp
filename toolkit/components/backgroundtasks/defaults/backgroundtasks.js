@@ -30,3 +30,6 @@ pref("network.cookie.noPersistentStorage", true);
 // fast shutdown to reduce the risk of open file handles preventing cleanup of
 // the temporary profile directory.
 pref("toolkit.shutdown.fastShutdownStage", 0);
+
+// Prevent key#.db and cert#.db from being created in the temporary profile.
+pref("security.nocertdb", true);
