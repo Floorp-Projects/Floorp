@@ -9,4 +9,4 @@ types-requests==2.27.11
 types-setuptools==57.4.2
 types-six==1.16.11
 types-ujson==4.2.0
-typing-extensions==3.10.0.2
+typing-extensions==4.1.1
