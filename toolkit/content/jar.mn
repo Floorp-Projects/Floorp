@@ -114,4 +114,5 @@ toolkit.jar:
    content/global/gmp-sources/widevinecdm.json (gmp-sources/widevinecdm.json)
 
 # Third party files
-   content/global/third_party/d3/d3.js         (/third_party/js/d3/d3.js)
+   content/global/third_party/d3/d3.js                (/third_party/js/d3/d3.js)
+   content/global/third_party/cfworker/json-schema.js (/third_party/js/cfworker/json-schema.js)
