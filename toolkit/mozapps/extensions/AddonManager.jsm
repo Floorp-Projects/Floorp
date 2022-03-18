@@ -4241,40 +4241,26 @@ var AddonManager = {
 /**
  * Manage AddonManager settings propagated over RemoteSettings synced data.
  *
- * - All managed AOM remote settings are expected to be part of the "addons-manager-settings"
- *   collection and each entry has an unique id and a set of defined preferences controlled
- *   (which are meant to also be enforced on the service side based on a JSONSchema that
- *   enforce the controlled preferences and their expected type).
+ * See :doc:`AMRemoteSettings Overview <AMRemoteSettings-overview>`.
  *
- * - The expected controlled prefs for each entry are described in the RS_ENTRIES_MAP,
- *   only the pref names listed in the map are going to be controlled by a remote settings
- *   entry with the related unique string "id".
- *
- * - any preference not listed explicitly in the RS_ENTRIES_MAP will be ignored.
- *
- * JSONSchema of the expected entry in this collection:
- *
- * {
- *   "type": "object",
- *   "required": ["id"],
- *   "additionalProperties": false,
- *   "anyOf": [
- *     {
- *       "type": "object",
- *       "properties": {
- *         "id": { "const": "installTriggerDeprecation" }
- *         "extensions.InstallTriggerImpl.enabled": { "type": "boolean"},
- *         "extensions.InstallTrigger.enabled": { "type": "boolean" }
- *       }
- *     }
- *   ]
- * }
- *
+ * .. warning::
+ *   Before landing any change to ``AMRemoteSettings`` or the format expected for the
+ *   remotely controlled settings (on the service or Firefos side), please read the
+ *   documentation page linked above and make sure to keep the JSON Schema described
+ *   and controlled settings groups included in that documentation page in sync with
+ *   the one actually set on the RemoteSettings service side.
  */
 AMRemoteSettings = {
-  // RemoteSettings collection id.
   RS_COLLECTION: "addons-manager-settings",
-  // RemoteSettings entry id => array of controlled prefs.
+
+  /**
+   * RemoteSettings settings group map.
+   *
+   * .. note::
+   *   Please keep in sync the "Controlled Settings Groups" documentation from
+   *   :doc:`AMRemoteSettings Overview <AMRemoteSettings-overview>` in sync with
+   *   the settings groups defined here.
+   */
   RS_ENTRIES_MAP: {
     installTriggerDeprecation: [
       "extensions.InstallTriggerImpl.enabled",
@@ -4336,6 +4322,14 @@ AMRemoteSettings = {
     }
   },
 
+  /**
+   * Process all the settings groups that are included in the collection entry with ``"id"`` set to ``"AddonManagerSettings"``
+   * (if any).
+   *
+   * .. note::
+   *   This method may need to be updated if the preference value type is not yet expected by this method
+   *   (which means that it would be ignored until handled explicitly).
+   */
   async processEntries() {
     const entries = await this.client.get({ syncIfEmpty: false }).catch(err => {
       logger.error("Failure to process AddonManager RemoteSettings", err);
