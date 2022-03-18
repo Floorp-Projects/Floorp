@@ -24,7 +24,11 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 class SettingsAdvancedMenuRobot {
     fun verifyAdvancedSettingsItems() {
         advancedSettingsList.waitForExists(waitingTime)
-        remoteDebuggingSwitch.check(matches(isDisplayed()))
+        developerToolsHeading().check(matches(isDisplayed()))
+        remoteDebuggingSwitch().check(matches(isDisplayed()))
+        assertRemoteDebuggingSwitchState()
+        openLinksInAppsButton().check(matches(isDisplayed()))
+        assertOpenLinksInAppsSwitchState()
     }
 
     fun verifyOpenLinksInAppsSwitchState(enabled: Boolean) = assertOpenLinksInAppsSwitchState(enabled)
@@ -41,7 +45,7 @@ class SettingsAdvancedMenuRobot {
 
 private fun openLinksInAppsButton() = onView(withText(R.string.preferences_open_links_in_apps))
 
-private fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
+private fun assertOpenLinksInAppsSwitchState(enabled: Boolean = false) {
     if (enabled) {
         openLinksInAppsButton()
             .check(
@@ -72,4 +76,34 @@ private fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
 private val advancedSettingsList =
     UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
-private val remoteDebuggingSwitch = onView(withText("Remote debugging via USB/Wi-Fi"))
+private fun developerToolsHeading() = onView(withText(R.string.preference_advanced_summary))
+
+private fun remoteDebuggingSwitch() = onView(withText("Remote debugging via USB/Wi-Fi"))
+
+private fun assertRemoteDebuggingSwitchState(enabled: Boolean = false) {
+    if (enabled) {
+        remoteDebuggingSwitch()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withId(R.id.switchWidget),
+                            isChecked()
+                        )
+                    )
+                )
+            )
+    } else {
+        remoteDebuggingSwitch()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withId(R.id.switchWidget),
+                            isNotChecked()
+                        )
+                    )
+                )
+            )
+    }
+}
