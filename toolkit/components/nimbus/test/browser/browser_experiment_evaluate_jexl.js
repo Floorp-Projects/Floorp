@@ -10,7 +10,7 @@ const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],
@@ -79,25 +79,15 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
   const slug = "foo" + Math.random();
   // Init the store before we use it
   await ExperimentManager.onStartup();
+
+  let recipe = ExperimentFakes.recipe(slug);
+  recipe.branches[0].slug = "mochitest-active-foo";
+  delete recipe.branches[1];
+
   let {
     enrollmentPromise,
     doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe(slug, {
-      branches: [
-        {
-          slug: "mochitest-active-foo",
-          features: [
-            {
-              enabled: true,
-              featureId: "foo",
-              value: null,
-            },
-          ],
-        },
-      ],
-    })
-  );
+  } = ExperimentFakes.enrollmentHelper(recipe);
 
   await enrollmentPromise;
 
