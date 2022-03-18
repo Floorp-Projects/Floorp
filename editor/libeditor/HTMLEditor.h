@@ -1480,6 +1480,22 @@ class HTMLEditor final : public EditorBase,
   MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
 
   /**
+   * InitializeInsertingElement is a callback type of methods which inserts
+   * an element into the DOM tree.  This is called immediately before or
+   * after inserting aNewElement into the DOM tree (depending on
+   * "editor.initialize_element_before_connect" pref whether this is called
+   * before or after inserting the element).
+   *
+   * @param aHTMLEditor     The HTML editor which modifies the DOM tree.
+   * @param aNewElement     The new element which will be or was inserted into
+   *                        the DOM tree.
+   * @param aPointToInsert  The position aNewElement will be or was inserted.
+   */
+  using InitializeInsertingElement =
+      std::function<nsresult(HTMLEditor& aHTMLEditor, Element& aNewElement,
+                             const EditorDOMPoint& aPointToInsert)>;
+
+  /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
    * this succeed to create an element node, this inserts the element to
    * aPointToInsert.
@@ -1508,9 +1524,8 @@ class HTMLEditor final : public EditorBase,
   CreateAndInsertElement(
       WithTransaction aWithTransaction, nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
-      const std::function<nsresult(Element&)>& aInitializer = [](Element&) {
-        return NS_OK;
-      });
+      const InitializeInsertingElement& aInitializer =
+          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
@@ -1558,9 +1573,8 @@ class HTMLEditor final : public EditorBase,
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
-      const std::function<nsresult(Element&)>& aInitializer = [](Element&) {
-        return NS_OK;
-      });
+      const InitializeInsertingElement& aInitializer =
+          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
@@ -3440,8 +3454,9 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   DeleteSelectionAndCreateElement(
-      nsAtom& aTag, const std::function<nsresult(Element&)>& aInitializer =
-                        [](Element&) { return NS_OK; });
+      nsAtom& aTag,
+      const InitializeInsertingElement& aInitializer =
+          [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; });
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if
