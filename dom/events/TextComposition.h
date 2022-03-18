@@ -233,9 +233,8 @@ class TextComposition final {
   };
 
   /**
-   * OnCreateCompositionTransaction() is called by
-   * CompositionTransaction::Create() immediately after creating
-   * new CompositionTransaction instance.
+   * OnUpdateCompositionInEditor() is called when editor updates composition
+   * string in the DOM tree.
    *
    * @param aStringToInsert     The string to insert the text node actually.
    *                            This may be different from the data of
@@ -245,20 +244,12 @@ class TextComposition final {
    * @param aTextNode           The text node which includes composition string.
    * @param aOffset             The offset of composition string in aTextNode.
    */
-  void OnCreateCompositionTransaction(const nsAString& aStringToInsert,
-                                      Text* aTextNode, uint32_t aOffset) {
-    if (!mContainerTextNode) {
-      mContainerTextNode = aTextNode;
-      mCompositionStartOffsetInTextNode = aOffset;
-      NS_WARNING_ASSERTION(mCompositionStartOffsetInTextNode != UINT32_MAX,
-                           "The text node is really too long.");
-    }
-#ifdef DEBUG
-    else {
-      MOZ_ASSERT(aTextNode == mContainerTextNode);
-      MOZ_ASSERT(aOffset == mCompositionStartOffsetInTextNode);
-    }
-#endif  // #ifdef DEBUG
+  void OnUpdateCompositionInEditor(const nsAString& aStringToInsert,
+                                   Text& aTextNode, uint32_t aOffset) {
+    mContainerTextNode = &aTextNode;
+    mCompositionStartOffsetInTextNode = aOffset;
+    NS_WARNING_ASSERTION(mCompositionStartOffsetInTextNode != UINT32_MAX,
+                         "The text node is really too long.");
     mCompositionLengthInTextNode = aStringToInsert.Length();
     NS_WARNING_ASSERTION(mCompositionLengthInTextNode != UINT32_MAX,
                          "The string to insert is really too long.");
