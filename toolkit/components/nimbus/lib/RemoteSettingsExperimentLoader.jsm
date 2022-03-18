@@ -215,7 +215,10 @@ class _RemoteSettingsExperimentLoader {
 
     let matches = 0;
     let recipeMismatches = [];
+    let invalidRecipes = [];
+    let invalidBranches = [];
     let validatorCache = {};
+
     if (recipes && !loadingError) {
       for (const r of recipes) {
         let validation = recipeValidator.validate(r);
@@ -227,14 +230,14 @@ class _RemoteSettingsExperimentLoader {
               2
             )}`
           );
-          // TODO: Do we want telemetry about invalid recipes?
+          invalidRecipes.push(r.slug);
           continue;
         }
 
         let type = r.isRollout ? "rollout" : "experiment";
 
         if (!(await this._validateBranches(r, validatorCache))) {
-          // TODO: Do we want telemetry about invalid branch values?
+          invalidBranches.push(r.slug);
           log.debug(`${r.id} did not validate`);
           continue;
         }
@@ -250,7 +253,11 @@ class _RemoteSettingsExperimentLoader {
       }
 
       log.debug(`${matches} recipes matched. Finalizing ExperimentManager.`);
-      this.manager.onFinalize("rs-loader", { recipeMismatches });
+      this.manager.onFinalize("rs-loader", {
+        recipeMismatches,
+        invalidRecipes,
+        invalidBranches,
+      });
     }
 
     if (trigger !== "timer") {
