@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Set up Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
       - name: Set up Virtualenv
