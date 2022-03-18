@@ -93,24 +93,92 @@ async function testDeprecationWarning(testPageURL, expectedDeprecationWarning) {
   return message;
 }
 
-add_task(function testDeprecationWarningsOnUADetection() {
-  return testDeprecationWarning(
-    "http://example.com/installtrigger_ua_detection.html",
-    "InstallTrigger is deprecated and will be removed in the future."
-  );
-});
+add_task(
+  {
+    pref_set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
+    ],
+  },
+  function testDeprecationWarningsOnUADetection() {
+    return testDeprecationWarning(
+      "http://example.com/installtrigger_ua_detection.html",
+      "InstallTrigger is deprecated and will be removed in the future."
+    );
+  }
+);
 
-add_task(async function testDeprecationWarningsOnInstallTriggerInstall() {
-  const message = await testDeprecationWarning(
-    "http://example.com/installtrigger_install.html",
-    "InstallTrigger.install() is deprecated and will be removed in the future."
-  );
+add_task(
+  {
+    pref_set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
+    ],
+  },
+  async function testDeprecationWarningsOnInstallTriggerInstall() {
+    const message = await testDeprecationWarning(
+      "http://example.com/installtrigger_install.html",
+      "InstallTrigger.install() is deprecated and will be removed in the future."
+    );
 
-  const moreInfoURL =
-    "https://extensionworkshop.com/documentation/publish/self-distribution/";
+    const moreInfoURL =
+      "https://extensionworkshop.com/documentation/publish/self-distribution/";
 
-  ok(
-    message.includes(moreInfoURL),
-    "Deprecation warning should include an url to self-distribution documentation"
-  );
-});
+    ok(
+      message.includes(moreInfoURL),
+      "Deprecation warning should include an url to self-distribution documentation"
+    );
+  }
+);
+
+async function testInstallTriggerDeprecationPrefs(expectedResults) {
+  const page = await ExtensionTestUtils.loadContentPage("http://example.com");
+  const promiseResults = page.spawn([], () => {
+    return {
+      uaDetectionResult: this.content.eval(
+        "typeof InstallTrigger !== 'undefined'"
+      ),
+      typeofInstallMethod: this.content.eval("typeof InstallTrigger?.install"),
+    };
+  });
+  if (expectedResults.error) {
+    await Assert.rejects(
+      promiseResults,
+      expectedResults.error,
+      "Got the expected error"
+    );
+  } else {
+    Assert.deepEqual(
+      await promiseResults,
+      expectedResults,
+      "Got the expected results"
+    );
+  }
+  await page.close();
+}
+
+add_task(
+  {
+    pref_set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", false],
+    ],
+  },
+  function testInstallTriggerImplDisabled() {
+    return testInstallTriggerDeprecationPrefs({
+      uaDetectionResult: true,
+      typeofInstallMethod: "undefined",
+    });
+  }
+);
+
+add_task(
+  {
+    pref_set: [["extensions.InstallTrigger.enabled", false]],
+  },
+  function testInstallTriggerDisabled() {
+    return testInstallTriggerDeprecationPrefs({
+      error: /ReferenceError: InstallTrigger is not defined/,
+    });
+  }
+);

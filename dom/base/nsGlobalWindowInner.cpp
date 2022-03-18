@@ -83,6 +83,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -2480,6 +2481,20 @@ bool nsGlobalWindowInner::ShouldReportForServiceWorkerScope(
 }
 
 InstallTriggerImpl* nsGlobalWindowInner::GetInstallTrigger() {
+  if (!mInstallTrigger &&
+      !StaticPrefs::extensions_InstallTriggerImpl_enabled()) {
+    // Return nullptr when InstallTriggerImpl is disabled by pref,
+    // which does not yet break the "typeof InstallTrigger !== 'undefined"
+    // "UA detection" use case, but prevents access to the InstallTriggerImpl
+    // methods and properties.
+    //
+    // NOTE: a separate pref ("extensions.InstallTrigger.enabled"), associated
+    // to this property using the [Pref] extended attribute in Window.webidl,
+    // does instead hide the entire InstallTrigger property.
+    //
+    // See Bug 1754441 for more details about this deprecation.
+    return nullptr;
+  }
   if (!mInstallTrigger) {
     ErrorResult rv;
     mInstallTrigger = ConstructJSImplementation<InstallTriggerImpl>(
