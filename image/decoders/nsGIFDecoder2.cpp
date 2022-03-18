@@ -91,8 +91,10 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
       mGIFOpen(false),
       mSawTransparency(false),
       mSwizzleFn(nullptr) {
-  // Clear out the structure, excluding the arrays.
+  // Clear out the structure, excluding the arrays. Ensure that the global
+  // colormap is initialized as opaque.
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
+  memset(mGIFStruct.global_colormap, 0xFF, sizeof(mGIFStruct.global_colormap));
 
   // Each color table will need to be unpacked.
   mSwizzleFn = SwizzleRow(SurfaceFormat::R8G8B8, SurfaceFormat::OS_RGBA);
@@ -855,6 +857,8 @@ LexerTransition<nsGIFDecoder2::State> nsGIFDecoder2::FinishImageDescriptor(
         mGIFStruct.local_colormap_buffer_size = mColormapSize;
         mGIFStruct.local_colormap =
             static_cast<uint32_t*>(moz_xmalloc(mColormapSize));
+        // Ensure the local colormap is initialized as opaque.
+        memset(mGIFStruct.local_colormap, 0xFF, mColormapSize);
       } else {
         mColormapSize = mGIFStruct.local_colormap_buffer_size;
       }
