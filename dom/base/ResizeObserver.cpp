@@ -49,7 +49,15 @@ static uint32_t GetNodeDepth(nsINode* aNode) {
 static nsSize GetContentRectSize(const nsIFrame& aFrame) {
   if (const nsIScrollableFrame* f = do_QueryFrame(&aFrame)) {
     // We return the scrollport rect for compat with other UAs, see bug 1733042.
-    return f->GetScrollPortRect().Size();
+    // But the scrollPort includes padding (but not border!), so remove it.
+    nsRect scrollPort = f->GetScrollPortRect();
+    nsMargin padding =
+        aFrame.GetUsedPadding().ApplySkipSides(aFrame.GetSkipSides());
+    scrollPort.Deflate(padding);
+    MOZ_ASSERT(!aFrame.PresContext()->UseOverlayScrollbars() ||
+               scrollPort.Size() ==
+                   aFrame.GetContentRectRelativeToSelf().Size());
+    return scrollPort.Size();
   }
   return aFrame.GetContentRectRelativeToSelf().Size();
 }
