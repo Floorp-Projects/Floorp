@@ -5840,6 +5840,10 @@
     type: bool
     value: @IS_NIGHTLY_BUILD@
     mirror: once
+-   name: gfx.webrender.dcomp-video-vp-scaling-win
+    type: bool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.
