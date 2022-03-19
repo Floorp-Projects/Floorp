@@ -34,6 +34,7 @@ window.onload = () =>{
             browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "2");
             var floorpPL = await browser.aboutConfigPrefs.getPref("floorp.protection.protectlevel");
             console.log("floorp.protection.protectlevel-startevent: " + floorpPL);
+            FLOORP_PROT_DEFAULT();
             FLOORP_PROT_LV2();
         }
         var i = await browser.aboutConfigPrefs.getPref("enable.floorp.updater.latest")
