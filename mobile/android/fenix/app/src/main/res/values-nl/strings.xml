@@ -138,6 +138,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d websites</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Alle gesynchroniseerde tabbladen bekijken</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Gesynchroniseerd apparaat</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Verwijderen</string>
@@ -250,7 +254,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s zal alles wat u in de adresbalk intypt met uw standaardzoekmachine delen.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Meer info</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Meer info</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s doorzoeken</string>
@@ -814,6 +818,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Weet u zeker dat u deze map wilt verwijderen?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s zal de geselecteerde items verwijderen.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Annuleren</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Map toevoegen</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -869,6 +875,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ONGEDAAN MAKEN</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Voer zoektermen in</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Naar Instellingen</string>
@@ -880,8 +889,16 @@
     <string name="phone_feature_recommended">Aanbevolen</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Toestemmingen wissen</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Annuleren</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Toestemming wissen</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Annuleren</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Toestemmingen op alle websites wissen</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -981,6 +998,11 @@
 
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Weergeven</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Annuleren</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Collectie %d</string>
@@ -1148,30 +1170,30 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview is nu Firefox Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview is nu Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">
         Firefox Nightly wordt elke nacht bijgewerkt en heeft experimentele nieuwe functies.
         Het is echter mogelijk minder stabiel. Download onze betabrowser voor een meer stabiele ervaring.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Download Firefox voor Android Beta</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Download Firefox voor Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly is verplaatst</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly is verplaatst</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Deze app ontvangt geen beveiligingsupdates meer. Stop met het gebruik van deze app en schakel over naar de nieuwe Nightly.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Deze app ontvangt geen beveiligingsupdates meer. Stop met het gebruik van deze app en schakel over naar de nieuwe Nightly.
         \n\nMaak een Firefox-account aan als u uw bladwijzers, aanmeldingen en geschiedenis naar een andere app wilt overzetten.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Schakel over naar de nieuwe Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Schakel over naar de nieuwe Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly is verplaatst</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly is verplaatst</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Deze app ontvangt geen beveiligingsupdates meer. Stop met het gebruik van deze app en schakel over naar de nieuwe Nightly.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Deze app ontvangt geen beveiligingsupdates meer. Stop met het gebruik van deze app en schakel over naar de nieuwe Nightly.
         \n\nMaak een Firefox-account aan als u uw bladwijzers, aanmeldingen en geschiedenis naar een andere app wilt overzetten.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Download de nieuwe Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Download de nieuwe Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1659,6 +1681,8 @@
     <string name="login_deletion_confirmation">Weet u zeker dat u deze aanmelding wilt verwijderen?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Verwijderen</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Annuleren</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Aanmeldopties</string>
     <!--  The editable text field for a login's web address. -->

@@ -133,6 +133,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d trang web</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Xem các thẻ đã đồng bộ hóa</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Thiết bị được đồng bộ hóa</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Xóa</string>
@@ -242,7 +246,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s sẽ chia sẻ mọi thứ bạn nhập vào thanh địa chỉ với công cụ tìm kiếm mặc định của bạn.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Tìm hiểu thêm</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Tìm kiếm %s</string>
@@ -799,6 +803,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Bạn có chắc chắn muốn xóa thư mục này?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s sẽ xóa các mục đã chọn.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Hủy bỏ</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Thêm thư mục</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -854,6 +860,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">HOÀN TÁC</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Nhập từ tìm kiếm</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Đi đến Cài đặt</string>
@@ -865,8 +874,16 @@
     <string name="phone_feature_recommended">Được đề xuất</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Xóa các quyền</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Hủy bỏ</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Xóa quyền</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Hủy bỏ</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Xóa quyền trên tất cả các trang web</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -966,6 +983,11 @@
 
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Xem</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Hủy bỏ</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Bộ sưu tập %d</string>
@@ -1128,29 +1150,29 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview hiện là Firefox Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview hiện là Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly được cập nhật mỗi đêm và có các tính năng mới thử nghiệm.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly được cập nhật mỗi đêm và có các tính năng mới thử nghiệm.
         Tuy nhiên, nó có thể kém ổn định hơn. Tải xuống trình duyệt beta của chúng tôi để có trải nghiệm ổn định hơn.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Tải Firefox Beta dành cho Android</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Tải Firefox Beta dành cho Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly đã di chuyển</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly đã di chuyển</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Ngừng sử dụng ứng dụng này và chuyển sang Nightly mới.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Ngừng sử dụng ứng dụng này và chuyển sang Nightly mới.
         \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Chuyển sang Nightly mới</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Chuyển sang Nightly mới</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly đã di chuyển</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly đã di chuyển</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Tải Nightly mới và ngừng sử dụng ứng dụng này.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Tải Nightly mới và ngừng sử dụng ứng dụng này.
         \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Tải Nightly mới</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Tải Nightly mới</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1636,6 +1658,8 @@
     <string name="login_deletion_confirmation">Bạn có chắc chắn muốn xóa thông tin đăng nhập này không?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Xóa</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Hủy bỏ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Tùy chọn thông tin đăng nhập</string>
     <!--  The editable text field for a login's web address. -->
