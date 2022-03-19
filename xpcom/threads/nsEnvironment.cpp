@@ -12,6 +12,7 @@
 #include "nsDependentString.h"
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Printf.h"
+#include "mozilla/StaticMutex.h"
 
 using namespace mozilla;
 
@@ -34,8 +35,6 @@ nsresult nsEnvironment::Create(nsISupports* aOuter, REFNSIID aIID,
   }
   return rv;
 }
-
-nsEnvironment::~nsEnvironment() = default;
 
 NS_IMETHODIMP
 nsEnvironment::Exists(const nsAString& aName, bool* aOutValue) {
@@ -96,19 +95,14 @@ nsEnvironment::Get(const nsAString& aName, nsAString& aOutValue) {
 typedef nsBaseHashtableET<nsCharPtrHashKey, char*> EnvEntryType;
 typedef nsTHashtable<EnvEntryType> EnvHashType;
 
-static EnvHashType* gEnvHash = nullptr;
+static StaticMutex gEnvHashMutex;
+static EnvHashType* gEnvHash GUARDED_BY(gEnvHashMutex) = nullptr;
 
-static bool EnsureEnvHash() {
-  if (gEnvHash) {
-    return true;
-  }
-
-  gEnvHash = new EnvHashType;
+static EnvHashType* EnsureEnvHash() REQUIRES(gEnvHashMutex) {
   if (!gEnvHash) {
-    return false;
+    gEnvHash = new EnvHashType;
   }
-
-  return true;
+  return gEnvHash;
 }
 
 NS_IMETHODIMP
@@ -126,13 +120,8 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue) {
     return rv;
   }
 
-  MutexAutoLock lock(mLock);
-
-  if (!EnsureEnvHash()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  EnvEntryType* entry = gEnvHash->PutEntry(nativeName.get());
+  StaticMutexAutoLock lock(gEnvHashMutex);
+  EnvEntryType* entry = EnsureEnvHash()->PutEntry(nativeName.get());
   if (!entry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
