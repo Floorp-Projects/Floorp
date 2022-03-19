@@ -4,6 +4,9 @@
 // party.
 // This verifies bug 462739
 function test() {
+  // This test depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.downloadFailedCallback = download_failed;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

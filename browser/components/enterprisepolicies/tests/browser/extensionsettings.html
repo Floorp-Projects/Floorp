@@ -5,7 +5,12 @@
 <meta charset="UTF-8">
 <script type="text/javascript">
 function installTrigger(url) {
-  InstallTrigger.install({extension: url});
+  try {
+    InstallTrigger.install({extension: url});
+  } catch (err) {
+    dump(`Failed to execute InstallTrigger.install: ${err}\n`);
+  }
+  return false;
 }
 </script>
 </head>
@@ -14,7 +19,7 @@ function installTrigger(url) {
 <a id="policytest" href="policytest_v0.1.xpi">policytest@mozilla.com</a>
 </p>
 <p>
-<a id="policytest_installtrigger" onclick="installTrigger(this.href);return false;" href="policytest_v0.1.xpi">policytest@mozilla.com</a>
+<a id="policytest_installtrigger" onclick="return installTrigger(this.href);" href="policytest_v0.1.xpi">policytest@mozilla.com</a>
 </p>
 <p>
 <a id="policytest_otherdomain" href="http://example.org:80/browser/browser/components/enterprisepolicies/tests/browser/policytest_v0.1.xpi">policytest@mozilla.com</a>

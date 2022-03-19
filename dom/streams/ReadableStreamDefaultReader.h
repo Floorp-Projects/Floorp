@@ -30,12 +30,8 @@ struct Read_ReadRequest : public ReadRequest {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Read_ReadRequest, ReadRequest)
 
   RefPtr<Promise> mPromise;
-  /* This allows Gecko Internals to create objects with null prototypes, to hide
-   * promise resolution from Object.prototype.then */
-  bool mForAuthorCode = true;
 
-  explicit Read_ReadRequest(Promise* aPromise, bool aForAuthorCode = true)
-      : mPromise(aPromise), mForAuthorCode(aForAuthorCode) {}
+  explicit Read_ReadRequest(Promise* aPromise) : mPromise(aPromise) {}
 
   void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                   ErrorResult& aRv) override;

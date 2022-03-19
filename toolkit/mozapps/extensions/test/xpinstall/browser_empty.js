@@ -1,6 +1,9 @@
 // ----------------------------------------------------------------------------
 // Test whether an install fails when there is no install script present.
 function test() {
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.downloadFailedCallback = download_failed;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

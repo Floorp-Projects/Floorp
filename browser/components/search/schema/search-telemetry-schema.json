@@ -36,10 +36,19 @@
         "pattern": "^[a-zA-Z0-9-._]*$"
       }
     },
+    "expectedOrganicCodes": {
+      "type": "array",
+      "title": "Expected Organic Codes",
+      "description": "An array of partner codes to match against the parameters in the url. Matching these codes will report the SERP as organic:none which means the user has done a search through the search engine's website rather than through SAP.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9-._]*$"
+      }
+    },
     "organicCodes": {
       "type": "array",
       "title": "Organic Codes",
-      "description": "An array of partner codes to match against the parameters in the url.  Matching these codes will report the SERP as organic.",
+      "description": "An array of partner codes to match against the parameters in the url. Matching these codes will report the SERP as organic:<partner code>, which means the search was performed organically rather than through a SAP.",
       "items": {
         "type": "string",
         "pattern": "^[a-zA-Z0-9-._]*$"

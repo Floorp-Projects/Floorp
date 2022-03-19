@@ -8,6 +8,10 @@ let popupPromise;
 const exampleURI = Services.io.newURI("http://example.com");
 async function test() {
   waitForExplicitFinish(); // have to call this ourselves because we're async.
+
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", false]],
   });
