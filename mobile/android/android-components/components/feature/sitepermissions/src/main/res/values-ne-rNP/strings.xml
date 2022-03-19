@@ -35,4 +35,12 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">%1$s लाई लगातार भण्डारणमा डेटा भण्डारण गर्न अनुमति दिन चाहानुहुन्छ?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">DRM-नियन्त्रित सामग्री बजाउन %1$s लाई अनुमति दिन चाहानुहुन्छ?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">%1$s लाई %2$s मा यसको कुकीहरू प्रयोग गर्न दिने हो?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">%s लाई यो डाटा किन चाहिन्छ भन्ने कुरा स्पष्ट नभएको खण्डमा तपाईले पहुँचलाई रोक लगाउन सक्नुहुन्छ।</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">अझ जान्नुहोस्</string>
 </resources>
