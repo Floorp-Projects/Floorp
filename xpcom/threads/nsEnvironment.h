@@ -27,10 +27,8 @@ class nsEnvironment final : public nsIEnvironment {
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
  private:
-  nsEnvironment() : mLock("nsEnvironment.mLock") {}
-  ~nsEnvironment();
-
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
+  nsEnvironment() {}
+  ~nsEnvironment() = default;
 };
 
 #endif /* !nsEnvironment_h__ */
