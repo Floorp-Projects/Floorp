@@ -88,13 +88,9 @@ const expected = [
   },
   // TODO: verify that directory is empty.
   { relPath: "cache2", isDirectory: true },
-  // Bug 1757252.
-  { relPath: "cert9.db" },
   { relPath: "compatibility.ini" },
   { relPath: "crashes", isDirectory: true },
   { relPath: "data", isDirectory: true },
-  // Bug 1757252.
-  { relPath: "key4.db" },
   { relPath: "local", isDirectory: true },
   { relPath: "minidumps", isDirectory: true },
   // `mozinfo.json` is an artifact of the testing infrastructure.

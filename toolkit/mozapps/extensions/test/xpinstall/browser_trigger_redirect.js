@@ -1,6 +1,9 @@
 // ----------------------------------------------------------------------------
 // Tests that the InstallTrigger callback can redirect to a relative url.
 function test() {
+  // This test depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;

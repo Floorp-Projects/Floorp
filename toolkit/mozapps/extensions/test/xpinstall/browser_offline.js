@@ -3,6 +3,9 @@ var proxyPrefValue;
 // ----------------------------------------------------------------------------
 // Tests that going offline cancels an in progress download.
 function test() {
+  // This test currently depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.downloadProgressCallback = download_progress;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

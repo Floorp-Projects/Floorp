@@ -18,9 +18,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=628410
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 628410 **/
 window.toString();
-InstallTrigger + "";
+
+if (SpecialPowers.Services.prefs.getBoolPref("extensions.InstallTrigger.enabled") &&
+    SpecialPowers.Services.prefs.getBoolPref("extensions.InstallTriggerImpl.enabled")) {
+  InstallTrigger + "";
+}
+
 console + "";
 ok(true, "Things didn't throw");
 

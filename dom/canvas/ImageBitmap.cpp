@@ -439,7 +439,6 @@ static already_AddRefed<SourceSurface> CreateSurfaceFromRawData(
   // Copy the source buffer in the _cropRect_ area into a new SourceSurface.
   RefPtr<DataSourceSurface> result =
       CropAndCopyDataSourceSurface(dataSurface, cropRect);
-
   if (NS_WARN_IF(!result)) {
     return nullptr;
   }
@@ -452,17 +451,17 @@ static already_AddRefed<SourceSurface> CreateSurfaceFromRawData(
     }
   }
 
-  if (aOptions.mResizeWidth.WasPassed() || aOptions.mResizeHeight.WasPassed()) {
-    dataSurface = result->GetDataSurface();
-    result = ScaleDataSourceSurface(dataSurface, aOptions);
+  if (aOptions.mPremultiplyAlpha == PremultiplyAlpha::Premultiply) {
+    result = AlphaPremultiplyDataSourceSurface(result);
+
     if (NS_WARN_IF(!result)) {
       return nullptr;
     }
   }
 
-  if (aOptions.mPremultiplyAlpha == PremultiplyAlpha::Premultiply) {
-    result = AlphaPremultiplyDataSourceSurface(result);
-
+  if (aOptions.mResizeWidth.WasPassed() || aOptions.mResizeHeight.WasPassed()) {
+    dataSurface = result->GetDataSurface();
+    result = ScaleDataSourceSurface(dataSurface, aOptions);
     if (NS_WARN_IF(!result)) {
       return nullptr;
     }
@@ -928,6 +927,17 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateImageBitmapInternal(
     }
   }
 
+  if (requiresPremultiply) {
+    if (!dataSurface) {
+      dataSurface = surface->GetDataSurface();
+    }
+
+    surface = AlphaPremultiplyDataSourceSurface(dataSurface, true);
+    if (NS_WARN_IF(!surface)) {
+      return nullptr;
+    }
+  }
+
   // resize if required
   if (aOptions.mResizeWidth.WasPassed() || aOptions.mResizeHeight.WasPassed()) {
     if (!dataSurface) {
@@ -944,13 +954,12 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateImageBitmapInternal(
     cropRect.SetRect(0, 0, surface->GetSize().width, surface->GetSize().height);
   }
 
-  if (requiresPremultiply || requiresUnpremultiply) {
+  if (requiresUnpremultiply) {
     if (!dataSurface) {
       dataSurface = surface->GetDataSurface();
     }
 
-    surface =
-        AlphaPremultiplyDataSourceSurface(dataSurface, requiresPremultiply);
+    surface = AlphaPremultiplyDataSourceSurface(dataSurface, false);
     if (NS_WARN_IF(!surface)) {
       return nullptr;
     }
@@ -1182,7 +1191,9 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   array.ComputeState();
   const SurfaceFormat FORMAT = SurfaceFormat::R8G8B8A8;
   // ImageData's underlying data is not alpha-premultiplied.
-  auto alphaType = gfxAlphaType::NonPremult;
+  auto alphaType = (aOptions.mPremultiplyAlpha == PremultiplyAlpha::Premultiply)
+                       ? gfxAlphaType::Premult
+                       : gfxAlphaType::NonPremult;
 
   const uint32_t BYTES_PER_PIXEL = BytesPerPixel(FORMAT);
   const uint32_t imageWidth = aImageData.Width();

@@ -2,6 +2,9 @@
 // Test whether an install fails when an invalid hash is included
 // This verifies bug 302284
 function test() {
+  // This test depends on InstallTrigger.install availability.
+  setInstallTriggerPrefs();
+
   Harness.downloadFailedCallback = download_failed;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
