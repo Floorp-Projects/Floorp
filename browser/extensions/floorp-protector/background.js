@@ -99,6 +99,7 @@ async function FLOORP_PROT_DEFAULT() {
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", false);
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", false);
     browser.aboutConfigPrefs.setBoolPref("browser.privatebrowsing.autostart", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting.block_mozAddonManager", false);
     console.log("Successfully reset the configuration." );
 }
 
@@ -225,9 +226,9 @@ async function FLOORP_PROT_LV4() {
     browser.aboutConfigPrefs.setBoolPref("browser.tabs.crashReporting.sendReport",		false);
     browser.aboutConfigPrefs.setBoolPref("browser.crashReports.unsubmittedCheck.enabled",	false);
     browser.aboutConfigPrefs.setBoolPref("network.allow-experiments", false);
-    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting", true);
     browser.aboutConfigPrefs.setBoolPref("browser.chrome.site_icons", false);
     browser.aboutConfigPrefs.setBoolPref("browser.privatebrowsing.autostart", true);
+    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting.block_mozAddonManager", true);
     console.log("Configuration successfully set to LV4." );
 }
 
