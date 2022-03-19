@@ -189,6 +189,7 @@ bool ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
     return false;
   }
 
+  mMutex.AssertCurrentThreadOwns();
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(mOwner));
   if (!channel) {
     return false;

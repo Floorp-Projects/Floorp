@@ -44,8 +44,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   nsresult Shutdown();
 
-  nsresult AddTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
-  nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
+  nsresult AddTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock)
+      REQUIRES(aTimer->mMutex);
+  nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock)
+      REQUIRES(aTimer->mMutex);
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
 
@@ -65,25 +67,27 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   // These internal helper methods must be called while mMonitor is held.
   // AddTimerInternal returns false if the insertion failed.
-  bool AddTimerInternal(nsTimerImpl* aTimer);
-  bool RemoveTimerInternal(nsTimerImpl* aTimer);
-  void RemoveLeadingCanceledTimersInternal();
-  void RemoveFirstTimerInternal();
-  nsresult Init();
+  bool AddTimerInternal(nsTimerImpl* aTimer) REQUIRES(mMonitor);
+  bool RemoveTimerInternal(nsTimerImpl* aTimer)
+      REQUIRES(mMonitor, aTimer->mMutex);
+  void RemoveLeadingCanceledTimersInternal() REQUIRES(mMonitor);
+  void RemoveFirstTimerInternal() REQUIRES(mMonitor);
+  nsresult Init() REQUIRES(mMonitor);
 
-  void PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef);
+  void PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
+      REQUIRES(mMonitor);
 
   nsCOMPtr<nsIThread> mThread;
   // Lock ordering requirements:
   // (optional) ThreadWrapper::sMutex ->
   // (optional) nsTimerImpl::mMutex   ->
   // TimerThread::mMonitor
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
-  bool mShutdown;
-  bool mWaiting;
-  bool mNotified;
-  bool mSleeping;
+  bool mShutdown GUARDED_BY(mMonitor);
+  bool mWaiting GUARDED_BY(mMonitor);
+  bool mNotified GUARDED_BY(mMonitor);
+  bool mSleeping GUARDED_BY(mMonitor);
 
   class Entry final : public nsTimerImplHolder {
     const TimeStamp mTimeout;
@@ -117,10 +121,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     TimeStamp Timeout() const { return mTimeout; }
   };
 
-  nsTArray<mozilla::UniquePtr<Entry>> mTimers;
+  nsTArray<mozilla::UniquePtr<Entry>> mTimers GUARDED_BY(mMonitor);
   // Set only at the start of the thread's Run():
-  uint32_t mAllowedEarlyFiringMicroseconds;
-  ProfilerThreadId mProfilerThreadId;
+  uint32_t mAllowedEarlyFiringMicroseconds GUARDED_BY(mMonitor);
+  ProfilerThreadId mProfilerThreadId GUARDED_BY(mMonitor);
 };
 
 #endif /* TimerThread_h___ */
