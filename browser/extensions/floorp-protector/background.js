@@ -6,7 +6,7 @@
         document.getElementById("UASelector").value = "2";
         var floorpPL = await browser.aboutConfigPrefs.getPref("floorp.protection.protectlevel");
     }
-    console.log("floorp.protection.protectlevel: " + floorpPL);
+    console.log("floorp.protection.protectlevel-startevent: " + floorpPL);
 })();
 
 document.getElementById("UASelector").addEventListener("change", function (e) {
@@ -14,26 +14,26 @@ document.getElementById("UASelector").addEventListener("change", function (e) {
     var selected = e.currentTarget.value;
     if (selected == "0") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "0");
-        console.log("floorp.protection.protectlevel: " + selected);
+        console.log("floorp.protection.protectlevel-selectevent: " + selected);
         FLOORP_PROT_DEFAULT();
     } else if (selected == "1") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "1");
-        console.log("floorp.protection.protectlevel: " + selected);
+        console.log("floorp.protection.protectlevel-selectevent: " + selected);
         FLOORP_PROT_DEFAULT();
         FLOORP_PROT_LV1();
     } else if (selected == "2") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "2");
-        console.log("floorp.protection.protectlevel: " + selected);
+        console.log("floorp.protection.protectlevel-selectevent: " + selected);
         FLOORP_PROT_DEFAULT();
         FLOORP_PROT_LV2();
     } else if (selected == "3") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "3");
-        console.log("floorp.protection.protectlevel: " + selected);
+        console.log("floorp.protection.protectlevel-selectevent: " + selected);
         FLOORP_PROT_DEFAULT();
         FLOORP_PROT_LV3();
     } else if (selected == "4") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "4");
-        console.log("floorp.protection.protectlevel: " + selected);
+        console.log("floorp.protection.protectlevel-selectevent: " + selected);
         FLOORP_PROT_DEFAULT();
         FLOORP_PROT_LV4();
     }
@@ -55,7 +55,7 @@ window.addEventListener("load",function(){
             document.getElementById("UASelector").value = "4";
         }
         var floorpPL = await browser.aboutConfigPrefs.getPref("floorp.protection.protectlevel")
-        console.log("floorp.protection.protectlevel: " + floorpPL)
+        console.log("floorp.protection.protectlevel-loadevent: " + floorpPL)
     })();
 })
 
