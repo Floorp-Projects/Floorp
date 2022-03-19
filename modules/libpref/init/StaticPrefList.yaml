@@ -4544,6 +4544,22 @@
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
 
+# Whether the InstallTrigger implementation should be enabled (or hidden and
+# none of its methods available).
+- name: extensions.InstallTriggerImpl.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Whether the InstallTrigger implementation should be enabled (or completely
+# hidden), separate from InstallTriggerImpl because InstallTrigger is improperly
+# used also for UA detection.
+- name: extensions.InstallTrigger.enabled
+  type: bool
+  value: true
+  mirror: always
+
+
 # Whether the background.service_worker in the extension manifest.json file
 # is enabled.
 - name: extensions.backgroundServiceWorker.enabled

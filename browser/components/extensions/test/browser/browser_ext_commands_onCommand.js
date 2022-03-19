@@ -378,3 +378,55 @@ add_task(async function test_user_defined_commands() {
   SimpleTest.endMonitorConsole();
   await waitForConsole;
 });
+
+add_task(async function test_commands_event_page() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "eventpage@commands" } },
+      background: { persistent: false },
+      commands: {
+        "toggle-feature": {
+          suggested_key: {
+            default: "Alt+Shift+J",
+          },
+        },
+      },
+    },
+    background() {
+      browser.commands.onCommand.addListener(name => {
+        browser.test.assertEq(name, "toggle-feature", "command received");
+        browser.test.sendMessage("onCommand");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  assertPersistentListeners(extension, "commands", "onCommand", {
+    primed: false,
+  });
+
+  // test events waken background
+  await extension.terminateBackground();
+  assertPersistentListeners(extension, "commands", "onCommand", {
+    primed: true,
+  });
+
+  EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
+
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("onCommand");
+  ok(true, "persistent event woke background");
+  assertPersistentListeners(extension, "commands", "onCommand", {
+    primed: false,
+  });
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});

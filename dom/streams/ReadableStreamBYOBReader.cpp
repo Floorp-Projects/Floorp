@@ -125,7 +125,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     if (aChunk.isObject()) {
       // We need to wrap this as the chunk could have come from
       // another compartment.
-      JS::RootedObject chunk(aCx, &aChunk.toObject());
+      JS::Rooted<JSObject*> chunk(aCx, &aChunk.toObject());
       if (!JS_WrapObject(aCx, &chunk)) {
         return;
       }

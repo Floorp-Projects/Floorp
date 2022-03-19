@@ -37,6 +37,17 @@ function extractChromeRoot(path) {
   return chromeRootPath;
 }
 
+function setInstallTriggerPrefs() {
+  Services.prefs.setBoolPref("extensions.InstallTrigger.enabled", true);
+  Services.prefs.setBoolPref("extensions.InstallTriggerImpl.enabled", true);
+  registerCleanupFunction(clearInstallTriggerPrefs);
+}
+
+function clearInstallTriggerPrefs() {
+  Services.prefs.clearUserPref("extensions.InstallTrigger.enabled");
+  Services.prefs.clearUserPref("extensions.InstallTriggerImpl.enabled");
+}
+
 /**
  * This is a test harness designed to handle responding to UI during the process
  * of installing an XPI. A test can set callbacks to hear about specific parts

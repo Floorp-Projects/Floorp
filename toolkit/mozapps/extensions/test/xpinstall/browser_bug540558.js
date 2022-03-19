@@ -1,6 +1,9 @@
 // ----------------------------------------------------------------------------
 // Tests that calling InstallTrigger.installChrome works
 function test() {
+  // This test depends on InstallTrigger.installChrome availability.
+  setInstallTriggerPrefs();
+
   Harness.installEndedCallback = check_xpi_install;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

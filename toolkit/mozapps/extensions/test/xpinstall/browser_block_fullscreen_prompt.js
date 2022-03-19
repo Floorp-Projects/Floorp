@@ -25,9 +25,9 @@ function changeFullscreen(browser, fullscreenState) {
   });
 }
 
-function triggerInstall(browser, trigger) {
-  return SpecialPowers.spawn(browser, [trigger], async function(trigger) {
-    content.InstallTrigger.install(trigger);
+function triggerInstall(browser, xpi_url) {
+  return SpecialPowers.spawn(browser, [xpi_url], async function(xpi_url) {
+    content.location = xpi_url;
   });
 }
 
@@ -47,7 +47,7 @@ add_task(async function testFullscreenBlockAddonInstallPrompt() {
   let addonEventPromise = TestUtils.topicObserved(
     "addon-install-fullscreen-blocked"
   );
-  await triggerInstall(gBrowser.selectedBrowser, { XPI: "amosigned.xpi" });
+  await triggerInstall(gBrowser.selectedBrowser, "amosigned.xpi");
   await addonEventPromise;
 
   // Test if addon installation prompt has been blocked
@@ -70,20 +70,22 @@ add_task(async function testFullscreenBlockAddonInstallPrompt() {
 
 // This tests if the addon install prompt is closed when entering fullscreen
 add_task(async function testFullscreenCloseAddonInstallPrompt() {
-  let triggers = encodeURIComponent(
-    JSON.stringify({
-      XPI: "amosigned.xpi",
-    })
-  );
-  let target = TESTROOT + "installtrigger.html?" + triggers;
-
   // Open example.com
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
   // Trigger addon installation
-  let addonEventPromise = TestUtils.topicObserved("addon-install-blocked");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, target);
+  let addonEventPromise = TestUtils.topicObserved(
+    "webextension-permission-prompt"
+  );
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [TESTROOT + "amosigned.xpi"],
+    xpi_url => {
+      this.content.location = xpi_url;
+    }
+  );
   // Wait for addon install event
+  info("Wait for webextension-permission-prompt");
   await addonEventPromise;
 
   // Test if addon installation prompt is visible
@@ -93,10 +95,10 @@ add_task(async function testFullscreenCloseAddonInstallPrompt() {
   );
   Assert.ok(
     PopupNotifications.getNotification(
-      "addon-install-blocked",
+      "addon-webext-permissions",
       gBrowser.selectedBrowser
     ) != null,
-    "Opened notification is installation blocked prompt"
+    "Opened notification is webextension permissions prompt"
   );
 
   // Switch to fullscreen and test for addon installation prompt close

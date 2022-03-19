@@ -106,11 +106,6 @@ linux1804-64-clang-trunk-qr/opt:
         - awsy
         - browsertime
 
-linux1804-64-domstreams-qr/debug:
-    build-platform: linux64-domstreams/debug
-    test-sets:
-        - domstreams-tests
-
 ##
 # Windows platforms (matching /windows.*/)
 

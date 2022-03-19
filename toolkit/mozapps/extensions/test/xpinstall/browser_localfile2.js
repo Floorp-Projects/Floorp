@@ -1,3 +1,12 @@
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.InstallTrigger.enabled", true],
+      ["extensions.InstallTriggerImpl.enabled", true],
+    ],
+  });
+});
+
 // ----------------------------------------------------------------------------
 // Test whether an install fails if the url is a local file when requested from
 // web content

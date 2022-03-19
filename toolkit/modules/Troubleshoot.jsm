@@ -65,6 +65,8 @@ const PREFS_FOR_DISPLAY = [
   "extensions.checkCompatibility",
   "extensions.formautofill.",
   "extensions.lastAppVersion",
+  "extensions.InstallTrigger.enabled",
+  "extensions.InstallTriggerImpl.enabled",
   "fission.autostart",
   "font.",
   "general.autoScroll",
