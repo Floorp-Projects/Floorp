@@ -5466,7 +5466,6 @@ var SessionStoreInternal = {
         aTabState.entries.length == 1 &&
         (aTabState.entries[0].url == "about:blank" ||
           aTabState.entries[0].url == "about:newtab" ||
-          aTabState.entries[0].url == "about:printpreview" ||
           aTabState.entries[0].url == "about:privatebrowsing") &&
         !aTabState.userTypedValue
       )
@@ -5491,10 +5490,7 @@ var SessionStoreInternal = {
       aTabState.userTypedValue ||
       (aTabState.attributes && aTabState.attributes.customizemode == "true") ||
       (aTabState.entries.length &&
-        !(
-          aTabState.entries[0].url == "about:printpreview" ||
-          aTabState.entries[0].url == "about:privatebrowsing"
-        ))
+        aTabState.entries[0].url != "about:privatebrowsing")
     );
   },
 
