@@ -101,9 +101,10 @@ class nsTimerImpl {
 
   nsresult InitCommon(const mozilla::TimeDuration& aDelay, uint32_t aType,
                       Callback&& newCallback,
-                      const mozilla::MutexAutoLock& aProofOfLock);
+                      const mozilla::MutexAutoLock& aProofOfLock)
+      REQUIRES(mMutex);
 
-  Callback& GetCallback() {
+  Callback& GetCallback() REQUIRES(mMutex) {
     mMutex.AssertCurrentThreadOwns();
     return mCallback;
   }
@@ -131,7 +132,8 @@ class nsTimerImpl {
            mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
   }
 
-  void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock);
+  void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock)
+      REQUIRES(mMutex);
 
   void GetName(nsACString& aName);
 
@@ -165,23 +167,23 @@ class nsTimerImpl {
   // Updated only after this timer has been removed from the timer thread.
   int32_t mGeneration;
 
-  mozilla::TimeDuration mDelay;
+  mozilla::TimeDuration mDelay GUARDED_BY(mMutex);
   // Never updated while in the TimerThread's timer list.  Only updated
   // before adding to that list or during nsTimerImpl::Fire(), when it has
   // been removed from the TimerThread's list.  TimerThread can access
   // mTimeout of any timer in the list safely
   mozilla::TimeStamp mTimeout;
 
-  RefPtr<nsITimer> mITimer;
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
-  Callback mCallback;
+  RefPtr<nsITimer> mITimer GUARDED_BY(mMutex);
+  mozilla::Mutex mMutex;
+  Callback mCallback GUARDED_BY(mMutex);
   // Counter because in rare cases we can Fire reentrantly
-  unsigned int mFiring;
+  unsigned int mFiring GUARDED_BY(mMutex);
 
-  static mozilla::StaticMutex sDeltaMutex MOZ_UNANNOTATED;
-  static double sDeltaSum;
-  static double sDeltaSumSquared;
-  static double sDeltaNum;
+  static mozilla::StaticMutex sDeltaMutex;
+  static double sDeltaSum GUARDED_BY(sDeltaMutex);
+  static double sDeltaSumSquared GUARDED_BY(sDeltaMutex);
+  static double sDeltaNum GUARDED_BY(sDeltaMutex);
 };
 
 class nsTimer final : public nsITimer {
