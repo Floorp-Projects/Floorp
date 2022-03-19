@@ -12,7 +12,22 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionShortcuts.jsm"
 );
 
-this.commands = class extends ExtensionAPI {
+this.commands = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onCommand({ fire }) {
+      let listener = (eventName, commandName) => {
+        fire.async(commandName);
+      };
+      this.on("command", listener);
+      return {
+        unregister: () => this.off("command", listener),
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   static onUninstall(extensionId) {
     return ExtensionShortcuts.removeCommandsFromStorage(extensionId);
   }
@@ -39,17 +54,10 @@ this.commands = class extends ExtensionAPI {
         reset: name => this.extension.shortcuts.resetCommand(name),
         onCommand: new EventManager({
           context,
-          name: "commands.onCommand",
+          module: "commands",
+          event: "onCommand",
           inputHandling: true,
-          register: fire => {
-            let listener = (eventName, commandName) => {
-              fire.async(commandName);
-            };
-            this.on("command", listener);
-            return () => {
-              this.off("command", listener);
-            };
-          },
+          extensionApi: this,
         }).api(),
       },
     };
