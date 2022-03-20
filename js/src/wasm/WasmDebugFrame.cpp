@@ -33,10 +33,10 @@ using namespace js::wasm;
 
 /* static */
 DebugFrame* DebugFrame::from(Frame* fp) {
-  MOZ_ASSERT(GetNearestEffectiveTls(fp)->code().metadata().debugEnabled);
+  MOZ_ASSERT(GetNearestEffectiveInstance(fp)->code().metadata().debugEnabled);
   auto* df =
       reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
-  MOZ_ASSERT(GetNearestEffectiveTls(fp) == df->instance());
+  MOZ_ASSERT(GetNearestEffectiveInstance(fp) == df->instance());
   return df;
 }
 
@@ -59,10 +59,12 @@ void DebugFrame::alignmentStaticAsserts() {
 #endif
 }
 
-Instance* DebugFrame::instance() { return GetNearestEffectiveTls(&frame_); }
+Instance* DebugFrame::instance() {
+  return GetNearestEffectiveInstance(&frame_);
+}
 
 const Instance* DebugFrame::instance() const {
-  return GetNearestEffectiveTls(&frame_);
+  return GetNearestEffectiveInstance(&frame_);
 }
 
 GlobalObject* DebugFrame::global() { return &instance()->object()->global(); }
