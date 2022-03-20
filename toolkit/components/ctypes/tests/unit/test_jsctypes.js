@@ -2168,6 +2168,10 @@ function run_type_ctor_class_tests(
     Assert.ok(d.__proto__ === t.prototype);
     Assert.ok(d instanceof t);
     Assert.ok(d.constructor === t);
+    // Other objects that are not instances of 't'.
+    Assert.equal({} instanceof t, false);
+    Assert.equal(t.__proto__ instanceof t, false);
+    Assert.equal(t.prototype instanceof t, false);
   }
 }
 
