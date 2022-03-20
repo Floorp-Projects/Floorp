@@ -94,7 +94,7 @@
  *     |          Caller TLS slot          |   \
  *     |          Callee TLS slot          |   | \
  *     +-----------------------------------+   |  \
- *     |       Shadowstack area (Win64)    |   |  wasm::FrameWithTls
+ *     |       Shadowstack area (Win64)    |   |  wasm::FrameWithInstances
  *     |            (32 bytes)             |   |  /
  *     +-----------------------------------+   | /  <= SP "Before call"
  *     |          Return address           |   //   <= SP "After call"
@@ -105,7 +105,7 @@
  *     |             ....                  |
  *     +-----------------------------------+    <=  SP
  *
- * The FrameWithTls is a struct with four fields: the saved FP, the return
+ * The FrameWithInstances is a struct with four fields: the saved FP, the return
  * address, and the two TLS slots; the shadow stack area is there only on Win64
  * and is unused by wasm but is part of the native ABI, with which the wasm ABI
  * is mostly compatible.  The slots for caller and callee TLS are only populated
@@ -133,10 +133,10 @@
  * References in the multi-return area are covered by the caller's map, as these
  * slots outlive the call.
  *
- * The address "Before call", ie the part of the FrameWithTls above the Frame,
- * must be aligned to WasmStackAlignment, and everything follows from that, with
- * padding inserted for alignment as required for stack arguments.  In turn
- * WasmStackAlignment is at least as large as the largest parameter type.
+ * The address "Before call", ie the part of the FrameWithInstances above the
+ * Frame, must be aligned to WasmStackAlignment, and everything follows from
+ * that, with padding inserted for alignment as required for stack arguments. In
+ * turn WasmStackAlignment is at least as large as the largest parameter type.
  *
  * The address of the multiple-results area is currently 8-byte aligned by Ion
  * and its alignment in baseline is uncertain, see bug 1747787.  Result values
@@ -361,55 +361,57 @@ static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
 static_assert(sizeof(Frame) == 2 * sizeof(void*),
               "Frame is a two pointer structure");
 
-// Note that sizeof(FrameWithTls) does not account for ShadowStackSpace.  Use
-// FrameWithTls::sizeOf() if you are not incorporating ShadowStackSpace through
-// other means (eg the ABIArgIter).
+// Note that sizeof(FrameWithInstances) does not account for ShadowStackSpace.
+// Use FrameWithInstances::sizeOf() if you are not incorporating ShadowStackSpace
+// through other means (eg the ABIArgIter).
 
-class FrameWithTls : public Frame {
+class FrameWithInstances : public Frame {
   // `ShadowStackSpace` bytes will be allocated here on Win64, at higher
   // addresses than Frame and at lower addresses than the TLS fields.
 
   // The TLS area MUST be two pointers exactly.
-  Instance* calleeTls_;
-  Instance* callerTls_;
+  Instance* calleeInstance_;
+  Instance* callerInstance_;
 
  public:
-  Instance* calleeTls() { return calleeTls_; }
-  Instance* callerTls() { return callerTls_; }
+  Instance* calleeInstance() { return calleeInstance_; }
+  Instance* callerInstance() { return callerInstance_; }
 
   constexpr static uint32_t sizeOf() {
-    return sizeof(wasm::FrameWithTls) + js::jit::ShadowStackSpace;
+    return sizeof(wasm::FrameWithInstances) + js::jit::ShadowStackSpace;
   }
 
-  constexpr static uint32_t sizeOfTlsFields() {
-    return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
+  constexpr static uint32_t sizeOfInstanceFields() {
+    return sizeof(wasm::FrameWithInstances) - sizeof(wasm::Frame);
   }
 
-  constexpr static uint32_t calleeTlsOffset() {
-    return offsetof(FrameWithTls, calleeTls_) + js::jit::ShadowStackSpace;
+  constexpr static uint32_t calleeInstanceOffset() {
+    return offsetof(FrameWithInstances, calleeInstance_) +
+           js::jit::ShadowStackSpace;
   }
 
-  constexpr static uint32_t calleeTlsOffsetWithoutFrame() {
-    return calleeTlsOffset() - sizeof(wasm::Frame);
+  constexpr static uint32_t calleeInstanceOffsetWithoutFrame() {
+    return calleeInstanceOffset() - sizeof(wasm::Frame);
   }
 
-  constexpr static uint32_t callerTlsOffset() {
-    return offsetof(FrameWithTls, callerTls_) + js::jit::ShadowStackSpace;
+  constexpr static uint32_t callerInstanceOffset() {
+    return offsetof(FrameWithInstances, callerInstance_) +
+           js::jit::ShadowStackSpace;
   }
 
-  constexpr static uint32_t callerTlsOffsetWithoutFrame() {
-    return callerTlsOffset() - sizeof(wasm::Frame);
+  constexpr static uint32_t callerInstanceOffsetWithoutFrame() {
+    return callerInstanceOffset() - sizeof(wasm::Frame);
   }
 };
 
-static_assert(FrameWithTls::calleeTlsOffsetWithoutFrame() ==
+static_assert(FrameWithInstances::calleeInstanceOffsetWithoutFrame() ==
                   js::jit::ShadowStackSpace,
               "Callee tls stored right above the return address.");
-static_assert(FrameWithTls::callerTlsOffsetWithoutFrame() ==
+static_assert(FrameWithInstances::callerInstanceOffsetWithoutFrame() ==
                   js::jit::ShadowStackSpace + sizeof(void*),
               "Caller tls stored right above the callee tls.");
 
-static_assert(FrameWithTls::sizeOfTlsFields() == 2 * sizeof(void*),
+static_assert(FrameWithInstances::sizeOfInstanceFields() == 2 * sizeof(void*),
               "There are only two additional slots");
 
 #if defined(JS_CODEGEN_ARM64)

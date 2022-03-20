@@ -3806,7 +3806,7 @@ void MacroAssembler::loadWasmGlobalPtr(uint32_t globalDataOffset,
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                                           const wasm::CalleeDesc& callee) {
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
 
   // Load the callee, before the caller's registers are clobbered.
   uint32_t globalDataOffset = callee.importGlobalDataOffset();
@@ -3829,7 +3829,7 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                     InstanceReg);
 
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
   loadWasmPinnedRegsFromTls();
 
   return call(desc, ABINonArgReg0);
@@ -3841,9 +3841,9 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
   MOZ_ASSERT(instanceArg != ABIArg());
 
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
 
   if (instanceArg.kind() == ABIArg::GPR) {
     movePtr(InstanceReg, instanceArg.gpr());
@@ -3907,9 +3907,9 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
   }
   loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
   return call(desc, scratch);
 }
 
@@ -4000,10 +4000,10 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   // branches predicted not taken, normally).
 
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
   movePtr(newTlsTemp, InstanceReg);
   storePtr(InstanceReg,
-           Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
 
 #ifdef WASM_HAS_HEAPREG
   // Use the null pointer exception resulting from loading HeapReg from a null
@@ -4026,7 +4026,7 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   // Restore registers and realm and join up with the fast path.
 
-  loadPtr(Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall),
+  loadPtr(Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall),
           InstanceReg);
   loadWasmPinnedRegsFromTls();
   switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);

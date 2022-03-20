@@ -37,14 +37,17 @@ using namespace js::wasm;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-static Instance* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
-  return *reinterpret_cast<Instance**>(reinterpret_cast<uint8_t*>(fp) +
-                                       FrameWithTls::callerTlsOffset());
+static Instance* ExtractCallerInstanceFromFrameWithInstances(Frame* fp) {
+  return *reinterpret_cast<Instance**>(
+      reinterpret_cast<uint8_t*>(fp) +
+      FrameWithInstances::callerInstanceOffset());
 }
 
-static const Instance* ExtractCalleeTlsFromFrameWithTls(const Frame* fp) {
+static const Instance* ExtractCalleeInstanceFromFrameWithInstances(
+    const Frame* fp) {
   return *reinterpret_cast<Instance* const*>(
-      reinterpret_cast<const uint8_t*>(fp) + FrameWithTls::calleeTlsOffset());
+      reinterpret_cast<const uint8_t*>(fp) +
+      FrameWithInstances::calleeInstanceOffset());
 }
 
 /*****************************************************************************/
@@ -218,7 +221,7 @@ void WasmFrameIter::popFrame() {
   MOZ_ASSERT(callsite);
 
   if (callsite->mightBeCrossInstance()) {
-    tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
+    tls_ = ExtractCallerInstanceFromFrameWithInstances(prevFP);
   }
 
   MOZ_ASSERT(code_ == &tls()->code());
@@ -997,7 +1000,7 @@ const Instance* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
       MOZ_ASSERT(!LookupCode(fp->returnAddress()));
-      return ExtractCalleeTlsFromFrameWithTls(fp);
+      return ExtractCalleeInstanceFromFrameWithInstances(fp);
     }
 
     uint8_t* returnAddress = fp->returnAddress();
@@ -1006,14 +1009,14 @@ const Instance* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
     MOZ_ASSERT(codeRange);
 
     if (codeRange->isEntry()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
+      return ExtractCalleeInstanceFromFrameWithInstances(fp);
     }
 
     MOZ_ASSERT(codeRange->kind() == CodeRange::Function);
     MOZ_ASSERT(code);
     const CallSite* callsite = code->lookupCallSite(returnAddress);
     if (callsite->mightBeCrossInstance()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
+      return ExtractCalleeInstanceFromFrameWithInstances(fp);
     }
 
     fp = fp->wasmCaller();
