@@ -3004,7 +3004,6 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
       nullptr,      // mayResolve
       nullptr,      // finalize
       nullptr,      // call
-      nullptr,      // hasInstance
       nullptr,      // construct
       nullptr,      // trace
   };
@@ -3908,7 +3907,6 @@ static const JSClassOps FinalizeCounterClassOps = {
     nullptr,                    // mayResolve
     finalize_counter_finalize,  // finalize
     nullptr,                    // call
-    nullptr,                    // hasInstance
     nullptr,                    // construct
     nullptr,                    // trace
 };
@@ -4678,7 +4676,6 @@ static const JSClassOps CloneBufferObjectClassOps = {
     nullptr,                      // mayResolve
     CloneBufferObject::Finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     nullptr,                      // trace
 };
@@ -5048,7 +5045,6 @@ class ShapeSnapshotObject : public NativeObject {
     nullptr,                        // mayResolve
     ShapeSnapshotObject::finalize,  // finalize
     nullptr,                        // call
-    nullptr,                        // hasInstance
     nullptr,                        // construct
     ShapeSnapshotObject::trace,     // trace
 };

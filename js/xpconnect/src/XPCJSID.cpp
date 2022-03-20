@@ -68,7 +68,6 @@ static const JSClassOps sIID_ClassOps = {
     IID_MayResolve,    // mayResolve
     nullptr,           // finalize
     nullptr,           // call
-    nullptr,           // hasInstance
     nullptr,           // construct
     nullptr,           // trace
 };

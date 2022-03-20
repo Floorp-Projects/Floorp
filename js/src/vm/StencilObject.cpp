@@ -32,7 +32,6 @@ using namespace js;
     nullptr,                  // mayResolve
     StencilObject::finalize,  // finalize
     nullptr,                  // call
-    nullptr,                  // hasInstance
     nullptr,                  // construct
     nullptr,                  // trace
 };
@@ -82,7 +81,6 @@ JS::Stencil* StencilObject::stencil() const {
     nullptr,                           // mayResolve
     StencilXDRBufferObject::finalize,  // finalize
     nullptr,                           // call
-    nullptr,                           // hasInstance
     nullptr,                           // construct
     nullptr,                           // trace
 };

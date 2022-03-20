@@ -40,7 +40,6 @@ const JSClassOps PluralRulesObject::classOps_ = {
     nullptr,                      // mayResolve
     PluralRulesObject::finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     nullptr,                      // trace
 };

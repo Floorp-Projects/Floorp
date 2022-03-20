@@ -271,10 +271,10 @@ static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
-constexpr uint32_t WasmCallerTlsOffsetBeforeCall =
-    wasm::FrameWithTls::callerTlsOffsetWithoutFrame();
-constexpr uint32_t WasmCalleeTlsOffsetBeforeCall =
-    wasm::FrameWithTls::calleeTlsOffsetWithoutFrame();
+constexpr uint32_t WasmCallerInstanceOffsetBeforeCall =
+    wasm::FrameWithInstances::callerInstanceOffsetWithoutFrame();
+constexpr uint32_t WasmCalleeInstanceOffsetBeforeCall =
+    wasm::FrameWithInstances::calleeInstanceOffsetWithoutFrame();
 
 // Allocation sites may be passed to GC thing allocation methods either via a
 // register (for baseline compilation) or an enum indicating one of the
@@ -3507,10 +3507,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   [[nodiscard]] bool wasmStartTry(size_t* tryNoteIndex);
 #endif
 
-  // Load all pinned regs via WasmTlsReg.  If the trapOffset is something, give
-  // the first load a trap descriptor with type IndirectCallToNull, so that a
-  // null Tls will cause a trap.
-  void loadWasmPinnedRegsFromTls(
+  // Load all pinned regs via InstanceReg.  If the trapOffset is something,
+  // give the first load a trap descriptor with type IndirectCallToNull, so that
+  // a null Tls will cause a trap.
+  void loadWasmPinnedRegsFromInstance(
       mozilla::Maybe<wasm::BytecodeOffset> trapOffset = mozilla::Nothing());
 
   // Returns a pair: the offset of the undefined (trapping) instruction, and
@@ -4469,7 +4469,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void switchToRealm(const void* realm, Register scratch);
   void switchToObjectRealm(Register obj, Register scratch);
   void switchToBaselineFrameRealm(Register scratch);
-  void switchToWasmTlsRealm(Register scratch1, Register scratch2);
+  void switchToWasmInstanceRealm(Register scratch1, Register scratch2);
   void debugAssertContextRealm(const void* realm, Register scratch);
 
   void loadJitActivation(Register dest);

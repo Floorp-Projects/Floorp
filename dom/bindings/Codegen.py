@@ -690,7 +690,6 @@ class CGDOMJSClass(CGThing):
               ${mayResolve}, /* mayResolve */
               ${finalize}, /* finalize */
               ${call}, /* call */
-              nullptr,               /* hasInstance */
               nullptr,               /* construct */
               ${trace}, /* trace */
             };
@@ -976,7 +975,6 @@ class CGInterfaceObjectJSClass(CGThing):
                     nullptr,               /* mayResolve */
                     nullptr,               /* finalize */
                     ${ctorname}, /* call */
-                    nullptr,               /* hasInstance */
                     ${ctorname}, /* construct */
                     nullptr,               /* trace */
                 };

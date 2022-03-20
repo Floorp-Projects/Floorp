@@ -72,7 +72,6 @@ const JSClassOps NumberFormatObject::classOps_ = {
     nullptr,                       // mayResolve
     NumberFormatObject::finalize,  // finalize
     nullptr,                       // call
-    nullptr,                       // hasInstance
     nullptr,                       // construct
     nullptr,                       // trace
 };

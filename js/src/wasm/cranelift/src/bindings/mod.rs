@@ -124,7 +124,7 @@ impl GlobalDesc {
         }
     }
 
-    /// Get the offset from the `WasmTlsReg` to the memory representing this global variable.
+    /// Get the offset from the `InstanceReg` to the memory representing this global variable.
     pub fn tls_offset(self) -> usize {
         unsafe { low_level::global_tlsOffset(self.0) }
     }
@@ -138,7 +138,7 @@ impl GlobalDesc {
 pub struct TableDesc(*const low_level::TableDesc);
 
 impl TableDesc {
-    /// Get the offset from the `WasmTlsReg` to the `wasm::TableTls` representing this table.
+    /// Get the offset from the `InstanceReg` to the `wasm::TableInstanceData` representing this table.
     pub fn tls_offset(self) -> usize {
         unsafe { low_level::table_tlsOffset(self.0) }
     }

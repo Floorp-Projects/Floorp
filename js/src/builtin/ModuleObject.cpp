@@ -775,7 +775,6 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
     nullptr,                 // mayResolve
     ModuleObject::finalize,  // finalize
     nullptr,                 // call
-    nullptr,                 // hasInstance
     nullptr,                 // construct
     ModuleObject::trace,     // trace
 };

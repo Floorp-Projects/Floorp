@@ -40,19 +40,19 @@ struct ExportArg {
 
 using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
 
-// FuncImportTls describes the region of wasm global memory allocated in the
-// instance's thread-local storage for a function import. This is accessed
-// directly from JIT code and mutated by Instance as exits become optimized and
-// deoptimized.
+// FuncImportInstanceData describes the region of wasm global memory allocated
+// in the instance's thread-local storage for a function import. This is
+// accessed directly from JIT code and mutated by Instance as exits become
+// optimized and deoptimized.
 
-struct FuncImportTls {
+struct FuncImportInstanceData {
   // The code to call at an import site: a wasm callee, a thunk into C++, or a
   // thunk into JIT code.
   void* code;
 
-  // The callee's Instance pointer, which must be loaded to WasmTlsReg (along
-  // with any pinned registers) before calling 'code'.
-  Instance* tls;
+  // The callee's Instance pointer, which must be loaded to InstanceReg
+  // (along with any pinned registers) before calling 'code'.
+  Instance* instance;
 
   // The callee function's realm.
   JS::Realm* realm;
@@ -63,11 +63,11 @@ struct FuncImportTls {
   static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
 };
 
-// TableTls describes the region of wasm global memory allocated in the
+// TableInstanceData describes the region of wasm global memory allocated in the
 // instance's thread-local storage which is accessed directly from JIT code
 // to bounds-check and index the table.
 
-struct TableTls {
+struct TableInstanceData {
   // Length of the table in number of elements (not bytes).
   uint32_t length;
 
@@ -83,14 +83,14 @@ struct TableTls {
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system
   // ABI with the additional ABI requirements that:
-  //  - WasmTlsReg and any pinned registers have been loaded appropriately
+  //  - InstanceReg and any pinned registers have been loaded appropriately
   //  - if this is a heterogeneous table that requires a signature check,
   //    WasmTableCallSigReg holds the signature id.
   void* code;
 
   // The pointer to the callee's instance's Instance. This must be loaded into
-  // WasmTlsReg before calling 'code'.
-  Instance* tls;
+  // InstanceReg before calling 'code'.
+  Instance* instance;
 };
 
 }  // namespace wasm

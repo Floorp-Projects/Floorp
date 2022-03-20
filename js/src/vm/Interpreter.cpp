@@ -839,12 +839,11 @@ extern bool JS::InstanceofOperator(JSContext* cx, HandleObject obj,
 }
 
 bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
-  const JSClass* clasp = obj->getClass();
-  RootedValue local(cx, v);
-  if (JSHasInstanceOp hasInstance = clasp->getHasInstance()) {
-    return hasInstance(cx, obj, &local, bp);
+  if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
+    RootedValue local(cx, v);
+    return Proxy::hasInstance(cx, obj, &local, bp);
   }
-  return JS::InstanceofOperator(cx, obj, local, bp);
+  return JS::InstanceofOperator(cx, obj, v, bp);
 }
 
 JSType js::TypeOfObject(JSObject* obj) {

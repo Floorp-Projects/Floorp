@@ -1192,7 +1192,6 @@ const JSClassOps XrayExpandoObjectClassOps = {
     nullptr,                // mayResolve
     ExpandoObjectFinalize,  // finalize
     nullptr,                // call
-    nullptr,                // hasInstance
     nullptr,                // construct
     nullptr,                // trace
 };

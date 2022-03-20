@@ -355,7 +355,6 @@ static const JSClassOps SavedFrameClassOps = {
     nullptr,               // mayResolve
     SavedFrame::finalize,  // finalize
     nullptr,               // call
-    nullptr,               // hasInstance
     nullptr,               // construct
     nullptr,               // trace
 };

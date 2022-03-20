@@ -41,7 +41,6 @@ const JSClassOps ListFormatObject::classOps_ = {
     nullptr,                     // mayResolve
     ListFormatObject::finalize,  // finalize
     nullptr,                     // call
-    nullptr,                     // hasInstance
     nullptr,                     // construct
     nullptr,                     // trace
 };

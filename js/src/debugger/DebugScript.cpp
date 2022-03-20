@@ -55,7 +55,6 @@ const JSClassOps DebugScriptObject::classOps_ = {
     nullptr,                      // mayResolve
     DebugScriptObject::finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     DebugScriptObject::trace,     // trace
 };

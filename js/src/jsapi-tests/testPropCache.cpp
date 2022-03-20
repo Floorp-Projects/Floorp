@@ -25,7 +25,6 @@ static const JSClassOps CounterClassOps = {
     nullptr,     // mayResolve
     nullptr,     // finalize
     nullptr,     // call
-    nullptr,     // hasInstance
     nullptr,     // construct
     nullptr,     // trace
 };

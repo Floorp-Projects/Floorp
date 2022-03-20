@@ -917,7 +917,7 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
   masm.bind(&fail);
   {
     if (gen->compilingWasm()) {
-      masm.Push(WasmTlsReg);
+      masm.Push(InstanceReg);
     }
     int32_t framePushedAfterTls = masm.framePushed();
 
@@ -942,7 +942,7 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
     restoreVolatile(output);
 
     if (gen->compilingWasm()) {
-      masm.Pop(WasmTlsReg);
+      masm.Pop(InstanceReg);
     }
   }
 
@@ -1018,7 +1018,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
   masm.bind(&fail);
   {
     if (gen->compilingWasm()) {
-      masm.Push(WasmTlsReg);
+      masm.Push(InstanceReg);
     }
     int32_t framePushedAfterTls = masm.framePushed();
 
@@ -1051,7 +1051,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     restoreVolatile(output);
 
     if (gen->compilingWasm()) {
-      masm.Pop(WasmTlsReg);
+      masm.Pop(InstanceReg);
     }
   }
 
@@ -1120,9 +1120,9 @@ void CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch* lir) {
 
 void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   MOZ_ASSERT(gen->compilingWasm());
-  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == WasmTlsReg);
+  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == InstanceReg);
 
-  masm.Push(WasmTlsReg);
+  masm.Push(InstanceReg);
   int32_t framePushedAfterTls = masm.framePushed();
 
   Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
@@ -1136,8 +1136,9 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   // Handle divide by zero.
   if (lir->canBeDivideByZero()) {
     Label nonZero;
-    // We can use WasmTlsReg as temp register because we preserved it before.
-    masm.branchTest64(Assembler::NonZero, rhs, rhs, WasmTlsReg, &nonZero);
+    // We can use InstanceReg as temp register because we preserved it
+    // before.
+    masm.branchTest64(Assembler::NonZero, rhs, rhs, InstanceReg, &nonZero);
     masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
     masm.bind(&nonZero);
   }
@@ -1178,14 +1179,14 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   MOZ_ASSERT(eax == output.low);
 
   masm.bind(&done);
-  masm.Pop(WasmTlsReg);
+  masm.Pop(InstanceReg);
 }
 
 void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   MOZ_ASSERT(gen->compilingWasm());
-  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == WasmTlsReg);
+  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == InstanceReg);
 
-  masm.Push(WasmTlsReg);
+  masm.Push(InstanceReg);
   int32_t framePushedAfterTls = masm.framePushed();
 
   Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
@@ -1197,8 +1198,9 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   // Prevent divide by zero.
   if (lir->canBeDivideByZero()) {
     Label nonZero;
-    // We can use WasmTlsReg as temp register because we preserved it before.
-    masm.branchTest64(Assembler::NonZero, rhs, rhs, WasmTlsReg, &nonZero);
+    // We can use InstanceReg as temp register because we preserved it
+    // before.
+    masm.branchTest64(Assembler::NonZero, rhs, rhs, InstanceReg, &nonZero);
     masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
     masm.bind(&nonZero);
   }
@@ -1223,7 +1225,7 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   masm.movl(edx, output.high);
   MOZ_ASSERT(eax == output.low);
 
-  masm.Pop(WasmTlsReg);
+  masm.Pop(InstanceReg);
 }
 
 void CodeGeneratorX86::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
