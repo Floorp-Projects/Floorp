@@ -65,7 +65,6 @@ const JSClassOps DateTimeFormatObject::classOps_ = {
     nullptr,                         // mayResolve
     DateTimeFormatObject::finalize,  // finalize
     nullptr,                         // call
-    nullptr,                         // hasInstance
     nullptr,                         // construct
     nullptr,                         // trace
 };

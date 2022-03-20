@@ -1277,7 +1277,6 @@ const JSClassOps WasmModuleObject::classOps_ = {
     nullptr,                     // mayResolve
     WasmModuleObject::finalize,  // finalize
     nullptr,                     // call
-    nullptr,                     // hasInstance
     nullptr,                     // construct
     nullptr,                     // trace
 };
@@ -1863,7 +1862,6 @@ const JSClassOps WasmInstanceObject::classOps_ = {
     nullptr,                       // mayResolve
     WasmInstanceObject::finalize,  // finalize
     nullptr,                       // call
-    nullptr,                       // hasInstance
     nullptr,                       // construct
     WasmInstanceObject::trace,     // trace
 };
@@ -2583,7 +2581,6 @@ const JSClassOps WasmMemoryObject::classOps_ = {
     nullptr,                     // mayResolve
     WasmMemoryObject::finalize,  // finalize
     nullptr,                     // call
-    nullptr,                     // hasInstance
     nullptr,                     // construct
     nullptr,                     // trace
 };
@@ -3008,7 +3005,6 @@ const JSClassOps WasmTableObject::classOps_ = {
     nullptr,                    // mayResolve
     WasmTableObject::finalize,  // finalize
     nullptr,                    // call
-    nullptr,                    // hasInstance
     nullptr,                    // construct
     WasmTableObject::trace,     // trace
 };
@@ -3446,7 +3442,6 @@ const JSClassOps WasmGlobalObject::classOps_ = {
     nullptr,                     // mayResolve
     WasmGlobalObject::finalize,  // finalize
     nullptr,                     // call
-    nullptr,                     // hasInstance
     nullptr,                     // construct
     WasmGlobalObject::trace,     // trace
 };
@@ -3699,7 +3694,6 @@ const JSClassOps WasmTagObject::classOps_ = {
     nullptr,                  // mayResolve
     WasmTagObject::finalize,  // finalize
     nullptr,                  // call
-    nullptr,                  // hasInstance
     nullptr,                  // construct
     nullptr,                  // trace
 };
@@ -3854,7 +3848,6 @@ const JSClassOps WasmExceptionObject::classOps_ = {
     nullptr,                        // mayResolve
     WasmExceptionObject::finalize,  // finalize
     nullptr,                        // call
-    nullptr,                        // hasInstance
     nullptr,                        // construct
     WasmExceptionObject::trace,     // trace
 };
@@ -5222,7 +5215,6 @@ const JSClassOps ResolveResponseClosure::classOps_ = {
     nullptr,                           // mayResolve
     ResolveResponseClosure::finalize,  // finalize
     nullptr,                           // call
-    nullptr,                           // hasInstance
     nullptr,                           // construct
     nullptr,                           // trace
 };

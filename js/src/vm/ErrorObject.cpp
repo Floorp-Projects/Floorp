@@ -183,7 +183,6 @@ static const JSClassOps ErrorObjectClassOps = {
     nullptr,       // mayResolve
     exn_finalize,  // finalize
     nullptr,       // call
-    nullptr,       // hasInstance
     nullptr,       // construct
     nullptr,       // trace
 };

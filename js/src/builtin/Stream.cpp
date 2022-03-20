@@ -378,7 +378,6 @@ static const JSClassOps ReadableByteStreamControllerClassOps = {
     nullptr,                               // mayResolve
     ReadableByteStreamControllerFinalize,  // finalize
     nullptr,                               // call
-    nullptr,                               // hasInstance
     nullptr,                               // construct
     nullptr,                               // trace
 };

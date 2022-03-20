@@ -333,7 +333,6 @@ static const JSClassOps ForOfPICClassOps = {
     nullptr,               // mayResolve
     ForOfPIC_finalize,     // finalize
     nullptr,               // call
-    nullptr,               // hasInstance
     nullptr,               // construct
     ForOfPIC_traceObject,  // trace
 };

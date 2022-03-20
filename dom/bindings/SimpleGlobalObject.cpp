@@ -69,7 +69,6 @@ static const JSClassOps SimpleGlobalClassOps = {
     SimpleGlobal_finalize,
     nullptr,
     nullptr,
-    nullptr,
     JS_GlobalObjectTraceHook,
 };
 

@@ -843,10 +843,6 @@ bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
     RootedValue local(cx, v);
     return Proxy::hasInstance(cx, obj, &local, bp);
   }
-  if (JSHasInstanceOp hasInstance = obj->getClass()->getHasInstance()) {
-    RootedValue local(cx, v);
-    return hasInstance(cx, obj, &local, bp);
-  }
   return JS::InstanceofOperator(cx, obj, v, bp);
 }
 
