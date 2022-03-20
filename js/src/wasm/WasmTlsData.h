@@ -50,8 +50,8 @@ struct FuncImportTls {
   // thunk into JIT code.
   void* code;
 
-  // The callee's Instance pointer, which must be loaded to WasmTlsReg (along
-  // with any pinned registers) before calling 'code'.
+  // The callee's Instance pointer, which must be loaded to InstanceReg
+  // (along with any pinned registers) before calling 'code'.
   Instance* tls;
 
   // The callee function's realm.
@@ -83,13 +83,13 @@ struct TableTls {
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system
   // ABI with the additional ABI requirements that:
-  //  - WasmTlsReg and any pinned registers have been loaded appropriately
+  //  - InstanceReg and any pinned registers have been loaded appropriately
   //  - if this is a heterogeneous table that requires a signature check,
   //    WasmTableCallSigReg holds the signature id.
   void* code;
 
   // The pointer to the callee's instance's Instance. This must be loaded into
-  // WasmTlsReg before calling 'code'.
+  // InstanceReg before calling 'code'.
   Instance* tls;
 };
 

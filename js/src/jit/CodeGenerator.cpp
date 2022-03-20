@@ -8078,7 +8078,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 
   if (reloadRegs) {
     masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetBeforeCall),
-                 WasmTlsReg);
+                 InstanceReg);
     masm.loadWasmPinnedRegsFromTls();
     if (switchRealm) {
       masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
@@ -8608,7 +8608,7 @@ void CodeGenerator::visitModPowTwoD(LModPowTwoD* ins) {
 }
 
 void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
-  masm.Push(WasmTlsReg);
+  masm.Push(InstanceReg);
   int32_t framePushedAfterTls = masm.framePushed();
 
   FloatRegister lhs = ToFloatRegister(ins->lhs());
@@ -8624,7 +8624,7 @@ void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
   masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ModD,
                    mozilla::Some(tlsOffset), MoveOp::DOUBLE);
 
-  masm.Pop(WasmTlsReg);
+  masm.Pop(InstanceReg);
 }
 
 void CodeGenerator::visitBigIntAdd(LBigIntAdd* ins) {
