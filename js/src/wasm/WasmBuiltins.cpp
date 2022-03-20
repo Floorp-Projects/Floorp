@@ -701,7 +701,7 @@ static void* WasmHandleTrap() {
       if (!recursion.check(cx)) {
         return nullptr;
       }
-      if (activation->wasmExitTls()->isInterrupted()) {
+      if (activation->wasmExitInstance()->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
       ReportTrapError(cx, JSMSG_OVER_RECURSED);
