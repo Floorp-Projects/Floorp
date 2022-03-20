@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
@@ -765,6 +766,23 @@ void XPC_WN_Helper_Finalize(JS::GCContext* gcx, JSObject* obj) {
   WrappedNativeFinalize(gcx, obj, WN_HELPER);
 }
 
+// RAII class used to store the wrapper in the context when resolving a lazy
+// property on its JS reflector. This is used by XPC_WN_MaybeResolving to allow
+// adding properties while resolving.
+class MOZ_RAII AutoSetResolvingWrapper {
+ public:
+  AutoSetResolvingWrapper(XPCCallContext& ccx, XPCWrappedNative* wrapper)
+      : mCcx(ccx), mOldResolvingWrapper(ccx.SetResolvingWrapper(wrapper)) {}
+
+  ~AutoSetResolvingWrapper() {
+    (void)mCcx.SetResolvingWrapper(mOldResolvingWrapper);
+  }
+
+ private:
+  XPCCallContext& mCcx;
+  XPCWrappedNative* mOldResolvingWrapper;
+};
+
 bool XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id,
                            bool* resolvedp) {
   nsresult rv = NS_OK;
@@ -778,18 +796,11 @@ bool XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 
   nsCOMPtr<nsIXPCScriptable> scr = wrapper->GetScriptable();
   if (scr && scr->WantResolve()) {
-    XPCWrappedNative* oldResolvingWrapper;
-    bool allowPropMods = scr->AllowPropModsDuringResolve();
-
-    if (allowPropMods) {
-      oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
+    mozilla::Maybe<AutoSetResolvingWrapper> asrw;
+    if (scr->AllowPropModsDuringResolve()) {
+      asrw.emplace(ccx, wrapper);
     }
-
     rv = scr->Resolve(wrapper, cx, obj, id, &resolved, &retval);
-
-    if (allowPropMods) {
-      (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
-    }
   }
 
   old = ccx.SetResolveName(old);
@@ -816,11 +827,10 @@ bool XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id,
       XPCWrappedNative* wrapperForInterfaceNames =
           (scr && scr->DontReflectInterfaceNames()) ? nullptr : wrapper;
 
-      XPCWrappedNative* oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
+      AutoSetResolvingWrapper asrw(ccx, wrapper);
       retval = DefinePropertyIfFound(
           ccx, obj, id, set, iface, member, wrapper->GetScope(), false,
           wrapperForInterfaceNames, nullptr, scr, JSPROP_ENUMERATE, resolvedp);
-      (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
     }
   }
 
