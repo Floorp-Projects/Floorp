@@ -600,7 +600,6 @@ static const JSClassOps FileObjectClassOps = {
     nullptr,               // mayResolve
     FileObject::finalize,  // finalize
     nullptr,               // call
-    nullptr,               // hasInstance
     nullptr,               // construct
     nullptr,               // trace
 };

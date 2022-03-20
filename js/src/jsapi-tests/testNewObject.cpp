@@ -107,7 +107,6 @@ BEGIN_TEST(testNewObject_1) {
       nullptr,        // mayResolve
       nullptr,        // finalize
       nullptr,        // call
-      nullptr,        // hasInstance
       constructHook,  // construct
       nullptr,        // trace
   };
@@ -162,7 +161,6 @@ static const JSClassOps Base_classOps = {
     nullptr,  // mayResolve
     nullptr,  // finalize
     nullptr,  // call
-    nullptr,  // hasInstance
     nullptr,  // construct
     nullptr,  // trace
 };

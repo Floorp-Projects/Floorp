@@ -322,7 +322,6 @@ static const JSClassOps ArrayBufferObjectClassOps = {
     nullptr,                      // mayResolve
     ArrayBufferObject::finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     nullptr,                      // trace
 };

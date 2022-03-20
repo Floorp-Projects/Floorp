@@ -68,7 +68,6 @@ static const JSClassOps RecordObjectClassOps = {
     nullptr,      // mayResolve
     nullptr,      // finalize
     nullptr,      // call
-    nullptr,      // hasInstance
     nullptr,      // construct
     nullptr,      // trace
 };

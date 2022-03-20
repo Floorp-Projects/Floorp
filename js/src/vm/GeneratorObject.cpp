@@ -343,7 +343,6 @@ const JSClassOps GeneratorObject::classOps_ = {
     nullptr,                                   // mayResolve
     nullptr,                                   // finalize
     nullptr,                                   // call
-    nullptr,                                   // hasInstance
     nullptr,                                   // construct
     CallTraceMethod<AbstractGeneratorObject>,  // trace
 };

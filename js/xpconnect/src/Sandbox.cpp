@@ -531,7 +531,6 @@ static const JSClassOps SandboxClassOps = {
     JS_MayResolveStandardClass,      // mayResolve
     sandbox_finalize,                // finalize
     nullptr,                         // call
-    nullptr,                         // hasInstance
     nullptr,                         // construct
     JS_GlobalObjectTraceHook,        // trace
 };

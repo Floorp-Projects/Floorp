@@ -23,7 +23,6 @@ BEGIN_TEST(testResolveRecursion) {
       nullptr,     // mayResolve
       nullptr,     // finalize
       nullptr,     // call
-      nullptr,     // hasInstance
       nullptr,     // construct
       nullptr,     // trace
   };
@@ -164,7 +163,6 @@ const JSClass* getGlobalClass() override {
       nullptr,                   // mayResolve
       nullptr,                   // finalize
       nullptr,                   // call
-      nullptr,                   // hasInstance
       nullptr,                   // construct
       JS_GlobalObjectTraceHook,  // trace
   };

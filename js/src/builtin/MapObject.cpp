@@ -193,7 +193,6 @@ static const JSClassOps MapIteratorObjectClassOps = {
     nullptr,                      // mayResolve
     MapIteratorObject::finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     nullptr,                      // trace
 };
@@ -433,7 +432,6 @@ const JSClassOps MapObject::classOps_ = {
     nullptr,   // mayResolve
     finalize,  // finalize
     nullptr,   // call
-    nullptr,   // hasInstance
     nullptr,   // construct
     trace,     // trace
 };
@@ -1007,7 +1005,6 @@ static const JSClassOps SetIteratorObjectClassOps = {
     nullptr,                      // mayResolve
     SetIteratorObject::finalize,  // finalize
     nullptr,                      // call
-    nullptr,                      // hasInstance
     nullptr,                      // construct
     nullptr,                      // trace
 };
@@ -1215,7 +1212,6 @@ const JSClassOps SetObject::classOps_ = {
     nullptr,   // mayResolve
     finalize,  // finalize
     nullptr,   // call
-    nullptr,   // hasInstance
     nullptr,   // construct
     trace,     // trace
 };

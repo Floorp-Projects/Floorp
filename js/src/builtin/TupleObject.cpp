@@ -91,7 +91,6 @@ const JSClassOps TupleObjectClassOps = {
     tup_mayResolve,  // mayResolve
     nullptr,         // finalize
     nullptr,         // call
-    nullptr,         // hasInstance
     nullptr,         // construct
     nullptr,         // trace
 };
