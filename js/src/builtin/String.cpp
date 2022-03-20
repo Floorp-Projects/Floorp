@@ -449,7 +449,6 @@ static const JSClassOps StringObjectClassOps = {
     str_mayResolve,  // mayResolve
     nullptr,         // finalize
     nullptr,         // call
-    nullptr,         // hasInstance
     nullptr,         // construct
     nullptr,         // trace
 };

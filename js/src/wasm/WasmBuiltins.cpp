@@ -380,7 +380,7 @@ static bool WasmHandleDebugTrap() {
   JSContext* cx = TlsContext.get();  // Cold code
   JitActivation* activation = CallingActivation(cx);
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = GetNearestEffectiveTls(fp);
+  Instance* instance = GetNearestEffectiveInstance(fp);
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
@@ -550,7 +550,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
           continue;
         }
 
-        MOZ_ASSERT(iter.tls() == iter.instance());
+        MOZ_ASSERT(iter.instance() == iter.instance());
         iter.instance()->setPendingException(ref);
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
@@ -701,7 +701,7 @@ static void* WasmHandleTrap() {
       if (!recursion.check(cx)) {
         return nullptr;
       }
-      if (activation->wasmExitTls()->isInterrupted()) {
+      if (activation->wasmExitInstance()->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
       ReportTrapError(cx, JSMSG_OVER_RECURSED);

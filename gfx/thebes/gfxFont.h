@@ -18,7 +18,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
@@ -292,36 +294,26 @@ struct FontCacheSizes {
   size_t mShapedWords;    // memory used by the per-font shapedWord caches
 };
 
-class gfxFontCacheExpirationTracker
-    : public ExpirationTrackerImpl<gfxFont, 3, ::detail::PlaceholderLock,
-                                   ::detail::PlaceholderAutoLock> {
+class gfxFontCache final
+    : public ExpirationTrackerImpl<gfxFont, 3, mozilla::Mutex,
+                                   mozilla::MutexAutoLock> {
  protected:
-  typedef ::detail::PlaceholderLock Lock;
-  typedef ::detail::PlaceholderAutoLock AutoLock;
-
-  Lock mLock;
-
-  AutoLock FakeLock() { return AutoLock(mLock); }
-
-  Lock& GetMutex() override {
-    mozilla::AssertIsMainThreadOrServoFontMetricsLocked();
-    return mLock;
-  }
-
- public:
+  // Expiration tracker implementation.
   enum { FONT_TIMEOUT_SECONDS = 10 };
 
-  explicit gfxFontCacheExpirationTracker(nsIEventTarget* aEventTarget)
-      : ExpirationTrackerImpl<gfxFont, 3, Lock, AutoLock>(
-            FONT_TIMEOUT_SECONDS * 1000, "gfxFontCache", aEventTarget) {}
-};
+  typedef mozilla::Mutex Lock;
+  typedef mozilla::MutexAutoLock AutoLock;
 
-class gfxFontCache final : private gfxFontCacheExpirationTracker {
+  // This protects the ExpirationTracker tables.
+  Lock mMutex = Lock("fontCacheExpirationMutex");
+
+  Lock& GetMutex() override { return mMutex; }
+
  public:
-  enum { SHAPED_WORD_TIMEOUT_SECONDS = 60 };
-
   explicit gfxFontCache(nsIEventTarget* aEventTarget);
   ~gfxFontCache();
+
+  enum { SHAPED_WORD_TIMEOUT_SECONDS = 60 };
 
   /*
    * Get the global gfxFontCache.  You must call Init() before
@@ -353,28 +345,37 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
   // Other gfxFont objects may be still in use but they will be pushed
   // into the expiration queues and removed.
   void Flush() {
-    mFonts.Clear();
+    {
+      mozilla::AutoWriteLock lock(mCacheLock);
+      mFonts.Clear();
+    }
     AgeAllGenerations();
   }
-
-  uint32_t Count() const { return mFonts.Count(); }
 
   void FlushShapedWordCaches();
   void NotifyGlyphsChanged();
 
+  void AgeCachedWords();
+
   void RunWordCacheExpirationTimer() {
-    if (mWordCacheExpirationTimer && !mTimerRunning) {
-      mWordCacheExpirationTimer->InitWithNamedFuncCallback(
-          WordCacheExpirationTimerCallback, this,
-          SHAPED_WORD_TIMEOUT_SECONDS * 1000, nsITimer::TYPE_REPEATING_SLACK,
-          "gfxFontCache::WordCacheExpiration");
-      mTimerRunning = true;
+    if (!mTimerRunning) {
+      mozilla::AutoWriteLock lock(mCacheLock);
+      if (!mTimerRunning && mWordCacheExpirationTimer) {
+        mWordCacheExpirationTimer->InitWithNamedFuncCallback(
+            WordCacheExpirationTimerCallback, this,
+            SHAPED_WORD_TIMEOUT_SECONDS * 1000, nsITimer::TYPE_REPEATING_SLACK,
+            "gfxFontCache::WordCacheExpiration");
+        mTimerRunning = true;
+      }
     }
   }
   void PauseWordCacheExpirationTimer() {
-    if (mWordCacheExpirationTimer && mTimerRunning) {
-      mWordCacheExpirationTimer->Cancel();
-      mTimerRunning = false;
+    if (mTimerRunning) {
+      mozilla::AutoWriteLock lock(mCacheLock);
+      if (mTimerRunning && mWordCacheExpirationTimer) {
+        mWordCacheExpirationTimer->Cancel();
+        mTimerRunning = false;
+      }
     }
   }
 
@@ -383,11 +384,23 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const;
 
-  void AgeAllGenerations() { AgeAllGenerationsLocked(FakeLock()); }
+  void AgeAllGenerations() {
+    AutoLock lock(mMutex);
+    AgeAllGenerationsLocked(lock);
+  }
 
-  void RemoveObject(gfxFont* aFont) { RemoveObjectLocked(aFont, FakeLock()); }
+  void RemoveObject(gfxFont* aFont) {
+    AutoLock lock(mMutex);
+    RemoveObjectLocked(aFont, lock);
+  }
+
+  mozilla::RWLock& GetCacheLock() { return mCacheLock; }
 
  protected:
+  // Guards the global font hashtable, separately from the expiration-tracker
+  // records.
+  mutable mozilla::RWLock mCacheLock = mozilla::RWLock("fontCacheLock");
+
   class MemoryReporter final : public nsIMemoryReporter {
     ~MemoryReporter() = default;
 
@@ -406,15 +419,13 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
   };
 
   nsresult AddObject(gfxFont* aFont) {
-    return AddObjectLocked(aFont, FakeLock());
+    AutoLock lock(mMutex);
+    return AddObjectLocked(aFont, lock);
   }
 
   // This gets called when the timeout has expired on a zero-refcount
   // font; we just delete it.
-  void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override {
-    NotifyExpired(aFont);
-  }
-
+  void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override;
   void NotifyExpired(gfxFont* aFont);
 
   void DestroyFont(gfxFont* aFont);
@@ -456,11 +467,12 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
     gfxFont* MOZ_UNSAFE_REF("tracking for deferred deletion") mFont;
   };
 
-  nsTHashtable<HashEntry> mFonts;
+  nsTHashtable<HashEntry> mFonts GUARDED_BY(mCacheLock);
 
   static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
-  nsCOMPtr<nsITimer> mWordCacheExpirationTimer;
-  bool mTimerRunning = false;
+
+  nsCOMPtr<nsITimer> mWordCacheExpirationTimer GUARDED_BY(mCacheLock);
+  std::atomic<bool> mTimerRunning = false;
 };
 
 class gfxTextPerfMetrics {

@@ -230,7 +230,7 @@ void BaseCompiler::pushHeapBase() {
 void BaseCompiler::pushHeapBase() {
   RegPtr heapBase = need<RegPtr>();
 #  ifdef RABALDR_PIN_INSTANCE
-  movePtr(RegPtr(WasmTlsReg), heapBase);
+  movePtr(RegPtr(InstanceReg), heapBase);
 #  else
   fr.loadTlsPtr(heapBase);
 #  endif
@@ -438,8 +438,9 @@ bool BaseCompiler::needTlsForAccess(const AccessCheck& check) {
 RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
   if (needTlsForAccess(check)) {
 #ifdef RABALDR_PIN_INSTANCE
-    // NOTE, returning WasmTlsReg here depends for correctness on *ALL* clients
-    // not attempting to free this register and not push it on the value stack.
+    // NOTE, returning InstanceReg here depends for correctness on *ALL*
+    // clients not attempting to free this register and not push it on the value
+    // stack.
     //
     // We have assertions in place to guard against that, so the risk of the
     // leaky abstraction is acceptable.  performRegisterLeakCheck() will ensure
@@ -448,7 +449,7 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
     // registers at startup.  Thus if the Tls is freed incorrectly it will end
     // up in that union via the regalloc, and if it is pushed incorrectly it
     // will end up in the union via the stack.
-    return RegPtr(WasmTlsReg);
+    return RegPtr(InstanceReg);
 #else
     RegPtr tls = need<RegPtr>();
     fr.loadTlsPtr(tls);
@@ -462,7 +463,7 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
                                            RegPtr specific) {
   if (needTlsForAccess(check)) {
 #ifdef RABALDR_PIN_INSTANCE
-    movePtr(RegPtr(WasmTlsReg), specific);
+    movePtr(RegPtr(InstanceReg), specific);
 #else
     fr.loadTlsPtr(specific);
 #endif

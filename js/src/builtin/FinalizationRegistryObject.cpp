@@ -98,7 +98,6 @@ const JSClassOps FinalizationRegistrationsObject::classOps_ = {
     nullptr,                                    // mayResolve
     FinalizationRegistrationsObject::finalize,  // finalize
     nullptr,                                    // call
-    nullptr,                                    // hasInstance
     nullptr,                                    // construct
     FinalizationRegistrationsObject::trace,     // trace
 };
@@ -211,7 +210,6 @@ const JSClassOps FinalizationRegistryObject::classOps_ = {
     nullptr,                               // mayResolve
     FinalizationRegistryObject::finalize,  // finalize
     nullptr,                               // call
-    nullptr,                               // hasInstance
     nullptr,                               // construct
     FinalizationRegistryObject::trace,     // trace
 };
@@ -651,7 +649,6 @@ const JSClassOps FinalizationQueueObject::classOps_ = {
     nullptr,                            // mayResolve
     FinalizationQueueObject::finalize,  // finalize
     nullptr,                            // call
-    nullptr,                            // hasInstance
     nullptr,                            // construct
     FinalizationQueueObject::trace,     // trace
 };

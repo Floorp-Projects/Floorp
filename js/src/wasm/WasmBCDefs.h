@@ -117,7 +117,7 @@ enum class RhsDestOp { True = true };
 // partly below in this file, partly in WasmBCRegDefs.h.
 //
 // RABALDR_PIN_INSTANCE
-//   WasmTlsReg is not allocatable and always holds the current Instance*,
+//   InstanceReg is not allocatable and always holds the current Instance*,
 //   except in known contexts where it could have been clobbered, such as after
 //   certain calls.
 //

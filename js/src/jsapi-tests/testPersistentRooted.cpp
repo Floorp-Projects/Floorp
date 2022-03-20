@@ -32,7 +32,6 @@ static const JSClassOps BarkWhenTracedClassClassOps = {
     nullptr,                        // mayResolve
     BarkWhenTracedClass::finalize,  // finalize
     nullptr,                        // call
-    nullptr,                        // hasInstance
     nullptr,                        // construct
     BarkWhenTracedClass::trace,     // trace
 };

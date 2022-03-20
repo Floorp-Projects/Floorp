@@ -1796,7 +1796,6 @@ const JSClassOps JS::DefaultGlobalClassOps = {
     JS_MayResolveStandardClass,      // mayResolve
     nullptr,                         // finalize
     nullptr,                         // call
-    nullptr,                         // hasInstance
     nullptr,                         // construct
     JS_GlobalObjectTraceHook,        // trace
 };

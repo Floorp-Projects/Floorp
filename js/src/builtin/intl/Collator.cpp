@@ -49,7 +49,6 @@ const JSClassOps CollatorObject::classOps_ = {
     nullptr,                   // mayResolve
     CollatorObject::finalize,  // finalize
     nullptr,                   // call
-    nullptr,                   // hasInstance
     nullptr,                   // construct
     nullptr,                   // trace
 };

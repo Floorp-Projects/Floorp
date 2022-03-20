@@ -155,8 +155,6 @@ bool PtrGetter(JSContext* cx, const JS::CallArgs& args);
 static bool CreateArray(JSContext* cx, unsigned argc, Value* vp);
 static bool ToString(JSContext* cx, unsigned argc, Value* vp);
 static bool ToSource(JSContext* cx, unsigned argc, Value* vp);
-static bool HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v,
-                        bool* bp);
 
 /*
  * Get the global "ctypes" object.
@@ -466,7 +464,6 @@ static const JSClassOps sCTypeProtoClassOps = {
     nullptr,            // mayResolve
     nullptr,            // finalize
     ConstructAbstract,  // call
-    nullptr,            // hasInstance
     ConstructAbstract,  // construct
     nullptr,            // trace
 };
@@ -487,7 +484,6 @@ static const JSClassOps sCTypeClassOps = {
     nullptr,               // mayResolve
     CType::Finalize,       // finalize
     CType::ConstructData,  // call
-    CType::HasInstance,    // hasInstance
     CType::ConstructData,  // construct
     CType::Trace,          // trace
 };
@@ -505,7 +501,6 @@ static const JSClassOps sCDataClassOps = {
     nullptr,             // mayResolve
     CData::Finalize,     // finalize
     FunctionType::Call,  // call
-    nullptr,             // hasInstance
     FunctionType::Call,  // construct
     nullptr,             // trace
 };
@@ -523,7 +518,6 @@ static const JSClassOps sCClosureClassOps = {
     nullptr,             // mayResolve
     CClosure::Finalize,  // finalize
     nullptr,             // call
-    nullptr,             // hasInstance
     nullptr,             // construct
     CClosure::Trace,     // trace
 };
@@ -552,7 +546,6 @@ static const JSClassOps sCDataFinalizerClassOps = {
     nullptr,                   // mayResolve
     CDataFinalizer::Finalize,  // finalize
     nullptr,                   // call
-    nullptr,                   // hasInstance
     nullptr,                   // construct
     nullptr,                   // trace
 };
@@ -728,7 +721,6 @@ static const JSClassOps sInt64ClassOps = {
     nullptr,              // mayResolve
     Int64Base::Finalize,  // finalize
     nullptr,              // call
-    nullptr,              // hasInstance
     nullptr,              // construct
     nullptr,              // trace
 };
@@ -4926,36 +4918,6 @@ bool CType::ToSource(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(result);
-  return true;
-}
-
-bool CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v,
-                        bool* bp) {
-  MOZ_ASSERT(CType::IsCType(obj));
-
-  Value slot = JS::GetReservedSlot(obj, SLOT_PROTO);
-  JS::Rooted<JSObject*> prototype(cx, &slot.toObject());
-  MOZ_ASSERT(prototype);
-  MOZ_ASSERT(CData::IsCDataProto(prototype));
-
-  *bp = false;
-  if (v.isPrimitive()) {
-    return true;
-  }
-
-  RootedObject proto(cx, &v.toObject());
-  for (;;) {
-    if (!JS_GetPrototype(cx, proto, &proto)) {
-      return false;
-    }
-    if (!proto) {
-      break;
-    }
-    if (proto == prototype) {
-      *bp = true;
-      break;
-    }
-  }
   return true;
 }
 

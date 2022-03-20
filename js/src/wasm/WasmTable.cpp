@@ -98,15 +98,15 @@ void Table::tracePrivate(JSTracer* trc) {
       if (isAsmJS_) {
 #ifdef DEBUG
         for (uint32_t i = 0; i < length_; i++) {
-          MOZ_ASSERT(!functions_[i].tls);
+          MOZ_ASSERT(!functions_[i].instance);
         }
 #endif
         break;
       }
 
       for (uint32_t i = 0; i < length_; i++) {
-        if (functions_[i].tls) {
-          functions_[i].tls->trace(trc);
+        if (functions_[i].instance) {
+          functions_[i].instance->trace(trc);
         } else {
           MOZ_ASSERT(!functions_[i].code);
         }
@@ -155,7 +155,7 @@ bool Table::getFuncRef(JSContext* cx, uint32_t index,
     return true;
   }
 
-  Instance& instance = *elem.tls;
+  Instance& instance = *elem.instance;
   const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
 
   RootedWasmInstanceObject instanceObj(cx, instance.object());
@@ -167,18 +167,18 @@ void Table::setFuncRef(uint32_t index, void* code, Instance* instance) {
   MOZ_ASSERT(isFunction());
 
   FunctionTableElem& elem = functions_[index];
-  if (elem.tls) {
-    gc::PreWriteBarrier(elem.tls->objectUnbarriered());
+  if (elem.instance) {
+    gc::PreWriteBarrier(elem.instance->objectUnbarriered());
   }
 
   if (!isAsmJS_) {
     elem.code = code;
-    elem.tls = instance;
-    MOZ_ASSERT(elem.tls->objectUnbarriered()->isTenured(),
+    elem.instance = instance;
+    MOZ_ASSERT(elem.instance->objectUnbarriered()->isTenured(),
                "no postWriteBarrier (Table::set)");
   } else {
     elem.code = code;
-    elem.tls = nullptr;
+    elem.instance = nullptr;
   }
 }
 
@@ -240,12 +240,12 @@ void Table::setNull(uint32_t index) {
     case TableRepr::Func: {
       MOZ_RELEASE_ASSERT(!isAsmJS_);
       FunctionTableElem& elem = functions_[index];
-      if (elem.tls) {
-        gc::PreWriteBarrier(elem.tls->objectUnbarriered());
+      if (elem.instance) {
+        gc::PreWriteBarrier(elem.instance->objectUnbarriered());
       }
 
       elem.code = nullptr;
-      elem.tls = nullptr;
+      elem.instance = nullptr;
       break;
     }
     case TableRepr::Ref: {
@@ -262,17 +262,17 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
     case TableRepr::Func: {
       MOZ_RELEASE_ASSERT(elemType().isFunc() && srcTable.elemType().isFunc());
       FunctionTableElem& dst = functions_[dstIndex];
-      if (dst.tls) {
-        gc::PreWriteBarrier(dst.tls->objectUnbarriered());
+      if (dst.instance) {
+        gc::PreWriteBarrier(dst.instance->objectUnbarriered());
       }
 
       FunctionTableElem& src = srcTable.functions_[srcIndex];
       dst.code = src.code;
-      dst.tls = src.tls;
+      dst.instance = src.instance;
 
-      if (dst.tls) {
+      if (dst.instance) {
         MOZ_ASSERT(dst.code);
-        MOZ_ASSERT(dst.tls->objectUnbarriered()->isTenured(),
+        MOZ_ASSERT(dst.instance->objectUnbarriered()->isTenured(),
                    "no postWriteBarrier (Table::copy)");
       } else {
         MOZ_ASSERT(!dst.code);

@@ -278,11 +278,11 @@ SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
  *   tiers up.  This is expected to be very hard.
  *
  * - Imported Wasm functions are never patched during tier-up.  Imports are held
- *   in FuncImportTls values in the instance's Tls, and for a wasm callee,
- *   what's stored is the raw code pointer into the best tier of the callee that
- *   was active at the time the import was resolved.  That could be baseline
- *   code, and if it is, the situation is as for Table entries: a call to an
- *   import will always go via that import's tier-1 code, which will tier up
+ *   in FuncImportInstanceData values in the instance's Tls, and for a wasm
+ *   callee, what's stored is the raw code pointer into the best tier of the
+ *   callee that was active at the time the import was resolved.  That could be
+ *   baseline code, and if it is, the situation is as for Table entries: a call
+ * to an import will always go via that import's tier-1 code, which will tier up
  *   with an indirect jump.
  *
  *   To do better, we must update all the import tables in the system that

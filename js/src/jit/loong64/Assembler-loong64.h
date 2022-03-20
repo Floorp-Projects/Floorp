@@ -193,18 +193,18 @@ static constexpr FloatRegister ABINonArgDoubleReg{FloatRegisters::f21,
 // TLS pointer argument register for WebAssembly functions. This must not alias
 // any other register used for passing function arguments or return values.
 // Preserved by WebAssembly functions. Must be nonvolatile.
-static constexpr Register WasmTlsReg = s4;
+static constexpr Register InstanceReg = s4;
 
 // Registers used for wasm table calls. These registers must be disjoint
-// from the ABI argument registers, WasmTlsReg and each other.
+// from the ABI argument registers, InstanceReg and each other.
 static constexpr Register WasmTableCallScratchReg0 = ABINonArgReg0;
 static constexpr Register WasmTableCallScratchReg1 = ABINonArgReg1;
 static constexpr Register WasmTableCallSigReg = ABINonArgReg2;
 static constexpr Register WasmTableCallIndexReg = ABINonArgReg3;
 
 // Register used as a scratch along the return path in the fast js -> wasm stub
-// code. This must not overlap ReturnReg, JSReturnOperand, or WasmTlsReg. It
-// must be a volatile register.
+// code. This must not overlap ReturnReg, JSReturnOperand, or InstanceReg.
+// It must be a volatile register.
 static constexpr Register WasmJitEntryReturnScratch = t1;
 
 static constexpr uint32_t ABIStackAlignment = 16;

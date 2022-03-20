@@ -2102,7 +2102,7 @@ void LIRGenerator::visitWasmBuiltinModD(MWasmBuiltinModD* ins) {
   MOZ_ASSERT(gen->compilingWasm());
   LWasmBuiltinModD* lir = new (alloc()) LWasmBuiltinModD(
       useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
-      useFixedAtStart(ins->tls(), WasmTlsReg));
+      useFixedAtStart(ins->tls(), InstanceReg));
   defineReturn(lir, ins);
 }
 
@@ -5240,7 +5240,7 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
 
   if (rval->type() == MIRType::Int64) {
     add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64),
-                                     useFixed(tlsParam, WasmTlsReg)));
+                                     useFixed(tlsParam, InstanceReg)));
     return;
   }
 
@@ -5261,14 +5261,14 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
   }
 
   LWasmReturn* lir =
-      new (alloc()) LWasmReturn(useFixed(tlsParam, WasmTlsReg), returnReg);
+      new (alloc()) LWasmReturn(useFixed(tlsParam, InstanceReg), returnReg);
   add(lir);
 }
 
 void LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins) {
   MDefinition* tlsParam = ins->getOperand(0);
   LWasmReturnVoid* lir =
-      new (alloc()) LWasmReturnVoid(useFixed(tlsParam, WasmTlsReg));
+      new (alloc()) LWasmReturnVoid(useFixed(tlsParam, InstanceReg));
   add(lir);
 }
 
