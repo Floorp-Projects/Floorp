@@ -29,6 +29,7 @@ const NotifyNew = (now, latest) =>{
 
 window.onload = () =>{
     (async() => {
+        await delay(3);
         var floorpPL = await browser.aboutConfigPrefs.getPref("floorp.protection.protectlevel");
         if (floorpPL == 2) {
             browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "2");

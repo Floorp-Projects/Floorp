@@ -6,7 +6,6 @@
 
 
 DIRS += [
-    "floorp-protector",
     "formautofill",
     "screenshots",
     "webcompat",
