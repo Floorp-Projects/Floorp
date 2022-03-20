@@ -168,7 +168,7 @@
  * performing a call, and so it saves live registers, moves arguments into ABI
  * locations, etc, before calling.  Abstractions in the masm make sure to pass
  * the instance pointer to an instance "method" call and to restore the
- * WasmTlsReg and HeapReg after the call.  In these straightforward cases,
+ * InstanceReg and HeapReg after the call.  In these straightforward cases,
  * calling the builtin additionally amounts to:
  *
  *  - exiting the wasm activation

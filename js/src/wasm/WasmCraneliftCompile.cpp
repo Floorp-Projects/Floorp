@@ -375,7 +375,7 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
 // byte offset into the `globalArea` field of the  `Instance` struct.
 //
 // Cranelift represents global variables with their byte offset from the "VM
-// context pointer" which is the `WasmTlsReg` pointing to the `Instance`
+// context pointer" which is the `InstanceReg` pointing to the `Instance`
 // struct.
 //
 // This function translates between the two.

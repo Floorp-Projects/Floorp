@@ -776,14 +776,14 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Arg 2: Instance*
   arg = abi.next(MIRType::Pointer);
   if (arg.kind() == ABIArg::GPR) {
-    masm.movePtr(arg.gpr(), WasmTlsReg);
+    masm.movePtr(arg.gpr(), InstanceReg);
   } else {
     masm.loadPtr(
         Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()),
-        WasmTlsReg);
+        InstanceReg);
   }
 
-  WasmPush(masm, WasmTlsReg);
+  WasmPush(masm, InstanceReg);
 
   // Save 'argv' on the stack so that we can recover it after the call.
   WasmPush(masm, argv);
@@ -820,7 +820,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.movePtr(ImmWord(0), FramePointer);
   masm.loadWasmPinnedRegsFromTls();
 
-  masm.storePtr(WasmTlsReg,
+  masm.storePtr(InstanceReg,
                 Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
@@ -844,7 +844,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Recover the 'argv' pointer which was saved before aligning the stack.
   WasmPop(masm, argv);
 
-  WasmPop(masm, WasmTlsReg);
+  WasmPop(masm, InstanceReg);
 
   // Store the register result, if any, in argv[0].
   // No widening is required, as the value leaves ReturnReg.
@@ -913,7 +913,7 @@ static void GenerateJitEntryLoadTls(MacroAssembler& masm, unsigned frameSize) {
   //                 => Instance*
   offset = FunctionExtended::offsetOfExtendedSlot(
       FunctionExtended::WASM_TLSDATA_SLOT);
-  masm.loadPrivate(Address(ScratchIonEntry, offset), WasmTlsReg);
+  masm.loadPrivate(Address(ScratchIonEntry, offset), InstanceReg);
 }
 
 // Creates a JS fake exit frame for wasm, so the frame iterators just use
@@ -928,12 +928,14 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
   masm.freeStack(frameSize);
   MoveSPForJitABI(masm);
 
-  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfCx()), ScratchIonEntry);
+  masm.loadPtr(Address(InstanceReg, Instance::offsetOfCx()),
+               ScratchIonEntry);
   masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry,
                                  ExitFrameType::WasmGenericJitEntry);
 
-  masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfJSJitExceptionHandler()),
-               ScratchIonEntry);
+  masm.loadPtr(
+      Address(InstanceReg, Instance::offsetOfJSJitExceptionHandler()),
+      ScratchIonEntry);
   masm.jump(ScratchIonEntry);
 }
 
@@ -1277,7 +1279,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // Setup wasm register state.
   masm.loadWasmPinnedRegsFromTls();
 
-  masm.storePtr(WasmTlsReg,
+  masm.storePtr(InstanceReg,
                 Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
@@ -1355,7 +1357,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
             // Per comment above, the call may have clobbered the Tls register,
             // so reload since unboxing will need it.
             GenerateJitEntryLoadTls(masm, /* frameSize */ 0);
-            UnboxAnyrefIntoValueReg(masm, WasmTlsReg, ReturnReg,
+            UnboxAnyrefIntoValueReg(masm, InstanceReg, ReturnReg,
                                     JSReturnOperand, WasmJitEntryReturnScratch);
             break;
           case RefType::TypeIndex:
@@ -1403,9 +1405,10 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
     // argument 1: tlsData
     if (argsIter->kind() == ABIArg::GPR) {
-      masm.movePtr(WasmTlsReg, argsIter->gpr());
+      masm.movePtr(InstanceReg, argsIter->gpr());
     } else {
-      masm.storePtr(WasmTlsReg, Address(sp, argsIter->offsetFromArgBase()));
+      masm.storePtr(InstanceReg,
+                    Address(sp, argsIter->offsetFromArgBase()));
     }
     argsIter++;
 
@@ -1431,7 +1434,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
                       &rejoinBeforeCall);
   }
 
-  // Prepare to throw: reload WasmTlsReg from the frame.
+  // Prepare to throw: reload InstanceReg from the frame.
   masm.bind(&exception);
   masm.setFramePushed(frameSize);
   GenerateJitEntryThrow(masm, frameSize);
@@ -1596,9 +1599,9 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 
   GenPrintf(DebugChannel::Function, masm, "\n");
 
-  // Load tls; from now on, WasmTlsReg is live.
-  masm.movePtr(ImmPtr(&inst), WasmTlsReg);
-  masm.storePtr(WasmTlsReg,
+  // Load tls; from now on, InstanceReg is live.
+  masm.movePtr(ImmPtr(&inst), InstanceReg);
+  masm.storePtr(InstanceReg,
                 Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
   masm.loadWasmPinnedRegsFromTls();
 
@@ -1657,9 +1660,9 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
             // For FuncRef and EqRef, use the AnyRef path for now, since that
             // will work.
           case wasm::RefType::Extern:
-            // The call to wasm above preserves the WasmTlsReg, we don't need to
-            // reload it here.
-            UnboxAnyrefIntoValueReg(masm, WasmTlsReg, ReturnReg,
+            // The call to wasm above preserves the InstanceReg, we don't
+            // need to reload it here.
+            UnboxAnyrefIntoValueReg(masm, InstanceReg, ReturnReg,
                                     JSReturnOperand, WasmJitEntryReturnScratch);
             break;
           case wasm::RefType::TypeIndex:
@@ -1990,7 +1993,7 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   masm.wasmReserveStackChecked(framePushed, BytecodeOffset(0));
   MOZ_ASSERT(masm.framePushed() == framePushed);
 
-  masm.storePtr(WasmTlsReg,
+  masm.storePtr(InstanceReg,
                 Address(masm.getStackPointer(), framePushed - sizeOfTlsSlot));
 
   // The argument register state is already setup by our caller. We just need
@@ -2025,7 +2028,7 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
 
   // Restore the TLS register and pinned regs, per wasm function ABI.
   masm.loadPtr(Address(masm.getStackPointer(), framePushed - sizeOfTlsSlot),
-               WasmTlsReg);
+               InstanceReg);
   masm.loadWasmPinnedRegsFromTls();
 
   // Restore cx->realm.
@@ -2121,9 +2124,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 
   // argument 0: Instance*
   if (i->kind() == ABIArg::GPR) {
-    masm.movePtr(WasmTlsReg, i->gpr());
+    masm.movePtr(InstanceReg, i->gpr());
   } else {
-    masm.storePtr(WasmTlsReg,
+    masm.storePtr(InstanceReg,
                   Address(masm.getStackPointer(), i->offsetFromArgBase()));
   }
   i++;
@@ -2235,7 +2238,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 
   // The native ABI preserves the TLS, heap and global registers since they
   // are non-volatile.
-  MOZ_ASSERT(NonVolatileRegs.has(WasmTlsReg));
+  MOZ_ASSERT(NonVolatileRegs.has(InstanceReg));
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
     defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64) || \
     defined(JS_CODEGEN_LOONG64)
@@ -2320,14 +2323,16 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // 5. Fill the arguments.
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
-  FillArgumentArrayForJitExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
-                              argOffset, scratch, scratch2, throwLabel);
+  FillArgumentArrayForJitExit(masm, InstanceReg, funcImportIndex,
+                              fi.funcType(), argOffset, scratch, scratch2,
+                              throwLabel);
   argOffset += fi.funcType().args().length() * sizeof(Value);
   MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
 
   // Preserve Tls because the JIT callee clobbers it.
   const size_t savedTlsOffset = argOffset;
-  masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), savedTlsOffset));
+  masm.storePtr(InstanceReg,
+                Address(masm.getStackPointer(), savedTlsOffset));
 
   // 2. Callee, part 2 -- now that the register is free, set up the callee.
   Register callee = ABINonArgReturnReg0;  // Live until call
@@ -2378,14 +2383,15 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // - or the value needs to be rooted, but nothing can cause a GC between
   //   here and CoerceInPlace, which roots before coercing to a primitive.
 
-  // The JIT callee clobbers all registers, including WasmTlsReg and
+  // The JIT callee clobbers all registers, including InstanceReg and
   // FramePointer, so restore those here. During this sequence of
   // instructions, FP can't be trusted by the profiling frame iterator.
   offsets->untrustedFPStart = masm.currentOffset();
   AssertStackAlignment(masm, JitStackAlignment,
                        sizeOfRetAddr + frameAlignExtra);
 
-  masm.loadPtr(Address(masm.getStackPointer(), savedTlsOffset), WasmTlsReg);
+  masm.loadPtr(Address(masm.getStackPointer(), savedTlsOffset),
+               InstanceReg);
   masm.moveStackPtrTo(FramePointer);
   masm.addPtr(Imm32(masm.framePushed()), FramePointer);
   offsets->untrustedFPEnd = masm.currentOffset();
@@ -2474,8 +2480,9 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   {
     // Call the arguments rectifier.
     masm.bind(&rectify);
-    masm.loadPtr(Address(WasmTlsReg, Instance::offsetOfJSJitArgsRectifier()),
-                 callee);
+    masm.loadPtr(
+        Address(InstanceReg, Instance::offsetOfJSJitArgsRectifier()),
+        callee);
     masm.jump(&rejoinBeforeCall);
   }
 
@@ -2823,7 +2830,7 @@ static void ClobberWasmRegsForLongJmp(MacroAssembler& masm, Register jumpReg) {
   RegisterAllocator::takeWasmRegisters(gprs);
   // Remove the TLS register from this set as landing pads require it to be
   // valid
-  gprs.take(WasmTlsReg);
+  gprs.take(InstanceReg);
   // Remove a specified register that will be used for the longjmp
   gprs.take(jumpReg);
   // Set all of these registers to zero
@@ -2924,7 +2931,7 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   // The case where a Wasm catch handler was found while unwinding the stack.
   masm.bind(&resumeCatch);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, tlsData)),
-               WasmTlsReg);
+               InstanceReg);
   masm.loadWasmPinnedRegsFromTls();
   masm.switchToWasmTlsRealm(scratch1, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),

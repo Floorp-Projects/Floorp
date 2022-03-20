@@ -3507,9 +3507,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   [[nodiscard]] bool wasmStartTry(size_t* tryNoteIndex);
 #endif
 
-  // Load all pinned regs via WasmTlsReg.  If the trapOffset is something, give
-  // the first load a trap descriptor with type IndirectCallToNull, so that a
-  // null Tls will cause a trap.
+  // Load all pinned regs via InstanceReg.  If the trapOffset is something,
+  // give the first load a trap descriptor with type IndirectCallToNull, so that
+  // a null Tls will cause a trap.
   void loadWasmPinnedRegsFromTls(
       mozilla::Maybe<wasm::BytecodeOffset> trapOffset = mozilla::Nothing());
 

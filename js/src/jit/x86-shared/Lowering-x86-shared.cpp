@@ -538,15 +538,17 @@ void LIRGeneratorX86Shared::lowerWasmBuiltinTruncateToInt32(
   LDefinition maybeTemp =
       Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempDouble();
   if (opd->type() == MIRType::Double) {
-    define(new (alloc()) LWasmBuiltinTruncateDToInt32(
-               useRegister(opd), useFixed(ins->tls(), WasmTlsReg), maybeTemp),
-           ins);
+    define(
+        new (alloc()) LWasmBuiltinTruncateDToInt32(
+            useRegister(opd), useFixed(ins->tls(), InstanceReg), maybeTemp),
+        ins);
     return;
   }
 
-  define(new (alloc()) LWasmBuiltinTruncateFToInt32(
-             useRegister(opd), useFixed(ins->tls(), WasmTlsReg), maybeTemp),
-         ins);
+  define(
+      new (alloc()) LWasmBuiltinTruncateFToInt32(
+          useRegister(opd), useFixed(ins->tls(), InstanceReg), maybeTemp),
+      ins);
 }
 
 void LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32* ins) {
