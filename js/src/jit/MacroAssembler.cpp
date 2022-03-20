@@ -3810,22 +3810,24 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
 
   // Load the callee, before the caller's registers are clobbered.
   uint32_t globalDataOffset = callee.importGlobalDataOffset();
-  loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code),
-                    ABINonArgReg0);
+  loadWasmGlobalPtr(
+      globalDataOffset + offsetof(wasm::FuncImportInstanceData, code),
+      ABINonArgReg0);
 
 #ifndef JS_CODEGEN_NONE
   static_assert(ABINonArgReg0 != InstanceReg, "by constraint");
 #endif
 
   // Switch to the callee's realm.
-  loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, realm),
-                    ABINonArgReg1);
+  loadWasmGlobalPtr(
+      globalDataOffset + offsetof(wasm::FuncImportInstanceData, realm),
+      ABINonArgReg1);
   loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()),
           ABINonArgReg2);
   storePtr(ABINonArgReg1, Address(ABINonArgReg2, JSContext::offsetOfRealm()));
 
   // Switch to the callee's TLS and pinned registers and make the call.
-  loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls),
+  loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportInstanceData, instance),
                     InstanceReg);
 
   storePtr(InstanceReg,
@@ -3987,7 +3989,7 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   Label fastCall;
   Label done;
   const Register newTlsTemp = WasmTableCallScratchReg1;
-  loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, tls)),
+  loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, instance)),
           newTlsTemp);
   branchPtr(Assembler::Equal, InstanceReg, newTlsTemp, &fastCall);
 
