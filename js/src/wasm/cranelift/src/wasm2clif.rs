@@ -98,7 +98,7 @@ fn init_sig_from_wsig(call_conv: CallConv, wsig: &bindings::FuncType) -> WasmRes
     }
 
     // Add a VM context pointer argument.
-    // This corresponds to SpiderMonkey's `WasmTlsReg` hidden argument.
+    // This corresponds to SpiderMonkey's `InstanceReg` hidden argument.
     sig.params.push(ir::AbiParam::special(
         POINTER_TYPE,
         ir::ArgumentPurpose::VMContext,

@@ -3222,7 +3222,7 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
     //  - import calls do by explicitly saving/restoring at the callsite
     //  - builtin calls do because the TLS reg is non-volatile
     // See also CodeGeneratorShared::emitWasmCall.
-    return !reg.isFloat() && reg.gpr() == WasmTlsReg;
+    return !reg.isFloat() && reg.gpr() == InstanceReg;
   }
 
   bool needsBoundsCheck() const { return needsBoundsCheck_; }
