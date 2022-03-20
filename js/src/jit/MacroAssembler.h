@@ -271,10 +271,10 @@ static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
-constexpr uint32_t WasmCallerTlsOffsetBeforeCall =
-    wasm::FrameWithTls::callerTlsOffsetWithoutFrame();
-constexpr uint32_t WasmCalleeTlsOffsetBeforeCall =
-    wasm::FrameWithTls::calleeTlsOffsetWithoutFrame();
+constexpr uint32_t WasmCallerInstanceOffsetBeforeCall =
+    wasm::FrameWithInstances::callerInstanceOffsetWithoutFrame();
+constexpr uint32_t WasmCalleeInstanceOffsetBeforeCall =
+    wasm::FrameWithInstances::calleeInstanceOffsetWithoutFrame();
 
 // Allocation sites may be passed to GC thing allocation methods either via a
 // register (for baseline compilation) or an enum indicating one of the
