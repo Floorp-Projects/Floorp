@@ -1782,8 +1782,8 @@ void MacroAssembler::switchToBaselineFrameRealm(Register scratch) {
   switchToObjectRealm(scratch, scratch);
 }
 
-void MacroAssembler::switchToWasmTlsRealm(Register scratch1,
-                                          Register scratch2) {
+void MacroAssembler::switchToWasmInstanceRealm(Register scratch1,
+                                               Register scratch2) {
   loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()), scratch1);
   loadPtr(Address(InstanceReg, wasm::Instance::offsetOfRealm()), scratch2);
   storePtr(scratch2, Address(scratch1, JSContext::offsetOfRealm()));
@@ -3832,7 +3832,7 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
 
   storePtr(InstanceReg,
            Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
-  loadWasmPinnedRegsFromTls();
+  loadWasmPinnedRegsFromInstance();
 
   return call(desc, ABINonArgReg0);
 }
@@ -4010,16 +4010,16 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 #ifdef WASM_HAS_HEAPREG
   // Use the null pointer exception resulting from loading HeapReg from a null
   // Tls to handle a call to a null slot.
-  loadWasmPinnedRegsFromTls(mozilla::Some(trapOffset));
+  loadWasmPinnedRegsFromInstance(mozilla::Some(trapOffset));
 #else
   Label nonNull;
   branchTestPtr(Assembler::NonZero, InstanceReg, InstanceReg, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
-  loadWasmPinnedRegsFromTls();
+  loadWasmPinnedRegsFromInstance();
 #endif
-  switchToWasmTlsRealm(index, WasmTableCallScratchReg1);
+  switchToWasmInstanceRealm(index, WasmTableCallScratchReg1);
 
   loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
           calleeScratch);
@@ -4030,8 +4030,8 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   loadPtr(Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall),
           InstanceReg);
-  loadWasmPinnedRegsFromTls();
-  switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+  loadWasmPinnedRegsFromInstance();
+  switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
   jump(&done);
 
   // Fast path: just load the code pointer and go.  The tls and heap register
@@ -4245,7 +4245,7 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
   }
 }
 
-void MacroAssembler::loadWasmPinnedRegsFromTls(
+void MacroAssembler::loadWasmPinnedRegsFromInstance(
     mozilla::Maybe<wasm::BytecodeOffset> trapOffset) {
 #ifdef WASM_HAS_HEAPREG
   static_assert(wasm::Instance::offsetOfMemoryBase() < 4096,

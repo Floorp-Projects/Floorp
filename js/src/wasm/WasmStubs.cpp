@@ -818,7 +818,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Setup wasm register state. The nullness of the frame pointer is used to
   // determine whether the call ended in success or failure.
   masm.movePtr(ImmWord(0), FramePointer);
-  masm.loadWasmPinnedRegsFromTls();
+  masm.loadWasmPinnedRegsFromInstance();
 
   masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
                                          WasmCalleeInstanceOffsetBeforeCall));
@@ -1277,7 +1277,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   GenPrintf(DebugChannel::Function, masm, "\n");
 
   // Setup wasm register state.
-  masm.loadWasmPinnedRegsFromTls();
+  masm.loadWasmPinnedRegsFromInstance();
 
   masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
                                          WasmCalleeInstanceOffsetBeforeCall));
@@ -1603,7 +1603,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.movePtr(ImmPtr(&inst), InstanceReg);
   masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
                                          WasmCalleeInstanceOffsetBeforeCall));
-  masm.loadWasmPinnedRegsFromTls();
+  masm.loadWasmPinnedRegsFromInstance();
 
   // Actual call.
   const CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
@@ -2029,10 +2029,10 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   // Restore the TLS register and pinned regs, per wasm function ABI.
   masm.loadPtr(Address(masm.getStackPointer(), framePushed - sizeOfTlsSlot),
                InstanceReg);
-  masm.loadWasmPinnedRegsFromTls();
+  masm.loadWasmPinnedRegsFromInstance();
 
   // Restore cx->realm.
-  masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+  masm.switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
 
   GenerateFunctionEpilogue(masm, framePushed, offsets);
   return FinishOffsets(masm, offsets);
@@ -2932,8 +2932,8 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   masm.bind(&resumeCatch);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, tlsData)),
                InstanceReg);
-  masm.loadWasmPinnedRegsFromTls();
-  masm.switchToWasmTlsRealm(scratch1, scratch2);
+  masm.loadWasmPinnedRegsFromInstance();
+  masm.switchToWasmInstanceRealm(scratch1, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
                scratch1);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
