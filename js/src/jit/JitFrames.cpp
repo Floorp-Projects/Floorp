@@ -1024,13 +1024,15 @@ static void TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
 }
 
-#ifdef JS_CODEGEN_MIPS32
+#if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32)
 uint8_t* alignDoubleSpill(uint8_t* pointer) {
   uintptr_t address = reinterpret_cast<uintptr_t>(pointer);
-  address &= ~(ABIStackAlignment - 1);
+  address &= ~(uintptr_t(ABIStackAlignment) - 1);
   return reinterpret_cast<uint8_t*>(address);
 }
+#endif
 
+#ifdef JS_CODEGEN_MIPS32
 static void TraceJitExitFrameCopiedArguments(JSTracer* trc,
                                              const VMFunctionData* f,
                                              ExitFooterFrame* footer) {

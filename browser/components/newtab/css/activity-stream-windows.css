@@ -77,7 +77,6 @@ html {
     margin: 0;
     width: 100vw;
     height: 100vh;
-    background-image: linear-gradient(to right, #d76f3d 0%, #56009c 100%) !important;
   }
   .search-wrapper .search-inner-wrapper {
     min-height: 44px !important;

@@ -139,6 +139,7 @@ var PreferenceRollouts = {
     "bug-1648229-rollout-comcast-steering-rollout-release-78-80",
     "bug-1732206-rollout-fission-release-rollout-release-94-95",
     "bug-1745237-rollout-fission-beta-96-97-rollout-beta-96-97",
+    "bug-1750601-rollout-doh-steering-in-canada-staggered-starting-for-release-97-98",
   ]),
 
   /**

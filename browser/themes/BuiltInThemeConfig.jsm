@@ -19,27 +19,17 @@ var EXPORTED_SYMBOLS = ["BuiltInThemeConfig"];
  */
 const BuiltInThemeConfig = new Map([
   [
-    "kanaze-erua@mozilla.org",
+    "firefox-compact-light@mozilla.org",
     {
-      version: "1.0",
-      path: "resource://builtin-themes/erua/",
-      expiry: "2022-04-15",
+      version: "1.3",
+      path: "resource://builtin-themes/light/",
     },
   ],
   [
-    "kanaze-aria@mozilla.org",
+    "firefox-compact-dark@mozilla.org",
     {
-      version: "1.0",
-      path: "resource://builtin-themes/aria/",
-      expiry: "2022-04-15",
-    },
-  ],
-  [
-    "kanaze-melt@mozilla.org",
-    {
-      version: "1.0",
-      path: "resource://builtin-themes/melt/",
-      expiry: "2022-04-15",
+      version: "1.3",
+      path: "resource://builtin-themes/dark/",
     },
   ],
   [
@@ -57,17 +47,27 @@ const BuiltInThemeConfig = new Map([
     },
   ],
   [
-    "firefox-compact-dark@mozilla.org",
+    "kanaze-erua@floorp.ablaze.one",
     {
-      version: "1.3",
-      path: "resource://builtin-themes/dark/",
+      version: "1.0",
+      path: "resource://builtin-themes/erua/",
+      expiry: "2022-04-15",
     },
   ],
   [
-    "firefox-compact-light@mozilla.org",
+    "kanaze-aria@floorp.ablaze.one",
     {
-      version: "1.3",
-      path: "resource://builtin-themes/light/",
+      version: "1.0",
+      path: "resource://builtin-themes/aria/",
+      expiry: "2022-04-15",
+    },
+  ],
+  [
+    "kanaze-melt@floorp.ablaze.one",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/melt/",
+      expiry: "2022-04-15",
     },
   ],
   [
