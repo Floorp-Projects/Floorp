@@ -298,14 +298,6 @@ typedef bool (*JSMayResolveOp)(const JSAtomState& names, jsid id,
 typedef void (*JSFinalizeOp)(JS::GCContext* gcx, JSObject* obj);
 
 /**
- * Check whether v is an instance of obj.  Return false on error or exception,
- * true on success with true in *bp if v is an instance of obj, false in
- * *bp otherwise.
- */
-typedef bool (*JSHasInstanceOp)(JSContext* cx, JS::HandleObject obj,
-                                JS::MutableHandleValue vp, bool* bp);
-
-/**
  * Function type for trace operation of the class called to enumerate all
  * traceable things reachable from obj's private data structure. For each such
  * thing, a trace implementation must call JS::TraceEdge on the thing's
@@ -608,7 +600,6 @@ struct MOZ_STATIC_CLASS JSClassOps {
   JSMayResolveOp mayResolve;
   JSFinalizeOp finalize;
   JSNative call;
-  JSHasInstanceOp hasInstance;
   JSNative construct;
   JSTraceOp trace;
 };
@@ -643,9 +634,6 @@ struct alignas(js::gc::JSClassAlignBytes) JSClass {
     return cOps ? cOps->mayResolve : nullptr;
   }
   JSNative getCall() const { return cOps ? cOps->call : nullptr; }
-  JSHasInstanceOp getHasInstance() const {
-    return cOps ? cOps->hasInstance : nullptr;
-  }
   JSNative getConstruct() const { return cOps ? cOps->construct : nullptr; }
 
   bool hasFinalize() const { return cOps && cOps->finalize; }

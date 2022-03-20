@@ -2251,7 +2251,6 @@ static const JSClassOps TypedArrayClassOps = {
     nullptr,                       // mayResolve
     TypedArrayObject::finalize,    // finalize
     nullptr,                       // call
-    nullptr,                       // hasInstance
     nullptr,                       // construct
     ArrayBufferViewObject::trace,  // trace
 };

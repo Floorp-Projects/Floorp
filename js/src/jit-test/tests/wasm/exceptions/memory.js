@@ -1,5 +1,5 @@
 // Ensure memory operations work after a throw coming from a function call.
-// These are also testing that the WasmTlsReg/HeapReg are set correctly after
+// These are also testing that the InstanceReg/HeapReg are set correctly after
 // catching an exception. There are some variations to the kind of calls here;
 // we test for direct/indirect calls of local/imported functions, and the
 // indirect calls may come from a local table or an imported table.

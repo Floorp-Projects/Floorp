@@ -710,7 +710,6 @@ static const JSClassOps ScriptSourceObjectClassOps = {
     nullptr,                       // mayResolve
     ScriptSourceObject::finalize,  // finalize
     nullptr,                       // call
-    nullptr,                       // hasInstance
     nullptr,                       // construct
     nullptr,                       // trace
 };

@@ -102,10 +102,10 @@ struct StackMap final {
       std::max(sizeof(jit::FloatRegisters::RegisterContent),
                sizeof(jit::Registers::RegisterContent));
 
-  // Add 16 words to account for the size of FrameWithTls including any shadow
-  // stack (at worst 8 words total), and then a little headroom in case the
-  // argument area had to be aligned.
-  static_assert(FrameWithTls::sizeOf() / sizeof(void*) <= 8);
+  // Add 16 words to account for the size of FrameWithInstances including any
+  // shadow stack (at worst 8 words total), and then a little headroom in case
+  // the argument area had to be aligned.
+  static_assert(FrameWithInstances::sizeOf() / sizeof(void*) <= 8);
   static_assert(maxFrameOffsetFromTop >=
                     (MaxParams * MaxParamSize / sizeof(void*)) + 16,
                 "limited size of the offset field");

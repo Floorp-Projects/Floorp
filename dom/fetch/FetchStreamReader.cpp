@@ -181,7 +181,9 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
 
   mGlobal = nullptr;
 
-  mPipeOut->CloseWithStatus(aStatus);
+  if (mPipeOut) {
+    mPipeOut->CloseWithStatus(aStatus);
+  }
   mPipeOut = nullptr;
 
   mWorkerRef = nullptr;

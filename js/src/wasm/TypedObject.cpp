@@ -55,7 +55,6 @@ static const JSClassOps RttValueClassOps = {
     nullptr,             // mayResolve
     RttValue::finalize,  // finalize
     nullptr,             // call
-    nullptr,             // hasInstance
     nullptr,             // construct
     RttValue::trace,     // trace
 };
@@ -654,7 +653,6 @@ const ObjectOps TypedObject::objectOps_ = {
       nullptr,  /* mayResolve  */                                     \
       Finalize, /* finalize    */                                     \
       nullptr,  /* call        */                                     \
-      nullptr,  /* hasInstance */                                     \
       nullptr,  /* construct   */                                     \
       Trace,                                                          \
   };                                                                  \

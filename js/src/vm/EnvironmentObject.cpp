@@ -374,7 +374,6 @@ const JSClassOps ModuleEnvironmentObject::classOps_ = {
     nullptr,                                // mayResolve
     nullptr,                                // finalize
     nullptr,                                // call
-    nullptr,                                // hasInstance
     nullptr,                                // construct
     nullptr,                                // trace
 };

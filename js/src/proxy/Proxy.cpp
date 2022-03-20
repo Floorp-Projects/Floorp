@@ -921,7 +921,6 @@ const JSClassOps js::ProxyClassOps = {
     nullptr,             // mayResolve
     proxy_Finalize,      // finalize
     nullptr,             // call
-    Proxy::hasInstance,  // hasInstance
     nullptr,             // construct
     ProxyObject::trace,  // trace
 };

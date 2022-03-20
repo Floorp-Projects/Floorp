@@ -93,7 +93,7 @@ class ABIArgIter : public ABIArgIterBase<VecT, ABIArgGenerator> {
 class WasmABIArgGenerator : public ABIArgGenerator {
  public:
   WasmABIArgGenerator() {
-    increaseStackOffset(wasm::FrameWithTls::sizeOfTlsFields());
+    increaseStackOffset(wasm::FrameWithInstances::sizeOfInstanceFields());
   }
 };
 

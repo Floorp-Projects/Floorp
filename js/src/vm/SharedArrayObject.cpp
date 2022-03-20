@@ -418,7 +418,6 @@ static const JSClassOps SharedArrayBufferObjectClassOps = {
     nullptr,                            // mayResolve
     SharedArrayBufferObject::Finalize,  // finalize
     nullptr,                            // call
-    nullptr,                            // hasInstance
     nullptr,                            // construct
     nullptr,                            // trace
 };
