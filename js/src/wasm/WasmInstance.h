@@ -44,8 +44,8 @@ using mozilla::Atomic;
 class FuncImport;
 class WasmFrameIter;
 
-struct FuncImportTls;
-struct TableTls;
+struct FuncImportInstanceData;
+struct TableInstanceData;
 struct TableDesc;
 struct TagDesc;
 
@@ -191,8 +191,8 @@ class alignas(16) Instance {
 
   // Internal helpers:
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
-  FuncImportTls& funcImportTls(const FuncImport& fi);
-  TableTls& tableTls(const TableDesc& td) const;
+  FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
+  TableInstanceData& tableInstanceData(const TableDesc& td) const;
 #ifdef ENABLE_WASM_EXCEPTIONS
   GCPtrWasmTagObject& tagTls(const TagDesc& td) const;
 #endif

@@ -40,19 +40,19 @@ struct ExportArg {
 
 using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
 
-// FuncImportTls describes the region of wasm global memory allocated in the
-// instance's thread-local storage for a function import. This is accessed
-// directly from JIT code and mutated by Instance as exits become optimized and
-// deoptimized.
+// FuncImportInstanceData describes the region of wasm global memory allocated
+// in the instance's thread-local storage for a function import. This is
+// accessed directly from JIT code and mutated by Instance as exits become
+// optimized and deoptimized.
 
-struct FuncImportTls {
+struct FuncImportInstanceData {
   // The code to call at an import site: a wasm callee, a thunk into C++, or a
   // thunk into JIT code.
   void* code;
 
   // The callee's Instance pointer, which must be loaded to InstanceReg
   // (along with any pinned registers) before calling 'code'.
-  Instance* tls;
+  Instance* instance;
 
   // The callee function's realm.
   JS::Realm* realm;
@@ -63,11 +63,11 @@ struct FuncImportTls {
   static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
 };
 
-// TableTls describes the region of wasm global memory allocated in the
+// TableInstanceData describes the region of wasm global memory allocated in the
 // instance's thread-local storage which is accessed directly from JIT code
 // to bounds-check and index the table.
 
-struct TableTls {
+struct TableInstanceData {
   // Length of the table in number of elements (not bytes).
   uint32_t length;
 
@@ -90,7 +90,7 @@ struct FunctionTableElem {
 
   // The pointer to the callee's instance's Instance. This must be loaded into
   // InstanceReg before calling 'code'.
-  Instance* tls;
+  Instance* instance;
 };
 
 }  // namespace wasm

@@ -2338,8 +2338,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   Register callee = ABINonArgReturnReg0;  // Live until call
 
   // 2.1. Get JSFunction callee.
-  masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, fun),
-                         callee);
+  masm.loadWasmGlobalPtr(
+      fi.tlsDataOffset() + offsetof(FuncImportInstanceData, fun), callee);
 
   // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), calleeArgOffset));

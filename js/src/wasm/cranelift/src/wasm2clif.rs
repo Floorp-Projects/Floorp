@@ -328,7 +328,7 @@ pub struct TransEnv<'static_env, 'module_env> {
     /// The key to this table is the TLS offset returned by `sig_idTlsOffset()`.
     signatures: HashMap<i32, ir::GlobalValue>,
 
-    /// Global variables containing `FuncImportTls` information about imported functions.
+    /// Global variables containing `FuncImportInstanceData` information about imported functions.
     /// This vector is indexed by a `FuncIndex`, taking advantage of the fact that WebAssembly
     /// imported functions are numbered starting from 0.
     ///
@@ -430,7 +430,7 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
         })
     }
 
-    /// Get the global variable storing the `FuncImportTls` struct for an imported function.
+    /// Get the global variable storing the `FuncImportInstanceData` struct for an imported function.
     fn func_import_global(&mut self, func: &mut ir::Function, index: FuncIndex) -> ir::GlobalValue {
         // See if we already allocated a global for this import.
         if let Some(gv) = self.func_gvs.get(index).and_then(|gv| gv.expand()) {
@@ -1012,11 +1012,11 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         // Is this an imported function in a different instance, or a local function?
         if self.module_env.func_is_import(callee_index) {
             // This is a call to an imported function. We need to load the callee address and vmctx
-            // from the associated `FuncImportTls` struct in a global.
+            // from the associated `FuncImportInstanceData` struct in a global.
             let gv = self.func_import_global(pos.func, callee_index);
             let gv_addr = pos.ins().global_value(POINTER_TYPE, gv);
 
-            // We need the first two pointer-sized fields from the `FuncImportTls` struct: `code`
+            // We need the first two pointer-sized fields from the `FuncImportInstanceData` struct: `code`
             // and `tls`.
             let fit_code = pos
                 .ins()
@@ -1408,7 +1408,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
 /// Information about a function table.
 #[derive(Clone)]
 struct TableInfo {
-    /// Global variable containing a `wasm::TableTls` struct with two fields:
+    /// Global variable containing a `wasm::TableInstanceData` struct with two fields:
     ///
     /// 0: Unsigned 32-bit table length.
     /// n: Pointer to table (n = sizeof(void*))

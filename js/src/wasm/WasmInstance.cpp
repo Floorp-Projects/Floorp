@@ -138,12 +138,12 @@ const void** Instance::addressOfTypeId(const TypeIdDesc& typeId) const {
   return (const void**)(globalData() + typeId.globalDataOffset());
 }
 
-FuncImportTls& Instance::funcImportTls(const FuncImport& fi) {
-  return *(FuncImportTls*)(globalData() + fi.tlsDataOffset());
+FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
+  return *(FuncImportInstanceData*)(globalData() + fi.tlsDataOffset());
 }
 
-TableTls& Instance::tableTls(const TableDesc& td) const {
-  return *(TableTls*)(globalData() + td.globalDataOffset);
+TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
+  return *(TableInstanceData*)(globalData() + td.globalDataOffset);
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -295,7 +295,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     }
   }
 
-  FuncImportTls& import = funcImportTls(fi);
+  FuncImportInstanceData& import = funcImportInstanceData(fi);
   RootedFunction importFun(cx, import.fun);
   MOZ_ASSERT(cx->realm() == importFun->realm());
 
@@ -890,7 +890,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
     } else {
       if (funcIndex < metadataTier.funcImports.length()) {
-        FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
+        FuncImportInstanceData& import =
+            funcImportInstanceData(funcImports[funcIndex]);
         JSFunction* fun = import.fun;
         if (IsWasmExportedFunction(fun)) {
           // This element is a wasm function imported from another
@@ -1097,7 +1098,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // Use the imported function only if it is an exported function, otherwise
   // fall through to get a (possibly new) exported function.
   if (funcIndex < funcImports.length()) {
-    FuncImportTls& import = instance->funcImportTls(funcImports[funcIndex]);
+    FuncImportInstanceData& import =
+        instance->funcImportInstanceData(funcImports[funcIndex]);
     if (IsWasmExportedFunction(import.fun)) {
       return FuncRef::fromJSFunction(import.fun).forCompiledCode();
     }
@@ -1396,7 +1398,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
     const FuncImport& fi = metadata(callerTier).funcImports[i];
-    FuncImportTls& import = funcImportTls(fi);
+    FuncImportInstanceData& import = funcImportInstanceData(fi);
     import.fun = f;
     if (!isAsmJS() && IsWasmExportedFunction(f)) {
       WasmInstanceObject* calleeInstanceObj =
@@ -1405,16 +1407,16 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       Tier calleeTier = calleeInstance.code().bestTier();
       const CodeRange& codeRange =
           calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
-      import.tls = &calleeInstance;
+      import.instance = &calleeInstance;
       import.realm = f->realm();
       import.code = calleeInstance.codeBase(calleeTier) +
                     codeRange.funcUncheckedCallEntry();
     } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
-      import.tls = this;
+      import.instance = this;
       import.realm = f->realm();
       import.code = thunk;
     } else {
-      import.tls = this;
+      import.instance = this;
       import.realm = f->realm();
       import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
     }
@@ -1423,7 +1425,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   // Initialize tables in the tls data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
-    TableTls& table = tableTls(td);
+    TableInstanceData& table = tableInstanceData(td);
     table.length = tables_[i]->length();
     table.functionBase = tables_[i]->functionBase();
   }
@@ -1684,7 +1686,7 @@ void Instance::tracePrivate(JSTracer* trc) {
   // OK to just do one tier here; though the tiers have different funcImports
   // tables, they share the tls object.
   for (const FuncImport& fi : metadata(code().stableTier()).funcImports) {
-    TraceNullableEdge(trc, &funcImportTls(fi).fun, "wasm import");
+    TraceNullableEdge(trc, &funcImportInstanceData(fi).fun, "wasm import");
   }
 
   for (const SharedTable& table : tables_) {
@@ -2339,7 +2341,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
 
   for (uint32_t i = 0; i < tables_.length(); i++) {
     if (tables_[i] == theTable) {
-      TableTls& table = tableTls(metadata().tables[i]);
+      TableInstanceData& table = tableInstanceData(metadata().tables[i]);
       table.length = tables_[i]->length();
       table.functionBase = tables_[i]->functionBase();
     }
