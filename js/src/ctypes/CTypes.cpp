@@ -155,8 +155,6 @@ bool PtrGetter(JSContext* cx, const JS::CallArgs& args);
 static bool CreateArray(JSContext* cx, unsigned argc, Value* vp);
 static bool ToString(JSContext* cx, unsigned argc, Value* vp);
 static bool ToSource(JSContext* cx, unsigned argc, Value* vp);
-static bool HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v,
-                        bool* bp);
 
 /*
  * Get the global "ctypes" object.
@@ -487,7 +485,7 @@ static const JSClassOps sCTypeClassOps = {
     nullptr,               // mayResolve
     CType::Finalize,       // finalize
     CType::ConstructData,  // call
-    CType::HasInstance,    // hasInstance
+    nullptr,               // hasInstance
     CType::ConstructData,  // construct
     CType::Trace,          // trace
 };
@@ -4926,36 +4924,6 @@ bool CType::ToSource(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(result);
-  return true;
-}
-
-bool CType::HasInstance(JSContext* cx, HandleObject obj, MutableHandleValue v,
-                        bool* bp) {
-  MOZ_ASSERT(CType::IsCType(obj));
-
-  Value slot = JS::GetReservedSlot(obj, SLOT_PROTO);
-  JS::Rooted<JSObject*> prototype(cx, &slot.toObject());
-  MOZ_ASSERT(prototype);
-  MOZ_ASSERT(CData::IsCDataProto(prototype));
-
-  *bp = false;
-  if (v.isPrimitive()) {
-    return true;
-  }
-
-  RootedObject proto(cx, &v.toObject());
-  for (;;) {
-    if (!JS_GetPrototype(cx, proto, &proto)) {
-      return false;
-    }
-    if (!proto) {
-      break;
-    }
-    if (proto == prototype) {
-      *bp = true;
-      break;
-    }
-  }
   return true;
 }
 
