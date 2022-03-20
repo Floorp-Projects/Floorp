@@ -41,7 +41,6 @@ const JSClassOps RelativeTimeFormatObject::classOps_ = {
     nullptr,                             // mayResolve
     RelativeTimeFormatObject::finalize,  // finalize
     nullptr,                             // call
-    nullptr,                             // hasInstance
     nullptr,                             // construct
     nullptr,                             // trace
 };

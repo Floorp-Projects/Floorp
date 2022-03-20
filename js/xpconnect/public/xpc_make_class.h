@@ -83,9 +83,6 @@ extern const js::ClassExtension XPC_WN_JSClassExtension;
         /* call */                                                            \
         ((_flags)&XPC_SCRIPTABLE_WANT_CALL) ? XPC_WN_Helper_Call : nullptr,   \
                                                                               \
-        /* hasInstance */                                                     \
-        nullptr,                                                              \
-                                                                              \
         /* construct */                                                       \
         ((_flags)&XPC_SCRIPTABLE_WANT_CONSTRUCT) ? XPC_WN_Helper_Construct    \
                                                  : nullptr,                   \

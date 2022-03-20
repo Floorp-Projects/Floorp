@@ -50,7 +50,6 @@ static const JSClassOps sLibraryClassOps = {
     nullptr,            // mayResolve
     Library::Finalize,  // finalize
     nullptr,            // call
-    nullptr,            // hasInstance
     nullptr,            // construct
     nullptr,            // trace
 };

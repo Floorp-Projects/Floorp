@@ -26,7 +26,6 @@ static const JSClassOps AddPropertyClassOps = {
     nullptr,      // mayResolve
     nullptr,      // finalize
     nullptr,      // call
-    nullptr,      // hasInstance
     nullptr,      // construct
     nullptr,      // trace
 };

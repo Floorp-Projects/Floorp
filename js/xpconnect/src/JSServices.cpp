@@ -34,7 +34,6 @@ static const JSClassOps sServices_ClassOps = {
     Services_MayResolve,    // mayResolve
     nullptr,                // finalize
     nullptr,                // call
-    nullptr,                // hasInstance
     nullptr,                // construct
     nullptr,                // trace
 };
