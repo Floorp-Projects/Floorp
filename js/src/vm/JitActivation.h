@@ -216,7 +216,7 @@ class JitActivation : public Activation {
         wasm::Frame::toJitEntryCaller(packedExitFP_));
   }
   wasm::Instance* wasmExitTls() const {
-    return wasm::GetNearestEffectiveTls(wasmExitFP());
+    return wasm::GetNearestEffectiveInstance(wasmExitFP());
   }
   void setWasmExitFP(const wasm::Frame* fp) {
     if (fp) {
