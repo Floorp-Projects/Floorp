@@ -46,8 +46,6 @@
     <string name="recently_saved_show_all">Tampilkan semua</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Tampilkan semua markah tersimpan</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Tampilkan tombol semua markah tersimpan</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Hapus</string>
@@ -128,8 +126,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Tampilkan tombol semua tab terbaru</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Tampilkan semua tab terbaru</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Pencarian Anda untuk \&quot;%1$s\&quot;</string>
@@ -138,6 +134,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d situs</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Lihat semua tab tersinkron</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Perangkat yang disinkronkan</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Hapus</string>
@@ -151,8 +151,6 @@
     <string name="recently_visited_menu_item_remove">Hapus</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Tampilkan semua eksplorasi lampau</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Tampilkan tombol semua eksplorasi lampau</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -253,7 +251,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s akan membagikan segala yang Anda ketik pada bilah alamat dengan mesin pencari baku Anda.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Pelajari lebih lanjut</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Pelajari lebih lanjut</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Cari %s</string>
@@ -818,6 +816,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Yakin akan menghapus folder ini?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s akan menghapus item terpilih.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Batal</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tambah folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -873,6 +873,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">URUNGKAN</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Masukkan istilah pencarian</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Buka Pengaturan</string>
@@ -884,8 +887,16 @@
     <string name="phone_feature_recommended">Disarankan</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Hapus izin</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Batal</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Hapus izin</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Batal</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Hapus izin pada semua situs</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -988,6 +999,11 @@
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Lihat</string>
 
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Batal</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Koleksi %d</string>
 
@@ -1003,6 +1019,10 @@
     <string name="share_link_all_apps_subheader">Semua tindakan</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Baru saja digunakan</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Salin ke papan klip</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Tersalin ke papan klip</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Masuk untuk menyinkronkan</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1150,30 +1170,30 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Sekarang, Firefox Preview adalah Firefox Nightly</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Sekarang, Firefox Preview adalah Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly mendapatkan pemutakhiran setiap malam dan memiliki fitur eksperimental baru.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly mendapatkan pemutakhiran setiap malam dan memiliki fitur eksperimental baru.
         Namun, fitur ini mungkin kurang stabil. Unduh peramban beta kami untuk pengalaman yang lebih stabil.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Dapatkan Firefox untuk Android Beta</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Dapatkan Firefox untuk Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly telah pindah</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly telah pindah</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Hentikan memakai aplikasi ini dan beralih ke Nightly yang baru.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Hentikan memakai aplikasi ini dan beralih ke Nightly yang baru.
         \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Beralih ke Nightly baru</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Beralih ke Nightly baru</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly telah pindah</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly telah pindah</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Dapatkan Nightly baru dan hentikan memakai aplikasi ini.
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Aplikasi ini tidak akan lagi menerima pemutakhiran keamanan. Dapatkan Nightly baru dan hentikan memakai aplikasi ini.
         \n\nUntuk memindahkan markah, info masuk, dan riwayat ke aplikasi lain, buatlah akun Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Dapatkan Nightly baru</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Dapatkan Nightly baru</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1181,10 +1201,9 @@
     <string name="onboarding_header">Selamat datang di %s!</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sinkronkan Firefox antar perangkat</string>
+    <string name="onboarding_account_sign_in_header_1">Sinkronkan Firefox antar perangkat</string>
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">Sinkronkan %1$s antar-perangkat</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sinkronkan %1$s antar-perangkat</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Bawa markah, riwayat, dan kata sandi ke %1$s di perangkat ini.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1659,6 +1678,8 @@
     <string name="login_deletion_confirmation">Yakin ingin menghapus info masuk ini?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Hapus</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Batal</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Opsi info masuk</string>
     <!--  The editable text field for a login's web address. -->
@@ -1703,9 +1724,9 @@
     <string name="synced_tabs_enable_tab_syncing">Harap aktifkan sinkronisasi tab.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">Anda tidak memiliki tab terbuka di Firefox pada perangkat Anda lainnya.</string>
+    <string name="synced_tabs_no_tabs">Anda tidak memiliki tab terbuka di Firefox pada perangkat Anda lainnya.</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">Anda tidak memiliki tab terbuka di %1$s pada perangkat Anda lainnya.</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Anda tidak memiliki tab terbuka di %1$s pada perangkat Anda lainnya.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Lihat daftar tab dari perangkat Anda lainnya.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
