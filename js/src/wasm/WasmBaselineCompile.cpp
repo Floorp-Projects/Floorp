@@ -1313,15 +1313,15 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
   if (call.restoreRegisterStateAndRealm) {
     // The Tls has been clobbered, so always reload
     fr.loadTlsPtr(InstanceReg);
-    masm.loadWasmPinnedRegsFromTls();
-    masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+    masm.loadWasmPinnedRegsFromInstance();
+    masm.switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
   } else if (call.usesSystemAbi) {
     // On x86 there are no pinned registers, so don't waste time
     // reloading the Tls.
 #ifndef JS_CODEGEN_X86
     // The Tls has been clobbered, so always reload
     fr.loadTlsPtr(InstanceReg);
-    masm.loadWasmPinnedRegsFromTls();
+    masm.loadWasmPinnedRegsFromInstance();
 #endif
   }
 }
