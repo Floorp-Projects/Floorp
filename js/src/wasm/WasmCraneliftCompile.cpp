@@ -367,7 +367,7 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       cx_tls_offset(Instance::offsetOfCx()),
       realm_cx_offset(JSContext::offsetOfRealm()),
       realm_tls_offset(Instance::offsetOfRealm()),
-      realm_func_import_tls_offset(offsetof(FuncImportTls, realm)),
+      realm_func_import_tls_offset(offsetof(FuncImportInstanceData, realm)),
       size_of_wasm_frame(sizeof(wasm::Frame)) {
 }
 
@@ -654,9 +654,9 @@ void wasm::CraneliftFreeReusableData(void* ptr) {
 static_assert(offsetof(wasm::Instance, memoryBase) == 0, "memory base moved");
 
 // The translate_call() function in wasm2clif.rs depends on these offsets.
-static_assert(offsetof(wasm::FuncImportTls, code) == 0,
+static_assert(offsetof(wasm::FuncImportInstanceData, code) == 0,
               "Import code field moved");
-static_assert(offsetof(wasm::FuncImportTls, tls) == sizeof(void*),
+static_assert(offsetof(wasm::FuncImportInstanceData, instance) == sizeof(void*),
               "Import tls moved");
 
 // Global

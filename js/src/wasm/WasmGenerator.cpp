@@ -250,7 +250,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   for (size_t i = 0; i < moduleEnv_->funcImportGlobalDataOffsets.length();
        i++) {
     uint32_t globalDataOffset;
-    if (!allocateGlobalBytes(sizeof(FuncImportTls), sizeof(void*),
+    if (!allocateGlobalBytes(sizeof(FuncImportInstanceData), sizeof(void*),
                              &globalDataOffset)) {
       return false;
     }
@@ -268,7 +268,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
 
   for (TableDesc& table : moduleEnv_->tables) {
-    if (!allocateGlobalBytes(sizeof(TableTls), sizeof(void*),
+    if (!allocateGlobalBytes(sizeof(TableInstanceData), sizeof(void*),
                              &table.globalDataOffset)) {
       return false;
     }
