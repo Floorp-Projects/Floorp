@@ -550,7 +550,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
           continue;
         }
 
-        MOZ_ASSERT(iter.tls() == iter.instance());
+        MOZ_ASSERT(iter.instance() == iter.instance());
         iter.instance()->setPendingException(ref);
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
