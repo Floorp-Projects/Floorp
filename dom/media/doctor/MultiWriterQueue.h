@@ -20,30 +20,28 @@ namespace mozilla {
 
 // Default reader locking strategy, using a mutex to ensure that concurrent
 // PopAll calls won't overlap.
-class MultiWriterQueueReaderLocking_Mutex {
+class CAPABILITY MultiWriterQueueReaderLocking_Mutex {
  public:
   MultiWriterQueueReaderLocking_Mutex()
       : mMutex("MultiWriterQueueReaderLocking_Mutex") {}
-  PUSH_IGNORE_THREAD_SAFETY
-  void Lock() { mMutex.Lock(); };
-  void Unlock() { mMutex.Unlock(); };
-  POP_THREAD_SAFETY
+  void Lock() CAPABILITY_ACQUIRE(mMutex) { mMutex.Lock(); };
+  void Unlock() CAPABILITY_RELEASE(mMutex) { mMutex.Unlock(); };
 
  private:
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 };
 
 // Reader non-locking strategy, trusting that PopAll will never be called
 // concurrently (e.g., by only calling it from a specific thread).
-class MultiWriterQueueReaderLocking_None {
+class CAPABILITY MultiWriterQueueReaderLocking_None {
  public:
 #ifndef DEBUG
-  void Lock(){};
-  void Unlock(){};
+  void Lock() CAPABILITY_ACQUIRE(){};
+  void Unlock() CAPABILITY_RELEASE(){};
 #else
   // DEBUG-mode checks to catch concurrent misuses.
-  void Lock() { MOZ_ASSERT(mLocked.compareExchange(false, true)); };
-  void Unlock() { MOZ_ASSERT(mLocked.compareExchange(true, false)); };
+  void Lock() CAPABILITY_ACQUIRE() { MOZ_ASSERT(mLocked.compareExchange(false, true)); };
+  void Unlock() CAPABILITY_RELEASE() { MOZ_ASSERT(mLocked.compareExchange(true, false)); };
 
  private:
   Atomic<bool> mLocked{false};
