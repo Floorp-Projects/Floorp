@@ -11,6 +11,9 @@ import copy
 import os
 import sys
 
+# load modules from parent dir
+sys.path.insert(1, os.path.dirname(sys.path[0]))
+
 from mozharness.base.python import PreScriptAction
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
@@ -71,85 +74,13 @@ firefox_ui_tests_config_options = (
                 "symbols, or the url of a zip file containing symbols.",
             },
         ],
-        [
-            ["--tag=TAG"],
-            {
-                "dest": "tag",
-                "help": "Subset of tests to run (local, remote).",
-            },
-        ],
     ]
     + copy.deepcopy(testing_config_options)
     + copy.deepcopy(code_coverage_config_options)
 )
 
-# Command line arguments for update tests
-firefox_ui_update_harness_config_options = [
-    [
-        ["--update-allow-mar-channel"],
-        {
-            "dest": "update_allow_mar_channel",
-            "help": "Additional MAR channel to be allowed for updates, e.g. "
-            '"firefox-mozilla-beta" for updating a release build to '
-            "the latest beta build.",
-        },
-    ],
-    [
-        ["--update-channel"],
-        {
-            "dest": "update_channel",
-            "help": "Update channel to use.",
-        },
-    ],
-    [
-        ["--update-direct-only"],
-        {
-            "action": "store_true",
-            "dest": "update_direct_only",
-            "help": "Only perform a direct update.",
-        },
-    ],
-    [
-        ["--update-fallback-only"],
-        {
-            "action": "store_true",
-            "dest": "update_fallback_only",
-            "help": "Only perform a fallback update.",
-        },
-    ],
-    [
-        ["--update-override-url"],
-        {
-            "dest": "update_override_url",
-            "help": "Force specified URL to use for update checks.",
-        },
-    ],
-    [
-        ["--update-target-buildid"],
-        {
-            "dest": "update_target_buildid",
-            "help": "Build ID of the updated build",
-        },
-    ],
-    [
-        ["--update-target-version"],
-        {
-            "dest": "update_target_version",
-            "help": "Version of the updated build.",
-        },
-    ],
-]
 
-firefox_ui_update_config_options = (
-    firefox_ui_update_harness_config_options
-    + copy.deepcopy(firefox_ui_tests_config_options)
-)
-
-
-class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
-
-    # Needs to be overwritten in sub classes
-    cli_script = None
+class FirefoxUIFunctionalTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
     def __init__(
         self,
@@ -169,7 +100,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             "uninstall",
         ]
 
-        super(FirefoxUITests, self).__init__(
+        super(FirefoxUIFunctionalTests, self).__init__(
             config_options=config_options,
             all_actions=all_actions or actions,
             default_actions=default_actions or actions,
@@ -209,13 +140,15 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             "mozpack/*",
             "mozbuild/*",
         ]
-        super(FirefoxUITests, self).download_and_extract(extract_dirs=extract_dirs)
+        super(FirefoxUIFunctionalTests, self).download_and_extract(
+            extract_dirs=extract_dirs
+        )
 
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
 
-        abs_dirs = super(FirefoxUITests, self).query_abs_dirs()
+        abs_dirs = super(FirefoxUIFunctionalTests, self).query_abs_dirs()
         abs_tests_install_dir = os.path.join(abs_dirs["abs_work_dir"], "tests")
 
         dirs = {
@@ -270,7 +203,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         cmd = [
             self.query_python_path(),
-            os.path.join(os.path.dirname(firefox_ui_harness.__file__), self.cli_script),
+            os.path.join(os.path.dirname(firefox_ui_harness.__file__), "cli_functional.py"),
             "--binary",
             binary_path,
             "--address",
@@ -299,18 +232,14 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         if self.symbols_url:
             cmd.extend(["--symbols-path", self.symbols_url])
 
-        if self.config.get("tag"):
-            cmd.extend(["--tag", self.config["tag"]])
-
         parser = StructuredOutputParser(
             config=self.config, log_obj=self.log_obj, strict=False
         )
 
-        # Add the default tests to run
-        tests = [
-            os.path.join(dirs["abs_fxui_manifest_dir"], t) for t in self.default_tests
-        ]
-        cmd.extend(tests)
+        # Add the tests to run
+        cmd.append(
+            os.path.join(dirs["abs_fxui_manifest_dir"], "functional", "manifest.ini")
+        )
 
         # Set further environment settings
         env = env or self.query_env()
@@ -327,11 +256,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if self.config["allow_software_gl_layers"]:
             env["MOZ_LAYERS_ALLOW_SOFTWARE_GL"] = "1"
-
-        # Disable non-local connections except for remote tests.
-        if self.config.get("tag") and self.config["tag"] != "remote":
-            # Causes Firefox to crash when using non-local connections.
-            env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
 
         return_code = self.run_command(
             cmd,
@@ -362,28 +286,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         )
 
 
-class FirefoxUIFunctionalTests(FirefoxUITests):
-
-    cli_script = "cli_functional.py"
-    default_tests = [
-        os.path.join("functional", "manifest.ini"),
-    ]
-
-
-class FirefoxUIUpdateTests(FirefoxUITests):
-
-    cli_script = "cli_update.py"
-    default_tests = [os.path.join("update", "manifest.ini")]
-
-    def __init__(self, config_options=None, *args, **kwargs):
-        config_options = config_options or firefox_ui_update_config_options
-
-        super(FirefoxUIUpdateTests, self).__init__(
-            config_options=config_options, *args, **kwargs
-        )
-
-    def query_harness_args(self):
-        """Collects specific update test related command line arguments."""
-        return super(FirefoxUIUpdateTests, self).query_harness_args(
-            firefox_ui_update_harness_config_options
-        )
+if __name__ == "__main__":
+    myScript = FirefoxUIFunctionalTests()
+    myScript.run_and_exit()
