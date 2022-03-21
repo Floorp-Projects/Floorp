@@ -33,7 +33,9 @@ add_task(async () => {
     "Can't get the value when you're error'd"
   );
 
-  let value = keyedScalarValue("telemetry.test.keyed_unsigned_int");
+  let value = keyedScalarValue(
+    "telemetry.test.another_mirror_for_labeled_counter"
+  );
   Assert.deepEqual(
     {
       a_label: 1,
