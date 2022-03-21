@@ -201,10 +201,31 @@ add_task(async function testRestore() {
       let uri = container_tab.linkedBrowser.currentURI.spec;
 
       // Verify XULFrameLoaderCreated was fired once
-      is(
-        xulFrameLoaderCreatedCounter.numCalledSoFar,
-        1,
-        `XULFrameLoaderCreated was fired once, when restoring ${uri} in container ${userContextId} `
+      if (
+        test_page_data.uri == "about:preferences" ||
+        test_page_data.uri == "about:config" ||
+        gFissionBrowser
+      ) {
+        todo_is(
+          xulFrameLoaderCreatedCounter.numCalledSoFar,
+          1,
+          `XULFrameLoaderCreated was fired once, when restoring ${uri} in container ${userContextId} `
+        );
+      } else {
+        is(
+          xulFrameLoaderCreatedCounter.numCalledSoFar,
+          1,
+          `XULFrameLoaderCreated was fired once, when restoring ${uri} in container ${userContextId} `
+        );
+      }
+      // While the above assertion is `todo_is`, ensure that we don't have a regression
+      // from current behaviour by checking that the event is fired < 3 times.
+      info(
+        `XULFrameLoaderCreated has been fired ${xulFrameLoaderCreatedCounter.numCalledSoFar} times, when restoring ${uri} in container ${userContextId}`
+      );
+      ok(
+        xulFrameLoaderCreatedCounter.numCalledSoFar <= 2,
+        `XULFrameLoaderCreated was fired [1,2] times, when restoring ${uri} in container ${userContextId} `
       );
       container_tab.ownerGlobal.gBrowser.removeEventListener(
         "XULFrameLoaderCreated",
