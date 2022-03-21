@@ -121,37 +121,17 @@ extern mozilla::LazyLogModule gSHIPBFCacheLog;
   }                                                  \
   PR_END_MACRO
 
-// Iterates over all registered session history listeners.
-#define ITERATE_LISTENERS(body)                                           \
-  PR_BEGIN_MACRO {                                                        \
-    for (const nsWeakPtr& weakPtr : mListeners.EndLimitedRange()) {       \
-      nsCOMPtr<nsISHistoryListener> listener = do_QueryReferent(weakPtr); \
-      if (listener) {                                                     \
-        body                                                              \
-      }                                                                   \
-    }                                                                     \
-  }                                                                       \
-  PR_END_MACRO
-
-// Calls a given method on all registered session history listeners.
-#define NOTIFY_LISTENERS(method, args) \
-  ITERATE_LISTENERS(listener->method args;);
-
-// Calls a given method on all registered session history listeners.
-// Listeners may return 'false' to cancel an action so make sure that we
-// set the return value to 'false' if one of the listeners wants to cancel.
-#define NOTIFY_LISTENERS_CANCELABLE(method, retval, args)                     \
-  PR_BEGIN_MACRO {                                                            \
-    bool canceled = false;                                                    \
-    (retval) = true;                                                          \
-    ITERATE_LISTENERS(if (NS_SUCCEEDED(listener->method args) && !(retval)) { \
-      canceled = true;                                                        \
-    });                                                                       \
-    if (canceled) {                                                           \
-      (retval) = false;                                                       \
-    }                                                                         \
-  }                                                                           \
-  PR_END_MACRO
+// Calls a F on all registered session history listeners.
+template <typename F>
+static void NotifyListeners(nsAutoTObserverArray<nsWeakPtr, 2>& aListeners,
+                            F&& f) {
+  for (const nsWeakPtr& weakPtr : aListeners.EndLimitedRange()) {
+    nsCOMPtr<nsISHistoryListener> listener = do_QueryReferent(weakPtr);
+    if (listener) {
+      f(listener);
+    }
+  }
+}
 
 class MOZ_STACK_CLASS SHistoryChangeNotifier {
  public:
@@ -821,7 +801,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
     }
 
     if (mEntries[mIndex] && !mEntries[mIndex]->GetPersist()) {
-      NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
+      NotifyListeners(mListeners, [](auto l) { l->OnHistoryReplaceEntry(); });
       aSHEntry->SetPersist(aPersist);
       mEntries[mIndex] = aSHEntry;
       UpdateRootBrowsingContextState();
@@ -832,11 +812,13 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
 
   int32_t truncating = Length() - 1 - mIndex;
   if (truncating > 0) {
-    NOTIFY_LISTENERS(OnHistoryTruncate, (truncating));
+    NotifyListeners(mListeners,
+                    [truncating](auto l) { l->OnHistoryTruncate(truncating); });
   }
 
   nsCOMPtr<nsIURI> uri = aSHEntry->GetURI();
-  NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, mIndex));
+  NotifyListeners(mListeners,
+                  [&uri, this](auto l) { l->OnHistoryNewEntry(uri, mIndex); });
 
   // Remove all entries after the current one, add the new one, and set the
   // new one as the current one.
@@ -860,7 +842,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
 }
 
 void nsSHistory::NotifyOnHistoryReplaceEntry() {
-  NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
+  NotifyListeners(mListeners, [](auto l) { l->OnHistoryReplaceEntry(); });
 }
 
 /* Get size of the history list */
@@ -1037,7 +1019,8 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
+  NotifyListeners(mListeners,
+                  [aNumEntries](auto l) { l->OnHistoryPurge(aNumEntries); });
 
   // Set all the entries hanging of the first entry that we keep
   // (mEntries[aNumEntries]) as being created as the result of a load
@@ -1105,7 +1088,9 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener* aListener) {
 }
 
 void nsSHistory::NotifyListenersContentViewerEvicted(uint32_t aNumEvicted) {
-  NOTIFY_LISTENERS(OnContentViewerEvicted, (aNumEvicted));
+  NotifyListeners(mListeners, [aNumEvicted](auto l) {
+    l->OnContentViewerEvicted(aNumEvicted);
+  });
 }
 
 NS_IMETHODIMP
@@ -1139,7 +1124,7 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
 
   aReplaceEntry->SetShistory(this);
 
-  NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
+  NotifyListeners(mListeners, [](auto l) { l->OnHistoryReplaceEntry(); });
 
   aReplaceEntry->SetPersist(true);
   mEntries[aIndex] = aReplaceEntry;
@@ -1149,9 +1134,24 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
   return NS_OK;
 }
 
+// Calls OnHistoryReload on all registered session history listeners.
+// Listeners may return 'false' to cancel an action so make sure that we
+// set the return value to 'false' if one of the listeners wants to cancel.
 NS_IMETHODIMP
 nsSHistory::NotifyOnHistoryReload(bool* aCanReload) {
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload, (aCanReload));
+  *aCanReload = true;
+
+  for (const nsWeakPtr& weakPtr : mListeners.EndLimitedRange()) {
+    nsCOMPtr<nsISHistoryListener> listener = do_QueryReferent(weakPtr);
+    if (listener) {
+      bool retval = true;
+
+      if (NS_SUCCEEDED(listener->OnHistoryReload(&retval)) && !retval) {
+        *aCanReload = false;
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1413,7 +1413,7 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags,
   // is public. So send the reload notifications with the
   // nsIWebNavigation flags.
   bool canNavigate = true;
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate, (&canNavigate));
+  MOZ_ALWAYS_SUCCEEDS(NotifyOnHistoryReload(&canNavigate));
   if (!canNavigate) {
     return NS_OK;
   }
@@ -1443,7 +1443,7 @@ nsSHistory::ReloadCurrentEntry() {
 nsresult nsSHistory::ReloadCurrentEntry(
     nsTArray<LoadEntryResult>& aLoadResults) {
   // Notify listeners
-  NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
+  NotifyListeners(mListeners, [](auto l) { l->OnHistoryGotoIndex(); });
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD, aLoadResults,
                    /* aSameEpoch */ false, /* aLoadCurrentEntry */ true,
@@ -2109,7 +2109,7 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
   // Send appropriate listener notifications.
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
-    NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
+    NotifyListeners(mListeners, [](auto l) { l->OnHistoryGotoIndex(); });
   }
 
   if (mRequestedIndex == mIndex) {
