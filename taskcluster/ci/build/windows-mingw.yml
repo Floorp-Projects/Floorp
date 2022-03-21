@@ -54,6 +54,7 @@ win32-mingwclang/opt:
 
 win32-mingwclang/debug:
     description: "Win32 MinGW-Clang Debug"
+    worker-type: b-linux-gcp
     index:
         product: firefox
         job-name: win32-mingwclang-debug
@@ -128,6 +129,7 @@ win64-mingwclang/opt:
 
 win64-mingwclang/debug:
     description: "Win64 MinGW-Clang Debug"
+    worker-type: b-linux-gcp
     index:
         product: firefox
         job-name: win64-mingwclang-debug
