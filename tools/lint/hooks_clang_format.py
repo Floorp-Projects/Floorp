@@ -53,7 +53,7 @@ def run_clang_format(hooktype, changedFiles):
     arguments = ["clang-format", "-p"] + path_list
     # On windows we need this to call the command in a shell, see Bug 1511594
     if os.name == "nt":
-        clang_format_cmd = ["sh", "mach"] + arguments
+        clang_format_cmd = [sys.executable, "mach"] + arguments
     else:
         clang_format_cmd = [os.path.join(topsrcdir, "mach")] + arguments
     if "commit" in hooktype:
