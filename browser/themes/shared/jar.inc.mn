@@ -32,7 +32,7 @@
   skin/classic/browser/controlcenter/panel.css                 (../shared/controlcenter/panel.css)
   skin/classic/browser/controlcenter/tracking-protection.svg   (../shared/controlcenter/tracking-protection.svg)
   skin/classic/browser/controlcenter/hero-message-background.svg   (../shared/controlcenter/hero-message-background.svg)
-  skin/classic/browser/customizableui/panelUI.inc.css          (../shared/customizableui/panelUI.inc.css)
+* skin/classic/browser/customizableui/panelUI.inc.css          (../shared/customizableui/panelUI.inc.css)
   skin/classic/browser/customizableui/empty-overflow-panel.png     (../shared/customizableui/empty-overflow-panel.png)
   skin/classic/browser/customizableui/empty-overflow-panel@2x.png  (../shared/customizableui/empty-overflow-panel@2x.png)
   skin/classic/browser/customizableui/density-compact.svg      (../shared/customizableui/density-compact.svg)
