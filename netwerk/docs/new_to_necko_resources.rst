@@ -8,7 +8,7 @@ Code Generation and IPC
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 * `IPC`_ and `IPDL`_
-* `IDL`_ 
+* `IDL`_
     - Implementing an interface (C++/JS)
     - XPCONNECT (scriptable/builtin)
     - QueryInterface - do_QueryInterface/do_QueryObject
@@ -32,14 +32,14 @@ Necko interfaces
 
 Libraries
 ~~~~~~~~~
-* `NSPR`_ 
-* `NSS`_ 
-* `PSM`_ 
+* `NSPR`_
+* `NSS`_
+* `PSM`_
 
 .. _NSPR: https://firefox-source-docs.mozilla.org/nspr/about_nspr.html?highlight=nspr
 .. _NSS: https://firefox-source-docs.mozilla.org/security/nss/legacy/faq/index.html
 .. _PSM: https://firefox-source-docs.mozilla.org/security/nss/legacy/faq/index.html?highlight=psm
- 
+
 
 Preferences
 ~~~~~~~~~~~
@@ -65,9 +65,9 @@ Testing
 .. _web-platform: /web-platform/index.html
 .. _gtest: /gtest/index.html
 .. _marionette: /testing/marionette/index.html
- 
+
 
 See also
 ~~~~~~~~
   - E10S (Electrolysis) -> Split ``HttpChannel`` into: ``HttpChannelChild`` & ``HttpChannelParent``
-  - Fission -> Site isolation 
+  - Fission -> Site isolation
