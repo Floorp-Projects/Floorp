@@ -465,5 +465,5 @@ interface nsISHEntry : nsISupports
      * sessionHistoryInParent enabled. See Document.webidl for more details on
      * what a Wireframe is.
      */
-    [implicit_jscontext] readonly attribute jsval wireframe;
+    [implicit_jscontext] attribute jsval wireframe;
 };

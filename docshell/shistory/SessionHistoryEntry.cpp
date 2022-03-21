@@ -1367,6 +1367,22 @@ SessionHistoryEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SessionHistoryEntry::SetWireframe(JSContext* aCx, JS::HandleValue aArg) {
+  if (aArg.isNullOrUndefined()) {
+    mWireframe = Nothing();
+    return NS_OK;
+  }
+
+  Wireframe wireframe;
+  if (aArg.isObject() && wireframe.Init(aCx, aArg)) {
+    mWireframe = Some(std::move(wireframe));
+    return NS_OK;
+  }
+
+  return NS_ERROR_INVALID_ARG;
+}
+
 NS_IMETHODIMP_(void)
 SessionHistoryEntry::SyncTreesForSubframeNavigation(
     nsISHEntry* aEntry, mozilla::dom::BrowsingContext* aTopBC,
