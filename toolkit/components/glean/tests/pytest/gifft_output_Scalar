@@ -11,6 +11,7 @@
 #include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
+#include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_ScalarGifftMap_h
 #define mozilla_glean_ScalarGifftMap_h
@@ -29,10 +30,12 @@ static inline SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
   auto lock = sLabeledMirrors.Lock();
   if (!*lock) {
     *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
-    RunOnShutdown([&] {
-      auto lock = sLabeledMirrors.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+      RunOnShutdown([&] {
+        auto lock = sLabeledMirrors.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+      });
+    }));
   }
   return lock;
 }
@@ -67,10 +70,12 @@ static inline TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
   auto lock = sTimespanStarts.Lock();
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
-    RunOnShutdown([&] {
-      auto lock = sTimespanStarts.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+      RunOnShutdown([&] {
+        auto lock = sTimespanStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+      });
+    }));
   }
   return lock;
 }
