@@ -421,9 +421,8 @@ var BookmarkPropertiesPanel = {
     document.commandDispatcher.focusedElement?.blur();
 
     // Get the states to compare bookmark and editedBookmark
-    if (this._node.bookmarkGuid) {
-      window.arguments[0].bookmarkState = gEditItemOverlay._bookmarkState;
-    }
+    window.arguments[0].bookmarkState = gEditItemOverlay._bookmarkState;
+
     // We have to uninit the panel first, otherwise late changes could force it
     // to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
