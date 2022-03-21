@@ -58,8 +58,8 @@ class nsProcess final : public nsIProcess, public nsIObserver {
                       bool aHoldWeak, bool aArgsUTF8);
 
   PRThread* mThread;
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
-  bool mShutdown;
+  mozilla::Mutex mLock;
+  bool mShutdown GUARDED_BY(mLock);
   bool mBlocking;
   bool mStartHidden;
   bool mNoShell;
@@ -71,11 +71,11 @@ class nsProcess final : public nsIProcess, public nsIObserver {
 
   // These members are modified by multiple threads, any accesses should be
   // protected with mLock.
-  int32_t mExitValue;
+  int32_t mExitValue GUARDED_BY(mLock);
 #if defined(PROCESSMODEL_WINAPI)
-  HANDLE mProcess;
+  HANDLE mProcess GUARDED_BY(mLock);
 #elif !defined(XP_UNIX)
-  PRProcess* mProcess;
+  PRProcess* mProcess GUARDED_BY(mLock);
 #endif
 };
 
