@@ -233,7 +233,11 @@ void Promise::Then(JSContext* aCx,
 
 void PromiseNativeThenHandlerBase::ResolvedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
-  RefPtr<Promise> promise = CallResolveCallback(aCx, aValue);
+  RefPtr<Promise> promise = CallResolveCallback(aCx, aValue, aRv);
+  if (aRv.Failed()) {
+    mPromise->MaybeReject(std::move(aRv));
+    return;
+  }
   if (promise) {
     mPromise->MaybeResolve(promise);
   } else {
@@ -267,7 +271,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseNativeThenHandlerBase)
 
 Result<RefPtr<Promise>, nsresult> Promise::ThenWithoutCycleCollection(
     const std::function<already_AddRefed<Promise>(
-        JSContext* aCx, JS::HandleValue aValue)>& aCallback) {
+        JSContext* aCx, JS::HandleValue aValue, ErrorResult& aRv)>& aCallback) {
   return ThenWithCycleCollectedArgs(aCallback);
 }
 
