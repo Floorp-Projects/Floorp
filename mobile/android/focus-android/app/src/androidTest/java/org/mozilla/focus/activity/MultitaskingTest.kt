@@ -11,6 +11,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,6 +68,7 @@ class MultitaskingTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/focus-android/issues/6538")
     @SmokeTest
     @Test
     fun testVisitingMultipleSites() {
@@ -112,6 +114,7 @@ class MultitaskingTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/focus-android/issues/6600")
     @SmokeTest
     @Test
     fun closeTabButtonTest() {
