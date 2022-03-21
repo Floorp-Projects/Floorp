@@ -523,6 +523,61 @@
   !endif
 !macroend
 
+!macro GetCommonDirectory
+
+  !ifndef ${_MOZFUNC_UN}GetCommonDirectory
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetCommonDirectory "!insertmacro ${_MOZFUNC_UN}GetCommonDirectoryCall"
+
+    Function ${_MOZFUNC_UN}GetCommonDirectory
+      Push $0   ; Save $0
+
+      ; This gets C:\ProgramData or the equivalent.
+      ${GetCommonAppDataFolder} $0
+
+      ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
+      ; several other places.
+      StrCpy $0 "$0\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38"
+
+      Exch $0   ; Restore original $0 and put our $0 on the stack.
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro GetCommonDirectoryCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call GetCommonDirectory
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetCommonDirectoryCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.GetCommonDirectory
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetCommonDirectory
+  !ifndef un.GetCommonDirectory
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro GetCommonDirectory
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
 /**
  * The macros below will automatically prepend un. to the function names when
  * they are defined (e.g. !define un.RegCleanMain).
@@ -3513,6 +3568,7 @@
   !ifndef ${_MOZFUNC_UN}CleanUpdateDirectories
     !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
     !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetCommonDirectory
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
     !undef _MOZFUNC_UN_TMP
@@ -3633,8 +3689,8 @@
             Delete "$R0\active-update.xml"
           !endif
 
-          ${GetCommonAppDataFolder} $R0
-          StrCpy $R0 "$R0\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\$R1"
+          ${${_MOZFUNC_UN}GetCommonDirectory} $R0
+          StrCpy $R0 "$R0\updates\$R1"
 
           ${If} ${FileExists} "$R0\updates\last-update.log"
             Rename "$R0\updates\last-update.log" "$TEMP\moz-update-newest-last-update.log"
@@ -3733,135 +3789,37 @@
 !macroend
 
 /**
- * Deletes shortcuts and Start Menu directories under Programs as specified by
- * the shortcuts log ini file and on Windows 7 unpins TaskBar and Start Menu
- * shortcuts. The shortcuts will not be deleted if the shortcut target isn't for
- * this install location which is determined by the shortcut having a target of
- * $INSTDIR\${FileMainEXE}. The context (All Users or Current User) of the
- * $DESKTOP and $SMPROGRAMS constants depends on the
- * SetShellVarContext setting and must be set by the caller of this macro. There
- * is no All Users context for $QUICKLAUNCH but this will not cause a problem
- * since the macro will just continue past the $QUICKLAUNCH shortcut deletion
- * section on subsequent calls.
+ * Removes relevant shortcuts from a given shortcuts log.
  *
- * The ini file sections must have the following format (the order of the
- * sections in the ini file is not important):
- * [SMPROGRAMS]
- * ; RelativePath is the directory relative from the Start Menu
- * ; Programs directory.
- * RelativePath=Mozilla App
- * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
- * ; on. There must not be a break in the sequence of the numbers.
- * Shortcut1=Mozilla App.lnk
- * Shortcut2=Mozilla App (Safe Mode).lnk
- * [DESKTOP]
- * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
- * ; on. There must not be a break in the sequence of the numbers.
- * Shortcut1=Mozilla App.lnk
- * Shortcut2=Mozilla App (Safe Mode).lnk
- * [QUICKLAUNCH]
- * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
- * ; on. There must not be a break in the sequence of the numbers for the
- * ; suffix.
- * Shortcut1=Mozilla App.lnk
- * Shortcut2=Mozilla App (Safe Mode).lnk
- * [STARTMENU]
- * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
- * ; on. There must not be a break in the sequence of the numbers for the
- * ; suffix.
- * Shortcut1=Mozilla App.lnk
- * Shortcut2=Mozilla App (Safe Mode).lnk
- *
+ * $R3 = return value from ShellLink::GetShortCutWorkingDirectory
  * $R4 = counter for appending to Shortcut for enumerating the ini file entries
- * $R5 = return value from ShellLink::GetShortCutTarget and
- *       ApplicationID::UninstallPinnedItem
- * $R6 = find handle and the long path to the Start Menu Programs directory
- *       (e.g. $SMPROGRAMS)
- * $R7 = path to the $QUICKLAUNCH\User Pinned directory and the return value
- *       from ReadINIStr for the relative path to the applications directory
- *       under the Start Menu Programs directory and the long path to this
+ * $R5 = return value from ShellLink::GetShortCutTarget
+ * $R6 = the long path to the Start Menu Programs directory (e.g. $SMPROGRAMS)
+ * $R7 = the return value from ReadINIStr for the relative path to the applications
+ *       directory under the Start Menu Programs directory and the long path to this
  *       directory
- * $R8 = return filename from FindFirst / FindNext and the return value from
- *       ReadINIStr for enumerating shortcuts
- * $R9 = long path to the shortcuts log ini file
+ * $R8 = the return value from ReadINIStr for enumerating shortcuts
+ * $R9 = [in] long path to the shortcuts ini file
  */
-!macro DeleteShortcuts
-
-  !ifndef ${_MOZFUNC_UN}DeleteShortcuts
-    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+!macro DeleteShortcutsFromLog
+  !ifndef ${_MOZFUNC_UN}DeleteShortcutsFromLog
     !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
     !insertmacro ${_MOZFUNC_UN_TMP}GetParent
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
-    !undef _MOZFUNC_UN_TMP
+    !insertmacro ${_MOZFUNC_UN_TMP}GetCommonDirectory
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}DeleteShortcuts "!insertmacro ${_MOZFUNC_UN}DeleteShortcutsCall"
+    !define ${_MOZFUNC_UN}DeleteShortcutsFromLog "!insertmacro ${_MOZFUNC_UN}DeleteShortcutsFromLogCall"
 
-    Function ${_MOZFUNC_UN}DeleteShortcuts
-      Push $R9
+    Function ${_MOZFUNC_UN}DeleteShortcutsFromLog
+      Exch $R9
       Push $R8
       Push $R7
       Push $R6
       Push $R5
       Push $R4
+      Push $R3
 
-      ${If} ${AtLeastWin7}
-        ; Since shortcuts that are pinned can later be removed without removing
-        ; the pinned shortcut unpin the pinned shortcuts for the application's
-        ; main exe using the pinned shortcuts themselves.
-        StrCpy $R7 "$QUICKLAUNCH\User Pinned"
-
-        ${If} ${FileExists} "$R7\TaskBar"
-          ; Delete TaskBar pinned shortcuts for the application's main exe
-          FindFirst $R6 $R8 "$R7\TaskBar\*.lnk"
-          ${Do}
-            ${If} ${FileExists} "$R7\TaskBar\$R8"
-              ShellLink::GetShortCutTarget "$R7\TaskBar\$R8"
-              Pop $R5
-              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
-              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
-                ApplicationID::UninstallPinnedItem "$R7\TaskBar\$R8"
-                Pop $R5
-              ${EndIf}
-            ${EndIf}
-            ClearErrors
-            FindNext $R6 $R8
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-          ${Loop}
-          FindClose $R6
-        ${EndIf}
-
-        ${If} ${FileExists} "$R7\StartMenu"
-          ; Delete Start Menu pinned shortcuts for the application's main exe
-          FindFirst $R6 $R8 "$R7\StartMenu\*.lnk"
-          ${Do}
-            ${If} ${FileExists} "$R7\StartMenu\$R8"
-              ShellLink::GetShortCutTarget "$R7\StartMenu\$R8"
-              Pop $R5
-              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
-              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
-                  ApplicationID::UninstallPinnedItem "$R7\StartMenu\$R8"
-                  Pop $R5
-              ${EndIf}
-            ${EndIf}
-            ClearErrors
-            FindNext $R6 $R8
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-          ${Loop}
-          FindClose $R6
-        ${EndIf}
-      ${EndIf}
-
-      ; Don't call ApplicationID::UninstallPinnedItem since pinned items for
-      ; this application were removed above and removing them below will remove
-      ; the association of side by side installations.
-      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
       ${If} ${FileExists} "$R9"
         ; Delete Start Menu shortcuts for this application
         StrCpy $R4 -1
@@ -3877,7 +3835,18 @@
             ShellLink::GetShortCutTarget "$SMPROGRAMS\$R8"
             Pop $R5
             ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ; Shortcuts created outside of the installer may
+            ; have metadata set on them such that GetShortCutTarget
+            ; returns the wrong path on 64-bit systems.
+            ; GetShortCutWorkingDirectory is not _quite_ as good
+            ; of a test (because it may be unset), but it's not
+            ; subject to this bug, and is therefore the next best thing.
+            ; https://phabricator.services.mozilla.com/D138197
+            ; contains some additional background on this.
+            ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+            Pop $R3
             ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            ${OrIf} "$INSTDIR" == "$R3"
               Delete "$SMPROGRAMS\$R8"
             ${EndIf}
           ${EndIf}
@@ -3888,7 +3857,10 @@
           ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandFullName}.lnk"
           Pop $R5
           ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+          Pop $R3
           ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+          ${OrIf} "$INSTDIR" == "$R3"
             Delete "$SMPROGRAMS\${BrandFullName}.lnk"
           ${EndIf}
         ${EndIf}
@@ -3907,7 +3879,10 @@
             ShellLink::GetShortCutTarget "$QUICKLAUNCH\$R8"
             Pop $R5
             ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+            Pop $R3
             ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            ${OrIf} "$INSTDIR" == "$R3"
               Delete "$QUICKLAUNCH\$R8"
             ${EndIf}
           ${EndIf}
@@ -3918,7 +3893,10 @@
           ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
           Pop $R5
           ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+          Pop $R3
           ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+          ${OrIf} "$INSTDIR" == "$R3"
             Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
           ${EndIf}
         ${EndIf}
@@ -3937,7 +3915,10 @@
             ShellLink::GetShortCutTarget "$DESKTOP\$R8"
             Pop $R5
             ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+            Pop $R3
             ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            ${OrIf} "$INSTDIR" == "$R3"
               Delete "$DESKTOP\$R8"
             ${EndIf}
           ${EndIf}
@@ -3948,6 +3929,9 @@
           ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
           Pop $R5
           ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ; We don't bother checking working directory here because we know
+          ; these shortcuts were only created by the installer, and thus
+          ; not subject to the bug described above.
           ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
             Delete "$DESKTOP\${BrandFullName}.lnk"
           ${EndIf}
@@ -3993,6 +3977,205 @@
           ${Loop}
         ${EndUnless}
       ${EndIf}
+
+      ClearErrors
+
+      Pop $R3
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro DeleteShortcutsFromLogCall _SHORTCUTS_LOG
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push ${_SHORTCUTS_LOG}
+  Call DeleteShortcutsFromLog
+  !verbose pop
+!macroend
+
+!macro un.DeleteShortcutsFromLogCall _SHORTCUTS_LOG
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push ${_SHORTCUTS_LOG}
+  Call un.DeleteShortcutsFromLog
+  !verbose pop
+!macroend
+
+!macro un.DeleteShortcutsFromLog
+  !ifndef un.DeleteShortcutsFromLog
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro DeleteShortcutsFromLog
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Deletes shortcuts and Start Menu directories under Programs as specified by
+ * the shortcuts log ini files and on Windows 7 unpins TaskBar and Start Menu
+ * shortcuts. The shortcuts will not be deleted if the shortcut target isn't for
+ * this install location which is determined by the shortcut having a target of
+ * $INSTDIR\${FileMainEXE} _or_ the working directory of the shortcut being
+ * equal to $INSTDIR. The context (All Users or Current User) of the
+ * $DESKTOP and $SMPROGRAMS constants depends on the
+ * SetShellVarContext setting and must be set by the caller of this macro. There
+ * is no All Users context for $QUICKLAUNCH but this will not cause a problem
+ * since the macro will just continue past the $QUICKLAUNCH shortcut deletion
+ * section on subsequent calls.
+ *
+ * The meat of this is farmed out to DeleteShortcutsFromLog to facilitate
+ * the processing of multiple shortcuts logs.
+ *
+ * The ini file sections must have the following format (the order of the
+ * sections in the ini file is not important):
+ * [SMPROGRAMS] -- this section is optional and largely irrelevant these days
+ * ; RelativePath is the directory relative from the Start Menu
+ * ; Programs directory.
+ * RelativePath=Mozilla App
+ * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
+ * ; on. There must not be a break in the sequence of the numbers.
+ * Shortcut1=Mozilla App.lnk
+ * Shortcut2=Mozilla App (Safe Mode).lnk
+ * [DESKTOP]
+ * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
+ * ; on. There must not be a break in the sequence of the numbers.
+ * Shortcut1=Mozilla App.lnk
+ * Shortcut2=Mozilla App (Safe Mode).lnk
+ * [QUICKLAUNCH]
+ * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
+ * ; on. There must not be a break in the sequence of the numbers for the
+ * ; suffix.
+ * Shortcut1=Mozilla App.lnk
+ * Shortcut2=Mozilla App (Safe Mode).lnk
+ * [STARTMENU]
+ * ; Shortcut1 is the first shortcut, Shortcut2 is the second shortcut, and so
+ * ; on. There must not be a break in the sequence of the numbers for the
+ * ; suffix.
+ * Shortcut1=Mozilla App.lnk
+ * Shortcut2=Mozilla App (Safe Mode).lnk
+ *
+ * $R4 = return value from ShellLink::GetShortCutWorkingDirectory
+ * $R5 = return value from ShellLink::GetShortCutTarget and
+ *       ApplicationID::UninstallPinnedItem
+ * $R6 = find handle
+ * $R7 = path to the $QUICKLAUNCH\User Pinned directory
+ * $R8 = return filename from FindFirst / FindNext
+ * $R9 = long path to the shortcut log ini file and path to the ProgramData
+ *       directory that the application stores additional shortcut logs in
+ *       (Typically c:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38)
+ */
+!macro DeleteShortcuts
+
+  !ifndef ${_MOZFUNC_UN}DeleteShortcuts
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}DeleteShortcutsFromLog
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}DeleteShortcuts "!insertmacro ${_MOZFUNC_UN}DeleteShortcutsCall"
+
+    Function ${_MOZFUNC_UN}DeleteShortcuts
+      Push $R9
+      Push $R8
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+
+      ; We call ApplicationID::UninstallPinnedItem once per shortcut here
+      ; (and explicitly not in DeleteShortcutsFromLog). Calling it again later
+      ; would remove the association of side by side installations.
+      ${If} ${AtLeastWin7}
+        ; Since shortcuts that are pinned can later be removed without removing
+        ; the pinned shortcut unpin the pinned shortcuts for the application's
+        ; main exe using the pinned shortcuts themselves.
+        StrCpy $R7 "$QUICKLAUNCH\User Pinned"
+
+        ${If} ${FileExists} "$R7\TaskBar"
+          ; Delete TaskBar pinned shortcuts for the application's main exe
+          FindFirst $R6 $R8 "$R7\TaskBar\*.lnk"
+          ${Do}
+            ${If} ${FileExists} "$R7\TaskBar\$R8"
+              ShellLink::GetShortCutTarget "$R7\TaskBar\$R8"
+              Pop $R5
+              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+              ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+              Pop $R4
+              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
+              ${OrIf} "$R4" == "$INSTDIR"
+                ApplicationID::UninstallPinnedItem "$R7\TaskBar\$R8"
+                Pop $R5
+              ${EndIf}
+            ${EndIf}
+            ClearErrors
+            FindNext $R6 $R8
+            ${If} ${Errors}
+              ${ExitDo}
+            ${EndIf}
+          ${Loop}
+          FindClose $R6
+        ${EndIf}
+
+        ${If} ${FileExists} "$R7\StartMenu"
+          ; Delete Start Menu pinned shortcuts for the application's main exe
+          FindFirst $R6 $R8 "$R7\StartMenu\*.lnk"
+          ${Do}
+            ${If} ${FileExists} "$R7\StartMenu\$R8"
+              ShellLink::GetShortCutTarget "$R7\StartMenu\$R8"
+              Pop $R5
+              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+              ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+              Pop $R4
+              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
+              ${OrIf} "$R4" == "$INSTDIR"
+                  ApplicationID::UninstallPinnedItem "$R7\StartMenu\$R8"
+                  Pop $R5
+              ${EndIf}
+            ${EndIf}
+            ClearErrors
+            FindNext $R6 $R8
+            ${If} ${Errors}
+              ${ExitDo}
+            ${EndIf}
+          ${Loop}
+          FindClose $R6
+        ${EndIf}
+      ${EndIf}
+
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
+      ${${_MOZFUNC_UN}DeleteShortcutsFromLog} $R9
+
+      ${${_MOZFUNC_UN}GetCommonDirectory} $R9
+      ; Shortcut logs created by an application are in a different directory,
+      ; and named after both the application and the user SID, eg:
+      ; Firefox_S-1-5-21-1004336348-1177238915-682003330-512_shortcuts.ini
+      FindFirst $R6 $R8 "$R9\*_shortcuts.ini"
+      ${DoUntil} ${Errors}
+        ${If} ${FileExists} "$R9\$R8"
+          ${${_MOZFUNC_UN}DeleteShortcutsFromLog} "$R9\$R8"
+        ${EndIf}
+        ClearErrors
+        FindNext $R6 $R8
+      ${Loop}
 
       ClearErrors
 
@@ -6988,14 +7171,6 @@
 !macroend
 !define GetShortcutsLogPath "!insertmacro GetShortcutsLogPath"
 
-/**
- * Deletes the shortcuts log ini file.
- */
-!macro DeleteShortcutsLogFile
-  ${DeleteFile} "$INSTDIR\uninstall\${SHORTCUTS_LOG}"
-!macroend
-!define DeleteShortcutsLogFile "!insertmacro DeleteShortcutsLogFile"
-
 
 ################################################################################
 # Macros for managing specific Windows version features
@@ -7637,6 +7812,11 @@
  * Subsequent calls will then retreive the stored hash value. On any failure,
  * $AppUserModelID will be set to an empty string.
  *
+ * A second string that will be used for Private Browsing mode is also generated by
+ * taking the regular $AppUserModelID and appending ";PrivateBrowsingAUMID" to it.
+ * This is stored in $AppUserModelIDPrivate upon successful completion of this
+ * function.
+ *
  * Registry format: root/_REG_PATH/"_EXE_PATH" = "hash"
  *
  * @param   _EXE_PATH
@@ -7644,7 +7824,8 @@
  * @param   _REG_PATH
  *          The HKLM/HKCU agnostic registry path where the key hash should
  *          be stored. ex: "Software\Mozilla\Firefox\TaskBarIDs"
- * @result  (Var) $AppUserModelID contains the app model id.
+ * @result  (Var) $AppUserModelID and $AppUserModelIDPrivate contain the
+ *          app model id and the private app model id, respectively.
  */
 !macro InitHashAppModelId
   !ifndef ${_MOZFUNC_UN}InitHashAppModelId
@@ -7656,6 +7837,7 @@
 
     !ifndef InitHashAppModelId
       Var AppUserModelID
+      Var AppUserModelIDPrivate
     !endif
 
     !verbose push
@@ -7692,6 +7874,9 @@
       end:
       ${If} "$AppUserModelID" == "error"
         StrCpy $AppUserModelID ""
+        StrCpy $AppUserModelIDPrivate ""
+      ${Else}
+        StrCpy $AppUserModelIDPrivate "$AppUserModelID;PrivateBrowsingAUMID"
       ${EndIf}
 
       ClearErrors
