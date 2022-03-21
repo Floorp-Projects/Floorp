@@ -201,6 +201,13 @@ class AboutReaderParent extends JSWindowActorParent {
         break;
       }
 
+      case "RedirectTo": {
+        gCachedArticles.set(message.data.newURL, message.data.article);
+        // This is setup as a query so we can navigate the page after we've
+        // cached the relevant info in the parent.
+        return true;
+      }
+
       default:
         this.callListeners(message);
         break;
