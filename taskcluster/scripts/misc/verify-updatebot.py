@@ -252,7 +252,7 @@ for bug in unique_updatebot_bugs:
             overall_failure = True
             continue
 
-        if library == 'angle':
+        if library == "angle":
             print("Currently cannot verify angle updates")
             continue
 
