@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<body>
+    <script>
+'use strict';
+const ab = new ArrayBuffer(4);
+const ta = new Uint8ClampedArray(ab);
+const idata = new ImageData(ta, 1);
+const canvas = document.createElement('canvas');
+const gl = canvas.getContext('webgl2');
+const worker = new Worker('worker.js');
+worker.postMessage([ab], [ab]);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 1, gl.RGB, idata.width, idata.height, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, idata);
+const err = gl.getError();
+window.ok = window.ok || console.log;
+ok(err == gl.INVALID_VALUE, 'texImage2D(ImageData) with Transferred ArrayBuffer is INVALID_VALUE');
+    </script>
+</body>
+</html>
