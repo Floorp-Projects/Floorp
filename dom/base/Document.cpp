@@ -14605,7 +14605,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   FrameForPointOptions options;
   options.mBits += FrameForPointOption::IgnoreCrossDoc;
   options.mBits += FrameForPointOption::IgnorePaintSuppression;
-  // options.mBits += FrameForPointOption::OnlyVisible;
+  options.mBits += FrameForPointOption::OnlyVisible;
 
   AutoTArray<nsIFrame*, 32> frames;
   const RelativeTo relativeTo{rootFrame, mozilla::ViewportType::Layout};
