@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals log */
-/* globals main, deviceInfo, analytics, catcher, communication, browser */
+/* globals main, deviceInfo, catcher, communication, browser */
 
 "use strict";
 
@@ -49,9 +49,7 @@ this.auth = (function() {
           initialized = true;
           saveAuthInfo(JSON.parse(req.responseText));
           resolve(true);
-          analytics.sendEvent("registered");
         } else {
-          analytics.sendEvent("register-failed", `bad-response-${req.status}`);
           log.warn("Error in response:", req.responseText);
           const exc = new Error("Bad response: " + req.status);
           exc.popupMessage = "LOGIN_ERROR";
@@ -59,7 +57,6 @@ this.auth = (function() {
         }
       });
       req.onerror = catcher.watchFunction(() => {
-        analytics.sendEvent("register-failed", "connection-error");
         const exc = new Error("Error contacting server");
         exc.popupMessage = "LOGIN_CONNECTION_ERROR";
         reject(exc);
@@ -97,18 +94,15 @@ this.auth = (function() {
             log.warn("Error in response:", req.responseText);
             const exc = new Error("Could not log in: " + req.status);
             exc.popupMessage = "LOGIN_ERROR";
-            analytics.sendEvent("login-failed", `bad-response-${req.status}`);
             reject(exc);
           } else if (req.status === 0) {
             const error = new Error("Could not log in, server unavailable");
             error.popupMessage = "LOGIN_CONNECTION_ERROR";
-            analytics.sendEvent("login-failed", "connection-error");
             reject(error);
           } else {
             initialized = true;
             const jsonResponse = JSON.parse(req.responseText);
             log.info("Screenshots logged in");
-            analytics.sendEvent("login");
             saveAuthInfo(jsonResponse);
             if (ownershipCheck) {
               resolve({ isOwner: jsonResponse.isOwner });
@@ -118,7 +112,6 @@ this.auth = (function() {
           }
         });
         req.onerror = catcher.watchFunction(() => {
-          analytics.sendEvent("login-failed", "connection-error");
           const exc = new Error("Connection failed");
           exc.url = loginUrl;
           exc.popupMessage = "CONNECTION_ERROR";
