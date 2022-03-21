@@ -4778,16 +4778,25 @@
       // This avoids tab-switches in the new window, preserving tab laziness.
       // However, to avoid multiple tab-switches in the original window, the other tabs
       // should be adopted before the selected one.
-      let selectedTabIndex = Math.max(0, tabs.indexOf(gBrowser.selectedTab));
-      let selectedTab = tabs[selectedTabIndex];
+      let { selectedTab } = gBrowser;
+      if (!tabs.includes(selectedTab)) {
+        selectedTab = tabs[0];
+      }
       let win = this.replaceTabWithWindow(selectedTab, aOptions);
       win.addEventListener(
         "before-initial-tab-adopted",
         () => {
-          for (let i = 0; i < tabs.length; ++i) {
-            if (i != selectedTabIndex) {
-              win.gBrowser.adoptTab(tabs[i], i);
+          let index = 0;
+          for (let tab of tabs) {
+            if (tab !== selectedTab) {
+              const newTab = win.gBrowser.adoptTab(tab, index);
+              if (!newTab) {
+                // The adoption failed. Restore "fadein" and don't increase the index.
+                tab.setAttribute("fadein", "true");
+                continue;
+              }
             }
+            ++index;
           }
           // Restore tab selection
           let winVisibleTabs = win.gBrowser.visibleTabs;
