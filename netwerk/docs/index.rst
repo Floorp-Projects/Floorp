@@ -13,5 +13,6 @@ There is also documentation for the `HTTP server we use for unit tests`_.
    http/logging
    dns/dns-over-https-trr
    submitting_networking_bugs.md
-
+   new_to_necko_resources
+ 
 .. _HTTP server we use for unit tests: http_server_for_testing.html
