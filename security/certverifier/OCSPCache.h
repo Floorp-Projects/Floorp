@@ -120,14 +120,14 @@ class OCSPCache {
                     /*out*/ size_t& index, const MutexAutoLock& aProofOfLock);
   void MakeMostRecentlyUsed(size_t aIndex, const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   static const size_t MaxEntries = 1024;
   // Sorted with the most-recently-used entry at the end.
   // Using 256 here reserves as much possible inline storage as the vector
   // implementation will give us. 1024 bytes is the maximum it allows,
   // which results in 256 Entry pointers or 128 Entry pointers, depending
   // on the size of a pointer.
-  Vector<Entry*, 256> mEntries;
+  Vector<Entry*, 256> mEntries GUARDED_BY(mMutex);
 };
 
 }  // namespace psm
