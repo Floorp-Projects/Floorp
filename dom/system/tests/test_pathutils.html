@@ -318,7 +318,7 @@
       // symlink to `/var`, so we need to pre-normalize our temporary directory
       // or expected paths won't match.
       const tmpDir = PathUtils.join(
-        PathUtils.normalize(PathUtils.tempDir),
+        PathUtils.normalize(await PathUtils.getTempDir()),
         "pathutils_test"
       );
 
@@ -475,16 +475,19 @@
   add_task(async function test_getDirectories() {
     // See: nsAppDirectoryServiceDefs.h
     const tests = [
-      ["profileDir", "ProfD"],
-      ["localProfileDir", "ProfLD"],
-      ["tempDir", AppConstants.MOZ_SANDBOX ? "ContentTmpD" : "TmpD"],
+      ["profileDir", "getProfileDir", "ProfD"],
+      ["localProfileDir", "getLocalProfileDir", "ProfLD"],
+      ["tempDir", "getTempDir", AppConstants.MOZ_SANDBOX ? "ContentTmpD" : "TmpD"],
     ];
 
-    for (const [attrName, dirConstant] of tests) {
+    for (const [attrName, methName, dirConstant] of tests) {
       const expected = Services.dirsvc.get(dirConstant, Ci.nsIFile).path;
 
       const attrValue = PathUtils[attrName];
       is(attrValue, expected, `PathUtils.${attrName} == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
+
+      const methValue = await PathUtils[methName]();
+      is(methValue, expected, `PathUtils.${methName}() == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
     }
   });
 </script>

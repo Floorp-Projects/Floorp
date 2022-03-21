@@ -103,26 +103,17 @@ namespace PathUtils {
 
 [Exposed=Window]
 partial namespace PathUtils {
-  /**
-   * The profile directory.
-   */
   [Throws, BinaryName="ProfileDirSync"]
   readonly attribute DOMString profileDir;
 
-  /**
-   * The local-specific profile directory.
-   */
   [Throws, BinaryName="LocalProfileDirSync"]
   readonly attribute DOMString localProfileDir;
 
-  /**
-   * The temporary directory for the process.
-   */
   [Throws, BinaryName="TempDirSync"]
   readonly attribute DOMString tempDir;
 };
 
-[Exposed=Worker]
+[Exposed=(Window, Worker)]
 partial namespace PathUtils {
   /**
    * The profile directory.
