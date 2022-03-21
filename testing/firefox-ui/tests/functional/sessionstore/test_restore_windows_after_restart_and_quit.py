@@ -30,28 +30,16 @@ class TestSessionStoreEnabledAllWindows(SessionStoreTestCase):
         the browser, and then ensures that the standard tabs have been
         restored, and that the private ones have not.
         """
-        current_windows_set = self.convert_open_windows_to_set()
-        self.assertEqual(
-            current_windows_set,
-            self.all_windows,
-            msg="Not all requested windows have been opened. Expected {}, got {}.".format(
-                self.all_windows, current_windows_set
-            ),
+        self.wait_for_windows(
+            self.all_windows, "Not all requested windows have been opened"
         )
 
         self.marionette.quit(in_app=True)
         self.marionette.start_session()
         self.marionette.set_context("chrome")
 
-        current_windows_set = self.convert_open_windows_to_set()
-        self.assertEqual(
-            current_windows_set,
-            self.test_windows,
-            msg="""Non private browsing windows should have
-                         been restored. Expected {}, got {}.
-                         """.format(
-                self.test_windows, current_windows_set
-            ),
+        self.wait_for_windows(
+            self.test_windows, "Non private browsing windows should have been restored"
         )
 
 
@@ -64,13 +52,8 @@ class TestSessionStoreEnabledNoPrivateWindows(TestSessionStoreEnabledAllWindows)
 
 class TestSessionStoreDisabled(SessionStoreTestCase):
     def test_no_restore_with_quit(self):
-        current_windows_set = self.convert_open_windows_to_set()
-        self.assertEqual(
-            current_windows_set,
-            self.all_windows,
-            msg="Not all requested windows have been opened. Expected {}, got {}.".format(
-                self.all_windows, current_windows_set
-            ),
+        self.wait_for_windows(
+            self.all_windows, "Not all requested windows have been opened"
         )
 
         self.marionette.quit(in_app=True)
@@ -89,24 +72,12 @@ class TestSessionStoreDisabled(SessionStoreTestCase):
         )
 
     def test_restore_with_restart(self):
-        current_windows_set = self.convert_open_windows_to_set()
-        self.assertEqual(
-            current_windows_set,
-            self.all_windows,
-            msg="Not all requested windows have been opened. Expected {}, got {}.".format(
-                self.all_windows, current_windows_set
-            ),
+        self.wait_for_windows(
+            self.all_windows, "Not all requested windows have been opened"
         )
 
         self.marionette.restart(in_app=True)
 
-        current_windows_set = self.convert_open_windows_to_set()
-        self.assertEqual(
-            current_windows_set,
-            self.test_windows,
-            msg="""Non private browsing windows should have
-                         been restored. Expected {}, got {}.
-                         """.format(
-                self.test_windows, current_windows_set
-            ),
+        self.wait_for_windows(
+            self.test_windows, "Non private browsing windows should have been restored"
         )
