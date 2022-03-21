@@ -233,6 +233,9 @@ void Promise::Then(JSContext* aCx,
 
 static void SettlePromise(Promise* aSettlingPromise, Promise* aCallbackPromise,
                           ErrorResult& aRv) {
+  if (!aSettlingPromise) {
+    return;
+  }
   if (aRv.Failed()) {
     aSettlingPromise->MaybeReject(std::move(aRv));
     return;
