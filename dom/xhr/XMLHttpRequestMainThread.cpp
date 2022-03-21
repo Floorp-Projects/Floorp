@@ -2042,10 +2042,6 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
       mResponseXML->SetSuppressParserErrorConsoleMessages(true);
     }
 
-    if (mPrincipal->IsSystemPrincipal()) {
-      mResponseXML->ForceEnableXULXBL();
-    }
-
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     bool isCrossSite = false;
     isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
