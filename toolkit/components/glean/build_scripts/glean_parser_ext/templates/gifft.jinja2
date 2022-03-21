@@ -15,6 +15,7 @@ Jinja2 template is not. Pleas file bugs! #}
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
 {% endif %}
+#include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_{{ probe_type }}GifftMap_h
 #define mozilla_glean_{{ probe_type }}GifftMap_h
@@ -31,10 +32,12 @@ static inline TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
   auto lock = sTimerIdToStarts.Lock();
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<TimerId, TimeStamp>>();
-    RunOnShutdown([&] {
-      auto lock = sTimerIdToStarts.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+      RunOnShutdown([&] {
+        auto lock = sTimerIdToStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+      });
+    }));
   }
   return lock;
 }
@@ -49,10 +52,12 @@ static inline SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
   auto lock = sLabeledMirrors.Lock();
   if (!*lock) {
     *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
-    RunOnShutdown([&] {
-      auto lock = sLabeledMirrors.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+      RunOnShutdown([&] {
+        auto lock = sLabeledMirrors.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+      });
+    }));
   }
   return lock;
 }
@@ -87,10 +92,12 @@ static inline TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
   auto lock = sTimespanStarts.Lock();
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
-    RunOnShutdown([&] {
-      auto lock = sTimespanStarts.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+      RunOnShutdown([&] {
+        auto lock = sTimespanStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+      });
+    }));
   }
   return lock;
 }
