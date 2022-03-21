@@ -72,41 +72,6 @@ Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, Maybe<uvec3> size,
                                 false});
 }
 
-TexUnpackBlobDesc FromImageData(const GLenum target, Maybe<uvec3> size,
-                                const dom::ImageData& imageData,
-                                dom::Uint8ClampedArray* const scopedArr) {
-  MOZ_RELEASE_ASSERT(scopedArr->Init(imageData.GetDataObject()));
-  scopedArr->ComputeState();
-  const size_t dataSize = scopedArr->Length();
-  const auto data = reinterpret_cast<uint8_t*>(scopedArr->Data());
-
-  const gfx::IntSize imageISize(imageData.Width(), imageData.Height());
-  const auto imageUSize = *uvec2::FromSize(imageISize);
-  const size_t stride = imageUSize.x * 4;
-  const gfx::SurfaceFormat surfFormat = gfx::SurfaceFormat::R8G8B8A8;
-  MOZ_ALWAYS_TRUE(dataSize == stride * imageUSize.y);
-
-  const RefPtr<gfx::DataSourceSurface> surf =
-      gfx::Factory::CreateWrappingDataSourceSurface(data, stride, imageISize,
-                                                    surfFormat);
-  MOZ_ASSERT(surf);
-
-  ////
-
-  if (!size) {
-    size.emplace(imageUSize.x, imageUSize.y, 1);
-  }
-
-  ////
-
-  // WhatWG "HTML Living Standard" (30 October 2015):
-  // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
-  // non-premultiplied alpha values."
-  return {target,  size.value(), gfxAlphaType::NonPremult,
-          {},      {},           Some(imageUSize),
-          nullptr, {},           surf};
-}
-
 static layers::SurfaceDescriptor Flatten(const layers::SurfaceDescriptor& sd) {
   const auto sdType = sd.type();
   if (sdType != layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo) {

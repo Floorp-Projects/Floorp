@@ -32,16 +32,21 @@ template <typename T>
 class Optional;
 
 class ImageData final : public nsISupports {
-  ~ImageData() { DropData(); }
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
+
+  const uint32_t mWidth;
+  const uint32_t mHeight;
+
+ private:
+  JS::Heap<JSObject*> mData;
 
  public:
   ImageData(uint32_t aWidth, uint32_t aHeight, JSObject& aData)
       : mWidth(aWidth), mHeight(aHeight), mData(&aData) {
     HoldData();
   }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
 
   static already_AddRefed<ImageData> Constructor(const GlobalObject& aGlobal,
                                                  const uint32_t aWidth,
@@ -75,9 +80,7 @@ class ImageData final : public nsISupports {
   void DropData();
 
   ImageData() = delete;
-
-  uint32_t mWidth, mHeight;
-  JS::Heap<JSObject*> mData;
+  ~ImageData() { DropData(); }
 };
 
 }  // namespace dom
