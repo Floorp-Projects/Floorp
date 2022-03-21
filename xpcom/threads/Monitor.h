@@ -228,16 +228,15 @@ typedef detail::BaseMonitorAutoUnlock<MonitorSingleWriter>
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
+class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleaseableMonitorAutoLock {
  public:
-  explicit ReleasableMonitorAutoLock(Monitor& aMonitor)
-      CAPABILITY_ACQUIRE(aMonitor)
+  explicit ReleaseableMonitorAutoLock(Monitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Lock();
     mLocked = true;
   }
 
-  ~ReleasableMonitorAutoLock() CAPABILITY_RELEASE() {
+  ~ReleaseableMonitorAutoLock() CAPABILITY_RELEASE() {
     if (mLocked) {
       mMonitor->Unlock();
     }
@@ -278,7 +277,7 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
     mMonitor->Lock();
     mLocked = true;
   }
-  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY() {
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(mMonitor) {
     mMonitor->AssertCurrentThreadOwns();
   }
 
@@ -286,9 +285,9 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
   bool mLocked;
   Monitor* mMonitor;
 
-  ReleasableMonitorAutoLock() = delete;
-  ReleasableMonitorAutoLock(const ReleasableMonitorAutoLock&) = delete;
-  ReleasableMonitorAutoLock& operator=(const ReleasableMonitorAutoLock&) =
+  ReleaseableMonitorAutoLock() = delete;
+  ReleaseableMonitorAutoLock(const ReleaseableMonitorAutoLock&) = delete;
+  ReleaseableMonitorAutoLock& operator=(const ReleaseableMonitorAutoLock&) =
       delete;
   static void* operator new(size_t) noexcept(true);
 };

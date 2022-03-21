@@ -222,8 +222,7 @@ class Node {
                          bool allow_close_on_bad_state);
   void ConvertToProxy(Port* port, const NodeName& to_node_name,
                       PortName* port_name,
-                      Event::PortDescriptor* port_descriptor)
-      REQUIRES(ports_lock_);
+                      Event::PortDescriptor* port_descriptor);
   int AcceptPort(const PortName& port_name,
                  const Event::PortDescriptor& port_descriptor);
 
@@ -245,20 +244,17 @@ class Node {
   // exist in |ports_|.
   void UpdatePortPeerAddress(const PortName& local_port_name, Port* local_port,
                              const NodeName& new_peer_node,
-                             const PortName& new_peer_port)
-      REQUIRES(ports_lock_);
+                             const PortName& new_peer_port);
 
   // Removes an entry from |peer_port_map_| corresponding to |local_port|'s peer
   // address, if valid.
-  void RemoveFromPeerPortMap(const PortName& local_port_name, Port* local_port)
-      REQUIRES(ports_lock_);
+  void RemoveFromPeerPortMap(const PortName& local_port_name, Port* local_port);
 
   // Swaps the peer information for two local ports. Used during port merges.
   // Note that |ports_lock_| must be held along with each of the two port's own
   // locks, through the extent of this method.
   void SwapPortPeers(const PortName& port0_name, Port* port0,
-                     const PortName& port1_name, Port* port1)
-      REQUIRES(ports_lock_);
+                     const PortName& port1_name, Port* port1);
 
   // Sends an acknowledge request to the peer if the port has a non-zero
   // |sequence_num_acknowledge_interval|. This needs to be done when the port's
@@ -291,9 +287,8 @@ class Node {
   // Because UserMessage events may execute arbitrary user code during
   // destruction, it is also important to ensure that such events are never
   // destroyed while this (or any individual Port) lock is held.
-  mozilla::Mutex ports_lock_{"Ports Lock"};
-  std::unordered_map<LocalPortName, RefPtr<Port>> ports_
-      GUARDED_BY(ports_lock_);
+  mozilla::Mutex ports_lock_ MOZ_UNANNOTATED{"Ports Lock"};
+  std::unordered_map<LocalPortName, RefPtr<Port>> ports_;
 
   // Maps a peer port name to a list of PortRefs for all local ports which have
   // the port name key designated as their peer port. The set of local ports
@@ -312,8 +307,7 @@ class Node {
   // a given peer node or a local port that references a specific given peer
   // port on a peer node. The key to this map is the corresponding peer node
   // name.
-  std::unordered_map<NodeName, PeerPortMap> peer_port_maps_
-      GUARDED_BY(ports_lock_);
+  std::unordered_map<NodeName, PeerPortMap> peer_port_maps_;
 };
 
 }  // namespace ports

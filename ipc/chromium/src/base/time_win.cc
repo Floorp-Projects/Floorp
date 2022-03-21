@@ -209,14 +209,6 @@ DWORD timeGetTimeWrapper() { return timeGetTime(); }
 
 DWORD (*tick_function)(void) = &timeGetTimeWrapper;
 
-// This setup is a little gross: the `now` instance lives until libxul is
-// unloaded, but leak checking runs prior to that, and would see a Mutex
-// instance contained in NowSingleton as still live.  Said instance would
-// be reported as a leak...but it's not, really.  To avoid that, we need
-// to use StaticMutex (which is not leak-checked), but StaticMutex can't
-// be a member variable.  So we have to have this separate static variable.
-static mozilla::StaticMutex sNowSingletonLock;
-
 // We use timeGetTime() to implement TimeTicks::Now().  This can be problematic
 // because it returns the number of milliseconds since Windows has started,
 // which will roll over the 32-bit value every ~49 days.  We try to track
@@ -225,7 +217,7 @@ static mozilla::StaticMutex sNowSingletonLock;
 class NowSingleton {
  public:
   TimeDelta Now() {
-    mozilla::StaticMutexAutoLock locked(sNowSingletonLock);
+    mozilla::StaticMutexAutoLock locked(lock_);
     // We should hold the lock while calling tick_function to make sure that
     // we keep our last_seen_ stay correctly in sync.
     DWORD now = tick_function();
@@ -237,20 +229,28 @@ class NowSingleton {
   }
 
   static NowSingleton& instance() {
-    static NowSingleton now;
+    // This setup is a little gross: the `now` instance lives until libxul is
+    // unloaded, but leak checking runs prior to that, and would see a Mutex
+    // instance contained in NowSingleton as still live.  Said instance would
+    // be reported as a leak...but it's not, really.  To avoid that, we need
+    // to use StaticMutex (which is not leak-checked), but StaticMutex can't
+    // be a member variable.  So we have to have this separate variable and
+    // pass it into the NowSingleton constructor.
+    static mozilla::StaticMutex mutex MOZ_UNANNOTATED;
+    static NowSingleton now(mutex);
     return now;
   }
 
  private:
-  explicit NowSingleton()
-      : rollover_(TimeDelta::FromMilliseconds(0)), last_seen_(0) {}
+  explicit NowSingleton(mozilla::StaticMutex& aMutex)
+      : lock_(aMutex),
+        rollover_(TimeDelta::FromMilliseconds(0)),
+        last_seen_(0) {}
   ~NowSingleton() = default;
 
-  TimeDelta rollover_ GUARDED_BY(
-      sNowSingletonLock);  // Accumulation of time lost due to rollover.
-  DWORD last_seen_
-      GUARDED_BY(sNowSingletonLock);  // The last timeGetTime value we saw, to
-                                      // detect rollover.
+  mozilla::StaticMutex& lock_;  // To protected last_seen_ and rollover_.
+  TimeDelta rollover_;          // Accumulation of time lost due to rollover.
+  DWORD last_seen_;  // The last timeGetTime value we saw, to detect rollover.
 
   DISALLOW_COPY_AND_ASSIGN(NowSingleton);
 };
