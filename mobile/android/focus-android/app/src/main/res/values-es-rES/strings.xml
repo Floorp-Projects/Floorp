@@ -508,7 +508,9 @@
     <string name="onboarding_history_title">Navega como nunca lo has hecho</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
+
+    <string name="onboarding_history_description2">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>

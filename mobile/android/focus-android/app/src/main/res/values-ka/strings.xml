@@ -491,7 +491,37 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">მოგესალმებათ %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">ახალ დონეზე აყვანილი პირადულობა, როცა მოგესურვებათ</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">ფარული და უხილავი რეჟიმების გაერთიანება</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s პირადულობის უწინარესობის უზრუნველმყოფი ბრაუზერია, თვალთვალისა და დევნისგან დაცვის მძლავრი ჩაშენებული საშუალებებით.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">მოინახულეთ გვერდები სრულიად ახლებურად</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
+    <string name="onboarding_history_description2">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">პირადულობის დაცვა ნებისმიერი გარემოებისთვის</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">საჭიროების შემთხვევაში მარტივად შეგიძლიათ პირადულობის დაცვის გამკაცრება ან შემსუბუქება.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">დაიწყეთ გვერდების მონახულება</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">გააძლიერეთ პირადი მონაცემების დაცვა</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">პირადი მონაცემების უსაფრთხოება ახალ დონეზეა აყვანილი. შეზღუდეთ სარეკლამო და სხვა შიგთავსი, რომლითაც საიტებზე თქვენი დევნაა შესაძლებელი და შეამცირეთ გვერდების ჩატვირთვის დრო.</string>
@@ -909,7 +939,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">დაცული ხართ!</string>
     <!-- Tool Tip Message -->
-    <string name="tool_tip_message">ეს ნაგულისხმევი პარამეტრები ძლიერ დაცვას გთავაზობთ. თუმცა, მარტივად შეგიძლიათ პარამეტრების შესწორება და საკუთარ საჭიროებებზე მორგება.</string>
+    <string name="tool_tip_message">ეს ნაგულისხმევი პარამეტრები ძლიერ დაცვას გთავაზობთ. თუმცა მარტივად შეგიძლიათ პარამეტრების შესწორება და საკუთარ საჭიროებებზე მორგება.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">დახურვა</string>
 

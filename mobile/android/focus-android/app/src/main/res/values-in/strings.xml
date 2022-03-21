@@ -509,7 +509,9 @@
     <string name="onboarding_history_title">Menjelajah seperti ini tidak pernah terjadi</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
+
+    <string name="onboarding_history_description2">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privasi yang sesuai dengan situasi apapun</string>
