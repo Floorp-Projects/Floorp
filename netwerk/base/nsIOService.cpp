@@ -269,7 +269,10 @@ nsresult nsIOService::Init() {
 
   // setup our bad port list stuff
   for (int i = 0; gBadPortList[i]; i++) {
+    // We can't be accessed by another thread yet
+    PUSH_IGNORE_THREAD_SAFETY
     mRestrictedPortList.AppendElement(gBadPortList[i]);
+    POP_THREAD_SAFETY
   }
 
   // Further modifications to the port list come from prefs

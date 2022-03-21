@@ -232,8 +232,8 @@ class nsIOService final : public nsIIOService,
   nsCategoryCache<nsIChannelEventSink> mChannelEventSinks{
       NS_CHANNEL_EVENT_SINK_CATEGORY};
 
-  Mutex mMutex MOZ_UNANNOTATED{"nsIOService::mMutex"};
-  nsTArray<int32_t> mRestrictedPortList;
+  Mutex mMutex{"nsIOService::mMutex"};
+  nsTArray<int32_t> mRestrictedPortList GUARDED_BY(mMutex);
 
   uint32_t mTotalRequests{0};
   uint32_t mCacheWon{0};
