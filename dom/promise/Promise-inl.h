@@ -10,9 +10,13 @@
 #include <type_traits>
 #include <utility>
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TupleCycleCollection.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace dom {
@@ -33,7 +37,7 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
   virtual ~PromiseNativeThenHandlerBase() = default;
 
   virtual already_AddRefed<Promise> CallResolveCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
+      JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) = 0;
 
   virtual void Traverse(nsCycleCollectionTraversalCallback&) = 0;
   virtual void Unlink() = 0;
@@ -97,6 +101,16 @@ using ::ImplCycleCollectionUnlink;
 template <typename Callback, typename... Args>
 class NativeThenHandler final : public PromiseNativeThenHandlerBase {
  public:
+  /**
+   * @param aPromise A promise that will be settled by the result of the
+   * callback. Any thrown value to ErrorResult passed to the callback will
+   * be used to reject the promise, otherwise the promise will be resolved with
+   * the return value.
+   * @param aOnResolve A resolve callback
+   * @param aArgs The custom arguments to be passed to the both callbacks. The
+   * handler class will grab them to make them live long enough and to allow
+   * cycle collection.
+   */
   NativeThenHandler(Promise& aPromise, Callback&& aOnResolve, Args&&... aArgs)
       : PromiseNativeThenHandlerBase(aPromise),
         mOnResolve(std::forward<Callback>(aOnResolve)),
@@ -113,23 +127,24 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgs)
   }
 
-  already_AddRefed<Promise> CallResolveCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    return CallCallback(aCx, mOnResolve, aValue);
+  already_AddRefed<Promise> CallResolveCallback(JSContext* aCx,
+                                                JS::Handle<JS::Value> aValue,
+                                                ErrorResult& aRv) override {
+    return CallCallback(aCx, mOnResolve, aValue, aRv);
   }
 
   template <size_t... Indices>
   already_AddRefed<Promise> CallCallback(JSContext* aCx,
                                          const Callback& aHandler,
                                          JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv,
                                          std::index_sequence<Indices...>) {
-    return mOnResolve(aCx, aValue, ArgType(Get<Indices>(mArgs))...);
+    return mOnResolve(aCx, aValue, aRv, ArgType(Get<Indices>(mArgs))...);
   }
 
-  already_AddRefed<Promise> CallCallback(JSContext* aCx,
-                                         const Callback& aHandler,
-                                         JS::Handle<JS::Value> aValue) {
-    return CallCallback(aCx, aHandler, aValue,
+  auto CallCallback(JSContext* aCx, const Callback& aHandler,
+                    JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+    return CallCallback(aCx, aHandler, aValue, aRv,
                         std::index_sequence_for<Args...>{});
   }
 
