@@ -19,7 +19,7 @@ job-defaults:
                     linux.*: ['trunk']
                     default: []
     mozharness:
-        script: firefox_ui_tests/functional.py
+        script: firefox_ui_tests.py
         config:
             by-test-platform:
                 windows.*:
@@ -31,19 +31,7 @@ job-defaults:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
 
-firefox-ui-functional-local:
+firefox-ui-functional:
     description: "Firefox-ui-tests functional run"
-    treeherder-symbol: Fxfn-l(en-US)
-    mozharness:
-        extra-options:
-            - "--tag"
-            - "local"
-
-firefox-ui-functional-remote:
-    description: "Firefox-ui-tests functional run"
-    treeherder-symbol: Fxfn-r(en-US)
-    mozharness:
-        extra-options:
-            - "--tag"
-            - "remote"
+    treeherder-symbol: Fxfn(en-US)
     tier: 2

@@ -131,8 +131,7 @@ linux32-tests:
 linux1804-tests:
     - cppunit
     - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - gtest
     # - jittest  # See comment in linux1804-ccov-tests set.
     - jsreftest
@@ -182,8 +181,7 @@ windows32-2004-tests:
     - cppunit
     - crashtest
     - gtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - jsreftest
     - marionette
     - mochitest-a11y
@@ -201,8 +199,7 @@ windows32-2004-tests:
 windows10-2004-tests:
     - cppunit
     - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - gtest
     - jsreftest
     - marionette
@@ -239,8 +236,7 @@ windows10-64-2004-ccov-tests:
 
 mingwclang-tests-debug:
     - cppunit
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - mochitest-a11y
     - mochitest-chrome-gpu
     - mochitest-plain-gpu
@@ -257,8 +253,7 @@ mingwclang-tests-debug:
 # for re-enabling.
 mingwclang-win32-tests-debug:
     - cppunit
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - mochitest-a11y
     - mochitest-chrome-gpu
     - mochitest-plain-gpu
@@ -322,8 +317,7 @@ macosx1100-64-qr-tests:
 macosx1015-64-qr-tests:
     - cppunit
     - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
+    - firefox-ui-functional
     - gtest
     - jittest
     - jsreftest
