@@ -336,7 +336,7 @@ class MachSiteManager:
             source,
         )
 
-    def up_to_date(self):
+    def _up_to_date(self):
         if self._site_packages_source == SitePackagesSource.NONE:
             return True
         elif self._site_packages_source == SitePackagesSource.SYSTEM:
@@ -359,7 +359,7 @@ class MachSiteManager:
             )
 
     def ensure(self, *, force=False):
-        up_to_date = self.up_to_date()
+        up_to_date = self._up_to_date()
         if force or not up_to_date:
             if Path(sys.prefix) == Path(self._metadata.prefix):
                 # If the Mach virtualenv is already activated, then the changes caused
@@ -369,7 +369,6 @@ class MachSiteManager:
                 # *then* come back and run the intended command.
                 raise VirtualenvOutOfDateException()
             self._build()
-        return up_to_date
 
     def attempt_populate_optional_packages(self):
         if self._site_packages_source != SitePackagesSource.VENV:
