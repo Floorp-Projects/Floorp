@@ -1079,7 +1079,8 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
   // need to consider process switches where the hiding docshell is already
   // remote (ie. GetEmbedderElement is nullptr), as shifting remoteness to the
   // frame element is handled elsewhere.
-  if (nsDocShell::Cast(docShellBeingHidden)->WillChangeProcess() &&
+  if (docShellBeingHidden &&
+      nsDocShell::Cast(docShellBeingHidden)->WillChangeProcess() &&
       docShellBeingHidden->GetBrowsingContext()->GetEmbedderElement()) {
     if (mFocusedWindow != window) {
       // The window being hidden is an ancestor of the focused window.
