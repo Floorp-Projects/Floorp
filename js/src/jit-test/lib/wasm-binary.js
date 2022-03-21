@@ -116,8 +116,6 @@ const RefFuncCode      = 0xd2;
 // SIMD opcodes
 const V128LoadCode = 0x00;
 const V128StoreCode = 0x0b;
-
-// Experimental SIMD opcodes as of August, 2020.
 const I32x4DotSI16x8Code = 0xba;
 const F32x4CeilCode = 0xd8;
 const F32x4FloorCode = 0xd9;
@@ -133,23 +131,25 @@ const F64x2PMinCode = 0xf6;
 const F64x2PMaxCode = 0xf7;
 const V128Load32ZeroCode = 0xfc;
 const V128Load64ZeroCode = 0xfd;
-const F32x4RelaxedFmaCode = 0xaf;
-const F32x4RelaxedFmsCode = 0xb0;
-const F64x2RelaxedFmaCode = 0xcf;
-const F64x2RelaxedFmsCode = 0xd0;
-const F32x4RelaxedMin = 0xb4;
-const F32x4RelaxedMax = 0xe2;
-const F64x2RelaxedMin = 0xd4;
-const F64x2RelaxedMax = 0xee;
-const I32x4RelaxedTruncSSatF32x4 = 0xa5;
-const I32x4RelaxedTruncUSatF32x4 = 0xa6;
-const I32x4RelaxedTruncSatF64x2SZero = 0xc5;
-const I32x4RelaxedTruncSatF64x2UZero = 0xc6;
-const I8x16RelaxedSwizzle = 0xa2;
-const I8x16LaneSelect = 0xb2;
-const I16x8LaneSelect = 0xb3;
-const I32x4LaneSelect = 0xd2;
-const I64x2LaneSelect = 0xd3;
+
+// Relaxed SIMD opcodes.
+const I8x16RelaxedSwizzleCode = 0x100;
+const I32x4RelaxedTruncSSatF32x4Code = 0x101;
+const I32x4RelaxedTruncUSatF32x4Code = 0x102;
+const I32x4RelaxedTruncSatF64x2SZeroCode = 0x103;
+const I32x4RelaxedTruncSatF64x2UZeroCode = 0x104;
+const F32x4RelaxedFmaCode = 0x105;
+const F32x4RelaxedFmsCode = 0x106;
+const F64x2RelaxedFmaCode = 0x107;
+const F64x2RelaxedFmsCode = 0x108;
+const I8x16RelaxedLaneSelectCode = 0x109;
+const I16x8RelaxedLaneSelectCode = 0x10a;
+const I32x4RelaxedLaneSelectCode = 0x10b;
+const I64x2RelaxedLaneSelectCode = 0x10c;
+const F32x4RelaxedMinCode = 0x10d;
+const F32x4RelaxedMaxCode = 0x10e;
+const F64x2RelaxedMinCode = 0x10f;
+const F64x2RelaxedMaxCode = 0x110;
 
 // SIMD wormhole opcodes.
 const WORMHOLE_SELFTEST = 0;

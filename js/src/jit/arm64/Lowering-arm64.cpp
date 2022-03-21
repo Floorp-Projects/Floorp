@@ -1024,10 +1024,10 @@ void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
       defineReuseInput(lir, ins, LWasmTernarySimd128::V0);
       break;
     }
-    case wasm::SimdOp::I8x16LaneSelect:
-    case wasm::SimdOp::I16x8LaneSelect:
-    case wasm::SimdOp::I32x4LaneSelect:
-    case wasm::SimdOp::I64x2LaneSelect: {
+    case wasm::SimdOp::I8x16RelaxedLaneSelect:
+    case wasm::SimdOp::I16x8RelaxedLaneSelect:
+    case wasm::SimdOp::I32x4RelaxedLaneSelect:
+    case wasm::SimdOp::I64x2RelaxedLaneSelect: {
       auto* lir = new (alloc()) LWasmTernarySimd128(
           ins->simdOp(), useRegister(ins->v0()), useRegister(ins->v1()),
           useRegisterAtStart(ins->v2()));
