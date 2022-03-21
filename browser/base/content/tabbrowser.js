@@ -2987,9 +2987,7 @@
             restoreTabsLazily && !select && !tabData.pinned;
 
           let url = "about:blank";
-          if (createLazyBrowser && tabData.entries && tabData.entries.length) {
-            // Let tabbrowser know the future URI because progress listeners won't
-            // get onLocationChange notification before the browser is inserted.
+          if (tabData.entries?.length) {
             let activeIndex = (tabData.index || tabData.entries.length) - 1;
             // Ensure the index is in bounds.
             activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
@@ -2997,10 +2995,23 @@
             url = tabData.entries[activeIndex].url;
           }
 
+          let preferredRemoteType = E10SUtils.getRemoteTypeForURI(
+            url,
+            gMultiProcessBrowser,
+            gFissionBrowser,
+            E10SUtils.DEFAULT_REMOTE_TYPE,
+            null,
+            E10SUtils.predictOriginAttributes({ window, userContextId })
+          );
+
+          // If we're creating a lazy browser, let tabbrowser know the future
+          // URI because progress listeners won't get onLocationChange
+          // notification before the browser is inserted.
+          //
           // Setting noInitialLabel is a perf optimization. Rendering tab labels
           // would make resizing the tabs more expensive as we're adding them.
           // Each tab will get its initial label set in restoreTab.
-          tab = this.addTrustedTab(url, {
+          tab = this.addTrustedTab(createLazyBrowser ? url : "about:blank", {
             createLazyBrowser,
             skipAnimation: true,
             allowInheritPrincipal: true,
@@ -3009,6 +3020,8 @@
             skipBackgroundNotify: true,
             bulkOrderedOpen: true,
             batchInsertingTabs: true,
+            skipLoad: !createLazyBrowser,
+            preferredRemoteType,
           });
 
           if (select) {
