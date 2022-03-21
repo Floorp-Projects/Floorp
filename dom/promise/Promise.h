@@ -274,6 +274,13 @@ class Promise : public SupportsWeakPtr {
       const std::function<already_AddRefed<Promise>(
           JSContext*, JS::HandleValue, ErrorResult& aRv)>& aCallback);
 
+  // Similar to ThenCatchWithCycleCollectedArgs but doesn't care with return
+  // values of the callbacks and does not return a new promise.
+  template <typename ResolveCallback, typename RejectCallback, typename... Args>
+  void AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
+                                          RejectCallback&& aOnReject,
+                                          Args&&... aArgs);
+
   JSObject* PromiseObj() const { return mPromiseObj; }
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
