@@ -11783,7 +11783,7 @@
   # true means win32k system calls are not permitted.
 -   name: security.sandbox.content.win32k-disable
     type: RelaxedAtomicBool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
