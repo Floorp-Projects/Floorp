@@ -1053,8 +1053,7 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
   {
     // Needed to swap peer map entries below.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    mozilla::Maybe<mozilla::MutexAutoLock> ports_locker(std::in_place,
-                                                        ports_lock_);
+    mozilla::ReleasableMutexAutoLock ports_locker(ports_lock_);
 
     mozilla::Maybe<PortLocker> locker(std::in_place, port_refs, size_t(2));
     auto* port0 = locker->GetPort(port0_ref);
@@ -1085,7 +1084,7 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
       const bool close_port1 =
           port1->state == Port::kReceiving || allow_close_on_bad_state;
       locker.reset();
-      ports_locker.reset();
+      ports_locker.Unlock();
       if (close_port0) {
         ClosePort(port0_ref);
       }
