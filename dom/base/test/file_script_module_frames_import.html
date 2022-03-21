@@ -3,12 +3,21 @@
 <head>
   <meta charset="utf-8">
   <title>Test module script bytecode across iframe</title>
+  <script type="text/javascript">
+var loadFramePromiseResolve;
+var loadFramePromise = new Promise(r => {
+  loadFramePromiseResolve = r;
+});
+function onLoadFrameLoaded() {
+  loadFramePromiseResolve();
+}
+  </script>
 </head>
 <body>
   <iframe id="save" name="save"
           src="file_script_module_frames_import_save.html"
           width="50" height="50"></iframe>
-  <iframe id="load" name="load"
+  <iframe id="load" name="load" onload="onLoadFrameLoaded()"
           src="file_script_module_frames_import_load.html"
           width="50" height="50"></iframe>
 </body>
