@@ -8,6 +8,13 @@ const XPI_CONTENT_TYPE = "application/x-xpinstall";
 const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
+});
 
 function amContentHandler() {}
 
@@ -63,6 +70,7 @@ amContentHandler.prototype = {
       sourceHost,
       sourceURL,
       browsingContext,
+      hasCrossOriginAncestor: ThirdPartyUtil.isThirdPartyChannel(aRequest),
     };
 
     Services.cpmm.sendAsyncMessage(MSG_INSTALL_ADDON, install);

@@ -2135,8 +2135,19 @@ var AddonManagerInternal = {
    *         The nsIPrincipal that initiated the install
    * @param  aInstall
    *         The AddonInstall to be installed
+   * @param  [aDetails]
+   *         Additional optional details
+   * @param  [aDetails.hasCrossOriginAncestor]
+   *         Boolean value set to true if any of cross-origin ancestors of the triggering frame
+   *         (if set to true the installation will be denied).
    */
-  installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal, aInstall) {
+  installAddonFromWebpage(
+    aMimetype,
+    aBrowser,
+    aInstallingPrincipal,
+    aInstall,
+    aDetails
+  ) {
     if (!gStarted) {
       throw Components.Exception(
         "AddonManager is not initialized",
@@ -2212,6 +2223,10 @@ var AddonManagerInternal = {
         );
         return;
       } else if (
+        // Block the install request if the triggering frame does have any cross-origin
+        // ancestor.
+        aDetails?.hasCrossOriginAncestor ||
+        // Block the install if triggered by a null principal.
         aInstallingPrincipal.isNullPrincipal ||
         (aBrowser &&
           (!aBrowser.contentPrincipal ||
@@ -2294,7 +2309,8 @@ var AddonManagerInternal = {
           topBrowser,
           aInstallingPrincipal.URI,
           aInstall,
-          () => startInstall("other")
+          () => startInstall("other"),
+          () => aInstall.cancel()
         );
       } else {
         // We download the addon and validate whether a 3rd party
@@ -4073,12 +4089,19 @@ var AddonManager = {
     return AddonManagerInternal.isInstallAllowed(aType, aInstallingPrincipal);
   },
 
-  installAddonFromWebpage(aType, aBrowser, aInstallingPrincipal, aInstall) {
+  installAddonFromWebpage(
+    aType,
+    aBrowser,
+    aInstallingPrincipal,
+    aInstall,
+    details
+  ) {
     AddonManagerInternal.installAddonFromWebpage(
       aType,
       aBrowser,
       aInstallingPrincipal,
-      aInstall
+      aInstall,
+      details
     );
   },
 

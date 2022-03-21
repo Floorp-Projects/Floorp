@@ -9,6 +9,13 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
+});
 
 const XPINSTALL_MIMETYPE = "application/x-xpinstall";
 
@@ -213,6 +220,7 @@ InstallTrigger.prototype = {
       method: "installTrigger",
       sourceHost,
       sourceURL,
+      hasCrossOriginAncestor: ThirdPartyUtil.isThirdPartyWindow(this._window),
     };
 
     return this._mediator.install(
