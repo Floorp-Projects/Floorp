@@ -22,7 +22,7 @@ win32/debug:
         platform: windows2012-32/debug
         symbol: B
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -132,7 +132,7 @@ win64/debug:
         platform: windows2012-64/debug
         symbol: B
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -238,7 +238,7 @@ win64-fuzzing/debug:
         platform: windows2012-64/debug
         symbol: Bf
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -669,7 +669,7 @@ win64-noopt/debug:
         platform: windows2012-64-noopt/debug
         symbol: B
         tier: 2
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -721,7 +721,7 @@ win32-noopt/debug:
         platform: windows2012-32-noopt/debug
         symbol: B
         tier: 2
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -1001,7 +1001,7 @@ win64-asan/debug:
         platform: windows2012-64/asan
         symbol: Bd
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -1359,7 +1359,7 @@ win64-aarch64/debug:
         platform: windows2012-aarch64/debug
         symbol: B
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
