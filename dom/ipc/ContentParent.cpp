@@ -7427,12 +7427,12 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
 mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryWireframe(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Wireframe& aWireframe) {
-  if (aContext.IsNullOrDiscarded()) {
+  if (aContext.IsNull()) {
     return IPC_OK();
   }
 
   SessionHistoryEntry* entry =
-      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+      aContext.GetMaybeDiscarded()->Canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetWireframe(Some(aWireframe));
   }
