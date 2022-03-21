@@ -28,6 +28,7 @@ job-defaults:
 
 macosx64/debug:
     description: "MacOS X x64 Cross-compile"
+    worker-type: b-linux-gcp
     index:
         job-name: macosx64-debug
     attributes:
@@ -58,6 +59,7 @@ macosx64/debug:
 
 macosx64-hybrid/plain:
     description: "MacOS X x64 Hybrid Cross-compile"
+    worker-type: b-linux-gcp
     index:
         job-name: macosx64-hybrid
     treeherder:
@@ -149,6 +151,7 @@ macosx64-asan-fuzzing/opt:
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
+    worker-type: b-linux-gcp
     index:
         job-name: macosx64-fuzzing-debug
     attributes:
@@ -397,6 +400,7 @@ macosx64-devedition/opt:
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
+    worker-type: b-linux-gcp
     index:
         job-name: macosx64-noopt-debug
     treeherder:
@@ -424,6 +428,7 @@ macosx64-noopt/debug:
 
 macosx64-aarch64-noopt/debug:
     description: "MacOS X aarch64 No-optimize Debug"
+    worker-type: b-linux-gcp
     index:
         job-name: macosx64-aarch64-noopt-debug
     treeherder:
@@ -714,38 +719,6 @@ macosx64-ccov/opt:
             - linux64-sccache
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
-
-macosx64-gcp/debug:
-    description: "MacOS X x64 Cross-compile - built on GCP"
-    index:
-        job-name: macosx64-gcp-debug
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: osx-cross/debug
-        symbol: B-gcp
-        tier: 2
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 3600
-        env:
-            PERFHERDER_EXTRA_OPTIONS: gcp
-    run:
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_mac_64_cross_builds.py
-        custom-build-variant-cfg: cross-debug
-        mozconfig-variant: debug
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - linux64-clang
-            - linux64-sccache
-            - macosx64-sdk-10.12
-            - sysroot-wasm32-wasi
-    optimization:
-        skip-unless-backstop: null
 
 macosx64-gcp/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
