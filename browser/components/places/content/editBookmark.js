@@ -721,15 +721,8 @@ var gEditItemOverlay = {
         this._initNamePicker();
         return;
       }
-      // Get all the bookmarks for the old tag, tag them with the new tag, and
-      // untag them from the old tag.
-      let oldTag = this._paneInfo.tag;
-      this._bookmarkState.tag = tag;
-      let title = this._paneInfo.title;
-      if (title == oldTag) {
-        this._bookmarkState.title = tag;
-      }
-      this._bookmarkState._tagChanged(tag);
+
+      this._bookmarkState._titleChanged(tag);
       return;
     }
     this._mayUpdateFirstEditField("namePicker");
