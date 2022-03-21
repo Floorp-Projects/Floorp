@@ -376,7 +376,7 @@ void PathUtils::GetTempDirSync(const GlobalObject&, nsString& aResult,
 
 already_AddRefed<Promise> PathUtils::GetProfileDirAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr) {
-  MOZ_ASSERT(!NS_IsMainThread());
+  // NB: This will eventually be off-main-thread only.
 
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
@@ -385,7 +385,7 @@ already_AddRefed<Promise> PathUtils::GetProfileDirAsync(
 
 already_AddRefed<Promise> PathUtils::GetLocalProfileDirAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr) {
-  MOZ_ASSERT(!NS_IsMainThread());
+  // NB: This will eventually be off-main-thread only.
 
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
@@ -395,7 +395,7 @@ already_AddRefed<Promise> PathUtils::GetLocalProfileDirAsync(
 
 already_AddRefed<Promise> PathUtils::GetTempDirAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr) {
-  MOZ_ASSERT(!NS_IsMainThread());
+  // NB: This will eventually be off-main-thread only.
 
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
