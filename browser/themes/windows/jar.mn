@@ -9,6 +9,7 @@ browser.jar:
   skin/classic/browser/browser.css
   skin/classic/browser/browser-custom-colors.css  (../shared/browser-custom-colors.css)
   skin/classic/browser/browser-aero.css
+  skin/classic/browser/contextmenu.css            (../shared/contextmenu.css)
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
   skin/classic/browser/pageInfo.css
