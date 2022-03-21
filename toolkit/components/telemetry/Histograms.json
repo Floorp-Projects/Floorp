@@ -9714,6 +9714,7 @@
     "high": 2147483646,
     "n_buckets": 10,
     "bug_numbers": [1288745, 1685406],
+    "releaseChannelCollection": "opt-out",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_LINEAR": {
@@ -9726,10 +9727,11 @@
     "high": 2147483646,
     "n_buckets": 10,
     "bug_numbers": [1288745, 1685406],
+    "releaseChannelCollection": "opt-out",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_MIRROR_FOR_CUSTOM": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox"],
     "alert_emails": ["chutten@mozilla.com"],
     "expires_in_version": "never",
@@ -9738,6 +9740,7 @@
     "high": 2147483646,
     "n_buckets": 10,
     "bug_numbers": [1716340],
+    "releaseChannelCollection": "opt-out",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_BOOLEAN": {

@@ -1321,7 +1321,7 @@ telemetry.test:
       - "firefox"
       - "fennec"
       - "thunderbird"
-    record_in_processes: ["main"]
+    record_in_processes: ["main", "content"]
     expiry_version: "999"
   main_only:
     objects: ["object1"]
@@ -1405,6 +1405,7 @@ telemetry.test:
       extra1: "This must be kept in-sync"
       extra2: "With the extra_keys in the Glean metric"
     products: ["firefox", "thunderbird"]
+    release_channel_collection: opt-out
 
 # This is a secondary category used for Telemetry tests.
 # The events here will not be sent out with any pings.
