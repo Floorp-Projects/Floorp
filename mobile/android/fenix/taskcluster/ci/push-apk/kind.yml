@@ -46,3 +46,8 @@ job-template:
     treeherder:
         job-symbol: gp
         kind: build
+    routes:
+        by-level:
+            '3':
+              - "notify.email.release-mgmt@mozilla.com.on-failed"
+            'default': []

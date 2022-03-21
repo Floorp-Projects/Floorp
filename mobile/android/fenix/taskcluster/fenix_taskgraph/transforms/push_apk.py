@@ -16,7 +16,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.channel", "worker.dep", "worker.certificate-alias"):
+        for key in ("worker.channel", "worker.dep", "worker.certificate-alias", "routes"):
             resolve_keyed_by(
                 task,
                 key,
