@@ -1111,3 +1111,8 @@ nsSHEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
   aOut.set(JS::NullValue());
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHEntry::SetWireframe(JSContext* aCx, JS::HandleValue aArg) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -285,6 +285,10 @@ var SessionHistoryInternal = {
       entry.structuredCloneVersion = stateData.formatVersion;
     }
 
+    if (shEntry.wireframe != null) {
+      entry.wireframe = shEntry.wireframe;
+    }
+
     if (shEntry.childCount > 0 && !shEntry.hasDynamicallyAddedChild()) {
       let children = [];
       for (let i = 0; i < shEntry.childCount; i++) {
@@ -559,6 +563,9 @@ var SessionHistoryInternal = {
     }
     if (entry.csp) {
       shEntry.csp = E10SUtils.deserializeCSP(entry.csp);
+    }
+    if (entry.wireframe) {
+      shEntry.wireframe = entry.wireframe;
     }
 
     if (entry.children) {
