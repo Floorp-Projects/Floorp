@@ -946,14 +946,12 @@ class ExternalPythonSite:
         stdlib_paths = subprocess.check_output(
             [
                 self.python_path,
+                # Don't "import site", so we don't include system/user pip-installed
+                # packages.
+                "-S",
                 "-c",
-                "import sys; import site; "
-                "site_packages = [site.getusersitepackages()] + site.getsitepackages(); "
-                "print([path for path in sys.path if path not in site_packages])",
+                "import sys; print(sys.path)",
             ],
-            # The "site" module may return erroneous entries for the system python
-            # if the "VIRTUAL_ENV" environment variable is set.
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
             universal_newlines=True,
         )
         return ast.literal_eval(stdlib_paths)
