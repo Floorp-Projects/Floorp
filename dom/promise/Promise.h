@@ -245,21 +245,27 @@ class Promise : public SupportsWeakPtr {
       std::enable_if_t<IsHandlerCallback<Callback, Args...>::value,
                        Result<RefPtr<Promise>, nsresult>>;
 
-  // Similar to the JavaScript Then() function. Accepts a single lambda function
-  // argument, which it attaches as a native resolution handler, and returns a
-  // new promise which resolves with that handler's return value, or propagates
-  // any rejections from this promise.
+  // Similar to the JavaScript then() function. Accepts two lambda function
+  // arguments, which it attaches as native resolve/reject handlers, and
+  // returns a new promise which:
+  // 1. if the ErrorResult contains an error value, rejects with it.
+  // 2. else, resolves with a return value.
   //
-  // Any additional arguments passed after the callback function are stored and
-  // passed as additional arguments to the function when it is called. These
+  // Any additional arguments passed after the callback functions are stored and
+  // passed as additional arguments to the functions when it is called. These
   // values will participate in cycle collection for the promise handler, and
   // therefore may safely form reference cycles with the promise chain.
   //
-  // Any strong references required by the callback should be passed in this
+  // Any strong references required by the callbacks should be passed in this
   // manner, rather than using lambda capture, lambda captures do not support
   // cycle collection, and can easily lead to leaks.
-  //
-  // Does not currently support rejection handlers.
+  template <typename ResolveCallback, typename RejectCallback, typename... Args>
+  ThenResult<ResolveCallback, Args...> ThenCatchWithCycleCollectedArgs(
+      ResolveCallback&& aOnResolve, RejectCallback&& aOnReject,
+      Args&&... aArgs);
+
+  // Same as ThenCatchWithCycleCollectedArgs, except the rejection value will
+  // simply be propagated.
   template <typename Callback, typename... Args>
   ThenResult<Callback, Args...> ThenWithCycleCollectedArgs(
       Callback&& aOnResolve, Args&&... aArgs);
