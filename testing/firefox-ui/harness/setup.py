@@ -32,14 +32,14 @@ setup(
     description="Firefox UI Harness",
     long_description=long_description,
     classifiers=[
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 2 :: Only",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
     ],
     # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords="mozilla",
-    author="Auto-tools",
+    author="DevTools",
     author_email="dev-webdriver@mozilla.org",
-    url="https://wiki.mozilla.org/Auto-tools/Projects/Marionette/Harnesses/FirefoxUI",
     license="MPL",
     packages=find_packages(),
     include_package_data=True,
