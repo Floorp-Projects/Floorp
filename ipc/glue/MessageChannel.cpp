@@ -135,6 +135,7 @@ class AutoEnterTransaction {
  public:
   explicit AutoEnterTransaction(MessageChannel* aChan, int32_t aMsgSeqno,
                                 int32_t aTransactionID, int aNestedLevel)
+      REQUIRES(*aChan->mMonitor)
       : mChan(aChan),
         mActive(true),
         mOutgoing(true),
@@ -148,6 +149,7 @@ class AutoEnterTransaction {
 
   explicit AutoEnterTransaction(MessageChannel* aChan,
                                 const IPC::Message& aMessage)
+      REQUIRES(*aChan->mMonitor)
       : mChan(aChan),
         mActive(true),
         mOutgoing(false),
@@ -173,6 +175,7 @@ class AutoEnterTransaction {
   }
 
   void Cancel() {
+    mChan->mMonitor->AssertCurrentThreadOwns();
     AutoEnterTransaction* cur = mChan->mTransactionStack;
     MOZ_RELEASE_ASSERT(cur == this);
     while (cur && cur->mNestedLevel != IPC::Message::NOT_NESTED) {
@@ -251,6 +254,7 @@ class AutoEnterTransaction {
   }
 
   void HandleReply(IPC::Message&& aMessage) {
+    mChan->mMonitor->AssertCurrentThreadOwns();
     AutoEnterTransaction* cur = mChan->mTransactionStack;
     MOZ_RELEASE_ASSERT(cur == this);
     while (cur) {
@@ -346,8 +350,8 @@ class ChannelCountReporter final : public nsIMemoryReporter {
 
   using CountTable = nsTHashMap<nsDepCharHashKey, ChannelCounts>;
 
-  static StaticMutex sChannelCountMutex MOZ_UNANNOTATED;
-  static CountTable* sChannelCounts;
+  static StaticMutex sChannelCountMutex;
+  static CountTable* sChannelCounts GUARDED_BY(sChannelCountMutex);
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -1065,6 +1069,7 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
   // shouldWakeUp is true, it's easier to post anyway than to have to
   // guarantee that every Send call processes everything it's supposed to
   // before returning.
+  task->AssertMonitorHeld(*mMonitor);
   task->Post();
 }
 
@@ -1492,6 +1497,7 @@ nsresult MessageChannel::MessageTask::Run() {
   }
 
   Channel()->AssertWorkerThread();
+  mMonitor->AssertSameMonitor(*Channel()->mMonitor);
   proxy = Channel()->Listener()->GetLifecycleProxy();
   Channel()->RunMessage(proxy, *this);
   return NS_OK;
@@ -1508,6 +1514,7 @@ nsresult MessageChannel::MessageTask::Cancel() {
   }
 
   Channel()->AssertWorkerThread();
+  mMonitor->AssertSameMonitor(*Channel()->mMonitor);
   if (!IsAlwaysDeferred(Msg())) {
     Channel()->mMaybeDeferredPendingCount--;
   }
@@ -1519,7 +1526,7 @@ nsresult MessageChannel::MessageTask::Cancel() {
 
 void MessageChannel::MessageTask::Post() {
   mMonitor->AssertCurrentThreadOwns();
-  Channel()->mMonitor->AssertCurrentThreadOwns();
+  mMonitor->AssertSameMonitor(*Channel()->mMonitor);
   MOZ_RELEASE_ASSERT(!mScheduled);
   MOZ_RELEASE_ASSERT(isInList());
 
@@ -1889,10 +1896,10 @@ void MessageChannel::OnChannelErrorFromLink() {
   PostErrorNotifyTask();
 }
 
-void MessageChannel::NotifyMaybeChannelError(Maybe<MonitorAutoLock>& aLock) {
+void MessageChannel::NotifyMaybeChannelError(ReleasableMonitorAutoLock& aLock) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
-  MOZ_RELEASE_ASSERT(aLock.isSome());
+  aLock.AssertCurrentThreadOwns();
 
   // TODO sort out Close() on this side racing with Close() on the other side
   if (ChannelClosing == mChannelState) {
@@ -1919,7 +1926,7 @@ void MessageChannel::NotifyMaybeChannelError(Maybe<MonitorAutoLock>& aLock) {
   // channel to be deleted. Release our caller's `MonitorAutoLock` before
   // invoking the listener, as this may call back into MessageChannel, and/or
   // cause the channel to be destroyed.
-  aLock.reset();
+  aLock.Unlock();
   mListener->OnChannelError();
 }
 
@@ -1933,7 +1940,7 @@ void MessageChannel::OnNotifyMaybeChannelError() {
   // Acquiring the lock here also allows us to ensure that
   // `OnChannelErrorFromLink` has finished running before this task is allowed
   // to continue.
-  Maybe<MonitorAutoLock> lock(std::in_place, *mMonitor);
+  ReleasableMonitorAutoLock lock(*mMonitor);
 
   mChannelErrorTask = nullptr;
 
@@ -2022,7 +2029,7 @@ void MessageChannel::Close() {
 
   // This lock guard may be reset by `Notify{ChannelClosed,MaybeChannelError}`
   // before invoking listener callbacks which may destroy this `MessageChannel`.
-  Maybe<MonitorAutoLock> lock(std::in_place, *mMonitor);
+  ReleasableMonitorAutoLock lock(*mMonitor);
 
   switch (mChannelState) {
     case ChannelError:
@@ -2051,10 +2058,10 @@ void MessageChannel::Close() {
   }
 }
 
-void MessageChannel::NotifyChannelClosed(Maybe<MonitorAutoLock>& aLock) {
+void MessageChannel::NotifyChannelClosed(ReleasableMonitorAutoLock& aLock) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
-  MOZ_RELEASE_ASSERT(aLock.isSome());
+  aLock.AssertCurrentThreadOwns();
 
   if (ChannelClosed != mChannelState) {
     MOZ_CRASH("channel should have been closed!");
@@ -2073,7 +2080,7 @@ void MessageChannel::NotifyChannelClosed(Maybe<MonitorAutoLock>& aLock) {
   // channel to be deleted. Release our caller's `MonitorAutoLock` before
   // invoking the listener, as this may call back into MessageChannel, and/or
   // cause the channel to be destroyed.
-  aLock.reset();
+  aLock.Unlock();
   mListener->OnChannelClose();
 }
 
@@ -2153,6 +2160,7 @@ void MessageChannel::RepostAllMessages() {
 
   bool needRepost = false;
   for (MessageTask* task : mPending) {
+    task->AssertMonitorHeld(*mMonitor);
     if (!task->IsScheduled()) {
       needRepost = true;
       break;
@@ -2172,6 +2180,7 @@ void MessageChannel::RepostAllMessages() {
   while (RefPtr<MessageTask> task = queue.popFirst()) {
     RefPtr<MessageTask> newTask = new MessageTask(this, std::move(task->Msg()));
     mPending.insertBack(newTask);
+    newTask->AssertMonitorHeld(*mMonitor);
     newTask->Post();
   }
 
