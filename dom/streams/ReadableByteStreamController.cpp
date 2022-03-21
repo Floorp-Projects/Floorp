@@ -18,6 +18,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableByteStreamControllerBinding.h"
@@ -477,55 +478,6 @@ bool ReadableByteStreamControllerShouldCallPull(
   return desiredSize.Value() > 0;
 }
 
-// MG:XXX: There's a template hiding here for handling the difference between
-// default and byte stream, eventually?
-class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
-  ~ByteStreamPullIfNeededPromiseHandler() override = default;
-
-  // Virtually const, but cycle collected
-  RefPtr<ReadableByteStreamController> mController;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(ByteStreamPullIfNeededPromiseHandler)
-
-  explicit ByteStreamPullIfNeededPromiseHandler(
-      ReadableByteStreamController* aController)
-      : PromiseNativeHandler(), mController(aController) {}
-
-  MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
-    // Step 7.1
-    mController->SetPulling(false);
-    // Step 7.2
-    if (mController->PullAgain()) {
-      // Step 7.2.1
-      mController->SetPullAgain(false);
-
-      // Step 7.2.2
-      ReadableByteStreamControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), aRv);
-    }
-  }
-
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
-    // Step 8.1
-    ReadableByteStreamControllerError(mController, aValue, aRv);
-  }
-};
-
-// Cycle collection methods for promise handler.
-NS_IMPL_CYCLE_COLLECTION(ByteStreamPullIfNeededPromiseHandler, mController)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ByteStreamPullIfNeededPromiseHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ByteStreamPullIfNeededPromiseHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamPullIfNeededPromiseHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
 void ReadableByteStreamControllerCallPullIfNeeded(
     JSContext* aCx, ReadableByteStreamController* aController,
@@ -560,9 +512,28 @@ void ReadableByteStreamControllerCallPullIfNeeded(
   }
 
   // Steps 7+8
-  RefPtr<ByteStreamPullIfNeededPromiseHandler> promiseHandler =
-      new ByteStreamPullIfNeededPromiseHandler(aController);
-  pullPromise->AppendNativeHandler(promiseHandler);
+  pullPromise->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableByteStreamController* aController)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            // Step 7.1
+            aController->SetPulling(false);
+            // Step 7.2
+            if (aController->PullAgain()) {
+              // Step 7.2.1
+              aController->SetPullAgain(false);
+
+              // Step 7.2.2
+              ReadableByteStreamControllerCallPullIfNeeded(
+                  aCx, MOZ_KnownLive(aController), aRv);
+            }
+          },
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableByteStreamController* aController) {
+        // Step 8.1
+        ReadableByteStreamControllerError(aController, aValue, aRv);
+      },
+      RefPtr(aController));
 }
 
 bool ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(
@@ -1861,57 +1832,6 @@ void ReadableByteStreamControllerPullInto(
   ReadableByteStreamControllerCallPullIfNeeded(aCx, aController, aRv);
 }
 
-class ByteStreamStartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~ByteStreamStartPromiseNativeHandler() override = default;
-
-  RefPtr<ReadableByteStreamController> mController;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(ByteStreamStartPromiseNativeHandler)
-
-  explicit ByteStreamStartPromiseNativeHandler(
-      ReadableByteStreamController* aController)
-      : PromiseNativeHandler(), mController(aController) {}
-
-  MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    MOZ_ASSERT(mController);
-
-    // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
-    //
-    // Step 16.1
-    mController->SetStarted(true);
-
-    // Step 16.2
-    mController->SetPulling(false);
-
-    // Step 16.3
-    mController->SetPullAgain(false);
-
-    // Step 16.4:
-
-    RefPtr<ReadableByteStreamController> stackController = mController;
-    ReadableByteStreamControllerCallPullIfNeeded(aCx, stackController, aRv);
-  }
-
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
-    // Step 17.1
-    ReadableByteStreamControllerError(mController, aValue, aRv);
-  }
-};
-
-// Cycle collection methods for promise handler
-NS_IMPL_CYCLE_COLLECTION(ByteStreamStartPromiseNativeHandler, mController)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ByteStreamStartPromiseNativeHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ByteStreamStartPromiseNativeHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamStartPromiseNativeHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
 void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
@@ -1976,8 +1896,31 @@ void SetUpReadableByteStreamController(
   startPromise->MaybeResolve(startResult);
 
   // Step 16+17
-  startPromise->AppendNativeHandler(
-      new ByteStreamStartPromiseNativeHandler(aController));
+  startPromise->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableByteStreamController* aController)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            MOZ_ASSERT(aController);
+
+            // Step 16.1
+            aController->SetStarted(true);
+
+            // Step 16.2
+            aController->SetPulling(false);
+
+            // Step 16.3
+            aController->SetPullAgain(false);
+
+            // Step 16.4:
+            ReadableByteStreamControllerCallPullIfNeeded(
+                aCx, MOZ_KnownLive(aController), aRv);
+          },
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableByteStreamController* aController) {
+        // Step 17.1
+        ReadableByteStreamControllerError(aController, aValue, aRv);
+      },
+      RefPtr(aController));
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source

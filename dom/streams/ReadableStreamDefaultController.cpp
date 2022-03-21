@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamController.h"
@@ -401,56 +402,6 @@ void ReadableStreamDefaultControllerError(
   ReadableStreamError(aCx, stream, aValue, aRv);
 }
 
-// MG:XXX: Probably can find base class between this and
-// StartPromiseNativeHandler
-class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
-  ~PullIfNeededNativePromiseHandler() override = default;
-
-  // Virtually const, but cycle collected
-  RefPtr<ReadableStreamDefaultController> mController;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(PullIfNeededNativePromiseHandler)
-
-  explicit PullIfNeededNativePromiseHandler(
-      ReadableStreamDefaultController* aController)
-      : PromiseNativeHandler(), mController(aController) {}
-
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
-    // Step 7.1
-    mController->SetPulling(false);
-    // Step 7.2
-    if (mController->PullAgain()) {
-      // Step 7.2.1
-      mController->SetPullAgain(false);
-
-      // Step 7.2.2
-      ErrorResult rv;
-      ReadableStreamDefaultControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), aRv);
-    }
-  }
-
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
-    // Step 8.1
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
-  }
-};
-
-// Cycle collection methods for promise handler.
-NS_IMPL_CYCLE_COLLECTION(PullIfNeededNativePromiseHandler, mController)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PullIfNeededNativePromiseHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PullIfNeededNativePromiseHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PullIfNeededNativePromiseHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
 static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
@@ -487,60 +438,30 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
   }
 
   // Step 7 + 8:
-  pullPromise->AppendNativeHandler(
-      new PullIfNeededNativePromiseHandler(aController));
+  pullPromise->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableStreamDefaultController* mController)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            // Step 7.1
+            mController->SetPulling(false);
+            // Step 7.2
+            if (mController->PullAgain()) {
+              // Step 7.2.1
+              mController->SetPullAgain(false);
+
+              // Step 7.2.2
+              ErrorResult rv;
+              ReadableStreamDefaultControllerCallPullIfNeeded(
+                  aCx, MOZ_KnownLive(mController), aRv);
+            }
+          },
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableStreamDefaultController* mController) {
+        // Step 8.1
+        ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
+      },
+      RefPtr(aController));
 }
-
-class StartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~StartPromiseNativeHandler() override = default;
-
-  RefPtr<ReadableStreamDefaultController> mController;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(StartPromiseNativeHandler)
-
-  explicit StartPromiseNativeHandler(
-      ReadableStreamDefaultController* aController)
-      : PromiseNativeHandler(), mController(aController) {}
-
-  MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    MOZ_ASSERT(mController);
-
-    // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
-    //
-    // Step 11.1
-    mController->SetStarted(true);
-
-    // Step 11.2
-    mController->SetPulling(false);
-
-    // Step 11.3
-    mController->SetPullAgain(false);
-
-    // Step 11.4:
-
-    RefPtr<ReadableStreamDefaultController> stackController = mController;
-    ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, aRv);
-  }
-
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
-    // Step 12.1
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
-  }
-};
-
-// Cycle collection methods for promise handler
-NS_IMPL_CYCLE_COLLECTION(StartPromiseNativeHandler, mController)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(StartPromiseNativeHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(StartPromiseNativeHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StartPromiseNativeHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
 void SetUpReadableStreamDefaultController(
@@ -591,10 +512,32 @@ void SetUpReadableStreamDefaultController(
   startPromise->MaybeResolve(startResult);
 
   // Step 11 & 12:
-  RefPtr<StartPromiseNativeHandler> startPromiseHandler =
-      new StartPromiseNativeHandler(aController);
+  startPromise->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableStreamDefaultController* aController)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            MOZ_ASSERT(aController);
 
-  startPromise->AppendNativeHandler(startPromiseHandler);
+            // Step 11.1
+            aController->SetStarted(true);
+
+            // Step 11.2
+            aController->SetPulling(false);
+
+            // Step 11.3
+            aController->SetPullAgain(false);
+
+            // Step 11.4:
+            ReadableStreamDefaultControllerCallPullIfNeeded(
+                aCx, MOZ_KnownLive(aController), aRv);
+          },
+
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         ReadableStreamDefaultController* aController) {
+        // Step 12.1
+        ReadableStreamDefaultControllerError(aCx, aController, aValue, aRv);
+      },
+      RefPtr(aController));
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source

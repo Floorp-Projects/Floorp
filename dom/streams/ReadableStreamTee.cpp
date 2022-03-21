@@ -9,6 +9,7 @@
 #include "js/experimental/TypedData.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
@@ -916,71 +917,46 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
   ReadableStreamBYOBReaderRead(aCx, byobReader, aView, readIntoRequest, aRv);
 }
 
-class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
-  ~ForwardReaderErrorPromiseHandler() override = default;
-  RefPtr<TeeState> mTeeState;
-  RefPtr<ReadableStreamGenericReader> mReader;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(ForwardReaderErrorPromiseHandler)
-
-  ForwardReaderErrorPromiseHandler(TeeState* aTeeState,
-                                   ReadableStreamGenericReader* aReader)
-      : mTeeState(aTeeState), mReader(aReader) {}
-
-  MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-
-  MOZ_CAN_RUN_SCRIPT
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // Step 14.1.1
-    if (mTeeState->GetReader() != mReader) {
-      return;
-    }
-
-    ErrorResult rv;
-    // Step 14.1.2: Perform
-    // !ReadableByteStreamControllerError(branch1.[[controller]], r).
-    MOZ_ASSERT(mTeeState->Branch1()->Controller()->IsByte());
-    ReadableByteStreamControllerError(
-        mTeeState->Branch1()->Controller()->AsByte(), aValue, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    // Step 14.1.3: Perform
-    // !ReadableByteStreamControllerError(branch2.[[controller]], r).
-    MOZ_ASSERT(mTeeState->Branch2()->Controller()->IsByte());
-    ReadableByteStreamControllerError(
-        mTeeState->Branch2()->Controller()->AsByte(), aValue, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    // Step 14.1.4: If canceled1 is false or canceled2 is false, resolve
-    // cancelPromise with undefined.
-    if (!mTeeState->Canceled1() || !mTeeState->Canceled2()) {
-      mTeeState->CancelPromise()->MaybeResolveWithUndefined();
-    }
-  }
-};
-
-NS_IMPL_CYCLE_COLLECTION(ForwardReaderErrorPromiseHandler, mTeeState, mReader)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ForwardReaderErrorPromiseHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ForwardReaderErrorPromiseHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ForwardReaderErrorPromiseHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // See https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 // Step 14.
 void ForwardReaderError(TeeState* aTeeState,
                         ReadableStreamGenericReader* aThisReader) {
-  aThisReader->ClosedPromise()->AppendNativeHandler(
-      new ForwardReaderErrorPromiseHandler(aTeeState, aThisReader));
+  aThisReader->ClosedPromise()->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         TeeState* aTeeState, ReadableStreamGenericReader* aThisReader) {},
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         TeeState* aTeeState, ReadableStreamGenericReader* aReader) {
+        // Step 14.1.1
+        if (aTeeState->GetReader() != aReader) {
+          return;
+        }
+
+        ErrorResult rv;
+        // Step 14.1.2: Perform
+        // !ReadableByteStreamControllerError(branch1.[[controller]], r).
+        MOZ_ASSERT(aTeeState->Branch1()->Controller()->IsByte());
+        ReadableByteStreamControllerError(
+            aTeeState->Branch1()->Controller()->AsByte(), aValue, aRv);
+        if (aRv.Failed()) {
+          return;
+        }
+
+        // Step 14.1.3: Perform
+        // !ReadableByteStreamControllerError(branch2.[[controller]], r).
+        MOZ_ASSERT(aTeeState->Branch2()->Controller()->IsByte());
+        ReadableByteStreamControllerError(
+            aTeeState->Branch2()->Controller()->AsByte(), aValue, aRv);
+        if (aRv.Failed()) {
+          return;
+        }
+
+        // Step 14.1.4: If canceled1 is false or canceled2 is false, resolve
+        // cancelPromise with undefined.
+        if (!aTeeState->Canceled1() || !aTeeState->Canceled2()) {
+          aTeeState->CancelPromise()->MaybeResolveWithUndefined();
+        }
+      },
+      RefPtr(aTeeState), RefPtr(aThisReader));
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
