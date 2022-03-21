@@ -291,3 +291,41 @@ add_task(async function test_slow_subframe_load() {
   // Cleanup.
   gBrowser.removeTab(tab);
 });
+
+/**
+ * Ensure that document wireframes can be persisted when they're enabled.
+ */
+add_task(async function test_wireframes() {
+  // Wireframes only works when Fission and SHIP are enabled.
+  if (
+    !Services.appinfo.fissionAutostart ||
+    !Services.appinfo.sessionHistoryInParent
+  ) {
+    ok(true, "Skipping test_wireframes when Fission or SHIP is not enabled.");
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.history.collectWireframes", true]],
+  });
+
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
+  let browser = tab.linkedBrowser;
+  await promiseBrowserLoaded(browser);
+
+  await TabStateFlusher.flush(browser);
+  let { entries } = JSON.parse(ss.getTabState(tab));
+
+  // Check the number of children.
+  is(entries.length, 1, "there is one shistory entry");
+
+  // Check for the wireframe
+  ok(entries[0].wireframe, "A wireframe was captured and serialized.");
+  ok(
+    entries[0].wireframe.rects.length,
+    "Several wireframe rects were captured."
+  );
+
+  // Cleanup.
+  gBrowser.removeTab(tab);
+});
