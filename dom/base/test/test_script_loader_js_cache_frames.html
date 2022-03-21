@@ -153,7 +153,7 @@ promise_test(async function() {
       `Expected events should be observed for ${src} while saving`);
 
     let observedLoadEvents = [];
-    await new Promise(resolve => {
+    const loadFrameEventPromise = new Promise(resolve => {
       function logEvent(evt) {
         const type = evt.type.replace(/^load_/, "");
 
@@ -174,8 +174,13 @@ promise_test(async function() {
       iwin.addEventListener("load_scriptloader_fallback", logEvent);
       iwin.addEventListener("load_test_evaluated", logEvent);
 
-      iwin.document.getElementById("load").contentWindow.doLoad();
     });
+
+    // Make sure the "load" iframe is fully loaded.
+    await iwin.loadFramePromise;
+    iwin.document.getElementById("load").contentWindow.doLoad();
+
+    await loadFrameEventPromise;
 
     // The event order is non-deterministic.
     // Just compare them as multi-set.
