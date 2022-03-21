@@ -27,7 +27,6 @@ import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
-import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -131,18 +130,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-        is Event.LoginDialogPromptDisplayed -> EventWrapper<NoExtraKeys>(
-            { LoginDialog.displayed.record(it) }
-        )
-        is Event.LoginDialogPromptCancelled -> EventWrapper<NoExtraKeys>(
-            { LoginDialog.cancelled.record(it) }
-        )
-        is Event.LoginDialogPromptSave -> EventWrapper<NoExtraKeys>(
-            { LoginDialog.saved.record(it) }
-        )
-        is Event.LoginDialogPromptNeverSave -> EventWrapper<NoExtraKeys>(
-            { LoginDialog.neverSave.record(it) }
         )
         is Event.ContextMenuItemTapped -> EventWrapper(
             { ContextMenu.itemTapped.record(it) },

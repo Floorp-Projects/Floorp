@@ -23,15 +23,21 @@ import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class MetricControllerTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @MockK(relaxUnitFun = true) private lateinit var dataService1: MetricsService
     @MockK(relaxUnitFun = true) private lateinit var dataService2: MetricsService
@@ -511,10 +517,6 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
 
         val simpleMappings = listOf(
-            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.DISPLAY, Event.LoginDialogPromptDisplayed),
-            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.CANCEL, Event.LoginDialogPromptCancelled),
-            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.NEVER_SAVE, Event.LoginDialogPromptNeverSave),
-            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.SAVE, Event.LoginDialogPromptSave),
             // CreditCardAutofillDialogFacts.Items is already tested.
             Triple(Component.FEATURE_CUSTOMTABS, CustomTabsFacts.Items.CLOSE, Event.CustomTabsClosed),
             Triple(Component.FEATURE_CUSTOMTABS, CustomTabsFacts.Items.ACTION_BUTTON, Event.CustomTabsActionTapped),
@@ -533,6 +535,29 @@ class MetricControllerTest {
             val fact = Fact(component, Action.CANCEL, item)
             val message = "$expectedEvent $component $item"
             assertEquals(message, expectedEvent, controller.factToEvent(fact))
+        }
+    }
+
+    @Test
+    fun `WHEN processing a fact with FEATURE_PROMPTS component THEN the right metric is recorded with no extras`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val action = mockk<Action>(relaxed = true)
+        val itemsToEvents = listOf(
+            LoginDialogFacts.Items.DISPLAY to LoginDialog.displayed,
+            LoginDialogFacts.Items.CANCEL to LoginDialog.cancelled,
+            LoginDialogFacts.Items.NEVER_SAVE to LoginDialog.neverSave,
+            LoginDialogFacts.Items.SAVE to LoginDialog.saved,
+        )
+
+        itemsToEvents.forEach { (item, event) ->
+            val fact = Fact(Component.FEATURE_PROMPTS, action, item)
+            controller.run {
+                fact.process()
+            }
+
+            assertEquals(true, event.testHasValue())
+            assertEquals(1, event.testGetValue().size)
+            assertEquals(null, event.testGetValue().single().extra)
         }
     }
 

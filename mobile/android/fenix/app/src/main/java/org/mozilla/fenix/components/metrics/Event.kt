@@ -182,11 +182,6 @@ sealed class Event {
     object ChangedToDefaultBrowser : Event()
     object DefaultBrowserNotifTapped : Event()
 
-    object LoginDialogPromptDisplayed : Event()
-    object LoginDialogPromptCancelled : Event()
-    object LoginDialogPromptSave : Event()
-    object LoginDialogPromptNeverSave : Event()
-
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()
 
