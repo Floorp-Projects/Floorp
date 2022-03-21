@@ -842,10 +842,10 @@ void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
       defineReuseInput(lir, ins, LWasmTernarySimd128::V0);
       break;
     }
-    case wasm::SimdOp::I8x16LaneSelect:
-    case wasm::SimdOp::I16x8LaneSelect:
-    case wasm::SimdOp::I32x4LaneSelect:
-    case wasm::SimdOp::I64x2LaneSelect: {
+    case wasm::SimdOp::I8x16RelaxedLaneSelect:
+    case wasm::SimdOp::I16x8RelaxedLaneSelect:
+    case wasm::SimdOp::I32x4RelaxedLaneSelect:
+    case wasm::SimdOp::I64x2RelaxedLaneSelect: {
       if (Assembler::HasAVX()) {
         auto* lir = new (alloc()) LWasmTernarySimd128(
             ins->simdOp(), useRegisterAtStart(ins->v0()),
@@ -1047,7 +1047,7 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::F64x2PMin:
     case wasm::SimdOp::F64x2PMax:
     case wasm::SimdOp::I8x16Swizzle:
-    case wasm::SimdOp::V8x16RelaxedSwizzle:
+    case wasm::SimdOp::I8x16RelaxedSwizzle:
     case wasm::SimdOp::I8x16Eq:
     case wasm::SimdOp::I8x16Ne:
     case wasm::SimdOp::I8x16GtS:

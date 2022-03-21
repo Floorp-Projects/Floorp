@@ -498,7 +498,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F32x4RelaxedMax:
         case SimdOp::F64x2RelaxedMin:
         case SimdOp::F64x2RelaxedMax:
-        case SimdOp::V8x16RelaxedSwizzle:
+        case SimdOp::I8x16RelaxedSwizzle:
           WASM_SIMD_OP(OpKind::Binary);
         case SimdOp::I8x16Neg:
         case SimdOp::I16x8Neg:
@@ -604,10 +604,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F32x4RelaxedFms:
         case SimdOp::F64x2RelaxedFma:
         case SimdOp::F64x2RelaxedFms:
-        case SimdOp::I8x16LaneSelect:
-        case SimdOp::I16x8LaneSelect:
-        case SimdOp::I32x4LaneSelect:
-        case SimdOp::I64x2LaneSelect:
+        case SimdOp::I8x16RelaxedLaneSelect:
+        case SimdOp::I16x8RelaxedLaneSelect:
+        case SimdOp::I32x4RelaxedLaneSelect:
+        case SimdOp::I64x2RelaxedLaneSelect:
           WASM_SIMD_OP(OpKind::Ternary);
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
         case SimdOp::MozWHSELFTEST:
