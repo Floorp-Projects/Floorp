@@ -144,7 +144,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   // Main thread callers must hold Lock() and check CleanUp() before calling
   // this. Worker thread callers, this will assert that the proxy has not been
   // cleaned up.
-  WorkerPrivate* GetWorkerPrivate() const NO_THREAD_SAFETY_ANALYSIS;
+  WorkerPrivate* GetWorkerPrivate() const;
 
   // This should only be used within WorkerRunnable::WorkerRun() running on the
   // worker thread! Do not call this after calling CleanUp().
@@ -156,9 +156,9 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   // 2. WorkerPromise() will crash!
   void CleanUp();
 
-  Mutex& Lock() RETURN_CAPABILITY(mCleanUpLock) { return mCleanUpLock; }
+  Mutex& Lock() { return mCleanUpLock; }
 
-  bool CleanedUp() const REQUIRES(mCleanUpLock) {
+  bool CleanedUp() const {
     mCleanUpLock.AssertCurrentThreadOwns();
     return mCleanedUp;
   }
@@ -207,7 +207,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   const PromiseWorkerProxyStructuredCloneCallbacks* mCallbacks;
 
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
-  Mutex mCleanUpLock;
+  Mutex mCleanUpLock MOZ_UNANNOTATED;
 };
 }  // namespace dom
 }  // namespace mozilla
