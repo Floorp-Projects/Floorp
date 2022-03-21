@@ -81,7 +81,6 @@ firefox_ui_tests_config_options = (
 
 
 class FirefoxUIFunctionalTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
-
     def __init__(
         self,
         config_options=None,
@@ -203,7 +202,9 @@ class FirefoxUIFunctionalTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         cmd = [
             self.query_python_path(),
-            os.path.join(os.path.dirname(firefox_ui_harness.__file__), "cli_functional.py"),
+            os.path.join(
+                os.path.dirname(firefox_ui_harness.__file__), "cli_functional.py"
+            ),
             "--binary",
             binary_path,
             "--address",
