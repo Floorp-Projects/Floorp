@@ -70,13 +70,16 @@ void APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId) {
   }
 }
 
+// Takes a conditional lock!
 /*static*/
-void APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId) {
+void APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId)
+    NO_THREAD_SAFETY_ANALYSIS {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
     updater->mApz->LockTree();
   }
 }
 
+// Assumes we took a conditional lock!
 /*static*/
 void APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
                                    const wr::WrPipelineInfo& aInfo) {
