@@ -50,6 +50,7 @@ job-defaults:
             armeabi-v7a: t-bitbar-gw-perf-g5
             arm64-v8a: t-bitbar-gw-perf-p2
     worker:
+        taskcluster-proxy: true
         max-run-time: 3600
         env:
             GECKO_HEAD_REPOSITORY: "https://hg.mozilla.org/mozilla-central"
