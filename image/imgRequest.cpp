@@ -64,7 +64,6 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mIsCrossSiteNoCORSRequest(false),
       mMutex("imgRequest"),
       mProgressTracker(new ProgressTracker()),
-      mInnerWindowId(0),
       mIsMultiPartChannel(false),
       mIsInCache(false),
       mDecodeRequested(false),

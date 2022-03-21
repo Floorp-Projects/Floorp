@@ -179,11 +179,12 @@ void mozilla_ForgetSharedFTFaceLockOwner(void* aContext, void* aOwner) {
   static_cast<mozilla::gfx::SharedFTFace*>(aContext)->ForgetLockOwner(aOwner);
 }
 
-int mozilla_LockSharedFTFace(void* aContext, void* aOwner) {
+int mozilla_LockSharedFTFace(void* aContext,
+                             void* aOwner) NO_THREAD_SAFETY_ANALYSIS {
   return int(static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Lock(aOwner));
 }
 
-void mozilla_UnlockSharedFTFace(void* aContext) {
+void mozilla_UnlockSharedFTFace(void* aContext) NO_THREAD_SAFETY_ANALYSIS {
   static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Unlock();
 }
 
@@ -630,11 +631,15 @@ void Factory::ReleaseFTLibrary(FT_Library aFTLibrary) {
   FT_Done_FreeType(aFTLibrary);
 }
 
-PUSH_IGNORE_THREAD_SAFETY
-void Factory::LockFTLibrary(FT_Library aFTLibrary) { mFTLock.Lock(); }
+void Factory::LockFTLibrary(FT_Library aFTLibrary)
+    CAPABILITY_ACQUIRE(mFTLock) NO_THREAD_SAFETY_ANALYSIS {
+  mFTLock.Lock();
+}
 
-void Factory::UnlockFTLibrary(FT_Library aFTLibrary) { mFTLock.Unlock(); }
-POP_THREAD_SAFETY
+void Factory::UnlockFTLibrary(FT_Library aFTLibrary)
+    CAPABILITY_RELEASE(mFTLock) NO_THREAD_SAFETY_ANALYSIS {
+  mFTLock.Unlock();
+}
 
 FT_Face Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName,
                            int aFaceIndex) {
