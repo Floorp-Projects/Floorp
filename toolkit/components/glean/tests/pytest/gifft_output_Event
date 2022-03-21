@@ -8,6 +8,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DataMutex.h"
+#include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_EventGifftMap_h
 #define mozilla_glean_EventGifftMap_h
