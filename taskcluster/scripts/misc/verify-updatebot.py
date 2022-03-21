@@ -243,13 +243,17 @@ for bug in unique_updatebot_bugs:
         )
 
         try:
-            target_revision = RE_COMMITMSG.search(first_commit.desc).groups(0)[1]
+            library, target_revision = RE_COMMITMSG.search(first_commit.desc).groups(0)
         except Exception:
             print(
                 "Could not parse the bug description with RE_COMMITMSG for the revision: %s"
                 % first_commit.desc
             )
             overall_failure = True
+            continue
+
+        if library == 'angle':
+            print("Currently cannot verify angle updates")
             continue
 
         moz_yaml_file = find_moz_yaml_from_commit(first_commit)
