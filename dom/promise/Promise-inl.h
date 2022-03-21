@@ -211,6 +211,32 @@ Promise::ThenResult<Callback, Args...> Promise::ThenWithCycleCollectedArgs(
       std::forward<Args>(aArgs)...);
 }
 
+template <typename ResolveCallback, typename RejectCallback, typename... Args>
+void Promise::AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
+                                                 RejectCallback&& aOnReject,
+                                                 Args&&... aArgs) {
+  auto onResolve =
+      [aOnResolve](JSContext* aCx, JS::HandleValue value, ErrorResult& aRv,
+                   StorageType<Args>&&... aArgs) -> already_AddRefed<Promise> {
+    aOnResolve(aCx, value, aRv, aArgs...);
+    return nullptr;
+  };
+  auto onReject =
+      [aOnReject](JSContext* aCx, JS::HandleValue value, ErrorResult& aRv,
+                  StorageType<Args>&&... aArgs) -> already_AddRefed<Promise> {
+    aOnReject(aCx, value, aRv, aArgs...);
+    return nullptr;
+  };
+
+  // Note: explicit template parameters for clang<7/gcc<8 without "Template
+  // argument deduction for class templates" support
+  AppendNativeHandler(
+      new NativeThenHandler<decltype(onResolve), decltype(onReject), Args...>(
+          nullptr, std::forward<decltype(onResolve)>(onResolve),
+          std::forward<decltype(onReject)>(onReject),
+          std::forward<Args>(aArgs)...));
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
