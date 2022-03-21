@@ -2717,8 +2717,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             local.mBytesSent.Construct(audioStats->payload_bytes_sent);
             local.mNackCount.Construct(
                 audioStats->rtcp_packet_type_counts.nack_packets);
-            /*
-             * Potential new stats that are now available upstream.
             local.mHeaderBytesSent.Construct(
                 audioStats->header_and_padding_bytes_sent);
             local.mRetransmittedPacketsSent.Construct(
@@ -2726,7 +2724,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             local.mRetransmittedBytesSent.Construct(
                 audioStats->retransmitted_bytes_sent);
             local.mTargetBitrate.Construct(audioStats->target_bitrate_bps);
-             */
             if (!report->mOutboundRtpStreamStats.AppendElement(std::move(local),
                                                                fallible)) {
               mozalloc_handle_oom(0);
@@ -2805,8 +2802,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             if (streamStats->qp_sum) {
               local.mQpSum.Construct(*streamStats->qp_sum);
             }
-            /*
-             * Potential new stats that are now available upstream.
             local.mHeaderBytesSent.Construct(
                 streamStats->rtp_stats.transmitted.header_bytes +
                 streamStats->rtp_stats.transmitted.padding_bytes);
@@ -2815,6 +2810,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             local.mRetransmittedBytesSent.Construct(
                 streamStats->rtp_stats.retransmitted.payload_bytes);
             local.mTargetBitrate.Construct(videoStats->target_media_bitrate_bps);
+            /*
+             * Potential new stats that are now available upstream.
             local.mTotalEncodedBytesTarget.Construct(
                 videoStats->total_encoded_bytes_target);
              */
