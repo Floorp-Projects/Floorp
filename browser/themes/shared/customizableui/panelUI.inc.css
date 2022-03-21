@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%filter substitution
+
+%define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
+
 :root {
   --panel-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-item-active-bgcolor: var(--button-active-bgcolor);
@@ -386,7 +390,7 @@ panelview[id^=PanelUI-webext-] {
   min-width: calc(var(--menu-panel-width) + 32px);
 }
 
-panelview .toolbaritem-combined-buttons > toolbarbutton > .toolbarbutton-icon {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -1222,12 +1226,10 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-:is(
-  panelview .toolbarbutton-1,
-  toolbarbutton.subviewbutton,
-  .widget-overflow-list .toolbarbutton-1,
-  panelview .toolbaritem-combined-buttons > toolbarbutton
-):focus-visible {
+panelview .toolbarbutton-1:focus-visible,
+toolbarbutton.subviewbutton:focus-visible,
+.widget-overflow-list .toolbarbutton-1:focus-visible,
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
 }
@@ -1237,7 +1239,7 @@ panelview .toolbarbutton-1 {
   panelview .toolbarbutton-1,
   toolbarbutton.subviewbutton,
   .widget-overflow-list .toolbarbutton-1,
-  panelview .toolbaritem-combined-buttons > toolbarbutton
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
 ):not([disabled]):hover {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
@@ -1248,7 +1250,7 @@ panelview .toolbarbutton-1 {
   panelview .toolbarbutton-1,
   toolbarbutton.subviewbutton,
   .widget-overflow-list .toolbarbutton-1,
-  panelview .toolbaritem-combined-buttons > toolbarbutton
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
 ):not([disabled]):hover:active {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
@@ -1387,7 +1389,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-panelview .toolbaritem-combined-buttons > toolbarbutton {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
@@ -1405,7 +1407,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   display: none;
 }
 
-panelview .toolbaritem-combined-buttons > toolbarbutton:not(.toolbarbutton-1)[disabled] {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:not(.toolbarbutton-1)[disabled] {
   opacity: 0.4;
   /* Override toolbarbutton.css which sets the color to GrayText */
   color: inherit;
@@ -1416,7 +1418,7 @@ panelview .toolbaritem-combined-buttons > toolbarbutton:not(.toolbarbutton-1)[di
   min-width: calc(5ch + var(--toolbarbutton-inner-padding) * 2);
 }
 
-panelview .toolbaritem-combined-buttons > separator {
+.toolbaritem-combined-buttons@inAnyPanel@ > separator {
   appearance: none;
   -moz-box-align: stretch;
   margin: .5em 0;
@@ -1428,7 +1430,7 @@ panelview .toolbaritem-combined-buttons > separator {
   transition-timing-function: ease;
 }
 
-panelview .toolbaritem-combined-buttons:hover > separator {
+.toolbaritem-combined-buttons@inAnyPanel@:hover > separator {
   margin: 0;
 }
 
