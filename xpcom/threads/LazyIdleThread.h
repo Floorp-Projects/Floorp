@@ -131,7 +131,7 @@ class LazyIdleThread final : public nsIThread,
   /**
    * Protects data that is accessed on both threads.
    */
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 
   /**
    * Touched on both threads but set before mThread is created. Used to direct
@@ -176,14 +176,14 @@ class LazyIdleThread final : public nsIThread,
    * The number of events that are pending on mThread. A nonzero value means
    * that the thread cannot be cleaned up.
    */
-  uint32_t mPendingEventCount;
+  uint32_t mPendingEventCount GUARDED_BY(mMutex);
 
   /**
    * The number of times that mThread has dispatched an idle notification. Any
    * timer that fires while this count is nonzero can safely be ignored as
    * another timer will be on the way.
    */
-  uint32_t mIdleNotificationCount;
+  uint32_t mIdleNotificationCount GUARDED_BY(mMutex);
 
   /**
    * Whether or not the thread should automatically shutdown. If the owner
@@ -202,7 +202,7 @@ class LazyIdleThread final : public nsIThread,
    * Set from CleanupThread and lasting until the thread has shut down. Prevents
    * further idle notifications during the shutdown process.
    */
-  bool mThreadIsShuttingDown;
+  bool mThreadIsShuttingDown GUARDED_BY(mMutex);
 
   /**
    * Whether or not the idle timeout is enabled.

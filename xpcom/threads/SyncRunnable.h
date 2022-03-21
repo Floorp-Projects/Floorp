@@ -124,8 +124,8 @@ class SyncRunnable : public Runnable {
 
  private:
   nsCOMPtr<nsIRunnable> mRunnable;
-  mozilla::Monitor mMonitor MOZ_UNANNOTATED;
-  bool mDone;
+  mozilla::Monitor mMonitor;
+  bool mDone GUARDED_BY(mMonitor);
 };
 
 }  // namespace mozilla
