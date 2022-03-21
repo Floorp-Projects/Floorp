@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+{%- extends "sphinx_rtd_theme/breadcrumbs.html" %}
+
+{% block breadcrumbs_aside %}
+<li class="wy-breadcrumbs-aside">
+    <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Generated+Documentation&short_desc=Documentation+issue+on+{{ pagename }}&comment=URL+=+https://firefox-source-docs.mozilla.org/{{ pagename }}.html" rel="nofollow">Report an issue</a> /
+    {%- if show_source and has_source and sourcename %}
+         <a href="{{ pathto('_sources/' + sourcename, true)|e }}" rel="nofollow"> {{ _('View page source') }}</a>
+    {%- endif %}
+</li>
+{% endblock %}
