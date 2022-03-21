@@ -9429,10 +9429,10 @@ bool BaseCompiler::emitBody() {
             }
             CHECK_NEXT(dispatchTernary1(RelaxedFmsF64x2, ValType::V128));
             break;
-          case uint32_t(SimdOp::I8x16LaneSelect):
-          case uint32_t(SimdOp::I16x8LaneSelect):
-          case uint32_t(SimdOp::I32x4LaneSelect):
-          case uint32_t(SimdOp::I64x2LaneSelect):
+          case uint32_t(SimdOp::I8x16RelaxedLaneSelect):
+          case uint32_t(SimdOp::I16x8RelaxedLaneSelect):
+          case uint32_t(SimdOp::I32x4RelaxedLaneSelect):
+          case uint32_t(SimdOp::I64x2RelaxedLaneSelect):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
@@ -9477,7 +9477,7 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF64x2ToUI32x4));
-          case uint32_t(SimdOp::V8x16RelaxedSwizzle):
+          case uint32_t(SimdOp::I8x16RelaxedSwizzle):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }

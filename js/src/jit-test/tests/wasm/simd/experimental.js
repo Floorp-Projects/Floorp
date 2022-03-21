@@ -134,7 +134,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
                                               ...V128Load(32),
-                                              SimdPrefix, varU32(I8x16RelaxedSwizzle)])]})])]));
+                                              SimdPrefix, varU32(I8x16RelaxedSwizzleCode)])]})])]));
 var mem = new Uint8Array(ins.exports.mem.buffer);
 var test = [1, 4, 3, 7, 123, 0, 8, 222];
 set(mem, 16, test);
@@ -156,7 +156,7 @@ assertEq(false, WebAssembly.validate(moduleWithSections([
     bodySection([
         funcBody({locals:[],
             body: [...V128StoreExpr(0, [...V128Load(16),
-                                        SimdPrefix, varU32(I8x16RelaxedSwizzle)])]})])])));
+                                        SimdPrefix, varU32(I8x16RelaxedSwizzleCode)])]})])])));
 
 
 // Relaxed MIN/MAX, https://github.com/WebAssembly/relaxed-simd/issues/33
@@ -172,8 +172,8 @@ var minMaxTests = [
 ];
 
 for (let k of [4, 2]) {
-    const minOpcode = k == 4 ? F32x4RelaxedMin : F64x2RelaxedMin;
-    const maxOpcode = k == 4 ? F32x4RelaxedMax : F64x2RelaxedMax;
+    const minOpcode = k == 4 ? F32x4RelaxedMinCode : F64x2RelaxedMinCode;
+    const maxOpcode = k == 4 ? F32x4RelaxedMaxCode : F64x2RelaxedMaxCode;
 
     var ins = wasmValidateAndEval(moduleWithSections([
         sigSection([v2vSig]),
@@ -238,16 +238,16 @@ var ins = wasmValidateAndEval(moduleWithSections([
     bodySection([
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSSatF32x4)])]}),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSSatF32x4Code)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncUSatF32x4)])]}),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncUSatF32x4Code)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2SZero)])]}),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2SZeroCode)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2UZero)])]})])]));
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2UZeroCode)])]})])]));
 
 var mem = ins.exports.mem.buffer;
 set(new Float32Array(mem), 4, [0, 2.3, -3.4, 100000]);
@@ -273,8 +273,8 @@ ins.exports.from64u();
 var result = get(new Uint32Array(mem), 0, 2);
 assertSame(result, [0x90000000, 0]);
 
-for (let op of [I32x4RelaxedTruncSSatF32x4, I32x4RelaxedTruncUSatF32x4,
-                I32x4RelaxedTruncSatF64x2SZero, I32x4RelaxedTruncSatF64x2UZero]) {
+for (let op of [I32x4RelaxedTruncSSatF32x4Code, I32x4RelaxedTruncUSatF32x4Code,
+                I32x4RelaxedTruncSatF64x2SZeroCode, I32x4RelaxedTruncSatF64x2UZeroCode]) {
     assertEq(false, WebAssembly.validate(moduleWithSections([
         sigSection([v2vSig]),
         declSection([0]),
@@ -287,10 +287,10 @@ for (let op of [I32x4RelaxedTruncSSatF32x4, I32x4RelaxedTruncUSatF32x4,
 
 // Relaxed blend / laneselect, https://github.com/WebAssembly/relaxed-simd/issues/17
 
-for (let [k, opcode, AT] of [[1, I8x16LaneSelect, Int8Array],
-                             [2, I16x8LaneSelect, Int16Array],
-                             [4, I32x4LaneSelect, Int32Array],
-                             [8, I64x2LaneSelect, BigInt64Array]]) {
+for (let [k, opcode, AT] of [[1, I8x16RelaxedLaneSelectCode, Int8Array],
+                             [2, I16x8RelaxedLaneSelectCode, Int16Array],
+                             [4, I32x4RelaxedLaneSelectCode, Int32Array],
+                             [8, I64x2RelaxedLaneSelectCode, BigInt64Array]]) {
 
     var ins = wasmValidateAndEval(moduleWithSections([
         sigSection([v2vSig]),

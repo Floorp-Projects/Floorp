@@ -4966,7 +4966,7 @@ MDefinition* MWasmTernarySimd128::foldsTo(TempAllocator& alloc) {
       }
     } else if (canRelaxBitselect()) {
       return MWasmTernarySimd128::New(alloc, v0(), v1(), v2(),
-                                      wasm::SimdOp::I8x16LaneSelect);
+                                      wasm::SimdOp::I8x16RelaxedLaneSelect);
     }
   }
   return this;
