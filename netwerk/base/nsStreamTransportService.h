@@ -45,13 +45,12 @@ class nsStreamTransportService final : public nsIStreamTransportService,
  private:
   ~nsStreamTransportService();
 
-  nsCOMPtr<nsIThreadPool> mPool;
+  nsCOMPtr<nsIThreadPool> mPool GUARDED_BY(mShutdownLock);
 
   DataMutex<nsTArray<RefPtr<DelayedRunnable>>> mScheduledDelayedRunnables;
 
-  mozilla::Mutex mShutdownLock MOZ_UNANNOTATED{
-      "nsStreamTransportService.mShutdownLock"};
-  bool mIsShutdown{false};
+  mozilla::Mutex mShutdownLock{"nsStreamTransportService.mShutdownLock"};
+  bool mIsShutdown GUARDED_BY(mShutdownLock) {false};
 };
 
 }  // namespace net
