@@ -19,7 +19,6 @@ import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchTerms
-import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.name
@@ -357,13 +356,6 @@ sealed class Event {
     data class AddonOpenSetting(val addonId: String) : Event() {
         override val extras: Map<Addons.openAddonSettingKeys, String>?
             get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
-    }
-
-    data class ToolbarPositionChanged(val position: Position) : Event() {
-        enum class Position { TOP, BOTTOM }
-
-        override val extras: Map<ToolbarSettings.changedPositionKeys, String>?
-            get() = hashMapOf(ToolbarSettings.changedPositionKeys.position to position.name)
     }
 
     data class OpenedLink(val mode: Mode) : Event() {

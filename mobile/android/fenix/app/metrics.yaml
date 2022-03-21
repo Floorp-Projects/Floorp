@@ -659,6 +659,7 @@ toolbar_settings:
       The user selected a new position for the toolbar
     extra_keys:
       position:
+        type: string
         description: |
           A string that indicates the new position of the toolbar TOP or BOTTOM
     bugs:

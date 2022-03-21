@@ -49,7 +49,6 @@ import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
-import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.GleanMetrics.Wallpapers
@@ -473,10 +472,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.EditLoginSave -> EventWrapper<NoExtraKeys>(
             { Logins.saveEditedLogin.record(it) }
-        )
-        is Event.ToolbarPositionChanged -> EventWrapper(
-            { ToolbarSettings.changedPosition.record(it) },
-            { ToolbarSettings.changedPositionKeys.valueOf(it) }
         )
         is Event.SaveLoginsSettingChanged -> EventWrapper(
             { Logins.saveLoginsSettingChanged.record(it) },
