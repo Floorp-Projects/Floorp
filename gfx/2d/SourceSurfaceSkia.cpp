@@ -169,10 +169,14 @@ bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface)
   if (!mIsMapped) {
     mChangeMutex.Unlock();
   }
+  // Static analysis will warn due to a conditional Unlock
+  PUSH_IGNORE_THREAD_SAFETY
   return isMapped;
+  POP_THREAD_SAFETY
 }
 
 void SourceSurfaceSkia::Unmap() NO_THREAD_SAFETY_ANALYSIS {
+  mChangeMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsMapped);
   mIsMapped = false;
   mChangeMutex.Unlock();
