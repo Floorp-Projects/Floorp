@@ -85,14 +85,7 @@ class Shmem final {
 
   Shmem(const Shmem& aOther) = default;
 
-#if !defined(DEBUG)
-  Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
-      : mSegment(aSegment), mData(aSegment->memory()), mSize(0), mId(aId) {
-    mSize = static_cast<size_t>(*PtrToSize(mSegment));
-  }
-#else
   Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId);
-#endif
 
   ~Shmem() {
     // Shmem only holds a "weak ref" to the actual segment, which is
