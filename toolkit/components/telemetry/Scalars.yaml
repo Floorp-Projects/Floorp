@@ -7691,7 +7691,7 @@ telemetry.test:
       - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
-      - 'main'
+      - 'main' # test_ChildScalars.js depends on this being main-only.
 
   string_kind:
     bug_numbers:
@@ -7857,7 +7857,27 @@ telemetry.test:
       - 'fennec'
       - 'thunderbird'
     record_in_processes:
+      - 'main' # test_ChildScalars.js depends on this being main-only
+
+  mirror_for_labeled_counter:
+    bug_numbers:
+      - 1277806
+      - 1685406
+      - 1758795
+    description: A testing keyed uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'thunderbird'
+    record_in_processes:
       - 'main'
+      - 'content'
 
   keyed_with_keys:
     bug_numbers:
@@ -7913,6 +7933,7 @@ telemetry.test:
     record_in_processes:
       - 'main'
       - 'content'
+    release_channel_collection: opt-out
 
   content_only_uint:
     bug_numbers:
@@ -8201,6 +8222,7 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
   mirror_for_timespan:
     bug_numbers: [1685406]
@@ -8210,6 +8232,7 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
   mirror_for_timespan_nanos:
     bug_numbers: [1704106]
@@ -8219,6 +8242,7 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
   mirror_for_labeled_bool:
     bug_numbers: [1685406]
@@ -8229,6 +8253,7 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
   mirror_for_quantity:
     bug_numbers: [1704846]
@@ -8238,6 +8263,7 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
   mirror_for_rate:
     bug_numbers: [1694496]
@@ -8250,6 +8276,31 @@ telemetry.test:
     notification_emails: [glean-team@mozilla.com]
     products: ["firefox", "thunderbird"]
     record_in_processes: ["all"]
+    release_channel_collection: opt-out
+
+  mirror_for_counter:
+    bug_numbers: [1758795]
+    description: >
+      Test only. This is a mirror probe for a Glean counter metric.
+    expires: never
+    kind: uint
+    notification_emails: [glean-team@mozilla.com]
+    products: ["firefox", "thunderbird"]
+    record_in_processes: ["all"]
+    release_channel_collection: opt-out
+
+  another_mirror_for_labeled_counter:
+    bug_numbers: [1758795]
+    description: >
+      Test only. This is a mirror probe for a Glean labeled_counter metric.
+      Keys are labels in the mirrored metric.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails: [glean-team@mozilla.com]
+    products: ["firefox", "thunderbird"]
+    record_in_processes: ["all"]
+    release_channel_collection: opt-out
 
 
 # The following section contains counters for corruption of internal omni jar files.
