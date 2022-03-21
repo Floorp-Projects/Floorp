@@ -1,6 +1,6 @@
-=======
-Firefox
-=======
+=================
+Firefox Front-end
+=================
 
 This is the nascent documentation of the Firefox front-end code.
 
