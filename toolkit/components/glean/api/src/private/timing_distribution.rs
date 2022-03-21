@@ -124,6 +124,16 @@ impl TimingDistribution for TimingDistributionMetric {
                 if let Some(_v) = map.insert(id, Instant::now()) {
                     // TODO: report an error and find a different TimerId.
                 }
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionStart(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionStart(c.metric_id.0, id);
+                    }
+                }
                 id
             }
         }
@@ -159,6 +169,16 @@ impl TimingDistribution for TimingDistributionMetric {
                 inner.stop_and_accumulate(id);
             }
             TimingDistributionMetric::Child(c) => {
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionStopAndAccumulate(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionStopAndAccumulate(c.metric_id.0, id);
+                    }
+                }
                 let mut map = c
                     .instants
                     .write()
@@ -228,6 +248,16 @@ impl TimingDistribution for TimingDistributionMetric {
                     .expect("Write lock must've been poisoned.");
                 if map.remove(&id).is_none() {
                     // TODO: report an error (cancelled a non-started id).
+                }
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionCancel(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionCancel(c.metric_id.0, id);
+                    }
                 }
             }
         }
