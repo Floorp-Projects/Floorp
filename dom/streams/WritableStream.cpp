@@ -86,57 +86,6 @@ void WritableStream::DealWithRejection(JSContext* aCx,
   FinishErroring(aCx, aRv);
 }
 
-class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
-  ~AbortStepsNativePromiseHandler() override = default;
-
-  RefPtr<WritableStream> mStream;
-  RefPtr<Promise> mAbortRequestPromise;
-
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(AbortStepsNativePromiseHandler)
-
-  explicit AbortStepsNativePromiseHandler(WritableStream* aStream,
-                                          Promise* aAbortRequestPromise)
-      : PromiseNativeHandler(),
-        mStream(aStream),
-        mAbortRequestPromise(aAbortRequestPromise) {}
-
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
-
-    // Step 13. Upon fulfillment of promise,
-    // Step 13.1. Resolve abortRequest’s promise with undefined.
-    mAbortRequestPromise->MaybeResolveWithUndefined();
-
-    // Step 13.2. Perform !
-    // WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-    mStream->RejectCloseAndClosedPromiseIfNeeded();
-  }
-
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
-
-    // Step 14. Upon rejection of promise with reason reason,
-    // Step 14.1. Reject abortRequest’s promise with reason.
-    mAbortRequestPromise->MaybeReject(aValue);
-
-    // Step 14.2. Perform !
-    // WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-    mStream->RejectCloseAndClosedPromiseIfNeeded();
-  }
-};
-
-NS_IMPL_CYCLE_COLLECTION(AbortStepsNativePromiseHandler, mStream,
-                         mAbortRequestPromise)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortStepsNativePromiseHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortStepsNativePromiseHandler)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortStepsNativePromiseHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
 void WritableStream::FinishErroring(JSContext* aCx, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[state]] is "erroring".
@@ -204,8 +153,28 @@ void WritableStream::FinishErroring(JSContext* aCx, ErrorResult& aRv) {
   }
 
   // Step 13 + 14.
-  promise->AppendNativeHandler(
-      new AbortStepsNativePromiseHandler(this, abortPromise));
+  promise->AddCallbacksWithCycleCollectedArgs(
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         Promise* aAbortRequestPromise, WritableStream* aStream) {
+        // Step 13. Upon fulfillment of promise,
+        // Step 13.1. Resolve abortRequest’s promise with undefined.
+        aAbortRequestPromise->MaybeResolveWithUndefined();
+
+        // Step 13.2. Perform !
+        // WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+        aStream->RejectCloseAndClosedPromiseIfNeeded();
+      },
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         Promise* aAbortRequestPromise, WritableStream* aStream) {
+        // Step 14. Upon rejection of promise with reason reason,
+        // Step 14.1. Reject abortRequest’s promise with reason.
+        aAbortRequestPromise->MaybeReject(aValue);
+
+        // Step 14.2. Perform !
+        // WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+        aStream->RejectCloseAndClosedPromiseIfNeeded();
+      },
+      RefPtr(abortPromise), RefPtr(this));
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-finish-in-flight-close
