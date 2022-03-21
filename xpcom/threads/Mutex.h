@@ -232,7 +232,9 @@ class MOZ_RAII SCOPED_CAPABILITY BaseAutoLock {
    * @param aLock A valid mozilla::Mutex* returned by
    *              mozilla::Mutex::NewMutex.
    **/
-  explicit BaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock) : mLock(aLock) { mLock.Lock(); }
+  explicit BaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock) : mLock(aLock) {
+    mLock.Lock();
+  }
 
   ~BaseAutoLock(void) CAPABILITY_RELEASE() { mLock.Unlock(); }
 
@@ -297,14 +299,14 @@ typedef detail::BaseAutoLock<OffTheBooksMutex&> OffTheBooksMutexAutoLock;
 
 namespace detail {
 /**
- * ReleaseableMutexAutoLock
+ * ReleasableMutexAutoLock
  * Acquires the Mutex when it enters scope, and releases it when it leaves
  * scope. Allows calling Unlock (and Lock) as an alternative to
  * MutexAutoUnlock; this can avoid an extra lock/unlock pair.
  *
  */
 template <typename T>
-class MOZ_RAII SCOPED_CAPABILITY ReleaseableBaseAutoLock {
+class MOZ_RAII SCOPED_CAPABILITY ReleasableBaseAutoLock {
  public:
   /**
    * Constructor
@@ -314,19 +316,19 @@ class MOZ_RAII SCOPED_CAPABILITY ReleaseableBaseAutoLock {
    * @param aLock A valid mozilla::Mutex& returned by
    *              mozilla::Mutex::NewMutex.
    **/
-  explicit ReleaseableBaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock)
-      : BaseAutoLock<T>(aLock) {
+  explicit ReleasableBaseAutoLock(T aLock) CAPABILITY_ACQUIRE(aLock)
+      : mLock(aLock) {
     mLock.Lock();
     mLocked = true;
   }
 
-  ~ReleaseableBaseAutoLock(void) CAPABILITY_RELEASE() {
-    if (!mLocked) {
-      mLock.Unlock();
+  ~ReleasableBaseAutoLock(void) CAPABILITY_RELEASE() {
+    if (mLocked) {
+      Unlock();
     }
   }
 
-  void AssertOwns(const T& aMutex) const ASSERT_CAPABILITY(mLock) {
+  void AssertOwns(const T& aMutex) const ASSERT_CAPABILITY(aMutex) {
     MOZ_ASSERT(&aMutex == &mLock);
     mLock.AssertCurrentThreadOwns();
   }
@@ -342,18 +344,20 @@ class MOZ_RAII SCOPED_CAPABILITY ReleaseableBaseAutoLock {
   // }
   // clang-format on
   void Unlock() CAPABILITY_RELEASE() {
+    MOZ_ASSERT(mLocked);
     mLock.Unlock();
     mLocked = false;
   }
   void Lock() CAPABILITY_ACQUIRE() {
+    MOZ_ASSERT(!mLocked);
     mLock.Lock();
     mLocked = true;
   }
 
  private:
-  ReleaseableBaseAutoLock() = delete;
-  ReleaseableBaseAutoLock(ReleaseableBaseAutoLock&) = delete;
-  ReleaseableBaseAutoLock& operator=(ReleaseableBaseAutoLock&) = delete;
+  ReleasableBaseAutoLock() = delete;
+  ReleasableBaseAutoLock(ReleasableBaseAutoLock&) = delete;
+  ReleasableBaseAutoLock& operator=(ReleasableBaseAutoLock&) = delete;
   static void* operator new(size_t) noexcept(true);
 
   bool mLocked;
@@ -361,10 +365,10 @@ class MOZ_RAII SCOPED_CAPABILITY ReleaseableBaseAutoLock {
 };
 
 template <typename MutexType>
-ReleaseableBaseAutoLock(MutexType&) -> ReleaseableBaseAutoLock<MutexType&>;
+ReleasableBaseAutoLock(MutexType&) -> ReleasableBaseAutoLock<MutexType&>;
 }  // namespace detail
 
-typedef detail::ReleaseableBaseAutoLock<Mutex&> ReleaseableMutexAutoLock;
+typedef detail::ReleasableBaseAutoLock<Mutex&> ReleasableMutexAutoLock;
 
 namespace detail {
 /**
