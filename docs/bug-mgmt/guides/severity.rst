@@ -75,9 +75,6 @@ Rules of thumb
 
 -  *A crash may be be a* ``S1`` *or* ``S2`` *defect, but not all crashes are
    critical defects*
--  High severity defects (``S1`` or ``S2``) do not need to be assigned
-   immediately as they will be reviewed by Engineering Leadership, QA, and
-   Release Management
 -  The severity of most bugs of type ``task`` and ``enhancement`` will be
    ``N/A``
 -  **Do not** assign bugs of type ``defect`` the severity ``N/A``
