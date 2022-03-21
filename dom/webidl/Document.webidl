@@ -736,7 +736,6 @@ dictionary WireframeTaggedRect {
   WireframeRectType type;
   Node? node;
 };
-[GenerateInit]
 dictionary Wireframe {
   unsigned long canvasBackground = 0; // in nscolor format
   sequence<WireframeTaggedRect> rects;
