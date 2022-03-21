@@ -3110,7 +3110,6 @@ var SessionStoreInternal = {
         ? { relatedToCurrent: true, ownerTab: aTab }
         : {}),
       skipLoad: true,
-      preferredRemoteType: aTab.linkedBrowser.remoteType,
     };
     let newTab = aWindow.gBrowser.addTrustedTab(null, tabOptions);
 
@@ -3247,35 +3246,12 @@ var SessionStoreInternal = {
       aIndex
     );
 
-    // Predict the remote type to use for the load to avoid unnecessary process
-    // switches.
-    let preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
-    if (state.entries?.length) {
-      let activeIndex = (state.index || state.entries.length) - 1;
-      activeIndex = Math.min(activeIndex, state.entries.length - 1);
-      activeIndex = Math.max(activeIndex, 0);
-
-      preferredRemoteType = E10SUtils.getRemoteTypeForURI(
-        state.entries[activeIndex].url,
-        aWindow.gMultiProcessBrowser,
-        aWindow.gFissionBrowser,
-        E10SUtils.DEFAULT_REMOTE_TYPE,
-        null,
-        E10SUtils.predictOriginAttributes({
-          window: aWindow,
-          userContextId: state.userContextId,
-        })
-      );
-    }
-
     // create a new tab
     let tabbrowser = aWindow.gBrowser;
     let tab = (tabbrowser.selectedTab = tabbrowser.addTrustedTab(null, {
       index: pos,
       pinned: state.pinned,
       userContextId: state.userContextId,
-      skipLoad: true,
-      preferredRemoteType,
     }));
 
     // restore tab content
