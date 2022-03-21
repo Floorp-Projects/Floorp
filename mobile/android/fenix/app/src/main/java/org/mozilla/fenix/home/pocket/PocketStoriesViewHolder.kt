@@ -63,7 +63,7 @@ class PocketStoriesViewHolder(
             // We should report back when a certain story is actually being displayed.
             // Cannot do it reliably so for now we'll just mass report everything as being displayed.
             stories?.let {
-                interactor::onStoriesShown
+                interactor.onStoriesShown(it)
             }
         }
 
