@@ -108,7 +108,7 @@ interacts with the browser. The area is one of those above with the addition of
 When an interaction occurs the widget's identifier is used as the key and the
 scalar is incremented. If the widget is provided by an add-on then the add-on
 identifier is dropped and an identifier of the form ``addonX`` is used where X
-is a number. The number used is stable for a single session. Everytime the user
+is a number. The number used is stable for a single session. Every time the user
 moves or interacts with an add-on the same number is used but then the numbers
 for each add-on may change after Firefox has been restarted.
 
