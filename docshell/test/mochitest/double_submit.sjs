@@ -12,33 +12,8 @@ const BinaryInputStream = CC(
   "setInputStream"
 );
 
-const BinaryOutputStream = CC(
-  "@mozilla.org/binaryoutputstream;1",
-  "nsIBinaryOutputStream",
-  "setOutputStream"
-);
-
 function log(str) {
   //  dump(`LOG: ${str}\n`);
-}
-
-function* generateBody(fragments, size) {
-  let result = [];
-  let chunkSize = (size / fragments) | 0;
-  let remaining = size;
-
-  log(`Chunk size ${chunkSize}`);
-  while (remaining > 0) {
-    let data = new Uint8Array(Math.min(remaining, chunkSize));
-    for (let i = 0; i < data.length; ++i) {
-      // Generate a character in the [a-z] range.
-      data[i] = 97 + Math.random() * (123 - 97);
-    }
-
-    yield data;
-    log(`Remaining to chunk ${remaining}`);
-    remaining -= data.length;
-  }
 }
 
 function readStream(inputStream) {
@@ -60,9 +35,9 @@ async function handleRequest(request, response) {
   Cu.importGlobalProperties(["URLSearchParams"]);
   let params = new URLSearchParams(request.queryString);
 
+  let start = now();
   let delay = parseInt(params.get("delay")) || 0;
-  let delayUntil = now() + delay;
-  log(`Delay until ${delayUntil}`);
+  log(`Delay for ${delay}`);
 
   let message = "good";
   if (request.method !== "POST") {
@@ -76,54 +51,28 @@ async function handleRequest(request, response) {
     log(`The result was ${message}`);
   }
 
-  let fragments = parseInt(params.get("fragments")) || 1;
-  let size = parseInt(params.get("size")) || 1024;
+  let body = `<!doctype html>
+    <script>
+    "use strict";
+    let target = (opener || parent);
+    target.postMessage(${JSON.stringify(message)}, '*');
+    </script>`;
 
-  let outputStream = new BinaryOutputStream(response.bodyOutputStream);
+  // Sieze power from the response to allow manually transmitting data at any
+  // rate we want, so we can delay transmitting headers.
+  response.seizePower();
 
-  let header = "<!doctype html><!-- ";
-  let footer = ` --><script>"use strict"; let target = (opener || parent); target.postMessage('${message}', '*');</script>`;
+  log(`Writing HTTP status line at ${now() - start}`);
+  response.write("HTTP/1.1 200 OK\r\n");
 
-  log("Set headers");
-  response.setHeader("Content-Type", "text/html", false);
-  response.setHeader(
-    "Content-Length",
-    `${size + header.length + footer.length}`,
-    false
-  );
-  response.setStatusLine(request.httpVersion, "200", "OK");
+  await new Promise(resolve => setTimeout(() => resolve(), delay));
 
-  response.processAsync();
-  log("Write header");
-  response.write(header);
-  log("Write body");
-  for (let data of generateBody(fragments, size)) {
-    delay = Math.max(0, delayUntil - now());
-    log(`Delay sending fragment for ${delay / fragments}`);
-    let failed = false;
-    await new Promise(resolve => {
-      setTimeout(() => {
-        try {
-          outputStream.writeByteArray(data, data.length);
-        } catch (e) {
-          log(e.message);
-          failed = true;
-        }
-        resolve();
-      }, delay / fragments);
-    });
-
-    if (failed) {
-      log("Stopped sending data");
-      break;
-    }
-
-    fragments = Math.max(--fragments, 1);
-    log(`Fragments left ${fragments}`);
-  }
-
-  log("Write footer");
-  response.write(footer);
-
+  log(`Delay completed at ${now() - start}`);
+  response.write("Content-Type: text/html\r\n");
+  response.write(`Content-Length: ${body.length}\r\n`);
+  response.write("\r\n");
+  response.write(body);
   response.finish();
+
+  log("Finished");
 }

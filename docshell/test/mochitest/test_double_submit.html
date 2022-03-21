@@ -8,8 +8,7 @@
   </head>
   <body>
     <iframe name="targetFrame" id="targetFrame"></iframe>
-    <form id="form" action="double_submit.sjs?size=4096&fragments=10&delay=1000" method="POST" target="targetFrame">
-      <input id="input" type="text" name="text" value="value">
+    <form id="form" action="double_submit.sjs?delay=1000" method="POST" target="targetFrame">
       <input id="token" type="text" name="token" value="">
       <input id="button" type="submit">
     </form>
@@ -17,15 +16,6 @@
       "use strict";
 
       const CROSS_ORIGIN_URI = "http://test1.example.com/tests/docshell/test/mochitest/ping.html";
-
-      function generateBody(size) {
-        let data = new Uint8Array(size);
-        for (let i = 0; i < size; ++i) {
-          data[i] = 97 + Math.random() * (123 - 97);
-        }
-
-        return new TextDecoder().decode(data);
-      }
 
       function asyncClick(counts) {
         let frame = document.createElement('iframe');
@@ -59,7 +49,6 @@
         let form = document.getElementById('form');
         let button = document.getElementById('button');
 
-        document.getElementById('input').value = generateBody(1024*1024);
         let token = document.getElementById('token');
         token.value = "first";
 
