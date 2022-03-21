@@ -157,19 +157,7 @@ class DisplayToolbar internal constructor(
         origin = rootView.findViewById<OriginView>(R.id.mozac_browser_toolbar_origin_view).also {
             it.toolbar = toolbar
         },
-        progress = rootView.findViewById<ProgressBar>(R.id.mozac_browser_toolbar_progress).apply {
-            accessibilityDelegate = object : View.AccessibilityDelegate() {
-                override fun onInitializeAccessibilityEvent(host: View?, event: AccessibilityEvent?) {
-                    super.onInitializeAccessibilityEvent(host, event)
-                    if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                        // Populate the scroll event with the current progress.
-                        // See accessibility note in `updateProgress()`.
-                        event.scrollY = progress
-                        event.maxScrollY = max
-                    }
-                }
-            }
-        },
+        progress = rootView.findViewById<ProgressBar>(R.id.mozac_browser_toolbar_progress),
         highlight = rootView.findViewById(R.id.mozac_browser_toolbar_permission_indicator)
     )
 
@@ -567,7 +555,12 @@ class DisplayToolbar internal constructor(
         }
 
         views.progress.progress = progress
-        views.progress.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SCROLLED)
+        val event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_SCROLLED).apply {
+            scrollY = progress
+            maxScrollY = views.progress.max
+        }
+
+        views.progress.parent.requestSendAccessibilityEvent(views.progress, event)
 
         if (progress >= views.progress.max) {
             // Loading is done, hide progress bar.
