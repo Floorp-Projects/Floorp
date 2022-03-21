@@ -145,8 +145,6 @@ this.shooter = (function() {
     } else {
       args.push({ incognito: browser.extension.inIncognitoContext });
     }
-
-    callBackground("sendEvent", ...args);
   };
 
   catcher.watchFunction(() => {

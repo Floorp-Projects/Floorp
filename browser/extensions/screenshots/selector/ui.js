@@ -134,9 +134,6 @@ this.ui = (function() {
     unhide() {
       this.updateElementSize();
       this.element.style.display = "block";
-      catcher.watchPromise(
-        callBackground("sendEvent", "internal", "unhide-selection-frame")
-      );
       this.initSizeWatch();
       this.element.focus();
     },
@@ -343,9 +340,6 @@ this.ui = (function() {
       );
       window.addEventListener("resize", this.onResize, true);
       this.element.style.display = "block";
-      catcher.watchPromise(
-        callBackground("sendEvent", "internal", "unhide-preselection-frame")
-      );
       this.element.focus();
     },
 
@@ -481,9 +475,6 @@ this.ui = (function() {
 
     unhide() {
       this.element.style.display = "block";
-      catcher.watchPromise(
-        callBackground("sendEvent", "internal", "unhide-preview-frame")
-      );
       this.element.focus();
     },
 
