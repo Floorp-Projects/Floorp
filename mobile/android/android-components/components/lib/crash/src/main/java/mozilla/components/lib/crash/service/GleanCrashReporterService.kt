@@ -36,6 +36,12 @@ class GleanCrashReporterService(
         // as the persisted crashes in the crash count file (see above comment)
         const val UNCAUGHT_EXCEPTION_KEY = "uncaught_exception"
         const val CAUGHT_EXCEPTION_KEY = "caught_exception"
+        const val MAIN_PROCESS_NATIVE_CODE_CRASH_KEY = "main_proc_native_code_crash"
+        const val FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY = "fg_proc_native_code_crash"
+        const val BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY = "bg_proc_native_code_crash"
+
+        // These keys are deprecated and should be removed after a period to allow for persisted
+        // crashes to be submitted.
         const val FATAL_NATIVE_CODE_CRASH_KEY = "fatal_native_code_crash"
         const val NONFATAL_NATIVE_CODE_CRASH_KEY = "nonfatal_native_code_crash"
     }
@@ -93,18 +99,19 @@ class GleanCrashReporterService(
     /**
      * Parses the crashes collected in the persisted crash file.  The format of this file is simple,
      * each line may contain [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY],
-     * [FATAL_NATIVE_CODE_CRASH_KEY] or [NONFATAL_NATIVE_CODE_CRASH_KEY]
-     * followed by a newline character.
+     * [MAIN_PROCESS_NATIVE_CODE_CRASH_KEY], [FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] or
+     * [BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] followed by a newline character.
      *
      * Example:
      *
      * <--Beginning of file-->
      * uncaught_exception\n
      * uncaught_exception\n
-     * fatal_native_code_crash\n
+     * main_process_native_code_crash\n
      * uncaught_exception\n
      * caught_exception\n
-     * nonfatal_native_code_crash\n
+     * foreground_child_process_native_code_crash\n
+     * background_child_process_native_code_crash\n
      * <--End of file-->
      *
      * It is unlikely that there will be more than one crash in a file, but not impossible.  This
@@ -123,6 +130,11 @@ class GleanCrashReporterService(
 
         var uncaughtExceptionCount = 0
         var caughtExceptionCount = 0
+        var mainProcessNativeCodeCrashCount = 0
+        var foregroundChildProcessNativeCodeCrashCount = 0
+        var backgroundChildProcessNativeCodeCrashCount = 0
+        // These keys are deprecated and should be removed after a period to allow for persisted
+        // crashes to be submitted.
         var fatalNativeCodeCrashCount = 0
         var nonfatalNativeCodeCrashCount = 0
 
@@ -132,6 +144,9 @@ class GleanCrashReporterService(
             when (line) {
                 UNCAUGHT_EXCEPTION_KEY -> ++uncaughtExceptionCount
                 CAUGHT_EXCEPTION_KEY -> ++caughtExceptionCount
+                MAIN_PROCESS_NATIVE_CODE_CRASH_KEY -> ++mainProcessNativeCodeCrashCount
+                FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY -> ++foregroundChildProcessNativeCodeCrashCount
+                BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY -> ++backgroundChildProcessNativeCodeCrashCount
                 FATAL_NATIVE_CODE_CRASH_KEY -> ++fatalNativeCodeCrashCount
                 NONFATAL_NATIVE_CODE_CRASH_KEY -> ++nonfatalNativeCodeCrashCount
             }
@@ -143,6 +158,21 @@ class GleanCrashReporterService(
         }
         if (caughtExceptionCount > 0) {
             CrashMetrics.crashCount[CAUGHT_EXCEPTION_KEY].add(caughtExceptionCount)
+        }
+        if (mainProcessNativeCodeCrashCount > 0) {
+            CrashMetrics.crashCount[MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].add(
+                mainProcessNativeCodeCrashCount
+            )
+        }
+        if (foregroundChildProcessNativeCodeCrashCount > 0) {
+            CrashMetrics.crashCount[FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
+                foregroundChildProcessNativeCodeCrashCount
+            )
+        }
+        if (backgroundChildProcessNativeCodeCrashCount > 0) {
+            CrashMetrics.crashCount[BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
+                backgroundChildProcessNativeCodeCrashCount
+            )
         }
         if (fatalNativeCodeCrashCount > 0) {
             CrashMetrics.crashCount[FATAL_NATIVE_CODE_CRASH_KEY].add(fatalNativeCodeCrashCount)
@@ -162,8 +192,9 @@ class GleanCrashReporterService(
      * place at the same time.
      *
      * @param crash Pass in the correct crash label to write to the file
-     * [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY], [FATAL_NATIVE_CODE_CRASH_KEY]
-     * or [NONFATAL_NATIVE_CODE_CRASH_KEY]
+     * [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY], [MAIN_PROCESS_NATIVE_CODE_CRASH_KEY],
+     * [FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] or
+     * [BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY]
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun recordCrash(crash: String) {
@@ -194,10 +225,13 @@ class GleanCrashReporterService(
     }
 
     override fun record(crash: Crash.NativeCodeCrash) {
-        if (crash.isFatal) {
-            recordCrash(FATAL_NATIVE_CODE_CRASH_KEY)
-        } else {
-            recordCrash(NONFATAL_NATIVE_CODE_CRASH_KEY)
+        when (crash.processType) {
+            Crash.NativeCodeCrash.PROCESS_TYPE_MAIN ->
+                recordCrash(MAIN_PROCESS_NATIVE_CODE_CRASH_KEY)
+            Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD ->
+                recordCrash(FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY)
+            Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD ->
+                recordCrash(BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY)
         }
     }
 
