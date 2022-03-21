@@ -41,7 +41,8 @@ gfxFT2FontBase::gfxFT2FontBase(
 
 gfxFT2FontBase::~gfxFT2FontBase() { mFTFace->ForgetLockOwner(this); }
 
-FT_Face gfxFT2FontBase::LockFTFace() {
+FT_Face gfxFT2FontBase::LockFTFace()
+    CAPABILITY_ACQUIRE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
   if (!mFTFace->Lock(this)) {
     FT_Set_Transform(mFTFace->GetFace(), nullptr, nullptr);
 
@@ -51,7 +52,9 @@ FT_Face gfxFT2FontBase::LockFTFace() {
   return mFTFace->GetFace();
 }
 
-void gfxFT2FontBase::UnlockFTFace() { mFTFace->Unlock(); }
+void gfxFT2FontBase::UnlockFTFace() CAPABILITY_RELEASE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
+  mFTFace->Unlock();
+}
 
 gfxFT2FontEntryBase::CmapCacheSlot* gfxFT2FontEntryBase::GetCmapCacheSlot(
     uint32_t aCharCode) {
