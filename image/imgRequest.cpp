@@ -68,7 +68,8 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mIsInCache(false),
       mDecodeRequested(false),
       mNewPartPending(false),
-      mHadInsecureRedirect(false) {
+      mHadInsecureRedirect(false),
+      mInnerWindowId(0) {
   LOG_FUNC(gImgLog, "imgRequest::imgRequest()");
 }
 
@@ -82,13 +83,12 @@ imgRequest::~imgRequest() {
     LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
 }
 
-nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
-                          bool aHadInsecureRedirect, nsIRequest* aRequest,
-                          nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
-                          mozilla::dom::Document* aLoadingDocument,
-                          nsIPrincipal* aTriggeringPrincipal,
-                          mozilla::CORSMode aCORSMode,
-                          nsIReferrerInfo* aReferrerInfo) {
+nsresult imgRequest::Init(
+    nsIURI* aURI, nsIURI* aFinalURI, bool aHadInsecureRedirect,
+    nsIRequest* aRequest, nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
+    mozilla::dom::Document* aLoadingDocument,
+    nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
+    nsIReferrerInfo* aReferrerInfo) NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
   // Init() can only be called once, and that's before it can be used off
   // mainthread

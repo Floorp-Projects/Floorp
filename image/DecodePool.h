@@ -98,8 +98,8 @@ class DecodePool final : public nsIObserver {
   bool mShuttingDown = false;
 
   // mMutex protects mIOThread.
-  Mutex mMutex MOZ_UNANNOTATED;
-  nsCOMPtr<nsIThread> mIOThread;
+  Mutex mMutex;
+  nsCOMPtr<nsIThread> mIOThread GUARDED_BY(mMutex);
 };
 
 }  // namespace image
