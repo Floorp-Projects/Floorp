@@ -71,7 +71,8 @@ class ScriptPreloader : public nsIObserver,
                         public nsIMemoryReporter,
                         public nsIRunnable,
                         public nsINamed,
-                        public nsIAsyncShutdownBlocker {
+                        public nsIAsyncShutdownBlocker,
+                        public SingleWriterLockOwner {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
   friend class mozilla::loader::ScriptCacheChild;
@@ -103,6 +104,8 @@ class ScriptPreloader : public nsIObserver,
   // into preloader cache.
   static void FillCompileOptionsForCachedStencil(JS::CompileOptions& options);
   static void FillDecodeOptionsForCachedStencil(JS::DecodeOptions& options);
+
+  bool OnWritingThread() const override { return NS_IsMainThread(); }
 
   // Retrieves the stencil with the given cache key from the cache.
   // Returns null if the stencil is not cached.
@@ -420,7 +423,7 @@ class ScriptPreloader : public nsIObserver,
   Result<Ok, nsresult> OpenCache();
 
   // Writes a new cache file to disk. Must not be called on the main thread.
-  Result<Ok, nsresult> WriteCache();
+  Result<Ok, nsresult> WriteCache() REQUIRES(mSaveMonitor);
 
   void StartCacheWrite();
 
@@ -485,7 +488,7 @@ class ScriptPreloader : public nsIObserver,
   bool mSaveComplete = false;
   bool mDataPrepared = false;
   // May only be changed on the main thread, while `mSaveMonitor` is held.
-  bool mCacheInvalidated = false;
+  bool mCacheInvalidated GUARDED_BY(mSaveMonitor) = false;
 
   // The list of scripts that we read from the initial startup cache file,
   // but have yet to initiate a decode task for.
@@ -501,11 +504,11 @@ class ScriptPreloader : public nsIObserver,
 
   // True if a runnable has been dispatched to the main thread to finish an
   // off-thread decode operation. Access only while 'mMonitor' is held.
-  bool mFinishDecodeRunnablePending = false;
+  bool mFinishDecodeRunnablePending GUARDED_BY(mMonitor) = false;
 
   // True is main-thread is blocked and we should notify with Monitor. Access
   // only while `mMonitor` is held.
-  bool mWaitingForDecode = false;
+  bool mWaitingForDecode GUARDED_BY(mMonitor) = false;
 
   // The process type of the current process.
   static ProcessType sProcessType;
@@ -530,8 +533,8 @@ class ScriptPreloader : public nsIObserver,
   // instance.
   AutoMemMap* mCacheData;
 
-  Monitor mMonitor MOZ_UNANNOTATED;
-  Monitor mSaveMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
+  MonitorSingleWriter mSaveMonitor ACQUIRED_BEFORE(mMonitor);
 };
 
 }  // namespace mozilla
