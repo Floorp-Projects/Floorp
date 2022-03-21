@@ -1387,7 +1387,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-panelview .toolbaritem-combined-buttons > toolbarbutton {
+panelview .toolbaritem-combined-buttons > :is(toolbarbutton, .toolbarbutton-1) {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
