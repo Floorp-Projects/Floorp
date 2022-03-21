@@ -3955,10 +3955,6 @@ Maybe<webgl::TexUnpackBlobDesc> FromImageBitmap(
     GLenum target, Maybe<uvec3> size, const dom::ImageBitmap& imageBitmap,
     ErrorResult* const out_rv);
 
-webgl::TexUnpackBlobDesc FromImageData(GLenum target, Maybe<uvec3> size,
-                                       const dom::ImageData& imageData,
-                                       dom::Uint8ClampedArray* const scopedArr);
-
 Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
     const ClientWebGLContext&, GLenum target, Maybe<uvec3> size,
     const dom::OffscreenCanvas& src, ErrorResult* const out_error);
@@ -4075,8 +4071,51 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     }
 
     if (src.mImageData) {
-      return Some(webgl::FromImageData(imageTarget, size, *(src.mImageData),
-                                       &scopedArr));
+      const auto& imageData = *src.mImageData;
+      MOZ_RELEASE_ASSERT(scopedArr.Init(imageData.GetDataObject()));
+      scopedArr.ComputeState();
+      const auto dataSize = scopedArr.Length();
+      const auto data = reinterpret_cast<uint8_t*>(scopedArr.Data());
+      if (!data) {
+        // Neutered, e.g. via Transfer
+        EnqueueError(LOCAL_GL_INVALID_VALUE,
+                     "ImageData.data.buffer is Detached. (Maybe you Transfered "
+                     "it to a Worker?");
+        return {};
+      }
+
+      // -
+
+      const gfx::IntSize imageSize(imageData.Width(), imageData.Height());
+      const auto sizeFromDims =
+          CheckedInt<size_t>(imageSize.width) * imageSize.height * 4;
+      MOZ_RELEASE_ASSERT(sizeFromDims.isValid() &&
+                         sizeFromDims.value() == dataSize);
+
+      const RefPtr<gfx::DataSourceSurface> surf =
+          gfx::Factory::CreateWrappingDataSourceSurface(
+              data, imageSize.width * 4, imageSize,
+              gfx::SurfaceFormat::R8G8B8A8);
+      MOZ_ASSERT(surf);
+
+      // -
+
+      const auto imageUSize = *uvec2::FromSize(imageSize);
+      const auto concreteSize =
+          size.valueOr(uvec3{imageUSize.x, imageUSize.y, 1});
+
+      // WhatWG "HTML Living Standard" (30 October 2015):
+      // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned
+      // as non-premultiplied alpha values."
+      return Some(webgl::TexUnpackBlobDesc{imageTarget,
+                                           concreteSize,
+                                           gfxAlphaType::NonPremult,
+                                           {},
+                                           {},
+                                           Some(imageUSize),
+                                           nullptr,
+                                           {},
+                                           surf});
     }
 
     if (src.mOffscreenCanvas) {
