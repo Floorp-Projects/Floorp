@@ -837,12 +837,7 @@ AboutReader.prototype = {
           docContentType
         );
       } catch (e) {
-        if (e?.newURL && this._actor) {
-          await this._actor.sendQuery("RedirectTo", {
-            newURL: e.newURL,
-            article: e.article,
-          });
-
+        if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
           this._win.location.replace(readerURL);
           return;
