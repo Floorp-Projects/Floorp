@@ -69,8 +69,6 @@ function pushPrefEnvAndWait(args, cb) {
 
 pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 1]]}, part1);
 
-var transparentBackgroundColor;
-
 function part1()
 {
     isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color applies");
@@ -121,12 +119,15 @@ function part1()
     isnot(cs3.borderBottomColor, cs4.borderBottomColor,
           "border-bottom-color applies");
     isnot(cs8.borderImageSource, cs9.borderImageSource, "border-image-source applies");
-    transparentBackgroundColor = cs2.backgroundColor;
     pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 2]]}, part2);
 }
 
+function toRGBA(c) {
+  return SpecialPowers.wrap(window).InspectorUtils.colorToRGBA(c, document);
+}
+
 function systemColor(c) {
-    let {r, g, b, a} = SpecialPowers.wrap(window).InspectorUtils.colorToRGBA(c, document);
+    let {r, g, b, a} = toRGBA(c);
     if (a == 1)
       return `rgb(${r}, ${g}, ${b})`;
     // Match ColorComponentToFloat's max number of decimals (3), and remove trailing zeros.
@@ -141,7 +142,7 @@ function systemColor(c) {
 function part2()
 {
     isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color transparency preserved (opaque)");
-    is(cs2.backgroundColor, transparentBackgroundColor, "background-color transparency is preserved (transparent)");
+    is(toRGBA(cs2.backgroundColor).a, 0, "background-color transparency is preserved (transparent)");
     is(cs1.color, cs2.color, "color is blocked");
     is(cs1.borderTopColor, cs2.borderTopColor, "border-top-color is blocked");
     is(cs1.borderRightColor, cs2.borderRightColor,
