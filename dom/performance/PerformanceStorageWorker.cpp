@@ -73,7 +73,6 @@ already_AddRefed<PerformanceStorageWorker> PerformanceStorageWorker::Create(
 
   RefPtr<PerformanceStorageWorker> storage = new PerformanceStorageWorker();
 
-  MutexAutoLock lock(storage->mMutex);  // for thread-safety analysis
   storage->mWorkerRef = WeakWorkerRef::Create(
       aWorkerPrivate, [storage]() { storage->ShutdownOnWorker(); });
 
