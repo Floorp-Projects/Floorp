@@ -1,6 +1,40 @@
 {
   "data": [
     {
+      "schema": 1647536413492,
+      "taggedCodes": [
+        "ffab",
+        "ffcm",
+        "ffhp",
+        "ffip",
+        "ffit",
+        "ffnt",
+        "ffocus",
+        "ffos",
+        "ffsb",
+        "fpas",
+        "fpsa",
+        "ftas",
+        "ftsa",
+        "newext"
+      ],
+      "telemetryId": "duckduckgo",
+      "organicCodes": [],
+      "codeParamName": "t",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "expectedOrganicCodes": [
+        "hz",
+        "h_"
+      ],
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
+      ],
+      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
+      "last_modified": 1647619735693
+    },
+    {
       "schema": 1643096116299,
       "taggedCodes": [
         "MOZ2",
@@ -84,36 +118,6 @@
       ],
       "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
       "last_modified": 1643136933998
-    },
-    {
-      "schema": 1643100257574,
-      "taggedCodes": [
-        "ffab",
-        "ffcm",
-        "ffhp",
-        "ffip",
-        "ffit",
-        "ffnt",
-        "ffocus",
-        "ffos",
-        "ffsb",
-        "fpas",
-        "fpsa",
-        "ftas",
-        "ftsa",
-        "newext"
-      ],
-      "telemetryId": "duckduckgo",
-      "organicCodes": [],
-      "codeParamName": "t",
-      "queryParamName": "q",
-      "searchPageRegexp": "^https://duckduckgo\\.com/",
-      "extraAdServersRegexps": [
-        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
-        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
-      ],
-      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1643136933995
     },
     {
       "schema": 1643100258578,
