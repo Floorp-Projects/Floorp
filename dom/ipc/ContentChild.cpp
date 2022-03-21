@@ -4541,6 +4541,10 @@ mozilla::ipc::IPCResult ContentChild::RecvFlushTabState(
     return IPC_OK();
   }
 
+  if (auto* docShell = nsDocShell::Cast(aContext->GetDocShell())) {
+    docShell->CollectWireframe();
+  }
+
   aContext->FlushSessionStore();
 
   aResolver(true);
