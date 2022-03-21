@@ -188,10 +188,7 @@ class Port {
 
   ~Port();
 
-  // This lock guards all fields in Port, but is locked in a unique way which is
-  // unfortunately somewhat difficult to get to work with the thread-safety
-  // analysis.
-  mozilla::Mutex lock_ MOZ_ANNOTATED{"Port State"};
+  mozilla::Mutex lock_ MOZ_UNANNOTATED{"Port State"};
 };
 
 }  // namespace ports

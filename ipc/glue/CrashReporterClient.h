@@ -40,8 +40,8 @@ class CrashReporterClient {
   ~CrashReporterClient();
 
  private:
-  static StaticMutex sLock;
-  static StaticRefPtr<CrashReporterClient> sClientSingleton GUARDED_BY(sLock);
+  static StaticMutex sLock MOZ_UNANNOTATED;
+  static StaticRefPtr<CrashReporterClient> sClientSingleton;
 };
 
 }  // namespace ipc
