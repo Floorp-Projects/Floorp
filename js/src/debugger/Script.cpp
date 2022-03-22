@@ -1485,7 +1485,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::InitElemSetter:
     case JSOp::InitHiddenElemSetter:
     case JSOp::FunCall:
-    case JSOp::FunApply:
     case JSOp::SpreadCall:
     case JSOp::Call:
     case JSOp::CallIgnoresRv:

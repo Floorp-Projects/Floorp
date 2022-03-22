@@ -2045,8 +2045,6 @@ void InlineFrameIterator::findNextFrame() {
   for (; i <= remaining && si_.moreFrames(); i++) {
     MOZ_ASSERT(IsIonInlinableOp(JSOp(*pc_)));
 
-    MOZ_ASSERT(JSOp(*pc_) != JSOp::FunApply);
-
     // Recover the number of actual arguments from the script.
     if (IsInvokeOp(JSOp(*pc_))) {
       numActualArgs_ = GET_ARGC(pc_);
