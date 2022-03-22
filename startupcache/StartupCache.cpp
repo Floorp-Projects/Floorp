@@ -225,6 +225,9 @@ nsresult StartupCache::Init() {
   rv = mObserverService->AddObserver(mListener, "startupcache-invalidate",
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = mObserverService->AddObserver(mListener, "intl:app-locales-changed",
+                                     false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   auto result = LoadArchive();
   rv = result.isErr() ? result.unwrapErr() : NS_OK;
@@ -629,9 +632,17 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
   }
   if (mCurTableReferenced) {
     // There should be no way for this assert to fail other than a user manually
-    // sending startupcache-invalidate messages through the Browser Toolbox.
-    MOZ_DIAGNOSTIC_ASSERT(xpc::IsInAutomation() || mOldTables.Length() < 10,
-                          "Startup cache invalidated too many times.");
+    // sending startupcache-invalidate messages through the Browser Toolbox. If
+    // something knowingly invalidates the cache, the event can be counted with
+    // mAllowedInvalidationsCount.
+    MOZ_DIAGNOSTIC_ASSERT(
+        xpc::IsInAutomation() ||
+            // The allowed invalidations can grow faster than the old tables, so
+            // guard against incorrect unsigned subtraction.
+            mAllowedInvalidationsCount > mOldTables.Length() ||
+            // Now perform the real check.
+            mOldTables.Length() - mAllowedInvalidationsCount < 10,
+        "Startup cache invalidated too many times.");
     mOldTables.AppendElement(std::move(mTable));
     mCurTableReferenced = false;
   } else {
@@ -653,6 +664,8 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
     gIgnoreDiskCache = true;
   }
 }
+
+void StartupCache::CountAllowedInvalidation() { mAllowedInvalidationsCount++; }
 
 void StartupCache::MaybeInitShutdownWrite() {
   if (mTimer) {
@@ -790,6 +803,12 @@ nsresult StartupCacheListener::Observe(nsISupports* subject, const char* topic,
     // in that case.
   } else if (strcmp(topic, "startupcache-invalidate") == 0) {
     sc->InvalidateCache(data && nsCRT::strcmp(data, u"memoryOnly") == 0);
+  } else if (strcmp(topic, "intl:app-locales-changed") == 0) {
+    // Live language switching invalidates the startup cache due to the history
+    // sidebar retaining localized strings in its internal SQL query. This
+    // should be a relatively rare event, but a user could do it an arbitrary
+    // number of times.
+    sc->CountAllowedInvalidation();
   }
   return NS_OK;
 }
