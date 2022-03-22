@@ -101,6 +101,7 @@
 
 #if defined(GP_OS_android)
 #  include "mozilla/java/GeckoJavaSamplerNatives.h"
+#  include "mozilla/jni/Refs.h"
 #endif
 
 #if defined(GP_OS_darwin)
@@ -2882,23 +2883,29 @@ struct JavaMarkerWithDetails {
   }
 };
 
-static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
+static void CollectJavaThreadProfileData(
+    nsTArray<java::GeckoJavaSampler::ThreadInfo::LocalRef>& javaThreads,
+    ProfileBuffer& aProfileBuffer) {
+  // Retrieve metadata about the threads.
+  const auto threadCount = java::GeckoJavaSampler::GetRegisteredThreadCount();
+  for (int i = 0; i < threadCount; i++) {
+    javaThreads.AppendElement(
+        java::GeckoJavaSampler::GetRegisteredThreadInfo(i));
+  }
+
   // locked_profiler_start uses sample count is 1000 for Java thread.
   // This entry size is enough now, but we might have to estimate it
   // if we can customize it
-
   // Pass the samples
-  // FIXME(bug 1618560): We are currently only profiling the Android UI thread.
-  constexpr ProfilerThreadId threadId = ProfilerThreadId::FromNumber(1);
   int sampleId = 0;
   while (true) {
-    // Gets the data from the Android UI thread only.
+    const auto threadId = java::GeckoJavaSampler::GetThreadId(sampleId);
     double sampleTime = java::GeckoJavaSampler::GetSampleTime(sampleId);
-    if (sampleTime == 0.0) {
+    if (threadId == 0 || sampleTime == 0.0) {
       break;
     }
 
-    aProfileBuffer.AddThreadIdEntry(threadId);
+    aProfileBuffer.AddThreadIdEntry(ProfilerThreadId::FromNumber(threadId));
     aProfileBuffer.AddEntry(ProfileBufferEntry::Time(sampleTime));
     int frameId = 0;
     while (true) {
@@ -2919,6 +2926,8 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
   // Pass the markers now
   while (true) {
+    constexpr auto threadId = ProfilerThreadId::FromNumber(1);
+
     // Gets the data from the Android UI thread only.
     java::GeckoJavaSampler::Marker::LocalRef marker =
         java::GeckoJavaSampler::PollNextMarker();
@@ -3046,8 +3055,11 @@ static void locked_profiler_stream_json_for_this_process(
   ProfileChunkedBuffer javaBufferManager(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex, javaChunkManager);
   ProfileBuffer javaBuffer(javaBufferManager);
+
+  nsTArray<java::GeckoJavaSampler::ThreadInfo::LocalRef> javaThreads;
+
   if (ActivePS::FeatureJava(aLock)) {
-    CollectJavaThreadProfileData(javaBuffer);
+    CollectJavaThreadProfileData(javaThreads, javaBuffer);
     aProgressLogger.SetLocalProgress(3_pc, "Collected Java thread");
   }
 #endif
@@ -3143,23 +3155,20 @@ static void locked_profiler_stream_json_for_this_process(
 
 #if defined(GP_OS_android)
     if (ActivePS::FeatureJava(aLock)) {
-      // Set the thread id of the Android UI thread to be 0.
-      // We are profiling the Android UI thread twice: Both from the C++ side
-      // (as a regular C++ profiled thread with the name "AndroidUI"), and from
-      // the Java side. The thread's actual ID is mozilla::jni::GetUIThreadId(),
-      // but since we're using that ID for the C++ side, we need to pick another
-      // tid that doesn't conflict with it for the Java side. So we just use 0.
-      // Once we add support for profiling of other java threads, we'll have to
-      // get their thread id and name via JNI.
-      ProfiledThreadData profiledThreadData(ThreadRegistrationInfo{
-          "AndroidUI (JVM)", ProfilerThreadId::FromNumber(1), false,
-          CorePS::ProcessStartTime()});
-      profiledThreadData.StreamJSON(
-          javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
-          CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
-          ActivePS::FeatureJSTracer(aLock), nullptr,
-          aProgressLogger.CreateSubLoggerTo("Streaming Java thread...", 96_pc,
-                                            "Streamed Java thread"));
+      for (java::GeckoJavaSampler::ThreadInfo::LocalRef& threadInfo :
+           javaThreads) {
+        ProfiledThreadData threadData(ThreadRegistrationInfo{
+            threadInfo->GetName()->ToCString().BeginReading(),
+            ProfilerThreadId::FromNumber(threadInfo->GetId()), false,
+            CorePS::ProcessStartTime()});
+
+        threadData.StreamJSON(
+            javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
+            CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
+            ActivePS::FeatureJSTracer(aLock), nullptr,
+            aProgressLogger.CreateSubLoggerTo("Streaming Java thread...", 96_pc,
+                                              "Streamed Java thread"));
+      }
     } else {
       aProgressLogger.SetLocalProgress(96_pc, "No Java thread");
     }
@@ -5594,11 +5603,21 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     if (javaInterval < 1) {
       javaInterval = 1;
     }
+
+    JNIEnv* env = jni::GetEnvForThread();
+    const auto& filters = ActivePS::Filters(aLock);
+    jni::ObjectArray::LocalRef javaFilters =
+        jni::ObjectArray::New<jni::String>(filters.length());
+    for (size_t i = 0; i < filters.length(); i++) {
+      javaFilters->SetElement(i, jni::StringParam(filters[i].data(), env));
+    }
+
     // Send the interval-relative entry count, but we have 100000 hard cap in
     // the java code, it can't be more than that.
     java::GeckoJavaSampler::Start(
-        javaInterval, std::round((double)(capacity.Value()) * interval /
-                                 (double)(javaInterval)));
+        javaFilters, javaInterval,
+        std::round((double)(capacity.Value()) * interval /
+                   (double)(javaInterval)));
   }
 #endif
 
