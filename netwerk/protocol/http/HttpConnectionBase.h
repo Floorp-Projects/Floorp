@@ -136,6 +136,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
   virtual bool ResolvedByTRR() = 0;
   virtual bool GetEchConfigUsed() = 0;
+  virtual PRIntervalTime LastWriteTime() = 0;
 
  protected:
   // The capabailities associated with the most recent transaction
@@ -189,7 +190,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
   bool IsReused() override;                                                    \
   [[nodiscard]] nsresult PushBack(const char* data, uint32_t length) override; \
   void SetEvent(nsresult aStatus) override;                                    \
-  virtual nsAHttpTransaction* Transaction() override;
+  virtual nsAHttpTransaction* Transaction() override;                          \
+  PRIntervalTime LastWriteTime() override;
 
 }  // namespace net
 }  // namespace mozilla
