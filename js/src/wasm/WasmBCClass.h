@@ -150,6 +150,16 @@ struct FunctionCall {
   size_t stackArgAreaSize;
 };
 
+enum class PostBarrierKind {
+  // Remove an existing store buffer entry if the new value does not require
+  // one. This is required to preserve invariants with HeapPtr when used for
+  // movable storage.
+  Precise,
+  // Add a store buffer entry if the new value requires it, but do not attempt
+  // to remove a pre-existing entry.
+  Imprecise,
+};
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Wasm baseline compiler proper.
@@ -1270,22 +1280,30 @@ struct BaseCompiler final {
   // The field might belong to an object or be a stack slot or a register or a
   // heap allocated value.
   //
+  // For the difference between 'precise' and 'imprecise', look at the
+  // documentation on PostBarrierKind.
+  //
   // `object` is a pointer to the object that contains the field. It is used, if
   // present, to skip adding a store buffer entry when the containing object is
   // in the nursery. This register is preserved by this function.
   // `valueAddr` is the address of the location that we are writing to. This
   // register is consumed by this function.
-  // `value` is the value to be store in the field. This register is preserved
-  // by this function.
-  [[nodiscard]] bool emitPostBarrier(const Maybe<RegRef>& object,
+  // `prevValue` is the value that existed in the field before `value` was
+  // stored. This register is consumed by this function.
+  // `value` is the value that was stored in the field. This register is
+  // preserved by this function.
+  [[nodiscard]] bool emitPostBarrierImprecise(const Maybe<RegRef>& object,
                                      RegPtr valueAddr, RegRef value);
+  [[nodiscard]] bool emitPostBarrierPrecise(const Maybe<RegRef>& object,
+                                            RegPtr valueAddr, RegRef prevValue, RegRef value);
 
   // Emits a store to a JS object pointer at the address `valueAddr`, which is
   // inside the GC cell `object`.
   //
   // Preserves `object` and `value`. Consumes `valueAddr`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
-                                        RegPtr valueAddr, RegRef value);
+                                        RegPtr valueAddr, RegRef value,
+                                        PostBarrierKind kind);
 
   // Emits a store of nullptr to a JS object pointer at the address valueAddr.
   // Preserves `valueAddr`.

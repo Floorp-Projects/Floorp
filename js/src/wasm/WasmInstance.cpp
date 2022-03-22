@@ -1158,6 +1158,15 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       reinterpret_cast<JSObject**>(location));
 }
 
+/* static */ void Instance::postBarrierPrecise(Instance* instance,
+                                               JSObject** location,
+                                               JSObject* prev) {
+  MOZ_ASSERT(SASigPostBarrierPrecise.failureMode == FailureMode::Infallible);
+  MOZ_ASSERT(location);
+  JSObject* next = *location;
+  JSObject::postWriteBarrier(location, prev, next);
+}
+
 /* static */ void Instance::postBarrierFiltering(Instance* instance,
                                                  gc::Cell** location) {
   MOZ_ASSERT(SASigPostBarrierFiltering.failureMode == FailureMode::Infallible);
