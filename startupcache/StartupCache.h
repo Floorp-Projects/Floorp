@@ -154,6 +154,10 @@ class StartupCache : public nsIMemoryReporter {
   // Removes the cache file.
   void InvalidateCache(bool memoryOnly = false);
 
+  // If some event knowingly re-generates the startup cache (like live language
+  // switching) count these events in order to allow them.
+  void CountAllowedInvalidation();
+
   // For use during shutdown - this will write the startupcache's data
   // to disk if the timer hasn't already gone off.
   void MaybeInitShutdownWrite();
@@ -211,10 +215,13 @@ class StartupCache : public nsIMemoryReporter {
   static void ThreadedPrefetch(void* aClosure);
 
   HashMap<nsCString, StartupCacheEntry> mTable;
-  // owns references to the contents of tables which have been invalidated.
-  // In theory grows forever if the cache is continually filled and then
-  // invalidated, but this should not happen in practice.
+  // This owns references to the contents of tables which have been invalidated.
+  // In theory it grows forever if the cache is continually filled and then
+  // invalidated, but this should not happen in practice. Deleting old tables
+  // could create dangling pointers. RefPtrs could be introduced, but it would
+  // be a large amount of error-prone work to change.
   nsTArray<decltype(mTable)> mOldTables;
+  size_t mAllowedInvalidationsCount;
   nsCOMPtr<nsIFile> mFile;
   loader::AutoMemMap mCacheData;
   Mutex mTableLock MOZ_UNANNOTATED;
