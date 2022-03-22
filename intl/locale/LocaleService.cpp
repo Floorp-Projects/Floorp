@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "nsDirectoryService.h"
@@ -175,6 +176,15 @@ LocaleService* LocaleService::GetInstance() {
   return sInstance;
 }
 
+static void NotifyAppLocaleChanged() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
+  }
+  // The locale in AppDateTimeFormat is cached statically.
+  AppDateTimeFormat::ClearLocaleCache();
+}
+
 void LocaleService::RemoveObservers() {
   if (mIsServer) {
     Preferences::RemoveObservers(this, kObservedPrefs);
@@ -192,10 +202,7 @@ void LocaleService::AssignAppLocales(const nsTArray<nsCString>& aAppLocales) {
              "This should only be called for LocaleService in client mode.");
 
   mAppLocales = aAppLocales.Clone();
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
-  }
+  NotifyAppLocaleChanged();
 }
 
 void LocaleService::AssignRequestedLocales(
@@ -249,10 +256,7 @@ void LocaleService::LocalesChanged() {
 
   if (mAppLocales != newLocales) {
     mAppLocales = std::move(newLocales);
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
-    }
+    NotifyAppLocaleChanged();
   }
 }
 
