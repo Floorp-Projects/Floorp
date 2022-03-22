@@ -310,6 +310,7 @@ async function getOriginalSourceText(originalSourceId) {
   if (!text) {
     try {
       const response = await networkRequest(url, {
+        sourceMapBaseURL: map.sourceMapBaseURL,
         loadFromCache: false,
       });
       text = response.content;
