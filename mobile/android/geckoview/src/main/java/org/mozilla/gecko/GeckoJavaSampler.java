@@ -577,10 +577,18 @@ public class GeckoJavaSampler {
         return;
       }
 
+      Log.i(LOGTAG, "Profiler starting. Calling thread: " + Thread.currentThread().getName());
+
       // Setting a limit of 120000 (2 mins with 1ms interval) for samples and markers for now
       // to make sure we are not allocating too much.
       final int limitedEntryCount = Math.min(aEntryCount, 120000);
+
       final List<Thread> threadsToProfile = getThreadsToProfile(aFilters);
+      if (threadsToProfile.size() < 1) {
+        throw new IllegalStateException("Expected >= 1 thread to profile (main thread).");
+      }
+      Log.i(LOGTAG, "Number of threads to profile: " + threadsToProfile.size());
+
       sSamplingRunnable = new SamplingRunnable(threadsToProfile, aInterval, limitedEntryCount);
       sMarkerStorage.start(limitedEntryCount, threadsToProfile);
       sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -742,6 +750,13 @@ public class GeckoJavaSampler {
       if (sSamplingRunnable == null) {
         return;
       }
+
+      Log.i(
+          LOGTAG,
+          "Profiler stopping. Sample array position: "
+              + sSamplingRunnable.mSamplePos
+              + ". Overflowed? "
+              + sSamplingRunnable.mBufferOverflowed);
 
       try {
         sSamplingScheduler.shutdown();
