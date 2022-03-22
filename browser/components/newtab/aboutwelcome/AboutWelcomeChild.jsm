@@ -178,10 +178,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWSetRequestedLocales.bind(this), window, {
       defineAs: "AWSetRequestedLocales",
     });
-
-    Cu.exportFunction(this.AWSendToDeviceEmailsSupported.bind(this), window, {
-      defineAs: "AWSendToDeviceEmailsSupported",
-    });
   }
 
   /**
@@ -334,12 +330,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return this.sendQueryAndCloneForContent(
       "AWPage:NEGOTIATE_LANGPACK",
       appAndSystemLocaleInfo
-    );
-  }
-
-  AWSendToDeviceEmailsSupported() {
-    return this.wrapPromise(
-      this.sendQuery("AWPage:SEND_TO_DEVICE_EMAILS_SUPPORTED")
     );
   }
 
