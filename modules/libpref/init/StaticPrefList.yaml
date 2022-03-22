@@ -3674,7 +3674,7 @@
 
 - name: dom.streams.writable_streams.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.streams.transform_streams.enabled
@@ -3684,7 +3684,7 @@
 
 - name: dom.streams.pipeTo.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # For area and anchor elements with target=_blank and no rel set to

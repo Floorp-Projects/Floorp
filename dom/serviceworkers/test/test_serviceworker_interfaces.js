@@ -309,6 +309,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WorkerNavigator",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  "WritableStream",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "WritableStreamDefaultController",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "WritableStreamDefaultWriter",
 ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!
 
