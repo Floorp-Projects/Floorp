@@ -179,6 +179,9 @@ class HTMLInputElement final : public TextControlElement,
   nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  nsresult MaybeHandleRadioButtonNavigation(EventChainPostVisitor&,
+                                            uint32_t aKeyCode);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor);
   MOZ_CAN_RUN_SCRIPT
