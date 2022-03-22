@@ -3256,8 +3256,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(CallIgnoresRv)
     CASE(CallIter)
     CASE(SuperCall)
-    CASE(FunCall)
-    CASE(FunApply) {
+    CASE(FunCall) {
       static_assert(JSOpLength_Call == JSOpLength_New,
                     "call and new must be the same size");
       static_assert(JSOpLength_Call == JSOpLength_CallIgnoresRv,
@@ -3268,8 +3267,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
                     "call and supercall must be the same size");
       static_assert(JSOpLength_Call == JSOpLength_FunCall,
                     "call and funcall must be the same size");
-      static_assert(JSOpLength_Call == JSOpLength_FunApply,
-                    "call and funapply must be the same size");
 
       if (REGS.fp()->hasPushedGeckoProfilerFrame()) {
         cx->geckoProfiler().updatePC(cx, script, REGS.pc);

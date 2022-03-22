@@ -458,7 +458,6 @@
   MACRO_(state, state, "state")                                                \
   MACRO_(static, static_, "static")                                            \
   MACRO_(status, status, "status")                                             \
-  MACRO_(std_Function_apply, std_Function_apply, "std_Function_apply")         \
   MACRO_(sticky, sticky, "sticky")                                             \
   MACRO_(StringIterator, StringIterator, "String Iterator")                    \
   MACRO_(strings, strings, "strings")                                          \
