@@ -153,7 +153,7 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
                                          JS::Handle<JS::Value> aValue,
                                          ErrorResult& aRv,
                                          std::index_sequence<Indices...>) {
-    return aHandler(aCx, aValue, aRv, ArgType(Get<Indices>(mArgs))...);
+    return aHandler(aCx, aValue, aRv, ArgType(std::get<Indices>(mArgs))...);
   }
 
   template <typename TCallback>
@@ -166,7 +166,7 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
   ResolveCallback mOnResolve;
   RejectCallback mOnReject;
 
-  Tuple<StorageType<Args>...> mArgs;
+  std::tuple<StorageType<Args>...> mArgs;
 };
 
 }  // anonymous namespace
