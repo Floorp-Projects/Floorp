@@ -7,11 +7,19 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
+XPIDL_SOURCES += [
+    "nsISessionStorageService.idl",
+]
+
+XPIDL_MODULE = "dom_storage"
+
 EXPORTS.mozilla.dom += [
+    "BackgroundSessionStorageServiceParent.h",
     "LocalStorage.h",
     "LocalStorageManager.h",
     "PartitionedLocalStorage.h",
     "SessionStorageManager.h",
+    "SessionStorageService.h",
     "Storage.h",
     "StorageActivityService.h",
     "StorageDBUpdater.h",
@@ -21,7 +29,12 @@ EXPORTS.mozilla.dom += [
     "StorageUtils.h",
 ]
 
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
 UNIFIED_SOURCES += [
+    "BackgroundSessionStorageServiceParent.cpp",
     "LocalStorage.cpp",
     "LocalStorageCache.cpp",
     "LocalStorageManager.cpp",
@@ -30,6 +43,7 @@ UNIFIED_SOURCES += [
     "SessionStorageCache.cpp",
     "SessionStorageManager.cpp",
     "SessionStorageObserver.cpp",
+    "SessionStorageService.cpp",
     "Storage.cpp",
     "StorageActivityService.cpp",
     "StorageDBThread.cpp",
@@ -44,6 +58,7 @@ IPDL_SOURCES += [
     "PBackgroundLocalStorageCache.ipdl",
     "PBackgroundSessionStorageCache.ipdl",
     "PBackgroundSessionStorageManager.ipdl",
+    "PBackgroundSessionStorageService.ipdl",
     "PBackgroundStorage.ipdl",
     "PSessionStorageObserver.ipdl",
 ]
