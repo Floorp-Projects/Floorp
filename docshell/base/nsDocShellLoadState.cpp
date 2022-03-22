@@ -581,6 +581,12 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
     BrowsingContext* aContext, nsIURI* aCurrentUnstrippedURI) {
   MOZ_ASSERT(aContext);
 
+  // Return early if the triggering principal doesn't exist. This could happen
+  // when loading a URL by using a browsing context in the Browser Toolbox.
+  if (!TriggeringPrincipal()) {
+    return;
+  }
+
   // We don't need to strip for sub frames because the query string has been
   // stripped in the top-level content. Also, we don't apply stripping if it
   // is triggered by addons.
