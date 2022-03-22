@@ -2103,6 +2103,29 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
   return Address(tmp, globalToTlsOffset);
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+// Table access.
+
+Address BaseCompiler::addressOfTableField(const TableDesc& table,
+                                          uint32_t fieldOffset, RegPtr tls) {
+  uint32_t tableToTlsOffset =
+      offsetof(TlsData, globalArea) + table.globalDataOffset + fieldOffset;
+  return Address(tls, tableToTlsOffset);
+}
+
+void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr tls,
+                                   RegI32 length) {
+  masm.load32(addressOfTableField(table, offsetof(TableTls, length), tls),
+              length);
+}
+
+void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr tls,
+                                     RegPtr elements) {
+  masm.loadPtr(addressOfTableField(table, offsetof(TableTls, elements), tls),
+               elements);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Basic emitters for simple operators.
@@ -5811,12 +5834,21 @@ bool BaseCompiler::emitTableFill() {
 }
 
 bool BaseCompiler::emitTableGet() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  uint32_t tableIndex;
+  Nothing nothing;
+  if (!iter_.readTableGet(&tableIndex, &nothing)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  if (moduleEnv_.tables[tableIndex].elemType.tableRepr() == TableRepr::Ref) {
+    return emitTableGetAnyRef(tableIndex);
+  }
+  pushI32(tableIndex);
   // get(index:u32, table:u32) -> AnyRef
-  return emitInstanceCallOp<uint32_t>(
-      SASigTableGet, [this](uint32_t* tableIndex) -> bool {
-        Nothing nothing;
-        return iter_.readTableGet(tableIndex, &nothing);
-      });
+  return emitInstanceCall(lineOrBytecode, SASigTableGetFunc);
 }
 
 bool BaseCompiler::emitTableGrow() {
@@ -5829,20 +5861,111 @@ bool BaseCompiler::emitTableGrow() {
 }
 
 bool BaseCompiler::emitTableSet() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  uint32_t tableIndex;
+  Nothing nothing;
+  if (!iter_.readTableSet(&tableIndex, &nothing, &nothing)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  if (moduleEnv_.tables[tableIndex].elemType.tableRepr() == TableRepr::Ref) {
+    return emitTableSetAnyRef(tableIndex);
+  }
+  pushI32(tableIndex);
   // set(index:u32, value:ref, table:u32) -> void
-  return emitInstanceCallOp<uint32_t>(
-      SASigTableSet, [this](uint32_t* tableIndex) -> bool {
-        Nothing nothing;
-        return iter_.readTableSet(tableIndex, &nothing, &nothing);
-      });
+  return emitInstanceCall(lineOrBytecode, SASigTableSetFunc);
 }
 
 bool BaseCompiler::emitTableSize() {
-  // size(table:u32) -> u32
-  return emitInstanceCallOp<uint32_t>(SASigTableSize,
-                                      [this](uint32_t* tableIndex) -> bool {
-                                        return iter_.readTableSize(tableIndex);
-                                      });
+  uint32_t tableIndex;
+  if (!iter_.readTableSize(&tableIndex)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  const TableDesc& table = moduleEnv_.tables[tableIndex];
+
+  RegPtr tls = needPtr();
+  RegI32 length = needI32();
+
+  fr.loadTlsPtr(tls);
+  loadTableLength(table, tls, length);
+
+  pushI32(length);
+  freePtr(tls);
+  return true;
+}
+
+void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
+                                        RegPtr tls) {
+  Label ok;
+  masm.wasmBoundsCheck32(
+      Assembler::Condition::Below, index,
+      addressOfTableField(table, offsetof(TableTls, length), tls), &ok);
+  masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
+  masm.bind(&ok);
+}
+
+bool BaseCompiler::emitTableGetAnyRef(uint32_t tableIndex) {
+  const TableDesc& table = moduleEnv_.tables[tableIndex];
+
+  RegPtr tls = needPtr();
+  RegPtr elements = needPtr();
+  RegI32 index = popI32();
+
+  fr.loadTlsPtr(tls);
+  emitTableBoundsCheck(table, index, tls);
+  loadTableElements(table, tls, elements);
+  masm.loadPtr(BaseIndex(elements, index, ScalePointer), elements);
+
+  pushRef(RegRef(elements));
+  freeI32(index);
+  freePtr(tls);
+
+  return true;
+}
+
+bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
+  const TableDesc& table = moduleEnv_.tables[tableIndex];
+
+  // Create temporaries for valueAddr that is not in the prebarrier register
+  // and can be consumed by the barrier operation
+  RegPtr valueAddr = RegPtr(PreBarrierReg);
+  needPtr(valueAddr);
+
+  RegPtr tls = needPtr();
+  RegPtr elements = needPtr();
+  RegRef value = popRef();
+  RegI32 index = popI32();
+
+  // x86 is one register too short for this operation, shuffle `value` back
+  // onto the stack until it is needed.
+#ifdef JS_CODEGEN_X86
+  pushRef(value);
+#endif
+
+  fr.loadTlsPtr(tls);
+  emitTableBoundsCheck(table, index, tls);
+  loadTableElements(table, tls, elements);
+  masm.computeEffectiveAddress(BaseIndex(elements, index, ScalePointer),
+                               valueAddr);
+
+  freeI32(index);
+  freePtr(elements);
+  freePtr(tls);
+
+#ifdef JS_CODEGEN_X86
+  value = popRef();
+#endif
+
+  if (!emitBarrieredStore(Nothing(), valueAddr, value)) {
+    return false;
+  }
+  freeRef(value);
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
