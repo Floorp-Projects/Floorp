@@ -692,10 +692,6 @@ class nsWindow final : public nsBaseWidget {
    */
   bool mWaitingForMoveToRectCallback : 1;
 
-  // Set when move/resize action is initiated by move-to-rect operation.
-  // Don't use move-to-rect again in such case.
-  bool mUpdatedByMoveToRectCallback : 1;
-
   // Params used for popup placemend by GdkWindowMoveToRect.
   // When popup is only resized and not positioned,
   // we need to reuse last GdkWindowMoveToRect params to avoid
