@@ -26,8 +26,6 @@
 #include "nsScriptSecurityManager.h"
 #include "ThirdPartyUtil.h"
 
-constexpr auto CONSOLE_SCHEMEFUL_CATEGORY = "cookieSchemeful"_ns;
-
 namespace mozilla {
 
 using dom::Document;
