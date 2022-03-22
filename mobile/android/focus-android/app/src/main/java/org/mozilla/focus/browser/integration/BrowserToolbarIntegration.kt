@@ -162,7 +162,8 @@ class BrowserToolbarIntegration(
                 useCases = customTabsUseCases,
                 menuBuilder = menu.menuBuilder,
                 menuItemIndex = menu.menuBuilder.items.size - 1,
-                closeListener = { fragment.closeCustomTab() }
+                closeListener = { fragment.closeCustomTab() },
+                updateToolbarBackground = false
             )
         }
 
