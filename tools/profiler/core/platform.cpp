@@ -2926,8 +2926,6 @@ static void CollectJavaThreadProfileData(
 
   // Pass the markers now
   while (true) {
-    constexpr auto threadId = ProfilerThreadId::FromNumber(1);
-
     // Gets the data from the Android UI thread only.
     java::GeckoJavaSampler::Marker::LocalRef marker =
         java::GeckoJavaSampler::PollNextMarker();
@@ -2937,6 +2935,7 @@ static void CollectJavaThreadProfileData(
     }
 
     // Get all the marker information from the Java thread using JNI.
+    const auto threadId = ProfilerThreadId::FromNumber(marker->GetThreadId());
     nsCString markerName = marker->GetMarkerName()->ToCString();
     jni::String::LocalRef text = marker->GetMarkerText();
     TimeStamp startTime =
