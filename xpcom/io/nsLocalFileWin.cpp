@@ -2303,6 +2303,11 @@ nsLocalFile::Remove(bool aRecursive) {
 
   if (isDir) {
     if (aRecursive) {
+      // WARNING: neither the `SHFileOperation` nor `IFileOperation` APIs are
+      // appropriate here as neither handle long path names, i.e. paths prefixed
+      // with `\\?\` or longer than 260 characters on Windows 10+ system with
+      // long paths enabled.
+
       RefPtr<nsDirEnumerator> dirEnum = new nsDirEnumerator();
 
       rv = dirEnum->Init(this);
