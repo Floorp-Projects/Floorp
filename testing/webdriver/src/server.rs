@@ -414,7 +414,7 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                             host,
                             allow_hosts
                                 .iter()
-                                .map(|x| format!("{}:{}", x, server_address.port()))
+                                .map(|x| format!("{}:{}", x.to_string(), server_address.port()))
                                 .collect::<Vec<_>>()
                                 .join(",")
                         );

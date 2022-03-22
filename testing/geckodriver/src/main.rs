@@ -105,7 +105,7 @@ impl fmt::Display for FatalError {
         let s = match *self {
             Parsing(ref err) => err.to_string(),
             Usage(ref s) => format!("error: {}", s),
-            Server(ref err) => format!("error: {}", err),
+            Server(ref err) => format!("error: {}", err.to_string()),
         };
         write!(f, "{}", s)
     }
