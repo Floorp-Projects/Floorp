@@ -148,12 +148,6 @@ module.exports = [
       "Measure time for a bunch of sync console.log statements to appear",
   },
   {
-    name: "console.log-in-loop-content-process",
-    path: "webconsole/log-in-loop-content-process.js",
-    description:
-      "Measure time for a bunch of sync console.log statements to be handled on the content process",
-  },
-  {
     name: "console.autocomplete",
     path: "webconsole/autocomplete.js",
     description: "Measure time for autocomplete popup to appear",

@@ -262,7 +262,10 @@ const previewers = {
       }
 
       const items = (grip.preview.items = []);
-      for (const item of PropertyIterators.enumSetEntries(objectActor)) {
+      for (const item of PropertyIterators.enumSetEntries(
+        objectActor,
+        /* forPreview */ true
+      )) {
         items.push(item);
         if (items.length == OBJECT_PREVIEW_MAX_ITEMS) {
           break;
@@ -275,7 +278,10 @@ const previewers = {
 
   WeakSet: [
     function(objectActor, grip) {
-      const enumEntries = PropertyIterators.enumWeakSetEntries(objectActor);
+      const enumEntries = PropertyIterators.enumWeakSetEntries(
+        objectActor,
+        /* forPreview */ true
+      );
 
       grip.preview = {
         kind: "ArrayLike",
@@ -316,7 +322,10 @@ const previewers = {
       }
 
       const entries = (grip.preview.entries = []);
-      for (const entry of PropertyIterators.enumMapEntries(objectActor)) {
+      for (const entry of PropertyIterators.enumMapEntries(
+        objectActor,
+        /* forPreview */ true
+      )) {
         entries.push(entry);
         if (entries.length == OBJECT_PREVIEW_MAX_ITEMS) {
           break;
@@ -329,7 +338,10 @@ const previewers = {
 
   WeakMap: [
     function(objectActor, grip) {
-      const enumEntries = PropertyIterators.enumWeakMapEntries(objectActor);
+      const enumEntries = PropertyIterators.enumWeakMapEntries(
+        objectActor,
+        /* forPreview */ true
+      );
 
       grip.preview = {
         kind: "MapLike",
