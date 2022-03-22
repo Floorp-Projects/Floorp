@@ -1238,8 +1238,9 @@ class FunctionCompiler {
       actualBase = extended;
     }
 
-    auto* ins = MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
-                                      bytecodeOffset());
+    auto* ins =
+        MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
+                              bytecodeOffset(), MWasmBoundsCheck::Memory);
     curBlock_->add(ins);
     actualBase = ins;
 
@@ -1698,6 +1699,76 @@ class FunctionCompiler {
     curBlock_->add(store);
 
     return valueAddr;
+  }
+
+  MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
+                              MIRType type) {
+    uint32_t globalDataOffset =
+        offsetof(TlsData, globalArea) + table.globalDataOffset + fieldOffset;
+    auto* load = MWasmLoadTls::New(alloc(), tlsPointer_, globalDataOffset, type,
+                                   AliasSet::Load(AliasSet::WasmTableMeta));
+    curBlock_->add(load);
+    return load;
+  }
+
+  MDefinition* loadTableLength(const TableDesc& table) {
+    return loadTableField(table, offsetof(TableTls, length), MIRType::Int32);
+  }
+
+  MDefinition* loadTableElements(const TableDesc& table) {
+    return loadTableField(table, offsetof(TableTls, elements),
+                          MIRType::Pointer);
+  }
+
+  MDefinition* tableGetAnyRef(const TableDesc& table, MDefinition* index) {
+    // Load the table length and perform a bounds check with spectre index
+    // masking
+    auto* length = loadTableLength(table);
+    auto* check = MWasmBoundsCheck::New(
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+    curBlock_->add(check);
+    if (JitOptions.spectreIndexMasking) {
+      index = check;
+    }
+
+    // Load the table elements and load the element
+    auto* elements = loadTableElements(table);
+    auto* element = MWasmLoadTableElement::New(alloc(), elements, index);
+    curBlock_->add(element);
+    return element;
+  }
+
+  [[nodiscard]] bool tableSetAnyRef(const TableDesc& table, MDefinition* index,
+                              MDefinition* value, uint32_t lineOrBytecode) {
+    // Load the table length and perform a bounds check with spectre index
+    // masking
+    auto* length = loadTableLength(table);
+    auto* check = MWasmBoundsCheck::New(
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+    curBlock_->add(check);
+    if (JitOptions.spectreIndexMasking) {
+      index = check;
+    }
+
+    // Load the table elements
+    auto* elements = loadTableElements(table);
+
+    // Load the previous value
+    auto* element = MWasmLoadTableElement::New(alloc(), elements, index);
+    curBlock_->add(element);
+
+    // Compute the value's location for the post barrier
+    auto* loc =
+        MWasmDerivedIndexPointer::New(alloc(), elements, index, ScalePointer);
+    curBlock_->add(loc);
+
+    // Store the new value
+    auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, loc, value,
+                                     AliasSet::WasmTableElement);
+    curBlock_->add(store);
+
+    // Perform the post barrier
+    return postBarrierFilteringCall(lineOrBytecode, loc);
   }
 
   void addInterruptCheck() {
@@ -5226,9 +5297,19 @@ static bool EmitTableGet(FunctionCompiler& f) {
     return true;
   }
 
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
+  if (table.elemType.tableRepr() == TableRepr::Ref) {
+    MDefinition* ret = f.tableGetAnyRef(table, index);
+    if (!ret) {
+      return false;
+    }
+    f.iter().setResult(ret);
+    return true;
+  }
+
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigTableGet;
+  const SymbolicAddressSignature& callee = SASigTableGetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5326,7 +5407,12 @@ static bool EmitTableSet(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigTableSet;
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
+  if (table.elemType.tableRepr() == TableRepr::Ref) {
+    return f.tableSetAnyRef(table, index, value, lineOrBytecode);
+  }
+
+  const SymbolicAddressSignature& callee = SASigTableSetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5366,33 +5452,14 @@ static bool EmitTableSize(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
 
-  const SymbolicAddressSignature& callee = SASigTableSize;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
+  MDefinition* length = f.loadTableLength(table);
+  if (!length) {
     return false;
   }
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
-  if (!tableIndexArg) {
-    return false;
-  }
-  if (!f.passArg(tableIndexArg, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  f.iter().setResult(ret);
+  f.iter().setResult(length);
   return true;
 }
 
