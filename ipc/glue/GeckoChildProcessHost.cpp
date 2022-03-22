@@ -881,8 +881,9 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 #if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || \
     defined(MOZ_ENABLE_FORKSERVER)
 
-static mozilla::StaticMutex gIPCLaunchThreadMutex MOZ_UNANNOTATED;
-static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
+static mozilla::StaticMutex gIPCLaunchThreadMutex;
+static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread
+    GUARDED_BY(gIPCLaunchThreadMutex);
 
 class IPCLaunchThreadObserver final : public nsIObserver {
  public:
