@@ -203,17 +203,12 @@ class nsHttpConnection final : public HttpConnectionBase,
   enum HttpConnectionState {
     UNINITIALIZED,
     SETTING_UP_TUNNEL,
-    TUNNEL_DONE,
-    TUNNEL_NOT_USED,
+    REQUEST,
   } mState{HttpConnectionState::UNINITIALIZED};
   void ChangeState(HttpConnectionState newState);
 
   // Tunnel retated functions:
   bool TunnelSetupInProgress() { return mState == SETTING_UP_TUNNEL; }
-  bool TunnelUsed() {
-    return mState == SETTING_UP_TUNNEL || mState == TUNNEL_DONE;
-  }
-  bool TunnelCompleted() { return mState == TUNNEL_DONE; }
   void SetTunnelSetupDone();
   nsresult CheckTunnelIsNeeded();
   nsresult SetupProxyConnectStream();
