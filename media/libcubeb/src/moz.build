@@ -40,21 +40,20 @@ if CONFIG['MOZ_JACK']:
     ]
     DEFINES['USE_JACK'] = True
 
-if CONFIG['MOZ_OSS']:
+if CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD', 'SunOS'):
     SOURCES += [
         'cubeb_oss.c',
     ]
     DEFINES['USE_OSS'] = True
 
-if CONFIG['MOZ_SNDIO']:
+if CONFIG['OS_ARCH'] == 'OpenBSD':
     SOURCES += [
         'cubeb_sndio.c',
     ]
     DEFINES['USE_SNDIO'] = True
-    if CONFIG['OS_ARCH'] == 'OpenBSD':
-        DEFINES['DISABLE_LIBSNDIO_DLOPEN'] = True
+    DEFINES['DISABLE_LIBSNDIO_DLOPEN'] = True
 
-if CONFIG['MOZ_AUDIOUNIT'] or CONFIG['MOZ_AUDIOUNIT_RUST']:
+if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
         'cubeb_audiounit.cpp',
         'cubeb_resampler.cpp'
@@ -67,7 +66,7 @@ if CONFIG['MOZ_AUDIOUNIT'] or CONFIG['MOZ_AUDIOUNIT_RUST']:
     if CONFIG['MOZ_AUDIOUNIT_RUST']:
         DEFINES['USE_AUDIOUNIT_RUST'] = True
 
-if CONFIG['MOZ_WASAPI']:
+if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
         'cubeb_resampler.cpp',
         'cubeb_wasapi.cpp',
@@ -83,17 +82,13 @@ if CONFIG['MOZ_WASAPI']:
     if CONFIG['CC_TYPE'] == 'clang-cl':
         CXXFLAGS += ['-Wno-macro-redefined'] # '_USE_MATH_DEFINES' : macro redefinition
 
-if CONFIG['MOZ_AAUDIO']:
+if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_aaudio.cpp']
-    SOURCES += ['cubeb_resampler.cpp']
-    SOURCES += ['cubeb-jni.cpp']
-    DEFINES['USE_AAUDIO'] = True
-
-if CONFIG['MOZ_OPENSL']:
     SOURCES += ['cubeb_opensl.c']
     SOURCES += ['cubeb_resampler.cpp']
     SOURCES += ['cubeb-jni.cpp']
     DEFINES['USE_OPENSL'] = True
+    DEFINES['USE_AAUDIO'] = True
 
 FINAL_LIBRARY = 'gkmedias'
 
