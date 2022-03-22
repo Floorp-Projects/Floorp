@@ -31,7 +31,8 @@ class SharedBuffers final {
    public:
     explicit OutputQueue(const char* aName) : mMutex(aName) {}
 
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+        REQUIRES(mMutex) {
       mMutex.AssertCurrentThreadOwns();
 
       size_t amount = 0;
@@ -42,16 +43,18 @@ class SharedBuffers final {
       return amount;
     }
 
-    Mutex& Lock() const { return const_cast<OutputQueue*>(this)->mMutex; }
+    Mutex& Lock() const RETURN_CAPABILITY(mMutex) {
+      return const_cast<OutputQueue*>(this)->mMutex;
+    }
 
-    size_t ReadyToConsume() const {
+    size_t ReadyToConsume() const REQUIRES(mMutex) {
       // Accessed on both main thread and media graph thread.
       mMutex.AssertCurrentThreadOwns();
       return mBufferList.size();
     }
 
     // Produce one buffer
-    AudioChunk& Produce() {
+    AudioChunk& Produce() REQUIRES(mMutex) {
       mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(NS_IsMainThread());
       mBufferList.push_back(AudioChunk());
@@ -59,7 +62,7 @@ class SharedBuffers final {
     }
 
     // Consumes one buffer.
-    AudioChunk Consume() {
+    AudioChunk Consume() REQUIRES(mMutex) {
       mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!NS_IsMainThread());
       MOZ_ASSERT(ReadyToConsume() > 0);
@@ -69,7 +72,7 @@ class SharedBuffers final {
     }
 
     // Empties the buffer queue.
-    void Clear() {
+    void Clear() REQUIRES(mMutex) {
       mMutex.AssertCurrentThreadOwns();
       mBufferList.clear();
     }
