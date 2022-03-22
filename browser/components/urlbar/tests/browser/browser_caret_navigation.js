@@ -21,22 +21,6 @@ add_task(async function() {
   gURLBar.selectionEnd = INITIAL_SELECTION_END;
 
   if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
-    if (AppConstants.platform == "linux") {
-      await checkCaretMoves(
-        "KEY_ArrowUp",
-        INITIAL_SELECTION_START,
-        "Selection should be collapsed to its start"
-      );
-
-      gURLBar.selectionStart = INITIAL_SELECTION_START;
-      gURLBar.selectionEnd = INITIAL_SELECTION_END;
-      await checkCaretMoves(
-        "KEY_ArrowDown",
-        INITIAL_SELECTION_END,
-        "Selection should be collapsed to its end"
-      );
-    }
-
     await checkCaretMoves(
       "KEY_ArrowDown",
       gURLBar.value.length,
