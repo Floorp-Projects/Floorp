@@ -406,12 +406,12 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntPoint& aLockCenter) override;
   void LockNativePointer() override;
   void UnlockNativePointer() override;
-  LayoutDeviceIntRect GetPreferredPopupRect() const override {
-    return mPreferredPopupRect;
+  LayoutDeviceIntRect GetMoveToRectPopupRect() const override {
+    return mMoveToRectPopupRect;
   };
-  void FlushPreferredPopupRect() override {
-    mPreferredPopupRect = LayoutDeviceIntRect();
-    mPreferredPopupRectFlushed = true;
+  void MoveToRectPopupRectClear() override {
+    mMoveToRectPopupRect = LayoutDeviceIntRect();
+    mMoveToRectPopupRectCleared = true;
   };
 #endif
 
@@ -685,7 +685,10 @@ class nsWindow final : public nsBaseWidget {
   // Popup is positioned by gdk_window_move_to_rect()
   bool mPopupUseMoveToRect : 1;
 
-  bool mPreferredPopupRectFlushed : 1;
+  // mMoveToRectPopupRectCleared is set when layout code changes popup size.
+  // We need to clear mMoveToRectPopupRect and reposition popup by move-to-rect.
+  bool mMoveToRectPopupRectCleared : 1;
+
   /* mWaitingForMoveToRectCallback is set when move-to-rect is called
    * and we're waiting for move-to-rect callback.
    *
@@ -826,8 +829,10 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<nsWindow> mWaylandPopupNext;
   RefPtr<nsWindow> mWaylandPopupPrev;
 
-  // Used by WaylandPopupMove() to track popup movement.
-  LayoutDeviceIntRect mPreferredPopupRect;
+  // When popup is resized by Gtk by move-to-rect callback,
+  // we store final popup size here. Then we use mMoveToRectPopupRect size
+  // in following popup operations unless mLayoutPopupSizeCleared is set.
+  LayoutDeviceIntRect mMoveToRectPopupRect;
 
   LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 
