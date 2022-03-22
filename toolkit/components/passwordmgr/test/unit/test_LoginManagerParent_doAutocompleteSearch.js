@@ -94,7 +94,7 @@ add_task(async function test_generated_noLogins() {
     ...NEW_PASSWORD_TEMPLATE_ARG,
     ...{
       // This is false when there is no autocomplete="new-password" attribute &&
-      // LoginAutoComplete._isProbablyANewPasswordField returns false
+      // LoginAutoComplete.isProbablyANewPasswordField returns false
       isProbablyANewPasswordField: false,
     },
   });
