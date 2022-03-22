@@ -84,5 +84,9 @@ void ConnectionHandle::TopBrowsingContextIdChanged(uint64_t id) {
   // Do nothing.
 }
 
+PRIntervalTime ConnectionHandle::LastWriteTime() {
+  return mConn->LastWriteTime();
+}
+
 }  // namespace net
 }  // namespace mozilla

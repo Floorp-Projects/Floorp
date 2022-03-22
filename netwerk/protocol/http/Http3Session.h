@@ -95,7 +95,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   int64_t GetBytesWritten() { return mTotalBytesWritten; }
   int64_t BytesRead() { return mTotalBytesRead; }
-  PRIntervalTime LastWriteTime() { return mLastWriteTime; }
 
   nsresult SendData(nsIUDPSocket* socket);
   nsresult RecvData(nsIUDPSocket* socket);
