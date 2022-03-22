@@ -8,8 +8,15 @@
 "use strict";
 
 // The following tests ensure we properly clear (partitioned/unpartitioned)
-// localStorage and indexedDB when using deleteDataFromBaseDomain and
-// deleteDataFromHost.
+// localStorage and indexedDB when using deleteDataFromBaseDomain,
+// deleteDataFromHost and deleteDataFromPrincipal.
+
+// Skip localStorage tests when using legacy localStorage. The legacy
+// localStorage implementation does not support clearing data by principal. See
+// Bug 1688221, Bug 1688665.
+const skipLocalStorageTests = !Services.prefs.getBoolPref(
+  "dom.storage.next_gen"
+);
 
 /**
  * Create an origin with partitionKey.
@@ -20,6 +27,10 @@
  * @returns {String} Origin with suffix.
  */
 function getOrigin(host, topLevelBaseDomain, originAttributes = {}) {
+  return getPrincipal(host, topLevelBaseDomain, originAttributes).origin;
+}
+
+function getPrincipal(host, topLevelBaseDomain, originAttributes = {}) {
   originAttributes = getOAWithPartitionKey(
     { topLevelBaseDomain },
     originAttributes
@@ -28,7 +39,7 @@ function getOrigin(host, topLevelBaseDomain, originAttributes = {}) {
     Services.io.newURI(`https://${host}`),
     originAttributes
   );
-  return principal.origin;
+  return principal;
 }
 
 function getTestEntryName(host, topLevelBaseDomain) {
@@ -274,6 +285,167 @@ async function runTestHost(storageType) {
   });
 }
 
+/**
+ * Run the principal test with either localStorage or indexedDB.
+ * @param {('localStorage'|'indexedDB')} storageType
+ */
+async function runTestPrincipal(storageType) {
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  // First party
+  setTestEntry({ storageType, host: "example.net" });
+  setTestEntry({
+    storageType,
+    host: "example.net",
+    originAttributes: { userContextId: 2 },
+  });
+  setTestEntry({
+    storageType,
+    host: "example.net",
+    originAttributes: { privateBrowsingId: 1 },
+  });
+  setTestEntry({ storageType, host: "test.example.net" });
+  setTestEntry({ storageType, host: "example.org" });
+
+  // Third-party partitioned.
+  setTestEntry({
+    storageType,
+    host: "example.net",
+    topLevelBaseDomain: "example.com",
+  });
+
+  // Ensure we have the correct storage test state.
+  await testEntryExists({ storageType, host: "example.net" });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    originAttributes: { userContextId: 2 },
+  });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    originAttributes: { privateBrowsingId: 1 },
+  });
+  await testEntryExists({ storageType, host: "test.example.net" });
+  await testEntryExists({ storageType, host: "example.org" });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    topLevelBaseDomain: "example.com",
+  });
+
+  // Clear entries from principal with custom OA.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromPrincipal(
+      getPrincipal("example.net", null, { userContextId: 2 }),
+      false,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  // Test that we only deleted entries for the exact origin.
+  await testEntryExists({ storageType, host: "example.net" });
+  await testEntryExists({
+    expected: false,
+    storageType,
+    host: "example.net",
+    originAttributes: { userContextId: 2 },
+  });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    originAttributes: { privateBrowsingId: 1 },
+  });
+  await testEntryExists({ storageType, host: "test.example.net" });
+  await testEntryExists({ storageType, host: "example.org" });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    topLevelBaseDomain: "example.com",
+  });
+
+  // Clear entries of from partitioned principal.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromPrincipal(
+      getPrincipal("example.net", "example.com"),
+      false,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  // Test that we only deleted entries for the partition.
+  await testEntryExists({ storageType, host: "example.net" });
+  await testEntryExists({
+    expected: false,
+    storageType,
+    host: "example.net",
+    originAttributes: { userContextId: 2 },
+  });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    originAttributes: { privateBrowsingId: 1 },
+  });
+  await testEntryExists({ storageType, host: "test.example.net" });
+  await testEntryExists({ storageType, host: "example.org" });
+  await testEntryExists({
+    expected: false,
+    storageType,
+    host: "example.net",
+    topLevelBaseDomain: "example.com",
+  });
+
+  // Clear entries of from principal without suffix.
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromPrincipal(
+      getPrincipal("example.net", null),
+      false,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  // Test that we only deleted entries for the given principal, and not entries
+  // for principals with the same host, but different OriginAttributes or
+  // subdomains.
+  await testEntryExists({ expected: false, storageType, host: "example.net" });
+  await testEntryExists({
+    expected: false,
+    storageType,
+    host: "example.net",
+    originAttributes: { userContextId: 2 },
+  });
+  await testEntryExists({
+    storageType,
+    host: "example.net",
+    originAttributes: { privateBrowsingId: 1 },
+  });
+
+  await testEntryExists({ storageType, host: "test.example.net" });
+  await testEntryExists({ storageType, host: "example.org" });
+  await testEntryExists({
+    expected: false,
+    storageType,
+    host: "example.net",
+    topLevelBaseDomain: "example.com",
+  });
+
+  // Cleanup
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+}
+
 // Tests
 
 add_task(function setup() {
@@ -307,4 +479,16 @@ add_task(async function test_baseDomain_localStorage() {
  */
 add_task(async function test_baseDomain_indexedDB() {
   await runTestBaseDomain("indexedDB");
+});
+
+/**
+ * Tests deleting localStorage entries by principal.
+ */
+add_task(async function test_principal_localStorage() {
+  // Bug 1688221, Bug 1688665.
+  if (skipLocalStorageTests) {
+    info("Skipping test");
+    return;
+  }
+  await runTestPrincipal("localStorage");
 });
