@@ -12,6 +12,7 @@ include protocol PBackgroundLSRequest;
 include protocol PBackgroundLSSimpleRequest;
 include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundSessionStorageManager;
+include protocol PBackgroundSessionStorageService;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
 include protocol PBroadcastChannel;
@@ -93,6 +94,7 @@ sync protocol PBackground
   manages PBackgroundLSSimpleRequest;
   manages PBackgroundLocalStorageCache;
   manages PBackgroundSessionStorageManager;
+  manages PBackgroundSessionStorageService;
   manages PBackgroundStorage;
   manages PBackgroundTest;
   manages PBroadcastChannel;
@@ -185,6 +187,8 @@ parent:
                                      uint32_t privateBrowsingId);
 
   async PBackgroundSessionStorageManager(uint64_t aTopContextId);
+
+  async PBackgroundSessionStorageService();
 
   async PBackgroundStorage(nsString profilePath, uint32_t privateBrowsingId);
 
