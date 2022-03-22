@@ -27,6 +27,25 @@ bool gShutdown(false);
 
 NS_IMPL_ISUPPORTS(SessionStorageService, nsISessionStorageService)
 
+NS_IMETHODIMP
+SessionStorageService::ClearStoragesForOrigin(nsIPrincipal* aPrincipal) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+
+  QM_TRY_INSPECT(const auto& originAttrs,
+                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, aPrincipal,
+                                                   GetOriginSuffix));
+
+  QM_TRY_INSPECT(const auto& originKey,
+                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, aPrincipal,
+                                                   GetStorageOriginKey));
+
+  QM_TRY(OkIf(SendClearStoragesForOrigin(originAttrs, originKey)),
+         NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
 SessionStorageService::SessionStorageService() { AssertIsOnMainThread(); }
 
 SessionStorageService::~SessionStorageService() {

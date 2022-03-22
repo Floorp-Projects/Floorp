@@ -11,4 +11,11 @@ interface nsIPrincipal;
 [scriptable, builtinclass, uuid(3b95dd6c-0293-4e06-baeb-2affaefc9e74)]
 interface nsISessionStorageService : nsISupports
 {
+  /**
+   * Removes all storages stored for the given principal.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose storages are to be cleared.
+   */
+  void clearStoragesForOrigin(in nsIPrincipal aPrincipal);
 };

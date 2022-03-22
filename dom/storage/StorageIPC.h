@@ -290,6 +290,9 @@ class SessionStorageManagerChild final
 
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
+      const nsCString& aOriginAttrs, const nsCString& aOriginKey) override;
 };
 
 class LocalStorageCacheParent final
