@@ -7,11 +7,17 @@ package org.mozilla.gecko;
 
 import android.os.Build;
 import android.os.Looper;
+import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,12 +33,27 @@ import org.mozilla.gecko.mozglue.JNIObject;
  *
  * <p>This class is thread safe because it uses synchronized on accesses to its mutable state. One
  * exception is {@link #isProfilerActive()}: see the javadoc for details.
- *
- * <p>Bug 1618560: Currently we only profile the Android UI thread. Ideally we should be able to
- * profile multiple threads.
  */
 public class GeckoJavaSampler {
   private static final String LOGTAG = "GeckoJavaSampler";
+
+  /**
+   * The thread ID to use for the main thread instead of its true thread ID.
+   *
+   * <p>The main thread is sampled twice: once for native code and once on the JVM. The native
+   * version uses the thread's id so we replace it to avoid a collision. We use this thread ID
+   * because it's unlikely any other thread currently has it. We can't use 0 because 0 is considered
+   * "unspecified" in native code:
+   * https://searchfox.org/mozilla-central/rev/d4ebb53e719b913afdbcf7c00e162f0e96574701/mozglue/baseprofiler/public/BaseProfilerUtils.h#194
+   */
+  private static final long REPLACEMENT_MAIN_THREAD_ID = 1;
+  /**
+   * The thread name to use for the main thread instead of its true thread name. The name is "main",
+   * which is ambiguous with the JS main thread, so we rename it to match the C++ replacement. We
+   * expect our code to later add a suffix to avoid a collision with the C++ thread name. See {@link
+   * #REPLACEMENT_MAIN_THREAD_ID} for related details.
+   */
+  private static final String REPLACEMENT_MAIN_THREAD_NAME = "AndroidUI";
 
   @GuardedBy("GeckoJavaSampler.class")
   private static SamplingRunnable sSamplingRunnable;
@@ -42,7 +63,8 @@ public class GeckoJavaSampler {
 
   // See isProfilerActive for details on the AtomicReference.
   @GuardedBy("GeckoJavaSampler.class")
-  private static AtomicReference<ScheduledFuture<?>> sSamplingFuture = new AtomicReference<>();
+  private static final AtomicReference<ScheduledFuture<?>> sSamplingFuture =
+      new AtomicReference<>();
 
   private static final MarkerStorage sMarkerStorage = new MarkerStorage();
 
@@ -86,11 +108,13 @@ public class GeckoJavaSampler {
    * (see Java Concurrency in Practice, 2nd Ed., Section 3.5.3 for safe publication idioms).
    */
   private static class Sample {
+    public final long mThreadId;
     public final Frame[] mFrames;
     public final double mTime;
     public final long mJavaTime; // non-zero if Android system time is used
 
-    public Sample(final StackTraceElement[] aStack) {
+    public Sample(final long aThreadId, final StackTraceElement[] aStack) {
+      mThreadId = aThreadId;
       mFrames = new Frame[aStack.length];
       mTime = GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY) ? getProfilerTime() : 0;
 
@@ -116,6 +140,27 @@ public class GeckoJavaSampler {
     private Frame(final String methodName, final String className) {
       this.methodName = methodName;
       this.className = className;
+    }
+  }
+
+  /** A data container for thread metadata. */
+  private static class ThreadInfo {
+    private final long mId;
+    private final String mName;
+
+    public ThreadInfo(final long mId, final String mName) {
+      this.mId = mId;
+      this.mName = mName;
+    }
+
+    @WrapForJNI
+    public long getId() {
+      return mId;
+    }
+
+    @WrapForJNI
+    public String getName() {
+      return mName;
     }
   }
 
@@ -259,6 +304,8 @@ public class GeckoJavaSampler {
    * to its mutable state.
    */
   private static class SamplingRunnable implements Runnable {
+    private final long mMainThreadId = Looper.getMainLooper().getThread().getId();
+
     // Sampling interval that is used by start and unpause
     public final int mInterval;
     private final int mSampleCount;
@@ -266,7 +313,8 @@ public class GeckoJavaSampler {
     @GuardedBy("GeckoJavaSampler.class")
     private boolean mBufferOverflowed = false;
 
-    private final Thread mMainThread;
+    @GuardedBy("GeckoJavaSampler.class")
+    private @NonNull final List<Thread> mThreadsToProfile;
 
     @GuardedBy("GeckoJavaSampler.class")
     private final Sample[] mSamples;
@@ -274,34 +322,44 @@ public class GeckoJavaSampler {
     @GuardedBy("GeckoJavaSampler.class")
     private int mSamplePos;
 
-    public SamplingRunnable(final int aInterval, final int aSampleCount) {
+    public SamplingRunnable(
+        @NonNull final List<Thread> aThreadsToProfile,
+        final int aInterval,
+        final int aSampleCount) {
+      mThreadsToProfile = aThreadsToProfile;
       // Sanity check of sampling interval.
       mInterval = Math.max(1, aInterval);
       mSampleCount = aSampleCount;
       mSamples = new Sample[mSampleCount];
       mSamplePos = 0;
-
-      // Find the main thread
-      mMainThread = Looper.getMainLooper().getThread();
-      if (mMainThread == null) {
-        Log.e(LOGTAG, "Main thread not found");
-      }
     }
 
     @Override
     public void run() {
       synchronized (GeckoJavaSampler.class) {
-        if (mMainThread == null) {
-          return;
-        }
-        final StackTraceElement[] bt = mMainThread.getStackTrace();
-        mSamples[mSamplePos] = new Sample(bt);
-        mSamplePos += 1;
-        if (mSamplePos == mSampleCount) {
-          // Sample array is full now, go back to start of
-          // the array and override old samples
-          mSamplePos = 0;
-          mBufferOverflowed = true;
+        // To minimize allocation in the critical section, we use a traditional for loop instead of
+        // a for each (i.e. `elem : coll`) loop because that allocates an iterator.
+        //
+        // We won't capture threads that are started during profiling because we iterate through an
+        // unchanging list of threads (bug 1759550).
+        for (int i = 0; i < mThreadsToProfile.size(); i++) {
+          final Thread thread = mThreadsToProfile.get(i);
+
+          // getStackTrace will return an empty trace if the thread is not alive: we call continue
+          // to avoid wasting space in the buffer for an empty sample.
+          final StackTraceElement[] stackTrace = thread.getStackTrace();
+          if (stackTrace.length == 0) {
+            continue;
+          }
+
+          mSamples[mSamplePos] = new Sample(thread.getId(), stackTrace);
+          mSamplePos += 1;
+          if (mSamplePos == mSampleCount) {
+            // Sample array is full now, go back to start of
+            // the array and override old samples
+            mSamplePos = 0;
+            mBufferOverflowed = true;
+          }
         }
       }
     }
@@ -344,6 +402,37 @@ public class GeckoJavaSampler {
   @WrapForJNI
   public static Marker pollNextMarker() {
     return sMarkerStorage.pollNextMarker();
+  }
+
+  @WrapForJNI
+  public static synchronized int getRegisteredThreadCount() {
+    return sSamplingRunnable.mThreadsToProfile.size();
+  }
+
+  @WrapForJNI
+  public static synchronized ThreadInfo getRegisteredThreadInfo(final int aIndex) {
+    final Thread thread = sSamplingRunnable.mThreadsToProfile.get(aIndex);
+
+    // See REPLACEMENT_MAIN_THREAD_NAME for why we do this.
+    String adjustedThreadName =
+        thread.getId() == sSamplingRunnable.mMainThreadId
+            ? REPLACEMENT_MAIN_THREAD_NAME
+            : thread.getName();
+
+    // To distinguish JVM threads from native threads, we append a JVM-specific suffix.
+    adjustedThreadName += " (JVM)";
+    return new ThreadInfo(getAdjustedThreadId(thread.getId()), adjustedThreadName);
+  }
+
+  @WrapForJNI
+  public static synchronized long getThreadId(final int aSampleId) {
+    final Sample sample = getSample(aSampleId);
+    return getAdjustedThreadId(sample != null ? sample.mThreadId : 0);
+  }
+
+  private static synchronized long getAdjustedThreadId(final long threadId) {
+    // See REPLACEMENT_MAIN_THREAD_ID for why we do this.
+    return threadId == sSamplingRunnable.mMainThreadId ? REPLACEMENT_MAIN_THREAD_ID : threadId;
   }
 
   @WrapForJNI
@@ -446,7 +535,8 @@ public class GeckoJavaSampler {
   }
 
   @WrapForJNI
-  public static void start(final int aInterval, final int aEntryCount) {
+  public static void start(
+      @NonNull final Object[] aFilters, final int aInterval, final int aEntryCount) {
     synchronized (GeckoJavaSampler.class) {
       if (sSamplingRunnable != null) {
         return;
@@ -460,13 +550,140 @@ public class GeckoJavaSampler {
       // Setting a limit of 120000 (2 mins with 1ms interval) for samples and markers for now
       // to make sure we are not allocating too much.
       final int limitedEntryCount = Math.min(aEntryCount, 120000);
-      sSamplingRunnable = new SamplingRunnable(aInterval, limitedEntryCount);
+      sSamplingRunnable =
+          new SamplingRunnable(getThreadsToProfile(aFilters), aInterval, limitedEntryCount);
       sMarkerStorage.start(limitedEntryCount);
       sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
       sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
               sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS));
     }
+  }
+
+  private static @NonNull List<Thread> getThreadsToProfile(final Object[] aFilters) {
+    // Clean up filters.
+    final List<String> cleanedFilters = new ArrayList<>();
+    for (final Object rawFilter : aFilters) {
+      // aFilters is a String[] but jni can only accept Object[] so we're forced to cast.
+      //
+      // We could pass the lowercased filters from native code but it may not handle lowercasing the
+      // same way Java does so we lower case here so it's consistent later when we lower case the
+      // thread name and compare against it.
+      final String filter = ((String) rawFilter).trim().toLowerCase(Locale.US);
+
+      // If the filter is empty, it's not meaningful: skip.
+      if (filter.isEmpty()) {
+        continue;
+      }
+
+      cleanedFilters.add(filter);
+    }
+
+    final ThreadGroup rootThreadGroup = getRootThreadGroup();
+    final Thread[] activeThreads = getActiveThreads(rootThreadGroup);
+    final Thread mainThread = Looper.getMainLooper().getThread();
+
+    // We model these catch-all filters after the C++ code (which we should eventually deduplicate):
+    // https://searchfox.org/mozilla-central/rev/b0779bcc485dc1c04334dfb9ea024cbfff7b961a/tools/profiler/core/platform.cpp#778-801
+    if (cleanedFilters.contains("*") || doAnyFiltersMatchPid(cleanedFilters, Process.myPid())) {
+      final List<Thread> activeThreadList = new ArrayList<>();
+      Collections.addAll(activeThreadList, activeThreads);
+      if (!activeThreadList.contains(mainThread)) {
+        activeThreadList.add(mainThread); // see below for why this is necessary.
+      }
+      return activeThreadList;
+    }
+
+    // We always want to profile the main thread. We're not certain getActiveThreads returns
+    // all active threads since we've observed that getActiveThreads doesn't include the main thread
+    // during xpcshell tests even though it's alive (bug 1760716). We intentionally don't rely on
+    // that method to add the main thread here.
+    final List<Thread> threadsToProfile = new ArrayList<>();
+    threadsToProfile.add(mainThread);
+
+    for (final Thread thread : activeThreads) {
+      if (shouldProfileThread(thread, cleanedFilters, mainThread)) {
+        threadsToProfile.add(thread);
+      }
+    }
+    return threadsToProfile;
+  }
+
+  private static boolean shouldProfileThread(
+      final Thread aThread, final List<String> aFilters, final Thread aMainThread) {
+    final String threadName = aThread.getName().trim().toLowerCase(Locale.US);
+    if (threadName.isEmpty()) {
+      return false; // We can't match against a thread with no name: skip.
+    }
+
+    if (aThread.equals(aMainThread)) {
+      return false; // We've already added the main thread outside of this method.
+    }
+
+    for (final String filter : aFilters) {
+      // In order to generically support thread pools with thread names like "arch_disk_io_0" (the
+      // kotlin IO dispatcher), we check if the filter is inside the thread name (e.g. a filter of
+      // "io" will match all of the threads in that pool) rather than an equality check.
+      if (threadName.contains(filter)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private static boolean doAnyFiltersMatchPid(
+      @NonNull final List<String> aFilters, final long aPid) {
+    final String prefix = "pid:";
+    for (final String filter : aFilters) {
+      if (!filter.startsWith(prefix)) {
+        continue;
+      }
+
+      try {
+        final long filterPid = Long.parseLong(filter.substring(prefix.length()));
+        if (filterPid == aPid) {
+          return true;
+        }
+      } catch (final NumberFormatException e) {
+        /* do nothing. */
+      }
+    }
+
+    return false;
+  }
+
+  private static @NonNull Thread[] getActiveThreads(final @NonNull ThreadGroup rootThreadGroup) {
+    // We need the root thread group to get all of the active threads because of how
+    // ThreadGroup.enumerate works.
+    //
+    // ThreadGroup.enumerate is inherently racey so we loop until we capture all of the active
+    // threads. We can only detect if we didn't capture all of the threads if the number of threads
+    // found (the value returned by enumerate) is smaller than the array we're capturing them in.
+    // Therefore, we make the array slightly larger than the known number of threads.
+    Thread[] allThreads;
+    int threadsFound;
+    do {
+      allThreads = new Thread[rootThreadGroup.activeCount() + 15];
+      threadsFound = rootThreadGroup.enumerate(allThreads, /* recurse */ true);
+    } while (threadsFound >= allThreads.length);
+
+    // There will be more indices in the array than threads and these will be set to null. We remove
+    // the null values to minimize bugs.
+    return Arrays.copyOfRange(allThreads, 0, threadsFound);
+  }
+
+  private static @NonNull ThreadGroup getRootThreadGroup() {
+    // Assert non-null: getThreadGroup only returns null for dead threads but the current thread
+    // can't be dead.
+    ThreadGroup parentGroup = Objects.requireNonNull(Thread.currentThread().getThreadGroup());
+
+    ThreadGroup group = null;
+    while (parentGroup != null) {
+      group = parentGroup;
+      parentGroup = group.getParent();
+    }
+    return group;
   }
 
   @WrapForJNI
