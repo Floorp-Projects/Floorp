@@ -22,6 +22,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.OrientationController
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -207,5 +208,36 @@ class OrientationDelegateTest : BaseSessionTest() {
         assertThat("The operation must throw NotSupportedError even if same orientation",
                    promise2.value,
                    equalTo("NotSupportedError"))
+    }
+
+    @WithDisplay(width = 300, height = 200)
+    @Test fun orientationUnlockByExitFullscreen() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
+
+        goFullscreen()
+        activityRule.scenario.onActivity { activity ->
+            // If the orientation is landscape, lock to portrait and wait for delegate. If portrait, lock to landscape instead.
+            if (activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+                lockPortrait()
+            } else if (activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                lockLandscape()
+            }
+        }
+
+        val promise = mainSession.evaluatePromiseJS("document.exitFullscreen()")
+        sessionRule.waitUntilCalled(object : ContentDelegate, OrientationController.OrientationDelegate {
+            @AssertCalled(count = 1)
+            override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+                assertThat("Exited fullscreen", fullScreen, equalTo(false))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onOrientationUnlock() {
+                activityRule.scenario.onActivity { activity ->
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                }
+            }
+        })
+        promise.value
     }
 }
