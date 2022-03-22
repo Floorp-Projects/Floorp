@@ -82,54 +82,6 @@ class GeckoViewPrompter {
     return false;
   }
 
-  accept(aInputText = this.inputText) {
-    if (this.callback) {
-      let acceptMsg = {};
-      switch (this.message.type) {
-        case "alert":
-          acceptMsg = null;
-          break;
-        case "button":
-          acceptMsg.button = 0;
-          break;
-        case "text":
-          acceptMsg.text = aInputText;
-          break;
-        default:
-          acceptMsg = null;
-          break;
-      }
-      this.callback(acceptMsg);
-      // Notify the UI that this prompt should be hidden.
-      this.dismiss();
-    }
-  }
-
-  getPromptType() {
-    switch (this.message.type) {
-      case "alert":
-        return this.message.checkValue ? "alertCheck" : "alert";
-      case "button":
-        return this.message.checkValue ? "confirmCheck" : "confirm";
-      case "text":
-        return this.message.checkValue ? "promptCheck" : "prompt";
-      default:
-        return this.message.type;
-    }
-  }
-
-  getPromptText() {
-    return this.message.msg;
-  }
-
-  getInputText() {
-    return this.inputText;
-  }
-
-  setInputText(aInput) {
-    this.inputText = aInput;
-  }
-
   /**
    * Shows a native prompt, and then spins the event loop for this thread while we wait
    * for a response
@@ -172,18 +124,10 @@ class GeckoViewPrompter {
 
   dismiss() {
     this._dispatcher.dispatch("GeckoView:Prompt:Dismiss", { id: this.id });
-    const actor = this.domWin.windowGlobalChild.getActor("GeckoViewPrompter");
-    actor?.unregisterPrompt(this);
   }
 
   asyncShowPrompt(aMsg, aCallback) {
     let handled = false;
-    this.message = aMsg;
-    this.inputText = aMsg.value;
-    this.callback = aCallback;
-    const actor = this.domWin?.windowGlobalChild.getActor("GeckoViewPrompter");
-    actor?.registerPrompt(this);
-
     const onResponse = response => {
       if (handled) {
         return;
@@ -217,6 +161,5 @@ class GeckoViewPrompter {
         onResponse(null);
       },
     });
-    actor?.notifyPromptShow(this);
   }
 }

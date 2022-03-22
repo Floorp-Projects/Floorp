@@ -747,23 +747,6 @@ function startup() {
         },
       },
     },
-    {
-      name: "GeckoViewPrompter",
-      onInit: {
-        actors: {
-          GeckoViewPrompter: {
-            parent: {
-              moduleURI: "resource:///actors/GeckoViewPrompterParent.jsm",
-            },
-            child: {
-              moduleURI: "resource:///actors/GeckoViewPrompterChild.jsm",
-            },
-            allFrames: true,
-            includeChrome: true,
-          },
-        },
-      },
-    },
   ]);
 
   if (!Services.appinfo.sessionHistoryInParent) {
@@ -783,10 +766,6 @@ function startup() {
 
   // Allows actors to access ModuleManager.
   window.moduleManager = ModuleManager;
-
-  window.prompts = () => {
-    return window.ModuleManager.getActor("GeckoViewPrompter").getPrompts();
-  };
 
   Services.tm.dispatchToMainThread(() => {
     // This should always be the first thing we do here - any additional delayed
