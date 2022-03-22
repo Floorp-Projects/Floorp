@@ -242,7 +242,6 @@ class InputScript {
           return ref.scriptData().functionFlags;
         });
   }
-  FunctionSyntaxKind functionSyntaxKind() const;
   bool hasPrivateScriptData() const {
     return script_.match(
         [](const BaseScript* ptr) { return ptr->hasPrivateScriptData(); },
@@ -712,6 +711,12 @@ struct CompilationInput {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump() const;
+  void dump(js::JSONPrinter& json) const;
+  void dumpFields(js::JSONPrinter& json) const;
+#endif
 };
 
 // When compiling a function which was previously Syntaxly Parsed, we generated
@@ -1322,6 +1327,14 @@ struct ExtensibleCompilationStencil {
 
 #ifdef DEBUG
   void assertNoExternalDependency() const;
+#endif
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+  void dump(js::JSONPrinter& json);
+  void dumpFields(js::JSONPrinter& json);
+
+  void dumpAtom(TaggedParserAtomIndex index);
 #endif
 };
 
