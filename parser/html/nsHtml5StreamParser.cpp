@@ -854,6 +854,7 @@ inline void nsHtml5StreamParser::OnContentComplete() {
 nsresult nsHtml5StreamParser::WriteStreamBytes(
     Span<const uint8_t> aFromSegment) {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
+  mTokenizerMutex.AssertCurrentThreadOwns();
   // mLastBuffer should always point to a buffer of the size
   // READ_BUFFER_SIZE.
   if (!mLastBuffer) {
@@ -1604,7 +1605,8 @@ nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 /* static */
 nsresult nsHtml5StreamParser::CopySegmentsToParser(
     nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
-    uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount) {
+    uint32_t aToOffset, uint32_t aCount,
+    uint32_t* aWriteCount) NO_THREAD_SAFETY_ANALYSIS {
   nsHtml5StreamParser* parser = static_cast<nsHtml5StreamParser*>(aClosure);
 
   parser->DoDataAvailable(AsBytes(Span(aFromSegment, aCount)));

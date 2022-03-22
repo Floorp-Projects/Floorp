@@ -679,10 +679,16 @@ void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
   masm.ma_bl(&debugTrapStub_, Assembler::NonZero);
   masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
               CodeOffset(masm.currentOffset()));
-#elif defined(JS_CODEGEN_MIPS64)
-  // TODO - also see insertBreakpointStub()
-#elif defined(JS_CODEGEN_LOONG64)
-  // TODO - also see insertBreakpointStub()
+#elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  ScratchPtr scratch(*this);
+  Label L;
+  masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugTrapHandler()),
+               scratch);
+  masm.branchPtr(Assembler::Equal, scratch, ImmWord(0), &L);
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+  masm.bind(&L);
 #else
   MOZ_CRASH("BaseCompiler platform hook: insertBreakablePoint");
 #endif
@@ -748,10 +754,17 @@ void BaseCompiler::insertBreakpointStub() {
     masm.ma_tst(tmp2, Imm32(1 << func_.index % 32), tmp1, Assembler::Always);
     masm.ma_bx(lr, Assembler::Zero);
   }
-#elif defined(JS_CODEGEN_MIPS64)
-  // TODO - also see insertBreakablePoint()
-#elif defined(JS_CODEGEN_LOONG64)
-  // TODO - also see insertBreakablePoint()
+#elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  {
+    ScratchPtr scratch(*this);
+
+    // Logic same as ARM64.
+    masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugFilter()),
+                 scratch);
+    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                       Imm32(1 << (func_.index % 32)), &L);
+    masm.abiret();
+  }
 #else
   MOZ_CRASH("BaseCompiler platform hook: endFunction");
 #endif
@@ -7776,6 +7789,10 @@ static void RelaxedConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs,
                                         RegV128 rd) {
   masm.unsignedTruncSatFloat64x2ToInt32x4Relaxed(rs, rd);
 }
+
+static void RelaxedQ15MulrS(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.q15MulrInt16x8Relaxed(rsd, rs, rsd);
+}
 #  endif
 
 void BaseCompiler::emitVectorAndNot() {
@@ -9482,6 +9499,11 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorBinary(RelaxedSwizzle));
+          case uint32_t(SimdOp::I16x8RelaxedQ15MulrS):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorBinary(RelaxedQ15MulrS));
 #  endif
           default:
             break;

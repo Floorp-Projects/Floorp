@@ -70,12 +70,6 @@ class FilteredContentIterator final {
   PostContentIterator mPostIterator;
   PreContentIterator mPreIterator;
 
-  RefPtr<nsAtom> mBlockQuoteAtom;
-  RefPtr<nsAtom> mScriptAtom;
-  RefPtr<nsAtom> mTextAreaAtom;
-  RefPtr<nsAtom> mSelectAreaAtom;
-  RefPtr<nsAtom> mMapAtom;
-
   UniquePtr<nsComposeTxtSrvFilter> mFilter;
   RefPtr<nsRange> mRange;
   bool mDidSkip;

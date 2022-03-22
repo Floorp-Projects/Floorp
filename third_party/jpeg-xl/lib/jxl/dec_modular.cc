@@ -303,12 +303,13 @@ Status ModularFrameDecoder::DecodeGroup(
   }
   // Undo global transforms that have been pushed to the group level
   if (!use_full_image) {
+    JXL_ASSERT(render_pipeline_input);
     for (auto t : global_transform) {
       JXL_RETURN_IF_ERROR(t.Inverse(gi, global_header.wp_header));
     }
-    JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(
-        gi, dec_state, nullptr, render_pipeline_input, output,
-        rect.Crop(dec_state->decoded), Rect(0, 0, gi.w, gi.h)));
+    JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(gi, dec_state, nullptr,
+                                                  *render_pipeline_input,
+                                                  Rect(0, 0, gi.w, gi.h)));
     return true;
   }
   int gic = 0;
@@ -451,26 +452,14 @@ Status ModularFrameDecoder::DecodeAcMetadata(size_t group_id, BitReader* reader,
 
 Status ModularFrameDecoder::ModularImageToDecodedRect(
     Image& gi, PassesDecoderState* dec_state, jxl::ThreadPool* pool,
-    RenderPipelineInput* render_pipeline_input, ImageBundle* output, Rect rect,
-    Rect modular_rect) {
-  auto& decoded = dec_state->decoded;
+    RenderPipelineInput& render_pipeline_input, Rect modular_rect) {
   const auto& frame_header = dec_state->shared->frame_header;
   const auto* metadata = frame_header.nonserialized_metadata;
-  if (!render_pipeline_input) {
-    size_t xsize = rect.xsize();
-    size_t ysize = rect.ysize();
-    if (!xsize || !ysize) {
-      return true;
-    }
-    JXL_DASSERT(rect.IsInside(decoded));
-  }
   JXL_CHECK(gi.transform.empty());
 
   auto get_row = [&](Rect r, size_t c, size_t y) {
-    return render_pipeline_input
-               ? render_pipeline_input->GetBuffer(c).second.Row(
-                     render_pipeline_input->GetBuffer(c).first, y)
-               : r.PlaneRow(&decoded, c, y);
+    return render_pipeline_input.GetBuffer(c).second.Row(
+        render_pipeline_input.GetBuffer(c).first, y);
   };
 
   size_t c = 0;
@@ -499,18 +488,12 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
         return JXL_FAILURE("Empty image");
       }
       JXL_CHECK(ch_in.hshift <= 3 && ch_in.vshift <= 3);
-      Rect r(rect.x0() >> ch_in.hshift, rect.y0() >> ch_in.vshift,
-             rect.xsize() >> ch_in.hshift, rect.ysize() >> ch_in.vshift,
-             DivCeil(decoded.xsize(), 1 << ch_in.hshift),
-             DivCeil(decoded.ysize(), 1 << ch_in.vshift));
+      Rect r = render_pipeline_input.GetBuffer(c).second;
       Rect mr(modular_rect.x0() >> ch_in.hshift,
               modular_rect.y0() >> ch_in.vshift,
               DivCeil(modular_rect.xsize(), 1 << ch_in.hshift),
               DivCeil(modular_rect.ysize(), 1 << ch_in.vshift));
       mr = mr.Crop(ch_in.plane);
-      if (render_pipeline_input) {
-        r = render_pipeline_input->GetBuffer(c).second;
-      }
       size_t xsize_shifted = r.xsize();
       size_t ysize_shifted = r.ysize();
       if (r.ysize() != mr.ysize() || r.xsize() != mr.xsize()) {
@@ -544,8 +527,15 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
               const size_t y = task;
               const pixel_type* const JXL_RESTRICT row_in =
                   mr.Row(&ch_in.plane, y);
-              float* const JXL_RESTRICT row_out = get_row(r, c, y);
-              int_to_float(row_in, row_out, xsize_shifted, bits, exp_bits);
+              if (rgb_from_gray) {
+                for (size_t cc = 0; cc < 3; cc++) {
+                  float* const JXL_RESTRICT row_out = get_row(r, cc, y);
+                  int_to_float(row_in, row_out, xsize_shifted, bits, exp_bits);
+                }
+              } else {
+                float* const JXL_RESTRICT row_out = get_row(r, c, y);
+                int_to_float(row_in, row_out, xsize_shifted, bits, exp_bits);
+              }
             },
             "ModularIntToFloat_losslessfloat"));
       } else {
@@ -575,47 +565,26 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
       c = 1;
     }
   }
-  size_t num_extra_channels = render_pipeline_input
-                                  ? output->extra_channels().size()
-                                  : dec_state->extra_channels.size();
+  size_t num_extra_channels = metadata->m.num_extra_channels;
   for (size_t ec = 0; ec < num_extra_channels; ec++, c++) {
-    const ExtraChannelInfo& eci = output->metadata()->extra_channel_info[ec];
+    const ExtraChannelInfo& eci = metadata->m.extra_channel_info[ec];
     int bits = eci.bit_depth.bits_per_sample;
     int exp_bits = eci.bit_depth.exponent_bits_per_sample;
     bool fp = eci.bit_depth.floating_point_sample;
     JXL_ASSERT(fp || bits < 32);
     const float mul = fp ? 0 : (1.0f / ((1u << bits) - 1));
-    size_t ecups = frame_header.extra_channel_upsampling[ec];
-    const size_t ec_xsize = DivCeil(frame_dim.xsize_upsampled, ecups);
-    const size_t ec_ysize = DivCeil(frame_dim.ysize_upsampled, ecups);
     JXL_ASSERT(c < gi.channel.size());
     Channel& ch_in = gi.channel[c];
-    if (!render_pipeline_input) {
-      // For x0, y0 there's no need to do a DivCeil().
-      JXL_DASSERT(rect.x0() % (1ul << ch_in.hshift) == 0);
-      JXL_DASSERT(rect.y0() % (1ul << ch_in.vshift) == 0);
-    }
-    Rect r(rect.x0() >> ch_in.hshift, rect.y0() >> ch_in.vshift,
-           DivCeil(rect.xsize(), 1lu << ch_in.hshift),
-           DivCeil(rect.ysize(), 1lu << ch_in.vshift), ec_xsize, ec_ysize);
-
-    if (render_pipeline_input) {
-      r = render_pipeline_input->GetBuffer(3 + ec).second;
-    }
+    Rect r = render_pipeline_input.GetBuffer(3 + ec).second;
     Rect mr(modular_rect.x0() >> ch_in.hshift,
             modular_rect.y0() >> ch_in.vshift,
             DivCeil(modular_rect.xsize(), 1 << ch_in.hshift),
             DivCeil(modular_rect.ysize(), 1 << ch_in.vshift));
     mr = mr.Crop(ch_in.plane);
 
-    if (!render_pipeline_input) {
-      JXL_DASSERT(r.IsInside(dec_state->extra_channels[ec]));
-    }
     for (size_t y = 0; y < r.ysize(); ++y) {
       float* const JXL_RESTRICT row_out =
-          render_pipeline_input
-              ? r.Row(render_pipeline_input->GetBuffer(3 + ec).first, y)
-              : r.Row(&dec_state->extra_channels[ec], y);
+          r.Row(render_pipeline_input.GetBuffer(3 + ec).first, y);
       const pixel_type* const JXL_RESTRICT row_in = mr.Row(&ch_in.plane, y);
       if (fp) {
         int_to_float(row_in, row_out, r.xsize(), bits, exp_bits);
@@ -624,9 +593,6 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
           row_out[x] = row_in[x] * mul;
         }
       }
-    }
-    if (!render_pipeline_input) {
-      JXL_CHECK_IMAGE_INITIALIZED(dec_state->extra_channels[ec], r);
     }
   }
   return true;
@@ -651,35 +617,29 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
   }
   if (gi.error) return JXL_FAILURE("Undoing transforms failed");
 
-  auto& decoded = dec_state->decoded;
-
-  if (dec_state->render_pipeline) {
-    std::atomic<bool> has_error{false};
-    JXL_RETURN_IF_ERROR(RunOnPool(
-        pool, 0, dec_state->shared->frame_dim.num_groups,
-        [&](size_t num_threads) {
-          dec_state->render_pipeline->PrepareForThreads(num_threads);
-          return true;
-        },
-        [&](const uint32_t group, size_t thread_id) {
-          RenderPipelineInput input =
-              dec_state->render_pipeline->GetInputBuffers(group, thread_id);
-          if (!ModularImageToDecodedRect(gi, dec_state, nullptr, &input, output,
-                                         Rect(),
-                                         dec_state->shared->GroupRect(group))) {
-            has_error = true;
-            return;
-          }
-          input.Done();
-        },
-        "ModularToRect"));
-    if (has_error) {
-      return JXL_FAILURE("Error producing input to render pipeline");
-    }
-  } else {
-    JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(gi, dec_state, pool, nullptr,
-                                                  output, Rect(decoded),
-                                                  Rect(0, 0, gi.w, gi.h)));
+  std::atomic<bool> has_error{false};
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, dec_state->shared->frame_dim.num_groups,
+      [&](size_t num_threads) {
+        dec_state->render_pipeline->PrepareForThreads(
+            num_threads,
+            /*use_group_ids=*/dec_state->shared->frame_header.encoding ==
+                FrameEncoding::kVarDCT);
+        return true;
+      },
+      [&](const uint32_t group, size_t thread_id) {
+        RenderPipelineInput input =
+            dec_state->render_pipeline->GetInputBuffers(group, thread_id);
+        if (!ModularImageToDecodedRect(gi, dec_state, nullptr, input,
+                                       dec_state->shared->GroupRect(group))) {
+          has_error = true;
+          return;
+        }
+        input.Done();
+      },
+      "ModularToRect"));
+  if (has_error) {
+    return JXL_FAILURE("Error producing input to render pipeline");
   }
   return true;
 }

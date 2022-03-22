@@ -112,7 +112,7 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
 // Could be performed in-place (i.e. Y, Cb and Cr could alias R, B and B).
 void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect) {
   JXL_CHECK_IMAGE_INITIALIZED(ycbcr, rect);
-  const HWY_CAPPED(float, GroupBorderAssigner::kPaddingXRound) df;
+  const HWY_CAPPED(float, kBlockDim) df;
   const size_t S = Lanes(df);  // Step.
 
   const size_t xsize = rect.xsize();

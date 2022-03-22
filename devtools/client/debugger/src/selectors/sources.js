@@ -11,15 +11,14 @@ import {
   getPlainUrl,
   isPretty,
   isJavaScript,
+  removeThreadActorId,
 } from "../utils/source";
 import {
   hasResource,
   getResource,
   getMappedResource,
   memoizeResourceShallow,
-  makeShallowQuery,
   makeReduceAllQuery,
-  makeMapWithArgs,
 } from "../utils/resource";
 import { stripQuery } from "../utils/url";
 
@@ -230,52 +229,40 @@ export function getProjectDirectoryRootName(state) {
   return state.sources.projectDirectoryRootName;
 }
 
-const queryAllDisplayedSources = makeShallowQuery({
-  filter: (_, { sourcesWithUrls }) => sourcesWithUrls,
-  map: makeMapWithArgs(
-    (
-      resource,
-      ident,
-      {
-        projectDirectoryRoot,
-        chromeAndExtensionsEnabled,
-        debuggeeIsWebExtension,
-        threads,
-      }
-    ) => ({
-      id: resource.id,
-      displayed:
-        isDescendantOfRoot(resource, projectDirectoryRoot, threads) &&
-        (!resource.isExtension ||
-          chromeAndExtensionsEnabled ||
-          debuggeeIsWebExtension),
-      thread: resource.thread,
-    })
-  ),
-  reduce: items =>
-    items.reduce((acc, { id, displayed, thread }) => {
-      if (displayed) {
-        acc.push({ id, thread });
-      }
-      return acc;
-    }, []),
-});
-
-function getAllDisplayedSources(state) {
-  return queryAllDisplayedSources(getSources(state), {
-    sourcesWithUrls: state.sources.sourcesWithUrls,
-    projectDirectoryRoot: state.sources.projectDirectoryRoot,
-    chromeAndExtensionsEnabled: state.sources.chromeAndExtensionsEnabled,
-    debuggeeIsWebExtension: state.threads.isWebExtension,
-    threads: getAllThreads(state),
-  });
-}
-
 const getDisplayedSourceIDs = createSelector(
-  getAllDisplayedSources,
-  displayedSources => {
+  getSources,
+  state => state.sources.sourcesWithUrls,
+  state => state.sources.projectDirectoryRoot,
+  state => state.sources.chromeAndExtensionsEnabled,
+  state => state.threads.isWebExtension,
+  getAllThreads,
+  (
+    sources,
+    sourcesWithUrls,
+    projectDirectoryRoot,
+    chromeAndExtensionsEnabled,
+    debuggeeIsWebExtension,
+    threads
+  ) => {
+    const rootWithoutThreadActor = removeThreadActorId(
+      projectDirectoryRoot,
+      threads
+    );
     const sourceIDsByThread = {};
-    for (const { id, thread } of displayedSources) {
+
+    for (const id of sourcesWithUrls) {
+      const source = getSourceInSources(sources, id);
+
+      const displayed =
+        isDescendantOfRoot(source, rootWithoutThreadActor) &&
+        (!source.isExtension ||
+          chromeAndExtensionsEnabled ||
+          debuggeeIsWebExtension);
+      if (!displayed) {
+        continue;
+      }
+
+      const thread = source.thread;
       if (!sourceIDsByThread[thread]) {
         sourceIDsByThread[thread] = new Set();
       }

@@ -134,6 +134,22 @@ bool RecvGetSessionStorageData(
   return true;
 }
 
+bool RecvClearStoragesForOrigin(const nsACString& aOriginAttrs,
+                                const nsACString& aOriginKey) {
+  mozilla::ipc::AssertIsInMainProcess();
+  mozilla::ipc::AssertIsOnBackgroundThread();
+
+  if (!sManagers) {
+    return true;
+  }
+
+  for (auto& entry : *sManagers) {
+    entry.GetData()->ClearStoragesForOrigin(aOriginAttrs, aOriginKey);
+  }
+
+  return true;
+}
+
 void SessionStorageManagerBase::ClearStoragesInternal(
     const OriginAttributesPattern& aPattern, const nsACString& aOriginScope) {
   for (const auto& oaEntry : mOATable) {
@@ -153,6 +169,28 @@ void SessionStorageManagerBase::ClearStoragesInternal(
         cache->Clear(false);
         cache->ResetWriteInfos();
       }
+    }
+  }
+}
+
+void SessionStorageManagerBase::ClearStoragesForOriginInternal(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey) {
+  for (const auto& oaEntry : mOATable) {
+    // Filter tables which match the given origin attrs.
+    if (oaEntry.GetKey() != aOriginAttrs) {
+      continue;
+    }
+
+    OriginKeyHashTable* table = oaEntry.GetWeak();
+    for (const auto& originKeyEntry : *table) {
+      // Match exact origin (without origin attrs).
+      if (originKeyEntry.GetKey() != aOriginKey) {
+        continue;
+      }
+
+      const auto cache = originKeyEntry.GetData()->mCache;
+      cache->Clear(false);
+      cache->ResetWriteInfos();
     }
   }
 }
@@ -409,6 +447,15 @@ void SessionStorageManager::CheckpointDataInternal(
   Unused << cacheActor->SendCheckpoint(writeInfos);
 
   aCache.ResetWriteInfos();
+}
+
+nsresult SessionStorageManager::ClearStoragesForOrigin(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey) {
+  AssertIsOnMainThread();
+
+  ClearStoragesForOriginInternal(aOriginAttrs, aOriginKey);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -850,6 +897,19 @@ void BackgroundSessionStorageManager::ClearStorages(
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   ClearStoragesInternal(aPattern, aOriginScope);
+}
+
+void BackgroundSessionStorageManager::ClearStoragesForOrigin(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey) {
+  ::mozilla::ipc::AssertIsInMainProcess();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  for (auto& managerActor : mParticipatingActors) {
+    QM_WARNONLY_TRY(OkIf(managerActor->SendClearStoragesForOrigin(
+        nsCString(aOriginAttrs), nsCString(aOriginKey))));
+  }
+
+  ClearStoragesForOriginInternal(aOriginAttrs, aOriginKey);
 }
 
 void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(

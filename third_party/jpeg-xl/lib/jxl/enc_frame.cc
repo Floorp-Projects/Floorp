@@ -213,7 +213,8 @@ uint64_t FrameFlagsFromParams(const CompressParams& cparams) {
   // noise is stored within the compressed image and adding noise makes things
   // worse.
   if (ApplyOverride(cparams.noise, dist >= kMinButteraugliForNoise) ||
-      cparams.photon_noise_iso > 0) {
+      cparams.photon_noise_iso > 0 ||
+      cparams.manual_noise.size() == NoiseParams::kNumNoisePoints) {
     flags |= FrameHeader::kNoise;
   }
 
@@ -303,7 +304,7 @@ Status MakeFrameHeader(const CompressParams& cparams,
   frame_header->flags = FrameFlagsFromParams(cparams);
   // Non-photon noise is not supported in the Modular encoder for now.
   if (frame_header->encoding != FrameEncoding::kVarDCT &&
-      cparams.photon_noise_iso == 0) {
+      cparams.photon_noise_iso == 0 && cparams.manual_noise.empty()) {
     frame_header->UpdateFlag(false, FrameHeader::Flags::kNoise);
   }
 
@@ -1042,6 +1043,30 @@ class LossyFrameEncoder {
   bool doing_jpeg_recompression = false;
 };
 
+Status ParamsPostInit(CompressParams* p) {
+  if (!p->manual_noise.empty() &&
+      p->manual_noise.size() != NoiseParams::kNumNoisePoints) {
+    return JXL_FAILURE("Invalid number of noise lut entries");
+  }
+  if (!p->manual_xyb_factors.empty() && p->manual_xyb_factors.size() != 3) {
+    return JXL_FAILURE("Invalid number of XYB quantization factors");
+  }
+  if (p->resampling <= 0) {
+    p->resampling = 1;
+    // For very low bit rates, using 2x2 resampling gives better results on
+    // most photographic images, with an adjusted butteraugli score chosen to
+    // give roughly the same amount of bits per pixel.
+    if (!p->already_downsampled && p->butteraugli_distance >= 20) {
+      p->resampling = 2;
+      p->butteraugli_distance = 6 + ((p->butteraugli_distance - 20) * 0.25);
+    }
+  }
+  if (p->ec_resampling <= 0) {
+    p->ec_resampling = p->resampling;
+  }
+  return true;
+}
+
 Status EncodeFrame(const CompressParams& cparams_orig,
                    const FrameInfo& frame_info, const CodecMetadata* metadata,
                    const ImageBundle& ib, PassesEncoderState* passes_enc_state,
@@ -1052,6 +1077,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   passes_enc_state->special_frames.clear();
 
   CompressParams cparams = cparams_orig;
+  JXL_RETURN_IF_ERROR(ParamsPostInit(&cparams));
 
   if (cparams.progressive_dc < 0) {
     if (cparams.progressive_dc != -1) {
@@ -1289,6 +1315,12 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   if (cparams.photon_noise_iso > 0) {
     lossy_frame_encoder.State()->shared.image_features.noise_params =
         SimulatePhotonNoise(ib.xsize(), ib.ysize(), cparams.photon_noise_iso);
+  }
+  if (cparams.manual_noise.size() == NoiseParams::kNumNoisePoints) {
+    for (size_t i = 0; i < NoiseParams::kNumNoisePoints; i++) {
+      lossy_frame_encoder.State()->shared.image_features.noise_params.lut[i] =
+          cparams.manual_noise[i];
+    }
   }
   if (frame_header->flags & FrameHeader::kNoise) {
     EncodeNoise(lossy_frame_encoder.State()->shared.image_features.noise_params,

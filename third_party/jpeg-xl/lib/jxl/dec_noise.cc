@@ -127,9 +127,9 @@ class StrengthEvalLut {
     auto scaled_vx = Max(Zero(D()), vx * Set(D(), kScale));
     auto floor_x = Floor(scaled_vx);
     auto frac_x = scaled_vx - floor_x;
-    floor_x = IfThenElse(scaled_vx >= Set(D(), kScale), Set(D(), kScale - 1),
+    floor_x = IfThenElse(scaled_vx >= Set(D(), kScale + 1), Set(D(), kScale),
                          floor_x);
-    frac_x = IfThenElse(scaled_vx >= Set(D(), kScale), Set(D(), 1), frac_x);
+    frac_x = IfThenElse(scaled_vx >= Set(D(), kScale + 1), Set(D(), 1), frac_x);
     auto floor_x_int = ConvertTo(DI(), floor_x);
 #if HWY_TARGET == HWY_SCALAR
     auto low = Set(D(), noise_params_.lut[floor_x_int.raw]);
@@ -251,17 +251,22 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
   }
 }
 
-void RandomImage3(size_t seed, const Rect& rect, Image3F* JXL_RESTRICT noise) {
-  HWY_ALIGN Xorshift128Plus rng(seed);
+void RandomImage3(size_t visible_frame_index, size_t nonvisible_frame_index,
+                  size_t x0, size_t y0, const Rect& rect,
+                  Image3F* JXL_RESTRICT noise) {
+  HWY_ALIGN Xorshift128Plus rng(visible_frame_index, nonvisible_frame_index, x0,
+                                y0);
   RandomImage(&rng, rect, &noise->Plane(0));
   RandomImage(&rng, rect, &noise->Plane(1));
   RandomImage(&rng, rect, &noise->Plane(2));
 }
 
-void Random3Planes(size_t seed, const std::pair<ImageF*, Rect>& plane0,
+void Random3Planes(size_t visible_frame_index, size_t nonvisible_frame_index,
+                   size_t x0, size_t y0, const std::pair<ImageF*, Rect>& plane0,
                    const std::pair<ImageF*, Rect>& plane1,
                    const std::pair<ImageF*, Rect>& plane2) {
-  HWY_ALIGN Xorshift128Plus rng(seed);
+  HWY_ALIGN Xorshift128Plus rng(visible_frame_index, nonvisible_frame_index, x0,
+                                y0);
   RandomImage(&rng, plane0.second, plane0.first);
   RandomImage(&rng, plane1.second, plane1.first);
   RandomImage(&rng, plane2.second, plane2.first);
@@ -284,15 +289,21 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
 }
 
 HWY_EXPORT(RandomImage3);
-void RandomImage3(size_t seed, const Rect& rect, Image3F* JXL_RESTRICT noise) {
-  return HWY_DYNAMIC_DISPATCH(RandomImage3)(seed, rect, noise);
+void RandomImage3(size_t visible_frame_index, size_t nonvisible_frame_index,
+                  size_t x0, size_t y0, const Rect& rect,
+                  Image3F* JXL_RESTRICT noise) {
+  return HWY_DYNAMIC_DISPATCH(RandomImage3)(
+      visible_frame_index, nonvisible_frame_index, x0, y0, rect, noise);
 }
 
 HWY_EXPORT(Random3Planes);
-void Random3Planes(size_t seed, const std::pair<ImageF*, Rect>& plane0,
+void Random3Planes(size_t visible_frame_index, size_t nonvisible_frame_index,
+                   size_t x0, size_t y0, const std::pair<ImageF*, Rect>& plane0,
                    const std::pair<ImageF*, Rect>& plane1,
                    const std::pair<ImageF*, Rect>& plane2) {
-  return HWY_DYNAMIC_DISPATCH(Random3Planes)(seed, plane0, plane1, plane2);
+  return HWY_DYNAMIC_DISPATCH(Random3Planes)(visible_frame_index,
+                                             nonvisible_frame_index, x0, y0,
+                                             plane0, plane1, plane2);
 }
 
 void DecodeFloatParam(float precision, float* val, BitReader* br) {

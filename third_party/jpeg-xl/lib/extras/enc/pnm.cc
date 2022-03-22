@@ -97,7 +97,8 @@ void VerticallyFlipImage(float* const float_image, const size_t xsize,
 }  // namespace
 
 Status EncodeImagePNM(const PackedPixelFile& ppf, size_t bits_per_sample,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
+                      ThreadPool* pool, size_t frame_index,
+                      std::vector<uint8_t>* bytes) {
   const bool floating_point = bits_per_sample > 16;
   // Choose native for PFM; PGM/PPM require big-endian (N/A for PBM)
   const JxlEndianness endianness =
@@ -114,13 +115,14 @@ Status EncodeImagePNM(const PackedPixelFile& ppf, size_t bits_per_sample,
   JXL_RETURN_IF_ERROR(EncodeHeader(ppf, bits_per_sample, is_little_endian,
                                    header, &header_size));
   bytes->resize(static_cast<size_t>(header_size) +
-                ppf.frames[0].color.pixels_size);
+                ppf.frames[frame_index].color.pixels_size);
   memcpy(bytes->data(), header, static_cast<size_t>(header_size));
-  memcpy(bytes->data() + header_size, ppf.frames[0].color.pixels(),
-         ppf.frames[0].color.pixels_size);
+  memcpy(bytes->data() + header_size, ppf.frames[frame_index].color.pixels(),
+         ppf.frames[frame_index].color.pixels_size);
   if (floating_point) {
     VerticallyFlipImage(reinterpret_cast<float*>(bytes->data() + header_size),
-                        ppf.frames[0].color.xsize, ppf.frames[0].color.ysize,
+                        ppf.frames[frame_index].color.xsize,
+                        ppf.frames[frame_index].color.ysize,
                         ppf.info.num_color_channels);
   }
 

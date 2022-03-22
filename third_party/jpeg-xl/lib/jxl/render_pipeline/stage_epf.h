@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "lib/jxl/image.h"
 #include "lib/jxl/loop_filter.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 

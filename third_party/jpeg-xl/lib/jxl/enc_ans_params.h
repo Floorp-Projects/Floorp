@@ -24,6 +24,7 @@ struct HistogramParams {
 
   enum class HybridUintMethod {
     kNone,        // just use kHybridUint420Config.
+    k000,         // force the fastest option.
     kFast,        // just try a couple of options.
     kContextMap,  // fast choice for ctx map.
     kBest,

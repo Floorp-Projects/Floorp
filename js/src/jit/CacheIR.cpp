@@ -8276,7 +8276,9 @@ AttachDecision CallIRGenerator::tryAttachMapGet(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
-  if (!callee->isNativeWithoutJitEntry() || callee->native() != fun_call) {
+  MOZ_ASSERT(callee->isNativeWithoutJitEntry());
+
+  if (callee->native() != fun_call) {
     return AttachDecision::NoAction;
   }
 
@@ -8893,8 +8895,9 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayConstructor(
 }
 
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
-  if (!calleeFunc->isNativeWithoutJitEntry() ||
-      calleeFunc->native() != fun_apply) {
+  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
+
+  if (calleeFunc->native() != fun_apply) {
     return AttachDecision::NoAction;
   }
 
@@ -9787,10 +9790,6 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 }
 
 AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
-  if (op_ == JSOp::FunCall || op_ == JSOp::FunApply) {
-    return AttachDecision::NoAction;
-  }
-
   if (mode_ != ICState::Mode::Specialized) {
     // We do not have megamorphic call hook stubs.
     // TODO: Should we attach specialized call hook stubs in
@@ -9845,7 +9844,6 @@ AttachDecision CallIRGenerator::tryAttachStub() {
     case JSOp::SuperCall:
     case JSOp::SpreadSuperCall:
     case JSOp::FunCall:
-    case JSOp::FunApply:
       break;
     default:
       return AttachDecision::NoAction;
@@ -9865,13 +9863,6 @@ AttachDecision CallIRGenerator::tryAttachStub() {
 
   HandleFunction calleeFunc = calleeObj.as<JSFunction>();
 
-  if (op_ == JSOp::FunCall) {
-    return tryAttachFunCall(calleeFunc);
-  }
-  if (op_ == JSOp::FunApply) {
-    return tryAttachFunApply(calleeFunc);
-  }
-
   // Check for scripted optimizations.
   if (calleeFunc->hasJitEntry()) {
     return tryAttachCallScripted(calleeFunc);
@@ -9879,6 +9870,14 @@ AttachDecision CallIRGenerator::tryAttachStub() {
 
   // Check for native-function optimizations.
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
+
+  // Try inlining Function.prototype.{call,apply}. We don't use the
+  // InlinableNative mechanism for this because we want to optimize these more
+  // aggressively than other natives.
+  if (op_ == JSOp::FunCall || op_ == JSOp::Call || op_ == JSOp::CallIgnoresRv) {
+    TRY_ATTACH(tryAttachFunCall(calleeFunc));
+    TRY_ATTACH(tryAttachFunApply(calleeFunc));
+  }
 
   return tryAttachCallNative(calleeFunc);
 }

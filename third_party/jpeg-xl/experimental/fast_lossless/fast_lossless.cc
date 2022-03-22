@@ -763,7 +763,6 @@ struct ChunkSampleCollector {
   inline void Chunk(size_t run, uint16_t* residuals) {
     // Run is broken. Encode the run and encode the individual vector.
     Rle(run, lz77_counts);
-    run = 0;
     for (size_t ix = 0; ix < kChunkSize; ix++) {
       unsigned token, nbits, bits;
       EncodeHybridUint000(residuals[ix], &token, &nbits, &bits);
@@ -1128,6 +1127,7 @@ size_t LLEnc(const unsigned char* rgba, size_t width, size_t stride,
   assert(width != 0);
   assert(height != 0);
   assert(stride >= nb_chans * bytes_per_sample * width);
+  (void)bytes_per_sample;
 
   // Count colors to try palette
   std::vector<uint32_t> palette(kHashSize);
@@ -1325,30 +1325,38 @@ size_t LLEnc(const unsigned char* rgba, size_t width, size_t stride,
 }
 
 size_t FastLosslessEncode(const unsigned char* rgba, size_t width,
-                          size_t stride, size_t height, size_t c,
+                          size_t stride, size_t height, size_t nb_chans,
                           size_t bitdepth, int effort, unsigned char** output) {
   assert(bitdepth <= 12);
   assert(bitdepth > 0);
-  assert(c <= 4);
-  assert(c != 0);
+  assert(nb_chans <= 4);
+  assert(nb_chans != 0);
   if (bitdepth <= 8) {
-    if (c == 1)
+    if (nb_chans == 1) {
       return LLEnc<1, 1>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 2)
+    }
+    if (nb_chans == 2) {
       return LLEnc<2, 1>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 3)
+    }
+    if (nb_chans == 3) {
       return LLEnc<3, 1>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 4)
+    }
+    if (nb_chans == 4) {
       return LLEnc<4, 1>(rgba, width, stride, height, bitdepth, effort, output);
+    }
   } else {
-    if (c == 1)
+    if (nb_chans == 1) {
       return LLEnc<1, 2>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 2)
+    }
+    if (nb_chans == 2) {
       return LLEnc<2, 2>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 3)
+    }
+    if (nb_chans == 3) {
       return LLEnc<3, 2>(rgba, width, stride, height, bitdepth, effort, output);
-    if (c == 4)
+    }
+    if (nb_chans == 4) {
       return LLEnc<4, 2>(rgba, width, stride, height, bitdepth, effort, output);
+    }
   }
   return 0;
 }

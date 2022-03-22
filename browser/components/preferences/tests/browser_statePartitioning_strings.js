@@ -5,15 +5,11 @@
 
 const CB_STRICT_FEATURES_PREF = "browser.contentblocking.features.strict";
 const CB_STRICT_FEATURES_VALUE = "tp,tpPrivate,cookieBehavior5,cm,fp,stp,lvl2";
-const MVP_UI_PREF = "browser.contentblocking.state-partitioning.mvp.ui.enabled";
 const FPI_PREF = "privacy.firstparty.isolate";
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIOR_VALUE = 5;
 
-async function testStrings(mvpUIEnabled) {
-  info(`Running testStrings with MVP UI pref set to ${MVP_UI_PREF}`);
-
-  SpecialPowers.pushPrefEnv({ set: [[MVP_UI_PREF, mvpUIEnabled]] });
+async function testStrings() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   let doc = gBrowser.contentDocument;
@@ -23,40 +19,18 @@ async function testStrings(mvpUIEnabled) {
     ".extra-information-label.cross-site-cookies-option"
   );
   for (let elt of elts) {
-    is(
-      elt.hidden,
-      !mvpUIEnabled,
-      `The new cross-site cookies info label is ${
-        mvpUIEnabled ? "visible" : "hidden"
-      }`
-    );
-  }
-
-  elts = doc.querySelectorAll(
-    ".extra-information-label.third-party-tracking-cookies-plus-isolate-option"
-  );
-  for (let elt of elts) {
-    is(
-      elt.hidden,
-      mvpUIEnabled,
-      `The old third party cookies info label is ${
-        mvpUIEnabled ? "hidden" : "visible"
-      }`
-    );
+    ok(!elt.hidden, "The new cross-site cookies info label is visible");
   }
 
   // Check the learn more strings
   elts = doc.querySelectorAll(
     ".tail-with-learn-more.content-blocking-warning-description"
   );
-  let expectedStringID = mvpUIEnabled
-    ? "content-blocking-and-isolating-etp-warning-description-2"
-    : "content-blocking-and-isolating-etp-warning-description";
   for (let elt of elts) {
     let id = doc.l10n.getAttributes(elt).id;
     is(
       id,
-      expectedStringID,
+      "content-blocking-and-isolating-etp-warning-description-2",
       "The correct warning description string is in use"
     );
   }
@@ -64,12 +38,9 @@ async function testStrings(mvpUIEnabled) {
   // Check the cookie blocking mode menu option string
   let elt = doc.querySelector("#isolateCookiesSocialMedia");
   let id = doc.l10n.getAttributes(elt).id;
-  expectedStringID = mvpUIEnabled
-    ? "sitedata-option-block-cross-site-cookies"
-    : "sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate";
   is(
     id,
-    expectedStringID,
+    "sitedata-option-block-cross-site-cookies",
     "The correct string is in use for the cookie blocking option"
   );
 
@@ -84,11 +55,7 @@ async function testStrings(mvpUIEnabled) {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   doc = gBrowser.contentDocument;
   warningElt = doc.getElementById("fpiIncompatibilityWarning");
-  is(
-    warningElt.hidden,
-    !mvpUIEnabled,
-    `The FPI warning is ${mvpUIEnabled ? "visible" : "hidden"}`
-  );
+  ok(!warningElt.hidden, `The FPI warning is visible`);
   await SpecialPowers.popPrefEnv();
 
   gBrowser.removeCurrentTab();
@@ -108,6 +75,5 @@ add_task(async function runTests() {
     defaults.setIntPref(COOKIE_BEHAVIOR_PREF, originalCookieBehavior);
   });
 
-  await testStrings(true);
-  await testStrings(false);
+  await testStrings();
 });

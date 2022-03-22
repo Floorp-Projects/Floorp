@@ -38,6 +38,9 @@ window.addEventListener("load", function onload(event) {
       for (let prop in snapshotFormatters) {
         await snapshotFormatters[prop](snapshot[prop]);
       }
+      if (location.hash) {
+        scrollToSection();
+      }
     });
     populateActionBox();
     setupEventListeners();
@@ -1729,4 +1732,16 @@ function setupEventListeners() {
   $("profile-dir-button").addEventListener("click", function(event) {
     openProfileDirectory();
   });
+}
+
+/**
+ * Scroll to section specified by location.hash
+ */
+function scrollToSection() {
+  const id = location.hash.substr(1);
+  const elem = $(id);
+
+  if (elem) {
+    elem.scrollIntoView();
+  }
 }

@@ -1454,6 +1454,15 @@ PlacesTreeView.prototype = {
           return null;
         }
 
+        // Don't show an insertion point if the index is contained
+        // within the selection and drag source is the same
+        if (
+          this._element.isDragSource &&
+          this._element.view.selection.isSelected(index)
+        ) {
+          return null;
+        }
+
         // Avoid the potentially expensive call to getChildIndex
         // if we know this container doesn't allow insertion.
         if (this._controller.disallowInsertion(container)) {
@@ -1473,8 +1482,11 @@ PlacesTreeView.prototype = {
           index = -1;
           dropNearNode = lastSelected;
         } else {
-          let lsi = container.getChildIndex(lastSelected);
-          index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
+          let lastSelectedIndex = container.getChildIndex(lastSelected);
+          index =
+            orientation == Ci.nsITreeView.DROP_BEFORE
+              ? lastSelectedIndex
+              : lastSelectedIndex + 1;
         }
       }
     }
@@ -1497,7 +1509,7 @@ PlacesTreeView.prototype = {
     });
   },
 
-  drop: function PTV_drop(aRow, aOrientation, aDataTransfer) {
+  async drop(aRow, aOrientation, aDataTransfer) {
     if (this._controller.disableUserActions) {
       return;
     }
@@ -1507,13 +1519,15 @@ PlacesTreeView.prototype = {
     // since this information is specific to the tree view.
     let ip = this._getInsertionPoint(aRow, aOrientation);
     if (ip) {
-      PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this._tree)
-        .catch(Cu.reportError)
-        .then(() => {
-          // We should only clear the drop target once
-          // the onDrop is complete, as it is an async function.
-          PlacesControllerDragHelper.currentDropTarget = null;
-        });
+      try {
+        await PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this._tree);
+      } catch (ex) {
+        Cu.reportError(ex);
+      } finally {
+        // We should only clear the drop target once
+        // the onDrop is complete, as it is an async function.
+        PlacesControllerDragHelper.currentDropTarget = null;
+      }
     }
   },
 

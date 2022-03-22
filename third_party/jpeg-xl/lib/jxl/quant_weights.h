@@ -423,7 +423,7 @@ class DequantMatrices {
   static_assert(kNum == sizeof(required_size_y) / sizeof(*required_size_y),
                 "Update this array when adding or removing quant tables.");
 
-  Status EnsureComputed(uint32_t kind_mask);
+  Status EnsureComputed(uint32_t acs_mask);
 
  private:
   static constexpr size_t required_size_[] = {

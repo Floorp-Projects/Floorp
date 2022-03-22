@@ -231,7 +231,81 @@ const incrementListeners = () => {
   }
 };
 
-this.bookmarks = class extends ExtensionAPI {
+this.bookmarks = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onCreated({ fire }) {
+      let listener = (event, bookmark) => {
+        fire.sync(bookmark.id, bookmark);
+      };
+
+      observer.on("created", listener);
+      incrementListeners();
+      return {
+        unregister() {
+          observer.off("created", listener);
+          decrementListeners();
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+
+    onRemoved({ fire }) {
+      let listener = (event, data) => {
+        fire.sync(data.guid, data.info);
+      };
+
+      observer.on("removed", listener);
+      incrementListeners();
+      return {
+        unregister() {
+          observer.off("removed", listener);
+          decrementListeners();
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+
+    onChanged({ fire }) {
+      let listener = (event, data) => {
+        fire.sync(data.guid, data.info);
+      };
+
+      observer.on("changed", listener);
+      incrementListeners();
+      return {
+        unregister() {
+          observer.off("changed", listener);
+          decrementListeners();
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+
+    onMoved({ fire }) {
+      let listener = (event, data) => {
+        fire.sync(data.guid, data.info);
+      };
+
+      observer.on("moved", listener);
+      incrementListeners();
+      return {
+        unregister() {
+          observer.off("moved", listener);
+          decrementListeners();
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     return {
       bookmarks: {
@@ -409,70 +483,30 @@ this.bookmarks = class extends ExtensionAPI {
 
         onCreated: new EventManager({
           context,
-          name: "bookmarks.onCreated",
-          register: fire => {
-            let listener = (event, bookmark) => {
-              fire.sync(bookmark.id, bookmark);
-            };
-
-            observer.on("created", listener);
-            incrementListeners();
-            return () => {
-              observer.off("created", listener);
-              decrementListeners();
-            };
-          },
+          module: "bookmarks",
+          event: "onCreated",
+          extensionApi: this,
         }).api(),
 
         onRemoved: new EventManager({
           context,
-          name: "bookmarks.onRemoved",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.sync(data.guid, data.info);
-            };
-
-            observer.on("removed", listener);
-            incrementListeners();
-            return () => {
-              observer.off("removed", listener);
-              decrementListeners();
-            };
-          },
+          module: "bookmarks",
+          event: "onRemoved",
+          extensionApi: this,
         }).api(),
 
         onChanged: new EventManager({
           context,
-          name: "bookmarks.onChanged",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.sync(data.guid, data.info);
-            };
-
-            observer.on("changed", listener);
-            incrementListeners();
-            return () => {
-              observer.off("changed", listener);
-              decrementListeners();
-            };
-          },
+          module: "bookmarks",
+          event: "onChanged",
+          extensionApi: this,
         }).api(),
 
         onMoved: new EventManager({
           context,
-          name: "bookmarks.onMoved",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.sync(data.guid, data.info);
-            };
-
-            observer.on("moved", listener);
-            incrementListeners();
-            return () => {
-              observer.off("moved", listener);
-              decrementListeners();
-            };
-          },
+          module: "bookmarks",
+          event: "onMoved",
+          extensionApi: this,
         }).api(),
       },
     };

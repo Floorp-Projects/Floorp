@@ -27,24 +27,29 @@ function getTestEntryName(origin, partitioned) {
   return `${origin}${partitioned ? "_partitioned" : ""}`;
 }
 
-async function testHasEntry(origin, isSet, testPartitioned = false) {
-  let tabs = originToTabs[origin];
+async function testHasEntry(originFirstParty, isSet, originThirdParty) {
+  let tabs = originToTabs[originFirstParty];
 
   for (let tab of tabs) {
     // For the partition test we inspect the sessionStorage of the iframe.
-    let browsingContext = testPartitioned
+    let browsingContext = originThirdParty
       ? tab.linkedBrowser.browsingContext.children[0]
       : tab.linkedBrowser.browsingContext;
     let actualSet = await SpecialPowers.spawn(
       browsingContext,
-      [getTestEntryName(origin, testPartitioned)],
+      [
+        getTestEntryName(
+          originThirdParty || originFirstParty,
+          !!originThirdParty
+        ),
+      ],
       key => {
         return !!content.sessionStorage.getItem(key);
       }
     );
 
-    let msg = `${origin}${isSet ? " " : " not "}set`;
-    if (testPartitioned) {
+    let msg = `${originFirstParty}${isSet ? " " : " not "}set`;
+    if (originThirdParty) {
       msg = "Partitioned under " + msg;
     }
 
@@ -116,15 +121,17 @@ function cleanup() {
   Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
 }
 
-add_task(function setup() {
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.cookie.cookieBehavior", 5]],
+  });
   cleanup();
 });
 
 add_task(async function test_deleteByBaseDomain() {
   await addTestTabs();
 
-  // Clear data for base domain of A.
-  info("Clearing sessionStorage for base domain " + BASE_DOMAIN_A);
+  info("Clearing sessionStorage for base domain A " + BASE_DOMAIN_A);
   await new Promise(resolve => {
     Services.clearData.deleteDataFromBaseDomain(
       BASE_DOMAIN_A,
@@ -134,24 +141,25 @@ add_task(async function test_deleteByBaseDomain() {
     );
   });
 
-  // All entries for A should have been cleared.
+  info("All entries for A should have been cleared.");
   await testHasEntry(ORIGIN_A, false);
   await testHasEntry(ORIGIN_A_SUB, false);
   await testHasEntry(ORIGIN_A_HTTP, false);
-  // Entries for B should still exist.
+
+  info("Entries for B should still exist.");
   await testHasEntry(ORIGIN_B, true);
   await testHasEntry(ORIGIN_B_SUB, true);
   await testHasEntry(ORIGIN_B_HTTP, true);
 
-  // All partitioned entries for B under A should have been cleared.
-  await testHasEntry(ORIGIN_A, false, true);
-  await testHasEntry(ORIGIN_A_SUB, false, true);
-  await testHasEntry(ORIGIN_A_HTTP, false, true);
+  info("All partitioned entries for B under A should have been cleared.");
+  await testHasEntry(ORIGIN_A, false, ORIGIN_B);
+  await testHasEntry(ORIGIN_A_SUB, false, ORIGIN_B_SUB);
+  await testHasEntry(ORIGIN_A_HTTP, false, ORIGIN_B_HTTP);
 
-  // All partitioned entries of A under B should have been cleared.
-  await testHasEntry(ORIGIN_B, false, true);
-  await testHasEntry(ORIGIN_B_SUB, false, true);
-  await testHasEntry(ORIGIN_B_HTTP, false, true);
+  info("All partitioned entries of A under B should have been cleared.");
+  await testHasEntry(ORIGIN_B, false, ORIGIN_A);
+  await testHasEntry(ORIGIN_B_SUB, false, ORIGIN_A_SUB);
+  await testHasEntry(ORIGIN_B_HTTP, false, ORIGIN_A_HTTP);
 
   cleanup();
 });
@@ -159,8 +167,7 @@ add_task(async function test_deleteByBaseDomain() {
 add_task(async function test_deleteAll() {
   await addTestTabs();
 
-  // Clear all sessionStorage.
-  info("Clearing sessionStorage for base domain " + BASE_DOMAIN_A);
+  info("Clearing sessionStorage for base domain A " + BASE_DOMAIN_A);
   await new Promise(resolve => {
     Services.clearData.deleteData(
       Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
@@ -168,7 +175,7 @@ add_task(async function test_deleteAll() {
     );
   });
 
-  // All entries should have been cleared.
+  info("All entries should have been cleared.");
   await testHasEntry(ORIGIN_A, false);
   await testHasEntry(ORIGIN_A_SUB, false);
   await testHasEntry(ORIGIN_A_HTTP, false);
@@ -176,13 +183,55 @@ add_task(async function test_deleteAll() {
   await testHasEntry(ORIGIN_B_SUB, false);
   await testHasEntry(ORIGIN_B_HTTP, false);
 
-  // All partitioned entries should have been cleared.
-  await testHasEntry(ORIGIN_A, false, true);
-  await testHasEntry(ORIGIN_A_SUB, false, true);
-  await testHasEntry(ORIGIN_A_HTTP, false, true);
-  await testHasEntry(ORIGIN_B, false, true);
-  await testHasEntry(ORIGIN_B_SUB, false, true);
-  await testHasEntry(ORIGIN_B_HTTP, false, true);
+  info("All partitioned entries should have been cleared.");
+  await testHasEntry(ORIGIN_A, false, ORIGIN_B);
+  await testHasEntry(ORIGIN_A_SUB, false, ORIGIN_B_SUB);
+  await testHasEntry(ORIGIN_A_HTTP, false, ORIGIN_B_HTTP);
+  await testHasEntry(ORIGIN_B, false, ORIGIN_A);
+  await testHasEntry(ORIGIN_B_SUB, false, ORIGIN_A_SUB);
+  await testHasEntry(ORIGIN_B_HTTP, false, ORIGIN_A_HTTP);
+
+  cleanup();
+});
+
+add_task(async function test_deleteFromPrincipal() {
+  await addTestTabs();
+
+  info("Clearing sessionStorage for partitioned principal A " + BASE_DOMAIN_A);
+
+  let principalA = Services.scriptSecurityManager.createContentPrincipal(
+    Services.io.newURI(ORIGIN_A),
+    { partitionKey: `(https,${BASE_DOMAIN_B})` }
+  );
+
+  info("principal: " + principalA.origin);
+  info("principal partitionKey " + principalA.originAttributes.partitionKey);
+  await new Promise(resolve => {
+    Services.clearData.deleteDataFromPrincipal(
+      principalA,
+      false,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      resolve
+    );
+  });
+
+  info("Unpartitioned entries should still exist.");
+  await testHasEntry(ORIGIN_A, true);
+  await testHasEntry(ORIGIN_A_SUB, true);
+  await testHasEntry(ORIGIN_A_HTTP, true);
+  await testHasEntry(ORIGIN_B, true);
+  await testHasEntry(ORIGIN_B_SUB, true);
+  await testHasEntry(ORIGIN_B_HTTP, true);
+
+  info("Only entries of principal should have been cleared.");
+  await testHasEntry(ORIGIN_A, true, ORIGIN_B);
+  await testHasEntry(ORIGIN_A_SUB, true, ORIGIN_B_SUB);
+  await testHasEntry(ORIGIN_A_HTTP, true, ORIGIN_B_HTTP);
+
+  await testHasEntry(ORIGIN_B, false, ORIGIN_A);
+
+  await testHasEntry(ORIGIN_B_SUB, true, ORIGIN_A_SUB);
+  await testHasEntry(ORIGIN_B_HTTP, true, ORIGIN_A_HTTP);
 
   cleanup();
 });

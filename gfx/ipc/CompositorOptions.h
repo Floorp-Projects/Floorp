@@ -52,9 +52,6 @@ class CompositorOptions {
     mAllowSoftwareWebRenderOGL = aAllowSoftwareWebRenderOGL;
   }
 
-  bool UseWebGPU() const { return mUseWebGPU; }
-  void SetUseWebGPU(bool aUseWebGPU) { mUseWebGPU = aUseWebGPU; }
-
   void SetInitiallyPaused(bool aPauseAtStartup) {
     mInitiallyPaused = aPauseAtStartup;
   }
@@ -64,8 +61,7 @@ class CompositorOptions {
            mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
-           mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
-           mUseWebGPU == aOther.mUseWebGPU;
+           mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL;
   }
 
   friend struct IPC::ParamTraits<CompositorOptions>;
@@ -75,7 +71,6 @@ class CompositorOptions {
   bool mUseSoftwareWebRender = false;
   bool mAllowSoftwareWebRenderD3D11 = false;
   bool mAllowSoftwareWebRenderOGL = false;
-  bool mUseWebGPU = false;
   bool mInitiallyPaused = false;
 
   // Make sure to add new fields to the ParamTraits implementation

@@ -3,23 +3,45 @@
 "use strict";
 
 const TEST_URI = URL_ROOT_SSL + "doc_sourcemap_chrome.html";
-const CSS_NAME = "sourcemaps_chrome.css";
+const CHROME_TEST_URI = CHROME_URL_ROOT + "doc_sourcemap_chrome.html";
+const GENERATED_NAME = "sourcemaps_chrome.css";
+const ORIGINAL_NAME = "sourcemaps.scss";
 
 /**
- * Test that a sourcemap served by a chrome URL will not be resolved
+ * Test that a sourcemap served by a chrome URL for a http document will not be resolved.
  */
 add_task(async function() {
   const { ui } = await openStyleEditorForURL(TEST_URI);
-  const editor = ui.editors[0];
-
-  // The CSS file contains a link to a sourcemap called which should map this
-  // CSS file to "sourcemaps.scss". If the CSS is still listed as CSS_NAME, it
-  // means the sourcemapped file was not resolved.
-  is(getStylesheetNameFor(editor), CSS_NAME, "The sourcemap was not resolved");
+  ok(
+    findStylesheetByName(ui, GENERATED_NAME),
+    "Sourcemap not resolved: generated source is listed"
+  );
+  ok(
+    !findStylesheetByName(ui, ORIGINAL_NAME),
+    "Sourcemap not resolved: original source is not listed"
+  );
 });
 
-function getStylesheetNameFor(editor) {
-  return editor.summary
-    .querySelector(".stylesheet-name > label")
-    .getAttribute("value");
+/**
+ * Test that a sourcemap served by a chrome URL for a chrome document is resolved.
+ */
+add_task(async function() {
+  const { ui } = await openStyleEditorForURL(CHROME_TEST_URI);
+  ok(
+    findStylesheetByName(ui, ORIGINAL_NAME),
+    "Sourcemap resolved: original source is listed"
+  );
+  ok(
+    !findStylesheetByName(ui, GENERATED_NAME),
+    "Sourcemap resolved: generated source is not listed"
+  );
+});
+
+function findStylesheetByName(ui, name) {
+  return ui.editors.some(
+    editor =>
+      editor.summary
+        .querySelector(".stylesheet-name > label")
+        .getAttribute("value") === name
+  );
 }

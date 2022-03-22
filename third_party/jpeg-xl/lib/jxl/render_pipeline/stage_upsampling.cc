@@ -10,6 +10,7 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/simd_util-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -44,9 +45,14 @@ class UpsamplingStage : public RenderPipelineStage {
     static HWY_FULL(float) df;
     size_t shift = settings_.shift_x;
     size_t N = 1 << shift;
-    xextra = RoundUpTo(xextra, Lanes(df));
-    ssize_t x0 = -xextra;
-    ssize_t x1 = xsize + xextra;
+    const size_t xsize_v = RoundUpTo(xsize, Lanes(df));
+    for (ssize_t iy = -2; iy <= 2; iy++) {
+      msan::UnpoisonMemory(GetInputRow(input_rows, c_, iy) + xsize + 2,
+                           sizeof(float) * (xsize_v - xsize));
+    }
+    JXL_ASSERT(xextra == 0);
+    ssize_t x0 = 0;
+    ssize_t x1 = xsize;
     if (N == 2) {
       ProcessRowImpl<2>(input_rows, output_rows, x0, x1);
     }
@@ -56,12 +62,19 @@ class UpsamplingStage : public RenderPipelineStage {
     if (N == 8) {
       ProcessRowImpl<8>(input_rows, output_rows, x0, x1);
     }
+    for (size_t oy = 0; oy < N; oy++) {
+      float* dst_row = GetOutputRow(output_rows, c_, oy);
+      msan::PoisonMemory(dst_row + xsize * N,
+                         sizeof(float) * (xsize_v - xsize) * N);
+    }
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
     return c == c_ ? RenderPipelineChannelMode::kInOut
                    : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "Upsample"; }
 
  private:
   template <size_t N>
@@ -84,23 +97,17 @@ class UpsamplingStage : public RenderPipelineStage {
     JXL_ABORT("Invalid upsample");
   }
 
-  template <size_t N>
+  template <ssize_t N>
   void ProcessRowImpl(const RowInfo& input_rows, const RowInfo& output_rows,
-                      size_t xextra, size_t xsize) const {
+                      ssize_t x0, ssize_t x1) const {
     static HWY_FULL(float) df;
-    const size_t xsize_v = RoundUpTo(xsize, Lanes(df));
-    for (ssize_t iy = -2; iy <= 2; iy++) {
-      msan::UnpoisonMemory(GetInputRow(input_rows, c_, iy) + xsize + 2,
-                           sizeof(float) * (xsize_v - xsize));
-    }
     for (size_t oy = 0; oy < N; oy++) {
       float* dst_row = GetOutputRow(output_rows, c_, oy);
-      for (ssize_t x = -xextra; x < static_cast<ssize_t>(xsize + xextra);
-           x += Lanes(df)) {
+      for (ssize_t x = x0; x < x1; x += Lanes(df)) {
         hwy::HWY_NAMESPACE::Vec<HWY_FULL(float)> ups[8];
         for (size_t ox = 0; ox < N; ox++) {
           auto result = Zero(df);
-          auto min = Load(df, GetInputRow(input_rows, c_, 0) + x);
+          auto min = LoadU(df, GetInputRow(input_rows, c_, 0) + x);
           auto max = min;
           for (ssize_t iy = -2; iy <= 2; iy++) {
             for (ssize_t ix = -2; ix <= 2; ix++) {
@@ -124,8 +131,6 @@ class UpsamplingStage : public RenderPipelineStage {
                            ups[6], ups[7], dst_row + x * N);
         }
       }
-      msan::PoisonMemory(dst_row + xsize * N,
-                         sizeof(float) * (xsize_v - xsize) * N);
     }
   }
 

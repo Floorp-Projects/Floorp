@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1756831
+-->
+<head>
+  <title>Test for Bug 1756831</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+
+<style>
+.scroller {
+  height: 300px;
+  width: 300px;
+  overflow: hidden;
+  border: 1px solid grey;
+}
+
+.long-content {
+  height: 300vh;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+</style>
+<div id="sc" class="scroller">
+  
+  <div class="long-content">
+    <div style="width: 30px; height: 30px; background: blue;"></div>
+    <div class="modal"></div>
+  </div>
+  
+</div>
+
+
+<script>
+SimpleTest.requestFlakyTimeout("need to wait for overlay scrollbars to fade out");
+SimpleTest.waitForExplicitFinish();
+// Test that mousing over content descendants that are not scrollable does not
+// scroll the overlay scrollbars.
+
+/* We are testing overlay scrollbars here, specifically those that display when
+   the mouse is moved over scrollable content. The first two prefs are for
+   that. We set the prefs that determine the duration of the scrollbar fade out
+   so they are uniform for us. It would be nice if we could set a very short
+   duration so we didn't have to wait, or a very long duration so as to prevent
+   the possibility of the scrollbars disappearing before we take a screenshot
+   to compare against, however neither of those are workable. If the duration
+   is too short we risk the scrollbars disappearing before we can screenshot
+   them. If the duration is too long the test takes a long time. We can't
+   change the duration prefs part way through the test because the prefs are
+   only read when the a scroll frame is created or when a scroll frame is
+   reflowed and we've switched to/from overlay scrollbars. Both of these would
+   cause the scrollbars to be shown again which would interrupt the test.
+*/
+
+add_task(async function() {
+  await SimpleTest.promiseFocus(window);
+  await SpecialPowers.pushPrefEnv({"set": [["ui.useOverlayScrollbars", 1],
+                                     ["ui.scrollbarDisplayOnMouseMove", 1],
+                                     ["ui.scrollbarFadeDuration", 500],
+                                     ["ui.scrollbarFadeBeginDelay", 500]]});
+  let utils = SpecialPowers.DOMWindowUtils;
+
+  let sc = document.getElementById("sc");
+  let boundingClientRect = sc.getBoundingClientRect();
+
+  // The div is initially overflow hidden, so it doesn't have scrollbars,
+  // capture that so we can compare against it later.
+  let noscrollbars = document.createElement("canvas");
+  noscrollbars.setAttribute("width", boundingClientRect.width);
+  noscrollbars.setAttribute("height", boundingClientRect.height);
+  let ctx = noscrollbars.getContext("2d");
+  SpecialPowers.wrap(ctx).drawWindow(window, boundingClientRect.x, boundingClientRect.y,
+                 boundingClientRect.width,
+                 boundingClientRect.height,
+                 "rgb(255,255,255)");
+
+  // dump("noscrollbars " + noscrollbars.toDataURL() + "\n");
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  // make div scrollable
+  sc.style.overflow = "auto";
+
+  // and make sure it's reconstructed so the prefs get applied
+  document.documentElement.style.display = "table";
+  document.documentElement.getBoundingClientRect();
+  document.documentElement.style.display = "";
+  document.documentElement.getBoundingClientRect();
+
+
+  const maxRetries = 5;
+  let retries = 0;
+  let canvasesSame = false;
+  while (!canvasesSame && retries < maxRetries) {
+    // wait for the scrollbars to fade away, 500+500 from prefs, then a bit more.
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    let canvas = document.createElement("canvas");
+    canvas.setAttribute("width", boundingClientRect.width);
+    canvas.setAttribute("height", boundingClientRect.height);
+    // take screen shot
+    ctx = canvas.getContext("2d");
+    SpecialPowers.wrap(ctx).drawWindow(window, boundingClientRect.x, boundingClientRect.y,
+                   boundingClientRect.width,
+                   boundingClientRect.height,
+                   "rgb(255,255,255)");
+    canvasesSame = (utils.compareCanvases(noscrollbars, canvas, {}) == 0);
+    retries++;
+    // dump("differences " + utils.compareCanvases(noscrollbars, canvas, {}));
+    // dump("canvas " + canvas.toDataURL() + "\n");
+  }
+
+  ok(canvasesSame, "scrollbars disappeared: canvasesSame " + canvasesSame + " retries " + retries)
+
+  // send mouse move that should not show scrollbar
+  await synthesizeMouseAtCenter(document.documentElement, { type: "mousemove" });
+  await new Promise(r => requestAnimationFrame(r));
+
+  let canvas = document.createElement("canvas");
+  canvas.setAttribute("width", boundingClientRect.width);
+  canvas.setAttribute("height", boundingClientRect.height);
+  ctx = canvas.getContext("2d");
+  SpecialPowers.wrap(ctx).drawWindow(window, boundingClientRect.x, boundingClientRect.y,
+                 boundingClientRect.width,
+                 boundingClientRect.height,
+                 "rgb(255,255,255)");
+
+  let differences = utils.compareCanvases(noscrollbars, canvas, {});
+  // dump("canvas " + canvas.toDataURL() + "\n");
+
+  ok(differences == 0, "differences " + differences);
+});
+</script>
+</body>
+</html>

@@ -41,6 +41,19 @@ class Xorshift128Plus {
     }
   }
 
+  HWY_MAYBE_UNUSED Xorshift128Plus(const uint32_t seed1, const uint32_t seed2,
+                                   const uint32_t seed3, const uint32_t seed4) {
+    // Init state using SplitMix64 generator
+    s0_[0] = SplitMix64(((static_cast<uint64_t>(seed1) << 32) + seed2) +
+                        0x9E3779B97F4A7C15ull);
+    s1_[0] = SplitMix64(((static_cast<uint64_t>(seed3) << 32) + seed4) +
+                        0x9E3779B97F4A7C15ull);
+    for (size_t i = 1; i < N; ++i) {
+      s0_[i] = SplitMix64(s0_[i - 1]);
+      s1_[i] = SplitMix64(s1_[i - 1]);
+    }
+  }
+
   HWY_INLINE HWY_MAYBE_UNUSED void Fill(uint64_t* HWY_RESTRICT random_bits) {
 #if HWY_CAP_INTEGER64
     const HWY_FULL(uint64_t) d;
