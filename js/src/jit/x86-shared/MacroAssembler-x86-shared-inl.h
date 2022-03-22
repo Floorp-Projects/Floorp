@@ -1872,6 +1872,11 @@ void MacroAssembler::q15MulrSatInt16x8(FloatRegister lhs, FloatRegister rhs,
   vpxor(scratch, dest, dest);
 }
 
+void MacroAssembler::q15MulrInt16x8Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpmulhrsw(Operand(rhs), lhs, dest);
+}
+
 // Integer negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {
