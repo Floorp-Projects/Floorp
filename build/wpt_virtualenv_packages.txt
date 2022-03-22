@@ -1,0 +1,2 @@
+pypi:tox==3.12.1
+pypi:ujson==4.0.2

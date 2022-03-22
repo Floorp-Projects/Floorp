@@ -540,12 +540,10 @@ def run_wpt(command_context, **params):
     category="testing",
     description="Update web-platform-test metadata.",
     parser=create_parser_update,
+    virtualenv_name="wpt",
 )
 def update_web_platform_tests(command_context, **params):
     setup(command_context)
-    command_context.virtualenv_manager.install_pip_package("html5lib==1.0.1")
-    command_context.virtualenv_manager.install_pip_package("ujson")
-    command_context.virtualenv_manager.install_pip_package("requests")
 
     wpt_updater = command_context._spawn(WebPlatformTestsUpdater)
     logger = wpt_updater.setup_logging(**params)
@@ -623,10 +621,10 @@ def wpt_meta_merge(command_context, **params):
     category="testing",
     description="Run the wpt tools and wptrunner unit tests",
     parser=create_parser_unittest,
+    virtualenv_name="wpt",
 )
 def wpt_unittest(command_context, **params):
     setup(command_context)
-    command_context.virtualenv_manager.install_pip_package("tox")
     runner = command_context._spawn(WebPlatformTestsUnittestRunner)
     return 0 if runner.run(**params) else 1
 
