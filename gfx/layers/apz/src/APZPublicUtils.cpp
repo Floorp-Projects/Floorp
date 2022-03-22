@@ -87,6 +87,25 @@ ScrollAnimationBezierPhysicsSettings ComputeBezierAnimationSettingsForOrigin(
   return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }
 
+ScrollMode GetScrollModeForOrigin(ScrollOrigin origin) {
+  if (!StaticPrefs::general_smoothScroll()) return ScrollMode::Instant;
+  switch (origin) {
+    case ScrollOrigin::Lines:
+      return StaticPrefs::general_smoothScroll_lines() ? ScrollMode::Smooth
+                                                       : ScrollMode::Instant;
+    case ScrollOrigin::Pages:
+      return StaticPrefs::general_smoothScroll_pages() ? ScrollMode::Smooth
+                                                       : ScrollMode::Instant;
+    case ScrollOrigin::Other:
+      return StaticPrefs::general_smoothScroll_other() ? ScrollMode::Smooth
+                                                       : ScrollMode::Instant;
+    default:
+      MOZ_ASSERT(false, "Unknown keyboard scroll origin");
+      return StaticPrefs::general_smoothScroll() ? ScrollMode::Smooth
+                                                 : ScrollMode::Instant;
+  }
+}
+
 }  // namespace apz
 }  // namespace layers
 }  // namespace mozilla
