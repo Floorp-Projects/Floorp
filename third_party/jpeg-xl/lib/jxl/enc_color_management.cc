@@ -18,7 +18,6 @@
 #include <array>
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <utility>
 
@@ -306,14 +305,6 @@ int DoColorSpaceTransform(void* t, size_t thread, const float* buf_src,
 
 // Define to 1 on OS X as a workaround for older LCMS lacking MD5.
 #define JXL_CMS_OLD_VERSION 0
-
-// cms functions (even *THR) are not thread-safe, except cmsDoTransform.
-// To ensure all functions are covered without frequent lock-taking nor risk of
-// recursive lock, we lock in the top-level APIs.
-static std::mutex& LcmsMutex() {
-  static std::mutex m;
-  return m;
-}
 
 #if JPEGXL_ENABLE_SKCMS
 
@@ -816,9 +807,6 @@ Status ApplyHlgOotf(JxlCms* t, float* JXL_RESTRICT buf, size_t xsize,
 
 }  // namespace
 
-// All functions that call lcms directly (except ColorSpaceTransform::Run) must
-// lock LcmsMutex().
-
 Status ColorEncoding::SetFieldsFromICC() {
   // In case parsing fails, mark the ColorEncoding as invalid.
   SetColorSpace(ColorSpace::kUnknown);
@@ -858,7 +846,6 @@ Status ColorEncoding::SetFieldsFromICC() {
   rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 #else  // JPEGXL_ENABLE_SKCMS
 
-  std::lock_guard<std::mutex> guard(LcmsMutex());
   const cmsContext context = GetContext();
 
   Profile profile;
@@ -920,7 +907,6 @@ void JxlCmsDestroy(void* cms_data) {
   if (cms_data == nullptr) return;
   JxlCms* t = reinterpret_cast<JxlCms*>(cms_data);
 #if !JPEGXL_ENABLE_SKCMS
-  std::lock_guard<std::mutex> guard(LcmsMutex());
   TransformDeleter()(t->lcms_transform);
 #endif
   delete t;
@@ -957,7 +943,6 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
     return nullptr;
   }
 #else   // JPEGXL_ENABLE_SKCMS
-  std::lock_guard<std::mutex> guard(LcmsMutex());
   const cmsContext context = GetContext();
   Profile profile_src, profile_dst;
   if (!DecodeProfile(context, c_src.ICC(), &profile_src)) {

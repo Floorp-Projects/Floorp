@@ -104,9 +104,10 @@ void BitWriter::AppendByteAligned(const std::vector<BitWriter>& others) {
   size_t pos = BitsWritten() / kBitsPerByte;
   for (const BitWriter& writer : others) {
     const Span<const uint8_t> span = writer.GetSpan();
-    if (span.size() != 0)
+    if (!span.empty()) {
       memcpy(storage_.data() + pos, span.data(), span.size());
-    pos += span.size();
+      pos += span.size();
+    }
   }
   storage_[pos++] = 0;  // for next Write
   JXL_ASSERT(pos <= storage_.size());

@@ -12,6 +12,7 @@ import {
   isThirdParty,
   isJavaScript,
   isDescendantOfRoot,
+  removeThreadActorId,
   isUrlExtension,
   isExtensionDirectoryPath,
   getLineText,
@@ -505,25 +506,30 @@ describe("sources", () => {
       const source = makeMockSource(
         "resource://activity-stream/vendor/react.js"
       );
-      expect(
-        isDescendantOfRoot(source, "resource://activity-stream", threads)
-      ).toBe(true);
+      const rootWithoutThreadActor = removeThreadActorId(
+        "resource://activity-stream",
+        threads
+      );
+      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
     });
 
     it("should detect source urls under chrome:// as root", () => {
       const source = makeMockSource(
         "chrome://browser/content/contentSearchUI.js"
       );
-      expect(isDescendantOfRoot(source, "chrome://", threads)).toBe(true);
+      const rootWithoutThreadActor = removeThreadActorId("chrome://", threads);
+      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
     });
 
     it("should detect source urls if root is a thread actor Id", () => {
       const source = makeMockSource(
         "resource://activity-stream/vendor/react-dom.js"
       );
-      expect(
-        isDescendantOfRoot(source, "server0.conn1.child1/thread19", threads)
-      ).toBe(true);
+      const rootWithoutThreadActor = removeThreadActorId(
+        "server0.conn1.child1/thread19",
+        threads
+      );
+      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
     });
   });
 

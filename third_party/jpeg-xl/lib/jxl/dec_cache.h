@@ -17,15 +17,17 @@
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/dec_group_border.h"
 #include "lib/jxl/dec_noise.h"
-#include "lib/jxl/dec_upsample.h"
-#include "lib/jxl/filters.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/render_pipeline/render_pipeline.h"
+#include "lib/jxl/render_pipeline/stage_upsampling.h"
 #include "lib/jxl/sanitizers.h"
 
 namespace jxl {
+
+constexpr size_t kSigmaBorder = 1;
+constexpr size_t kSigmaPadding = 2;
 
 // Per-frame decoder state. All the images here should be accessed through a
 // group rect (either with block units or pixel units).
@@ -34,17 +36,8 @@ struct PassesDecoderState {
   // Allows avoiding copies for encoder loop.
   const PassesSharedState* JXL_RESTRICT shared = &shared_storage;
 
-  // Upsamplers for all the possible upsampling factors (2 to 8).
-  Upsampler upsamplers[3];
-
-  // Storage for RNG output for noise synthesis.
-  Image3F noise;
-
-  // Storage for pre-color-transform output for displayed
-  // save_before_color_transform frames.
-  Image3F pre_color_transform_frame;
-  // Non-empty (contains originals) if extra-channels were cropped.
-  std::vector<ImageF> pre_color_transform_ec;
+  // 8x upsampling stage for DC.
+  std::unique_ptr<RenderPipelineStage> upsampler8x;
 
   // For ANS decoding.
   std::vector<ANSCode> code;
@@ -54,17 +47,8 @@ struct PassesDecoderState {
   float x_dm_multiplier;
   float b_dm_multiplier;
 
-  // Decoded image.
-  Image3F decoded;
-  std::vector<ImageF> extra_channels;
-
-  // Borders between groups. Only allocated if `decoded` is *not* allocated.
-  // We also store the extremal borders for simplicity. Horizontal borders are
-  // stored in an image as wide as the main frame, in top-to-bottom order (top
-  // border of a group first, followed by the bottom border, followed by top
-  // border of the next group). Vertical borders are similarly stored.
-  Image3F borders_horizontal;
-  Image3F borders_vertical;
+  // Sigma values for EPF.
+  ImageF sigma;
 
   // RGB8 output buffer. If not nullptr, image data will be written to this
   // buffer instead of being written to the output ImageBundle. The image data
@@ -87,8 +71,9 @@ struct PassesDecoderState {
   // One row per thread
   std::vector<std::vector<float>> pixel_callback_rows;
 
-  // Seed for noise, to have different noise per-frame.
-  size_t noise_seed = 0;
+  // Used for seeding noise.
+  size_t visible_frame_index = 0;
+  size_t nonvisible_frame_index = 0;
 
   // Keep track of the transform types used.
   std::atomic<uint32_t> used_acs{0};
@@ -96,166 +81,19 @@ struct PassesDecoderState {
   // Storage for coefficients if in "accumulate" mode.
   std::unique_ptr<ACImage> coefficients = make_unique<ACImageT<int32_t>>(0, 0);
 
-  // Filter application pipeline used by ApplyImageFeatures. One entry is needed
-  // per thread.
-  std::vector<FilterPipeline> filter_pipelines;
-
-  // Input weights used by the filters. These are shared from multiple threads
-  // but are read-only for the filter application.
-  FilterWeights filter_weights;
-
-  // Manages the status of borders.
-  GroupBorderAssigner group_border_assigner;
-
-  // Rendering pipeline. TODO(veluca): eventually, this pipeline will replace
-  // most of the state in this struct.
+  // Rendering pipeline.
   std::unique_ptr<RenderPipeline> render_pipeline;
 
   // Storage for the current frame if it can be referenced by future frames.
   ImageBundle frame_storage_for_referencing;
 
-  // TODO(veluca): this should eventually become "iff no global modular
-  // transform was applied".
-  bool EagerFinalizeImageRect() const {
-    return shared->frame_header.encoding == FrameEncoding::kVarDCT &&
-           shared->frame_header.nonserialized_metadata->m.extra_channel_info
-               .empty();
-  }
+  struct PipelineOptions {
+    bool use_slow_render_pipeline;
+    bool coalescing;
+    bool render_spotcolors;
+  };
 
-  // Amount of padding that will be accessed, in all directions, outside a rect
-  // during a call to FinalizeImageRect().
-  size_t FinalizeRectPadding() const {
-    size_t padding = shared->frame_header.loop_filter.Padding();
-    padding += shared->frame_header.upsampling == 1 ? 0 : 2;
-    JXL_DASSERT(padding <= kMaxFinalizeRectPadding);
-    for (auto ups : shared->frame_header.extra_channel_upsampling) {
-      if (ups > 1) {
-        padding = std::max(padding, size_t{2});
-      }
-    }
-    // We could be making a distinction between h and w padding here, but it is
-    // likely not worth it.
-    if (!shared->frame_header.chroma_subsampling.Is444()) {
-      padding = std::max(padding / 2 + 1, padding);
-    }
-    return padding;
-  }
-
-  // Storage for intermediate data during FinalizeRect steps.
-  // TODO(veluca): these buffers are larger than strictly necessary.
-  std::vector<Image3F> filter_input_storage;
-  std::vector<Image3F> padded_upsampling_input_storage;
-  std::vector<Image3F> upsampling_input_storage;
-  size_t upsampler_arena_size = 0;
-  std::vector<hwy::AlignedFreeUniquePtr<float[]>> upsampler_storage;
-  // We keep four arrays, one per upsampling level, to reduce memory usage in
-  // the common case of no upsampling.
-  std::vector<Image3F> output_pixel_data_storage[4] = {};
-  std::vector<ImageF> ec_temp_images;
-  std::vector<ImageF> ycbcr_temp_images;
-  std::vector<Image3F> ycbcr_out_images;
-
-  // Buffer for decoded pixel data for a group.
-  std::vector<Image3F> group_data;
-  static constexpr size_t kGroupDataYBorder = kMaxFinalizeRectPadding * 2;
-  static constexpr size_t kGroupDataXBorder =
-      RoundUpToBlockDim(kMaxFinalizeRectPadding) * 2 + kBlockDim;
-
-  void EnsureStorage(size_t num_threads) {
-    // We need one filter_storage per thread, ensure we have at least that many.
-    if (shared->frame_header.loop_filter.epf_iters != 0 ||
-        shared->frame_header.loop_filter.gab) {
-      if (filter_pipelines.size() < num_threads) {
-        filter_pipelines.resize(num_threads);
-      }
-    }
-    // We allocate filter_input_storage unconditionally to ensure that the image
-    // is allocated if we need it for DC upsampling.
-    for (size_t _ = filter_input_storage.size(); _ < num_threads; _++) {
-      // Extra padding along the x dimension to ensure memory accesses don't
-      // load out-of-bounds pixels.
-      filter_input_storage.emplace_back(
-          kApplyImageFeaturesTileDim + 2 * kGroupDataXBorder,
-          kApplyImageFeaturesTileDim + 2 * kGroupDataYBorder);
-    }
-    if (shared->frame_header.upsampling != 1) {
-      for (size_t _ = upsampling_input_storage.size(); _ < num_threads; _++) {
-        // At this point, we only need up to 2 pixels of border per side for
-        // upsampling, but we add an extra border for aligned access.
-        upsampling_input_storage.emplace_back(
-            kApplyImageFeaturesTileDim + 2 * kBlockDim,
-            kApplyImageFeaturesTileDim + 4);
-        padded_upsampling_input_storage.emplace_back(
-            kApplyImageFeaturesTileDim + 2 * kBlockDim,
-            kApplyImageFeaturesTileDim + 4);
-      }
-    }
-    const size_t arena_size = Upsampler::GetArenaSize(
-        kApplyImageFeaturesTileDim * shared->frame_header.upsampling);
-    if (arena_size > upsampler_arena_size) upsampler_storage.clear();
-    for (size_t _ = upsampler_storage.size(); _ < num_threads; _++) {
-      upsampler_storage.emplace_back(hwy::AllocateAligned<float>(arena_size));
-    }
-    upsampler_arena_size = arena_size;
-    for (size_t _ = group_data.size(); _ < num_threads; _++) {
-      group_data.emplace_back(kGroupDim + 2 * kGroupDataXBorder,
-                              kGroupDim + 2 * kGroupDataYBorder);
-#if MEMORY_SANITIZER
-      // Avoid errors due to loading vectors on the outermost padding.
-      FillImage(msan::kSanitizerSentinel, &group_data.back());
-#endif
-    }
-    if (!shared->frame_header.chroma_subsampling.Is444()) {
-      for (size_t _ = ycbcr_temp_images.size(); _ < num_threads; _++) {
-        ycbcr_temp_images.emplace_back(kGroupDim + 2 * kGroupDataXBorder,
-                                       kGroupDim + 2 * kGroupDataYBorder);
-        ycbcr_out_images.emplace_back(kGroupDim + 2 * kGroupDataXBorder,
-                                      kGroupDim + 2 * kGroupDataYBorder);
-      }
-    }
-    if (rgb_output || pixel_callback) {
-      size_t log2_upsampling = CeilLog2Nonzero(shared->frame_header.upsampling);
-      for (size_t _ = output_pixel_data_storage[log2_upsampling].size();
-           _ < num_threads; _++) {
-        output_pixel_data_storage[log2_upsampling].emplace_back(
-            kApplyImageFeaturesTileDim << log2_upsampling,
-            kApplyImageFeaturesTileDim << log2_upsampling);
-      }
-      opaque_alpha.resize(
-          kApplyImageFeaturesTileDim * shared->frame_header.upsampling, 1.0f);
-      if (pixel_callback) {
-        pixel_callback_rows.resize(num_threads);
-        for (size_t i = 0; i < pixel_callback_rows.size(); ++i) {
-          pixel_callback_rows[i].resize(kApplyImageFeaturesTileDim *
-                                        shared->frame_header.upsampling *
-                                        (rgb_output_is_rgba ? 4 : 3));
-        }
-      }
-    }
-    if (shared->metadata->m.num_extra_channels * num_threads >
-        ec_temp_images.size()) {
-      ec_temp_images.resize(shared->metadata->m.num_extra_channels *
-                            num_threads);
-    }
-    for (size_t i = 0; i < shared->metadata->m.num_extra_channels; i++) {
-      if (shared->frame_header.extra_channel_upsampling[i] == 1) continue;
-      // We need up to 2 pixels of padding on each side. On the x axis, we round
-      // up padding so that 0 starts at a multiple of kBlockDim.
-      size_t xs = kApplyImageFeaturesTileDim * shared->frame_header.upsampling /
-                      shared->frame_header.extra_channel_upsampling[i] +
-                  2 * kBlockDim;
-      size_t ys = kApplyImageFeaturesTileDim * shared->frame_header.upsampling /
-                      shared->frame_header.extra_channel_upsampling[i] +
-                  4;
-      for (size_t t = 0; t < num_threads; t++) {
-        auto& eti =
-            ec_temp_images[t * shared->metadata->m.num_extra_channels + i];
-        if (eti.xsize() < xs || eti.ysize() < ys) {
-          eti = ImageF(xs, ys);
-        }
-      }
-    }
-  }
+  Status PreparePipeline(ImageBundle* decoded, PipelineOptions options);
 
   // Information for colour conversions.
   OutputEncodingInfo output_encoding_info;
@@ -273,15 +111,10 @@ struct PassesDecoderState {
     fast_xyb_srgb8_conversion = false;
     used_acs = 0;
 
-    group_border_assigner.Init(shared->frame_dim);
-    const LoopFilter& lf = shared->frame_header.loop_filter;
-    JXL_RETURN_IF_ERROR(filter_weights.Init(lf, shared->frame_dim));
-    for (auto& fp : filter_pipelines) {
-      // De-initialize FilterPipelines.
-      fp.num_filters = 0;
-    }
-    for (size_t i = 0; i < 3; i++) {
-      upsamplers[i].Init(2 << i, shared->metadata->transform_data);
+    upsampler8x = GetUpsamplingStage(shared->metadata->transform_data, 0, 3);
+    if (shared->frame_header.loop_filter.epf_iters > 0) {
+      sigma = ImageF(shared->frame_dim.xsize_blocks + 2 * kSigmaPadding,
+                     shared->frame_dim.ysize_blocks + 2 * kSigmaPadding);
     }
     return true;
   }
@@ -301,58 +134,13 @@ struct PassesDecoderState {
     if (sz > shared_storage.coeff_orders.size()) {
       shared_storage.coeff_orders.resize(sz);
     }
-    if (shared->frame_header.flags & FrameHeader::kNoise && !render_pipeline) {
-      noise = Image3F(shared->frame_dim.xsize_upsampled_padded,
-                      shared->frame_dim.ysize_upsampled_padded);
-      size_t num_x_groups = DivCeil(noise.xsize(), kGroupDim);
-      size_t num_y_groups = DivCeil(noise.ysize(), kGroupDim);
-      PROFILER_ZONE("GenerateNoise");
-      auto generate_noise = [&](const uint32_t group_index,
-                                size_t /* thread */) {
-        size_t gx = group_index % num_x_groups;
-        size_t gy = group_index / num_x_groups;
-        Rect rect(gx * kGroupDim, gy * kGroupDim, kGroupDim, kGroupDim,
-                  noise.xsize(), noise.ysize());
-        RandomImage3(noise_seed + group_index, rect, &noise);
-      };
-      JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, num_x_groups * num_y_groups,
-                                    ThreadPool::NoInit, generate_noise,
-                                    "Generate noise"));
-      {
-        PROFILER_ZONE("High pass noise");
-        // 4 * (1 - box kernel)
-        WeightsSymmetric5 weights{{HWY_REP4(-3.84)}, {HWY_REP4(0.16)},
-                                  {HWY_REP4(0.16)},  {HWY_REP4(0.16)},
-                                  {HWY_REP4(0.16)},  {HWY_REP4(0.16)}};
-        // TODO(veluca): avoid copy.
-        // TODO(veluca): avoid having a full copy of the image in main memory.
-        ImageF noise_tmp(noise.xsize(), noise.ysize());
-        for (size_t c = 0; c < 3; c++) {
-          Symmetric5(noise.Plane(c), Rect(noise), weights, pool, &noise_tmp);
-          std::swap(noise.Plane(c), noise_tmp);
-        }
-        noise_seed += shared->frame_dim.num_groups;
-      }
-    }
-    EnsureBordersStorage();
-    if (!EagerFinalizeImageRect()) {
-      // decoded must be padded to a multiple of kBlockDim rows since the last
-      // rows may be used by the filters even if they are outside the frame
-      // dimension.
-      decoded = Image3F(shared->frame_dim.xsize_padded,
-                        shared->frame_dim.ysize_padded);
-    }
-#if MEMORY_SANITIZER
-    // Avoid errors due to loading vectors on the outermost padding.
-    FillImage(msan::kSanitizerSentinel, &decoded);
-#endif
     return true;
   }
 
-  void EnsureBordersStorage();
-
-  Status FinalizeGroup(size_t group_idx, size_t thread, Image3F* pixel_data,
-                       ImageBundle* output);
+  // Fills the `state->filter_weights.sigma` image with the precomputed sigma
+  // values in the area inside `block_rect`. Accesses the AC strategy, quant
+  // field and epf_sharpness fields in the corresponding positions.
+  void ComputeSigma(const Rect& block_rect, PassesDecoderState* state);
 };
 
 // Temp images required for decoding a single group. Reduces memory allocations
@@ -396,6 +184,13 @@ struct GroupDecCache {
     dec_group_qblock16 = int16_memory_.get();
   }
 
+  void InitDCBufferOnce() {
+    if (dc_buffer.xsize() == 0) {
+      dc_buffer = ImageF(kGroupDimInBlocks + kRenderPipelineXOffset * 2,
+                         kGroupDimInBlocks + 4);
+    }
+  }
+
   // Scratch space used by DecGroupImpl().
   float* dec_group_block;
   int32_t* dec_group_qblock;
@@ -409,6 +204,9 @@ struct GroupDecCache {
 
   // AC decoding
   Image3I num_nzeroes[kMaxNumPasses];
+
+  // Buffer for DC upsampling.
+  ImageF dc_buffer;
 
  private:
   hwy::AlignedFreeUniquePtr<float[]> float_memory_;

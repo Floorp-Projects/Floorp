@@ -10731,11 +10731,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
   JSOp op = JSOp::Call;
   bool maybeAsyncArrow = false;
   if (auto prop = handler_.maybeDottedProperty(lhs)) {
-    // Use the JSOp::Fun{Apply,Call} optimizations given the right
-    // syntax.
-    if (prop == TaggedParserAtomIndex::WellKnown::apply()) {
-      op = JSOp::FunApply;
-    } else if (prop == TaggedParserAtomIndex::WellKnown::call()) {
+    // Use the JSOp::FunCall optimizations given the right syntax.
+    if (prop == TaggedParserAtomIndex::WellKnown::call()) {
       op = JSOp::FunCall;
     }
   } else if (tt == TokenKind::LeftParen &&

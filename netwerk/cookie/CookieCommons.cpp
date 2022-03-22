@@ -26,8 +26,6 @@
 #include "nsScriptSecurityManager.h"
 #include "ThirdPartyUtil.h"
 
-constexpr auto CONSOLE_SCHEMEFUL_CATEGORY = "cookieSchemeful"_ns;
-
 namespace mozilla {
 
 using dom::Document;
@@ -611,68 +609,6 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
     }
   }
   return isForeign;
-}
-
-namespace {
-
-bool MaybeCompareSchemeInternal(Cookie* aCookie,
-                                nsICookie::schemeType aSchemeType) {
-  MOZ_ASSERT(aCookie);
-
-  // This is an old cookie without a scheme yet. Let's consider it valid.
-  if (aCookie->SchemeMap() == nsICookie::SCHEME_UNSET) {
-    return true;
-  }
-
-  return !!(aCookie->SchemeMap() & aSchemeType);
-}
-
-}  // namespace
-
-// static
-bool CookieCommons::MaybeCompareSchemeWithLogging(
-    nsIConsoleReportCollector* aCRC, nsIURI* aHostURI, Cookie* aCookie,
-    nsICookie::schemeType aSchemeType) {
-  MOZ_ASSERT(aCookie);
-  MOZ_ASSERT(aHostURI);
-
-  if (MaybeCompareSchemeInternal(aCookie, aSchemeType)) {
-    return true;
-  }
-
-  nsAutoCString uri;
-  nsresult rv = aHostURI->GetSpec(uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return !StaticPrefs::network_cookie_sameSite_schemeful();
-  }
-
-  if (!StaticPrefs::network_cookie_sameSite_schemeful()) {
-    CookieLogging::LogMessageToConsole(
-        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_SCHEMEFUL_CATEGORY,
-        "CookieSchemefulRejectForBeta"_ns,
-        AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookie->Name()),
-                                NS_ConvertUTF8toUTF16(uri)});
-    return true;
-  }
-
-  CookieLogging::LogMessageToConsole(
-      aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_SCHEMEFUL_CATEGORY,
-      "CookieSchemefulReject"_ns,
-      AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookie->Name()),
-                              NS_ConvertUTF8toUTF16(uri)});
-  return false;
-}
-
-// static
-bool CookieCommons::MaybeCompareScheme(Cookie* aCookie,
-                                       nsICookie::schemeType aSchemeType) {
-  MOZ_ASSERT(aCookie);
-
-  if (!StaticPrefs::network_cookie_sameSite_schemeful()) {
-    return true;
-  }
-
-  return MaybeCompareSchemeInternal(aCookie, aSchemeType);
 }
 
 // static

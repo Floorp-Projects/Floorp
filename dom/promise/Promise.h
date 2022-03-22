@@ -34,9 +34,7 @@ namespace JS {
 class Value;
 }
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AnyCallback;
 class MediaStreamError;
@@ -264,11 +262,17 @@ class Promise : public SupportsWeakPtr {
       ResolveCallback&& aOnResolve, RejectCallback&& aOnReject,
       Args&&... aArgs);
 
-  // Same as ThenCatchWithCycleCollectedArgs, except the rejection value will
+  // Same as ThenCatchWithCycleCollectedArgs, except the rejection error will
   // simply be propagated.
   template <typename Callback, typename... Args>
   ThenResult<Callback, Args...> ThenWithCycleCollectedArgs(
       Callback&& aOnResolve, Args&&... aArgs);
+
+  // Same as ThenCatchWithCycleCollectedArgs, except the resolved value will
+  // simply be propagated.
+  template <typename Callback, typename... Args>
+  ThenResult<Callback, Args...> CatchWithCycleCollectedArgs(
+      Callback&& aOnReject, Args&&... aArgs);
 
   Result<RefPtr<Promise>, nsresult> ThenWithoutCycleCollection(
       const std::function<already_AddRefed<Promise>(
@@ -305,6 +309,11 @@ class Promise : public SupportsWeakPtr {
       nsIGlobalObject* aGlobal, ErrorResult& aRv);
 
  protected:
+  template <typename ResolveCallback, typename RejectCallback, typename... Args>
+  ThenResult<ResolveCallback, Args...> ThenCatchWithCycleCollectedArgsImpl(
+      Maybe<ResolveCallback>&& aOnResolve, Maybe<RejectCallback>&& aOnReject,
+      Args&&... aArgs);
+
   // Legacy method for throwing DOMExceptions.  Only used by media code at this
   // point, via DetailedPromise.  Do NOT add new uses!  When this is removed,
   // remove the friend declaration in ErrorResult.h.
@@ -362,8 +371,7 @@ class Promise : public SupportsWeakPtr {
   JS::Heap<JSObject*> mPromiseObj;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 extern "C" {
 // These functions are used in the implementation of ffi bindings for

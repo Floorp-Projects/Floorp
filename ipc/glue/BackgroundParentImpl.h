@@ -138,6 +138,9 @@ class BackgroundParentImpl : public PBackgroundParent,
   AllocPBackgroundSessionStorageManagerParent(
       const uint64_t& aTopContextId) override;
 
+  already_AddRefed<PBackgroundSessionStorageServiceParent>
+  AllocPBackgroundSessionStorageServiceParent() override;
+
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;
 
   already_AddRefed<PRemoteLazyInputStreamParent>

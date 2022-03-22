@@ -553,20 +553,18 @@ Status FwdPalette(Image &input, uint32_t begin_c, uint32_t end_c,
   uint32_t nb = end_c - begin_c + 1;
   uint32_t nb_colors_orig = nb_colors;
   uint32_t nb_deltas_orig = nb_deltas;
-  bool status;
-  if ((lossy || nb != 1) &&
-      input.bitdepth >= 8) {  // if no channel palette special case
-    status = FwdPaletteIteration(input, begin_c, end_c, nb_colors, nb_deltas,
-                                 ordered, lossy, predictor, wp_header,
-                                 palette_iteration_data);
+  // if no channel palette special case
+  if ((lossy || nb != 1) && input.bitdepth >= 8) {
+    JXL_RETURN_IF_ERROR(FwdPaletteIteration(
+        input, begin_c, end_c, nb_colors, nb_deltas, ordered, lossy, predictor,
+        wp_header, palette_iteration_data));
   }
   palette_iteration_data.final_run = true;
   nb_colors = nb_colors_orig;
   nb_deltas = nb_deltas_orig;
-  status =
-      FwdPaletteIteration(input, begin_c, end_c, nb_colors, nb_deltas, ordered,
-                          lossy, predictor, wp_header, palette_iteration_data);
-  return status;
+  return FwdPaletteIteration(input, begin_c, end_c, nb_colors, nb_deltas,
+                             ordered, lossy, predictor, wp_header,
+                             palette_iteration_data);
 }
 
 }  // namespace jxl

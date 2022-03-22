@@ -76,7 +76,7 @@ class CodecInOut {
   CodecInOut& operator=(CodecInOut&&) = default;
 
   size_t LastStillFrame() const {
-    JXL_DASSERT(frames.size() > 0);
+    JXL_DASSERT(!frames.empty());
     size_t last = 0;
     for (size_t i = 0; i < frames.size(); i++) {
       last = i;

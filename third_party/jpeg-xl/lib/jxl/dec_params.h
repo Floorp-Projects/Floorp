@@ -29,9 +29,6 @@ struct DecompressParams {
   // If true, coalesce frames (otherwise return unblended frames)
   bool coalescing = true;
 
-  // These cannot be kOn because they need encoder support.
-  Override preview = Override::kDefault;
-
   // How many passes to decode at most. By default, decode everything.
   uint32_t max_passes = std::numeric_limits<uint32_t>::max();
   // Alternatively, one can specify the maximum tolerable downscaling factor

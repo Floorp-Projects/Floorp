@@ -523,32 +523,40 @@ export function getRelativeUrl(source, root) {
 }
 
 /**
+ * source.url doesn't include thread actor ID, so before calling underRoot(), the thread actor ID
+ * must be removed from the root, which this function handles.
+ * @param {string} root The root url to be cleaned
+ * @param {Set<Thread>} threads The list of threads
+ * @returns {string} The root url with thread actor IDs removed
+ */
+export function removeThreadActorId(root, threads) {
+  threads.forEach(thread => {
+    if (root.includes(thread.actor)) {
+      root = root.slice(thread.actor.length + 1);
+    }
+  });
+  return root;
+}
+
+/**
  * Checks if the source is descendant of the root identified by the
  * root url specified. The root might likely be projectDirectoryRoot which
  * is a defined by a pref that allows users restrict the source tree to
  * a subset of sources.
  *
- * @params {Object} source
+ * @param {Object} source
  *                  The source object
- * @params {String} rootUrl
- *                  The url for the root node
- * @params {Array}  threads
- *                  A list of existing threads
+ * @param {String} rootUrlWithoutThreadActor
+ *                 The url for the root node, without the thread actor ID. This can be obtained
+ *                 by calling removeThreadActorId()
  */
-export function isDescendantOfRoot(source, rootUrl, threads) {
-  // source.url doesn't include thread actor ID, so remove the thread actor ID from the root
-  threads.forEach(thread => {
-    if (rootUrl.includes(thread.actor)) {
-      rootUrl = rootUrl.slice(thread.actor.length + 1);
-    }
-  });
-
+export function isDescendantOfRoot(source, rootUrlWithoutThreadActor) {
   if (source.url && source.url.includes("chrome://")) {
     const { group, path } = getURL(source);
-    return (group + path).includes(rootUrl);
+    return (group + path).includes(rootUrlWithoutThreadActor);
   }
 
-  return !!source.url && source.url.includes(rootUrl);
+  return !!source.url && source.url.includes(rootUrlWithoutThreadActor);
 }
 
 export function isGenerated(source) {

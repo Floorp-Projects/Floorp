@@ -114,8 +114,8 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
       }
       JXL_RETURN_IF_ERROR(extras::ConvertCodecInOutToPackedPixelFile(
           io, format, c_desired, pool, &ppf));
-      JXL_RETURN_IF_ERROR(
-          extras::EncodeImagePNM(ppf, bits_per_sample, pool, &bytes_vector));
+      JXL_RETURN_IF_ERROR(extras::EncodeImagePNM(
+          ppf, bits_per_sample, pool, /*frame_index=*/0, &bytes_vector));
       bytes->assign(bytes_vector.data(),
                     bytes_vector.data() + bytes_vector.size());
       return true;

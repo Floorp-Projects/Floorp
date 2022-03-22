@@ -53,6 +53,8 @@ class kYCbCrStage : public RenderPipelineStage {
     return c < 3 ? RenderPipelineChannelMode::kInPlace
                  : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "YCbCr"; }
 };
 
 std::unique_ptr<RenderPipelineStage> GetYCbCrStage() {

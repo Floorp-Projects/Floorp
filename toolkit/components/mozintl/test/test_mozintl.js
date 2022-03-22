@@ -9,6 +9,7 @@ function run_test() {
   test_constructors();
   test_rtf_formatBestUnit();
   test_datetimeformat();
+  test_getLanguageDirection();
 
   ok(true);
 }
@@ -165,4 +166,17 @@ function test_datetimeformat() {
   equal(formatted, "2020年12月8日");
 
   Services.prefs.clearUserPref("intl.date_time.pattern_override.date_long");
+}
+
+function test_getLanguageDirection() {
+  equal(Services.intl.getScriptDirection("ar"), "rtl");
+  equal(Services.intl.getScriptDirection("ar-EG"), "rtl");
+  equal(Services.intl.getScriptDirection("ckb"), "rtl");
+  equal(Services.intl.getScriptDirection("fa"), "rtl");
+  equal(Services.intl.getScriptDirection("he"), "rtl");
+  equal(Services.intl.getScriptDirection("ur"), "rtl");
+
+  equal(Services.intl.getScriptDirection("en"), "ltr");
+  equal(Services.intl.getScriptDirection("en-US"), "ltr");
+  equal(Services.intl.getScriptDirection("fr"), "ltr");
 }

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { getAddonAndLocalAPIsMocker } = ChromeUtils.import(
   "resource://testing-common/LangPackMatcherTestUtils.jsm"
 );
@@ -32,6 +33,7 @@ add_task(function test_appLocaleLanguageMismatch() {
     appLocaleRaw: "en-US",
     appLocale: { baseName: "en-US", language: "en", region: "US" },
     matchType: "language-mismatch",
+    canLiveReload: true,
     displayNames: {
       systemLanguage: "European Spanish",
       appLanguage: "American English",
@@ -53,6 +55,7 @@ add_task(function test_appLocaleRegionMismatch() {
     appLocaleRaw: "en-US",
     appLocale: { baseName: "en-US", language: "en", region: "US" },
     matchType: "region-mismatch",
+    canLiveReload: true,
     displayNames: {
       systemLanguage: "Canadian English",
       appLanguage: "American English",
@@ -75,6 +78,7 @@ add_task(function test_appLocaleScriptMismatch() {
     appLocaleRaw: "zh-CN",
     appLocale: { baseName: "zh-CN", language: "zh", region: "CN" },
     matchType: "match",
+    canLiveReload: true,
     displayNames: {
       systemLanguage: "简体中文（中国）",
       appLanguage: "中文（中国）",
@@ -97,8 +101,63 @@ add_task(function test_appLocaleInvalidSystem() {
     appLocaleRaw: "en-US",
     appLocale: { baseName: "en-US", language: "en", region: "US" },
     matchType: "unknown",
+    canLiveReload: null,
     displayNames: { systemLanguage: null, appLanguage: "American English" },
   });
+});
+
+add_task(function test_bidiSwitchDisabled() {
+  Services.prefs.setBoolPref(
+    "intl.multilingual.liveReloadBidirectional",
+    false
+  );
+  sandbox.restore();
+  // Script mismatch:
+  mockAddonAndLocaleAPIs({
+    sandbox,
+    systemLocale: "ar-EG",
+    appLocale: "en-US",
+  });
+
+  deepEqual(LangPackMatcher.getAppAndSystemLocaleInfo(), {
+    systemLocaleRaw: "ar-EG",
+    systemLocale: { baseName: "ar-EG", language: "ar", region: "EG" },
+    appLocaleRaw: "en-US",
+    appLocale: { baseName: "en-US", language: "en", region: "US" },
+    matchType: "language-mismatch",
+    canLiveReload: false,
+    displayNames: {
+      systemLanguage: "Arabic (Egypt)",
+      appLanguage: "American English",
+    },
+  });
+  Services.prefs.clearUserPref("intl.multilingual.liveReloadBidirectional");
+});
+
+add_task(async function test_bidiSwitchEnabled() {
+  Services.prefs.setBoolPref("intl.multilingual.liveReloadBidirectional", true);
+  sandbox.restore();
+  // Script mismatch:
+  mockAddonAndLocaleAPIs({
+    sandbox,
+    systemLocale: "ar-EG",
+    appLocale: "en-US",
+  });
+
+  deepEqual(LangPackMatcher.getAppAndSystemLocaleInfo(), {
+    systemLocaleRaw: "ar-EG",
+    systemLocale: { baseName: "ar-EG", language: "ar", region: "EG" },
+    appLocaleRaw: "en-US",
+    appLocale: { baseName: "en-US", language: "en", region: "US" },
+    matchType: "language-mismatch",
+    canLiveReload: true,
+    displayNames: {
+      systemLanguage: "Arabic (Egypt)",
+      appLanguage: "American English",
+    },
+  });
+
+  Services.prefs.clearUserPref("intl.multilingual.liveReloadBidirectional");
 });
 
 function shuffle(array) {

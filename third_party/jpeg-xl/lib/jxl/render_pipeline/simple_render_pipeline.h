@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "lib/jxl/filters.h"
 #include "lib/jxl/render_pipeline/render_pipeline.h"
 
 namespace jxl {
@@ -22,9 +21,7 @@ class SimpleRenderPipeline : public RenderPipeline {
 
   void ProcessBuffers(size_t group_id, size_t thread_id) override;
 
-  void RunPipeline();
-
-  void PrepareForThreadsInternal(size_t num) override;
+  void PrepareForThreadsInternal(size_t num, bool use_group_ids) override;
 
   // Full frame buffers. Both X and Y dimensions are padded by
   // kRenderPipelineXOffset.
@@ -32,7 +29,7 @@ class SimpleRenderPipeline : public RenderPipeline {
   size_t processed_passes_ = 0;
 
  private:
-  Rect MakeChannelRect(size_t group_id, size_t channel, bool is_color);
+  Rect MakeChannelRect(size_t group_id, size_t channel);
 };
 
 }  // namespace jxl

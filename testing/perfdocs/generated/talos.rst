@@ -376,7 +376,7 @@ Talos test lists
 .. dropdown:: ARES6
    :container: + anchor-id-ARES6
 
-   * contact: :jandem
+   * contact: :jandem and SpiderMonkey Team
    * source: `ARES-6 <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/ARES-6>`__
    * type: `Page load`_
    * data: 6 cycles of the entire benchmark
@@ -424,7 +424,7 @@ Talos test lists
 .. dropdown:: JetStream
    :container: + anchor-id-JetStream
 
-   * contact: :jandem
+   * contact: :jandem and SpiderMonkey Team
    * source: `jetstream.manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/jetstream/jetstream.manifest>`__ and jetstream.zip from tooltool
    * type: `Page load`_
    * measuring: JavaScript performance
@@ -478,7 +478,7 @@ Talos test lists
 .. dropdown:: a11yr
    :container: + anchor-id-a11yr
 
-   * contact: :surkov
+   * contact: :jamie and accessibility team
    * source: `a11y.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/a11y>`__
    * type: `Page load`_
    * measuring: ???
@@ -668,7 +668,7 @@ Talos test lists
 .. dropdown:: about_preferences_basic
    :container: + anchor-id-about_preferences_basic
 
-   * contact: :jaws
+   * contact: :jaws and :gijs
    * source: `about_preferences_basic.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/about-preferences/about_preferences_basic.manifest>`__
    * type: `Page load`_
    * measuring: first-non-blank-paint
@@ -876,7 +876,7 @@ Talos test lists
 .. dropdown:: basic_compositor_video
    :container: + anchor-id-basic_compositor_video
 
-   * contact: :davidb
+   * contact: :b0bh00d, :jeffm, and gfx
    * source: `video <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/video>`__
    * type: `Page load`_
    * data: 12 cycles of the entire benchmark, each subtest will have 12 data points (see below)
@@ -1084,7 +1084,7 @@ Talos test lists
 .. dropdown:: cpstartup
    :container: + anchor-id-cpstartup
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, Gijs, fqueze, and dthayer
    * measuring: Time from opening a new tab (which creates a new content process) to having that new content process be ready to load URLs.
    * source: `cpstartup <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/cpstartup>`__
    * type: `Page load`_
@@ -1266,7 +1266,7 @@ Talos test lists
 .. dropdown:: cross_origin_pageload
    :container: + anchor-id-cross_origin_pageload
 
-   * contact: :sefeng, :jesup
+   * contact: :sefeng, :jesup, and perf eng team
    * measuring: The time it takes to load a page which has 20 cross origin iframes
    * source: `cross_origin_pageload <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/cross_origin_pageload>`__
    * type: `Page load`_
@@ -1447,7 +1447,7 @@ Talos test lists
 .. dropdown:: damp
    :container: + anchor-id-damp
 
-   * contact: :ochameau
+   * contact: :ochameau and devtools team
    * source: `damp <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/devtools>`__
    * type: `Page load`_
    * measuring: Developer Tools toolbox startup, shutdown, and reload performance
@@ -1670,7 +1670,7 @@ Talos test lists
 .. dropdown:: displaylist_mutate
    :container: + anchor-id-displaylist_mutate
 
-   * contact: :mattwoodrow
+   * contact: :miko and gfx
    * source: `displaylist_mutate.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/layout/benchmarks/displaylist_mutate.html>`__
    * type: `Page load`_
    * data: we load the displaylist_mutate.html page five times, measuring pageload each time, generating 5 data points.
@@ -1880,7 +1880,7 @@ Talos test lists
 .. dropdown:: dromaeo_css
    :container: + anchor-id-dromaeo_css
 
-   * contact: :bz
+   * contact: :emilio, and css/layout team
    * source: `css.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
    * type: `Page load`_
    * reporting: speed in test runs per second (higher is better)
@@ -2043,7 +2043,7 @@ Talos test lists
 .. dropdown:: dromaeo_dom
    :container: + anchor-id-dromaeo_dom
 
-   * contact: :bz
+   * contact: :peterv and dom team
    * source: `dom.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
    * type: `Page load`_
    * data: see Dromaeo DOM
@@ -2140,7 +2140,7 @@ Talos test lists
 .. dropdown:: glterrain
    :container: + anchor-id-glterrain
 
-   * contact: :jgilbert
+   * contact: :jgilbert and gfx
    * source: `glterrain <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/terrain>`__
    * type: `Page load`_
    * data: we load the perftest.html page (which generates 4 metrics to track) 25 times, resulting in 4 sets of 25 data points
@@ -2410,7 +2410,7 @@ Talos test lists
 .. dropdown:: glvideo
    :container: + anchor-id-glvideo
 
-   * contact: :jgilbert
+   * contact: :jgilbert and gfx
    * source: `glvideo <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/video>`__
    * type: `Page load`_
    * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
@@ -2677,7 +2677,7 @@ Talos test lists
 .. dropdown:: kraken
    :container: + anchor-id-kraken
 
-   * contact: :sdetar
+   * contact: :sdetar, jandem, and SpiderMonkey Team
    * source: `kraken.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/kraken>`__
    * type: `Page load`_
    * measuring: JavaScript performance
@@ -2846,7 +2846,7 @@ Talos test lists
 .. dropdown:: motionmark_animometer
    :container: + anchor-id-motionmark_animometer
 
-   * contact: :davidb
+   * contact: :b0bh00d, :jeffm, and gfx
    * source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifests <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark>`__
    * type: `Page load`_
    * measuring: benchmark measuring the time to animate complex scenes
@@ -2894,6 +2894,7 @@ Talos test lists
 .. dropdown:: motionmark_htmlsuite
    :container: + anchor-id-motionmark_htmlsuite
 
+   * contact: :jrmuizel and graphics(gfx) team
    * tpmanifest: ${talos}/tests/motionmark/htmlsuite.manifest
    * **Test Task**:
 
@@ -2933,7 +2934,7 @@ Talos test lists
 .. dropdown:: motionmark_webgl
    :container: + anchor-id-motionmark_webgl
 
-   * contact: :jgilbert
+   * contact: :jgilbert and gfx
    * source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark/webgl.manifest>`__
    * type: `Page load`_
    * measuring: Draw call performance in WebGL
@@ -3178,7 +3179,7 @@ Talos test lists
 .. dropdown:: pdfpaint
    :container: + anchor-id-pdfpaint
 
-   * contact: :bdahl
+   * contact: :bdahl and Compiler and Development Tools team
    * source:
    * type: `Page load`_
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
@@ -3353,7 +3354,7 @@ Talos test lists
 .. dropdown:: perf_reftest
    :container: + anchor-id-perf_reftest
 
-   * contact: :bholley
+   * contact: :emilio and css/layout team
    * source: `perf-reftest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest>`__
    * type: `Page load`_
    * reporting: intervals in ms (lower is better)
@@ -3575,7 +3576,7 @@ Talos test lists
 .. dropdown:: perf_reftest_singletons
    :container: + anchor-id-perf_reftest_singletons
 
-   * contact: :heycam
+   * contact: :emelio and Layout team
    * source: `perf-reftest-singletons <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest-singletons>`__
    * type: `Page load`_
    * reporting: intervals in ms (lower is better)
@@ -3738,7 +3739,7 @@ Talos test lists
 .. dropdown:: rasterflood_gradient
    :container: + anchor-id-rasterflood_gradient
 
-   * contact: :rhunt
+   * contact: :jrmuizel, :jimm, and gfx
    * source: `rasterflood_gradient.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_gradient.html>`__
    * type: `Page load`_
    * data: we load the rasterflood_gradient.html page ten times, computing a score each time, generating 10 data points.
@@ -3937,7 +3938,7 @@ Talos test lists
 .. dropdown:: rasterflood_svg
    :container: + anchor-id-rasterflood_svg
 
-   * contact: :rhunt
+   * contact: :jrmuizel, :jimm, and gfx
    * source: `rasterflood_svg.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_svg.html>`__
    * type: `Page load`_
    * data: we load the rasterflood_svg.html page ten times, measuring pageload each time, generating 10 data points.
@@ -4134,9 +4135,9 @@ Talos test lists
 .. dropdown:: sessionrestore
    :container: + anchor-id-sessionrestore
 
-   * contact: :mikedeboer, :mconley, :felipe
+   * contact: :dale, :dao, :farre, session restore module owners/peers, and DOM team
    * source: `talos/sessionrestore <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/sessionrestore>`__
-   * bug: `bug 936630 <https://bugzilla.mozilla.org/show_bug.cgi?id=936630>`__, 
+   * bug: `bug 936630 <https://bugzilla.mozilla.org/show_bug.cgi?id=936630>`__,
     `bug 1331937 <https://bugzilla.mozilla.org/show_bug.cgi?id=1331937>`__,
     `bug 1531520 <https://bugzilla.mozilla.org/show_bug.cgi?id=1531520>`__
    * type: Startup_
@@ -4669,7 +4670,7 @@ Talos test lists
 .. dropdown:: startup_about_home_paint
    :container: + anchor-id-startup_about_home_paint
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
    * type: Startup_
    * measuring: The time from process start to the point where the about:home page reports that it has painted the Top Sites.
@@ -4848,6 +4849,9 @@ Talos test lists
 .. dropdown:: startup_about_home_paint_cached
    :container: + anchor-id-startup_about_home_paint_cached
 
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
+   * See `startup_about_home_paint <#startup_about_home_paint>`_.
+   * description: Tests loading about:home on startup with the about:home startup cache enabled.
    * cycles: 20
    * extensions: ['${talos}/startup_test/startup_about_home_paint/addon']
    * preferences: {'browser.startup.homepage.abouthome_cache.enabled': True}
@@ -5016,7 +5020,7 @@ Talos test lists
 .. dropdown:: startup_about_home_paint_realworld_webextensions
    :container: + anchor-id-startup_about_home_paint_realworld_webextensions
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
    * type: Startup_, `Real-world WebExtensions`_
    * measuring: The time from process start to the point where the about:home page reports that it has painted the Top Sites when 5 popular, real-world WebExtensions are installed and enabled.
@@ -5160,7 +5164,7 @@ Talos test lists
 .. dropdown:: stylebench
    :container: + anchor-id-stylebench
 
-   * contact: :emilio
+   * contact: :emilio and Layout team
    * source: `stylebench.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/stylebench/stylebench.manifest>`__
    * type: `Page load`_
    * measuring: speed of dynamic style recalculation
@@ -5170,7 +5174,7 @@ Talos test lists
 .. dropdown:: tabpaint
    :container: + anchor-id-tabpaint
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tabpaint <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabpaint>`__
    * bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1253382
    * type: `Page load`_
@@ -5365,7 +5369,7 @@ Talos test lists
 .. dropdown:: tabswitch
    :container: + anchor-id-tabswitch
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tabswitch <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabswitch>`__
    * bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1166132
    * type: `Page load`_
@@ -5592,7 +5596,7 @@ Talos test lists
 .. dropdown:: tart
    :container: + anchor-id-tart
 
-   * contact: :mconley
+   * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tart <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tart>`__
    * type: `Page load`_
    * measuring: Desktop Firefox UI animation speed and smoothness
@@ -5829,6 +5833,8 @@ Talos test lists
 .. dropdown:: tart_flex
    :container: + anchor-id-tart_flex
 
+   * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
+   * Contact: No longer being maintained by any team/individual
    * preferences: {'layout.css.emulate-moz-box-with-flex': True}
    * **Test Task**:
 
@@ -5877,6 +5883,9 @@ Talos test lists
 .. dropdown:: tp5n
    :container: + anchor-id-tp5n
 
+   * contact: fx-perf@mozilla.com
+   * description:
+    The tp5 is an updated web page test set to 100 pages from April 8th, 2011. Effort was made for the pages to no longer be splash screens/login pages/home pages but to be pages that better reflect the actual content of the site in question.
    * cleanup: ${talos}/xtalos/parse_xperf.py -c ${talos}/bcontroller.json
    * cycles: 1
    * linux_counters: []
@@ -5947,7 +5956,7 @@ Talos test lists
 .. dropdown:: tp5o
    :container: + anchor-id-tp5o
 
-   * contact: :davehunt
+   * contact: :davehunt, and perftest team
    * source: `tp5n.zip <#page-sets>`__
    * type: `Page load`_
    * data: we load each of the 51 tp5o pages 25 times, resulting in 51 sets of 25 data points.
@@ -6216,7 +6225,7 @@ Talos test lists
 .. dropdown:: tp5o_scroll
    :container: + anchor-id-tp5o_scroll
 
-   * contact: :kats
+   * contact: :botond, :tnikkel, :hiro, and layout team
    * source: `tp5n.zip <#page-sets>`__
    * type: `Page load`_
    * data: we load each of the 51 tp5o pages 12 times, resulting in 51 sets of 12 data points.
@@ -6468,6 +6477,7 @@ Talos test lists
 .. dropdown:: tp5o_webext
    :container: + anchor-id-tp5o_webext
 
+   * contact: :mixedpuppy and webextension team
    * preferences: {'xpinstall.signatures.required': False}
    * webextensions: ${talos}/webextensions/dummy/dummy.xpi
    * **Test Task**:
@@ -6633,7 +6643,7 @@ Talos test lists
 .. dropdown:: tresize
    :container: + anchor-id-tresize
 
-   * contact: :jimm
+   * contact: :gcp and platform integration
    * source: `tresize-test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tresize/addon/content/tresize-test.html>`__
    * type: Startup_
    * measuring: Time to do XUL resize, in ms (lower is better).
@@ -6833,7 +6843,7 @@ Talos test lists
 .. dropdown:: ts_paint
    :container: + anchor-id-ts_paint
 
-   * contact: :davidb
+   * contact: :mconley, Firefox Desktop Front-end team,
    * source: `tspaint_test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tspaint_test.html>`__
    * Perfomatic: "Ts, Paint"
    * type: Startup_
@@ -7029,6 +7039,8 @@ Talos test lists
 .. dropdown:: ts_paint_flex
    :container: + anchor-id-ts_paint_flex
 
+   * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
+   * Contact: No longer being maintained by any team/individual
    * preferences: {'layout.css.emulate-moz-box-with-flex': True}
    * **Test Task**:
 
@@ -7069,12 +7081,13 @@ Talos test lists
    :container: + anchor-id-ts_paint_heavy
 
    * `ts_paint <#ts_paint>`_ test run against a heavy user profile.
-   * add test details
+   * contact: :mconley, Firefox Desktop Front-end team,
    * profile: simple
 
 .. dropdown:: ts_paint_webext
    :container: + anchor-id-ts_paint_webext
 
+   * contact: :mconley, Firefox Desktop Front-end team,
    * preferences: {'xpinstall.signatures.required': False}
    * webextensions: ${talos}/webextensions/dummy/dummy.xpi
    * **Test Task**:
@@ -7240,7 +7253,7 @@ Talos test lists
 .. dropdown:: tscrollx
    :container: + anchor-id-tscrollx
 
-   * contact: :jrmuizel
+   * contact: :jrmuizel and gfx
    * source: `scroll.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/scroll>`__
    * type: `Page load`_
    * measuring: Scroll performance
@@ -7442,7 +7455,7 @@ Talos test lists
 .. dropdown:: tsvg_static
    :container: + anchor-id-tsvg_static
 
-   * contact: :jwatt, :dholbert, :neerja
+   * contact: :jwatt, :dholbert
    * source: `svg_static <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/svg_static/>`__
    * type: `Page load`_
    * data: we load the 5 svg pages 25 times, resulting in 5 sets of 25 data points
@@ -7632,6 +7645,7 @@ Talos test lists
    :container: + anchor-id-tsvgm
 
    * An svg-only number that measures SVG rendering performance for dynamic content only.
+   * contact: :jwatt, :dholbert
    * add test details
    * gecko_profile_entries: 1000000
    * gecko_profile_interval: 10
@@ -8052,7 +8066,7 @@ Talos test lists
 .. dropdown:: twinopen
    :container: + anchor-id-twinopen
 
-   * contact: :bdahl, :jimm
+   * contact: :gcp and platform integration
    * source: `twinopen <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/twinopen>`__
    * type: Startup_
    * data: we open a new browser window 20 times, resulting in 1 set of 20 data points.
@@ -8242,6 +8256,11 @@ Talos test lists
 .. dropdown:: v8_7
    :container: + anchor-id-v8_7
 
+   * description:
+    This is the V8 (version 7) javascript benchmark taken verbatim and slightly modified
+    to fit into our pageloader extension and talos harness. The previous version of this
+    test is V8 version 5 which was run on selective branches and operating systems.
+   * contact: No longer being maintained by any team/individual
    * gecko_profile_entries: 1000000
    * gecko_profile_interval: 1
    * lower_is_better: False

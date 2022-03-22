@@ -590,12 +590,16 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           int compression_type;
           png_bytep profile;
           png_charp name;
-          png_uint_32 proflen;
-          png_get_iCCP(png_ptr, info_ptr, &name, &compression_type, &profile,
-                       &proflen);
-          ppf->icc.resize(proflen);
-          memcpy(ppf->icc.data(), profile, proflen);
-          have_color = true;
+          png_uint_32 proflen = 0;
+          auto ok = png_get_iCCP(png_ptr, info_ptr, &name, &compression_type,
+                                 &profile, &proflen);
+          if (ok && proflen) {
+            ppf->icc.resize(proflen);
+            memcpy(ppf->icc.data(), profile, proflen);
+            have_color = true;
+          } else {
+            // TODO(eustas): JXL_WARNING?
+          }
         } else if (id == kId_sRGB) {
           JXL_RETURN_IF_ERROR(DecodeSRGB(chunk.data() + 8, chunk.size() - 12,
                                          &ppf->color_encoding));

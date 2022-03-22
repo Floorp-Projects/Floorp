@@ -289,7 +289,6 @@ class ANSSymbolReader {
       return;
     }
     *value = ReadHybridUintConfig(configs[ctx], token, br);
-    return;
   }
   bool HuffRleOnly() {
     if (lz77_window_ == nullptr) return false;

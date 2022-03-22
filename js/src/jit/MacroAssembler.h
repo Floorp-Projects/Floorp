@@ -3457,6 +3457,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                   FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
+  inline void q15MulrInt16x8Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
  public:
   // ========================================================================
   // Truncate floating point.

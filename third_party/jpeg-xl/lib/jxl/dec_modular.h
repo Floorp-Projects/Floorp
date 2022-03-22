@@ -119,8 +119,7 @@ class ModularFrameDecoder {
  private:
   Status ModularImageToDecodedRect(Image& gi, PassesDecoderState* dec_state,
                                    jxl::ThreadPool* pool,
-                                   RenderPipelineInput* render_pipeline_input,
-                                   ImageBundle* output, Rect rect,
+                                   RenderPipelineInput& render_pipeline_input,
                                    Rect modular_rect);
 
   Image full_image;

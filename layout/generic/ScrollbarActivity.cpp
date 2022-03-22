@@ -12,6 +12,9 @@
 #include "nsContentUtils.h"
 #include "nsAString.h"
 #include "nsQueryFrame.h"
+#include "nsIScrollableFrame.h"
+#include "PresShell.h"
+#include "nsLayoutUtils.h"
 #include "nsRefreshDriver.h"
 #include "nsComponentManagerUtils.h"
 #include "nsStyledElement.h"
@@ -95,8 +98,24 @@ ScrollbarActivity::HandleEvent(dom::Event* aEvent) {
 
   if (type.EqualsLiteral("mousemove")) {
     // Mouse motions anywhere in the scrollable frame should keep the
-    // scrollbars visible.
-    ActivityOccurred();
+    // scrollbars visible, but we have to be careful as content descendants of
+    // our scrollable content aren't necessarily scrolled by our scroll frame
+    // (if they are out of flow and their containing block is not a descendant
+    // of our scroll frame) and we don't want those to activate us.
+    nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
+    MOZ_ASSERT(scrollFrame);
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(mScrollableFrame);
+    nsCOMPtr<nsIContent> targetContent =
+        do_QueryInterface(aEvent->GetOriginalTarget());
+    nsIFrame* targetFrame =
+        targetContent ? targetContent->GetPrimaryFrame() : nullptr;
+    if ((scrollableFrame && scrollableFrame->IsRootScrollFrameOfDocument()) ||
+        !targetFrame ||
+        nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
+            scrollFrame, targetFrame,
+            scrollFrame->PresShell()->GetRootFrame())) {
+      ActivityOccurred();
+    }
     return NS_OK;
   }
 

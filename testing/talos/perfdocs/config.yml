@@ -10,7 +10,7 @@ suites:
         description: "Talos test lists"
         tests:
             ARES6: >
-                - contact: :jandem
+                - contact: :jandem and SpiderMonkey Team
                 - source: `ARES-6 <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/ARES-6>`__
                 - type: `Page load`_
                 - data: 6 cycles of the entire benchmark
@@ -18,7 +18,7 @@ suites:
                 - **Lower is better**
                 - unit: geometric mean / benchmark score
             JetStream: >
-                - contact: :jandem
+                - contact: :jandem and SpiderMonkey Team
                 - source: `jetstream.manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/jetstream/jetstream.manifest>`__ and jetstream.zip from tooltool
                 - type: `Page load`_
                 - measuring: JavaScript performance
@@ -33,7 +33,7 @@ suites:
                     javascript benchmark taken verbatim and slightly modified to fit into
                     our pageloader extension and talos harness.
             a11yr: >
-                - contact: :surkov
+                - contact: :jamie and accessibility team
                 - source: `a11y.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/a11y>`__
                 - type: `Page load`_
                 - measuring: ???
@@ -49,7 +49,7 @@ suites:
                     * 0;dhtml.html;1584;1637;1643;1665;1741;1529;1647;1645;1692;1647;1542;1750;1654;1649;1541;1656;1674;1645;1645;1740;1558;1652;1654;1656;1654 |
                     * 1;tablemutation.html;398;385;389;391;387;387;385;387;388;385;384;31746;386;387;384;387;389;387;387;387;388;391;386;387;388 |
             about_preferences_basic: >
-                - contact: :jaws
+                - contact: :jaws and :gijs
                 - source: `about_preferences_basic.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/about-preferences/about_preferences_basic.manifest>`__
                 - type: `Page load`_
                 - measuring: first-non-blank-paint
@@ -85,7 +85,7 @@ suites:
                     * 4;preferences#sync;148;156;140;137;159;139;143;145;138;130;145;142;141;133;146;141;147;143;146;146;139;144;142;151;156
                     * 5;preferences#home;141;111;130;131;138;128;133;122;138;138;131;139;139;132;133;141;143;139;138;135;136;128;134;140;135
             basic_compositor_video: >
-                - contact: :davidb
+                - contact: :b0bh00d, :jeffm, and gfx
                 - source: `video <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/video>`__
                 - type: `Page load`_
                 - data: 12 cycles of the entire benchmark, each subtest will have 12 data points (see below)
@@ -119,7 +119,7 @@ suites:
                     * ;22;1080p.60fps.mp4_scale_2_startup;6.963;6.947;6.914;6.929;6.979;7.010;7.010245327102808;6.914;6.961;7.028;7.012;6.914
                     * ;23;1080p.60fps.mp4_scale_2_inclip;6.757;6.694;6.672;6.669;6.737;6.831;6.716;6.715;6.832;6.670;6.672;6.759
             cpstartup: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, Gijs, fqueze, and dthayer
                 - measuring: Time from opening a new tab (which creates a new content process) to having that new content process be ready to load URLs.
                 - source: `cpstartup <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/cpstartup>`__
                 - type: `Page load`_
@@ -129,7 +129,7 @@ suites:
                 - **Example Data**
                     * 0;content-process-startup;877;737;687;688;802;697;794;685;694;688;794;669;699;684;690;849;687;873;694;689
             cross_origin_pageload: >
-                - contact: :sefeng, :jesup
+                - contact: :sefeng, :jesup, and perf eng team
                 - measuring: The time it takes to load a page which has 20 cross origin iframes
                 - source: `cross_origin_pageload <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/cross_origin_pageload>`__
                 - type: `Page load`_
@@ -139,7 +139,7 @@ suites:
                 - **Example Data**
                     * 0;/index.html;194.42;154.12;141.38;145.88;136.92;147.64;152.54;138.02;145.5;143.62
             damp: >
-                - contact: :ochameau
+                - contact: :ochameau and devtools team
                 - source: `damp <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/devtools>`__
                 - type: `Page load`_
                 - measuring: Developer Tools toolbox startup, shutdown, and reload performance
@@ -190,7 +190,7 @@ suites:
                     * 34;complicated.netmonitor.reload.DAMP;4033.55;3577.36;3655.61;3721.24;3874.29;3977.92;3778.62;3825.60;3984.65;3707.91;3985.24;3565.21;3702.40;3956.70;3627.14;3916.11;3929.11;3934.06;3590.60;3628.39;3618.84;3579.52;3953.04;3781.01;3682.69
                     * 35;complicated.netmonitor.close.DAMP;1042.98;920.21;928.19;940.38;950.25;1043.61;1078.16;1077.38;1132.91;1095.05;1176.31;1256.83;1143.14;1234.61;1248.97;1242.29;1378.63;1312.74;1371.48;1373.15;1544.55;1422.51;1549.48;1616.55;1506.58
             displaylist_mutate: >
-                - contact: :mattwoodrow
+                - contact: :miko and gfx
                 - source: `displaylist_mutate.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/layout/benchmarks/displaylist_mutate.html>`__
                 - type: `Page load`_
                 - data: we load the displaylist_mutate.html page five times, measuring pageload each time, generating 5 data points.
@@ -220,7 +220,7 @@ suites:
                     runs/second numbers for its sub-tests. The score for a sub-suite is the
                     geometric mean of the scores for its tests.
             dromaeo_css: >
-                - contact: :bz
+                - contact: :emilio, and css/layout team
                 - source: `css.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
                 - type: `Page load`_
                 - reporting: speed in test runs per second (higher is better)
@@ -250,7 +250,7 @@ suites:
                     * 4;prototype.html;237.05;251.94;256.61;259.65;263.52;4488.53;4676.88;4745.24;4745.50;4748.81;4648.47;4660.21;4666.58;4671.88;4677.32;3602.84;3611.40;3613.69;3615.69;3619.15;3604.41;3619.44;3623.24;3627.66;3628.11;3526.59;3589.35;3615.93;3616.35;3622.80;3624.69;3626.84;3628.47;3631.22;3632.15;3184.76;3186.11;3187.16;3187.78;3189.35;4353.43;4466.46;4482.57;4616.72;4617.88;4012.18;4034.84;4047.07;4047.82;4055.29;4815.11;4815.21;4816.11;4817.08;4820.40;3300.31;3345.18;3369.55;3420.98;3447.97;5026.99;5033.82;5034.50;5034.95;5038.97;3516.72;3520.79;3520.95;3521.81;3523.47;3565.29;3574.23;3574.37;3575.82;3578.37;4045.19;4053.51;4056.76;4058.76;4059.00;4714.67;4868.66;4869.66;4873.54;4878.29;1278.20;1300.92;1301.13;1301.17;1302.47;868.94;871.16;878.50;883.40;884.85;3874.71;3878.44;3881.61;3882.67;3886.92;4959.83;4968.45;4969.50;4971.38;4972.30;3862.69;3870.15;3871.79;3873.83;3878.07;2690.15;2711.66;2714.42;2715.39;2715.89;4349.04;4349.63;4351.33;4353.59;4355.46;4950.95;5101.08;5107.69;5120.21;5120.39;4336.63;4360.76;4361.96;4362.28;4365.43;4928.75;4939.41;4939.56;4943.95;4966.78;4869.03;4886.24;4888.85;4889.14;4895.76;4362.39;4362.78;4363.96;4365.00;4365.08;3408.00;3470.03;3476.37;3546.65;3547.34;4905.73;4926.21;4926.70;4926.93;4929.43;4682.88;4694.91;4696.30;4697.06;4699.69;4688.86;4691.25;4691.46;4698.37;4699.41;4628.07;4631.31;4633.42;4634.00;4636.00;4699.44;4796.02;4808.83;4809.95;4813.52;4719.10;4720.41;4722.95;4723.03;4723.53
                     * 5;yui.html;569.72;602.22;627.02;647.49;692.84;9978.30;10117.54;10121.70;10129.75;10137.24;9278.68;9291.44;9349.00;9370.53;9375.86;475.79;481.92;606.51;607.42;618.73;617.68;618.89;623.30;626.58;631.85;501.81;649.76;653.22;655.69;656.71;510.62;645.56;657.42;657.88;658.39;475.53;476.77;476.80;476.92;476.96;9895.16;9976.15;9988.25;9989.85;9996.40;9483.15;9545.75;9676.37;9808.51;10360.22;8331.29;8397.87;8538.06;8714.69;8803.78;2748.93;2800.93;2802.59;2857.33;2864.46;33757.16;33804.83;33859.32;33931.00;33991.32;7818.65;7846.92;7892.09;8170.55;8217.75;13691.38;13692.86;13693.25;13698.73;13706.66;5378.70;5517.83;5615.86;5616.16;5624.00;2985.63;3002.97;3003.07;3037.73;3038.87;2459.10;2502.52;2504.91;2507.07;2507.26;396.62;405.78;411.43;412.03;412.56;543.45;550.75;568.50;578.59;592.25;6762.21;6901.72;6984.27;7064.22;7122.29;454.78;519.40;539.29;543.96;566.16;3235.39;3266.13;3453.26;3498.79;3518.54;39079.22;39722.80;41350.59;41422.38;41540.17;34435.14;34606.31;34623.31;34661.00;34672.48;29449.12;29530.11;30507.24;31938.52;31961.52;7449.33;7524.62;7629.73;7712.96;7796.42;22917.43;23319.00;23441.41;23582.88;23583.53;29780.40;30272.55;31761.00;31765.84;31839.36;6112.45;6218.35;6476.68;6603.54;6793.66;10385.79;10471.69;10518.53;10552.74;10644.95;9563.52;9571.33;9617.09;9946.35;9976.80;9406.11;9518.48;9806.46;10102.44;10173.19;9482.43;9550.28;9878.21;9902.90;9951.45;8343.17;8511.00;8606.00;8750.21;8869.29;8234.96;8462.70;8473.49;8499.58;8808.91
             dromaeo_dom: >
-                - contact: :bz
+                - contact: :peterv and dom team
                 - source: `dom.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
                 - type: `Page load`_
                 - data: see Dromaeo DOM
@@ -279,7 +279,7 @@ suites:
 
                     Please see `dromaeo_css <#dromaeo_css>`_ for examples of data.
             glterrain: >
-                - contact: :jgilbert
+                - contact: :jgilbert and gfx
                 - source: `glterrain <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/terrain>`__
                 - type: `Page load`_
                 - data: we load the perftest.html page (which generates 4 metrics to track) 25 times, resulting in 4 sets of 25 data points
@@ -299,7 +299,7 @@ suites:
                     * 2;2.WebGL-terrain-alpha-yes-AA-no;24.01795;23.889449;24.2683;24.34649;23.0562;24.02275;23.54819;24.1874;23.93545;23.53629;23.305149;23.62459;24.01589;24.06405;24.143449;23.998549;24.08205;24.26989;24.0736;24.2346;24.01145;23.7817;23.90785;24.7118;24.2834
                     * 3;3.WebGL-terrain-alpha-yes-AA-yes;25.91375;25.87005;25.64875;25.15615;25.5475;24.497449;24.56385;25.57529;25.54889;26.31559;24.143949;25.09895;24.75049;25.2087;25.52385;25.9017;25.4439;24.3495;25.9269;25.734449;26.4126;25.547449;25.667249;25.679349;25.9565
             glvideo: >
-                - contact: :jgilbert
+                - contact: :jgilbert and gfx
                 - source: `glvideo <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/video>`__
                 - type: `Page load`_
                 - data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
@@ -317,7 +317,7 @@ suites:
                     to be a WebGL texture (gl.texImage2D). We run it for 5 times and ignore
                     the first found. Lower results are better.
             kraken: >
-                - contact: :sdetar
+                - contact: :sdetar, jandem, and SpiderMonkey Team
                 - source: `kraken.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/kraken>`__
                 - type: `Page load`_
                 - measuring: JavaScript performance
@@ -348,7 +348,7 @@ suites:
                     * 12;stanford-crypto-pbkdf2;176;187;183;183;176;174;181;187;175;173
                     * 13;stanford-crypto-sha256-iterative;86;85;83;84;86;85;85;86;83;83
             motionmark_animometer: >
-                - contact: :davidb
+                - contact: :b0bh00d, :jeffm, and gfx
                 - source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifests <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark>`__
                 - type: `Page load`_
                 - measuring: benchmark measuring the time to animate complex scenes
@@ -357,24 +357,25 @@ suites:
                         repeat this 5 times and report the median value
                     * suite: we take a geometric mean of all the subtests (9 for
                         animometer, 11 for html suite)
-            motionmark_htmlsuite: ""
+            motionmark_htmlsuite: >
+                - contact: :jrmuizel and graphics(gfx) team
             motionmark_webgl: >
-                - contact: :jgilbert
+                - contact: :jgilbert and gfx
                 - source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark/webgl.manifest>`__
                 - type: `Page load`_
                 - measuring: Draw call performance in WebGL
                 - summarization:
                     * subtest: FPS from the subtest, each subtest is run once for 15
                         seconds, report the average FPS over that time.
-                    * suite: identical to subtest 
+                    * suite: identical to subtest
             pdfpaint: >
-                - contact: :bdahl
+                - contact: :bdahl and Compiler and Development Tools team
                 - source:
                 - type: `Page load`_
                 - reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
                 - data: load a PDF 20 times
             perf_reftest: >
-                - contact: :bholley
+                - contact: :emilio and css/layout team
                 - source: `perf-reftest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest>`__
                 - type: `Page load`_
                 - reporting: intervals in ms (lower is better)
@@ -421,7 +422,7 @@ suites:
                         167.36, 167.265, 167.75500000000002, 166.895, 167.735, 166.985, 166.275, 166.54000000000002, 165.61, 166.115,
                         166.64499999999998, 165.68, 167.64499999999998, 167.12, 168.15, 166.575, 166.335],
             perf_reftest_singletons: >
-                - contact: :heycam
+                - contact: :emelio and Layout team
                 - source: `perf-reftest-singletons <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest-singletons>`__
                 - type: `Page load`_
                 - reporting: intervals in ms (lower is better)
@@ -444,7 +445,7 @@ suites:
                     * 87.14500000000001;92.78500000000001;86.96499999999999;98.32000000000001;97.485;90.67000000000002;
                     * 86.72500000000001;95.665;100.67;101.095;94.32;91.87
             rasterflood_gradient: >
-                - contact: :rhunt
+                - contact: :jrmuizel, :jimm, and gfx
                 - source: `rasterflood_gradient.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_gradient.html>`__
                 - type: `Page load`_
                 - data: we load the rasterflood_gradient.html page ten times, computing a score each time, generating 10 data points.
@@ -465,7 +466,7 @@ suites:
                     (or regressions) to general painting performance or gradient rendering
                     will affect this benchmark.
             rasterflood_svg: >
-                - contact: :rhunt
+                - contact: :jrmuizel, :jimm, and gfx
                 - source: `rasterflood_svg.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_svg.html>`__
                 - type: `Page load`_
                 - data: we load the rasterflood_svg.html page ten times, measuring pageload each time, generating 10 data points.
@@ -485,9 +486,9 @@ suites:
                     Improvements (or regressions) to general painting performance or SVG are
                     likely to affect this benchmark.
             sessionrestore: >
-                - contact: :mikedeboer, :mconley, :felipe
+                - contact: :dale, :dao, :farre, session restore module owners/peers, and DOM team
                 - source: `talos/sessionrestore <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/sessionrestore>`__
-                - bug: `bug 936630 <https://bugzilla.mozilla.org/show_bug.cgi?id=936630>`__, 
+                - bug: `bug 936630 <https://bugzilla.mozilla.org/show_bug.cgi?id=936630>`__,
                     `bug 1331937 <https://bugzilla.mozilla.org/show_bug.cgi?id=1331937>`__,
                     `bug 1531520 <https://bugzilla.mozilla.org/show_bug.cgi?id=1531520>`__
                 - type: Startup_
@@ -519,7 +520,7 @@ suites:
             sessionrestore_no_auto_restore: >
                 - See `sessionrestore <#sessionrestore>`_.
             startup_about_home_paint: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
                 - source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
                 - type: Startup_
                 - measuring: The time from process start to the point where the about:home page reports that it has painted the Top Sites.
@@ -527,9 +528,12 @@ suites:
                 - reporting: test time in ms (lower is better)
                 - **Example Data**
                     * [1503.0, 1497.0, 1523.0, 1536.0, 1511.0, 1485.0, 1594.0, 1580.0, 1531.0, 1471.0, 1502.0, 1520.0, 1488.0, 1533.0, 1531.0, 1502.0, 1486.0, 1489.0, 1487.0, 1475.0]
-            startup_about_home_paint_cached: ""
+            startup_about_home_paint_cached: >
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
+                - See `startup_about_home_paint <#startup_about_home_paint>`_.
+                - description: Tests loading about:home on startup with the about:home startup cache enabled.
             startup_about_home_paint_realworld_webextensions: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
                 - source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
                 - type: Startup_, `Real-world WebExtensions`_
                 - measuring: The time from process start to the point where the about:home page reports that it has painted the Top Sites when 5 popular, real-world WebExtensions are installed and enabled.
@@ -538,13 +542,13 @@ suites:
                 - **Example Data**
                     * [1503.0, 1497.0, 1523.0, 1536.0, 1511.0, 1485.0, 1594.0, 1580.0, 1531.0, 1471.0, 1502.0, 1520.0, 1488.0, 1533.0, 1531.0, 1502.0, 1486.0, 1489.0, 1487.0, 1475.0]
             stylebench: >
-                - contact: :emilio
+                - contact: :emilio and Layout team
                 - source: `stylebench.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/stylebench/stylebench.manifest>`__
                 - type: `Page load`_
                 - measuring: speed of dynamic style recalculation
                 - reporting: runs/minute score
             tabpaint: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
                 - source: `tabpaint <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabpaint>`__
                 - bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1253382
                 - type: `Page load`_
@@ -567,7 +571,7 @@ suites:
                     * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 19 data points
                     * suite: geometric_mean(subtests)
             tabswitch: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
                 - source: `tabswitch <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabswitch>`__
                 - bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1166132
                 - type: `Page load`_
@@ -632,7 +636,7 @@ suites:
                     * 48;youtube.com/www.youtube.com/music.html;40.53;41.48;59.67;40.81;40.07
                     * 49;people.com.cn/people.com.cn/index.html;96.49;103.64;115.12;66.05;117.84
             tart: >
-                - contact: :mconley
+                - contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
                 - source: `tart <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tart>`__
                 - type: `Page load`_
                 - measuring: Desktop Firefox UI animation speed and smoothness
@@ -687,9 +691,14 @@ suites:
                     * 26;newtab-open-preload-no.error.TART;40.82;40.85;37.38;37.40;36.30;36.47;36.89;37.63;37.12;38.65;36.73;36.95;36.11;38.59;37.39;37.77;37.93;37.54;37.46;38.29;36.58;38.25;38.32;37.92;36.93
                     * 27;newtab-open-preload-yes.half.TART;3.14;2.96;2.97;8.37;2.98;3.00;2.96;3.05;3.12;3.48;3.07;3.23;3.05;2.88;2.92;3.06;2.90;3.01;3.19;2.90;3.18;3.11;3.04;3.16;3.21
                     * 28;newtab-open-preload-yes.all.TART;5.10;4.60;4.63;8.94;5.01;4.69;4.63;4.67;4.93;5.43;4.78;5.12;4.77;4.65;4.50;4.78;4.75;4.63;4.76;4.45;4.86;4.88;4.69;4.86;4.92
-                    * 29;newtab-open-preload-yes.error.TART;35.90;37.24;38.57;40.60;36.04;38.12;38.78;36.73;36.91;36.69;38.12;36.69;37.79;35.80;36.11;38.01;36.59;38.85;37.14;37.30;38.02;38.95;37.64;37.86;36.43                
-            tart_flex: ""
-            tp5n: ""
+                    * 29;newtab-open-preload-yes.error.TART;35.90;37.24;38.57;40.60;36.04;38.12;38.78;36.73;36.91;36.69;38.12;36.69;37.79;35.80;36.11;38.01;36.59;38.85;37.14;37.30;38.02;38.95;37.64;37.86;36.43
+            tart_flex: >
+                - description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
+                - Contact: No longer being maintained by any team/individual
+            tp5n: >
+                - contact: fx-perf@mozilla.com
+                - description:
+                    The tp5 is an updated web page test set to 100 pages from April 8th, 2011. Effort was made for the pages to no longer be splash screens/login pages/home pages but to be pages that better reflect the actual content of the site in question.
             tp5: >
                 - description:
                     Note that the tp5 test no longer exists (only talos-tp5o) though many
@@ -697,7 +706,7 @@ suites:
                     the tp5 pageset and some information about how data using the tp5
                     pageset might be used in various suites.
             tp5o: >
-                - contact: :davehunt
+                - contact: :davehunt, and perftest team
                 - source: `tp5n.zip <#page-sets>`__
                 - type: `Page load`_
                 - data: we load each of the 51 tp5o pages 25 times, resulting in 51 sets of 25 data points.
@@ -784,7 +793,7 @@ suites:
                     * 49;youku.com/www.youku.com/index.html;844;448;498;441;417;497;478;439;467;436;447;465;438;461;466;446;452;496;457;446;486;449;467;499;442
                     * 50;youtube.com/www.youtube.com/music.html;443;338;253;289;238;296;254;290;242;302;237;290;253;305;253;293;251;311;244;293;255;291;246;316;249
             tp5o_scroll: >
-                - contact: :kats
+                - contact: :botond, :tnikkel, :hiro, and layout team
                 - source: `tp5n.zip <#page-sets>`__
                 - type: `Page load`_
                 - data: we load each of the 51 tp5o pages 12 times, resulting in 51 sets of 12 data points.
@@ -861,9 +870,10 @@ suites:
                     * Slowdown in the building of display list
                     * Slowdown in rasterization of content
                     * Slowdown in composite times
-            tp5o_webext: ""
+            tp5o_webext: >
+                - contact: :mixedpuppy and webextension team
             tresize: >
-                - contact: :jimm
+                - contact: :gcp and platform integration
                 - source: `tresize-test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tresize/addon/content/tresize-test.html>`__
                 - type: Startup_
                 - measuring: Time to do XUL resize, in ms (lower is better).
@@ -890,7 +900,7 @@ suites:
                     * resizes also trigger a rendering flush so bugs in the flushing code can manifest as regressions
                     * introduction of more spurious MozAfterPaint events - see `bug 1471961 <https://bugzilla.mozilla.org/show_bug.cgi?id=1471961>`__
             ts_paint: >
-                - contact: :davidb
+                - contact: :mconley, Firefox Desktop Front-end team,
                 - source: `tspaint_test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tspaint_test.html>`__
                 - Perfomatic: "Ts, Paint"
                 - type: Startup_
@@ -910,13 +920,16 @@ suites:
                     * (and/or maybe tpaint?) will regress if a new element is added to the
                         browser window (e.g. browser.xul) and it's frame gets created. Fix
                         this by ensuring it's display:none by default.
-            ts_paint_flex: ""
+            ts_paint_flex: >
+                - description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
+                - Contact: No longer being maintained by any team/individual
             ts_paint_heavy: >
                 - `ts_paint <#ts_paint>`_ test run against a heavy user profile.
-                - add test details
-            ts_paint_webext: ""
+                - contact: :mconley, Firefox Desktop Front-end team,
+            ts_paint_webext: >
+                - contact: :mconley, Firefox Desktop Front-end team,
             tscrollx: >
-                - contact: :jrmuizel
+                - contact: :jrmuizel and gfx
                 - source: `scroll.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/scroll>`__
                 - type: `Page load`_
                 - measuring: Scroll performance
@@ -944,7 +957,7 @@ suites:
                     * 4;iframe.svg;13.82;14.87;14.78;14.35;14.73;14.50;14.15;14.46;14.80;14.48;15.10;14.93;14.77;14.52;14.08;15.01;14.58;14.52;15.23;14.35;14.72;14.28;14.30;14.27;14.96
                     * 5;reader.htm;10.72;10.62;10.23;10.48;10.42;10.64;10.40;10.40;10.14;10.60;10.51;10.36;10.57;10.41;10.52;10.75;10.19;10.72;10.44;9.75;10.49;10.07;10.54;10.46;10.44
             tsvg_static: >
-                - contact: :jwatt, :dholbert, :neerja
+                - contact: :jwatt, :dholbert
                 - source: `svg_static <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/svg_static/>`__
                 - type: `Page load`_
                 - data: we load the 5 svg pages 25 times, resulting in 5 sets of 25 data points
@@ -961,6 +974,7 @@ suites:
                     * 4;composite-scale-rotate-opacity.svg;91;60;67;84;62;66;78;69;65;68;62;73;68;63;64;71;79;77;63;80;85;65;82;76;81
             tsvgm: >
                 - An svg-only number that measures SVG rendering performance for dynamic content only.
+                - contact: :jwatt, :dholbert
                 - add test details
             tsvgr_opacity: >
                 - contact: :jwatt, :dholbert
@@ -1021,7 +1035,7 @@ suites:
                         regressions - they just mean that we need to re-baseline our
                         expectations from the test.
             twinopen: >
-                - contact: :bdahl, :jimm
+                - contact: :gcp and platform integration
                 - source: `twinopen <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/twinopen>`__
                 - type: Startup_
                 - data: we open a new browser window 20 times, resulting in 1 set of 20 data points.
@@ -1037,4 +1051,9 @@ suites:
                     instance of the browser. (Measures ctrl-n performance.)
                 - **Example Data**
                     * [209.219, 222.180, 225.299, 225.970, 228.090, 229.450, 230.625, 236.315, 239.804, 242.795, 244.5, 244.770, 250.524, 251.785, 253.074, 255.349, 264.729, 266.014, 269.399, 326.190]
-            v8_7: ""
+            v8_7: >
+                - description:
+                    This is the V8 (version 7) javascript benchmark taken verbatim and slightly modified
+                    to fit into our pageloader extension and talos harness. The previous version of this
+                    test is V8 version 5 which was run on selective branches and operating systems.
+                - contact: No longer being maintained by any team/individual

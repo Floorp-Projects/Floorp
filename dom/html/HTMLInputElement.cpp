@@ -851,8 +851,7 @@ void HTMLInputElement::InitUploadLastDir() {
   gUploadLastDir = new UploadLastDir();
   NS_ADDREF(gUploadLastDir);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService && gUploadLastDir) {
     observerService->AddObserver(gUploadLastDir,
                                  "browser:purge-session-history", true);
@@ -949,9 +948,8 @@ static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
 // construction, destruction
 //
 
-HTMLInputElement::HTMLInputElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser, FromClone aFromClone)
+HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
+                                   FromParser aFromParser, FromClone aFromClone)
     : TextControlElement(std::move(aNodeInfo), aFromParser,
                          FormControlType(kInputDefaultType->value)),
       mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
@@ -2935,7 +2933,7 @@ void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
   } else if (!mForm->ImplicitSubmissionIsDisabled()) {
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
-    RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+    RefPtr<dom::HTMLFormElement> form(mForm);
     form->MaybeSubmit(nullptr);
   }
 }
@@ -3775,41 +3773,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         case eKeyPress: {
           if (mType == FormControlType::InputRadio && !keyEvent->IsAlt() &&
               !keyEvent->IsControl() && !keyEvent->IsMeta()) {
-            bool isMovingBack = false;
-            switch (keyEvent->mKeyCode) {
-              case NS_VK_UP:
-              case NS_VK_LEFT:
-                isMovingBack = true;
-                [[fallthrough]];
-              case NS_VK_DOWN:
-              case NS_VK_RIGHT:
-                // Arrow key pressed, focus+select prev/next radio button
-                nsIRadioGroupContainer* container = GetRadioGroupContainer();
-                if (container) {
-                  nsAutoString name;
-                  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-                  RefPtr<HTMLInputElement> selectedRadioButton;
-                  container->GetNextRadioButton(
-                      name, isMovingBack, this,
-                      getter_AddRefs(selectedRadioButton));
-                  if (selectedRadioButton) {
-                    FocusOptions options;
-                    ErrorResult error;
-
-                    selectedRadioButton->Focus(options, CallerType::System,
-                                               error);
-                    rv = error.StealNSResult();
-                    if (NS_SUCCEEDED(rv)) {
-                      rv = DispatchSimulatedClick(selectedRadioButton,
-                                                  aVisitor.mEvent->IsTrusted(),
-                                                  aVisitor.mPresContext);
-                      if (NS_SUCCEEDED(rv)) {
-                        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-                      }
-                    }
-                  }
-                }
-            }
+            rv = MaybeHandleRadioButtonNavigation(aVisitor, keyEvent->mKeyCode);
           }
 
           /*
@@ -4054,7 +4018,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           case FormControlType::InputImage:
             if (mForm) {
               // Hold a strong ref while dispatching
-              RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+              RefPtr<HTMLFormElement> form(mForm);
               if (mType == FormControlType::InputReset) {
                 form->MaybeReset(this);
               } else {
@@ -4100,6 +4064,52 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   return MaybeInitPickers(aVisitor);
+}
+
+enum class RadioButtonMove { Back, Forward, None };
+nsresult HTMLInputElement::MaybeHandleRadioButtonNavigation(
+    EventChainPostVisitor& aVisitor, uint32_t aKeyCode) {
+  auto move = [&] {
+    switch (aKeyCode) {
+      case NS_VK_UP:
+        return RadioButtonMove::Back;
+      case NS_VK_DOWN:
+        return RadioButtonMove::Forward;
+      case NS_VK_LEFT:
+      case NS_VK_RIGHT: {
+        const bool isRtl = GetComputedDirectionality() == eDir_RTL;
+        return isRtl == (aKeyCode == NS_VK_LEFT) ? RadioButtonMove::Forward
+                                                 : RadioButtonMove::Back;
+      }
+    }
+    return RadioButtonMove::None;
+  }();
+  if (move == RadioButtonMove::None) {
+    return NS_OK;
+  }
+  // Arrow key pressed, focus+select prev/next radio button
+  RefPtr<HTMLInputElement> selectedRadioButton;
+  if (nsIRadioGroupContainer* container = GetRadioGroupContainer()) {
+    nsAutoString name;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+    container->GetNextRadioButton(name, move == RadioButtonMove::Back, this,
+                                  getter_AddRefs(selectedRadioButton));
+  }
+  if (!selectedRadioButton) {
+    return NS_OK;
+  }
+  FocusOptions options;
+  ErrorResult error;
+  selectedRadioButton->Focus(options, CallerType::System, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
+  nsresult rv = DispatchSimulatedClick(
+      selectedRadioButton, aVisitor.mEvent->IsTrusted(), aVisitor.mPresContext);
+  if (NS_SUCCEEDED(rv)) {
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+  }
+  return rv;
 }
 
 void HTMLInputElement::PostHandleEventForRangeThumb(
@@ -5323,8 +5333,7 @@ already_AddRefed<Promise> HTMLInputElement::GetFilesAndDirectories(
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
 
-  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(),
-                                 mozilla::fallible_t())) {
+  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(), fallible)) {
     p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
     return p.forget();
   }
@@ -6741,7 +6750,7 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
 
   // Services to retrieve image/*, audio/*, video/* filters
   nsCOMPtr<nsIStringBundleService> stringService =
-      mozilla::components::StringBundle::Service();
+      components::StringBundle::Service();
   if (!stringService) {
     return;
   }

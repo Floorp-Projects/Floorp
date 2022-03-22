@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Page scrolling bug test, helper page</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+    // --------------------------------------------------------------------
+    // Page scrolling not smooth test
+    //
+    // This test checks that a page scroll respects general_smoothScroll_pages preference.
+    //
+    // The page contains a <div> that is large enough to make the page
+    // scrollable.
+    //
+    // We trigger the page scroll and then we wait to reach destination
+    // Expecting an instant scroll, we check that the scroll event is called once
+    // --------------------------------------------------------------------
+    const testData = [
+      {scrollOrigin: "page", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.pages", false],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "page", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.pages", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "page", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.pages", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "page", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.pages", false],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "page", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.pages", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "page", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.pages", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      // Origin:Line Scrolling tests
+      {scrollOrigin: "line", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.lines", false],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "line", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.lines", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "line", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.lines", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "line", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.lines", false],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "line", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.lines", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "line", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.lines", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      // Origin:Other Scrolling test
+      {scrollOrigin: "other", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.other", false],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "other", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.other", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "other", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.other", true],
+        ["general.smoothScroll.msdPhysics.enabled", true]]},
+      {scrollOrigin: "other", smooth: false,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.other", false],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "other", smooth: false,
+        prefs: [["general.smoothScroll", false], ["general.smoothScroll.other", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]},
+      {scrollOrigin: "other", smooth: true,
+        prefs: [["general.smoothScroll", true], ["general.smoothScroll.other", true],
+        ["general.smoothScroll.msdPhysics.enabled", false]]}];
+
+    async function test(data) {
+      /*
+      Test Data:
+      {
+        scrollOrigin: "page"|"other"|"line",
+        smooth: bool,
+        prefs: prefences
+      }
+      */
+      const scrollOrigin = data.scrollOrigin;
+      const smooth = data.smooth;
+      const msdPhysics = data.prefs[2][1];
+      var SimpleTest = window.opener.SimpleTest;
+      let destination = 0;
+      let key = "";
+      switch (scrollOrigin){
+        case "page":
+          destination = document.scrollingElement.clientHeight * 0.8;
+          key = "KEY_PageDown";
+          break;
+        case "other":
+          destination = 40000; // Div is 50k
+          key = "KEY_End";
+          break;
+        case "line":
+        default:
+          destination = 50; // pref set to scroll by 5 lines
+                            // line scroll amounts vary by platform but are
+                            // in the 16-19px range
+          key = "KEY_ArrowDown";
+      }
+      await SpecialPowers.pushPrefEnv({ set: data.prefs });
+      SimpleTest.info(`Testing Scrolling preferences. [origin: ${scrollOrigin}; smooth: ${smooth}; msdPhysics: ${msdPhysics}; ${destination}]`);
+
+      // Send the synthesized key event, and wait until it arrives in the
+      // content process.
+      let keyPromise = promiseOneEvent(window, "keydown", null);
+      window.synthesizeKey(key);
+      await keyPromise;
+
+      // Take control of the refresh driver. It's important to do this
+      // as soon as the key event has arrived, to ensure that any compositor
+      // animation hasn't started yet. Otherwise, the compositor animation
+      // could start and get in multiple samples (potentially the entire
+      // animation) before the content process gets a chance to observe it,
+      // preventing us from distinguishing smooth scrolls from instant scrolls.
+      let utils = SpecialPowers.DOMWindowUtils;
+      utils.advanceTimeAndRefresh(0);
+
+      // Flush any pending paints. This gives a chance for any handoff of
+      // the scroll to APZ to occur.
+      await promiseAllPaintsDone();
+
+      // Tick the refresh driver manually until we detect that scrolling has
+      // started (scrollY > 0) and then stopped (scroll offset the same in
+      // two subsequent ticks).
+      let startedScroll = false;
+      let stoppedScroll = false;
+      let scrollCount = 0;
+      let prevScrollPos = window.scrollY;
+      while (!stoppedScroll) {
+        // Tick the refresh driver. This triggers a composite, so any
+        // compositor animation will be sampled. (Main thread animations
+        // will also be sampled.)
+        utils.advanceTimeAndRefresh(16);
+
+        // Flush APZ repaints to ensure that scroll offset changes from
+        // a compositor sample reach the content process.
+        await promiseApzFlushedRepaints();
+
+        // Track the number of ticks in which the scroll offset changed.
+        let scrollPos = window.scrollY;
+        if (startedScroll && scrollPos == prevScrollPos) {
+          stoppedScroll = true;
+          break;
+        }
+        if (!startedScroll && scrollPos > 0) {
+          startedScroll = true;
+        }
+        if (startedScroll) {
+          scrollCount++;
+        }
+        prevScrollPos = scrollPos;
+      }
+
+      SimpleTest.info(`Scrolled to ${window.scrollY}`);
+
+      // Relinquish control of the refresh driver.
+      utils.restoreNormalRefresh();
+
+      SimpleTest.ok(window.scrollY >= destination, `The page did not scroll [origin: ${scrollOrigin}, smooth: ${smooth}]`);
+      if (smooth)
+        SimpleTest.ok(scrollCount > 1,
+        `Scrolled only once, but expecting a smooth transtion [origin: ${scrollOrigin}; msdPhysics: ${msdPhysics}]`);
+      else
+        SimpleTest.is(scrollCount, 1,
+        `Scrolled more than once, but expecting an instant scroll [origin: ${scrollOrigin}; msdPhysics: ${msdPhysics}]`);
+
+      // Synthesize a touch tap to cancel the animation if it's still in-progress.
+      // (scrollTo() does not do this as of bug 1692708, it adjusts the destination
+      // of the animation by a relative delta).
+      let touchStartPromise = promiseOneEvent(window, "touchstart", null);
+      await synthesizeNativeTap(window, 50, 50);
+      // Wait until the tap is actually processed by APZ.
+      await touchStartPromise;
+      await promiseApzFlushedRepaints();
+
+      // Reset scroll position for next case.
+      window.scrollTo(0, 0);
+      await promiseApzFlushedRepaints();
+      SimpleTest.is(0, window.scrollY, `Expected to be scrolled to origin, actually scrolled to ${window.scrollY}`)
+    }
+
+    async function runTests() {
+      for (i = 0; i < testData.length; i++){
+        await test(testData[i]);
+      }
+    }
+
+    if (getPlatform() == "linux") {
+      // FIXME(bug 1760731): On Linux, this test frequently hangs at
+      // "await touchStartPromise", so we skip it.
+      SimpleTest.ok(true, "Test is disabled on Linux, skipping");
+      subtestDone();
+    } else {
+      waitUntilApzStable()
+      .then(runTests)
+      .then(subtestDone, subtestFailed);
+    }
+  </script>
+</head>
+<body style="height: 10000px; overflow: scroll;">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1756529">SmoothScrollPage not honored with MSD physics bug.</a>
+  <!-- Put enough content into the page to make it have a nonzero scroll range -->
+  <div style="height: 50000px;">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Tellus in metus vulputate eu. Vestibulum morbi blandit cursus risus at ultrices mi tempus imperdiet. Congue quisque egestas diam in. Pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu. Eleifend mi in nulla posuere. Proin libero nunc consequat interdum varius. Risus pretium quam vulputate dignissim suspendisse in est. Lacus vel facilisis volutpat est. Donec pretium vulputate sapien nec. Feugiat sed lectus vestibulum mattis. Platea dictumst quisque sagittis purus. Vulputate eu scelerisque felis imperdiet proin fermentum leo vel. Enim facilisis gravida neque convallis a cras semper auctor. Placerat orci nulla pellentesque dignissim enim sit.</p>
+    <p>Augue neque gravida in fermentum et sollicitudin ac. Mattis enim ut tellus elementum sagittis vitae et. Malesuada nunc vel risus commodo viverra maecenas accumsan. Viverra nibh cras pulvinar mattis nunc sed. Lectus nulla at volutpat diam ut venenatis tellus in. Non tellus orci ac auctor. Magna etiam tempor orci eu lobortis. Malesuada nunc vel risus commodo viverra maecenas accumsan lacus vel. Sagittis orci a scelerisque purus. Tellus pellentesque eu tincidunt tortor. Vulputate dignissim suspendisse in est ante in. Tristique et egestas quis ipsum suspendisse. Quisque egestas diam in arcu cursus. Massa massa ultricies mi quis hendrerit dolor magna eget. Mattis nunc sed blandit libero volutpat sed. Consectetur purus ut faucibus pulvinar elementum integer enim.</p>
+    <p>Vestibulum lorem sed risus ultricies tristique nulla. Imperdiet nulla malesuada pellentesque elit eget gravida. Feugiat nisl pretium fusce id velit ut tortor pretium. Commodo ullamcorper a lacus vestibulum sed arcu non odio. Id nibh tortor id aliquet lectus proin nibh nisl condimentum. Amet volutpat consequat mauris nunc congue nisi vitae suscipit tellus. Neque ornare aenean euismod elementum. Semper quis lectus nulla at. Massa sed elementum tempus egestas. Praesent elementum facilisis leo vel fringilla est ullamcorper eget nulla. Pellentesque elit eget gravida cum sociis natoque penatibus et. Massa enim nec dui nunc mattis enim. Laoreet suspendisse interdum consectetur libero id faucibus nisl. Fusce ut placerat orci nulla.</p>
+    <p>Vitae tempus quam pellentesque nec nam aliquam. Vestibulum mattis ullamcorper velit sed ullamcorper morbi tincidunt ornare. Nam libero justo laoreet sit amet. Arcu non sodales neque sodales. Nec ultrices dui sapien eget mi proin sed. Parturient montes nascetur ridiculus mus mauris vitae ultricies. Lacus sed viverra tellus in hac habitasse. Orci phasellus egestas tellus rutrum. Leo a diam sollicitudin tempor id eu nisl. Diam phasellus vestibulum lorem sed risus ultricies tristique nulla. Lectus nulla at volutpat diam ut venenatis tellus in. Cursus metus aliquam eleifend mi in nulla. Et ultrices neque ornare aenean euismod. Sit amet aliquam id diam maecenas ultricies mi. Volutpat diam ut venenatis tellus in metus vulputate eu.</p>
+    <p>Pellentesque elit ullamcorper dignissim cras tincidunt. Morbi tincidunt augue interdum velit euismod. Diam vel quam elementum pulvinar etiam non quam. Eget duis at tellus at urna. Posuere ac ut consequat semper viverra nam libero justo laoreet. Ac turpis egestas maecenas pharetra convallis posuere. Ultrices tincidunt arcu non sodales neque sodales ut etiam sit. In eu mi bibendum neque egestas. Pellentesque sit amet porttitor eget dolor morbi. Ac tortor dignissim convallis aenean et tortor at. Elementum tempus egestas sed sed risus pretium quam. Nisi scelerisque eu ultrices vitae auctor eu augue. Urna duis convallis convallis tellus id interdum velit laoreet id. Auctor eu augue ut lectus arcu bibendum at varius vel.</p>
+  </div>
+</body>
+</html>

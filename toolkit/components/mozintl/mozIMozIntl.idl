@@ -83,6 +83,15 @@ interface mozIMozIntl : nsISupports
    */
   jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes, [optional] in jsval options);
 
+  /**
+   * Returns the assumed script directionality for known Firefox locales. This is
+   * somewhat crude, but should work until Bug 1750781 lands.
+   *
+   * TODO (Bug 1750781) - Callers should use Intl.LocaleInfo once it is standardized (see
+   * Bug 1693576), rather than maintaining a hardcoded list of RTL locales.
+   */
+  jsval getScriptDirection(in jsval locale);
+
   readonly attribute jsval Collator;
   readonly attribute jsval DateTimeFormat;
   readonly attribute jsval DisplayNames;

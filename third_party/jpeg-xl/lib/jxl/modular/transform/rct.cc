@@ -4,8 +4,15 @@
 // license that can be found in the LICENSE file.
 
 #include "lib/jxl/modular/transform/rct.h"
-
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "lib/jxl/modular/transform/rct.cc"
+#include <hwy/foreach_target.h>
+#include <hwy/highway.h>
+HWY_BEFORE_NAMESPACE();
 namespace jxl {
+namespace HWY_NAMESPACE {
+
+using hwy::HWY_NAMESPACE::ShiftRight;
 
 template <int transform_type>
 void InvRCTRow(const pixel_type* in0, const pixel_type* in1,
@@ -15,7 +22,38 @@ void InvRCTRow(const pixel_type* in0, const pixel_type* in1,
                 "Invalid transform type");
   int second = transform_type >> 1;
   int third = transform_type & 1;
-  for (size_t x = 0; x < w; x++) {
+
+  size_t x = 0;
+  const HWY_FULL(pixel_type) d;
+  const size_t N = Lanes(d);
+  for (; x + N - 1 < w; x += N) {
+    if (transform_type == 6) {
+      auto Y = Load(d, in0 + x);
+      auto Co = Load(d, in1 + x);
+      auto Cg = Load(d, in2 + x);
+      Y -= ShiftRight<1>(Cg);
+      auto G = Cg + Y;
+      Y -= ShiftRight<1>(Co);
+      auto R = Y + Co;
+      Store(R, d, out0 + x);
+      Store(G, d, out1 + x);
+      Store(Y, d, out2 + x);
+    } else {
+      auto First = Load(d, in0 + x);
+      auto Second = Load(d, in1 + x);
+      auto Third = Load(d, in2 + x);
+      if (third) Third += First;
+      if (second == 1) {
+        Second += First;
+      } else if (second == 2) {
+        Second += ShiftRight<1>(First + Third);
+      }
+      Store(First, d, out0 + x);
+      Store(Second, d, out1 + x);
+      Store(Third, d, out2 + x);
+    }
+  }
+  for (; x < w; x++) {
     if (transform_type == 6) {
       pixel_type Y = in0[x];
       pixel_type Co = in1[x];
@@ -96,4 +134,17 @@ Status InvRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
   return true;
 }
 
+}  // namespace HWY_NAMESPACE
 }  // namespace jxl
+HWY_AFTER_NAMESPACE();
+
+#if HWY_ONCE
+namespace jxl {
+
+HWY_EXPORT(InvRCT);
+Status InvRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
+  return HWY_DYNAMIC_DISPATCH(InvRCT)(input, begin_c, rct_type, pool);
+}
+
+}  // namespace jxl
+#endif

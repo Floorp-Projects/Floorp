@@ -447,9 +447,6 @@ add_task(async function test3rdPartyStoragePermission() {
   // that this works correctly, i.e. the permission items are added to the
   // anchor when relevant, and other permission items are added to the default
   // anchor, and adding/removing permissions preserves this behavior correctly.
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.contentblocking.state-partitioning.mvp.ui.enabled", true]],
-  });
 
   await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
     await openPermissionPopup();
