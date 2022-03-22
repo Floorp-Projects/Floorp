@@ -267,6 +267,11 @@ Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub) {
   }
 
   if (data.isSome()) {
+    // Warp only supports inlining Standard and FunCall calls.
+    if (flags.getArgFormat() != CallFlags::Standard &&
+        flags.getArgFormat() != CallFlags::FunCall) {
+      return mozilla::Nothing();
+    }
     data->calleeOperand = calleeGuardOperand;
     data->callFlags = flags;
     data->target = target;
