@@ -679,10 +679,16 @@ void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
   masm.ma_bl(&debugTrapStub_, Assembler::NonZero);
   masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
               CodeOffset(masm.currentOffset()));
-#elif defined(JS_CODEGEN_MIPS64)
-  // TODO - also see insertBreakpointStub()
-#elif defined(JS_CODEGEN_LOONG64)
-  // TODO - also see insertBreakpointStub()
+#elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  ScratchPtr scratch(*this);
+  Label L;
+  masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugTrapHandler()),
+               scratch);
+  masm.branchPtr(Assembler::Equal, scratch, ImmWord(0), &L);
+  masm.call(&debugTrapStub_);
+  masm.append(CallSiteDesc(iter_.lastOpcodeOffset(), kind),
+              CodeOffset(masm.currentOffset()));
+  masm.bind(&L);
 #else
   MOZ_CRASH("BaseCompiler platform hook: insertBreakablePoint");
 #endif
@@ -748,10 +754,17 @@ void BaseCompiler::insertBreakpointStub() {
     masm.ma_tst(tmp2, Imm32(1 << func_.index % 32), tmp1, Assembler::Always);
     masm.ma_bx(lr, Assembler::Zero);
   }
-#elif defined(JS_CODEGEN_MIPS64)
-  // TODO - also see insertBreakablePoint()
-#elif defined(JS_CODEGEN_LOONG64)
-  // TODO - also see insertBreakablePoint()
+#elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  {
+    ScratchPtr scratch(*this);
+
+    // Logic same as ARM64.
+    masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugFilter()),
+                 scratch);
+    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
+                       Imm32(1 << (func_.index % 32)), &L);
+    masm.abiret();
+  }
 #else
   MOZ_CRASH("BaseCompiler platform hook: endFunction");
 #endif
