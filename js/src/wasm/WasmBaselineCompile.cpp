@@ -7789,6 +7789,10 @@ static void RelaxedConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs,
                                         RegV128 rd) {
   masm.unsignedTruncSatFloat64x2ToInt32x4Relaxed(rs, rd);
 }
+
+static void RelaxedQ15MulrS(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.q15MulrInt16x8Relaxed(rsd, rs, rsd);
+}
 #  endif
 
 void BaseCompiler::emitVectorAndNot() {
@@ -9495,6 +9499,11 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorBinary(RelaxedSwizzle));
+          case uint32_t(SimdOp::I16x8RelaxedQ15MulrS):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorBinary(RelaxedQ15MulrS));
 #  endif
           default:
             break;

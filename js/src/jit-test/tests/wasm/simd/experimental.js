@@ -334,3 +334,42 @@ for (let [k, opcode, AT] of [[1, I8x16RelaxedLaneSelectCode, Int8Array],
                                                   ...V128Load(0),
                                                   SimdPrefix, varU32(opcode)])]})])])));    
 }
+
+
+// Relaxed rounding q-format multiplication.
+var ins = wasmValidateAndEval(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0]),
+    memorySection(1),
+    exportSection([{funcIndex: 0, name: "relaxed_q15mulr_s"},
+                    {memIndex: 0, name: "mem"}]),
+    bodySection([
+        funcBody({locals:[],
+                    body: [...V128StoreExpr(0, [...V128Load(16),
+                                                ...V128Load(32),
+                                                SimdPrefix, varU32(I16x8RelaxedQ15MulrS)])]})])]));
+
+var mem16 = new Int16Array(ins.exports.mem.buffer);
+for (let [as, bs] of cross([
+        [1, -3, 5, -7, 11, -13, -17, 19],
+        [-1, 0, 16, -32, 64, 128, -1024, 0, 1],
+        [1,2,-32768,32767,1,4,-32768,32767]]) ) {
+    set(mem16, 8, as);
+    set(mem16, 16, bs);
+    ins.exports.relaxed_q15mulr_s();
+    const result = get(mem16, 0, 8);
+    for (let i = 0; i < 8; i++) {
+        const expected = (as[i] * bs[i] + 0x4000) >> 15;
+        if (as[i] == -32768 && bs[i] == -32768) continue;
+        assertEq(expected, result[i], `result of ${as[i]} * ${bs[i]}`);
+    }
+}
+
+// Misc utils.
+function cross(xs) {
+    let results = [];
+    for ( let x of xs )
+        for ( let y of xs )
+            results.push([x,y]);
+    return results;
+}
