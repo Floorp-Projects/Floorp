@@ -16,6 +16,8 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.gleanplumb.Message
+import org.mozilla.fenix.gleanplumb.MessagingState
 
 /**
  * [Action] implementation related to [AppStore].
@@ -61,5 +63,48 @@ sealed class AppAction : Action {
         val categoriesSelected: List<PocketRecommendedStoriesSelectedCategory>
     ) : AppAction()
     object RemoveCollectionsPlaceholder : AppAction()
-    object RemoveSetDefaultBrowserCard : AppAction()
+    /**
+     * [Action]s related to interactions with the Messaging Framework.
+     */
+    sealed class MessagingAction : AppAction() {
+        /**
+         * Restores the [Message] state from the storage.
+         */
+        object Restore : MessagingAction()
+
+        /**
+         * Evaluates if a new messages should be shown to users.
+         */
+        object Evaluate : MessagingAction()
+
+        /**
+         * Updates [MessagingState.messageToShow] with the given [message].
+         */
+        data class UpdateMessageToShow(val message: Message) : MessagingAction()
+
+        /**
+         * Updates [MessagingState.messageToShow] with the given [message].
+         */
+        object ConsumeMessageToShow : MessagingAction()
+
+        /**
+         * Updates [MessagingState.messages] with the given [messages].
+         */
+        data class UpdateMessages(val messages: List<Message>) : MessagingAction()
+
+        /**
+         * Indicates the given [message] was clicked.
+         */
+        data class MessageClicked(val message: Message) : MessagingAction()
+
+        /**
+         * Indicates the given [message] was shown.
+         */
+        data class MessageDisplayed(val message: Message) : MessagingAction()
+
+        /**
+         * Indicates the given [message] was dismissed.
+         */
+        data class MessageDismissed(val message: Message) : MessagingAction()
+    }
 }

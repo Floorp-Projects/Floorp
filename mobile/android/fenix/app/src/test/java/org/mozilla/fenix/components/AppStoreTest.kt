@@ -16,6 +16,8 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -23,6 +25,7 @@ import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
@@ -71,7 +74,6 @@ class AppStoreTest {
             mode = currentMode.getCurrentMode(),
             topSites = emptyList(),
             showCollectionPlaceholder = true,
-            showSetAsDefaultBrowserCard = true,
             recentTabs = emptyList()
         )
 
@@ -91,6 +93,16 @@ class AppStoreTest {
         appStore.dispatch(AppAction.ModeChange(Mode.Normal)).join()
         assertEquals(Mode.Normal, appStore.state.mode)
     }
+
+    @Test
+    fun `GIVEN a new value for messageToShow WHEN NimbusMessageChange is called THEN update the current value`() =
+        runBlocking {
+            assertNull(appStore.state.messaging.messageToShow)
+
+            appStore.dispatch(UpdateMessageToShow(mockk())).join()
+
+            assertNotNull(appStore.state.messaging.messageToShow)
+        }
 
     @Test
     fun `Test changing the collections in AppStore`() = runBlocking {

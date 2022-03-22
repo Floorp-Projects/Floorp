@@ -311,24 +311,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    /**
-     * Shows if the user has chosen to close the set default browser experiment card
-     * on home screen or has clicked the set as default browser button.
-     */
-    var userDismissedExperimentCard by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_experiment_card_home),
-        default = false
-    )
-
-    /**
-     * Shows if the set default browser experiment card should be shown on home screen.
-     */
-    fun shouldShowSetAsDefaultBrowserCard(): Boolean {
-        return isDefaultBrowserMessageLocation(MessageSurfaceId.HOMESCREEN_BANNER) &&
-            !userDismissedExperimentCard &&
-            numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD
-    }
-
     private val defaultBrowserFeature: DefaultBrowserMessage by lazy {
         FxNimbus.features.defaultBrowserMessage.value()
     }
@@ -1212,7 +1194,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     private val homescreenSections: Map<HomeScreenSection, Boolean> by lazy {
-        FxNimbus.features.homescreen.value().sectionsEnabled
+        FxNimbus.features.homescreen.value(appContext).sectionsEnabled
     }
 
     var historyMetadataUIFeature by lazyFeatureFlagPreference(

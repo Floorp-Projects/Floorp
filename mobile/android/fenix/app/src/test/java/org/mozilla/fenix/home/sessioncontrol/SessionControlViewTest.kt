@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
@@ -155,7 +156,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles
@@ -165,6 +166,40 @@ class SessionControlViewTest {
         assertTrue(results[1] is AdapterItem.RecentBookmarksHeader)
         assertTrue(results[2] is AdapterItem.RecentBookmarks)
         assertTrue(results[3] is AdapterItem.CustomizeHomeButton)
+    }
+
+    @Test
+    fun `GIVEN a nimbusMessageCard WHEN normalModeAdapterItems is called THEN add a NimbusMessageCard`() {
+        val settings: Settings = mockk()
+        val topSites = emptyList<TopSite>()
+        val collections = emptyList<TabCollection>()
+        val expandedCollections = emptySet<Long>()
+        val recentBookmarks = listOf(RecentBookmark())
+        val recentTabs = emptyList<RecentTab.Tab>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
+        val pocketArticles = emptyList<PocketRecommendedStory>()
+        val nimbusMessageCard: Message = mockk()
+
+        every { settings.showTopSitesFeature } returns true
+        every { settings.showRecentTabsFeature } returns true
+        every { settings.showRecentBookmarksFeature } returns true
+        every { settings.historyMetadataUIFeature } returns true
+        every { settings.showPocketRecommendationsFeature } returns true
+
+        val results = normalModeAdapterItems(
+            settings,
+            topSites,
+            collections,
+            expandedCollections,
+            recentBookmarks,
+            false,
+            nimbusMessageCard,
+            recentTabs,
+            historyMetadata,
+            pocketArticles
+        )
+
+        assertTrue(results.contains(AdapterItem.NimbusMessageCard(nimbusMessageCard)))
     }
 
     @Test
@@ -191,7 +226,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles
@@ -227,7 +262,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles
@@ -263,7 +298,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles
@@ -300,7 +335,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles
@@ -336,7 +371,7 @@ class SessionControlViewTest {
             expandedCollections,
             recentBookmarks,
             false,
-            false,
+            null,
             recentTabs,
             historyMetadata,
             pocketArticles

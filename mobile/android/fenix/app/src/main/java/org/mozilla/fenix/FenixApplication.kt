@@ -65,6 +65,7 @@ import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
@@ -158,6 +159,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         val store = components.core.store
         GlobalScope.launch(Dispatchers.IO) {
             setStartupMetrics(store, settings())
+        }
+        if (FeatureFlags.messagingFeature && settings().isExperimentationEnabled) {
+            components.appStore.dispatch(AppAction.MessagingAction.Restore)
         }
     }
 

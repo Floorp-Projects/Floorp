@@ -17,6 +17,7 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.gleanplumb.MessagingState
 
 /**
  * Value type that represents the state of the tabs tray.
@@ -30,12 +31,12 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
  * @property mode The state of the [HomeFragment] UI.
  * @property topSites The list of [TopSite] in the [HomeFragment].
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
- * @property showSetAsDefaultBrowserCard If true, shows the default browser card
  * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property recentHistory The list of [RecentlyVisitedItem]s.
  * @property pocketStories The list of currently shown [PocketRecommendedStory]s.
  * @property pocketStoriesCategories All [PocketRecommendedStory] categories.
+ * @property messaging State related messages.
  * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
  */
 data class AppState(
@@ -46,11 +47,11 @@ data class AppState(
     val mode: Mode = Mode.Normal,
     val topSites: List<TopSite> = emptyList(),
     val showCollectionPlaceholder: Boolean = false,
-    val showSetAsDefaultBrowserCard: Boolean = false,
     val recentTabs: List<RecentTab> = emptyList(),
     val recentBookmarks: List<RecentBookmark> = emptyList(),
     val recentHistory: List<RecentlyVisitedItem> = emptyList(),
     val pocketStories: List<PocketRecommendedStory> = emptyList(),
     val pocketStoriesCategories: List<PocketRecommendedStoriesCategory> = emptyList(),
-    val pocketStoriesCategoriesSelections: List<PocketRecommendedStoriesSelectedCategory> = emptyList()
+    val pocketStoriesCategoriesSelections: List<PocketRecommendedStoriesSelectedCategory> = emptyList(),
+    val messaging: MessagingState = MessagingState(),
 ) : State

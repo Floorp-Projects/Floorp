@@ -59,6 +59,8 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EngineSource
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.gleanplumb.Message
+import org.mozilla.fenix.gleanplumb.MessageController
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -76,6 +78,7 @@ class DefaultSessionControlControllerTest {
     private val appStore: AppStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
+    private val messageController: MessageController = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
@@ -129,7 +132,6 @@ class DefaultSessionControlControllerTest {
             mode = Mode.Normal,
             topSites = emptyList(),
             showCollectionPlaceholder = true,
-            showSetAsDefaultBrowserCard = true,
             recentTabs = emptyList(),
             recentBookmarks = emptyList()
         )
@@ -1076,6 +1078,26 @@ class DefaultSessionControlControllerTest {
         }
     }
 
+    @Test
+    fun `WHEN handleMessageClicked,handleMessageClosed and handleMessageDisplayed are called THEN delegate to messageController`() {
+        val controller = createController()
+        val message = mockk<Message>()
+
+        controller.handleMessageClicked(message)
+        controller.handleMessageClosed(message)
+        controller.handleMessageDisplayed(message)
+
+        verify {
+            messageController.onMessagePressed(message)
+        }
+        verify {
+            messageController.onMessageDismissed(message)
+        }
+        verify {
+            messageController.onMessageDisplayed(message)
+        }
+    }
+
     private fun createController(
         hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },
@@ -1088,6 +1110,7 @@ class DefaultSessionControlControllerTest {
             engine = engine,
             metrics = metrics,
             store = store,
+            messageController = messageController,
             tabCollectionStorage = tabCollectionStorage,
             addTabUseCase = tabsUseCases.addTab,
             restoreUseCase = mockk(relaxed = true),

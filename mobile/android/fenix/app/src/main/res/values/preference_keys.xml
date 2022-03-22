@@ -270,9 +270,6 @@
 
     <string name="pref_key_open_next_tab_desktop_mode" translatable="false">pref_key_open_next_tab_desktop_mode</string>
 
-    <!-- Set default browser experiment card-->
-    <string name="pref_key_experiment_card_home" translatable="false">pref_key_experiment_card_home</string>
-
     <!-- Secret Info Setting Keys -->
     <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
 

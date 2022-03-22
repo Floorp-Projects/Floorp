@@ -109,4 +109,10 @@ object FeatureFlags {
      * Enables the Unified Search feature.
      */
     val unifiedSearchFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables receiving from the messaging framework.
+     */
+    @Suppress("MayBeConst")
+    val messagingFeature = false
 }

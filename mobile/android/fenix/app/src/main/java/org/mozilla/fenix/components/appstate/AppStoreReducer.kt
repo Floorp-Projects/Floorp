@@ -14,6 +14,7 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+import org.mozilla.fenix.gleanplumb.state.MessagingReducer
 
 /**
  * Reducer for [AppStore].
@@ -29,6 +30,8 @@ internal object AppStoreReducer {
             state.copy(nonFatalCrashes = state.nonFatalCrashes - action.crash)
         is AppAction.RemoveAllNonFatalCrashes ->
             state.copy(nonFatalCrashes = emptyList())
+
+        is AppAction.MessagingAction -> MessagingReducer.reduce(state, action)
 
         is AppAction.Change -> state.copy(
             collections = action.collections,
@@ -60,7 +63,6 @@ internal object AppStoreReducer {
         is AppAction.RemoveCollectionsPlaceholder -> {
             state.copy(showCollectionPlaceholder = false)
         }
-        is AppAction.RemoveSetDefaultBrowserCard -> state.copy(showSetAsDefaultBrowserCard = false)
         is AppAction.RecentTabsChange -> {
             val recentSearchGroup = action.recentTabs.find { it is RecentTab.SearchGroup } as RecentTab.SearchGroup?
             state.copy(

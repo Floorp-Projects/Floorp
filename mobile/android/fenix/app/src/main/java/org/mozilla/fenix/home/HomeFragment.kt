@@ -97,6 +97,8 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.gleanplumb.DefaultMessageController
+import org.mozilla.fenix.gleanplumb.MessagingFeature
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -172,6 +174,7 @@ class HomeFragment : Fragment() {
     private lateinit var currentMode: CurrentMode
 
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
+    private val messagingFeature = ViewBoundFeatureWrapper<MessagingFeature>()
     private val recentTabsListFeature = ViewBoundFeatureWrapper<RecentTabsListFeature>()
     private val recentBookmarksFeature = ViewBoundFeatureWrapper<RecentBookmarksFeature>()
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
@@ -239,6 +242,16 @@ class HomeFragment : Fragment() {
             }
         }
 
+        if (requireContext().settings().isExperimentationEnabled) {
+            messagingFeature.set(
+                feature = MessagingFeature(
+                    store = requireComponents.appStore,
+                ),
+                owner = viewLifecycleOwner,
+                view = binding.root
+            )
+        }
+
         if (requireContext().settings().showTopSitesFeature) {
             topSitesFeature.set(
                 feature = TopSitesFeature(
@@ -298,6 +311,11 @@ class HomeFragment : Fragment() {
                 settings = components.settings,
                 engine = components.core.engine,
                 metrics = components.analytics.metrics,
+                messageController = DefaultMessageController(
+                    appStore = components.appStore,
+                    messagingStorage = components.analytics.messagingStorage,
+                    homeActivity = activity
+                ),
                 store = store,
                 tabCollectionStorage = components.core.tabCollectionStorage,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,

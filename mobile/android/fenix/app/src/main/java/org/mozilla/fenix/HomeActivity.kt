@@ -1016,18 +1016,22 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
+    fun processIntent(intent: Intent): Boolean {
+        return externalSourceIntentProcessors.any {
+            it.process(
+                intent,
+                navHost.navController,
+                this.intent
+            )
+        }
+    }
+
     @VisibleForTesting
     internal fun getSettings(): Settings = settings()
 
     private fun shouldNavigateToBrowserOnColdStart(savedInstanceState: Bundle?): Boolean {
         return isActivityColdStarted(intent, savedInstanceState) &&
-            !externalSourceIntentProcessors.any {
-                it.process(
-                    intent,
-                    navHost.navController,
-                    this.intent
-                )
-            }
+            !processIntent(intent)
     }
 
     companion object {
