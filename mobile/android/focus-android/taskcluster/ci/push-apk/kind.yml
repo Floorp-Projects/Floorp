@@ -47,3 +47,8 @@ job-template:
                 focus-release: gpf
                 klar-release: gpkl
         kind: build
+    routes:
+        by-level:
+            '3':
+              - "notify.email.release-mgmt@mozilla.com.on-failed"
+            'default': []
