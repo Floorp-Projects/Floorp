@@ -785,6 +785,23 @@ impl TransformPalette {
             (transform_kind << 24)
         )
     }
+
+    pub fn get_custom(
+        &mut self,
+        transform: LayoutToPictureTransform,
+    ) -> TransformPaletteId {
+        let index = register_transform(
+            &mut self.metadata,
+            &mut self.transforms,
+            transform,
+        );
+
+        let transform_kind = self.metadata[index].transform_kind as u32;
+        TransformPaletteId(
+            (index as u32) |
+            (transform_kind << 24)
+        )
+    }
 }
 
 // Texture cache resources can be either a simple rect, or define

@@ -5896,26 +5896,10 @@ impl PicturePrimitive {
                             shadow.blur_radius,
                         );
 
-                        let mut shadow_rect = prim_rect.inflate(
+                        let shadow_rect = prim_rect.inflate(
                             blur_inflation_x * BLUR_SAMPLE_SCALE,
                             blur_inflation_y * BLUR_SAMPLE_SCALE,
                         ).translate(shadow.offset);
-
-                        // If we are drawing with snapping enabled, the local rect of the prim must be in the raster
-                        // space, to avoid situations where there is a 180deg rotation in between the root and primitive
-                        // space not being correctly applied.
-                        if surface.surface_spatial_node_index != surface.raster_spatial_node_index {
-                            let map_local_to_raster = SpaceMapper::new_with_target(
-                                surface.raster_spatial_node_index,
-                                surface.surface_spatial_node_index,
-                                LayoutRect::max_rect(),
-                                frame_context.spatial_tree,
-                            );
-
-                            shadow_rect = map_local_to_raster
-                                .map(&shadow_rect)
-                                .unwrap();
-                        }
 
                         // ImageBrush colors
                         request.push(shadow.color.premultiplied());
