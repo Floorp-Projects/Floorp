@@ -52,7 +52,6 @@ async function testDoorHanger(
         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
         "tracking.example.com,tracking.example.org",
       ],
-      ["browser.contentblocking.state-partitioning.mvp.ui.enabled", true],
       // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
       ["network.cookie.sameSite.laxByDefault", false],
     ],
