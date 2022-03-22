@@ -6012,48 +6012,35 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.bind(&skipBarrier);
 }
 
-// This frees the register `valueAddr`.
-
-bool BaseCompiler::emitPostBarrierCall(RegPtr valueAddr) {
+bool BaseCompiler::emitPostBarrier(const Maybe<RegRef>& object,
+                                   RegPtr valueAddr, RegRef value) {
   uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
 
-  // The `valueAddr` is a raw pointer to the cell within some GC object or
-  // TLS area, and we guarantee that the GC will not run while the
-  // postbarrier call is active, so push a uintptr_t value.
-  pushPtr(valueAddr);
-  return emitInstanceCall(bytecodeOffset, SASigPostBarrier);
-}
-
-// Emits a store to a JS object pointer at the address valueAddr, which is
-// inside the GC cell `object`. Preserves `object` and `value`.
-bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
-                                      RegPtr valueAddr, RegRef value) {
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-  // barrier is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
-  emitPreBarrier(valueAddr);  // Preserves valueAddr
-  masm.storePtr(value, Address(valueAddr, 0));
-
-  Label skipBarrier;
+  // We must force a sync before the guard so that locals are in a consistent
+  // location for whether or not the post-barrier call is taken.
   sync();
 
-  RegRef otherScratch = needRef();
+  // Emit a guard to skip the post-barrier call if it is not needed.
+  Label skipBarrier;
+  RegPtr otherScratch = needPtr();
   EmitWasmPostBarrierGuard(masm, object, otherScratch, value, &skipBarrier);
-  freeRef(otherScratch);
+  freePtr(otherScratch);
 
+  // Push `object` and `value` to preserve them across the call.
   if (object) {
     pushRef(*object);
   }
   pushRef(value);
 
-  // Consumes valueAddr
-  if (!emitPostBarrierCall(valueAddr)) {
+  // The `valueAddr` is a raw pointer to the cell within some GC object or
+  // TLS area, and we are careful so that the GC will not run while the
+  // post-barrier call is active, so push a uintptr_t value.
+  pushPtr(valueAddr);
+  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier)) {
     return false;
   }
 
-  // Consume all other operands as they may have been clobbered by the post
-  // barrier call
+  // Restore `object` and `value`.
   popRef(value);
   if (object) {
     popRef(*object);
@@ -6063,15 +6050,34 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
   return true;
 }
 
-// Emits a store of nullptr to a JS object pointer at the address valueAddr.
-// Preserves `valueAddr`.
+bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
+                                      RegPtr valueAddr, RegRef value) {
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+  // barrier is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+
+  // The pre-barrier preserves all allocated registers.
+  emitPreBarrier(valueAddr);
+
+  // Store the value
+  masm.storePtr(value, Address(valueAddr, 0));
+
+  // The post-barrier preserves object, value, and consumes valueAddr.
+  return emitPostBarrier(object, valueAddr, value);
+}
+
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
   // TODO/AnyRef-boxing: With boxed immediates and strings, the write
   // barrier is going to have to be more complicated.
   ASSERT_ANYREF_IS_JSOBJECT;
 
-  emitPreBarrier(valueAddr);  // Preserves valueAddr
+  // The pre-barrier preserves all allocated registers.
+  emitPreBarrier(valueAddr);
+
+  // Store null
   masm.storePtr(ImmWord(0), Address(valueAddr, 0));
+
+  // No post-barrier is needed, as null does not require a store buffer entry
 }
 
 //////////////////////////////////////////////////////////////////////////////
