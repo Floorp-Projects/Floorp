@@ -2971,6 +2971,7 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
       false;  // Check if it can be read from another frame.
   bool isRecoverableResult = true;  // Check if it can safely be reconstructed.
   bool isImplicitlyUsed = candidate->isImplicitlyUsed();
+  bool hasTryBlock = candidate->block()->graph().hasTryBlock();
 
   TruncateKind kind = TruncateKind::Truncate;
   for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd();
@@ -3022,9 +3023,11 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
   // instruction operating on this instruction is going to be a no-op.
   //
   // Note, that if the result can be observed from another frame, then this
-  // optimization is not safe.
+  // optimization is not safe. Similarly, if this function contains a try
+  // block, the result could be observed from a catch block, which we do
+  // not compile.
   bool safeToConvert = kind == TruncateKind::Truncate && !isImplicitlyUsed &&
-                       !isObservableResult;
+                       !isObservableResult && !hasTryBlock;
 
   // If the candidate instruction appears as operand of a resume point or a
   // recover instruction, and we have to truncate its result, then we might
