@@ -31,6 +31,13 @@ function triggerInstall(browser, xpi_url) {
   });
 }
 
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    // Relax the user input requirements while running this test.
+    set: [["xpinstall.userActivation.required", false]],
+  });
+});
+
 // This tests if addon installation is blocked when requested in fullscreen
 add_task(async function testFullscreenBlockAddonInstallPrompt() {
   // Open example.com
