@@ -694,65 +694,6 @@ body {
     animation: fadein 0.4s;
   }
 
-  .mobile-downloads {
-
-    .qr-code-image {
-      margin: 24px 0 10px;
-      width: 113px;
-      height: 113px;
-    }
-
-    .email-link {
-      font-size: 16px;
-      font-weight: 400;
-      text-decoration: underline;
-      color: var(--in-content-link-color);
-
-      &:hover {
-        background: none;
-      }
-    }
-  }
-
-  .mobile-download-buttons {
-    list-style: none;
-    padding: 10px 0;
-    margin: 0;
-
-    li {
-      display: inline-block;
-
-      button {
-        display: inline-block;
-        height: 45px;
-        width: 152px;
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
-
-      &:not(:first-child) {
-        margin-inline: 5px 0;
-      }
-    }
-  }
-
-  .dismiss-button {
-    padding: 0;
-    margin-block: 30px -45px;
-    margin-inline: 0 30px;
-    display: block;
-    float: inline-end;
-    background: url('chrome://global/skin/icons/close.svg') no-repeat center / cover;
-    height: 15px;
-    width: 15px;
-    align-self: end;
-    // override default min-height and min-width for buttons
-    min-height: 15px;
-    min-width: 15px;
-    -moz-context-properties: fill;
-    fill: currentColor;
-  }
-
   @keyframes fadein {
     from { opacity: 0; }
   }

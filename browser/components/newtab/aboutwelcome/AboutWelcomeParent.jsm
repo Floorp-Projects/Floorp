@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
@@ -313,9 +312,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return LangPackMatcher.ensureLangPackInstalled(data);
       case "AWPage:SET_REQUESTED_LOCALES":
         return LangPackMatcher.setRequestedAppLocales(data);
-      case "AWPage:SEND_TO_DEVICE_EMAILS_SUPPORTED": {
-        return BrowserUtils.sendToDeviceEmailsSupported();
-      }
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
     }

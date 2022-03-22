@@ -25,11 +25,6 @@ function setupRegions(home, current) {
   Region._setCurrentRegion(current || "");
 }
 
-function setLanguage(language) {
-  Services.locale.availableLocales = [language];
-  Services.locale.requestedLocales = [language];
-}
-
 add_task(async function test_shouldShowVPNPromo() {
   function setPromoEnabled(enabled) {
     Services.prefs.setBoolPref("browser.vpn_promo.enabled", enabled);
@@ -101,6 +96,11 @@ add_task(async function test_shouldShowRallyPromo() {
   const allowedLanguage = "en-US";
   const disallowedLanguage = "fr";
 
+  function setLanguage(language) {
+    Services.locale.availableLocales = [language];
+    Services.locale.requestedLocales = [language];
+  }
+
   // Show promo when region is US and language is en-US
   setupRegions(allowedRegion, allowedRegion);
   setLanguage(allowedLanguage);
@@ -122,17 +122,4 @@ add_task(async function test_shouldShowRallyPromo() {
   // Don't show when current region is not US, even if home region is US and langague is en-US
   setupRegions(allowedRegion, disallowedRegion);
   Assert.ok(!BrowserUtils.shouldShowRallyPromo());
-});
-
-add_task(async function test_sendToDeviceEmailsSupported() {
-  const allowedLanguage = "en-US";
-  const disallowedLanguage = "ar";
-
-  // Return true if language is en-US
-  setLanguage(allowedLanguage);
-  Assert.ok(BrowserUtils.sendToDeviceEmailsSupported());
-
-  // Return false if language is ar
-  setLanguage(disallowedLanguage);
-  Assert.ok(!BrowserUtils.sendToDeviceEmailsSupported());
 });

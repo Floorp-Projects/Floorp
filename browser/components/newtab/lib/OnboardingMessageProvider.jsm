@@ -73,52 +73,26 @@ const ONBOARDING_MESSAGES = () => [
                   content: {
                     logo: {
                       imageURL:
-                        "chrome://browser/content/assets/focus-logo.svg",
-                      height: "48px",
+                        "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
+                      height: "100px",
                     },
-                    title: {
-                      string_id: "spotlight-focus-promo-title",
-                    },
-                    subtitle: {
-                      string_id: "spotlight-focus-promo-subtitle",
-                    },
-                    dismiss_button: {
+                    title: "Get Firefox Focus",
+                    subtitle: "Scan the QR Code to Download",
+                    primary_button: {
+                      label: "Email yourself a link",
                       action: {
-                        navigate: true,
+                        type: "OPEN_URL",
+                        data: {
+                          args:
+                            "https://www.mozilla.org/firefox/mobile/get-app/",
+                          where: "tabshifted",
+                        },
                       },
                     },
-                    tiles: {
-                      type: "mobile_downloads",
-                      data: {
-                        QR_code: {
-                          image_url:
-                            "chrome://browser/content/assets/focus-qr-code.svg",
-                          alt_text: {
-                            string_id: "spotlight-focus-promo-qr-code",
-                          },
-                        },
-                        marketplace_buttons: {
-                          ios_link: {
-                            action: {
-                              data: {
-                                args:
-                                  "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
-                                where: "tabshifted",
-                              },
-                              type: "OPEN_URL",
-                            },
-                          },
-                          android_link: {
-                            action: {
-                              data: {
-                                args:
-                                  "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
-                                where: "tabshifted",
-                              },
-                              type: "OPEN_URL",
-                            },
-                          },
-                        },
+                    secondary_button: {
+                      label: "Close",
+                      action: {
+                        navigate: true,
                       },
                     },
                   },
