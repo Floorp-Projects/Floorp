@@ -705,18 +705,17 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
 
-  int32_t caretStyle = StaticPrefs::layout_selection_caret_style();
-  if (caretStyle == 0
-#ifdef XP_WIN
-      && aAmount != eSelectLine
-#endif
-  ) {
-    // Put caret at the selection edge in the |aDirection| direction.
-    caretStyle = 2;
-  }
+  const bool doCollapse = [&] {
+    if (sel->IsCollapsed() || aContinueSelection) {
+      return false;
+    }
+    if (aAmount > eSelectLine) {
+      return false;
+    }
+    int32_t caretStyle = StaticPrefs::layout_selection_caret_style();
+    return caretStyle == 2 || (caretStyle == 0 && aAmount != eSelectLine);
+  }();
 
-  const bool doCollapse = !sel->IsCollapsed() && !aContinueSelection &&
-                          caretStyle == 2 && aAmount <= eSelectLine;
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
       SetChangeReasons(nsISelectionListener::COLLAPSETOSTART_REASON);
