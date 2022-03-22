@@ -17,7 +17,6 @@
 
       this.addEventListener("focus", event => {
         this._cachedInsertionPoint = undefined;
-
         // See select handler. We need the sidebar's places commandset to be
         // updated as well
         document.commandDispatcher.updateCommands("focus");
@@ -67,6 +66,10 @@
             break;
           }
         }
+
+        // Indicate to drag and drop listeners
+        // whether or not this was the start of the drag
+        this._isDragSource = true;
 
         this._controller.setDataTransfer(event);
         event.stopPropagation();
@@ -123,6 +126,7 @@
       });
 
       this.addEventListener("dragend", event => {
+        this._isDragSource = false;
         PlacesControllerDragHelper.currentDropTarget = null;
       });
     }
@@ -388,6 +392,10 @@
         orientation
       );
       return this._cachedInsertionPoint;
+    }
+
+    get isDragSource() {
+      return this._isDragSource;
     }
 
     get ownerWindow() {
