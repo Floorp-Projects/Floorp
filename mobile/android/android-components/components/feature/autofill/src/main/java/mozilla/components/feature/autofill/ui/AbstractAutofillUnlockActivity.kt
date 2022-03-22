@@ -7,6 +7,7 @@ package mozilla.components.feature.autofill.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcel
 import android.service.autofill.FillResponse
 import android.view.autofill.AutofillManager
 import android.widget.inline.InlinePresentationSpec
@@ -40,16 +41,21 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val parsedStructure = intent.getParcelableExtra<ParsedStructure>(EXTRA_PARSED_STRUCTURE)
+        val parsedStructure = with(Parcel.obtain()) {
+            val rawBytes = intent.getByteArrayExtra(EXTRA_PARSED_STRUCTURE)
+            unmarshall(rawBytes!!, 0, rawBytes.size)
+            setDataPosition(0)
+            ParsedStructure(this).also {
+                recycle()
+            }
+        }
         val imeSpec = intent.getImeSpec()
         val maxSuggestionCount = intent.getIntExtra(EXTRA_MAX_SUGGESTION_COUNT, MAX_LOGINS)
         // While the user is asked to authenticate, we already try to build the fill response asynchronously.
-        if (parsedStructure != null) {
-            fillResponse = lifecycleScope.async(Dispatchers.IO) {
-                val builder = fillHandler.handle(parsedStructure, forceUnlock = true, maxSuggestionCount)
-                val result = builder.build(this@AbstractAutofillUnlockActivity, configuration, imeSpec)
-                result
-            }
+        fillResponse = lifecycleScope.async(Dispatchers.IO) {
+            val builder = fillHandler.handle(parsedStructure, forceUnlock = true, maxSuggestionCount)
+            val result = builder.build(this@AbstractAutofillUnlockActivity, configuration, imeSpec)
+            result
         }
 
         if (authenticator == null) {

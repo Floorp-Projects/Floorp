@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Parcel
 import android.service.autofill.FillResponse
 import android.service.autofill.InlinePresentation
 import android.view.autofill.AutofillId
@@ -52,10 +53,21 @@ internal data class AuthFillResponseBuilder(
         }
 
         val authIntent = Intent(context, configuration.unlockActivity)
-        authIntent.putExtra(
-            AbstractAutofillUnlockActivity.EXTRA_PARSED_STRUCTURE,
-            parsedStructure
-        )
+
+        // Pass `ParsedStructure` as raw bytes to prevent the system throwing a ClassNotFoundException
+        // when updating the PendingIntent and trying to create and remap `ParsedStructure`
+        // from the parcelable extra because of an unknown ClassLoader.
+        with(Parcel.obtain()) {
+            parsedStructure.writeToParcel(this, 0)
+
+            authIntent.putExtra(
+                AbstractAutofillUnlockActivity.EXTRA_PARSED_STRUCTURE,
+                this.marshall()
+            )
+
+            recycle()
+        }
+
         authIntent.putExtra(AbstractAutofillUnlockActivity.EXTRA_IME_SPEC, imeSpec)
         authIntent.putExtra(
             AbstractAutofillUnlockActivity.EXTRA_MAX_SUGGESTION_COUNT,

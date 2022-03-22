@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-autofill**
+  * 🚒 Bug fixed [issue #11893](https://github.com/mozilla-mobile/android-components/issues/11893) - Fix issue with autofilling in 3rd party applications not being immediately available after unlocking the autofill service.
+
 * **feature-contextmenu**
   * 🌟 Add new `additionalValidation` parameter to context menu options builders allowing clients to know when these options to be shown and potentially block showing them.
 
