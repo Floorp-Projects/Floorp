@@ -11,7 +11,6 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "background-script.js",
     "manifest.json",
-    "test.html",
     "update.js",
 ]
 
