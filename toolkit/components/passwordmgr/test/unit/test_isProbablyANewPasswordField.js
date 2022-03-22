@@ -1,5 +1,5 @@
 /**
- * Test for LoginAutoComplete._isProbablyANewPasswordField.
+ * Test for LoginAutoComplete.isProbablyANewPasswordField.
  */
 
 "use strict";
@@ -43,7 +43,7 @@ const LABELLEDBY_SHADOW_TESTCASE = labelledByDocument();
 
 const TESTCASES = [
   // Note there is no test case for `<input type="password" autocomplete="new-password">`
-  // since _isProbablyANewPasswordField explicitly does not run in that case.
+  // since isProbablyANewPasswordField explicitly does not run in that case.
   {
     description: "Basic login form",
     document: `
@@ -146,7 +146,7 @@ add_task(async function test_returns_false_when_pref_disabled() {
         );
   for (let [i, input] of testcase.inputs ||
     document.querySelectorAll(`input[type="password"]`).entries()) {
-    const result = LoginAutoComplete._isProbablyANewPasswordField(input);
+    const result = LoginAutoComplete.isProbablyANewPasswordField(input);
     Assert.strictEqual(
       result,
       false,
@@ -177,7 +177,7 @@ for (let testcase of TESTCASES) {
       const results = [];
       for (let input of testcase.inputs ||
         document.querySelectorAll(`input[type="password"]`)) {
-        const result = LoginAutoComplete._isProbablyANewPasswordField(input);
+        const result = LoginAutoComplete.isProbablyANewPasswordField(input);
         results.push(result);
       }
 
