@@ -4,11 +4,7 @@
 
 import { makeResourceQuery } from "./base-query";
 
-import {
-  queryCacheWeak,
-  queryCacheShallow,
-  queryCacheStrict,
-} from "./query-cache";
+import { queryCacheWeak, queryCacheStrict } from "./query-cache";
 
 import { memoizeResourceShallow } from "./memoize";
 import { shallowEqual } from "./compare";
@@ -24,20 +20,6 @@ export function filterAllIds(values) {
 export function makeWeakQuery({ filter, map, reduce }) {
   return makeResourceQuery({
     cache: queryCacheWeak,
-    filter,
-    map: memoizeResourceShallow(map),
-    reduce,
-    resultCompare: shallowEqual,
-  });
-}
-
-/**
- * Create a query function to take a list of IDs and map each Reduceding
- * resource object into a mapped form.
- */
-export function makeShallowQuery({ filter, map, reduce }) {
-  return makeResourceQuery({
-    cache: queryCacheShallow,
     filter,
     map: memoizeResourceShallow(map),
     reduce,
@@ -100,18 +82,6 @@ export function makeFilterQuery(filter, map) {
     },
     map,
     reduce: reduceMappedArrayToObject,
-  });
-}
-
-/**
- * Create a query function that accepts an argument and can filter the
- * resource items to a subset before mapping each resulting resource.
- */
-export function makeReduceQuery(map, reduce) {
-  return makeShallowQuery({
-    filter: filterAllIds,
-    map,
-    reduce,
   });
 }
 
