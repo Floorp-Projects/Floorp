@@ -1045,7 +1045,8 @@ nsresult nsHttpResponseHead::GetLastModifiedValue(uint32_t* result) {
   return ParseDateHeader(nsHttp::Last_Modified, result);
 }
 
-bool nsHttpResponseHead::operator==(const nsHttpResponseHead& aOther) const {
+bool nsHttpResponseHead::operator==(const nsHttpResponseHead& aOther) const
+    NO_THREAD_SAFETY_ANALYSIS {
   nsHttpResponseHead& curr = const_cast<nsHttpResponseHead&>(*this);
   nsHttpResponseHead& other = const_cast<nsHttpResponseHead&>(aOther);
   RecursiveMutexAutoLock monitorOther(other.mRecursiveMutex);
