@@ -18,9 +18,7 @@ The helper — described below — reports predefined update status, which event
 
    Examples of update status: *up-to-date, success, network error, server error, signature error, server backoff, unknown error…*
 
-Every call to the UptakeTelemetry helper registers a point in a single :ref:`keyed histogram <histogram-type-keyed>` whose id is ``UPTAKE_REMOTE_CONTENT_RESULT_1`` with the specified update ``source`` as the key.
-
-Additionally, to provide real-time insight into uptake, a :ref:`Telemetry Event <eventtelemetry>` may be sent. Because telemetry events are more expensive to process than histograms, we take some measures to avoid overwhelming Mozilla systems with the flood of data that this produces. We always send events when not on release channel. On release channel, we only send events from 1% of clients.
+Every call to the UptakeTelemetry helper may send a :ref:`Telemetry Event <eventtelemetry>`. Because events are expensive, we take some measures to avoid overwhelming Mozilla systems with the flood of data that this produces. We always send events when not on release channel. On release channel, we only send events from 1% of clients.
 
 Usage
 -----
@@ -41,6 +39,7 @@ Usage
   - ``UptakeTelemetry.STATUS.PREF_DISABLED``: Update is disabled in user preferences.
   - ``UptakeTelemetry.STATUS.PARSE_ERROR``: Parsing server response has failed.
   - ``UptakeTelemetry.STATUS.CONTENT_ERROR``: Server response has unexpected content.
+  - ``UptakeTelemetry.STATUS.CORRUPTION_ERROR``: Error related to corrupted local data.
   - ``UptakeTelemetry.STATUS.SIGNATURE_ERROR``: Signature verification after diff-based sync has failed.
   - ``UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR``: Signature verification after full fetch has failed.
   - ``UptakeTelemetry.STATUS.CONFLICT_ERROR``: Some remote changes are in conflict with local changes.
@@ -53,16 +52,13 @@ Usage
   - ``UptakeTelemetry.STATUS.NETWORK_ERROR``: Communication with server has failed.
   - ``UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR``: Network not available.
   - ``UptakeTelemetry.STATUS.CLEANUP_ERROR``: Clean-up of temporary files has failed.
+  - ``UptakeTelemetry.STATUS.SHUTDOWN_ERROR``: Error occurring during shutdown.
   - ``UptakeTelemetry.STATUS.UNKNOWN_ERROR``: Uncategorized error.
   - ``UptakeTelemetry.STATUS.CUSTOM_1_ERROR``: Error #1 specific to this update source.
   - ``UptakeTelemetry.STATUS.CUSTOM_2_ERROR``: Error #2 specific to this update source.
   - ``UptakeTelemetry.STATUS.CUSTOM_3_ERROR``: Error #3 specific to this update source.
   - ``UptakeTelemetry.STATUS.CUSTOM_4_ERROR``: Error #4 specific to this update source.
   - ``UptakeTelemetry.STATUS.CUSTOM_5_ERROR``: Error #5 specific to this update source.
-
-  Events Telemetry only:
-
-  - ``UptakeTelemetry.STATUS.SHUTDOWN_ERROR``: Error occurring during shutdown.
 
 Example:
 

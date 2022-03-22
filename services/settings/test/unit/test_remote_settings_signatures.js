@@ -19,6 +19,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const PREF_SETTINGS_SERVER = "services.settings.server";
 const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
 const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
+const TELEMETRY_COMPONENT = "remotesettings";
 
 const CERT_DIR = "test_remote_settings_signatures/";
 const CHAIN_FILES = [
@@ -123,7 +124,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   const x5u = `http://localhost:${port}/test_remote_settings_signatures/test_cert_chain.pem`;
 
   // Telemetry reports.
-  const TELEMETRY_HISTOGRAM_KEY = client.identifier;
+  const TELEMETRY_SOURCE = client.identifier;
 
   function registerHandlers(responses) {
     function handleResponse(serverTimeMillis, request, response) {
@@ -302,7 +303,10 @@ add_task(async function test_check_synchronization_with_signatures() {
   // .. and use this map to register handlers for each path
   registerHandlers(emptyCollectionResponses);
 
-  let startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  let startSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
 
   // With all of this set up, we attempt a sync. This will resolve if all is
   // well and throw if something goes wrong.
@@ -310,11 +314,14 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   equal((await client.get()).length, 0);
 
-  let endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  let endSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
 
   // ensure that a success histogram is tracked when a succesful sync occurs.
   let expectedIncrements = { [UptakeTelemetry.STATUS.SUCCESS]: 1 };
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
 
   //
   // 2.
@@ -494,7 +501,10 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   registerHandlers(badSigGoodSigResponses);
 
-  startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  startSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
 
   let syncEventSent = false;
   client.on("sync", ({ data }) => {
@@ -505,7 +515,10 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   equal((await client.get()).length, 2);
 
-  endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  endSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
 
   // since we only fixed the signature, and no data was changed, the sync event
   // was not sent.
@@ -515,7 +528,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   // (initial) bad signature - only SERVICES_SETTINGS_SYNC_SIG_FAIL should
   // increment.
   expectedIncrements = { [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1 };
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
 
   //
   // 6.
@@ -711,7 +724,10 @@ add_task(async function test_check_synchronization_with_signatures() {
     ],
   };
 
-  startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  startSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
   registerHandlers(allBadSigResponses);
   await Assert.rejects(
     client.maybeSync(6000),
@@ -720,9 +736,12 @@ add_task(async function test_check_synchronization_with_signatures() {
   );
 
   // Ensure that the failure is reflected in the accumulated telemetry:
-  endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  endSnapshot = getUptakeTelemetrySnapshot(
+    TELEMETRY_COMPONENT,
+    TELEMETRY_SOURCE
+  );
   expectedIncrements = { [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1 };
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
 
   // When signature fails after retry, the local data present before sync
   // should be maintained (if its signature is valid).
