@@ -263,10 +263,11 @@ export class WelcomeScreen extends React.PureComponent {
     AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
-  async handleAction(event) {
+  async handleAction(event, target) {
     let { props } = this;
     let { value } = event.currentTarget;
     let targetContent =
+      target ||
       props.content[value] ||
       props.content.tiles ||
       props.content.languageSwitcher;

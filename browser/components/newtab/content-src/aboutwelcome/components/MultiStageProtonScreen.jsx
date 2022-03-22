@@ -5,6 +5,7 @@
 import React, { useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { Colorways } from "./Colorways";
+import { MobileDownloads } from "./MobileDownloads";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -99,6 +100,14 @@ export class ProtonScreen extends React.PureComponent {
             handleAction={this.props.handleAction}
           />
         ) : null}
+        {content.tiles &&
+        content.tiles.type === "mobile_downloads" &&
+        content.tiles.data ? (
+          <MobileDownloads
+            data={content.tiles.data}
+            handleAction={this.props.handleAction}
+          />
+        ) : null}
       </React.Fragment>
     );
   }
@@ -127,6 +136,17 @@ export class ProtonScreen extends React.PureComponent {
     ) : null;
   }
 
+  renderDismissButton() {
+    return (
+      <button
+        className="dismiss-button"
+        onClick={this.props.handleAction}
+        value="dismiss_button"
+        data-l10n-id={"spotlight-dialog-close-button"}
+      ></button>
+    );
+  }
+
   render() {
     const {
       autoAdvance,
@@ -139,7 +159,7 @@ export class ProtonScreen extends React.PureComponent {
     } = this.props;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoAdvance || isCornerPosition;
+    const hideStepsIndicator = autoAdvance || isCornerPosition || total === 0;
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";
@@ -193,6 +213,7 @@ export class ProtonScreen extends React.PureComponent {
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
             style={content.background ? { background: content.background } : {}}
           >
+            {content.dismiss_button ? this.renderDismissButton() : null}
             {content.logo ? (
               <div
                 className={`brand-logo`}
