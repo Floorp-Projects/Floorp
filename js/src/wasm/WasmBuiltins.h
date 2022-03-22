@@ -121,6 +121,7 @@ enum class SymbolicAddress {
   RttSub,
   PreBarrierFiltering,
   PostBarrier,
+  PostBarrierPrecise,
   PostBarrierFiltering,
   StructNew,
 #if defined(ENABLE_WASM_EXCEPTIONS)
@@ -242,6 +243,7 @@ extern const SymbolicAddressSignature SASigTableSetFunc;
 extern const SymbolicAddressSignature SASigRefFunc;
 extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
+extern const SymbolicAddressSignature SASigPostBarrierPrecise;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
 #ifdef ENABLE_WASM_EXCEPTIONS

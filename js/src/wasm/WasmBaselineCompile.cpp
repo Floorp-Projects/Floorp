@@ -4290,7 +4290,8 @@ bool BaseCompiler::emitThrow() {
         RegRef rv = popRef();
         pushPtr(data);
         // emitBarrieredStore preserves exn, rv
-        if (!emitBarrieredStore(Some(exn), valueAddr, rv)) {
+        if (!emitBarrieredStore(Some(exn), valueAddr, rv,
+                                PostBarrierKind::Imprecise)) {
           return false;
         }
         popPtr(data);
@@ -5157,7 +5158,8 @@ bool BaseCompiler::emitSetGlobal() {
       }
       RegRef rv = popRef();
       // emitBarrieredStore preserves rv
-      if (!emitBarrieredStore(Nothing(), valueAddr, rv)) {
+      if (!emitBarrieredStore(Nothing(), valueAddr, rv,
+                              PostBarrierKind::Imprecise)) {
         return false;
       }
       freeRef(rv);
@@ -5961,7 +5963,8 @@ bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
   value = popRef();
 #endif
 
-  if (!emitBarrieredStore(Nothing(), valueAddr, value)) {
+  if (!emitBarrieredStore(Nothing(), valueAddr, value,
+                          PostBarrierKind::Precise)) {
     return false;
   }
   freeRef(value);
@@ -6012,8 +6015,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.bind(&skipBarrier);
 }
 
-bool BaseCompiler::emitPostBarrier(const Maybe<RegRef>& object,
-                                   RegPtr valueAddr, RegRef value) {
+bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
+                                            RegPtr valueAddr, RegRef value) {
   uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
 
   // We must force a sync before the guard so that locals are in a consistent
@@ -6050,8 +6053,35 @@ bool BaseCompiler::emitPostBarrier(const Maybe<RegRef>& object,
   return true;
 }
 
+bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
+                                          RegPtr valueAddr, RegRef prevValue, RegRef value) {
+  uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
+
+  // Push `object` and `value` to preserve them across the call.
+  if (object) {
+    pushRef(*object);
+  }
+  pushRef(value);
+
+  // Push the arguments and call the precise post-barrier
+  pushPtr(valueAddr);
+  pushRef(prevValue);
+  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrierPrecise)) {
+    return false;
+  }
+
+  // Restore `object` and `value`.
+  popRef(value);
+  if (object) {
+    popRef(*object);
+  }
+
+  return true;
+}
+
 bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
-                                      RegPtr valueAddr, RegRef value) {
+                                      RegPtr valueAddr, RegRef value,
+                                      PostBarrierKind kind) {
   // TODO/AnyRef-boxing: With boxed immediates and strings, the write
   // barrier is going to have to be more complicated.
   ASSERT_ANYREF_IS_JSOBJECT;
@@ -6059,11 +6089,22 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
   // The pre-barrier preserves all allocated registers.
   emitPreBarrier(valueAddr);
 
+  // The precise post-barrier requires the previous value stored in the field,
+  // in order to know if the previous store buffer entry needs to be removed.
+  RegRef prevValue;
+  if (kind == PostBarrierKind::Precise) {
+    prevValue = needRef();
+    masm.loadPtr(Address(valueAddr, 0), prevValue);
+  }
+
   // Store the value
   masm.storePtr(value, Address(valueAddr, 0));
 
-  // The post-barrier preserves object, value, and consumes valueAddr.
-  return emitPostBarrier(object, valueAddr, value);
+  // The post-barrier preserves object and value.
+  if (kind == PostBarrierKind::Precise) {
+    return emitPostBarrierPrecise(object, valueAddr, prevValue, value);
+  }
+  return emitPostBarrierImprecise(object, valueAddr, value);
 }
 
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
@@ -6265,7 +6306,8 @@ bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr data,
   pushPtr(data);
 
   // emitBarrieredStore preserves object and value
-  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref(),
+                          PostBarrierKind::Imprecise)) {
     return false;
   }
   freeRef(value.ref());
@@ -6316,7 +6358,8 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
   pushI32(index);
 
   // emitBarrieredStore preserves object and value
-  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref(),
+                          PostBarrierKind::Imprecise)) {
     return false;
   }
 
