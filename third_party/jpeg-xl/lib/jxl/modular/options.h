@@ -98,6 +98,7 @@ struct ModularOptions {
   // TODO(veluca): add tree kinds for JPEG recompression with CfL enabled,
   // general AC metadata, different DC qualities, and others.
   enum class TreeKind {
+    kTrivialTreeNoPredictor,
     kLearn,
     kJpegTranscodeACMeta,
     kFalconACMeta,

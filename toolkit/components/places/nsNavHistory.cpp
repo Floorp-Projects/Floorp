@@ -138,6 +138,7 @@ using namespace mozilla::places;
 #define TOPIC_PREF_CHANGED "nsPref:changed"
 #define TOPIC_PROFILE_TEARDOWN "profile-change-teardown"
 #define TOPIC_PROFILE_CHANGE "profile-before-change"
+#define TOPIC_APP_LOCALES_CHANGED "intl:app-locales-changed"
 
 static const char* kObservedPrefs[] = {PREF_HISTORY_ENABLED,
                                        PREF_MATCH_DIACRITICS,
@@ -428,6 +429,7 @@ nsresult nsNavHistory::Init() {
   if (obsSvc) {
     (void)obsSvc->AddObserver(this, TOPIC_PLACES_CONNECTION_CLOSED, true);
     (void)obsSvc->AddObserver(this, TOPIC_IDLE_DAILY, true);
+    (void)obsSvc->AddObserver(this, TOPIC_APP_LOCALES_CHANGED, true);
   }
 
   // Don't add code that can fail here! Do it up above, before we add our
@@ -2105,6 +2107,10 @@ nsNavHistory::Observe(nsISupports* aSubject, const char* aTopic,
 
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
     (void)DecayFrecency();
+  }
+
+  else if (strcmp(aTopic, TOPIC_APP_LOCALES_CHANGED) == 0) {
+    mBundle = nullptr;
   }
 
   return NS_OK;

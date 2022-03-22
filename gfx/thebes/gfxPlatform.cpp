@@ -2761,18 +2761,30 @@ void gfxPlatform::InitWebGLConfig() {
 }
 
 void gfxPlatform::InitWebGPUConfig() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
   feature.SetDefaultFromPref("dom.webgpu.enabled", true, false);
-#ifndef NIGHTLY_BUILD
-  feature.ForceDisable(FeatureStatus::Blocked,
-                       "WebGPU can only be enabled in nightly",
-                       "WEBGPU_DISABLE_NON_NIGHTLY"_ns);
-#endif
-  if (!UseWebRender()) {
-    feature.ForceDisable(FeatureStatus::UnavailableNoWebRender,
-                         "WebGPU can't present without WebRender",
-                         "FEATURE_FAILURE_WEBGPU_NEED_WEBRENDER"_ns);
+
+  nsCString message;
+  nsCString failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
+    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
+
+#ifdef RELEASE_OR_BETA
+  feature.ForceDisable(FeatureStatus::Blocked,
+                       "WebGPU cannot be enabled in release or beta",
+                       "WEBGPU_DISABLE_RELEASE_OR_BETA"_ns);
+#else
+  if (StaticPrefs::gfx_webgpu_force_enabled_AtStartup()) {
+    feature.UserForceEnable("Force-enabled by pref");
+  }
+#endif
+
+  gfxVars::SetAllowWebGPU(feature.IsEnabled());
 }
 
 #ifdef XP_WIN

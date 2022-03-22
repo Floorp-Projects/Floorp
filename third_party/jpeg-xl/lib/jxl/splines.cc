@@ -213,6 +213,17 @@ HWY_EXPORT(DrawSegments);
 
 namespace {
 
+// It is not in spec, but reasonable limit to avoid overflows.
+template <typename T>
+Status ValidateSplinePointPos(const T& x, const T& y) {
+  constexpr T kSplinePosLimit = 1u << 23;
+  if ((x >= kSplinePosLimit) || (x <= -kSplinePosLimit) ||
+      (y >= kSplinePosLimit) || (y <= -kSplinePosLimit)) {
+    return JXL_FAILURE("Spline coordinates out of bounds");
+  }
+  return true;
+}
+
 // Maximum number of spline control points per frame is
 //   std::min(kMaxNumControlPoints, xsize * ysize / 2)
 constexpr size_t kMaxNumControlPoints = 1u << 20u;
@@ -248,6 +259,7 @@ Status DecodeAllStartingPoints(std::vector<Spline::Point>* const points,
       x = UnpackSigned(x) + last_x;
       y = UnpackSigned(y) + last_y;
     }
+    JXL_RETURN_IF_ERROR(ValidateSplinePointPos(x, y));
     points->emplace_back(static_cast<float>(x), static_cast<float>(y));
     last_x = x;
     last_y = y;
@@ -418,30 +430,22 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
                                    Spline& result) const {
   result.control_points.clear();
   result.control_points.reserve(control_points_.size() + 1);
-  int current_x = static_cast<int>(roundf(starting_point.x)),
-      current_y = static_cast<int>(roundf(starting_point.y));
-  // It is not in spec, but reasonable limit to avoid overflows.
-  constexpr int kPosLimit = 1u << 23;
-  if ((current_x >= kPosLimit) || (current_x <= -kPosLimit) ||
-      (current_y >= kPosLimit) || (current_y <= -kPosLimit)) {
-    return JXL_FAILURE("Spline coordinates out of bounds");
-  }
+  float px = roundf(starting_point.x);
+  float py = roundf(starting_point.y);
+  JXL_RETURN_IF_ERROR(ValidateSplinePointPos(px, py));
+  int current_x = static_cast<int>(px);
+  int current_y = static_cast<int>(py);
   result.control_points.push_back(Spline::Point{static_cast<float>(current_x),
                                                 static_cast<float>(current_y)});
   int current_delta_x = 0, current_delta_y = 0;
   for (const auto& point : control_points_) {
     current_delta_x += point.first;
     current_delta_y += point.second;
-    if ((current_delta_x >= kPosLimit) || (current_delta_x <= -kPosLimit) ||
-        (current_delta_y >= kPosLimit) || (current_delta_y <= -kPosLimit)) {
-      return JXL_FAILURE("Spline coordinates out of bounds");
-    }
+    JXL_RETURN_IF_ERROR(
+        ValidateSplinePointPos(current_delta_x, current_delta_y));
     current_x += current_delta_x;
     current_y += current_delta_y;
-    if ((current_x >= kPosLimit) || (current_x <= -kPosLimit) ||
-        (current_y >= kPosLimit) || (current_y <= -kPosLimit)) {
-      return JXL_FAILURE("Spline coordinates out of bounds");
-    }
+    JXL_RETURN_IF_ERROR(ValidateSplinePointPos(current_x, current_y));
     result.control_points.push_back(Spline::Point{
         static_cast<float>(current_x), static_cast<float>(current_y)});
   }

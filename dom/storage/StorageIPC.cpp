@@ -564,6 +564,17 @@ void SessionStorageManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
+mozilla::ipc::IPCResult SessionStorageManagerChild::RecvClearStoragesForOrigin(
+    const nsCString& aOriginAttrs, const nsCString& aOriginKey) {
+  AssertIsOnOwningThread();
+
+  if (mSSManager) {
+    mSSManager->ClearStoragesForOrigin(aOriginAttrs, aOriginKey);
+  }
+
+  return IPC_OK();
+}
+
 LocalStorageCacheParent::LocalStorageCacheParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const nsACString& aOriginKey, uint32_t aPrivateBrowsingId)

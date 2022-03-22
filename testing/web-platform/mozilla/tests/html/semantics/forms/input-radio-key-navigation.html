@@ -1,0 +1,61 @@
+<!doctype html>
+<title>Keyboard navigation on input type=radio</title>
+<meta charset=utf-8>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<link rel="author" href="https://mozilla.org" title="Mozilla">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
+
+<form dir="ltr">
+  <input type=radio name=whatever value=1>
+  <input type=radio name=whatever value=2>
+  <input type=radio name=whatever value=3>
+</form>
+<form dir="rtl">
+  <input type=radio name=whatever value=1>
+  <input type=radio name=whatever value=2>
+  <input type=radio name=whatever value=3>
+</form>
+<script>
+const KEYS = {
+  ArrowLeft: '\uE012',
+  ArrowUp: '\uE013',
+  ArrowRight: '\uE014',
+  ArrowDown: '\uE015',
+};
+
+function nextFocusIndex(currentIndex, length, forward) {
+  if (forward) {
+    return (currentIndex + 1) % length;
+  }
+  return (currentIndex == 0 ? length : currentIndex) - 1;
+}
+
+async function testMove(form, keyName, forward) {
+  let radios = form.querySelectorAll("input[type=radio]");
+  assert_equals(radios.length, 3, "Sanity check");
+
+  let focusIndex = 1;
+  radios[focusIndex].focus();
+
+  // Enough to wrap around, and one more to test the last active element too.
+  for (let i = 0; i <= radios.length; ++i) {
+    assert_equals(document.activeElement, radios[focusIndex], `Focused expected radio input (${focusIndex})`);
+    await test_driver.send_keys(document.activeElement, KEYS[keyName]);
+    focusIndex = nextFocusIndex(focusIndex, radios.length, forward);
+  }
+}
+
+promise_test(async t => {
+  for (let form of document.querySelectorAll("form")) {
+    const rtl = form.dir == "rtl";
+    await testMove(form, "ArrowDown", /* forward = */ true);
+    await testMove(form, "ArrowUp", /* forward = */ false);
+    await testMove(form, "ArrowLeft", /* forward = */ rtl);
+    await testMove(form, "ArrowRight", /* forward = */ !rtl);
+  }
+});
+</script>

@@ -1098,7 +1098,7 @@ var gMainPane = {
       let description = document.createXULElement("description");
       description.classList.add("message-bar-description");
 
-      if (i == 0 && gMainPane.getLocaleDirection(locales[0]) === "rtl") {
+      if (i == 0 && Services.intl.getScriptDirection(locales[0]) === "rtl") {
         description.classList.add("rtl-locale");
       }
       description.setAttribute("flex", "1");
@@ -1397,29 +1397,6 @@ var gMainPane = {
   },
 
   /**
-   * Returns the assumed script directionality for known Firefox locales. This is
-   * somewhat crude, but should work until Bug 1750781 lands.
-   *
-   * TODO (Bug 1750781) - This should use Intl.LocaleInfo once it is standardized (see
-   * Bug 1693576), rather than maintaining a hardcoded list of RTL locales.
-   *
-   * @param {string} locale
-   * @return {"ltr" | "rtl"}
-   */
-  getLocaleDirection(locale) {
-    if (
-      locale == "ar" ||
-      locale == "ckb" ||
-      locale == "fa" ||
-      locale == "he" ||
-      locale == "ur"
-    ) {
-      return "rtl";
-    }
-    return "ltr";
-  },
-
-  /**
    * Determine the transition strategy for switching the locale based on prefs
    * and the switched locales.
    *
@@ -1435,8 +1412,8 @@ var gMainPane = {
 
     if (Services.prefs.getBoolPref("intl.multilingual.liveReload")) {
       if (
-        gMainPane.getLocaleDirection(newLocales[0]) !==
-          gMainPane.getLocaleDirection(appLocalesAsBCP47[0]) &&
+        Services.intl.getScriptDirection(newLocales[0]) !==
+          Services.intl.getScriptDirection(appLocalesAsBCP47[0]) &&
         !Services.prefs.getBoolPref("intl.multilingual.liveReloadBidirectional")
       ) {
         // Bug 1750852: The directionality of the text changed, which requires a restart

@@ -1098,14 +1098,10 @@ sitedata-block-desc = Type blocked
 
 sitedata-option-block-cross-site-trackers =
     .label = Cross-site trackers
-sitedata-option-block-cross-site-and-social-media-trackers =
-    .label = Cross-site and social media trackers
 sitedata-option-block-cross-site-tracking-cookies =
     .label = Cross-site tracking cookies
 sitedata-option-block-cross-site-cookies =
     .label = Cross-site tracking cookies, and isolate other cross-site cookies
-sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate =
-    .label = Cross-site and social media trackers, and isolate remaining cookies
 sitedata-option-block-unvisited =
     .label = Cookies from unvisited websites
 sitedata-option-block-all-third-party =
@@ -1208,7 +1204,6 @@ content-blocking-etp-standard-tcp-rollout-description = Total Cookie Protection 
 content-blocking-etp-standard-tcp-rollout-learn-more = Learn more
 
 content-blocking-warning-title = Heads up!
-content-blocking-and-isolating-etp-warning-description = Blocking trackers and isolating cookies could impact the functionality of some sites. Reload a page with trackers to load all content.
 content-blocking-and-isolating-etp-warning-description-2 = This setting may cause some websites to not display content or work correctly. If a site seems broken, you may want to turn off tracking protection for that site to load all content.
 content-blocking-warning-learn-how = Learn how
 

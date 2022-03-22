@@ -17,6 +17,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/BackgroundSessionStorageServiceParent.h"
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
@@ -487,6 +488,14 @@ BackgroundParentImpl::AllocPBackgroundSessionStorageManagerParent(
   AssertIsOnBackgroundThread();
 
   return dom::AllocPBackgroundSessionStorageManagerParent(aTopContextId);
+}
+
+already_AddRefed<mozilla::dom::PBackgroundSessionStorageServiceParent>
+BackgroundParentImpl::AllocPBackgroundSessionStorageServiceParent() {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  return MakeAndAddRef<mozilla::dom::BackgroundSessionStorageServiceParent>();
 }
 
 already_AddRefed<PIdleSchedulerParent>

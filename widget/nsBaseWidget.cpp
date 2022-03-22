@@ -1216,8 +1216,6 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
     }
 #endif
 
-    options.SetUseWebGPU(StaticPrefs::dom_webgpu_enabled());
-
 #ifdef MOZ_WIDGET_ANDROID
     // Unconditionally set the compositor as initially paused, as we have not
     // yet had a chance to send the compositor surface to the GPU process. We

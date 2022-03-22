@@ -1265,11 +1265,7 @@ let gPermissions = {
       },
     },
 
-    "3rdPartyStorage": {
-      get disabled() {
-        return !SitePermissions.statePartitioningPermissionsEnabled;
-      },
-    },
+    "3rdPartyStorage": {},
   },
 };
 
@@ -1295,12 +1291,5 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "openProtoPermissionEnabled",
   "security.external_protocol_requires_permission",
   true,
-  SitePermissions.invalidatePermissionList.bind(SitePermissions)
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  SitePermissions,
-  "statePartitioningPermissionsEnabled",
-  "browser.contentblocking.state-partitioning.mvp.ui.enabled",
-  false,
   SitePermissions.invalidatePermissionList.bind(SitePermissions)
 );

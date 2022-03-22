@@ -14,7 +14,7 @@
 namespace jxl {
 
 std::unique_ptr<RenderPipelineStage> GetWriteToImageBundleStage(
-    ImageBundle* image_bundle);
+    ImageBundle* image_bundle, ColorEncoding color_encoding);
 
 // Gets a stage to write color channels to an Image3F.
 std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(Image3F* image);

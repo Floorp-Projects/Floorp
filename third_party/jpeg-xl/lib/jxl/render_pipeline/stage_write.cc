@@ -7,6 +7,7 @@
 
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_bundle.h"
+#include "lib/jxl/sanitizers.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_write.cc"
@@ -89,6 +90,7 @@ class WriteToU8Stage : public RenderPipelineStage {
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   float* JXL_RESTRICT temp) const final {
     if (ypos >= height_) return;
+    JXL_DASSERT(xextra == 0);
     size_t bytes = rgba_ ? 4 : 3;
     const float* JXL_RESTRICT row_in_r = GetInputRow(input_rows, 0, 0);
     const float* JXL_RESTRICT row_in_g = GetInputRow(input_rows, 1, 0);
@@ -103,10 +105,16 @@ class WriteToU8Stage : public RenderPipelineStage {
     auto one = Set(d, 1.0f);
     auto mul = Set(d, 255.0f);
 
-    ssize_t x0 = -RoundUpTo(xextra, Lanes(d));
-    ssize_t x1 = RoundUpTo(xsize + xextra, Lanes(d));
+    ssize_t x1 = RoundUpTo(xsize, Lanes(d));
 
-    for (ssize_t x = x0; x < x1; x += Lanes(d)) {
+    msan::UnpoisonMemory(row_in_r + xsize, sizeof(float) * (x1 - xsize));
+    msan::UnpoisonMemory(row_in_g + xsize, sizeof(float) * (x1 - xsize));
+    msan::UnpoisonMemory(row_in_b + xsize, sizeof(float) * (x1 - xsize));
+    if (row_in_a) {
+      msan::UnpoisonMemory(row_in_a + xsize, sizeof(float) * (x1 - xsize));
+    }
+
+    for (ssize_t x = 0; x < x1; x += Lanes(d)) {
       auto rf = Clamp(zero, Load(d, row_in_r + x), one) * mul;
       auto gf = Clamp(zero, Load(d, row_in_g + x), one) * mul;
       auto bf = Clamp(zero, Load(d, row_in_b + x), one) * mul;
@@ -132,6 +140,8 @@ class WriteToU8Stage : public RenderPipelineStage {
                ? RenderPipelineChannelMode::kInput
                : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "WriteToU8"; }
 
  private:
   uint8_t* rgb_;
@@ -165,9 +175,30 @@ HWY_EXPORT(GetWriteToU8Stage);
 namespace {
 class WriteToImageBundleStage : public RenderPipelineStage {
  public:
-  explicit WriteToImageBundleStage(ImageBundle* image_bundle)
+  explicit WriteToImageBundleStage(ImageBundle* image_bundle,
+                                   ColorEncoding color_encoding)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
-        image_bundle_(image_bundle) {}
+        image_bundle_(image_bundle),
+        color_encoding_(std::move(color_encoding)) {}
+
+  void SetInputSizes(
+      const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
+#if JXL_ENABLE_ASSERT
+    JXL_ASSERT(input_sizes.size() >= 3);
+    for (size_t c = 1; c < input_sizes.size(); c++) {
+      JXL_ASSERT(input_sizes[c].first == input_sizes[0].first);
+      JXL_ASSERT(input_sizes[c].second == input_sizes[0].second);
+    }
+#endif
+    image_bundle_->SetFromImage(
+        Image3F(input_sizes[0].first, input_sizes[0].second), color_encoding_);
+    // TODO(veluca): consider not reallocating ECs if not needed.
+    image_bundle_->extra_channels().clear();
+    for (size_t c = 3; c < input_sizes.size(); c++) {
+      image_bundle_->extra_channels().emplace_back(input_sizes[c].first,
+                                                   input_sizes[c].second);
+    }
+  }
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
@@ -178,8 +209,7 @@ class WriteToImageBundleStage : public RenderPipelineStage {
              sizeof(float) * (xsize + 2 * xextra));
     }
     for (size_t ec = 0; ec < image_bundle_->extra_channels().size(); ec++) {
-      JXL_ASSERT(ec < image_bundle_->extra_channels().size());
-      JXL_ASSERT(image_bundle_->extra_channels()[ec].xsize() <=
+      JXL_ASSERT(image_bundle_->extra_channels()[ec].xsize() >=
                  xpos + xsize + xextra);
       memcpy(image_bundle_->extra_channels()[ec].Row(ypos) + xpos - xextra,
              GetInputRow(input_rows, 3 + ec, 0) - xextra,
@@ -188,19 +218,32 @@ class WriteToImageBundleStage : public RenderPipelineStage {
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
-    return c < 3 + image_bundle_->extra_channels().size()
-               ? RenderPipelineChannelMode::kInput
-               : RenderPipelineChannelMode::kIgnored;
+    return RenderPipelineChannelMode::kInput;
   }
+
+  const char* GetName() const override { return "WriteIB"; }
 
  private:
   ImageBundle* image_bundle_;
+  ColorEncoding color_encoding_;
 };
 
 class WriteToImage3FStage : public RenderPipelineStage {
  public:
   explicit WriteToImage3FStage(Image3F* image)
       : RenderPipelineStage(RenderPipelineStage::Settings()), image_(image) {}
+
+  void SetInputSizes(
+      const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
+#if JXL_ENABLE_ASSERT
+    JXL_ASSERT(input_sizes.size() >= 3);
+    for (size_t c = 1; c < 3; ++c) {
+      JXL_ASSERT(input_sizes[c].first == input_sizes[0].first);
+      JXL_ASSERT(input_sizes[c].second == input_sizes[0].second);
+    }
+#endif
+    *image_ = Image3F(input_sizes[0].first, input_sizes[0].second);
+  }
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
@@ -216,6 +259,8 @@ class WriteToImage3FStage : public RenderPipelineStage {
     return c < 3 ? RenderPipelineChannelMode::kInput
                  : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "WriteI3F"; }
 
  private:
   Image3F* image_;
@@ -244,11 +289,12 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
     if (ypos >= height_) return;
     const float* line_buffers[4];
     for (size_t c = 0; c < 3; c++) {
-      line_buffers[c] = GetInputRow(input_rows, c, 0);
+      line_buffers[c] = GetInputRow(input_rows, c, 0) - xextra;
     }
     if (has_alpha_) {
-      line_buffers[3] = GetInputRow(input_rows, alpha_c_, 0);
+      line_buffers[3] = GetInputRow(input_rows, alpha_c_, 0) - xextra;
     } else {
+      // No xextra offset; opaque_alpha_ is a way to set all values to 1.0f.
       line_buffers[3] = opaque_alpha_.data();
     }
     // TODO(veluca): SIMD.
@@ -257,14 +303,16 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
       size_t j = 0;
       size_t ix = 0;
       for (; ix < kMaxPixelsPerCall && ssize_t(ix) + x0 < limit; ix++) {
-        temp[j++] = line_buffers[0][x0 + ix];
-        temp[j++] = line_buffers[1][x0 + ix];
-        temp[j++] = line_buffers[2][x0 + ix];
+        temp[j++] = line_buffers[0][ix];
+        temp[j++] = line_buffers[1][ix];
+        temp[j++] = line_buffers[2][ix];
         if (rgba_) {
-          temp[j++] = line_buffers[3][x0 + ix];
+          temp[j++] = line_buffers[3][ix];
         }
       }
       pixel_callback_(temp, xpos + x0, ypos, ix);
+      for (size_t c = 0; c < 3; c++) line_buffers[c] += kMaxPixelsPerCall;
+      if (has_alpha_) line_buffers[3] += kMaxPixelsPerCall;
     }
   }
 
@@ -273,6 +321,8 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
                ? RenderPipelineChannelMode::kInput
                : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "WritePixelCB"; }
 
  private:
   static constexpr size_t kMaxPixelsPerCall = 1024;
@@ -289,8 +339,9 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
 }  // namespace
 
 std::unique_ptr<RenderPipelineStage> GetWriteToImageBundleStage(
-    ImageBundle* image_bundle) {
-  return jxl::make_unique<WriteToImageBundleStage>(image_bundle);
+    ImageBundle* image_bundle, ColorEncoding color_encoding) {
+  return jxl::make_unique<WriteToImageBundleStage>(image_bundle,
+                                                   std::move(color_encoding));
 }
 
 std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(Image3F* image) {

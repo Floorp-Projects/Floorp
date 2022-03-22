@@ -556,6 +556,12 @@ void ChooseUintConfigs(const HistogramParams& params,
   codes->uint_config.resize(clustered_histograms->size());
 
   if (params.uint_method == HistogramParams::HybridUintMethod::kNone) return;
+  if (params.uint_method == HistogramParams::HybridUintMethod::k000) {
+    codes->uint_config.clear();
+    codes->uint_config.resize(clustered_histograms->size(),
+                              HybridUintConfig(0, 0, 0));
+    return;
+  }
   if (params.uint_method == HistogramParams::HybridUintMethod::kContextMap) {
     codes->uint_config.clear();
     codes->uint_config.resize(clustered_histograms->size(),
@@ -1504,6 +1510,9 @@ size_t BuildAndEncodeHistograms(const HistogramParams& params,
   // Unless we are using the kContextMap histogram option.
   if (params.uint_method == HistogramParams::HybridUintMethod::kContextMap) {
     uint_config = HybridUintConfig(2, 0, 1);
+  }
+  if (params.uint_method == HistogramParams::HybridUintMethod::k000) {
+    uint_config = HybridUintConfig(0, 0, 0);
   }
   if (ans_fuzzer_friendly_) {
     uint_config = HybridUintConfig(10, 0, 0);

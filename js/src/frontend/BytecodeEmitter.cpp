@@ -7380,9 +7380,6 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   ParseNode* funNode = argsList->head();
   if (constructing) {
     callOp = JSOp::New;
-  } else if (funNode->isName(
-                 TaggedParserAtomIndex::WellKnown::std_Function_apply())) {
-    callOp = JSOp::FunApply;
   }
 
   if (!emitTree(funNode)) {
@@ -8073,8 +8070,7 @@ ParseNode* BytecodeEmitter::getCoordNode(ParseNode* callNode,
                                          ParseNode* calleeNode, JSOp op,
                                          ListNode* argsList) {
   ParseNode* coordNode = callNode;
-  if (op == JSOp::Call || op == JSOp::SpreadCall || op == JSOp::FunCall ||
-      op == JSOp::FunApply) {
+  if (op == JSOp::Call || op == JSOp::SpreadCall || op == JSOp::FunCall) {
     // Default to using the location of the `(` itself.
     // obj[expr]() // expression
     //          ^  // column coord

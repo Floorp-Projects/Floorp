@@ -2046,22 +2046,16 @@ void InlineFrameIterator::findNextFrame() {
     MOZ_ASSERT(IsIonInlinableOp(JSOp(*pc_)));
 
     // Recover the number of actual arguments from the script.
-    if (JSOp(*pc_) != JSOp::FunApply) {
+    if (IsInvokeOp(JSOp(*pc_))) {
       numActualArgs_ = GET_ARGC(pc_);
-    }
-    if (JSOp(*pc_) == JSOp::FunCall) {
-      if (numActualArgs_ > 0) {
+      if (JSOp(*pc_) == JSOp::FunCall && numActualArgs_ > 0) {
         numActualArgs_--;
       }
     } else if (IsGetPropPC(pc_) || IsGetElemPC(pc_)) {
       numActualArgs_ = 0;
-    } else if (IsSetPropPC(pc_)) {
+    } else {
+      MOZ_RELEASE_ASSERT(IsSetPropPC(pc_));
       numActualArgs_ = 1;
-    }
-
-    if (numActualArgs_ == 0xbadbad) {
-      MOZ_CRASH(
-          "Couldn't deduce the number of arguments of an ionmonkey frame");
     }
 
     // Skip over non-argument slots, as well as |this|.

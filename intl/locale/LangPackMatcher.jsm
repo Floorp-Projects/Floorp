@@ -282,6 +282,20 @@ function getAppAndSystemLocaleInfo() {
     type: "language",
   });
 
+  // Live reloading with bidi switching may not be supported.
+  let canLiveReload = null;
+  if (systemLocale && appLocale) {
+    const systemDirection = Services.intl.getScriptDirection(
+      systemLocale.language
+    );
+    const appDirection = Services.intl.getScriptDirection(appLocale.language);
+    const supportsBidiSwitching = Services.prefs.getBoolPref(
+      "intl.multilingual.liveReloadBidirectional",
+      false
+    );
+    canLiveReload = systemDirection === appDirection || supportsBidiSwitching;
+  }
+
   return {
     // Return the Intl.Locale in a serializable form.
     systemLocaleRaw,
@@ -289,6 +303,7 @@ function getAppAndSystemLocaleInfo() {
     appLocaleRaw,
     appLocale,
     matchType,
+    canLiveReload,
 
     // These can be used as Fluent message args.
     displayNames: {

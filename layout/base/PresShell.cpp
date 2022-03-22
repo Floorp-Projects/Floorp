@@ -187,6 +187,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layout/ScrollAnchorContainer.h"
+#include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ScrollTypes.h"
@@ -2380,9 +2381,10 @@ NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Pages);
   if (scrollFrame) {
     scrollFrame->ScrollBy(
-        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES, ScrollMode::Smooth,
+        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES, scrollMode,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
         nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
@@ -2393,13 +2395,14 @@ NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
     int32_t lineCount =
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
-        ScrollMode::Smooth, nullptr, mozilla::ScrollOrigin::NotSpecified,
+        scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
         nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
@@ -2409,14 +2412,15 @@ NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(HorizontalScrollDirection);
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
     int32_t h =
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
                             NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(
-        nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, ScrollMode::Smooth,
-        nullptr, mozilla::ScrollOrigin::NotSpecified,
-        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
+        nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
+        mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,
+        nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2425,9 +2429,10 @@ NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Other);
   if (scrollFrame) {
     scrollFrame->ScrollBy(
-        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, ScrollMode::Smooth,
+        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
         nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }

@@ -245,6 +245,42 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 
   TransitiveCompileOptions(const TransitiveCompileOptions&) = delete;
   TransitiveCompileOptions& operator=(const TransitiveCompileOptions&) = delete;
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  template <typename Printer>
+  void dumpWith(Printer& print) const {
+#  define PrintFields_(Name) print(#  Name, Name)
+    PrintFields_(filename_);
+    PrintFields_(introducerFilename_);
+    PrintFields_(sourceMapURL_);
+    PrintFields_(mutedErrors_);
+    PrintFields_(forceStrictMode_);
+    PrintFields_(sourcePragmas_);
+    PrintFields_(skipFilenameValidation_);
+    PrintFields_(hideScriptFromDebugger_);
+    PrintFields_(deferDebugMetadata_);
+    PrintFields_(eagerDelazificationStrategy_);
+    PrintFields_(selfHostingMode);
+    PrintFields_(asmJSOption);
+    PrintFields_(throwOnAsmJSValidationFailureOption);
+    PrintFields_(forceAsync);
+    PrintFields_(discardSource);
+    PrintFields_(sourceIsLazy);
+    PrintFields_(allowHTMLComments);
+    PrintFields_(nonSyntacticScope);
+    PrintFields_(topLevelAwait);
+    PrintFields_(useFdlibmForSinCosTan);
+    PrintFields_(importAssertions);
+    PrintFields_(borrowBuffer);
+    PrintFields_(usePinnedBytecode);
+    PrintFields_(allocateInstantiationStorage);
+    PrintFields_(introductionType);
+    PrintFields_(introductionLineno);
+    PrintFields_(introductionOffset);
+    PrintFields_(hasIntroductionInfo);
+#  undef PrintFields_
+  }
+#endif  // defined(DEBUG) || defined(JS_JITSPEW)
 };
 
 /**
@@ -285,6 +321,21 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
 
   ReadOnlyCompileOptions(const ReadOnlyCompileOptions&) = delete;
   ReadOnlyCompileOptions& operator=(const ReadOnlyCompileOptions&) = delete;
+
+ public:
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  template <typename Printer>
+  void dumpWith(Printer& print) const {
+    this->TransitiveCompileOptions::dumpWith(print);
+#  define PrintFields_(Name) print(#  Name, Name)
+    PrintFields_(lineno);
+    PrintFields_(column);
+    PrintFields_(scriptSourceOffset);
+    PrintFields_(isRunOnce);
+    PrintFields_(noScriptRval);
+#  undef PrintFields_
+  }
+#endif  // defined(DEBUG) || defined(JS_JITSPEW)
 };
 
 /**

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CanvasManagerParent.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/WebGLParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -91,7 +90,7 @@ already_AddRefed<dom::PWebGLParent> CanvasManagerParent::AllocPWebGLParent() {
 
 already_AddRefed<webgpu::PWebGPUParent>
 CanvasManagerParent::AllocPWebGPUParent() {
-  if (!StaticPrefs::dom_webgpu_enabled()) {
+  if (!gfxVars::AllowWebGPU()) {
     return nullptr;
   }
 

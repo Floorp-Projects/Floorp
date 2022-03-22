@@ -28,18 +28,18 @@ TEST(ExternalImageTest, InvalidSize) {
   const uint8_t buf[10 * 100 * 8] = {};
   EXPECT_FALSE(ConvertFromExternal(
       Span<const uint8_t>(buf, 10), /*xsize=*/10, /*ysize=*/100,
-      /*c_current=*/ColorEncoding::SRGB(), /*has_alpha=*/true,
+      /*c_current=*/ColorEncoding::SRGB(), /*channels=*/4,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, nullptr, &ib, /*float_in=*/false, /*align=*/0));
   EXPECT_FALSE(ConvertFromExternal(
       Span<const uint8_t>(buf, sizeof(buf) - 1), /*xsize=*/10, /*ysize=*/100,
-      /*c_current=*/ColorEncoding::SRGB(), /*has_alpha=*/true,
+      /*c_current=*/ColorEncoding::SRGB(), /*channels=*/4,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, nullptr, &ib, /*float_in=*/false, /*align=*/0));
   EXPECT_TRUE(ConvertFromExternal(
       Span<const uint8_t>(buf, sizeof(buf)), /*xsize=*/10,
       /*ysize=*/100, /*c_current=*/ColorEncoding::SRGB(),
-      /*has_alpha=*/true, /*alpha_is_premultiplied=*/false,
+      /*channels=*/4, /*alpha_is_premultiplied=*/false,
       /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, nullptr, &ib, /*float_in=*/false, /*align=*/0));
 }
@@ -59,7 +59,7 @@ TEST(ExternalImageTest, AlphaMissing) {
   EXPECT_TRUE(ConvertFromExternal(
       Span<const uint8_t>(buf, sizeof(buf)), xsize, ysize,
       /*c_current=*/ColorEncoding::SRGB(),
-      /*has_alpha=*/true, /*alpha_is_premultiplied=*/false,
+      /*channels=*/4, /*alpha_is_premultiplied=*/false,
       /*bits_per_sample=*/8, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, nullptr, &ib, /*float_in=*/false, /*align=*/0));
   EXPECT_FALSE(ib.HasAlpha());

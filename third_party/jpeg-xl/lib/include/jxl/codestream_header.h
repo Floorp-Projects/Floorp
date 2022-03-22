@@ -143,6 +143,8 @@ typedef struct {
    * representable value. The image does not necessarily contain a pixel
    * actually this bright. An encoder is allowed to set 255 for SDR images
    * without computing a histogram.
+   * Leaving this set to its default of 0 lets libjxl choose a sensible default
+   * value based on the color encoding.
    */
   float intensity_target;
 

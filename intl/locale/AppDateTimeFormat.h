@@ -49,6 +49,11 @@ class AppDateTimeFormat {
                          const PRExplodedTime* aExplodedTime,
                          nsAString& aStringOut);
 
+  /**
+   * If the app locale changes, the cached locale needs to be reset.
+   */
+  static void ClearLocaleCache();
+
   static void Shutdown();
 
  private:

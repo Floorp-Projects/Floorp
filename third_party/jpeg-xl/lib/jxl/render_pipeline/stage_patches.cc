@@ -29,6 +29,8 @@ class PatchDictionaryStage : public RenderPipelineStage {
     return RenderPipelineChannelMode::kInPlace;
   }
 
+  const char* GetName() const override { return "Patches"; }
+
  private:
   const PatchDictionary& patches_;
 };

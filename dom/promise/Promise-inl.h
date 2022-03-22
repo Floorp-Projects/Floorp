@@ -18,14 +18,16 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
 
   PromiseNativeThenHandlerBase(Promise* aPromise) : mPromise(aPromise) {}
+
+  virtual bool HasResolvedCallback() = 0;
+  virtual bool HasRejectedCallback() = 0;
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
@@ -118,11 +120,11 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
    * promise parameter. Unfortunately doing so confuses the compiler and errors
    * out, because nothing prevents promise from being ResolveCallback.
    */
-  NativeThenHandler(Promise* aPromise, ResolveCallback&& aOnResolve,
-                    RejectCallback&& aOnReject, Args&&... aArgs)
+  NativeThenHandler(Promise* aPromise, Maybe<ResolveCallback>&& aOnResolve,
+                    Maybe<RejectCallback>&& aOnReject, Args&&... aArgs)
       : PromiseNativeThenHandlerBase(aPromise),
-        mOnResolve(std::forward<ResolveCallback>(aOnResolve)),
-        mOnReject(std::forward<RejectCallback>(aOnReject)),
+        mOnResolve(std::forward<Maybe<ResolveCallback>>(aOnResolve)),
+        mOnReject(std::forward<Maybe<RejectCallback>>(aOnReject)),
         mArgs(std::forward<Args>(aArgs)...) {}
 
  protected:
@@ -136,15 +138,18 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgs)
   }
 
+  bool HasResolvedCallback() override { return mOnResolve.isSome(); }
+  bool HasRejectedCallback() override { return mOnReject.isSome(); }
+
   already_AddRefed<Promise> CallResolveCallback(JSContext* aCx,
                                                 JS::Handle<JS::Value> aValue,
                                                 ErrorResult& aRv) override {
-    return CallCallback(aCx, mOnResolve, aValue, aRv);
+    return CallCallback(aCx, *mOnResolve, aValue, aRv);
   }
   already_AddRefed<Promise> CallRejectCallback(JSContext* aCx,
                                                JS::Handle<JS::Value> aValue,
                                                ErrorResult& aRv) override {
-    return CallCallback(aCx, mOnReject, aValue, aRv);
+    return CallCallback(aCx, *mOnReject, aValue, aRv);
   }
 
   template <typename TCallback, size_t... Indices>
@@ -153,7 +158,7 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
                                          JS::Handle<JS::Value> aValue,
                                          ErrorResult& aRv,
                                          std::index_sequence<Indices...>) {
-    return aHandler(aCx, aValue, aRv, ArgType(Get<Indices>(mArgs))...);
+    return aHandler(aCx, aValue, aRv, ArgType(std::get<Indices>(mArgs))...);
   }
 
   template <typename TCallback>
@@ -163,19 +168,19 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
                         std::index_sequence_for<Args...>{});
   }
 
-  ResolveCallback mOnResolve;
-  RejectCallback mOnReject;
+  Maybe<ResolveCallback> mOnResolve;
+  Maybe<RejectCallback> mOnReject;
 
-  Tuple<StorageType<Args>...> mArgs;
+  std::tuple<StorageType<Args>...> mArgs;
 };
 
 }  // anonymous namespace
 
 template <typename ResolveCallback, typename RejectCallback, typename... Args>
 Promise::ThenResult<ResolveCallback, Args...>
-Promise::ThenCatchWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
-                                         RejectCallback&& aOnReject,
-                                         Args&&... aArgs) {
+Promise::ThenCatchWithCycleCollectedArgsImpl(
+    Maybe<ResolveCallback>&& aOnResolve, Maybe<RejectCallback>&& aOnReject,
+    Args&&... aArgs) {
   using HandlerType =
       NativeThenHandler<ResolveCallback, RejectCallback, Args...>;
 
@@ -185,9 +190,10 @@ Promise::ThenCatchWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
     return Err(rv.StealNSResult());
   }
 
-  auto* handler = new (fallible) HandlerType(
-      promise, std::forward<ResolveCallback>(aOnResolve),
-      std::forward<RejectCallback>(aOnReject), std::forward<Args>(aArgs)...);
+  auto* handler = new (fallible)
+      HandlerType(promise, std::forward<Maybe<ResolveCallback>>(aOnResolve),
+                  std::forward<Maybe<RejectCallback>>(aOnReject),
+                  std::forward<Args>(aArgs)...);
 
   if (!handler) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
@@ -197,18 +203,29 @@ Promise::ThenCatchWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
   return std::move(promise);
 }
 
+template <typename ResolveCallback, typename RejectCallback, typename... Args>
+Promise::ThenResult<ResolveCallback, Args...>
+Promise::ThenCatchWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
+                                         RejectCallback&& aOnReject,
+                                         Args&&... aArgs) {
+  return ThenCatchWithCycleCollectedArgsImpl(Some(aOnResolve), Some(aOnReject),
+                                             std::forward<Args>(aArgs)...);
+}
+
 template <typename Callback, typename... Args>
 Promise::ThenResult<Callback, Args...> Promise::ThenWithCycleCollectedArgs(
     Callback&& aOnResolve, Args&&... aArgs) {
-  return ThenCatchWithCycleCollectedArgs(
-      std::forward<Callback>(aOnResolve),
-      [](JSContext* aCx, JS::Handle<JS::Value> value, ErrorResult& aRv,
-         StorageType<Args>&&...) -> already_AddRefed<Promise> {
-        aRv.MightThrowJSException();
-        aRv.ThrowJSException(aCx, value);
-        return nullptr;
-      },
-      std::forward<Args>(aArgs)...);
+  return ThenCatchWithCycleCollectedArgsImpl(Some(aOnResolve),
+                                             Maybe<Callback>(Nothing()),
+                                             std::forward<Args>(aArgs)...);
+}
+
+template <typename Callback, typename... Args>
+Promise::ThenResult<Callback, Args...> Promise::CatchWithCycleCollectedArgs(
+    Callback&& aOnReject, Args&&... aArgs) {
+  return ThenCatchWithCycleCollectedArgsImpl(Maybe<Callback>(Nothing()),
+                                             Some(aOnReject),
+                                             std::forward<Args>(aArgs)...);
 }
 
 template <typename ResolveCallback, typename RejectCallback, typename... Args>
@@ -232,12 +249,10 @@ void Promise::AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
   // argument deduction for class templates" support
   AppendNativeHandler(
       new NativeThenHandler<decltype(onResolve), decltype(onReject), Args...>(
-          nullptr, std::forward<decltype(onResolve)>(onResolve),
-          std::forward<decltype(onReject)>(onReject),
+          nullptr, Some(onResolve), Some(onReject),
           std::forward<Args>(aArgs)...));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Promise_inl_h

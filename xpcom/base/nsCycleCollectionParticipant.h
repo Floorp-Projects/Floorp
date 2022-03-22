@@ -1085,4 +1085,21 @@ inline void ImplCycleCollectionUnlink(JS::Heap<T*>& aField) {
         MOZ_FOR_EACH_EXPAND_HELPER js_members_)                             \
   NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+template <typename... Elements>
+inline void ImplCycleCollectionUnlink(std::tuple<Elements...>& aField) {
+  std::apply([](auto&&... aArgs) { (ImplCycleCollectionUnlink(aArgs), ...); },
+             aField);
+}
+template <typename... Elements>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    std::tuple<Elements...>& aField, const char* aName, uint32_t aFlags) {
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  std::apply(
+      [&](auto&&... aArgs) {
+        (ImplCycleCollectionTraverse(aCallback, aArgs, aName, aFlags), ...);
+      },
+      aField);
+}
+
 #endif  // nsCycleCollectionParticipant_h__

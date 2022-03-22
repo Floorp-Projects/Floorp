@@ -444,22 +444,26 @@ async function prepareContentForReact(content) {
     )?.content.help_text.text;
   }
 
+  let shouldRemoveLanguageMismatchScreen = true;
   if (content.languageMismatchEnabled) {
     const screen = content?.screens?.find(s => s.id === "AW_LANGUAGE_MISMATCH");
-    if (screen) {
+    if (screen && content.appAndSystemLocaleInfo.canLiveReload) {
       // Add the display names for the OS and Firefox languages, like "American English".
-      const { appAndSystemLocaleInfo } = content;
       function addMessageArgs(obj) {
         for (const value of Object.values(obj)) {
           if (value?.string_id) {
-            value.args = appAndSystemLocaleInfo.displayNames;
+            value.args = content.appAndSystemLocaleInfo.displayNames;
           }
         }
       }
+
       addMessageArgs(screen.content.languageSwitcher);
       addMessageArgs(screen.content);
+      shouldRemoveLanguageMismatchScreen = false;
     }
-  } else {
+  }
+
+  if (shouldRemoveLanguageMismatchScreen) {
     removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH");
   }
 

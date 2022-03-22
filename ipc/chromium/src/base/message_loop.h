@@ -421,9 +421,9 @@ class MessageLoop : public base::MessagePump::Delegate {
   // aquired under a mutex for processing on this instance's thread. These tasks
   // have not yet been sorted out into items for our work_queue_ vs items that
   // will be handled by the TimerManager.
-  TaskQueue incoming_queue_;
+  TaskQueue incoming_queue_ GUARDED_BY(incoming_queue_lock_);
   // Protect access to incoming_queue_.
-  mozilla::Mutex incoming_queue_lock_ MOZ_UNANNOTATED;
+  mozilla::Mutex incoming_queue_lock_;
 
   RunState* state_;
   int run_depth_base_;

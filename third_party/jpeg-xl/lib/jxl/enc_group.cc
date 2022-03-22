@@ -112,7 +112,7 @@ retry:
       const float val = block_in[pos] * (qm[pos] * qac * qm_multiplier);
       float v = (std::abs(val) < thres[hfix]) ? 0 : rintf(val);
       const float error = std::abs(val) - std::abs(v);
-      hfError[hfix] += error;
+      hfError[hfix] += error * error;
       if (hfMaxError[hfix] < error) {
         hfMaxError[hfix] = error;
         hfMaxErrorIx[hfix] = pos;
@@ -124,13 +124,14 @@ retry:
     }
   }
   if (c != 1) return;
-  // TODO(veluca): include AFV?
-  const size_t kPartialBlockKinds =
+  constexpr size_t kPartialBlockKinds =
       (1 << AcStrategy::Type::IDENTITY) | (1 << AcStrategy::Type::DCT2X2) |
       (1 << AcStrategy::Type::DCT4X4) | (1 << AcStrategy::Type::DCT4X8) |
-      (1 << AcStrategy::Type::DCT8X4);
+      (1 << AcStrategy::Type::DCT8X4) | (1 << AcStrategy::Type::AFV0) |
+      (1 << AcStrategy::Type::AFV1) | (1 << AcStrategy::Type::AFV2) |
+      (1 << AcStrategy::Type::AFV3);
   if ((1 << quant_kind) & kPartialBlockKinds) return;
-  float hfErrorLimit = 0.1f * (xsize * ysize) * kDCTBlockSize * 0.25f;
+  float hfErrorLimit = 0.029f * (xsize * ysize) * kDCTBlockSize * 0.25f;
   bool goretry = false;
   for (int i = 1; i < 4; ++i) {
     if (hfError[i] >= hfErrorLimit &&

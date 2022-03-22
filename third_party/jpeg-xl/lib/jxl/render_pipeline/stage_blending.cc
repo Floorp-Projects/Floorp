@@ -32,31 +32,25 @@ class BlendingStage : public RenderPipelineStage {
         state_.frame_header.extra_channel_blending_info;
     ImageBundle& bg = *state_.reference_frames[info_.source].frame;
     bg_ = &bg;
-    if (bg.xsize() == 0 && bg.ysize() == 0) {
-      // there is no background, assume it to be all zeroes
-      ImageBundle empty(&state_.metadata->m);
-      Image3F color(image_xsize_, image_ysize_);
-      ZeroFillImage(&color);
-      empty.SetFromImage(std::move(color), frame_color_encoding);
-      if (!ec_info.empty()) {
-        std::vector<ImageF> ec;
-        for (size_t i = 0; i < ec_info.size(); ++i) {
-          ImageF eci(image_xsize_, image_ysize_);
-          ZeroFillImage(&eci);
-          ec.push_back(std::move(eci));
-        }
-        empty.SetExtraChannels(std::move(ec));
-      }
-      bg = std::move(empty);
+    if (bg.xsize() == 0 || bg.ysize() == 0) {
+      zeroes_.resize(image_xsize_, 0.f);
     } else if (state_.reference_frames[info_.source].ib_is_in_xyb) {
       initialized_ = JXL_FAILURE(
           "Trying to blend XYB reference frame %i and non-XYB frame",
           info_.source);
       return;
+    } else if (std::any_of(ec_info.begin(), ec_info.end(),
+                           [this](const BlendingInfo& info) {
+                             const ImageBundle& bg =
+                                 *state_.reference_frames[info.source].frame;
+                             return bg.xsize() == 0 || bg.ysize() == 0;
+                           })) {
+      zeroes_.resize(image_xsize_, 0.f);
     }
 
-    if (bg.xsize() < image_xsize_ || bg.ysize() < image_ysize_ ||
-        bg.origin.x0 != 0 || bg.origin.y0 != 0) {
+    if (bg.xsize() != 0 && bg.ysize() != 0 &&
+        (bg.xsize() < image_xsize_ || bg.ysize() < image_ysize_ ||
+         bg.origin.x0 != 0 || bg.origin.y0 != 0)) {
       initialized_ = JXL_FAILURE("Trying to use a %" PRIuS "x%" PRIuS
                                  " crop as a background",
                                  bg.xsize(), bg.ysize());
@@ -122,7 +116,6 @@ class BlendingStage : public RenderPipelineStage {
       return;
     }
     if (bg_xpos < 0) {
-      xpos -= bg_xpos;
       offset -= bg_xpos;
       xsize += bg_xpos;
       bg_xpos = 0;
@@ -133,12 +126,26 @@ class BlendingStage : public RenderPipelineStage {
     }
     std::vector<const float*> bg_row_ptrs_(input_rows.size());
     std::vector<float*> fg_row_ptrs_(input_rows.size());
-    for (size_t c = 0; c < input_rows.size(); ++c) {
-      bg_row_ptrs_[c] =
-          (c < 3 ? bg_->color()->ConstPlaneRow(c, bg_ypos)
-                 : bg_->extra_channels()[c - 3].ConstRow(bg_ypos)) +
-          bg_xpos;
-      fg_row_ptrs_[c] = GetInputRow(input_rows, c, offset);
+    size_t num_c = std::min(input_rows.size(), extra_channel_info_->size() + 3);
+    for (size_t c = 0; c < num_c; ++c) {
+      fg_row_ptrs_[c] = GetInputRow(input_rows, c, 0) + offset;
+      if (c < 3) {
+        bg_row_ptrs_[c] =
+            bg_->xsize() != 0 && bg_->ysize() != 0
+                ? bg_->color()->ConstPlaneRow(c, bg_ypos) + bg_xpos
+                : zeroes_.data();
+      } else {
+        const ImageBundle& ec_bg =
+            *state_
+                 .reference_frames[state_.frame_header
+                                       .extra_channel_blending_info[c - 3]
+                                       .source]
+                 .frame;
+        bg_row_ptrs_[c] =
+            ec_bg.xsize() != 0 && ec_bg.ysize() != 0
+                ? ec_bg.extra_channels()[c - 3].ConstRow(bg_ypos) + bg_xpos
+                : zeroes_.data();
+      }
     }
     PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
                     fg_row_ptrs_.data(), 0, xsize, blending_info_[0],
@@ -149,6 +156,46 @@ class BlendingStage : public RenderPipelineStage {
     return RenderPipelineChannelMode::kInPlace;
   }
 
+  bool SwitchToImageDimensions() const override { return true; }
+
+  void GetImageDimensions(size_t* xsize, size_t* ysize,
+                          FrameOrigin* frame_origin) const override {
+    *xsize = image_xsize_;
+    *ysize = image_ysize_;
+    *frame_origin = state_.frame_header.frame_origin;
+  }
+
+  void ProcessPaddingRow(const RowInfo& output_rows, size_t xsize, size_t xpos,
+                         size_t ypos) const override {
+    if (bg_->xsize() == 0 || bg_->ysize() == 0) {
+      for (size_t c = 0; c < 3; ++c) {
+        memset(GetInputRow(output_rows, c, 0), 0, xsize * sizeof(float));
+      }
+    } else {
+      for (size_t c = 0; c < 3; ++c) {
+        memcpy(GetInputRow(output_rows, c, 0),
+               bg_->color()->ConstPlaneRow(c, ypos) + xpos,
+               xsize * sizeof(float));
+      }
+    }
+    for (size_t ec = 0; ec < extra_channel_info_->size(); ++ec) {
+      const ImageBundle& ec_bg =
+          *state_
+               .reference_frames
+                   [state_.frame_header.extra_channel_blending_info[ec].source]
+               .frame;
+      if (ec_bg.xsize() == 0 || ec_bg.ysize() == 0) {
+        memset(GetInputRow(output_rows, 3 + ec, 0), 0, xsize * sizeof(float));
+      } else {
+        memcpy(GetInputRow(output_rows, 3 + ec, 0),
+               ec_bg.extra_channels()[ec].ConstRow(ypos) + xpos,
+               xsize * sizeof(float));
+      }
+    }
+  }
+
+  const char* GetName() const override { return "Blending"; }
+
  private:
   const PassesSharedState& state_;
   BlendingInfo info_;
@@ -158,6 +205,7 @@ class BlendingStage : public RenderPipelineStage {
   size_t image_ysize_;
   std::vector<PatchBlending> blending_info_;
   const std::vector<ExtraChannelInfo>* extra_channel_info_;
+  std::vector<float> zeroes_;
 };
 
 std::unique_ptr<RenderPipelineStage> GetBlendingStage(

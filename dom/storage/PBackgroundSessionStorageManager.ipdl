@@ -28,7 +28,9 @@ sync protocol PBackgroundSessionStorageManager
   async DeleteMe();
 
  child:
-   async __delete__();
+  async __delete__();
+
+  async ClearStoragesForOrigin(nsCString aOriginAttrs, nsCString aOriginKey);
 };
 
 } // namespace dom
