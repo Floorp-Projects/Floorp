@@ -15,10 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -168,6 +171,9 @@ public class GeckoJavaSampler {
    * A data container for metadata around a marker. This class is thread safe by being immutable.
    */
   private static class Marker extends JNIObject {
+    /** The id of the thread this marker was captured on. */
+    private final long mThreadId;
+
     /** Name of the marker */
     private final String mMarkerName;
     /** Either start time for the duration markers or time for a point-in-time markers. */
@@ -204,16 +210,19 @@ public class GeckoJavaSampler {
      * <p>Last parameter is optional and can be given with any combination. This gives users the
      * ability to add more context into a marker.
      *
+     * @param aThreadId The id of the thread this marker was captured on.
      * @param aMarkerName Identifier of the marker as a string.
      * @param aStartTime Start time as Double. It can be null if you want to mark a point of time.
      * @param aEndTime End time as Double. If it's null, this function implicitly gets the end time.
      * @param aText An optional string field for more information about the marker.
      */
     public Marker(
+        final long aThreadId,
         @NonNull final String aMarkerName,
         @Nullable final Double aStartTime,
         @Nullable final Double aEndTime,
         @Nullable final String aText) {
+      mThreadId = getAdjustedThreadId(aThreadId);
       mMarkerName = aMarkerName;
       mText = aText;
 
@@ -275,6 +284,11 @@ public class GeckoJavaSampler {
     }
 
     @WrapForJNI
+    public long getThreadId() {
+      return mThreadId;
+    }
+
+    @WrapForJNI
     public @NonNull String getMarkerName() {
       return mMarkerName;
     }
@@ -289,7 +303,8 @@ public class GeckoJavaSampler {
    * Public method to add a new marker to Gecko profiler. This can be used to add a marker *inside*
    * the geckoview code, but ideally ProfilerController methods should be used instead.
    *
-   * @see Marker#Marker(String, Double, Double, String) for information about the parameter options.
+   * @see Marker#Marker(long, String, Double, Double, String) for information about the parameter
+   *     options.
    */
   public static void addMarker(
       @NonNull final String aMarkerName,
@@ -463,9 +478,9 @@ public class GeckoJavaSampler {
   /**
    * A start/stop-aware container for storing profiler markers.
    *
-   * <p>This class is thread safe: see {@link #mMarkers} for the threading policy. Start/stop are
-   * guaranteed to execute in the order they are called but other methods do not have such ordering
-   * guarantees.
+   * <p>This class is thread safe: see {@link #mMarkers} and other member variables for the
+   * threading policy. Start/stop are guaranteed to execute in the order they are called but other
+   * methods do not have such ordering guarantees.
    */
   private static class MarkerStorage {
     /**
@@ -477,13 +492,31 @@ public class GeckoJavaSampler {
      */
     private volatile Queue<Marker> mMarkers;
 
+    /**
+     * The thread ids of the threads we're profiling. This field maintains thread safety by writing
+     * a read-only value to this volatile field before concurrency begins and only reading it during
+     * concurrent sections.
+     */
+    private volatile Set<Long> mProfiledThreadIds = Collections.emptySet();
+
     MarkerStorage() {}
 
-    public synchronized void start(final int aMarkerCount) {
+    public synchronized void start(final int aMarkerCount, final List<Thread> aProfiledThreads) {
       if (this.mMarkers != null) {
         return;
       }
       this.mMarkers = new LinkedBlockingQueue<>(aMarkerCount);
+
+      final Set<Long> profiledThreadIds = new HashSet<>(aProfiledThreads.size());
+      for (final Thread thread : aProfiledThreads) {
+        profiledThreadIds.add(thread.getId());
+      }
+
+      // We use a temporary collection, rather than mutating the collection within the member
+      // variable, to ensure the collection is fully written before the state is made available to
+      // all threads via the volatile write into the member variable. This collection must be
+      // read-only for it to remain thread safe.
+      mProfiledThreadIds = Collections.unmodifiableSet(profiledThreadIds);
     }
 
     public synchronized void stop() {
@@ -491,6 +524,7 @@ public class GeckoJavaSampler {
         return;
       }
       this.mMarkers = null;
+      mProfiledThreadIds = Collections.emptySet();
     }
 
     private void addMarker(
@@ -504,16 +538,12 @@ public class GeckoJavaSampler {
         return;
       }
 
-      // It would be good to use `Looper.getMainLooper().isCurrentThread()`
-      // instead but it requires API level 23 and current min is 16.
-      if (Looper.myLooper() != Looper.getMainLooper()) {
-        // Bug 1618560: Currently only main thread is being profiled and
-        // this marker doesn't belong to the main thread.
-        throw new AssertionError("Currently only main thread is supported for markers.");
+      final long threadId = Thread.currentThread().getId();
+      if (!mProfiledThreadIds.contains(threadId)) {
+        return;
       }
 
-      final Marker newMarker = new Marker(aMarkerName, aStartTime, aEndTime, aText);
-
+      final Marker newMarker = new Marker(threadId, aMarkerName, aStartTime, aEndTime, aText);
       boolean successful = markersQueue.offer(newMarker);
       while (!successful) {
         // Marker storage is full, remove the head and add again.
@@ -550,9 +580,9 @@ public class GeckoJavaSampler {
       // Setting a limit of 120000 (2 mins with 1ms interval) for samples and markers for now
       // to make sure we are not allocating too much.
       final int limitedEntryCount = Math.min(aEntryCount, 120000);
-      sSamplingRunnable =
-          new SamplingRunnable(getThreadsToProfile(aFilters), aInterval, limitedEntryCount);
-      sMarkerStorage.start(limitedEntryCount);
+      final List<Thread> threadsToProfile = getThreadsToProfile(aFilters);
+      sSamplingRunnable = new SamplingRunnable(threadsToProfile, aInterval, limitedEntryCount);
+      sMarkerStorage.start(limitedEntryCount, threadsToProfile);
       sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
       sSamplingFuture.set(
           sSamplingScheduler.scheduleAtFixedRate(
