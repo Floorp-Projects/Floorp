@@ -2255,13 +2255,13 @@ nsWindow::WaylandPopupGetPositionFromLayout() {
     anchorRectAppUnits.Inflate(popupMargin.mAnchorMargin);
     LOG("    after margins %s\n", ToString(anchorRectAppUnits).c_str());
     nscoord auPerDev = popupFrame->PresContext()->AppUnitsPerDevPixel();
+    anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRectAppUnits,
+                                                            auPerDev);
     if (anchorRect.width < 0) {
       auto w = -anchorRect.width;
       anchorRect.width += w + 1;
       anchorRect.x += w;
     }
-    anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRectAppUnits,
-                                                            auPerDev);
     LOG("    final %s\n", ToString(anchorRect).c_str());
   }
 
