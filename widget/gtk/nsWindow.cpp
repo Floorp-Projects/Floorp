@@ -2018,12 +2018,13 @@ bool nsWindow::WaylandPopupFitsParentWindow(const GdkRectangle& aSize) {
   // We use parent mozcontainer size plus left/top CSD decorations sizes as
   // this coordinates are used by mBounds.
   int parentWidth = gdk_window_get_width(parentGdkWindow) + x;
-  int parentHeight = gdk_window_get_width(parentGdkWindow) + y;
+  int parentHeight = gdk_window_get_height(parentGdkWindow) + y;
   int popupWidth = aSize.width;
   int popupHeight = aSize.height;
 
   auto popupBounds = DevicePixelsToGdkRectRoundOut(mBounds);
-  return popupBounds.x + popupWidth <= parentWidth &&
+  return popupBounds.x >= 0 && popupBounds.y >= 0 &&
+         popupBounds.x + popupWidth <= parentWidth &&
          popupBounds.y + popupHeight <= parentHeight;
 }
 
