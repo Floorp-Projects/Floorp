@@ -27,8 +27,8 @@ void Image::undo_transforms(const weighted::Header &wp_header,
   }
 }
 
-Image::Image(size_t iw, size_t ih, int bd, int nb_chans)
-    : w(iw), h(ih), bitdepth(bd), nb_meta_channels(0), error(false) {
+Image::Image(size_t iw, size_t ih, int bitdepth, int nb_chans)
+    : w(iw), h(ih), bitdepth(bitdepth), nb_meta_channels(0), error(false) {
   for (int i = 0; i < nb_chans; i++) channel.emplace_back(Channel(iw, ih));
 }
 

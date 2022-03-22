@@ -52,30 +52,19 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   cparams.speed_tier = SpeedTier::kSquirrel;
   DecompressParams dparams;
 
-  dparams.preview = Override::kOff;
-
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
-                                /*distmap=*/nullptr, pool),
-            2.5);
-  EXPECT_EQ(0u, io2.preview_frame.xsize());
+  EXPECT_EQ(preview_xsize, io2.metadata.m.preview_size.xsize());
+  EXPECT_EQ(preview_ysize, io2.metadata.m.preview_size.ysize());
+  EXPECT_EQ(preview_xsize, io2.preview_frame.xsize());
+  EXPECT_EQ(preview_ysize, io2.preview_frame.ysize());
 
-  dparams.preview = Override::kOn;
-
-  CodecInOut io3;
-  Roundtrip(&io, cparams, dparams, pool, &io3);
-  EXPECT_EQ(preview_xsize, io3.metadata.m.preview_size.xsize());
-  EXPECT_EQ(preview_ysize, io3.metadata.m.preview_size.ysize());
-  EXPECT_EQ(preview_xsize, io3.preview_frame.xsize());
-  EXPECT_EQ(preview_ysize, io3.preview_frame.ysize());
-
-  EXPECT_LE(ButteraugliDistance(io.preview_frame, io3.preview_frame,
+  EXPECT_LE(ButteraugliDistance(io.preview_frame, io2.preview_frame,
                                 cparams.ba_params, GetJxlCms(),
                                 /*distmap=*/nullptr, pool),
             2.5);
   EXPECT_LE(
-      ButteraugliDistance(io.Main(), io3.Main(), cparams.ba_params, GetJxlCms(),
+      ButteraugliDistance(io.Main(), io2.Main(), cparams.ba_params, GetJxlCms(),
                           /*distmap=*/nullptr, pool),
       2.5);
 }

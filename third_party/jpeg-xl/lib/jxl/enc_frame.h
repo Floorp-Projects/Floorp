@@ -60,6 +60,9 @@ struct FrameInfo {
   std::vector<BlendingInfo> extra_channel_blending_info;
 };
 
+// Checks and adjusts CompressParams when they are all initialized.
+Status ParamsPostInit(CompressParams* p);
+
 // Encodes a single frame (including its header) into a byte stream.  Groups may
 // be processed in parallel by `pool`. metadata is the ImageMetadata encoded in
 // the codestream, and must be used for the FrameHeaders, do not use

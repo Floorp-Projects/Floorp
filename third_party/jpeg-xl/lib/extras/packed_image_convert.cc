@@ -138,9 +138,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
                           frame.color.format.data_type == JXL_TYPE_FLOAT;
     JXL_RETURN_IF_ERROR(ConvertFromExternal(
         span, frame.color.xsize, frame.color.ysize,
-        io->metadata.m.color_encoding,
-        /*has_alpha=*/frame.color.format.num_channels == 2 ||
-            frame.color.format.num_channels == 4,
+        io->metadata.m.color_encoding, frame.color.format.num_channels,
         /*alpha_is_premultiplied=*/ppf.info.alpha_premultiplied,
         frame_bits_per_sample, frame.color.format.endianness,
         /*flipped_y=*/frame.color.flipped_y, pool, &bundle,

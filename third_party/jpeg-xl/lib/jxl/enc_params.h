@@ -246,14 +246,17 @@ struct CompressParams {
   bool use_new_heuristics = false;
 
   // Down/upsample the image before encoding / after decoding by this factor.
-  // The resampling value can also be set to 0 to automatically choose based
+  // The resampling value can also be set to <= 0 to automatically choose based
   // on distance, however EncodeFrame doesn't support this, so it is
-  // required to process the CompressParams to set a valid positive resampling
+  // required to call PostInit() to set a valid positive resampling
   // value and altered butteraugli score if this is used.
-  size_t resampling = 1;
-  size_t ec_resampling = 1;
+  int resampling = -1;
+  int ec_resampling = -1;
   // Skip the downsampling before encoding if this is true.
   bool already_downsampled = false;
+
+  std::vector<float> manual_noise;
+  std::vector<float> manual_xyb_factors;
 };
 
 static constexpr float kMinButteraugliForDynamicAR = 0.5f;

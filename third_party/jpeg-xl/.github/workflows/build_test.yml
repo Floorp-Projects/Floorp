@@ -256,10 +256,12 @@ jobs:
 
           - arch: i386
             lowprecision:
+            test_in_pr: true
             build_target: i686-linux-gnu
 
     env:
       BUILD_DIR: build
+      WILL_RUN_TESTS: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.names, 'CI:full'))) }}
 
     steps:
     - name: Setup apt
@@ -381,13 +383,7 @@ jobs:
           cjxl djxl libjxl.so libjxl_dec.so
     # Run the tests on push and when requested in pull_request.
     - name: Test
-      # Some tests have a small floating point error on i686.
-      # TODO(deymo): Re-enable i686 tests.
-      if: |
-        matrix.build_target != 'i686-linux-gnu' && (
-          github.event_name == 'push' ||
-          (github.event_name == 'pull_request' &&
-           contains(github.event.pull_request.labels.*.names, 'CI:full')))
+      if: env.WILL_RUN_TESTS == 'true'
       run: |
         ./ci.sh test
       env:

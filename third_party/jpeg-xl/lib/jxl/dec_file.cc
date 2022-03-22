@@ -41,41 +41,6 @@ Status DecodeHeaders(BitReader* reader, CodecInOut* io) {
 
 }  // namespace
 
-Status DecodePreview(const DecompressParams& dparams,
-                     const CodecMetadata& metadata,
-                     BitReader* JXL_RESTRICT reader, ThreadPool* pool,
-                     ImageBundle* JXL_RESTRICT preview, uint64_t* dec_pixels,
-                     const SizeConstraints* constraints) {
-  // No preview present in file.
-  if (!metadata.m.have_preview) {
-    if (dparams.preview == Override::kOn) {
-      return JXL_FAILURE("preview == kOn but no preview present");
-    }
-    return true;
-  }
-
-  // Have preview; prepare to skip or read it.
-  JXL_RETURN_IF_ERROR(reader->JumpToByteBoundary());
-
-  if (dparams.preview == Override::kOff) {
-    JXL_RETURN_IF_ERROR(SkipFrame(metadata, reader, /*is_preview=*/true));
-    return true;
-  }
-
-  // Else: default or kOn => decode preview.
-  PassesDecoderState dec_state;
-  JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(
-      metadata, ColorEncoding::LinearSRGB(metadata.m.color_encoding.IsGray())));
-  JXL_RETURN_IF_ERROR(DecodeFrame(dparams, &dec_state, pool, reader, preview,
-                                  metadata, constraints,
-                                  /*is_preview=*/true));
-  if (dec_pixels) {
-    *dec_pixels += dec_state.shared->frame_dim.xsize_upsampled *
-                   dec_state.shared->frame_dim.ysize_upsampled;
-  }
-  return true;
-}
-
 // To avoid the complexity of file I/O and buffering, we assume the bitstream
 // is loaded (or for large images/sequences: mapped into) memory.
 Status DecodeFile(const DecompressParams& dparams,
@@ -124,20 +89,23 @@ Status DecodeFile(const DecompressParams& dparams,
       }
     }
 
-    JXL_RETURN_IF_ERROR(DecodePreview(dparams, io->metadata, &reader, pool,
-                                      &io->preview_frame, &io->dec_pixels,
-                                      &io->constraints));
+    PassesDecoderState dec_state;
+    JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(
+        io->metadata,
+        ColorEncoding::LinearSRGB(io->metadata.m.color_encoding.IsGray())));
+
+    if (io->metadata.m.have_preview) {
+      JXL_RETURN_IF_ERROR(reader.JumpToByteBoundary());
+      JXL_RETURN_IF_ERROR(DecodeFrame(dparams, &dec_state, pool, &reader,
+                                      &io->preview_frame, io->metadata,
+                                      &io->constraints, /*is_preview=*/true));
+    }
 
     // Only necessary if no ICC and no preview.
     JXL_RETURN_IF_ERROR(reader.JumpToByteBoundary());
     if (io->metadata.m.have_animation && dparams.keep_dct) {
       return JXL_FAILURE("Cannot decode to JPEG an animation");
     }
-
-    PassesDecoderState dec_state;
-    JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(
-        io->metadata,
-        ColorEncoding::LinearSRGB(io->metadata.m.color_encoding.IsGray())));
 
     io->frames.clear();
     Status dec_ok(false);

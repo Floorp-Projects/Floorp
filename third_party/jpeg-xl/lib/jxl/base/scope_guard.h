@@ -24,7 +24,7 @@ class ScopeGuard {
   }
 
   template <typename CallbackParam>
-  ScopeGuard(CallbackParam &&callback)
+  explicit ScopeGuard(CallbackParam &&callback)
       : callback_(std::forward<CallbackParam>(callback)), armed_(true) {}
 
   ~ScopeGuard() {
@@ -40,7 +40,7 @@ class ScopeGuard {
 
 template <typename Callback>
 ScopeGuard<Callback> MakeScopeGuard(Callback &&callback) {
-  return {std::forward<Callback>(callback)};
+  return ScopeGuard<Callback>{std::forward<Callback>(callback)};
 }
 
 }  // namespace jxl
