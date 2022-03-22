@@ -3,14 +3,14 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "reselect";
-import { makeShallowQuery } from "../utils/resource";
+import { shallowEqual } from "../utils/resource";
 import { getPrettySourceURL } from "../utils/source";
 
 import {
   getSource,
   getSpecificSourceByURL,
   getSources,
-  resourceAsSourceBase,
+  getSourceInSources,
 } from "./sources";
 import { isOriginalId } from "devtools-source-map";
 import { isSimilarTab } from "../utils/tabs";
@@ -22,17 +22,14 @@ export const getSourceTabs = createSelector(
   ({ tabs }) => tabs.filter(tab => tab.sourceId)
 );
 
-export const getSourcesForTabs = state => {
-  const tabs = getSourceTabs(state);
-  const sources = getSources(state);
-  return querySourcesForTabs(sources, tabs);
-};
-
-const querySourcesForTabs = makeShallowQuery({
-  filter: (_, tabs) => tabs.map(({ sourceId }) => sourceId),
-  map: resourceAsSourceBase,
-  reduce: items => items,
-});
+export const getSourcesForTabs = createSelector(
+  getSources,
+  getSourceTabs,
+  (sources, sourceTabs) => {
+    return sourceTabs.map(tab => getSourceInSources(sources, tab.sourceId));
+  },
+  { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
+);
 
 export function tabExists(state, sourceId) {
   return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
