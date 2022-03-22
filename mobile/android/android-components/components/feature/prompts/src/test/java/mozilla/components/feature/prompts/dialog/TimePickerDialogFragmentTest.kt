@@ -9,7 +9,6 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.content.DialogInterface.BUTTON_POSITIVE
-import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.os.Looper.getMainLooper
 import android.widget.DatePicker
 import android.widget.NumberPicker
@@ -39,7 +38,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
 
@@ -211,8 +209,6 @@ class TimePickerDialogFragmentTest {
     }
 
     @Test
-    @Config(sdk = [LOLLIPOP])
-    @Suppress("DEPRECATION")
     fun `building a time picker`() {
         val initialDate = "2018-06-12T19:30".toDate("yyyy-MM-dd'T'HH:mm")
         val minDate = "2018-06-07T00:00".toDate("yyyy-MM-dd'T'HH:mm")
