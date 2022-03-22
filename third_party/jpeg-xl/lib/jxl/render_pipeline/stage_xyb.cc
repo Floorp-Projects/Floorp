@@ -12,6 +12,7 @@
 
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/fast_math-inl.h"
+#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -62,7 +63,7 @@ struct OpPq {
 
 struct OpHlg {
   explicit OpHlg(const float luminances[3], const float intensity_target)
-      : luminances(luminances) {
+      : luminances(luminances), exponent(1.0f) {
     if (295 <= intensity_target && intensity_target <= 305) {
       apply_inverse_ootf = false;
       return;
@@ -131,7 +132,7 @@ class XYBStage : public RenderPipelineStage {
     msan::UnpoisonMemory(row0 + xsize, sizeof(float) * (xsize_v - xsize));
     msan::UnpoisonMemory(row1 + xsize, sizeof(float) * (xsize_v - xsize));
     msan::UnpoisonMemory(row2 + xsize, sizeof(float) * (xsize_v - xsize));
-    for (int64_t x = -xextra; x < (int64_t)(xsize + xextra); x += Lanes(d)) {
+    for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
       const auto in_opsin_x = Load(d, row0 + x);
       const auto in_opsin_y = Load(d, row1 + x);
       const auto in_opsin_b = Load(d, row2 + x);
@@ -154,6 +155,8 @@ class XYBStage : public RenderPipelineStage {
     return c < 3 ? RenderPipelineChannelMode::kInPlace
                  : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "XYB"; }
 
  private:
   OpsinParams opsin_params_;
@@ -243,6 +246,8 @@ class FastXYBStage : public RenderPipelineStage {
                ? RenderPipelineChannelMode::kInput
                : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "FastXYB"; }
 
  private:
   uint8_t* rgb_;

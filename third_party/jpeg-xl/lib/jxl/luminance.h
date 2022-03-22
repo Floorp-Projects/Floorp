@@ -11,10 +11,12 @@ namespace jxl {
 // Chooses a default intensity target based on the transfer function of the
 // image, if known. For SDR images or images not known to be HDR, returns
 // kDefaultIntensityTarget, for images known to have PQ or HLG transfer function
-// returns a higher value. If the image metadata already has a non-zero
-// intensity target, does nothing.
+// returns a higher value.
 class CodecInOut;
 void SetIntensityTarget(CodecInOut* io);
+
+struct ImageMetadata;
+void SetIntensityTarget(ImageMetadata* m);
 
 }  // namespace jxl
 

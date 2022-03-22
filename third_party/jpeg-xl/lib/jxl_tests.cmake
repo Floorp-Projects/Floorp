@@ -6,7 +6,6 @@ set(TEST_FILES
   extras/dec/color_description_test.cc
   extras/dec/pgx_test.cc
   jxl/ac_strategy_test.cc
-  jxl/adaptive_reconstruction_test.cc
   jxl/alpha_test.cc
   jxl/ans_common_test.cc
   jxl/ans_test.cc
@@ -18,7 +17,6 @@ set(TEST_FILES
   jxl/coeff_order_test.cc
   jxl/color_encoding_internal_test.cc
   jxl/color_management_test.cc
-  jxl/compressed_image_test.cc
   jxl/convolve_test.cc
   jxl/data_parallel_test.cc
   jxl/dct_test.cc
@@ -30,7 +28,6 @@ set(TEST_FILES
   jxl/fast_dct_test.cc
   jxl/fast_math_test.cc
   jxl/fields_test.cc
-  jxl/filters_internal_test.cc
   jxl/gaborish_test.cc
   jxl/gamma_correct_test.cc
   jxl/gauss_blur_test.cc

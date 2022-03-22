@@ -35,6 +35,8 @@ class SplineStage : public RenderPipelineStage {
                  : RenderPipelineChannelMode::kIgnored;
   }
 
+  const char* GetName() const override { return "Splines"; }
+
  private:
   const Splines& splines_;
 };

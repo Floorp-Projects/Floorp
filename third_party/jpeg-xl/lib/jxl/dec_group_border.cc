@@ -58,7 +58,7 @@ void GroupBorderAssigner::ClearDone(size_t group_id) {
 // (for horizontal borders): the order as seen on those corners will decide who
 // handles that border.
 
-void GroupBorderAssigner::GroupDone(size_t group_id, size_t padding,
+void GroupBorderAssigner::GroupDone(size_t group_id, size_t padx, size_t pady,
                                     Rect* rects_to_finalize,
                                     size_t* num_to_finalize) {
   size_t x = group_id % frame_dim_.xsize_groups;
@@ -87,9 +87,6 @@ void GroupBorderAssigner::GroupDone(size_t group_id, size_t padding,
   size_t bottom_right_status = fetch_status(bottom_right_idx, kTopLeft);
   size_t bottom_left_status = fetch_status(bottom_left_idx, kTopRight);
 
-  size_t padx = PaddingX(padding);
-  size_t pady = padding;
-
   size_t x1 = block_rect.x0() + block_rect.xsize();
   size_t y1 = block_rect.y0() + block_rect.ysize();
 
@@ -100,18 +97,18 @@ void GroupBorderAssigner::GroupDone(size_t group_id, size_t padding,
   // of border of this group (on the other side), end of border of next group.
   size_t xpos[4] = {
       block_rect.x0() == 0 ? 0 : block_rect.x0() * kBlockDim - padx,
-      block_rect.x0() == 0 ? 0
-                           : std::min(frame_dim_.xsize_padded,
-                                      block_rect.x0() * kBlockDim + padx),
-      is_last_group_x ? frame_dim_.xsize_padded : x1 * kBlockDim - padx,
-      std::min(frame_dim_.xsize_padded, x1 * kBlockDim + padx)};
+      block_rect.x0() == 0
+          ? 0
+          : std::min(frame_dim_.xsize, block_rect.x0() * kBlockDim + padx),
+      is_last_group_x ? frame_dim_.xsize : x1 * kBlockDim - padx,
+      std::min(frame_dim_.xsize, x1 * kBlockDim + padx)};
   size_t ypos[4] = {
       block_rect.y0() == 0 ? 0 : block_rect.y0() * kBlockDim - pady,
-      block_rect.y0() == 0 ? 0
-                           : std::min(frame_dim_.ysize_padded,
-                                      block_rect.y0() * kBlockDim + pady),
-      is_last_group_y ? frame_dim_.ysize_padded : y1 * kBlockDim - pady,
-      std::min(frame_dim_.ysize_padded, y1 * kBlockDim + pady)};
+      block_rect.y0() == 0
+          ? 0
+          : std::min(frame_dim_.ysize, block_rect.y0() * kBlockDim + pady),
+      is_last_group_y ? frame_dim_.ysize : y1 * kBlockDim - pady,
+      std::min(frame_dim_.ysize, y1 * kBlockDim + pady)};
 
   *num_to_finalize = 0;
   auto append_rect = [&](size_t x0, size_t x1, size_t y0, size_t y1) {

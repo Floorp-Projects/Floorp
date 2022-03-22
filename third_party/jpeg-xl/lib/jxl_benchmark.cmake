@@ -8,7 +8,6 @@
 set(JPEGXL_INTERNAL_SOURCES_GBENCH
   extras/tone_mapping_gbench.cc
   jxl/dec_external_image_gbench.cc
-  jxl/dec_reconstruct_gbench.cc
   jxl/enc_external_image_gbench.cc
   jxl/gauss_blur_gbench.cc
   jxl/splines_gbench.cc

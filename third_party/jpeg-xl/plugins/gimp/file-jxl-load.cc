@@ -19,11 +19,11 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
 
   gint32 layer;
 
-  gpointer pixels_buffer_1;
-  gpointer pixels_buffer_2;
-  size_t buffer_size;
+  gpointer pixels_buffer_1 = nullptr;
+  gpointer pixels_buffer_2 = nullptr;
+  size_t buffer_size = 0;
 
-  GimpImageBaseType image_type;
+  GimpImageBaseType image_type = GIMP_RGB;
   GimpImageType layer_type = GIMP_RGB_IMAGE;
   GimpPrecision precision = GIMP_PRECISION_U16_GAMMA;
   JxlBasicInfo info = {};

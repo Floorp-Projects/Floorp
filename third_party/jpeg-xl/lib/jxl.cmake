@@ -93,11 +93,7 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/dec_params.h
   jxl/dec_patch_dictionary.cc
   jxl/dec_patch_dictionary.h
-  jxl/dec_reconstruct.cc
-  jxl/dec_reconstruct.h
   jxl/dec_transforms-inl.h
-  jxl/dec_upsample.cc
-  jxl/dec_upsample.h
   jxl/dec_xyb-inl.h
   jxl/dec_xyb.cc
   jxl/dec_xyb.h
@@ -123,9 +119,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/field_encodings.h
   jxl/fields.cc
   jxl/fields.h
-  jxl/filters.cc
-  jxl/filters.h
-  jxl/filters_internal.h
   jxl/frame_header.cc
   jxl/frame_header.h
   jxl/gauss_blur.cc

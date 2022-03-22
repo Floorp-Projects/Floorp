@@ -24,25 +24,12 @@ class GroupBorderAssigner {
   // Marks a group as done, and returns the (at most 3) rects to run
   // FinalizeImageRect on. `block_rect` must be the rect corresponding
   // to the given `group_id`, measured in blocks.
-  void GroupDone(size_t group_id, size_t padding, Rect* rects_to_finalize,
-                 size_t* num_to_finalize);
+  void GroupDone(size_t group_id, size_t padx, size_t pady,
+                 Rect* rects_to_finalize, size_t* num_to_finalize);
   // Marks a group as not-done, for running re-paints.
   void ClearDone(size_t group_id);
 
   static constexpr size_t kMaxToFinalize = 3;
-
-  // Vectors on ARM NEON are never wider than 4 floats, so rounding to multiples
-  // of 4 is enough.
-#if defined(__ARM_NEON) || defined(__ARM_NEON__)
-  static constexpr size_t kPaddingXRound = 4;
-#else
-  static constexpr size_t kPaddingXRound = kBlockDim;
-#endif
-
-  // Returns the necessary amount of padding for the X axis.
-  static size_t PaddingX(size_t padding) {
-    return RoundUpTo(padding, kPaddingXRound);
-  }
 
  private:
   FrameDimensions frame_dim_;

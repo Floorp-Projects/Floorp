@@ -597,7 +597,7 @@ struct Container {
     if (memcmp(expected, ftyp_box.data.data(), 12) != 0)
       return JXL_FAILURE("Invalid ftyp");
 
-    while (in->size() > 0) {
+    while (!in->empty()) {
       Box box = {};
       JXL_RETURN_IF_ERROR(box.Decode(in));
       if (box.data.data() == nullptr) {

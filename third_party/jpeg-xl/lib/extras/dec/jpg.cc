@@ -153,8 +153,9 @@ void MyErrorExit(j_common_ptr cinfo) {
 
 void MyOutputMessage(j_common_ptr cinfo) {
 #if JXL_DEBUG_WARNING == 1
-  char buf[JMSG_LENGTH_MAX];
+  char buf[JMSG_LENGTH_MAX + 1];
   (*cinfo->err->format_message)(cinfo, buf);
+  buf[JMSG_LENGTH_MAX] = 0;
   JXL_WARNING("%s", buf);
 #endif
 }

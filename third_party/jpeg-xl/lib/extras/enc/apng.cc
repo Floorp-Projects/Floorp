@@ -260,7 +260,7 @@ Status EncodeImageAPNG(const CodecInOut* io, const ColorEncoding& c_desired,
     }
 
     count++;
-    if (count == io->frames.size()) png_write_end(png_ptr, NULL);
+    if (count == io->frames.size() || !have_anim) png_write_end(png_ptr, NULL);
 
     png_destroy_write_struct(&png_ptr, &info_ptr);
   }

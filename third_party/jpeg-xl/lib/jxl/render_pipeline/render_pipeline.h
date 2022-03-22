@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "lib/jxl/filters.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 
 namespace jxl {
@@ -61,10 +61,6 @@ class RenderPipeline {
     // the pipeline.
     void UseSimpleImplementation() { use_simple_implementation_ = true; }
 
-    // Marks the 3 last channels as being noise input channels, which use the
-    // same size as color channels.
-    void UsesNoise() { uses_noise_ = true; }
-
     // Finalizes setup of the pipeline. Shifts for all channels should be 0 at
     // this point.
     std::unique_ptr<RenderPipeline> Finalize(
@@ -74,7 +70,6 @@ class RenderPipeline {
     std::vector<std::unique_ptr<RenderPipelineStage>> stages_;
     size_t num_c_;
     bool use_simple_implementation_ = false;
-    bool uses_noise_ = false;
   };
 
   friend class Builder;
@@ -88,8 +83,11 @@ class RenderPipeline {
     return true;
   }
 
-  // Allocates storage to run with `num` threads.
-  void PrepareForThreads(size_t num);
+  // Allocates storage to run with `num` threads. If `use_group_ids` is true,
+  // storage is allocated for each group, not each thread. The behaviour is
+  // undefined if calling this function multiple times with a different value
+  // for `use_group_ids`.
+  void PrepareForThreads(size_t num, bool use_group_ids);
 
   // Retrieves a buffer where input data should be stored by the callee. When
   // input has been provided for all buffers, the pipeline will complete its
@@ -102,14 +100,18 @@ class RenderPipeline {
                              group_completed_passes_.end());
   }
 
+  virtual void ClearDone(size_t i) {}
+
  protected:
   std::vector<std::unique_ptr<RenderPipelineStage>> stages_;
   // Shifts for every channel at the input of each stage.
   std::vector<std::vector<std::pair<size_t, size_t>>> channel_shifts_;
-  // Amount of (cumulative) padding required by each stage.
-  std::vector<size_t> padding_;
+
+  // Amount of (cumulative) padding required by each stage and channel, in
+  // either direction.
+  std::vector<std::vector<std::pair<size_t, size_t>>> padding_;
+
   FrameDimensions frame_dimensions_;
-  bool uses_noise_;
 
   std::vector<uint8_t> group_completed_passes_;
 
@@ -129,7 +131,10 @@ class RenderPipeline {
 
   // Note that this method may be called multiple times with different (or
   // equal) `num`.
-  virtual void PrepareForThreadsInternal(size_t num) = 0;
+  virtual void PrepareForThreadsInternal(size_t num, bool use_group_ids) = 0;
+
+  // Called once frame dimensions and stages are known.
+  virtual void Init() {}
 };
 
 }  // namespace jxl
