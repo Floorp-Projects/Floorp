@@ -1019,6 +1019,22 @@ class MozIntl {
     });
   }
 
+  getScriptDirection(locale) {
+    // This is a crude implementation until Bug 1693576 lands.
+    // See justification in toolkit/components/mozintl/mozIMozIntl.idl
+    const { language } = new Intl.Locale(locale);
+    if (
+      language == "ar" ||
+      language == "ckb" ||
+      language == "fa" ||
+      language == "he" ||
+      language == "ur"
+    ) {
+      return "rtl";
+    }
+    return "ltr";
+  }
+
   get DateTimeFormat() {
     if (!this._cache.hasOwnProperty("DateTimeFormat")) {
       mozIntlHelper.addDateTimeFormatConstructor(this._cache);
