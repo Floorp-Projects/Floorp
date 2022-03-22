@@ -77,6 +77,16 @@ class AboutReaderChild extends JSWindowActorChild {
         ReaderMode.leaveReaderMode(this.docShell, this.contentWindow);
         break;
       }
+      case "Reader:HideToolbar": {
+        this.toolbar = this.document.getElementById("toolbar");
+        this.toolbar.hidden = true;
+        break;
+      }
+      case "Reader:ShowToolbar": {
+        this.toolbar = this.document.getElementById("toolbar");
+        this.toolbar.hidden = false;
+        break;
+      }
     }
 
     // Forward the message to the reader if it has been created.
