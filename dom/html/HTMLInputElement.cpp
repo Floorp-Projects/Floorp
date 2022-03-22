@@ -851,8 +851,7 @@ void HTMLInputElement::InitUploadLastDir() {
   gUploadLastDir = new UploadLastDir();
   NS_ADDREF(gUploadLastDir);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService && gUploadLastDir) {
     observerService->AddObserver(gUploadLastDir,
                                  "browser:purge-session-history", true);
@@ -949,9 +948,8 @@ static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
 // construction, destruction
 //
 
-HTMLInputElement::HTMLInputElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser, FromClone aFromClone)
+HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
+                                   FromParser aFromParser, FromClone aFromClone)
     : TextControlElement(std::move(aNodeInfo), aFromParser,
                          FormControlType(kInputDefaultType->value)),
       mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
@@ -2935,7 +2933,7 @@ void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
   } else if (!mForm->ImplicitSubmissionIsDisabled()) {
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
-    RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+    RefPtr<dom::HTMLFormElement> form(mForm);
     form->MaybeSubmit(nullptr);
   }
 }
@@ -4054,7 +4052,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           case FormControlType::InputImage:
             if (mForm) {
               // Hold a strong ref while dispatching
-              RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+              RefPtr<HTMLFormElement> form(mForm);
               if (mType == FormControlType::InputReset) {
                 form->MaybeReset(this);
               } else {
@@ -5323,8 +5321,7 @@ already_AddRefed<Promise> HTMLInputElement::GetFilesAndDirectories(
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
 
-  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(),
-                                 mozilla::fallible_t())) {
+  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(), fallible)) {
     p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
     return p.forget();
   }
@@ -6741,7 +6738,7 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
 
   // Services to retrieve image/*, audio/*, video/* filters
   nsCOMPtr<nsIStringBundleService> stringService =
-      mozilla::components::StringBundle::Service();
+      components::StringBundle::Service();
   if (!stringService) {
     return;
   }
