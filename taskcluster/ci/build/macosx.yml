@@ -5,7 +5,7 @@
 job-defaults:
     index:
         product: firefox
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
     run:
@@ -28,7 +28,6 @@ job-defaults:
 
 macosx64/debug:
     description: "MacOS X x64 Cross-compile"
-    worker-type: b-linux-gcp
     index:
         job-name: macosx64-debug
     attributes:
@@ -59,7 +58,6 @@ macosx64/debug:
 
 macosx64-hybrid/plain:
     description: "MacOS X x64 Hybrid Cross-compile"
-    worker-type: b-linux-gcp
     index:
         job-name: macosx64-hybrid
     treeherder:
@@ -151,7 +149,6 @@ macosx64-asan-fuzzing/opt:
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
-    worker-type: b-linux-gcp
     index:
         job-name: macosx64-fuzzing-debug
     attributes:
@@ -185,6 +182,7 @@ macosx64-fuzzing/debug:
 
 macosx64-x64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"
+    worker-type: b-linux
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -222,6 +220,7 @@ macosx64-x64-devedition/opt:
 
 macosx64-aarch64-devedition/opt:
     description: "MacOS X Dev Edition Aarch64 (shippable)"
+    worker-type: b-linux
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -261,6 +260,7 @@ macosx64-aarch64-devedition/opt:
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
+    worker-type: b-linux
     attributes:
         shippable: true
         enable-build-signing: true
@@ -400,7 +400,6 @@ macosx64-devedition/opt:
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
-    worker-type: b-linux-gcp
     index:
         job-name: macosx64-noopt-debug
     treeherder:
@@ -428,7 +427,6 @@ macosx64-noopt/debug:
 
 macosx64-aarch64-noopt/debug:
     description: "MacOS X aarch64 No-optimize Debug"
-    worker-type: b-linux-gcp
     index:
         job-name: macosx64-aarch64-noopt-debug
     treeherder:
@@ -486,6 +484,7 @@ macosx64-add-on-devel/opt:
 
 macosx64-x64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
+    worker-type: b-linux
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -519,6 +518,7 @@ macosx64-x64-shippable/opt:
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X aarch64 Cross-compile"
+    worker-type: b-linux
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -555,6 +555,7 @@ macosx64-aarch64-shippable/opt:
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"
+    worker-type: b-linux
     attributes:
         shippable: true
         enable-build-signing: true
@@ -712,35 +713,6 @@ macosx64-ccov/opt:
         mozconfig-variant: code-coverage
     run-on-projects: ['mozilla-central']
     use-sccache: false
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - linux64-clang
-            - linux64-sccache
-            - macosx64-sdk-10.12
-            - sysroot-wasm32-wasi
-
-macosx64-gcp/opt:
-    description: "MacOS X x64 Cross-compile - built on GCP"
-    index:
-        job-name: macosx64-gcp-opt
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: osx-cross/opt
-        symbol: B-gcp
-        tier: 2
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: gcp
-    run:
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_mac_64_cross_builds.py
-    run-on-projects: ['mozilla-central']
-    use-sccache: true
     fetches:
         toolchain:
             - linux64-cctools-port
