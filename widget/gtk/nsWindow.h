@@ -82,7 +82,20 @@ class nsIFrame;
 #if !GTK_CHECK_VERSION(3, 18, 0)
 struct _GdkEventTouchpadPinch;
 typedef struct _GdkEventTouchpadPinch GdkEventTouchpadPinch;
+#endif
 
+#if !GTK_CHECK_VERSION(3, 22, 0)
+typedef enum {
+  GDK_ANCHOR_FLIP_X = 1 << 0,
+  GDK_ANCHOR_FLIP_Y = 1 << 1,
+  GDK_ANCHOR_SLIDE_X = 1 << 2,
+  GDK_ANCHOR_SLIDE_Y = 1 << 3,
+  GDK_ANCHOR_RESIZE_X = 1 << 4,
+  GDK_ANCHOR_RESIZE_Y = 1 << 5,
+  GDK_ANCHOR_FLIP = GDK_ANCHOR_FLIP_X | GDK_ANCHOR_FLIP_Y,
+  GDK_ANCHOR_SLIDE = GDK_ANCHOR_SLIDE_X | GDK_ANCHOR_SLIDE_Y,
+  GDK_ANCHOR_RESIZE = GDK_ANCHOR_RESIZE_X | GDK_ANCHOR_RESIZE_Y
+} GdkAnchorHints;
 #endif
 
 namespace mozilla {
@@ -484,8 +497,7 @@ class nsWindow final : public nsBaseWidget {
   nsWindow* GetTransientForWindowIfPopup();
   bool IsHandlingTouchSequence(GdkEventSequence* aSequence);
 
-  void ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
-                 bool aRepaint);
+  void ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove);
   void NativeMoveResizeWaylandPopup(bool aMove, bool aResize);
 
   // Returns true if the given point (in device pixels) is within a resizer
@@ -686,6 +698,20 @@ class nsWindow final : public nsBaseWidget {
   // Don't use move-to-rect again in such case.
   bool mUpdatedByMoveToRectCallback : 1;
 
+  // Params used for popup placemend by GdkWindowMoveToRect.
+  // When popup is only resized and not positioned,
+  // we need to reuse last GdkWindowMoveToRect params to avoid
+  // popup movement.
+  struct WaylandPopupMoveToRectParams {
+    LayoutDeviceIntRect mAnchorRect;
+    GdkGravity mAnchorRectType;
+    GdkGravity mPopupAnchorType;
+    GdkAnchorHints mHints;
+    GdkPoint mOffset;
+  };
+
+  WaylandPopupMoveToRectParams mPopupMoveToRectParams;
+
   // Whether we've configured default clear color already.
   bool mConfiguredClearColor : 1;
   // Whether we've received a non-blank paint in which case we can reset the
@@ -740,7 +766,7 @@ class nsWindow final : public nsBaseWidget {
 
   // Wayland Popup section
   GdkPoint WaylandGetParentPosition();
-  bool WaylandPopupNeedsTrackInHierarchy();
+  bool WaylandPopupConfigure();
   bool WaylandPopupIsAnchored();
   bool WaylandPopupIsMenu();
   bool WaylandPopupIsContextMenu();
@@ -774,6 +800,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
   bool WaylandPopupFitsParentWindow(const GdkRectangle& aSize);
+  const WaylandPopupMoveToRectParams WaylandPopupGetPositionFromLayout();
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
   nsAutoCString GetFrameTag() const;
