@@ -1,8 +1,9 @@
 import socket
 import subprocess
 import time
-
 from http.client import HTTPConnection
+
+import webdriver
 
 
 def request(server_host, server_port, path="/status", host=None, origin=None):
@@ -57,14 +58,21 @@ def get_host(port_type, hostname, server_port):
 class Geckodriver:
     def __init__(self, configuration, hostname, extra_args):
         self.config = configuration["webdriver"]
+        self.requested_capabilities = configuration["capabilities"]
         self.hostname = hostname
         self.extra_args = extra_args
+
+        self.capabilities = None
         self.command = None
+        self.port = get_free_port()
         self.proc = None
-        self.port = None
+
+        capabilities = {"alwaysMatch": self.requested_capabilities}
+        self.session = webdriver.Session(
+            self.hostname, self.port, capabilities=capabilities
+        )
 
     def __enter__(self):
-        self.port = get_free_port()
         self.command = (
             [self.config["binary"], "--port", str(self.port)]
             + self.config["args"]
@@ -90,5 +98,13 @@ class Geckodriver:
         return self
 
     def __exit__(self, *args, **kwargs):
+        self.delete_session()
+
         self.proc.terminate()
         print(self.proc.stdout.read())
+
+    def new_session(self):
+        self.session.start()
+
+    def delete_session(self):
+        self.session.end()

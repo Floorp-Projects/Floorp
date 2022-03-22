@@ -1177,6 +1177,7 @@ impl MarionetteConnection {
                 match MarionetteConnection::try_connect(host, port) {
                     Ok(stream) => {
                         debug!("Connection to Marionette established on {}:{}.", host, port);
+                        browser.update_marionette_port(port);
                         return Ok(stream);
                     }
                     Err(e) => {

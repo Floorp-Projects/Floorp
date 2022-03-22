@@ -42,6 +42,20 @@ impl Browser {
             Browser::Existing(x) => Ok(Some(*x)),
         }
     }
+
+    pub(crate) fn update_marionette_port(&mut self, port: u16) {
+        match self {
+            Browser::Local(x) => x.update_marionette_port(port),
+            Browser::Remote(x) => x.update_marionette_port(port),
+            Browser::Existing(x) => {
+                if port != *x {
+                    error!(
+                        "Cannot re-assign Marionette port when connected to an existing browser"
+                    );
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -161,18 +175,20 @@ impl LocalBrowser {
         if self.marionette_port != 0 {
             return Ok(Some(self.marionette_port));
         }
+
         if let Some(profile_path) = self.profile_path.as_ref() {
-            let port = read_marionette_port(profile_path);
-            if let Some(port) = port {
-                self.marionette_port = port;
-            }
-            return Ok(port);
+            return Ok(read_marionette_port(profile_path));
         }
+
         // This should be impossible, but it isn't enforced
         Err(WebDriverError::new(
             ErrorStatus::SessionNotCreated,
             "Port not known when using named profile",
         ))
+    }
+
+    fn update_marionette_port(&mut self, port: u16) {
+        self.marionette_port = port;
     }
 
     pub(crate) fn check_status(&mut self) -> Option<String> {
@@ -275,6 +291,10 @@ impl RemoteBrowser {
 
     fn marionette_port(&mut self) -> WebDriverResult<Option<u16>> {
         Ok(Some(self.marionette_port))
+    }
+
+    fn update_marionette_port(&mut self, port: u16) {
+        self.marionette_port = port;
     }
 }
 
@@ -534,7 +554,7 @@ mod tests {
     }
 
     #[test]
-    fn test_local_marionette_port() {
+    fn test_local_read_marionette_port() {
         fn create_port_file(profile_path: &Path, data: &[u8]) {
             let port_path = profile_path.join("MarionetteActivePort");
             let mut file = File::create(&port_path).unwrap();
