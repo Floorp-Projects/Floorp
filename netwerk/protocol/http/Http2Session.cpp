@@ -4430,8 +4430,7 @@ nsresult Http2Session::OnHeadersAvailable(nsAHttpTransaction* transaction,
                                           nsHttpRequestHead* requestHead,
                                           nsHttpResponseHead* responseHead,
                                           bool* reset) {
-  return mConnection->OnHeadersAvailable(transaction, requestHead, responseHead,
-                                         reset);
+  return NS_OK;
 }
 
 bool Http2Session::IsReused() {
@@ -4669,6 +4668,10 @@ bool Http2Session::CanAcceptWebsocket() {
         mProcessedWaitingWebsockets));
   return mEnableWebsockets &&
          (mPeerAllowsWebsockets || !mProcessedWaitingWebsockets);
+}
+
+PRIntervalTime Http2Session::LastWriteTime() {
+  return mConnection->LastWriteTime();
 }
 
 }  // namespace net
