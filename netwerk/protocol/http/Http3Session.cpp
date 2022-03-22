@@ -1896,5 +1896,7 @@ nsresult Http3Session::GetTransactionSecurityInfo(nsISupports** secinfo) {
   return NS_OK;
 }
 
+PRIntervalTime Http3Session::LastWriteTime() { return mLastWriteTime; }
+
 }  // namespace net
 }  // namespace mozilla
