@@ -6,7 +6,6 @@ package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.WindowManager
@@ -39,7 +38,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -62,7 +60,6 @@ class ViewTest {
         assertTrue(view.hasFocus())
     }
 
-    @Config(sdk = [Build.VERSION_CODES.M])
     @Test
     fun `hideKeyboard should hide soft keyboard`() {
         val view = mock<View>()

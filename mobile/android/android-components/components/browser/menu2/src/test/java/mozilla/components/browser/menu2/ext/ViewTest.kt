@@ -8,7 +8,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -30,7 +29,6 @@ import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class ViewTest {
@@ -115,7 +113,6 @@ class ViewTest {
         verify(view).imageTintList = null
     }
 
-    @Config(sdk = [Build.VERSION_CODES.M])
     @Test
     fun `sets highlight effect`() {
         val view: View = mock()
