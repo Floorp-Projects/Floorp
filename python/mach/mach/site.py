@@ -49,12 +49,6 @@ class InstallPipRequirementsException(Exception):
     pass
 
 
-class SiteUpToDateResult:
-    def __init__(self, is_up_to_date, reason=None):
-        self.is_up_to_date = is_up_to_date
-        self.reason = reason
-
-
 class SitePackagesSource(enum.Enum):
     NONE = "none"
     SYSTEM = "system"
@@ -342,9 +336,9 @@ class MachSiteManager:
             source,
         )
 
-    def _up_to_date(self):
+    def up_to_date(self):
         if self._site_packages_source == SitePackagesSource.NONE:
-            return SiteUpToDateResult(True)
+            return True
         elif self._site_packages_source == SitePackagesSource.SYSTEM:
             pthfile_lines = [
                 *self._requirements.pths_as_absolute(self._topsrcdir),
@@ -353,7 +347,7 @@ class MachSiteManager:
             _assert_pip_check(
                 self._topsrcdir, pthfile_lines, "mach", self._requirements
             )
-            return SiteUpToDateResult(True)
+            return True
         elif self._site_packages_source == SitePackagesSource.VENV:
             environment = self._virtualenv()
             return _is_venv_up_to_date(
@@ -365,16 +359,17 @@ class MachSiteManager:
             )
 
     def ensure(self, *, force=False):
-        result = self._up_to_date()
-        if force or not result.is_up_to_date:
+        up_to_date = self.up_to_date()
+        if force or not up_to_date:
             if Path(sys.prefix) == Path(self._metadata.prefix):
                 # If the Mach virtualenv is already activated, then the changes caused
                 # by rebuilding the virtualenv won't take effect until the next time
                 # Mach is used, which can lead to confusing one-off errors.
                 # Instead, request that the user resolve the out-of-date situation,
                 # *then* come back and run the intended command.
-                raise VirtualenvOutOfDateException(result.reason)
+                raise VirtualenvOutOfDateException()
             self._build()
+        return up_to_date
 
     def attempt_populate_optional_packages(self):
         if self._site_packages_source != SitePackagesSource.VENV:
@@ -566,11 +561,9 @@ class CommandSiteManager:
         If using a virtualenv Python binary directly, it's useful to call this function
         first to ensure that the virtualenv doesn't have obsolete references or packages.
         """
-        result = self._up_to_date()
-        if not result.is_up_to_date:
+        if not self._up_to_date():
             active_site = MozSiteMetadata.from_runtime()
             if active_site.site_name == self._site_name:
-                print(result.reason, file=sys.stderr)
                 raise Exception(
                     f'The "{self._site_name}" site is out-of-date, even though it has '
                     f"already been activated. Was it modified while this Mach process "
@@ -1209,12 +1202,8 @@ def _is_venv_up_to_date(
     expected_metadata,
 ):
     if not os.path.exists(target_venv.prefix):
-        return SiteUpToDateResult(False, f'"{target_venv.prefix}" does not exist')
+        return False
 
-    # Modifications to any of the following files mean the virtualenv should be
-    # rebuilt:
-    # * The `virtualenv` package
-    # * Any of our requirements manifest files
     virtualenv_package = os.path.join(
         topsrcdir,
         "third_party",
@@ -1224,50 +1213,41 @@ def _is_venv_up_to_date(
         "version.py",
     )
     deps = [virtualenv_package] + requirements.requirements_paths
+
+    # Modifications to any of the following files mean the virtualenv should be
+    # rebuilt:
+    # * This file
+    # * The `virtualenv` package
+    # * Any of our requirements manifest files
     metadata_mtime = os.path.getmtime(
         os.path.join(target_venv.prefix, METADATA_FILENAME)
     )
-    for dep_file in deps:
-        if os.path.getmtime(dep_file) > metadata_mtime:
-            return SiteUpToDateResult(
-                False, f'"{dep_file}" has changed since the virtualenv was created'
-            )
+    dep_mtime = max(os.path.getmtime(p) for p in deps)
+    if dep_mtime > metadata_mtime:
+        return False
 
     try:
         existing_metadata = MozSiteMetadata.from_path(target_venv.prefix)
-    except MozSiteMetadataOutOfDateError as e:
+    except MozSiteMetadataOutOfDateError:
         # The metadata is missing required fields, so must be out-of-date.
-        return SiteUpToDateResult(False, str(e))
+        return False
 
     if existing_metadata != expected_metadata:
         # The metadata doesn't exist or some fields have different values.
-        return SiteUpToDateResult(
-            False,
-            f"The existing metadata on-disk ({vars(existing_metadata)}) does not match "
-            f"the expected metadata ({vars(expected_metadata)}",
-        )
+        return False
 
     platlib_site_packages_dir = target_venv.resolve_sysconfig_packages_path("platlib")
-    pthfile_path = os.path.join(platlib_site_packages_dir, PTH_FILENAME)
     try:
-        with open(pthfile_path) as file:
+        with open(os.path.join(platlib_site_packages_dir, PTH_FILENAME)) as file:
             current_pthfile_contents = file.read().strip()
     except FileNotFoundError:
-        return SiteUpToDateResult(False, f'No pthfile found at "{pthfile_path}"')
+        return False
 
     expected_pthfile_contents = "\n".join(expected_pthfile_lines)
     if current_pthfile_contents != expected_pthfile_contents:
-        return SiteUpToDateResult(
-            False,
-            f'The pthfile at "{pthfile_path}" does not match the expected value.\n'
-            f"# --- on-disk pthfile: ---\n"
-            f"{current_pthfile_contents}\n"
-            f"# --- expected pthfile contents ---\n"
-            f"{expected_pthfile_contents}\n"
-            f"# ---",
-        )
+        return False
 
-    return SiteUpToDateResult(True)
+    return True
 
 
 def activate_virtualenv(virtualenv: PythonVirtualenv):
