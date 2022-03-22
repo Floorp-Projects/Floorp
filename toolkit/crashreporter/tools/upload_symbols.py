@@ -23,7 +23,6 @@ import redo
 import requests
 import shutil
 import sys
-from mozbuild.base import MozbuildObject
 
 log = logging.getLogger("upload-symbols")
 log.setLevel(logging.INFO)
@@ -57,9 +56,6 @@ def get_taskcluster_secret(secret_name):
 
 
 def main():
-    config = MozbuildObject.from_environment()
-    config.activate_virtualenv()
-
     logging.basicConfig()
     parser = argparse.ArgumentParser(
         description="Upload symbols in ZIP using token from Taskcluster secrets service."
@@ -90,8 +86,6 @@ def main():
         import gzip
         import tarfile
         import tempfile
-
-        config._ensure_zstd()
         import zstandard
 
         def prepare_zip_from(archive, tmpdir):
