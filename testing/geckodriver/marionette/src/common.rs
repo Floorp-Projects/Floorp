@@ -121,11 +121,7 @@ pub struct WebElement {
 pub struct Timeouts {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub implicit: Option<u64>,
-    #[serde(
-        default,
-        rename = "pageLoad",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, rename = "pageLoad", skip_serializing_if = "Option::is_none")]
     pub page_load: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[allow(clippy::option_option)]
