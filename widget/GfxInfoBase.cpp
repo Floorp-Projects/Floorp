@@ -209,10 +209,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
       name = BLOCKLIST_PREF_BRANCH "dx.p016";
       break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
-      name = BLOCKLIST_PREF_BRANCH "vp8.hw-decode";
-      break;
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
-      name = BLOCKLIST_PREF_BRANCH "vp9.hw-decode";
+      // We don't provide prefs for these features as these are
+      // not handling downloadable blocklist.
       break;
     case nsIGfxInfo::FEATURE_GL_SWIZZLE:
       name = BLOCKLIST_PREF_BRANCH "gl.swizzle";
@@ -473,12 +472,8 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   if (aFeature.EqualsLiteral("DX_NV12")) {
     return nsIGfxInfo::FEATURE_DX_NV12;
   }
-  if (aFeature.EqualsLiteral("VP8_HW_DECODE")) {
-    return nsIGfxInfo::FEATURE_VP8_HW_DECODE;
-  }
-  if (aFeature.EqualsLiteral("VP9_HW_DECODE")) {
-    return nsIGfxInfo::FEATURE_VP9_HW_DECODE;
-  }
+  // We do not support FEATURE_VP8_HW_DECODE and FEATURE_VP9_HW_DECODE
+  // in downloadable blocklist.
   if (aFeature.EqualsLiteral("GL_SWIZZLE")) {
     return nsIGfxInfo::FEATURE_GL_SWIZZLE;
   }
