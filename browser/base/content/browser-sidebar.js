@@ -116,6 +116,8 @@ var SidebarUI = {
 
     this._inited = true;
 
+    Services.obs.addObserver(this, "intl:app-locales-changed");
+
     this._initDeferred.resolve();
   },
 
@@ -146,9 +148,29 @@ var SidebarUI = {
       xulStore.persist(this._title, "value");
     }
 
+    Services.obs.removeObserver(this, "intl:app-locales-changed");
+
     if (this._observer) {
       this._observer.disconnect();
       this._observer = null;
+    }
+  },
+
+  /**
+   * The handler for Services.obs.addObserver.
+   **/
+  observe(_subject, topic, _data) {
+    switch (topic) {
+      case "intl:app-locales-changed": {
+        if (this.isOpen) {
+          // The <tree> component used in history and bookmarks, but it does not
+          // support live switching the app locale. Reload the entire sidebar to
+          // invalidate any old text.
+          this.hide();
+          this._show(this.lastOpenedId);
+          break;
+        }
+      }
     }
   },
 
