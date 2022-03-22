@@ -183,6 +183,147 @@ def midir_support(target, midir_linux_support):
 
 set_config("MOZ_WEBMIDI_MIDIR_IMPL", midir_support)
 
+# Enable various cubeb backends
+# ==============================================================
+@depends(target)
+def audio_backends_default(target):
+    if target.os == "Android":
+        return (
+            "aaudio",
+            "opensl",
+        )
+    elif target.os in ("DragonFly", "FreeBSD", "SunOS"):
+        return ("oss",)
+    elif target.os == "OpenBSD":
+        return ("sndio",)
+    elif target.os == "OSX":
+        return ("audiounit",)
+    elif target.os == "WINNT":
+        return ("wasapi",)
+    else:
+        return ("pulseaudio",)
+
+
+option(
+    "--enable-audio-backends",
+    nargs="+",
+    choices=(
+        "aaudio",
+        "alsa",
+        "audiounit",
+        "jack",
+        "opensl",
+        "oss",
+        "pulseaudio",
+        "sndio",
+        "wasapi",
+    ),
+    default=audio_backends_default,
+    help="Enable various cubeb backends",
+)
+
+
+@depends("--enable-audio-backends", target)
+def imply_aaudio(value, target):
+    if "aaudio" in value and target.os != "Android":
+        die("Cannot enable AAudio on %s", target.os)
+    return "aaudio" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_alsa(value, target):
+    if "alsa" in value and target.kernel != "Linux" and target.os != "FreeBSD":
+        die("Cannot enable ALSA on %s", target.os)
+    return "alsa" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_audiounit(value, target):
+    if "audiounit" in value and target.os != "OSX" and target.kernel != "Darwin":
+        die("Cannot enable AudioUnit on %s", target.os)
+    return "audiounit" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_jack(value, target):
+    if (
+        "jack" in value
+        and target.os == "Android"
+        or target.os == "OSX"
+        or target.os == "WINNT"
+    ):
+        die("Cannot enable JACK on %s", target.os)
+    return "jack" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_opensl(value, target):
+    if "opensl" in value and target.os != "Android":
+        die("Cannot enable OpenSL on %s", target.os)
+    return "opensl" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_oss(value, target):
+    if (
+        "oss" in value
+        and target.os == "Android"
+        or target.os == "OSX"
+        or target.os == "WINNT"
+    ):
+        die("Cannot enable OSS on %s", target.os)
+    return "oss" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_pulseaudio(value, target):
+    if (
+        "pulseaudio" in value
+        and target.os == "Android"
+        or target.os == "OSX"
+        or target.os == "WINNT"
+    ):
+        die("Cannot enable PulseAudio on %s", target.os)
+    return "pulseaudio" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_sndio(value, target):
+    if (
+        "sndio" in value
+        and target.os == "Android"
+        or target.os == "OSX"
+        or target.os == "WINNT"
+    ):
+        die("Cannot enable sndio on %s", target.os)
+    return "sndio" in value
+
+
+@depends("--enable-audio-backends", target)
+def imply_wasapi(value, target):
+    if "wasapi" in value and target.os != "WINNT":
+        die("Cannot enable WASAPI on %s", target.os)
+    return "wasapi" in value
+
+
+set_config("MOZ_AAUDIO", imply_aaudio, when="--enable-audio-backends")
+
+imply_option("--enable-alsa", imply_alsa, reason="--enable-audio-backends")
+
+set_config("MOZ_AUDIOUNIT_RUST", imply_audiounit, when="--enable-audio-backends")
+
+imply_option("--enable-jack", imply_jack, reason="--enable-audio-backends")
+
+set_config("MOZ_OPENSL", imply_opensl, when="--enable-audio-backends")
+
+set_config("MOZ_OSS", imply_oss, when="--enable-audio-backends")
+
+imply_option("--enable-pulseaudio", imply_pulseaudio, reason="--enable-audio-backends")
+
+imply_option("--enable-sndio", imply_sndio, reason="--enable-audio-backends")
+
+set_config("MOZ_WASAPI", imply_wasapi, when="--enable-audio-backends")
+
 # ALSA cubeb backend
 # ==============================================================
 option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
@@ -196,7 +337,6 @@ def enable_alsa_or_midir_linux_support(alsa_enabled, midir_linux_support):
 pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_midir_linux_support)
 
 set_config("MOZ_ALSA", True, when="--enable-alsa")
-set_define("MOZ_ALSA", True, when="--enable-alsa")
 
 # JACK cubeb backend
 # ==============================================================
@@ -205,36 +345,26 @@ system_lib_option("--enable-jack", env="MOZ_JACK", help="Enable JACK audio backe
 jack = pkg_check_modules("MOZ_JACK", "jack", when="--enable-jack")
 
 set_config("MOZ_JACK", depends_if(jack)(lambda _: True))
-set_define("MOZ_JACK", depends_if(jack)(lambda _: True))
 
 # PulseAudio cubeb backend
 # ==============================================================
-@depends(target)
-def pulseaudio_default(target):
-    return target.os not in ("WINNT", "OSX", "Android", "OpenBSD")
-
-
 option(
     "--enable-pulseaudio",
     env="MOZ_PULSEAUDIO",
-    default=pulseaudio_default,
     help="{Enable|Disable} PulseAudio audio backend.",
 )
 
 pulseaudio = pkg_check_modules("MOZ_PULSEAUDIO", "libpulse", when="--enable-pulseaudio")
 
 set_config("MOZ_PULSEAUDIO", depends_if(pulseaudio)(lambda _: True))
-set_define("MOZ_PULSEAUDIO", depends_if(pulseaudio)(lambda _: True))
 
-# AudioUnit cubeb Rust backend
+# sndio cubeb backend
 # ==============================================================
-@depends(target)
-def enable_audiounit_rust(target):
-    return target.os == "OSX" and target.kernel == "Darwin"
+system_lib_option("--enable-sndio", env="MOZ_SNDIO", help="Enable sndio audio backend.")
 
+sndio = pkg_check_modules("MOZ_SNDIO", "sndio", when="--enable-sndio")
 
-set_config("MOZ_AUDIOUNIT_RUST", True, when=enable_audiounit_rust)
-set_define("MOZ_AUDIOUNIT_RUST", True, when=enable_audiounit_rust)
+set_config("MOZ_SNDIO", depends_if(sndio)(lambda _: True))
 
 # Javascript engine
 # ==============================================================
