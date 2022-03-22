@@ -333,34 +333,32 @@ class AliasSet {
         1 << 9,                  // An array buffer view's length or byteOffset
     WasmGlobalCell = 1 << 10,    // A wasm global cell
     WasmTableElement = 1 << 11,  // An element of a wasm table
-    WasmTableMeta = 1 << 12,     // A wasm table elements pointer and
-                                 // length field, in Tls.
-    WasmStackResult = 1 << 13,   // A stack result from the current function
+    WasmStackResult = 1 << 12,   // A stack result from the current function
 
     // JSContext's exception state. This is used on instructions like MThrow
     // or MNewArrayDynamicLength that throw exceptions (other than OOM) but have
     // no other side effect, to ensure that they get their own up-to-date resume
     // point. (This resume point will be used when constructing the Baseline
     // frame during exception bailouts.)
-    ExceptionState = 1 << 14,
+    ExceptionState = 1 << 13,
 
     // Used for instructions that load the privateSlot of DOM proxies and
     // the ExpandoAndGeneration.
-    DOMProxyExpando = 1 << 15,
+    DOMProxyExpando = 1 << 14,
 
     // Hash table of a Map or Set object.
-    MapOrSetHashTable = 1 << 16,
+    MapOrSetHashTable = 1 << 15,
 
     // Internal state of the random number generator
-    RNG = 1 << 17,
+    RNG = 1 << 16,
 
     // The pendingException slot on the wasm tls object.
-    WasmPendingException = 1 << 18,
+    WasmPendingException = 1 << 17,
 
     Last = WasmPendingException,
 
     Any = Last | (Last - 1),
-    NumCategories = 19,
+    NumCategories = 18,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -8990,12 +8988,11 @@ class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
         aliases_(aliases) {
     // Different Tls data have different alias classes and only those classes
     // are allowed.
-    MOZ_ASSERT(
-        aliases_.flags() == AliasSet::Load(AliasSet::WasmHeapMeta).flags() ||
-        aliases_.flags() == AliasSet::Load(AliasSet::WasmTableMeta).flags() ||
-        aliases_.flags() ==
-            AliasSet::Load(AliasSet::WasmPendingException).flags() ||
-        aliases_.flags() == AliasSet::None().flags());
+    MOZ_ASSERT(aliases_.flags() ==
+                   AliasSet::Load(AliasSet::WasmHeapMeta).flags() ||
+               aliases_.flags() ==
+                   AliasSet::Load(AliasSet::WasmPendingException).flags() ||
+               aliases_.flags() == AliasSet::None().flags());
 
     // The only types supported at the moment.
     MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
@@ -9084,21 +9081,12 @@ class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
 // For memory64, bounds check nodes are always of type Int64.
 
 class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
- public:
-  enum Target {
-    Memory,
-    Table,
-  };
-
- private:
   wasm::BytecodeOffset bytecodeOffset_;
-  Target target_;
 
   explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit,
-                            wasm::BytecodeOffset bytecodeOffset, Target target)
+                            wasm::BytecodeOffset bytecodeOffset)
       : MBinaryInstruction(classOpcode, index, boundsCheckLimit),
-        bytecodeOffset_(bytecodeOffset),
-        target_(target) {
+        bytecodeOffset_(bytecodeOffset) {
     MOZ_ASSERT(index->type() == boundsCheckLimit->type());
 
     // Bounds check is effectful: it throws for OOB.
@@ -9115,8 +9103,6 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, index), (1, boundsCheckLimit))
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool isMemory() const { return target_ == MWasmBoundsCheck::Memory; }
 
   bool isRedundant() const { return !isGuard(); }
 
@@ -9592,25 +9578,6 @@ class MWasmLoadGlobalCell : public MUnaryInstruction,
   AliasType mightAlias(const MDefinition* def) const override;
 };
 
-class MWasmLoadTableElement : public MBinaryInstruction,
-                              public NoTypePolicy::Data {
-  MWasmLoadTableElement(MDefinition* elements, MDefinition* index)
-      : MBinaryInstruction(classOpcode, elements, index) {
-    setResultType(MIRType::RefOrNull);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmLoadTableElement)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements))
-  NAMED_OPERANDS((1, index))
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::WasmTableElement);
-  }
-};
-
 class MWasmStoreGlobalVar : public MBinaryInstruction,
                             public NoTypePolicy::Data {
   MWasmStoreGlobalVar(unsigned globalDataOffset, MDefinition* value,
@@ -9700,38 +9667,6 @@ class MWasmDerivedPointer : public MUnaryInstruction,
 
   ALLOW_CLONE(MWasmDerivedPointer)
 };
-
-class MWasmDerivedIndexPointer : public MBinaryInstruction,
-                                 public NoTypePolicy::Data {
-  MWasmDerivedIndexPointer(MDefinition* base, MDefinition* index, Scale scale)
-      : MBinaryInstruction(classOpcode, base, index), scale_(scale) {
-    setResultType(MIRType::Pointer);
-    setMovable();
-  }
-
-  Scale scale_;
-
- public:
-  INSTRUCTION_HEADER(WasmDerivedIndexPointer)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, base))
-  NAMED_OPERANDS((1, index))
-
-  Scale scale() const { return scale_; }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins) &&
-           ins->toWasmDerivedIndexPointer()->scale() == scale();
-  }
-
-  ALLOW_CLONE(MWasmDerivedIndexPointer)
-};
-
-// Stores a reference to an address. This performs a pre-barrier on the address,
-// but not a post-barrier. A post-barrier must be performed separately, if it's
-// required.
 
 class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;

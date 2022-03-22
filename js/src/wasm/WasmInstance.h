@@ -431,12 +431,13 @@ class alignas(16) Instance {
                            uint32_t dstTableIndex, uint32_t srcTableIndex);
   static int32_t tableFill(Instance* instance, uint32_t start, void* value,
                            uint32_t len, uint32_t tableIndex);
-  static void* tableGetFunc(Instance* instance, uint32_t index,
-                            uint32_t tableIndex);
+  static void* tableGet(Instance* instance, uint32_t index,
+                        uint32_t tableIndex);
   static uint32_t tableGrow(Instance* instance, void* initValue, uint32_t delta,
                             uint32_t tableIndex);
-  static int32_t tableSetFunc(Instance* instance, uint32_t index, void* value,
-                              uint32_t tableIndex);
+  static int32_t tableSet(Instance* instance, uint32_t index, void* value,
+                          uint32_t tableIndex);
+  static uint32_t tableSize(Instance* instance, uint32_t tableIndex);
   static int32_t tableInit(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex,
                            uint32_t tableIndex);
@@ -456,8 +457,6 @@ class alignas(16) Instance {
   static void* refFunc(Instance* instance, uint32_t funcIndex);
   static void preBarrierFiltering(Instance* instance, gc::Cell** location);
   static void postBarrier(Instance* instance, gc::Cell** location);
-  static void postBarrierPrecise(Instance* instance, JSObject** location,
-                                 JSObject* prev);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, void* structDescr);
 #ifdef ENABLE_WASM_EXCEPTIONS

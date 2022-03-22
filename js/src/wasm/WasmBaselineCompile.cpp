@@ -2103,29 +2103,6 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
   return Address(tmp, globalToTlsOffset);
 }
 
-//////////////////////////////////////////////////////////////////////
-//
-// Table access.
-
-Address BaseCompiler::addressOfTableField(const TableDesc& table,
-                                          uint32_t fieldOffset, RegPtr tls) {
-  uint32_t tableToTlsOffset =
-      wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
-  return Address(tls, tableToTlsOffset);
-}
-
-void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr tls,
-                                   RegI32 length) {
-  masm.load32(addressOfTableField(table, offsetof(TableInstanceData, length), tls),
-              length);
-}
-
-void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr tls,
-                                     RegPtr elements) {
-  masm.loadPtr(addressOfTableField(table, offsetof(TableInstanceData, elements), tls),
-               elements);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Basic emitters for simple operators.
@@ -4290,8 +4267,7 @@ bool BaseCompiler::emitThrow() {
         RegRef rv = popRef();
         pushPtr(data);
         // emitBarrieredStore preserves exn, rv
-        if (!emitBarrieredStore(Some(exn), valueAddr, rv,
-                                PostBarrierKind::Imprecise)) {
+        if (!emitBarrieredStore(Some(exn), valueAddr, rv)) {
           return false;
         }
         popPtr(data);
@@ -5158,8 +5134,7 @@ bool BaseCompiler::emitSetGlobal() {
       }
       RegRef rv = popRef();
       // emitBarrieredStore preserves rv
-      if (!emitBarrieredStore(Nothing(), valueAddr, rv,
-                              PostBarrierKind::Imprecise)) {
+      if (!emitBarrieredStore(Nothing(), valueAddr, rv)) {
         return false;
       }
       freeRef(rv);
@@ -5836,21 +5811,12 @@ bool BaseCompiler::emitTableFill() {
 }
 
 bool BaseCompiler::emitTableGet() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  uint32_t tableIndex;
-  Nothing nothing;
-  if (!iter_.readTableGet(&tableIndex, &nothing)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-  if (moduleEnv_.tables[tableIndex].elemType.tableRepr() == TableRepr::Ref) {
-    return emitTableGetAnyRef(tableIndex);
-  }
-  pushI32(tableIndex);
   // get(index:u32, table:u32) -> AnyRef
-  return emitInstanceCall(lineOrBytecode, SASigTableGetFunc);
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableGet, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableGet(tableIndex, &nothing);
+      });
 }
 
 bool BaseCompiler::emitTableGrow() {
@@ -5863,112 +5829,20 @@ bool BaseCompiler::emitTableGrow() {
 }
 
 bool BaseCompiler::emitTableSet() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  uint32_t tableIndex;
-  Nothing nothing;
-  if (!iter_.readTableSet(&tableIndex, &nothing, &nothing)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-  if (moduleEnv_.tables[tableIndex].elemType.tableRepr() == TableRepr::Ref) {
-    return emitTableSetAnyRef(tableIndex);
-  }
-  pushI32(tableIndex);
   // set(index:u32, value:ref, table:u32) -> void
-  return emitInstanceCall(lineOrBytecode, SASigTableSetFunc);
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableSet, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableSet(tableIndex, &nothing, &nothing);
+      });
 }
 
 bool BaseCompiler::emitTableSize() {
-  uint32_t tableIndex;
-  if (!iter_.readTableSize(&tableIndex)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
-
-  RegPtr tls = needPtr();
-  RegI32 length = needI32();
-
-  fr.loadTlsPtr(tls);
-  loadTableLength(table, tls, length);
-
-  pushI32(length);
-  freePtr(tls);
-  return true;
-}
-
-void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
-                                        RegPtr tls) {
-  Label ok;
-  masm.wasmBoundsCheck32(
-      Assembler::Condition::Below, index,
-      addressOfTableField(table, offsetof(TableInstanceData, length), tls), &ok);
-  masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
-  masm.bind(&ok);
-}
-
-bool BaseCompiler::emitTableGetAnyRef(uint32_t tableIndex) {
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
-
-  RegPtr tls = needPtr();
-  RegPtr elements = needPtr();
-  RegI32 index = popI32();
-
-  fr.loadTlsPtr(tls);
-  emitTableBoundsCheck(table, index, tls);
-  loadTableElements(table, tls, elements);
-  masm.loadPtr(BaseIndex(elements, index, ScalePointer), elements);
-
-  pushRef(RegRef(elements));
-  freeI32(index);
-  freePtr(tls);
-
-  return true;
-}
-
-bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
-
-  // Create temporaries for valueAddr that is not in the prebarrier register
-  // and can be consumed by the barrier operation
-  RegPtr valueAddr = RegPtr(PreBarrierReg);
-  needPtr(valueAddr);
-
-  RegPtr tls = needPtr();
-  RegPtr elements = needPtr();
-  RegRef value = popRef();
-  RegI32 index = popI32();
-
-  // x86 is one register too short for this operation, shuffle `value` back
-  // onto the stack until it is needed.
-#ifdef JS_CODEGEN_X86
-  pushRef(value);
-#endif
-
-  fr.loadTlsPtr(tls);
-  emitTableBoundsCheck(table, index, tls);
-  loadTableElements(table, tls, elements);
-  masm.computeEffectiveAddress(BaseIndex(elements, index, ScalePointer),
-                               valueAddr);
-
-  freeI32(index);
-  freePtr(elements);
-  freePtr(tls);
-
-#ifdef JS_CODEGEN_X86
-  value = popRef();
-#endif
-
-  if (!emitBarrieredStore(Nothing(), valueAddr, value,
-                          PostBarrierKind::Precise)) {
-    return false;
-  }
-  freeRef(value);
-  return true;
+  // size(table:u32) -> u32
+  return emitInstanceCallOp<uint32_t>(SASigTableSize,
+                                      [this](uint32_t* tableIndex) -> bool {
+                                        return iter_.readTableSize(tableIndex);
+                                      });
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -6015,35 +5889,48 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.bind(&skipBarrier);
 }
 
-bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
-                                            RegPtr valueAddr, RegRef value) {
+// This frees the register `valueAddr`.
+
+bool BaseCompiler::emitPostBarrierCall(RegPtr valueAddr) {
   uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
 
-  // We must force a sync before the guard so that locals are in a consistent
-  // location for whether or not the post-barrier call is taken.
+  // The `valueAddr` is a raw pointer to the cell within some GC object or
+  // TLS area, and we guarantee that the GC will not run while the
+  // postbarrier call is active, so push a uintptr_t value.
+  pushPtr(valueAddr);
+  return emitInstanceCall(bytecodeOffset, SASigPostBarrier);
+}
+
+// Emits a store to a JS object pointer at the address valueAddr, which is
+// inside the GC cell `object`. Preserves `object` and `value`.
+bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
+                                      RegPtr valueAddr, RegRef value) {
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+  // barrier is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+
+  emitPreBarrier(valueAddr);  // Preserves valueAddr
+  masm.storePtr(value, Address(valueAddr, 0));
+
+  Label skipBarrier;
   sync();
 
-  // Emit a guard to skip the post-barrier call if it is not needed.
-  Label skipBarrier;
-  RegPtr otherScratch = needPtr();
+  RegRef otherScratch = needRef();
   EmitWasmPostBarrierGuard(masm, object, otherScratch, value, &skipBarrier);
-  freePtr(otherScratch);
+  freeRef(otherScratch);
 
-  // Push `object` and `value` to preserve them across the call.
   if (object) {
     pushRef(*object);
   }
   pushRef(value);
 
-  // The `valueAddr` is a raw pointer to the cell within some GC object or
-  // TLS area, and we are careful so that the GC will not run while the
-  // post-barrier call is active, so push a uintptr_t value.
-  pushPtr(valueAddr);
-  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier)) {
+  // Consumes valueAddr
+  if (!emitPostBarrierCall(valueAddr)) {
     return false;
   }
 
-  // Restore `object` and `value`.
+  // Consume all other operands as they may have been clobbered by the post
+  // barrier call
   popRef(value);
   if (object) {
     popRef(*object);
@@ -6053,72 +5940,15 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
   return true;
 }
 
-bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
-                                          RegPtr valueAddr, RegRef prevValue, RegRef value) {
-  uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
-
-  // Push `object` and `value` to preserve them across the call.
-  if (object) {
-    pushRef(*object);
-  }
-  pushRef(value);
-
-  // Push the arguments and call the precise post-barrier
-  pushPtr(valueAddr);
-  pushRef(prevValue);
-  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrierPrecise)) {
-    return false;
-  }
-
-  // Restore `object` and `value`.
-  popRef(value);
-  if (object) {
-    popRef(*object);
-  }
-
-  return true;
-}
-
-bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
-                                      RegPtr valueAddr, RegRef value,
-                                      PostBarrierKind kind) {
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-  // barrier is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
-  // The pre-barrier preserves all allocated registers.
-  emitPreBarrier(valueAddr);
-
-  // The precise post-barrier requires the previous value stored in the field,
-  // in order to know if the previous store buffer entry needs to be removed.
-  RegRef prevValue;
-  if (kind == PostBarrierKind::Precise) {
-    prevValue = needRef();
-    masm.loadPtr(Address(valueAddr, 0), prevValue);
-  }
-
-  // Store the value
-  masm.storePtr(value, Address(valueAddr, 0));
-
-  // The post-barrier preserves object and value.
-  if (kind == PostBarrierKind::Precise) {
-    return emitPostBarrierPrecise(object, valueAddr, prevValue, value);
-  }
-  return emitPostBarrierImprecise(object, valueAddr, value);
-}
-
+// Emits a store of nullptr to a JS object pointer at the address valueAddr.
+// Preserves `valueAddr`.
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
   // TODO/AnyRef-boxing: With boxed immediates and strings, the write
   // barrier is going to have to be more complicated.
   ASSERT_ANYREF_IS_JSOBJECT;
 
-  // The pre-barrier preserves all allocated registers.
-  emitPreBarrier(valueAddr);
-
-  // Store null
+  emitPreBarrier(valueAddr);  // Preserves valueAddr
   masm.storePtr(ImmWord(0), Address(valueAddr, 0));
-
-  // No post-barrier is needed, as null does not require a store buffer entry
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -6306,8 +6136,7 @@ bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr data,
   pushPtr(data);
 
   // emitBarrieredStore preserves object and value
-  if (!emitBarrieredStore(Some(object), valueAddr, value.ref(),
-                          PostBarrierKind::Imprecise)) {
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
     return false;
   }
   freeRef(value.ref());
@@ -6358,8 +6187,7 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
   pushI32(index);
 
   // emitBarrieredStore preserves object and value
-  if (!emitBarrieredStore(Some(object), valueAddr, value.ref(),
-                          PostBarrierKind::Imprecise)) {
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
     return false;
   }
 
