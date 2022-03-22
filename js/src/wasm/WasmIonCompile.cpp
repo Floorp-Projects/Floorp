@@ -1660,51 +1660,72 @@ class FunctionCompiler {
     return load;
   }
 
-  MInstruction* storeGlobalVar(uint32_t globalDataOffset, bool isIndirect,
-                               MDefinition* v) {
+  bool storeGlobalVar(uint32_t lineOrBytecode, uint32_t globalDataOffset,
+                      bool isIndirect, MDefinition* v) {
     if (inDeadCode()) {
-      return nullptr;
+      return true;
     }
 
-    MInstruction* store;
-    MInstruction* valueAddr = nullptr;
     if (isIndirect) {
       // Pull a pointer to the value out of Instance::globalArea, then
       // store through that pointer.
-      auto* cellPtr =
+      auto* valueAddr =
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
                                   /*isConst=*/true, tlsPointer_);
-      curBlock_->add(cellPtr);
-      if (v->type() == MIRType::RefOrNull) {
-        valueAddr = cellPtr;
-        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
-                                   AliasSet::WasmGlobalCell);
-      } else {
-        store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
-      }
-    } else {
-      // Store the value directly in Instance::globalArea.
-      if (v->type() == MIRType::RefOrNull) {
-        valueAddr = MWasmDerivedPointer::New(
-            alloc(), tlsPointer_,
-            wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
-        curBlock_->add(valueAddr);
-        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
-                                   AliasSet::WasmGlobalVar);
-      } else {
-        store =
-            MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
-      }
-    }
-    curBlock_->add(store);
+      curBlock_->add(valueAddr);
 
-    return valueAddr;
+      // Handle a store to a ref-typed field specially
+      if (v->type() == MIRType::RefOrNull) {
+        // Load the previous value for the post-write barrier
+        auto* prevValue = MWasmLoadGlobalCell::New(alloc(), MIRType::RefOrNull, valueAddr);
+        curBlock_->add(prevValue);
+
+        // Store the new value
+        auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                   AliasSet::WasmGlobalCell);
+        curBlock_->add(store);
+
+        // Call the post-write barrier
+        return postBarrierPrecise(lineOrBytecode, valueAddr, prevValue);
+      }
+
+      auto* store = MWasmStoreGlobalCell::New(alloc(), v, valueAddr);
+      curBlock_->add(store);
+      return true;
+    }
+    // Or else store the value directly in Instance::globalArea.
+
+    // Handle a store to a ref-typed field specially
+    if (v->type() == MIRType::RefOrNull) {
+      // Compute the address of the ref-typed global
+      auto* valueAddr = MWasmDerivedPointer::New(
+          alloc(), tlsPointer_,
+          wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
+      curBlock_->add(valueAddr);
+
+      // Load the previous value for the post-write barrier
+      auto* prevValue = MWasmLoadGlobalCell::New(alloc(), MIRType::RefOrNull, valueAddr);
+      curBlock_->add(prevValue);
+
+      // Store the new value
+      auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                 AliasSet::WasmGlobalVar);
+      curBlock_->add(store);
+
+      // Call the post-write barrier
+      return postBarrierPrecise(lineOrBytecode, valueAddr, prevValue);
+    }
+
+    auto* store =
+        MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+    curBlock_->add(store);
+    return true;
   }
 
   MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
                               MIRType type) {
     uint32_t globalDataOffset =
-        offsetof(TlsData, globalArea) + table.globalDataOffset + fieldOffset;
+        wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_, globalDataOffset, type,
                                    AliasSet::Load(AliasSet::WasmTableMeta));
     curBlock_->add(load);
@@ -1712,11 +1733,11 @@ class FunctionCompiler {
   }
 
   MDefinition* loadTableLength(const TableDesc& table) {
-    return loadTableField(table, offsetof(TableTls, length), MIRType::Int32);
+    return loadTableField(table, offsetof(TableInstanceData, length), MIRType::Int32);
   }
 
   MDefinition* loadTableElements(const TableDesc& table) {
-    return loadTableField(table, offsetof(TableTls, elements),
+    return loadTableField(table, offsetof(TableInstanceData, elements),
                           MIRType::Pointer);
   }
 
@@ -1754,8 +1775,8 @@ class FunctionCompiler {
     auto* elements = loadTableElements(table);
 
     // Load the previous value
-    auto* element = MWasmLoadTableElement::New(alloc(), elements, index);
-    curBlock_->add(element);
+    auto* prevValue = MWasmLoadTableElement::New(alloc(), elements, index);
+    curBlock_->add(prevValue);
 
     // Compute the value's location for the post barrier
     auto* loc =
@@ -1768,7 +1789,7 @@ class FunctionCompiler {
     curBlock_->add(store);
 
     // Perform the post barrier
-    return postBarrierFilteringCall(lineOrBytecode, loc);
+    return postBarrierPrecise(lineOrBytecode, loc, prevValue);
   }
 
   void addInterruptCheck() {
@@ -1779,14 +1800,17 @@ class FunctionCompiler {
         MWasmInterruptCheck::New(alloc(), tlsPointer_, bytecodeOffset()));
   }
 
-  bool postBarrierFilteringCall(uint32_t lineOrBytecode,
-                                MDefinition* barrierAddr) {
-    const SymbolicAddressSignature& callee = SASigPostBarrierFiltering;
+  bool postBarrierPrecise(uint32_t lineOrBytecode, MDefinition* valueAddr,
+                          MDefinition* value) {
+    const SymbolicAddressSignature& callee = SASigPostBarrierPrecise;
     CallCompileState args;
     if (!passInstance(callee.argTypes[0], &args)) {
       return false;
     }
-    if (!passArg(barrierAddr, callee.argTypes[1], &args)) {
+    if (!passArg(valueAddr, callee.argTypes[1], &args)) {
+      return false;
+    }
+    if (!passArg(value, callee.argTypes[2], &args)) {
       return false;
     }
     finishCall(&args);
@@ -3204,12 +3228,21 @@ class FunctionCompiler {
         continue;
       }
 
+      // Compute the address of the field
       auto* fieldAddr = MWasmDerivedPointer::New(alloc(), data, offset);
       if (!fieldAddr) {
         return false;
       }
       curBlock_->add(fieldAddr);
 
+      // Load the previous value
+      auto* prevValue = MWasmLoadObjectDataField::New(alloc(), exception, data, offset, ToMIRType(type));
+      if (!prevValue) {
+        return false;
+      }
+      curBlock_->add(prevValue);
+
+      // Store the new value
       auto* store = MWasmStoreObjectDataRefField::New(
           alloc(), tlsPointer_, exception, fieldAddr, argValues[i]);
       if (!store) {
@@ -3217,7 +3250,8 @@ class FunctionCompiler {
       }
       curBlock_->add(store);
 
-      if (!postBarrierFilteringCall(lineOrBytecode, fieldAddr)) {
+      // Call the post-write barrier
+      if (!postBarrierPrecise(lineOrBytecode, fieldAddr, prevValue)) {
         return false;
       }
     }
@@ -4015,19 +4049,13 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
 
   const GlobalDesc& global = f.moduleEnv().globals[id];
   MOZ_ASSERT(global.isMutable());
-  MInstruction* barrierAddr =
-      f.storeGlobalVar(global.offset(), global.isIndirect(), value);
-
-  if (barrierAddr) {
-    // We always call the C++ postbarrier because the location will never be in
-    // the nursery, and the value stored will very frequently be in the nursery.
-    // The C++ postbarrier performs any necessary filtering.
-    return f.postBarrierFilteringCall(lineOrBytecode, barrierAddr);
-  }
-  return true;
+  return f.storeGlobalVar(lineOrBytecode, global.offset(), global.isIndirect(),
+                          value);
 }
 
 static bool EmitTeeGlobal(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
   uint32_t id;
   MDefinition* value;
   if (!f.iter().readTeeGlobal(&id, &value)) {
@@ -4037,8 +4065,8 @@ static bool EmitTeeGlobal(FunctionCompiler& f) {
   const GlobalDesc& global = f.moduleEnv().globals[id];
   MOZ_ASSERT(global.isMutable());
 
-  f.storeGlobalVar(global.offset(), global.isIndirect(), value);
-  return true;
+  return f.storeGlobalVar(lineOrBytecode, global.offset(), global.isIndirect(),
+                          value);
 }
 
 template <typename MIRClass>
