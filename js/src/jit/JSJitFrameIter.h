@@ -669,11 +669,10 @@ class InlineFrameIterator {
   JSFunction* callee(MaybeReadFallback& fallback) const;
 
   unsigned numActualArgs() const {
-    // The number of actual arguments of inline frames is recovered by the
-    // iteration process. It is recovered from the bytecode because this
-    // property still hold since the for inlined frames. This property does not
-    // hold for the parent frame because it can have optimize a call to
-    // js_fun_call or js_fun_apply.
+    // The number of actual arguments for inline frames is determined by this
+    // iterator based on the caller's bytecode instruction (Call, FunCall,
+    // GetProp/SetProp, etc). For the outer function it's stored in the stack
+    // frame.
     if (more()) {
       return numActualArgs_;
     }

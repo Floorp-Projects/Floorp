@@ -9788,7 +9788,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 }
 
 AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
-  if (op_ == JSOp::FunCall || op_ == JSOp::FunApply) {
+  if (op_ == JSOp::FunCall) {
     return AttachDecision::NoAction;
   }
 
@@ -9846,7 +9846,6 @@ AttachDecision CallIRGenerator::tryAttachStub() {
     case JSOp::SuperCall:
     case JSOp::SpreadSuperCall:
     case JSOp::FunCall:
-    case JSOp::FunApply:
       break;
     default:
       return AttachDecision::NoAction;
@@ -9881,8 +9880,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   // Try inlining Function.prototype.apply. We don't use the InlinableNative
   // mechanism for this because we want to optimize this more aggressively than
   // other natives.
-  if (op_ == JSOp::FunApply || op_ == JSOp::Call ||
-      op_ == JSOp::CallIgnoresRv) {
+  if (op_ == JSOp::Call || op_ == JSOp::CallIgnoresRv) {
     TRY_ATTACH(tryAttachFunApply(calleeFunc));
   }
 
