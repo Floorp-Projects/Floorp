@@ -3760,6 +3760,186 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) const {
   asBorrow()->dumpFields(json);
 }
 
+struct DumpOptionsFields {
+  js::JSONPrinter& json;
+
+  void operator()(const char* name, JS::AsmJSOption value) {
+    const char* valueStr = nullptr;
+    switch (value) {
+      case JS::AsmJSOption::Enabled:
+        valueStr = "JS::AsmJSOption::Enabled";
+        break;
+      case JS::AsmJSOption::DisabledByAsmJSPref:
+        valueStr = "JS::AsmJSOption::DisabledByAsmJSPref";
+        break;
+      case JS::AsmJSOption::DisabledByLinker:
+        valueStr = "JS::AsmJSOption::DisabledByLinker";
+        break;
+      case JS::AsmJSOption::DisabledByNoWasmCompiler:
+        valueStr = "JS::AsmJSOption::DisabledByNoWasmCompiler";
+        break;
+      case JS::AsmJSOption::DisabledByDebugger:
+        valueStr = "JS::AsmJSOption::DisabledByDebugger";
+        break;
+    }
+    json.property(name, valueStr);
+  }
+
+  void operator()(const char* name, JS::DelazificationOption value) {
+    const char* valueStr = nullptr;
+    switch (value) {
+#  define SelectValueStr_(Strategy)                      \
+    case JS::DelazificationOption::Strategy:             \
+      valueStr = "JS::DelazificationOption::" #Strategy; \
+      break;
+
+      FOREACH_DELAZIFICATION_STRATEGY(SelectValueStr_)
+#  undef SelectValueStr_
+    }
+    json.property(name, valueStr);
+  }
+
+  void operator()(const char* name, char16_t* value) {}
+
+  void operator()(const char* name, bool value) { json.property(name, value); }
+
+  void operator()(const char* name, uint32_t value) {
+    json.property(name, value);
+  }
+
+  void operator()(const char* name, uint64_t value) {
+    json.property(name, value);
+  }
+
+  void operator()(const char* name, const char* value) {
+    if (value) {
+      json.property(name, value);
+      return;
+    }
+    json.nullProperty(name);
+  }
+};
+
+static void DumpOptionsFields(js::JSONPrinter& json,
+                              const JS::ReadOnlyCompileOptions& options) {
+  struct DumpOptionsFields printer {
+    json
+  };
+  options.dumpWith(printer);
+}
+
+static void DumpInputScopeFields(js::JSONPrinter& json,
+                                 const InputScope& scope) {
+  json.property("kind", ScopeKindString(scope.kind()));
+
+  InputScope enclosing = scope.enclosing();
+  if (enclosing.isNull()) {
+    json.nullProperty("enclosing");
+  } else {
+    json.beginObjectProperty("enclosing");
+    DumpInputScopeFields(json, enclosing);
+    json.endObject();
+  }
+}
+
+static void DumpInputScriptFields(js::JSONPrinter& json,
+                                  const InputScript& script) {
+  json.beginObjectProperty("extent");
+  {
+    SourceExtent extent = script.extent();
+    json.property("sourceStart", extent.sourceStart);
+    json.property("sourceEnd", extent.sourceEnd);
+    json.property("toStringStart", extent.toStringStart);
+    json.property("toStringEnd", extent.toStringEnd);
+    json.property("lineno", extent.lineno);
+    json.property("column", extent.column);
+  }
+  json.endObject();
+
+  json.beginListProperty("immutableFlags");
+  DumpImmutableScriptFlags(json, script.immutableFlags());
+  json.endList();
+
+  json.beginListProperty("functionFlags");
+  DumpFunctionFlagsItems(json, script.functionFlags());
+  json.endList();
+
+  json.property("hasPrivateScriptData", script.hasPrivateScriptData());
+
+  InputScope scope = script.enclosingScope();
+  if (scope.isNull()) {
+    json.nullProperty("enclosingScope");
+  } else {
+    json.beginObjectProperty("enclosingScope");
+    DumpInputScopeFields(json, scope);
+    json.endObject();
+  }
+
+  if (script.useMemberInitializers()) {
+    json.property("memberInitializers",
+                  script.getMemberInitializers().serialize());
+  }
+}
+
+void CompilationInput::dump() const {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+  out.put("\n");
+}
+
+void CompilationInput::dump(js::JSONPrinter& json) const {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void CompilationInput::dumpFields(js::JSONPrinter& json) const {
+  const char* targetStr = nullptr;
+  switch (target) {
+    case CompilationTarget::Global:
+      targetStr = "CompilationTarget::Global";
+      break;
+    case CompilationTarget::SelfHosting:
+      targetStr = "CompilationTarget::SelfHosting";
+      break;
+    case CompilationTarget::StandaloneFunction:
+      targetStr = "CompilationTarget::StandaloneFunction";
+      break;
+    case CompilationTarget::StandaloneFunctionInNonSyntacticScope:
+      targetStr = "CompilationTarget::StandaloneFunctionInNonSyntacticScope";
+      break;
+    case CompilationTarget::Eval:
+      targetStr = "CompilationTarget::Eval";
+      break;
+    case CompilationTarget::Module:
+      targetStr = "CompilationTarget::Module";
+      break;
+    case CompilationTarget::Delazification:
+      targetStr = "CompilationTarget::Delazification";
+      break;
+  }
+  json.property("target", targetStr);
+
+  json.beginObjectProperty("options");
+  DumpOptionsFields(json, options);
+  json.endObject();
+
+  if (lazy_.isNull()) {
+    json.nullProperty("lazy_");
+  } else {
+    json.beginObjectProperty("lazy_");
+    DumpInputScriptFields(json, lazy_);
+    json.endObject();
+  }
+
+  json.beginObjectProperty("enclosingScope");
+  DumpInputScopeFields(json, enclosingScope);
+  json.endObject();
+
+  // TODO: Support printing the atomCache and the source fields.
+}
+
 void CompilationStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
@@ -3857,6 +4037,26 @@ void CompilationStencil::dumpAtom(TaggedParserAtomIndex index) const {
   json.beginObject();
   DumpTaggedParserAtomIndex(json, index, this);
   json.endObject();
+}
+
+void ExtensibleCompilationStencil::dump() {
+  frontend::BorrowingCompilationStencil borrowingStencil(*this);
+  borrowingStencil.dump();
+}
+
+void ExtensibleCompilationStencil::dump(js::JSONPrinter& json) {
+  frontend::BorrowingCompilationStencil borrowingStencil(*this);
+  borrowingStencil.dump(json);
+}
+
+void ExtensibleCompilationStencil::dumpFields(js::JSONPrinter& json) {
+  frontend::BorrowingCompilationStencil borrowingStencil(*this);
+  borrowingStencil.dumpFields(json);
+}
+
+void ExtensibleCompilationStencil::dumpAtom(TaggedParserAtomIndex index) {
+  frontend::BorrowingCompilationStencil borrowingStencil(*this);
+  borrowingStencil.dumpAtom(index);
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
