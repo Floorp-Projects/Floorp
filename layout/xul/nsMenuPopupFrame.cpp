@@ -599,9 +599,9 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     mPrefSize = prefSize;
     nsIWidget* widget = GetWidget();
     if (mPopupState != ePopupShown && widget && IS_WAYLAND_DISPLAY()) {
-      // When the popup size changed in the DOM, we need to flush widget
-      // preferred popup rect to avoid showing it in wrong size.
-      widget->FlushPreferredPopupRect();
+      // We changed popup size, clear the one stored on widget level.
+      // This is Wayland only.
+      widget->MoveToRectPopupRectClear();
     }
   }
 
@@ -1568,9 +1568,10 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   if (IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
       nsRect prefRect = LayoutDeviceIntRect::ToAppUnits(
-          widget->GetPreferredPopupRect(), presContext->AppUnitsPerDevPixel());
+          widget->GetMoveToRectPopupRect(), presContext->AppUnitsPerDevPixel());
       if (prefRect.width > 0 && prefRect.height > 0) {
-        // shrink the popup down if it is larger than the prefered size.
+        // Shrink the popup down if it's larger than size received from Wayland
+        // compositor.
         if (mRect.width > prefRect.width) {
           mRect.width = prefRect.width;
         }
