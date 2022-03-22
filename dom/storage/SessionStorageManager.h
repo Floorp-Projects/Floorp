@@ -42,6 +42,9 @@ bool RecvLoadSessionStorageData(
     uint64_t aTopContextId,
     nsTArray<mozilla::dom::SSCacheCopy>&& aCacheCopyList);
 
+bool RecvClearStoragesForOrigin(const nsACString& aOriginAttrs,
+                                const nsACString& aOriginKey);
+
 class BrowsingContext;
 class ContentParent;
 class SSSetItemInfo;
@@ -92,6 +95,9 @@ class SessionStorageManagerBase {
   void ClearStoragesInternal(const OriginAttributesPattern& aPattern,
                              const nsACString& aOriginScope);
 
+  void ClearStoragesForOriginInternal(const nsACString& aOriginAttrs,
+                                      const nsACString& aOriginKey);
+
   OriginRecord* GetOriginRecord(const nsACString& aOriginAttrs,
                                 const nsACString& aOriginKey,
                                 bool aMakeIfNeeded,
@@ -126,6 +132,9 @@ class SessionStorageManager final : public SessionStorageManagerBase,
   nsresult LoadData(nsIPrincipal& aPrincipal, SessionStorageCache& aCache);
 
   void CheckpointData(nsIPrincipal& aPrincipal, SessionStorageCache& aCache);
+
+  nsresult ClearStoragesForOrigin(const nsACString& aOriginAttrs,
+                                  const nsACString& aOriginKey);
 
  private:
   ~SessionStorageManager();
@@ -208,6 +217,9 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
 
   void ClearStorages(const OriginAttributesPattern& aPattern,
                      const nsCString& aOriginScope);
+
+  void ClearStoragesForOrigin(const nsACString& aOriginAttrs,
+                              const nsACString& aOriginKey);
 
   void SetCurrentBrowsingContextId(uint64_t aBrowsingContextId);
 
