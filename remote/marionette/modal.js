@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   Services: "resource://gre/modules/Services.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -52,15 +51,6 @@ modal.findModalDialogs = function(context) {
     ) {
       logger.trace("Found open window modal prompt");
       return new modal.Dialog(() => context, win);
-    }
-  }
-
-  if (AppInfo.isAndroid) {
-    const geckoViewPrompts = context.window.prompts();
-    if (geckoViewPrompts.length > 0) {
-      logger.trace("Found open GeckoView prompt");
-      const prompt = geckoViewPrompts[0];
-      return new modal.Dialog(() => context, prompt);
     }
   }
 
@@ -121,7 +111,6 @@ modal.DialogObserver = class {
   register() {
     Services.obs.addObserver(this, "common-dialog-loaded");
     Services.obs.addObserver(this, "domwindowopened");
-    Services.obs.addObserver(this, "geckoview-prompt-show");
     Services.obs.addObserver(this, "tabmodal-dialog-loaded");
 
     // Register event listener for all already open windows
@@ -133,7 +122,6 @@ modal.DialogObserver = class {
   unregister() {
     Services.obs.removeObserver(this, "common-dialog-loaded");
     Services.obs.removeObserver(this, "domwindowopened");
-    Services.obs.removeObserver(this, "geckoview-prompt-show");
     Services.obs.removeObserver(this, "tabmodal-dialog-loaded");
 
     // Unregister event listener for all open windows
@@ -215,18 +203,6 @@ modal.DialogObserver = class {
       case "domwindowopened":
         subject.addEventListener("DOMModalDialogClosed", this);
         break;
-
-      case "geckoview-prompt-show":
-        for (let win of Services.wm.getEnumerator(null)) {
-          const prompt = win.prompts().find(item => item.id == subject.id);
-          if (prompt) {
-            this.callbacks.forEach(callback =>
-              callback(modal.ACTION_OPENED, prompt)
-            );
-            return;
-          }
-        }
-        break;
     }
   }
 
@@ -287,33 +263,22 @@ modal.Dialog = class {
     this.win_ = Cu.getWeakReference(dialog);
   }
 
-  get args() {
-    if (AppInfo.isAndroid) {
-      return this.window.args;
-    }
-    let tm = this.tabModal;
-    return tm ? tm.args : null;
-  }
-
   get curBrowser_() {
     return this.curBrowserFn_();
   }
 
-  get isOpen() {
-    if (AppInfo.isAndroid) {
-      return this.window !== null;
+  /**
+   * Returns the ChromeWindow associated with an open dialog window if
+   * it is currently attached to the DOM.
+   */
+  get window() {
+    if (this.win_) {
+      let win = this.win_.get();
+      if (win && win.parent) {
+        return win;
+      }
     }
-    if (!this.ui) {
-      return false;
-    }
-    return true;
-  }
-
-  get isWindowModal() {
-    return [
-      Services.prompt.MODAL_TYPE_WINDOW,
-      Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
-    ].includes(this.args.modalType);
+    return null;
   }
 
   get tabModal() {
@@ -324,60 +289,20 @@ modal.Dialog = class {
     return this.curBrowser_.getTabModal();
   }
 
-  get text() {
-    if (AppInfo.isAndroid) {
-      return this.window.getPromptText();
-    }
-    return this.ui.infoBody.textContent;
+  get args() {
+    let tm = this.tabModal;
+    return tm ? tm.args : null;
+  }
+
+  get isWindowModal() {
+    return [
+      Services.prompt.MODAL_TYPE_WINDOW,
+      Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
+    ].includes(this.args.modalType);
   }
 
   get ui() {
     let tm = this.tabModal;
     return tm ? tm.ui : null;
-  }
-
-  /**
-   * For Android, this returns a GeckoViewPrompter, which can be used to control prompts.
-   * Otherwise, this returns the ChromeWindow associated with an open dialog window if
-   * it is currently attached to the DOM.
-   */
-  get window() {
-    if (this.win_) {
-      let win = this.win_.get();
-      if (win && (AppInfo.isAndroid || win.parent)) {
-        return win;
-      }
-    }
-    return null;
-  }
-
-  set text(inputText) {
-    if (AppInfo.isAndroid) {
-      this.window.setInputText(inputText);
-    } else {
-      // see toolkit/components/prompts/content/commonDialog.js
-      let { loginTextbox } = this.ui;
-      loginTextbox.value = inputText;
-    }
-  }
-
-  accept() {
-    if (AppInfo.isAndroid) {
-      // GeckoView does not have a UI, so the methods are called directly
-      this.window.acceptPrompt();
-    } else {
-      const { button0 } = this.ui;
-      button0.click();
-    }
-  }
-
-  dismiss() {
-    if (AppInfo.isAndroid) {
-      // GeckoView does not have a UI, so the methods are called directly
-      this.window.dismissPrompt();
-    } else {
-      const { button0, button1 } = this.ui;
-      (button1 ? button1 : button0).click();
-    }
   }
 };
