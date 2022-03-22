@@ -207,7 +207,7 @@ function uninstallFakePAC() {
   MockRegistrar.unregister(fakePACCID);
 }
 
-function _eventsTelemetrySnapshot(component, source) {
+function getUptakeTelemetrySnapshot(component, source) {
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
@@ -238,46 +238,16 @@ function _eventsTelemetrySnapshot(component, source) {
   );
 }
 
-function getUptakeTelemetrySnapshot(key) {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-  const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
-  const TELEMETRY_COMPONENT = "remotesettings";
-  const histogram = Services.telemetry
-    .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
-    .snapshot()[key];
-  const events = _eventsTelemetrySnapshot(TELEMETRY_COMPONENT, key);
-  return { histogram, events };
-}
-
 function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
   const { UptakeTelemetry } = ChromeUtils.import(
     "resource://services-common/uptake-telemetry.js"
   );
-  const STATUSES = Object.values(UptakeTelemetry.HISTOGRAM_LABELS);
-
+  const STATUSES = Object.values(UptakeTelemetry.STATUS);
   for (const status of STATUSES) {
-    const key = STATUSES.indexOf(status);
     const expected = expectedIncrements[status] || 0;
-    // Check histogram increments.
-    let value1 =
-      (snapshot1 && snapshot1.histogram && snapshot1.histogram.values[key]) ||
-      0;
-    let value2 =
-      (snapshot2 && snapshot2.histogram && snapshot2.histogram.values[key]) ||
-      0;
-    let actual = value2 - value1;
-    equal(expected, actual, `check histogram values for ${status}`);
-    // Check events increments.
-    value1 =
-      (snapshot1 && snapshot1.histogram && snapshot1.histogram.values[key]) ||
-      0;
-    value2 =
-      (snapshot2 && snapshot2.histogram && snapshot2.histogram.values[key]) ||
-      0;
-    actual = value2 - value1;
-    equal(expected, actual, `check events for ${status}`);
+    const previous = snapshot1[status] || 0;
+    const current = snapshot2[status] || previous;
+    Assert.equal(expected, current - previous, `check events for ${status}`);
   }
 }
 

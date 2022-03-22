@@ -23,13 +23,14 @@ async function withFakeClientID(uuid, f) {
 
 add_task(async function test_unknown_status_is_not_reported() {
   const source = "update-source";
-  const startHistogram = getUptakeTelemetrySnapshot(source);
+  const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
 
-  await UptakeTelemetry.report(COMPONENT, "unknown-status", { source });
+  try {
+    await UptakeTelemetry.report(COMPONENT, "unknown-status", { source });
+  } catch (e) {}
 
-  const endHistogram = getUptakeTelemetrySnapshot(source);
-  const expectedIncrements = {};
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  Assert.deepEqual(startSnapshot, endSnapshot);
 });
 
 add_task(async function test_age_is_converted_to_string_and_reported() {
@@ -37,7 +38,6 @@ add_task(async function test_age_is_converted_to_string_and_reported() {
   const age = 42;
 
   await withFakeChannel("nightly", async () => {
-    // no sampling.
     await UptakeTelemetry.report(COMPONENT, status, { source: "s", age });
   });
 
@@ -54,22 +54,22 @@ add_task(async function test_age_is_converted_to_string_and_reported() {
 
 add_task(async function test_each_status_can_be_caught_in_snapshot() {
   const source = "some-source";
-  const startHistogram = getUptakeTelemetrySnapshot(source);
+  const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
 
   const expectedIncrements = {};
-  for (const status of Object.values(UptakeTelemetry.HISTOGRAM_LABELS)) {
-    await UptakeTelemetry.report(COMPONENT, status, { source });
+  for (const status of Object.values(UptakeTelemetry.STATUS)) {
     expectedIncrements[status] = 1;
+    await UptakeTelemetry.report(COMPONENT, status, { source });
   }
 
-  const endHistogram = getUptakeTelemetrySnapshot(source);
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
 });
 
 add_task(async function test_events_are_sent_when_hash_is_mod_0() {
   const source = "some-source";
-  const startSnapshot = getUptakeTelemetrySnapshot(source);
-  const startSuccess = startSnapshot.events.success || 0;
+  const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  const startSuccess = startSnapshot.success || 0;
   const uuid = "d81bbfad-d741-41f5-a7e6-29f6bde4972a"; // hash % 100 = 0
   await withFakeClientID(uuid, async () => {
     await withFakeChannel("release", async () => {
@@ -78,15 +78,15 @@ add_task(async function test_events_are_sent_when_hash_is_mod_0() {
       });
     });
   });
-  const endSnapshot = getUptakeTelemetrySnapshot(source);
-  Assert.equal(endSnapshot.events.success, startSuccess + 1);
+  const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  Assert.equal(endSnapshot.success, startSuccess + 1);
 });
 
 add_task(
   async function test_events_are_not_sent_when_hash_is_greater_than_pref() {
     const source = "some-source";
-    const startSnapshot = getUptakeTelemetrySnapshot(source);
-    const startSuccess = startSnapshot.events.success || 0;
+    const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+    const startSuccess = startSnapshot.success || 0;
     const uuid = "d81bbfad-d741-41f5-a7e6-29f6bde49721"; // hash % 100 = 1
     await withFakeClientID(uuid, async () => {
       await withFakeChannel("release", async () => {
@@ -97,15 +97,15 @@ add_task(
         );
       });
     });
-    const endSnapshot = getUptakeTelemetrySnapshot(source);
-    Assert.equal(endSnapshot.events.success || 0, startSuccess);
+    const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+    Assert.equal(endSnapshot.success || 0, startSuccess);
   }
 );
 
 add_task(async function test_events_are_sent_when_nightly() {
   const source = "some-source";
-  const startSnapshot = getUptakeTelemetrySnapshot(source);
-  const startSuccess = startSnapshot.events.success || 0;
+  const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  const startSuccess = startSnapshot.success || 0;
   const uuid = "d81bbfad-d741-41f5-a7e6-29f6bde49721"; // hash % 100 = 1
   await withFakeClientID(uuid, async () => {
     await withFakeChannel("nightly", async () => {
@@ -114,6 +114,6 @@ add_task(async function test_events_are_sent_when_nightly() {
       });
     });
   });
-  const endSnapshot = getUptakeTelemetrySnapshot(source);
-  Assert.equal(endSnapshot.events.success, startSuccess + 1);
+  const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
+  Assert.equal(endSnapshot.success, startSuccess + 1);
 });
