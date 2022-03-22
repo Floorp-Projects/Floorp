@@ -818,14 +818,23 @@ void nsContentSecurityUtils::DetectJsHacks() {
   if (MOZ_LIKELY(sJSHacksChecked || sJSHacksPresent)) {
     return;
   }
+  nsresult rv;
+  sJSHacksChecked = true;
+
   // This preference is required by bootstrapLoader.xpi, which is an
   // alternate way to load legacy-style extensions. It only works on
   // DevEdition/Nightly.
-  bool xpinstallSignatures =
-      Preferences::GetBool("xpinstall.signatures.required", false);
-  if (!xpinstallSignatures) {
+  bool xpinstallSignatures;
+  rv = Preferences::GetBool("xpinstall.signatures.required",
+                            &xpinstallSignatures, PrefValueKind::Default);
+  if (!NS_FAILED(rv) && !xpinstallSignatures) {
     sJSHacksPresent = true;
-    sJSHacksChecked = true;
+    return;
+  }
+  rv = Preferences::GetBool("xpinstall.signatures.required",
+                            &xpinstallSignatures, PrefValueKind::User);
+  if (!NS_FAILED(rv) && !xpinstallSignatures) {
+    sJSHacksPresent = true;
     return;
   }
 
@@ -834,27 +843,48 @@ void nsContentSecurityUtils::DetectJsHacks() {
   // project to run legacy-style 'extensions', some of which use eval,
   // all of which run in the System Principal context.
   nsAutoString jsConfigPref;
-  nsresult rv = Preferences::GetString("general.config.filename", jsConfigPref);
+  rv = Preferences::GetString("general.config.filename", jsConfigPref,
+                              PrefValueKind::Default);
   if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
     sJSHacksPresent = true;
+    return;
+  }
+  rv = Preferences::GetString("general.config.filename", jsConfigPref,
+                              PrefValueKind::User);
+  if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
+    sJSHacksPresent = true;
+    return;
   }
 
   // These preferences are for autoconfiguration of Firefox by admins.
   // The first will load a file over the network; the second will
   // fall back to a local file if the network is unavailable
   nsAutoString configUrlPref;
-  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref);
+  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
+                              PrefValueKind::Default);
   if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
     sJSHacksPresent = true;
+    return;
+  }
+  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
+                              PrefValueKind::User);
+  if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
+    sJSHacksPresent = true;
+    return;
   }
 
   bool failOverToCache;
-  rv = Preferences::GetBool("autoadmin.failover_to_cached", &failOverToCache);
+  rv = Preferences::GetBool("autoadmin.failover_to_cached", &failOverToCache,
+                            PrefValueKind::Default);
+  if (!NS_FAILED(rv) && failOverToCache) {
+    sJSHacksPresent = true;
+    return;
+  }
+  rv = Preferences::GetBool("autoadmin.failover_to_cached", &failOverToCache,
+                            PrefValueKind::User);
   if (!NS_FAILED(rv) && failOverToCache) {
     sJSHacksPresent = true;
   }
-
-  sJSHacksChecked = true;
 }
 
 /* static */
