@@ -491,7 +491,7 @@ class TelemetryHandler {
         } else if (searchProviderInfo.organicCodes.includes(code)) {
           oldType = "organic";
           type = "organic";
-        } else if (searchProviderInfo.expectedOrganicCodes.includes(code)) {
+        } else if (searchProviderInfo.expectedOrganicCodes?.includes(code)) {
           code = "none";
         } else {
           code = "other";
