@@ -305,3 +305,33 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
 
   await doExperimentCleanup();
 });
+
+/**
+ * Test rendering a screen with a dismiss button
+ */
+add_task(async function test_aboutwelcome_dismiss_button() {
+  const TEST_DISMISS_CONTENT = makeTestContent("TEST_DISMISS_STEP", {
+    dismiss_button: {
+      action: {
+        navigate: true,
+      },
+    },
+  });
+
+  const TEST_DISMISS_JSON = JSON.stringify([TEST_DISMISS_CONTENT]);
+  let browser = await openAboutWelcome(TEST_DISMISS_JSON);
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  let sandbox = sinon.createSandbox();
+
+  // Spy AboutWelcomeParent Content Message Handler
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  // Click dismiss button
+  await onButtonClick(browser, "button.dismiss-button");
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+});

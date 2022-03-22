@@ -554,6 +554,88 @@ const MESSAGES = () => [
     trigger: { id: "defaultBrowserCheck" },
   },
   {
+    id: "PB_FOCUS_PROMO",
+    groups: ["panel-test-provider"],
+    template: "spotlight",
+    content: {
+      template: "multistage",
+      backdrop: "transparent",
+      screens: [
+        {
+          id: "PBM_FIREFOX_FOCUS",
+          order: 0,
+          content: {
+            logo: {
+              imageURL: "chrome://browser/content/assets/focus-logo.svg",
+              height: "48px",
+            },
+            title: {
+              string_id: "spotlight-focus-promo-title",
+            },
+            subtitle: {
+              string_id: "spotlight-focus-promo-subtitle",
+            },
+            dismiss_button: {
+              action: {
+                navigate: true,
+              },
+            },
+            tiles: {
+              type: "mobile_downloads",
+              data: {
+                QR_code: {
+                  image_url:
+                    "chrome://browser/content/assets/focus-qr-code.svg",
+                  alt_text: {
+                    string_id: "spotlight-focus-promo-qr-code",
+                  },
+                },
+                email: {
+                  link_text: "Email yourself a link",
+                  link: {
+                    action: {
+                      data: {
+                        args: "https://mozilla.org",
+                        where: "tabshifted",
+                      },
+                      type: "OPEN_URL",
+                      navigate: true,
+                    },
+                  },
+                },
+                marketplace_buttons: {
+                  ios_link: {
+                    action: {
+                      data: {
+                        args:
+                          "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
+                        where: "tabshifted",
+                      },
+                      type: "OPEN_URL",
+                      navigate: true,
+                    },
+                  },
+                  android_link: {
+                    action: {
+                      data: {
+                        args:
+                          "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
+                        where: "tabshifted",
+                      },
+                      type: "OPEN_URL",
+                      navigate: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+    trigger: { id: "defaultBrowserCheck" },
+  },
+  {
     id: "PB_NEWTAB_VPN_PROMO",
     template: "pb_newtab",
     content: {
