@@ -744,7 +744,7 @@ function renderTransportStats(
     }
   }
 
-  const estimateKbps = (timestamp, lastTimestamp, bytes, lastBytes) => {
+  const estimateKBps = (timestamp, lastTimestamp, bytes, lastBytes) => {
     if (!timestamp || !lastTimestamp || !bytes || !lastBytes) {
       return "0.0";
     }
@@ -787,12 +787,12 @@ function renderTransportStats(
     if (bytesReceived) {
       let s = ` (${(bytesReceived / 1024).toFixed(2)} Kb`;
       if (local && history) {
-        s += ` , ${estimateKbps(
+        s += ` , ${estimateKBps(
           timestamp,
           history[id].lastTimestamp,
           bytesReceived,
           history[id].lastBytesReceived
-        )} Kbps`;
+        )} KBps`;
       }
       s += ")";
       elements.push(renderText("span", s));
@@ -836,12 +836,12 @@ function renderTransportStats(
     if (bytesSent) {
       let s = ` (${(bytesSent / 1024).toFixed(2)} Kb`;
       if (local && history) {
-        s += `, ${estimateKbps(
+        s += `, ${estimateKBps(
           timestamp,
           history[id].lastTimestamp,
           bytesSent,
           history[id].lastBytesSent
-        )} Kbps`;
+        )} KBps`;
       }
       s += ")";
       elements.push(renderText("span", s));
