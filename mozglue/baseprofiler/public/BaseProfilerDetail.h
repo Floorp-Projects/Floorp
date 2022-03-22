@@ -22,7 +22,7 @@ namespace baseprofiler {
 namespace detail {
 
 // Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
-class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
+class CAPABILITY BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
  public:
   BaseProfilerMutex() : ::mozilla::detail::MutexImpl() {}
   explicit BaseProfilerMutex(const char* aName)
@@ -45,11 +45,11 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
            baseprofiler::profiler_current_thread_id();
   }
 
-  void AssertCurrentThreadOwns() const {
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
     MOZ_ASSERT(IsLockedOnCurrentThread());
   }
 
-  void Lock() {
+  void Lock() CAPABILITY_ACQUIRE() {
     const BaseProfilerThreadId tid = baseprofiler::profiler_current_thread_id();
     MOZ_ASSERT(tid.IsSpecified());
     MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
@@ -59,7 +59,7 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
     mOwningThreadId = tid.ToNumber();
   }
 
-  [[nodiscard]] bool TryLock() {
+  [[nodiscard]] bool TryLock() TRY_ACQUIRE(true) {
     const BaseProfilerThreadId tid = baseprofiler::profiler_current_thread_id();
     MOZ_ASSERT(tid.IsSpecified());
     MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
@@ -73,7 +73,7 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
     return true;
   }
 
-  void Unlock() {
+  void Unlock() CAPABILITY_RELEASE() {
     MOZ_ASSERT(IsLockedOnCurrentThread(), "Unlocking when not locked here");
     // We're still holding the mutex here, so it's safe to just reset
     // `mOwningThreadId`.
@@ -149,6 +149,7 @@ class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
 #endif  // DEBUG
   }
 
+  PUSH_IGNORE_THREAD_SAFETY
   void Lock() {
     if (IsActivated()) {
       mMaybeMutex->Lock();
@@ -160,6 +161,7 @@ class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
       mMaybeMutex->Unlock();
     }
   }
+  POP_THREAD_SAFETY
 
  private:
   Maybe<BaseProfilerMutex> mMaybeMutex;
