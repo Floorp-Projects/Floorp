@@ -400,7 +400,6 @@ nsWindow::nsWindow()
       mPopupTemporaryHidden(false),
       mPopupClosed(false),
       mPopupUseMoveToRect(false),
-      mMoveToRectPopupRectCleared(false),
       mWaitingForMoveToRectCallback(false),
       mUpdatedByMoveToRectCallback(false),
       mConfiguredClearColor(false),
@@ -942,11 +941,6 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove) {
   if (aMove) {
     mBounds.x = aX;
     mBounds.y = aY;
-  }
-
-  // We have updated size from layout so we need to resize the popup.
-  if (mMoveToRectPopupRectCleared) {
-    aMove = true;
   }
 
   // For top-level windows, aWidth and aHeight should possibly be
@@ -1871,7 +1865,6 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   // Store popup size received from Wayland compositor.
   // We're going to reuse it in layout code if popup is moved.
   mMoveToRectPopupRect = newBounds;
-  mMoveToRectPopupRectCleared = false;
 
   const bool needsPositionUpdate = newBounds.TopLeft() != mBounds.TopLeft();
   const bool needsSizeUpdate = newBounds.Size() != mBounds.Size();
@@ -6188,7 +6181,6 @@ void nsWindow::NativeShow(bool aAction) {
     // There's a chance that when the popup will be shown again it might be
     // resized because parent could be moved meanwhile.
     mMoveToRectPopupRect = LayoutDeviceIntRect();
-    mMoveToRectPopupRectCleared = false;
     LOG("nsWindow::NativeShow hide\n");
     if (GdkIsWaylandDisplay()) {
       if (IsWaylandPopup()) {
