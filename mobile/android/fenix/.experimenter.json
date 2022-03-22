@@ -1,34 +1,23 @@
 {
-  "homescreen": {
-    "description": "The homescreen that the user goes to when they press home or new tab.",
-    "hasExposure": true,
-    "exposureDescription": "",
-    "variables": {
-      "sections-enabled": {
-        "description": "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default.",
-        "type": "json"
-      }
-    }
-  },
   "default-browser-message": {
     "description": "A small feature allowing experiments on the placement of a default browser message.",
     "hasExposure": true,
     "exposureDescription": "",
     "variables": {
       "message-location": {
-        "description": "Where is the message to be put.",
-        "type": "string"
+        "type": "string",
+        "description": "Where is the message to be put."
       }
     }
   },
-  "search-term-groups": {
-    "description": "A feature allowing the grouping of URLs around the search term that it came from.",
+  "homescreen": {
+    "description": "The homescreen that the user goes to when they press home or new tab.",
     "hasExposure": true,
     "exposureDescription": "",
     "variables": {
-      "enabled": {
-        "description": "If true, the feature shows up on the homescreen and on the new tab screen.",
-        "type": "boolean"
+      "sections-enabled": {
+        "type": "json",
+        "description": "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default."
       }
     }
   },
@@ -38,16 +27,27 @@
     "exposureDescription": "",
     "variables": {
       "settings-icon": {
-        "description": "The drawable displayed in the app menu for Settings",
-        "type": "string"
+        "type": "string",
+        "description": "The drawable displayed in the app menu for Settings"
       },
       "settings-punctuation": {
-        "description": "The emoji displayed in the Settings screen title.",
-        "type": "string"
+        "type": "string",
+        "description": "The emoji displayed in the Settings screen title."
       },
       "settings-title": {
-        "description": "The title of displayed in the Settings screen and app menu.",
-        "type": "string"
+        "type": "string",
+        "description": "The title of displayed in the Settings screen and app menu."
+      }
+    }
+  },
+  "search-term-groups": {
+    "description": "A feature allowing the grouping of URLs around the search term that it came from.",
+    "hasExposure": true,
+    "exposureDescription": "",
+    "variables": {
+      "enabled": {
+        "type": "boolean",
+        "description": "If true, the feature shows up on the homescreen and on the new tab screen."
       }
     }
   }
