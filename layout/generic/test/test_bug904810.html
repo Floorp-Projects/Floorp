@@ -18,7 +18,6 @@ second line
 third line
 </textarea></p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -26,11 +25,6 @@ third line
 /** Test for Bug 904810 **/
 
 SimpleTest.waitForExplicitFinish();
-
-// We intermittently trigger two "Wrong parent ComputedStyle" assertions
-// on B2G emulator builds (bug XXXXXXX).  The two frames that get incorrect
-// ComputedStyle parents are scroll bar parts in the <textarea>.
-SimpleTest.expectAssertions(0, 2);
 
 SimpleTest.waitForFocus(function test() {
   function shiftLeft(i) {
@@ -44,7 +38,6 @@ SimpleTest.waitForFocus(function test() {
   }
 
   const isWindows = /WINNT/.test(SpecialPowers.OS);
-  
   var textarea = document.getElementById('textarea904810');
   textarea.focus();
 
@@ -53,26 +46,16 @@ SimpleTest.waitForFocus(function test() {
   textarea.selectionEnd = 1;
   shiftRight(7);
   synthesizeKey("KEY_ArrowDown");
-  if (isWindows) {
-    is(textarea.selectionStart, 19, "caret moved to next line below selection end");
-    is(textarea.selectionEnd, 19, "caret moved to next line below selection end");
-  } else {
-    is(textarea.selectionStart, 8, "caret moved to visual end of selection");
-    is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
-  }
+  is(textarea.selectionStart, 19, "caret moved to next line below selection end");
+  is(textarea.selectionEnd, 19, "caret moved to next line below selection end");
 
   // Testing KEY_ArrowDown with backward selection
   textarea.selectionStart = 8;
   textarea.selectionEnd = 8;
   shiftLeft(7);
   synthesizeKey("KEY_ArrowDown");
-  if (isWindows) {
-    is(textarea.selectionStart, 12, "caret moved to next line below selection start");
-    is(textarea.selectionEnd, 12, "caret moved to next line below selection start");
-  } else {
-    is(textarea.selectionStart, 8, "caret moved to visual end of selection");
-    is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
-  }
+  is(textarea.selectionStart, 12, "caret moved to next line below selection start");
+  is(textarea.selectionEnd, 12, "caret moved to next line below selection start");
 
   // Testing KEY_ArrowUp with forward selection
   textarea.selectionStart = 12;
@@ -80,13 +63,8 @@ SimpleTest.waitForFocus(function test() {
   shiftRight(7);
   synthesizeKey("KEY_ArrowUp");
   var result = textarea.selectionEnd
-  if (isWindows) {
-    is(textarea.selectionStart, 8, "caret moved to previous line above selection end");
-    is(textarea.selectionEnd, 8, "caret moved to previous line above selection end");
-  } else {
-    is(textarea.selectionStart, 12, "caret moved to visual start of selection");
-    is(textarea.selectionEnd, 12, "caret moved to visual start of selection");
-  }
+  is(textarea.selectionStart, 8, "caret moved to previous line above selection end");
+  is(textarea.selectionEnd, 8, "caret moved to previous line above selection end");
 
   // Testing KEY_ArrowUp with backward selection
   textarea.selectionStart = 19;
@@ -94,15 +72,8 @@ SimpleTest.waitForFocus(function test() {
   shiftLeft(7);
   synthesizeKey("KEY_ArrowUp");
   var result = textarea.selectionEnd
-  if (isWindows) {
-    is(textarea.selectionStart, 1, "caret moved to previous line above selection start");
-    is(textarea.selectionEnd, 1, "caret moved to previous line above selection start");
-  } else {
-    is(textarea.selectionStart, 12, "caret moved to visual start of selection");
-    is(textarea.selectionEnd, 12, "caret moved to visual start of selection");
-  }
-
- 
+  is(textarea.selectionStart, 1, "caret moved to previous line above selection start");
+  is(textarea.selectionEnd, 1, "caret moved to previous line above selection start");
 
   SimpleTest.finish();
 });
