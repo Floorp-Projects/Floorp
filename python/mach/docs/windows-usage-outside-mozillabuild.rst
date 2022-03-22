@@ -90,6 +90,28 @@ If you're using Mercurial, you'll need to install it to your Windows-native Pyth
 
 If you're using Git with Cinnabar, follow its `setup instructions <https://github.com/glandium/git-cinnabar#setup>`__.
 
+4. Set Powershell Execution Policy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you're using Powershell, Windows will raise an error by default when you try to invoke
+``.\mach.ps1``:
+
+.. code::
+
+    .\mach : File <topsrcdir>\mach.ps1 cannot be loaded because running scripts is disabled on this system. For
+    more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+    At line:1 char:1
+
+To work around this:
+
+1. From the Start menu, type in "Powershell", then right-click on the best match and click
+   "Run as administrator"
+2. Run the command ``Set-ExecutionPolicy RemoteSigned``
+3. Close the Administrator Powershell window, and open a regular Powershell window
+4. Go to your Firefox checkout (likely ``C:\mozilla-source\mozilla-unified``)
+5. Test the new execution policy by running ``.\mach bootstrap``. If it doesn't immediately fail
+   with the error about "Execution Policies", then the problem is resolved.
+
 Success!
 ~~~~~~~~
 
