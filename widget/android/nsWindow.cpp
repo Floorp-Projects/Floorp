@@ -893,6 +893,8 @@ class LayerViewSupport final
   // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
 
+  Maybe<uint32_t> mDefaultClearColor;
+
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
     explicit CaptureRequest(java::GeckoResult::GlobalRef aResult,
@@ -1013,6 +1015,10 @@ class LayerViewSupport final
         mUiCompositorControllerChild->OnCompositorSurfaceChanged(
             gkWindow->mWidgetId, mSurface);
       }
+    }
+
+    if (mDefaultClearColor) {
+      mUiCompositorControllerChild->SetDefaultClearColor(*mDefaultClearColor);
     }
 
     if (!mCompositorPaused) {
@@ -1332,6 +1338,7 @@ class LayerViewSupport final
 
   void SetDefaultClearColor(int32_t aColor) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+    mDefaultClearColor = Some((uint32_t)aColor);
     if (mUiCompositorControllerChild) {
       mUiCompositorControllerChild->SetDefaultClearColor((uint32_t)aColor);
     }
