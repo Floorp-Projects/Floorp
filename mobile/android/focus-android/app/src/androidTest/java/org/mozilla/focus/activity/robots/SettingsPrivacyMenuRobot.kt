@@ -62,7 +62,11 @@ class SettingsPrivacyMenuRobot {
         httpsOnlyModeSwitch().check(matches(isDisplayed()))
         assertHttpsOnlyModeSwitchState()
         sendDataSwitch().check(matches(isDisplayed()))
-        assertSendDataSwitchState()
+        if (packageName != "org.mozilla.focus.debug") {
+            assertSendDataSwitchState(true)
+        } else {
+            assertSendDataSwitchState()
+        }
         studiesOption().check(matches(isDisplayed()))
         studiesDefaultOption().check(matches(isDisplayed()))
     }
