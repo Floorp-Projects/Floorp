@@ -170,9 +170,6 @@ void gfxConfig::Inherit(EnumSet<Feature> aFeatures,
       case Feature::DIRECT2D:
         status = aDevicePrefs.useD2D1();
         break;
-      case Feature::WEBGPU:
-        status = aDevicePrefs.webGPU();
-        break;
       default:
         break;
     }

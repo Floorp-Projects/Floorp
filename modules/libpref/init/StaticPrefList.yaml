@@ -5663,6 +5663,12 @@
   value: true
   mirror: always
 
+# Should we override the blocklist to enable WebGPU?
+- name: gfx.webgpu.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
 # We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
 # The first enables WR+additional features, and the second just enables WR.
 # For developer convenience, building with --enable-webrender=true or just
