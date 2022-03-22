@@ -2,10 +2,23 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
+);
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
 );
 
 add_task(async function test_bookmarks() {
@@ -1615,3 +1628,82 @@ add_task(async function test_tree_with_empty_folder() {
 
   await extension.unload();
 });
+
+add_task(
+  {
+    pref_set: [["extensions.eventPages.enabled", true]],
+  },
+  async function test_bookmarks_event_page() {
+    await AddonTestUtils.promiseStartupManager();
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        browser_specific_settings: { gecko: { id: "eventpage@bookmarks" } },
+        permissions: ["bookmarks"],
+        background: { persistent: false },
+      },
+      background() {
+        browser.bookmarks.onCreated.addListener(() => {
+          browser.test.sendMessage("onCreated");
+        });
+        browser.bookmarks.onRemoved.addListener(() => {
+          browser.test.sendMessage("onRemoved");
+        });
+        browser.bookmarks.onChanged.addListener(() => {});
+        browser.bookmarks.onMoved.addListener(() => {});
+        browser.test.sendMessage("ready");
+      },
+    });
+
+    const EVENTS = ["onCreated", "onRemoved", "onChanged", "onMoved"];
+    await PlacesUtils.bookmarks.eraseEverything();
+
+    await extension.startup();
+    await extension.awaitMessage("ready");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "bookmarks", event, {
+        primed: false,
+      });
+    }
+
+    // test events waken background
+    await extension.terminateBackground();
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "bookmarks", event, {
+        primed: true,
+      });
+    }
+
+    let bookmark = {
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: `http://example.com/12345`,
+      title: `My bookmark 12345`,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    };
+    await PlacesUtils.bookmarks.insert(bookmark);
+
+    await extension.awaitMessage("ready");
+    await extension.awaitMessage("onCreated");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "bookmarks", event, {
+        primed: false,
+      });
+    }
+
+    await AddonTestUtils.promiseRestartManager();
+    await extension.awaitStartup();
+
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "bookmarks", event, {
+        primed: true,
+      });
+    }
+
+    await PlacesUtils.bookmarks.eraseEverything();
+    await extension.awaitMessage("ready");
+    await extension.awaitMessage("onRemoved");
+
+    await extension.unload();
+    await AddonTestUtils.promiseShutdownManager();
+  }
+);
