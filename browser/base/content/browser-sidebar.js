@@ -10,37 +10,44 @@ var SidebarUI = {
     if (this._sidebars) {
       return this._sidebars;
     }
+
+    function makeSidebar({ elementId, ...rest }) {
+      return {
+        get sourceL10nEl() {
+          return document.getElementById(elementId);
+        },
+        get title() {
+          return document.getElementById(elementId).getAttribute("label");
+        },
+        ...rest,
+      };
+    }
+
     return (this._sidebars = new Map([
       [
         "viewBookmarksSidebar",
-        {
-          title: document
-            .getElementById("sidebar-switcher-bookmarks")
-            .getAttribute("label"),
+        makeSidebar({
+          elementId: "sidebar-switcher-bookmarks",
           url: "chrome://browser/content/places/bookmarksSidebar.xhtml",
           menuId: "menu_bookmarksSidebar",
-        },
+        }),
       ],
       [
         "viewHistorySidebar",
-        {
-          title: document
-            .getElementById("sidebar-switcher-history")
-            .getAttribute("label"),
+        makeSidebar({
+          elementId: "sidebar-switcher-history",
           url: "chrome://browser/content/places/historySidebar.xhtml",
           menuId: "menu_historySidebar",
           triggerButtonId: "appMenuViewHistorySidebar",
-        },
+        }),
       ],
       [
         "viewTabsSidebar",
-        {
-          title: document
-            .getElementById("sidebar-switcher-tabs")
-            .getAttribute("label"),
+        makeSidebar({
+          elementId: "sidebar-switcher-tabs",
           url: "chrome://browser/content/syncedtabs/sidebar.xhtml",
           menuId: "menu_tabsSidebar",
-        },
+        }),
       ],
     ]));
   },
@@ -76,6 +83,11 @@ var SidebarUI = {
   _switcherTarget: null,
   _switcherArrow: null,
   _inited: false,
+
+  /**
+   * @type {MutationObserver | null}
+   */
+  _observer: null,
 
   _initDeferred: PromiseUtils.defer(),
 
@@ -133,6 +145,36 @@ var SidebarUI = {
       xulStore.persist(this._box, "width");
       xulStore.persist(this._title, "value");
     }
+
+    if (this._observer) {
+      this._observer.disconnect();
+      this._observer = null;
+    }
+  },
+
+  /**
+   * Ensure the title stays in sync with the source element, which updates for
+   * l10n changes.
+   *
+   * @param {HTMLElement} [element]
+   */
+  observeTitleChanges(element) {
+    if (!element) {
+      return;
+    }
+    let observer = this._observer;
+    if (!observer) {
+      observer = new MutationObserver(() => {
+        this.title = this.sidebars.get(this.lastOpenedId).title;
+      });
+      // Re-use the observer.
+      this._observer = observer;
+    }
+    observer.disconnect();
+    observer.observe(element, {
+      attributes: true,
+      attributeFilter: ["label"],
+    });
   },
 
   /**
@@ -509,8 +551,10 @@ var SidebarUI = {
       this._box.setAttribute("sidebarcommand", commandID);
       this.lastOpenedId = commandID;
 
-      let { url, title } = this.sidebars.get(commandID);
+      let { url, title, sourceL10nEl } = this.sidebars.get(commandID);
       this.title = title;
+      // Keep the title element in sync with any l10n changes.
+      this.observeTitleChanges(sourceL10nEl);
       this.browser.setAttribute("src", url); // kick off async load
 
       if (this.browser.contentDocument.location.href != url) {
