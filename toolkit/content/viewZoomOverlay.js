@@ -13,16 +13,6 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomManager = {
-  get MIN() {
-    delete this.MIN;
-    return (this.MIN = Services.prefs.getIntPref("zoom.minPercent") / 100);
-  },
-
-  get MAX() {
-    delete this.MAX;
-    return (this.MAX = Services.prefs.getIntPref("zoom.maxPercent") / 100);
-  },
-
   get useFullZoom() {
     return Services.prefs.getBoolPref("browser.zoom.full");
   },
@@ -72,25 +62,6 @@ var ZoomManager = {
     }
   },
 
-  get zoomValues() {
-    var zoomValues = Services.prefs
-      .getCharPref("toolkit.zoomManager.zoomValues")
-      .split(",")
-      .map(parseFloat);
-    zoomValues.sort((a, b) => a - b);
-
-    while (zoomValues[0] < this.MIN) {
-      zoomValues.shift();
-    }
-
-    while (zoomValues[zoomValues.length - 1] > this.MAX) {
-      zoomValues.pop();
-    }
-
-    delete this.zoomValues;
-    return (this.zoomValues = zoomValues);
-  },
-
   enlarge: function ZoomManager_enlarge() {
     var i = this.zoomValues.indexOf(this.snap(this.zoom)) + 1;
     if (i < this.zoomValues.length) {
@@ -129,3 +100,42 @@ var ZoomManager = {
     return values[i - 1];
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ZoomManager,
+  "MIN",
+  "zoom.minPercent",
+  30,
+  null,
+  v => v / 100
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  ZoomManager,
+  "MAX",
+  "zoom.maxPercent",
+  500,
+  null,
+  v => v / 100
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ZoomManager,
+  "zoomValues",
+  "toolkit.zoomManager.zoomValues",
+  ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4,5",
+  null,
+  zoomValues => {
+    zoomValues = zoomValues.split(",").map(parseFloat);
+    zoomValues.sort((a, b) => a - b);
+
+    while (zoomValues[0] < this.MIN) {
+      zoomValues.shift();
+    }
+
+    while (zoomValues[zoomValues.length - 1] > this.MAX) {
+      zoomValues.pop();
+    }
+
+    return zoomValues;
+  }
+);
