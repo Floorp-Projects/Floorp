@@ -448,6 +448,10 @@ nsresult HttpConnectionUDP::ForceSend() {
 
 HttpVersion HttpConnectionUDP::Version() { return HttpVersion::v3_0; }
 
+PRIntervalTime HttpConnectionUDP::LastWriteTime() {
+  return mHttp3Session->LastWriteTime();
+}
+
 //-----------------------------------------------------------------------------
 // HttpConnectionUDP <private>
 //-----------------------------------------------------------------------------
