@@ -222,6 +222,13 @@ class HistoryMetadataGroupControllerTest {
             }
             metrics.track(Event.HistorySearchTermGroupRemoveTab)
         }
+        coVerify {
+            abnormalList.forEach {
+                store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
+                historyStorage.deleteVisitsFor(it.url)
+            }
+            metrics.track(Event.HistorySearchTermGroupRemoveTab)
+        }
         // Here we expect the action to be dispatched, because deleted items include the items
         // provided by getMetadataItemsList(), so that the store becomes empty and the event
         // should be sent
