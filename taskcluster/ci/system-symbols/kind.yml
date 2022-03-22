@@ -22,6 +22,9 @@ job-defaults:
         kind: other
         tier: 2
     worker-type: b-linux
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
 
 jobs:
     mac:

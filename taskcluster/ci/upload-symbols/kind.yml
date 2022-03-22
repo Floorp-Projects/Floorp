@@ -38,6 +38,7 @@ job-template:
             # {level} gets replaced in the upload_symbols transform
             SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
             MAKECAB: /builds/worker/fetches/makecab/makecab
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     run:
         using: mach
         mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/build/target.crashreporter-symbols-full.tar.zst>"}
