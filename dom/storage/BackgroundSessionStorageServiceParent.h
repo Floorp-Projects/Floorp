@@ -16,6 +16,9 @@ class BackgroundSessionStorageServiceParent final
  public:
   NS_INLINE_DECL_REFCOUNTING(BackgroundSessionStorageServiceParent, override)
 
+  mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
+      const nsACString& aOriginAttrs, const nsACString& aOriginKey);
+
  private:
   ~BackgroundSessionStorageServiceParent() = default;
 };

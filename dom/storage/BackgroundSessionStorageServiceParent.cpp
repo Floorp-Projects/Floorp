@@ -6,4 +6,24 @@
 
 #include "mozilla/dom/BackgroundSessionStorageServiceParent.h"
 
-namespace mozilla::dom {}  // namespace mozilla::dom
+#include "mozilla/dom/SessionStorageManager.h"
+#include "mozilla/ipc/BackgroundParent.h"
+
+namespace mozilla::dom {
+
+using namespace mozilla::ipc;
+
+mozilla::ipc::IPCResult
+BackgroundSessionStorageServiceParent::RecvClearStoragesForOrigin(
+    const nsACString& aOriginAttrs, const nsACString& aOriginKey) {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (!mozilla::dom::RecvClearStoragesForOrigin(aOriginAttrs, aOriginKey)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
+}
+
+}  // namespace mozilla::dom
