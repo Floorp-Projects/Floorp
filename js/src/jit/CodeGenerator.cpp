@@ -8178,24 +8178,9 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
   }
 }
 
-void CodeGenerator::visitWasmLoadTableElement(LWasmLoadTableElement* ins) {
-  Register elements = ToRegister(ins->elements());
-  Register index = ToRegister(ins->index());
-  Register output = ToRegister(ins->output());
-  masm.loadPtr(BaseIndex(elements, index, ScalePointer), output);
-}
-
 void CodeGenerator::visitWasmDerivedPointer(LWasmDerivedPointer* ins) {
   masm.movePtr(ToRegister(ins->base()), ToRegister(ins->output()));
   masm.addPtr(Imm32(int32_t(ins->offset())), ToRegister(ins->output()));
-}
-
-void CodeGenerator::visitWasmDerivedIndexPointer(
-    LWasmDerivedIndexPointer* ins) {
-  Register base = ToRegister(ins->base());
-  Register index = ToRegister(ins->index());
-  Register output = ToRegister(ins->output());
-  masm.computeEffectiveAddress(BaseIndex(base, index, ins->scale()), output);
 }
 
 void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
