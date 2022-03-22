@@ -420,7 +420,7 @@ void AudioSink::NotifyAudioNeeded() {
     }
   }
 
-  if (mAudioQueue.IsFinished()) {
+  if (mAudioQueue.IsFinished() && mAudioQueue.GetSize() == 0) {
     // We have reached the end of the data, drain the resampler.
     DrainConverter(SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
     mProcessedQueueFinished = true;
