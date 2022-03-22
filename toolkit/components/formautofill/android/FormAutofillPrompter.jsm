@@ -49,19 +49,13 @@ let FormAutofillPrompter = {
     let newCreditCard;
     if (creditCard.guid) {
       let originalCCData = await storage.creditCards.get(creditCard.guid);
-
-      newCreditCard = CreditCard.fromGecko(originalCCData || creditCard.record);
-      newCreditCard.record.name = creditCard.record.name;
-      newCreditCard.record.number = creditCard.record.number;
-      newCreditCard.record.expMonth = creditCard.record.expMonth;
-      newCreditCard.record.expYear = creditCard.record.expYear;
-      newCreditCard.record.type = creditCard.record.type;
+      newCreditCard = { ...originalCCData, ...creditCard.record };
     } else {
-      newCreditCard = creditCard;
+      newCreditCard = creditCard.record;
     }
 
     prompt.asyncShowPrompt(
-      this._createMessage([CreditCard.fromGecko(newCreditCard.record)]),
+      this._createMessage([CreditCard.fromGecko(newCreditCard)]),
       result => {
         const selectedCreditCard = result?.selection?.value;
 
