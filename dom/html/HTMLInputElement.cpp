@@ -3773,41 +3773,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         case eKeyPress: {
           if (mType == FormControlType::InputRadio && !keyEvent->IsAlt() &&
               !keyEvent->IsControl() && !keyEvent->IsMeta()) {
-            bool isMovingBack = false;
-            switch (keyEvent->mKeyCode) {
-              case NS_VK_UP:
-              case NS_VK_LEFT:
-                isMovingBack = true;
-                [[fallthrough]];
-              case NS_VK_DOWN:
-              case NS_VK_RIGHT:
-                // Arrow key pressed, focus+select prev/next radio button
-                nsIRadioGroupContainer* container = GetRadioGroupContainer();
-                if (container) {
-                  nsAutoString name;
-                  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-                  RefPtr<HTMLInputElement> selectedRadioButton;
-                  container->GetNextRadioButton(
-                      name, isMovingBack, this,
-                      getter_AddRefs(selectedRadioButton));
-                  if (selectedRadioButton) {
-                    FocusOptions options;
-                    ErrorResult error;
-
-                    selectedRadioButton->Focus(options, CallerType::System,
-                                               error);
-                    rv = error.StealNSResult();
-                    if (NS_SUCCEEDED(rv)) {
-                      rv = DispatchSimulatedClick(selectedRadioButton,
-                                                  aVisitor.mEvent->IsTrusted(),
-                                                  aVisitor.mPresContext);
-                      if (NS_SUCCEEDED(rv)) {
-                        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-                      }
-                    }
-                  }
-                }
-            }
+            rv = MaybeHandleRadioButtonNavigation(aVisitor, keyEvent->mKeyCode);
           }
 
           /*
@@ -4098,6 +4064,52 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   return MaybeInitPickers(aVisitor);
+}
+
+enum class RadioButtonMove { Back, Forward, None };
+nsresult HTMLInputElement::MaybeHandleRadioButtonNavigation(
+    EventChainPostVisitor& aVisitor, uint32_t aKeyCode) {
+  auto move = [&] {
+    switch (aKeyCode) {
+      case NS_VK_UP:
+        return RadioButtonMove::Back;
+      case NS_VK_DOWN:
+        return RadioButtonMove::Forward;
+      case NS_VK_LEFT:
+      case NS_VK_RIGHT: {
+        const bool isRtl = GetComputedDirectionality() == eDir_RTL;
+        return isRtl == (aKeyCode == NS_VK_LEFT) ? RadioButtonMove::Forward
+                                                 : RadioButtonMove::Back;
+      }
+    }
+    return RadioButtonMove::None;
+  }();
+  if (move == RadioButtonMove::None) {
+    return NS_OK;
+  }
+  // Arrow key pressed, focus+select prev/next radio button
+  RefPtr<HTMLInputElement> selectedRadioButton;
+  if (nsIRadioGroupContainer* container = GetRadioGroupContainer()) {
+    nsAutoString name;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+    container->GetNextRadioButton(name, move == RadioButtonMove::Back, this,
+                                  getter_AddRefs(selectedRadioButton));
+  }
+  if (!selectedRadioButton) {
+    return NS_OK;
+  }
+  FocusOptions options;
+  ErrorResult error;
+  selectedRadioButton->Focus(options, CallerType::System, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
+  nsresult rv = DispatchSimulatedClick(
+      selectedRadioButton, aVisitor.mEvent->IsTrusted(), aVisitor.mPresContext);
+  if (NS_SUCCEEDED(rv)) {
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+  }
+  return rv;
 }
 
 void HTMLInputElement::PostHandleEventForRangeThumb(
