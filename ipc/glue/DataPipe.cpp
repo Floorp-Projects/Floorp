@@ -24,9 +24,12 @@ namespace data_pipe_detail {
 
 // Helper for queueing up actions to be run once the mutex has been unlocked.
 // Actions will be run in-order.
-class DataPipeAutoLock {
+class SCOPED_CAPABILITY DataPipeAutoLock {
  public:
-  explicit DataPipeAutoLock(Mutex& aMutex) : mMutex(aMutex) { mMutex.Lock(); }
+  explicit DataPipeAutoLock(Mutex& aMutex) CAPABILITY_ACQUIRE(aMutex)
+      : mMutex(aMutex) {
+    mMutex.Lock();
+  }
   DataPipeAutoLock(const DataPipeAutoLock&) = delete;
   DataPipeAutoLock& operator=(const DataPipeAutoLock&) = delete;
 
@@ -35,7 +38,7 @@ class DataPipeAutoLock {
     mActions.AppendElement(MakeUnique<Action<F>>(std::move(aAction)));
   }
 
-  ~DataPipeAutoLock() {
+  ~DataPipeAutoLock() CAPABILITY_RELEASE() {
     mMutex.Unlock();
     for (auto& action : mActions) {
       action->Run();
@@ -92,25 +95,30 @@ class DataPipeLink : public NodeController::PortObserver {
         mOffset(aOffset),
         mAvailable(aAvailable) {}
 
-  void Init() {
-    if (NS_SUCCEEDED(mPeerStatus)) {
+  void Init() EXCLUDES(*mMutex) {
+    {
+      DataPipeAutoLock lock(*mMutex);
+      if (NS_FAILED(mPeerStatus)) {
+        return;
+      }
       MOZ_ASSERT(mPort.IsValid());
       mPort.Controller()->SetPortObserver(mPort.Port(), this);
-      OnPortStatusChanged();
     }
+    OnPortStatusChanged();
   }
 
-  void OnPortStatusChanged() final;
+  void OnPortStatusChanged() final EXCLUDES(*mMutex);
 
   // Add a task to notify the callback after `aLock` is unlocked.
   //
   // This method is safe to call multiple times, as after the first time it is
   // called, `mCallback` will be cleared.
-  void NotifyOnUnlock(DataPipeAutoLock& aLock) {
+  void NotifyOnUnlock(DataPipeAutoLock& aLock) REQUIRES(*mMutex) {
     DoNotifyOnUnlock(aLock, mCallback.forget(), mCallbackTarget.forget());
   }
 
-  void SendBytesConsumedOnUnlock(DataPipeAutoLock& aLock, uint32_t aBytes) {
+  void SendBytesConsumedOnUnlock(DataPipeAutoLock& aLock, uint32_t aBytes)
+      REQUIRES(*mMutex) {
     MOZ_LOG(gDataPipeLog, LogLevel::Verbose,
             ("SendOnUnlock CONSUMED(%u) %s", aBytes, Describe(aLock).get()));
     if (NS_FAILED(mPeerStatus)) {
@@ -133,7 +141,7 @@ class DataPipeLink : public NodeController::PortObserver {
   }
 
   void SetPeerError(DataPipeAutoLock& aLock, nsresult aStatus,
-                    bool aSendClosed = false) {
+                    bool aSendClosed = false) REQUIRES(*mMutex) {
     MOZ_LOG(gDataPipeLog, LogLevel::Debug,
             ("SetPeerError(%s%s) %s", GetStaticErrorName(aStatus),
              aSendClosed ? ", send" : "", Describe(aLock).get()));
@@ -155,7 +163,7 @@ class DataPipeLink : public NodeController::PortObserver {
     NotifyOnUnlock(aLock);
   }
 
-  nsCString Describe(DataPipeAutoLock& aLock) const {
+  nsCString Describe(DataPipeAutoLock& aLock) const REQUIRES(*mMutex) {
     return nsPrintfCString(
         "[%s(%p) c=%u e=%s o=%u a=%u, cb=%s]",
         mReceiverSide ? "Receiver" : "Sender", this, mCapacity,
@@ -167,20 +175,20 @@ class DataPipeLink : public NodeController::PortObserver {
   // `DataPipeLink`.
   std::shared_ptr<Mutex> mMutex;
 
-  ScopedPort mPort;
+  ScopedPort mPort GUARDED_BY(*mMutex);
   const RefPtr<SharedMemory> mShmem;
   const uint32_t mCapacity;
   const bool mReceiverSide;
 
-  bool mProcessingSegment = false;
+  bool mProcessingSegment GUARDED_BY(*mMutex) = false;
 
-  nsresult mPeerStatus = NS_OK;
-  uint32_t mOffset = 0;
-  uint32_t mAvailable = 0;
+  nsresult mPeerStatus GUARDED_BY(*mMutex) = NS_OK;
+  uint32_t mOffset GUARDED_BY(*mMutex) = 0;
+  uint32_t mAvailable GUARDED_BY(*mMutex) = 0;
 
-  bool mCallbackClosureOnly = false;
-  nsCOMPtr<nsIRunnable> mCallback;
-  nsCOMPtr<nsIEventTarget> mCallbackTarget;
+  bool mCallbackClosureOnly GUARDED_BY(*mMutex) = false;
+  nsCOMPtr<nsIRunnable> mCallback GUARDED_BY(*mMutex);
+  nsCOMPtr<nsIEventTarget> mCallbackTarget GUARDED_BY(*mMutex);
 };
 
 void DataPipeLink::OnPortStatusChanged() {
@@ -275,6 +283,7 @@ void DataPipeBase::CloseInternal(DataPipeAutoLock& aLock, nsresult aStatus) {
   // Set our status to an errored status.
   mStatus = NS_SUCCEEDED(aStatus) ? NS_BASE_STREAM_CLOSED : aStatus;
   RefPtr<DataPipeLink> link = mLink.forget();
+  AssertSameMutex(link->mMutex);
   link->NotifyOnUnlock(aLock);
 
   // If our peer hasn't disappeared yet, clean up our connection to it.
@@ -304,29 +313,33 @@ nsresult DataPipeBase::ProcessSegmentsInternal(
       return status == NS_BASE_STREAM_CLOSED ? NS_OK : status;
     }
 
-    if (!mLink->mAvailable) {
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mLink->mPeerStatus),
+    RefPtr<DataPipeLink> link = mLink;
+    AssertSameMutex(link->mMutex);
+    if (!link->mAvailable) {
+      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(link->mPeerStatus),
                             "CheckStatus will have returned an error");
       return *aProcessedCount > 0 ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    MOZ_RELEASE_ASSERT(!mLink->mProcessingSegment,
+    MOZ_RELEASE_ASSERT(!link->mProcessingSegment,
                        "Only one thread may be processing a segment at a time");
 
     // Extract an iterator over the next contiguous region of the shared memory
     // buffer which will be used .
-    char* start = static_cast<char*>(mLink->mShmem->memory()) + mLink->mOffset;
+    char* start = static_cast<char*>(link->mShmem->memory()) + link->mOffset;
     char* iter = start;
-    char* end = start + std::min({aCount, mLink->mAvailable,
-                                  mLink->mCapacity - mLink->mOffset});
+    char* end = start + std::min({aCount, link->mAvailable,
+                                  link->mCapacity - link->mOffset});
 
     // Record the consumed region from our segment when exiting this scope,
     // telling our peer how many bytes were consumed. Hold on to `mLink` to keep
     // the shmem mapped and make sure we can clean up even if we're closed while
     // processing the shmem region.
-    RefPtr<DataPipeLink> link = mLink;
     link->mProcessingSegment = true;
     auto scopeExit = MakeScopeExit([&] {
+      mMutex->AssertCurrentThreadOwns();  // should still be held
+      AssertSameMutex(link->mMutex);
+
       MOZ_RELEASE_ASSERT(link->mProcessingSegment);
       link->mProcessingSegment = false;
       uint32_t totalProcessed = iter - start;
@@ -375,10 +388,17 @@ void DataPipeBase::AsyncWaitInternal(already_AddRefed<nsIRunnable> aCallback,
            callback.get(), Describe(lock).get()));
 
   if (NS_FAILED(CheckStatus(lock))) {
-    MOZ_ASSERT_IF(mLink, !mLink->mCallback);
+#ifdef DEBUG
+    if (mLink) {
+      AssertSameMutex(mLink->mMutex);
+      MOZ_ASSERT(!mLink->mCallback);
+    }
+#endif
     DoNotifyOnUnlock(lock, callback.forget(), target.forget());
     return;
   }
+
+  AssertSameMutex(mLink->mMutex);
 
   // NOTE: After this point, `mLink` may have previously had a callback which is
   // now being cancelled, make sure we clear `mCallback` even if we're going to
@@ -400,7 +420,11 @@ nsresult DataPipeBase::CheckStatus(DataPipeAutoLock& aLock) {
   // NOTE: There may still be 2-stage writes/reads ongoing at this point, which
   // will continue due to `mLink` being kept alive by the
   // `ProcessSegmentsInternal` function.
-  if (NS_SUCCEEDED(mStatus) && NS_FAILED(mLink->mPeerStatus) &&
+  if (NS_FAILED(mStatus)) {
+    return mStatus;
+  }
+  AssertSameMutex(mLink->mMutex);
+  if (NS_FAILED(mLink->mPeerStatus) &&
       (!mLink->mReceiverSide || !mLink->mAvailable)) {
     CloseInternal(aLock, mLink->mPeerStatus);
   }
@@ -409,6 +433,7 @@ nsresult DataPipeBase::CheckStatus(DataPipeAutoLock& aLock) {
 
 nsCString DataPipeBase::Describe(DataPipeAutoLock& aLock) {
   if (mLink) {
+    AssertSameMutex(mLink->mMutex);
     return mLink->Describe(aLock);
   }
   return nsPrintfCString("[status=%s]", GetStaticErrorName(mStatus));
@@ -425,6 +450,7 @@ void DataPipeWrite(IPC::MessageWriter* aWriter, T* aParam) {
     return;
   }
 
+  aParam->AssertSameMutex(aParam->mLink->mMutex);
   MOZ_RELEASE_ASSERT(!aParam->mLink->mProcessingSegment,
                      "cannot transfer while processing a segment");
 
@@ -575,6 +601,7 @@ NS_IMETHODIMP DataPipeReceiver::Available(uint64_t* _retval) {
   if (NS_FAILED(rv)) {
     return rv;
   }
+  AssertSameMutex(mLink->mMutex);
   *_retval = mLink->mAvailable;
   return NS_OK;
 }
