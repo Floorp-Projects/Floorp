@@ -728,7 +728,7 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
   }
 
   // try to use ICC profile
-  if (icc.size() > 0 && !jxl_save_opts.is_gray) {
+  if (!icc.empty() && !jxl_save_opts.is_gray) {
     if (JXL_ENC_SUCCESS ==
         JxlEncoderSetICCProfile(enc.get(), icc.data(), icc.size())) {
       jxl_save_opts.icc_attached = true;

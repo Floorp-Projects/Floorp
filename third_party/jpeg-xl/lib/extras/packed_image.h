@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -39,7 +40,7 @@ class PackedImage {
         stride(stride),
         format(format),
         pixels_size(ysize * stride),
-        pixels_(malloc(pixels_size), free) {}
+        pixels_(malloc(std::max<size_t>(1, pixels_size)), free) {}
   // Construct the image using the passed pixel buffer. The buffer is owned by
   // this object and released with free().
   PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format,

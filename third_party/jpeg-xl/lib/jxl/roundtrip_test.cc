@@ -38,8 +38,7 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   jxl::CodecInOut io;
   io.SetSize(xsize, ysize);
 
-  bool is_gray =
-      pixel_format.num_channels == 1 || pixel_format.num_channels == 2;
+  bool is_gray = pixel_format.num_channels < 3;
   bool has_alpha =
       pixel_format.num_channels == 2 || pixel_format.num_channels == 4;
 
@@ -98,13 +97,13 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   } else {
     color_encoding = jxl::ColorEncoding::SRGB(is_gray);
   }
-  EXPECT_TRUE(
-      ConvertFromExternal(jxl::Span<const uint8_t>(buf.data(), buf.size()),
-                          xsize, ysize, color_encoding, has_alpha,
-                          /*alpha_is_premultiplied=*/false,
-                          /*bits_per_sample=*/bitdepth, pixel_format.endianness,
-                          /*flipped_y=*/false, /*pool=*/nullptr, &io.Main(),
-                          float_in, /*align=*/0));
+  EXPECT_TRUE(ConvertFromExternal(
+      jxl::Span<const uint8_t>(buf.data(), buf.size()), xsize, ysize,
+      color_encoding, pixel_format.num_channels,
+      /*alpha_is_premultiplied=*/false,
+      /*bits_per_sample=*/bitdepth, pixel_format.endianness,
+      /*flipped_y=*/false, /*pool=*/nullptr, &io.Main(), float_in,
+      /*align=*/0));
   return io;
 }
 

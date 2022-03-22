@@ -48,7 +48,9 @@ namespace {
 template <typename T>
 void AppendJxlpBoxCounter(uint32_t counter, bool last, T* output) {
   if (last) counter |= 0x80000000;
-  StoreBE32(counter, jxl::Extend(output, 4));
+  for (size_t i = 0; i < 4; i++) {
+    output->push_back(counter >> (8 * (3 - i)) & 0xff);
+  }
 }
 
 void QueueFrame(
@@ -280,7 +282,7 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
         bytes.clear();
       }
 
-      if (store_jpeg_metadata && jpeg_metadata.size() > 0) {
+      if (store_jpeg_metadata && !jpeg_metadata.empty()) {
         jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_metadata.size(),
                              false, &output_byte_queue);
         output_byte_queue.insert(output_byte_queue.end(), jpeg_metadata.begin(),
@@ -452,6 +454,9 @@ JxlEncoderStatus JxlEncoderSetColorEncoding(JxlEncoder* enc,
     return JXL_ENC_ERROR;
   }
   enc->color_encoding_set = true;
+  if (!enc->intensity_target_set) {
+    jxl::SetIntensityTarget(&enc->metadata.m);
+  }
   return JXL_ENC_SUCCESS;
 }
 
@@ -468,6 +473,9 @@ JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
     return JXL_ENC_ERROR;
   }
   enc->color_encoding_set = true;
+  if (!enc->intensity_target_set) {
+    jxl::SetIntensityTarget(&enc->metadata.m);
+  }
   return JXL_ENC_SUCCESS;
 }
 
@@ -477,7 +485,7 @@ void JxlEncoderInitBasicInfo(JxlBasicInfo* info) {
   info->ysize = 0;
   info->bits_per_sample = 8;
   info->exponent_bits_per_sample = 0;
-  info->intensity_target = 255.f;
+  info->intensity_target = 0.f;
   info->min_nits = 0.f;
   info->relative_to_max_display = JXL_FALSE;
   info->linear_below = 0.f;
@@ -582,7 +590,16 @@ JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
   } else {
     return JXL_API_ERROR("Invalid value for orientation field");
   }
-  enc->metadata.m.SetIntensityTarget(info->intensity_target);
+  if (info->intensity_target != 0) {
+    enc->metadata.m.SetIntensityTarget(info->intensity_target);
+    enc->intensity_target_set = true;
+  } else if (enc->color_encoding_set || enc->metadata.m.xyb_encoded) {
+    // If both conditions are false, JxlEncoderSetColorEncoding will be called
+    // later and we will get one more chance to call jxl::SetIntensityTarget,
+    // after the color encoding is indeed set.
+    jxl::SetIntensityTarget(&enc->metadata.m);
+    enc->intensity_target_set = true;
+  }
   enc->metadata.m.tone_mapping.min_nits = info->min_nits;
   enc->metadata.m.tone_mapping.relative_to_max_display =
       info->relative_to_max_display;
@@ -780,9 +797,6 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       if (value != -1 && value != 1 && value != 2 && value != 4 && value != 8) {
         return JXL_ENC_ERROR;
       }
-      // The implementation doesn't support the default choice between 1x1 and
-      // 2x2 for extra channels, so 1x1 is set as the default.
-      if (value == -1) value = 1;
       frame_settings->values.cparams.ec_resampling = value;
       return JXL_ENC_SUCCESS;
     case JXL_ENC_FRAME_SETTING_ALREADY_DOWNSAMPLED:
@@ -994,6 +1008,7 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->num_queued_boxes = 0;
   enc->encoder_options.clear();
   enc->output_byte_queue.clear();
+  enc->output_bytes_flushed = 0;
   enc->wrote_bytes = false;
   enc->jxlp_counter = 0;
   enc->metadata = jxl::CodecMetadata();
@@ -1002,6 +1017,7 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->boxes_closed = false;
   enc->basic_info_set = false;
   enc->color_encoding_set = false;
+  enc->intensity_target_set = false;
   enc->use_container = false;
   enc->use_boxes = false;
   enc->codestream_level = 5;
@@ -1331,10 +1347,10 @@ JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
          (!enc->output_byte_queue.empty() || !enc->input_queue.empty())) {
     if (!enc->output_byte_queue.empty()) {
       size_t to_copy = std::min(*avail_out, enc->output_byte_queue.size());
-      memcpy(static_cast<void*>(*next_out), enc->output_byte_queue.data(),
-             to_copy);
+      std::copy_n(enc->output_byte_queue.begin(), to_copy, *next_out);
       *next_out += to_copy;
       *avail_out -= to_copy;
+      enc->output_bytes_flushed += to_copy;
       enc->output_byte_queue.erase(enc->output_byte_queue.begin(),
                                    enc->output_byte_queue.begin() + to_copy);
     } else if (!enc->input_queue.empty()) {

@@ -11,6 +11,7 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/fast_math-inl.h"
+#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -141,7 +142,7 @@ class AddNoiseStage : public RenderPipelineStage {
   AddNoiseStage(const NoiseParams& noise_params,
                 const ColorCorrelationMap& cmap, size_t first_c)
       : RenderPipelineStage(RenderPipelineStage::Settings::Symmetric(
-            /*shift=*/0, /*border=*/2)),
+            /*shift=*/0, /*border=*/0)),
         noise_params_(noise_params),
         cmap_(cmap),
         first_c_(first_c) {}
@@ -179,7 +180,7 @@ class AddNoiseStage : public RenderPipelineStage {
     // shuffles are otherwise done on the data, so this is safe.
     msan::UnpoisonMemory(row_x + xsize, (xsize_v - xsize) * sizeof(float));
     msan::UnpoisonMemory(row_y + xsize, (xsize_v - xsize) * sizeof(float));
-    for (size_t x = 0; x < xsize; x += Lanes(d)) {
+    for (size_t x = 0; x < xsize_v; x += Lanes(d)) {
       const auto vx = Load(d, row_x + x);
       const auto vy = Load(d, row_y + x);
       const auto in_g = vy - vx;
@@ -205,6 +206,8 @@ class AddNoiseStage : public RenderPipelineStage {
            : c < 3       ? RenderPipelineChannelMode::kInPlace
                          : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "AddNoise"; }
 
  private:
   const NoiseParams& noise_params_;
@@ -237,8 +240,8 @@ class ConvolveNoiseStage : public RenderPipelineStage {
         rows[i] = GetInputRow(input_rows, c, i - 2);
       }
       float* JXL_RESTRICT row_out = GetOutputRow(output_rows, c, 0);
-      for (int64_t x = -RoundUpTo(xextra, Lanes(d));
-           x < (int64_t)(xsize + xextra); x += Lanes(d)) {
+      for (ssize_t x = -RoundUpTo(xextra, Lanes(d));
+           x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
         const auto p00 = Load(d, rows[2] + x);
         auto others = Zero(d);
         for (ssize_t i = -2; i <= 2; i++) {
@@ -262,6 +265,8 @@ class ConvolveNoiseStage : public RenderPipelineStage {
     return c >= first_c_ ? RenderPipelineChannelMode::kInOut
                          : RenderPipelineChannelMode::kIgnored;
   }
+
+  const char* GetName() const override { return "ConvNoise"; }
 
  private:
   size_t first_c_;

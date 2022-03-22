@@ -102,7 +102,8 @@ Tree MakeFixedTree(int property, const std::vector<int32_t>& cutoffs,
 }
 
 Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels) {
-  if (tree_kind == ModularOptions::TreeKind::kJpegTranscodeACMeta) {
+  if (tree_kind == ModularOptions::TreeKind::kJpegTranscodeACMeta ||
+      tree_kind == ModularOptions::TreeKind::kTrivialTreeNoPredictor) {
     // All the data is 0, so no need for a fancy tree.
     return {PropertyDecisionNode::Leaf(Predictor::Zero)};
   }
@@ -320,6 +321,12 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
       }
     }
   }
+  if (cparams.decoding_speed_tier >= 1 && cparams.responsive &&
+      cparams.quality_pair == std::make_pair(100.f, 100.f)) {
+    cparams.options.tree_kind =
+        ModularOptions::TreeKind::kTrivialTreeNoPredictor;
+    cparams.options.nb_repeats = 0;
+  }
   stream_images.resize(num_streams);
   if (cquality > 100) cquality = quality;
 
@@ -434,9 +441,14 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
 
 bool do_transform(Image& image, const Transform& tr,
                   const weighted::Header& wp_header,
-                  jxl::ThreadPool* pool = nullptr) {
+                  jxl::ThreadPool* pool = nullptr, bool force_jxlart = false) {
   Transform t = tr;
-  bool did_it = TransformForward(t, image, wp_header, pool);
+  bool did_it = true;
+  if (force_jxlart) {
+    if (!t.MetaApply(image)) return false;
+  } else {
+    did_it = TransformForward(t, image, wp_header, pool);
+  }
   if (did_it) image.transform.push_back(t);
   return did_it;
 }
@@ -453,7 +465,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
   }
 
   if (do_color && metadata.bit_depth.bits_per_sample <= 16 &&
-      cparams.speed_tier < SpeedTier::kCheetah) {
+      cparams.speed_tier < SpeedTier::kCheetah &&
+      cparams.decoding_speed_tier < 2) {
     FindBestPatchDictionary(*color, enc_state, cms, nullptr, aux_out,
                             cparams.color_transform == ColorTransform::kXYB);
     PatchDictionaryEncoder::SubtractFrom(
@@ -492,7 +505,12 @@ Status ModularFrameEncoder::ComputeEncodingData(
   if (cparams.color_transform == ColorTransform::kXYB &&
       cparams.modular_mode == true) {
     static const float enc_factors[3] = {32768.0f, 2048.0f, 2048.0f};
-    DequantMatricesSetCustomDC(&enc_state->shared.matrices, enc_factors);
+    if (cparams.manual_xyb_factors.size() == 3) {
+      DequantMatricesSetCustomDC(&enc_state->shared.matrices,
+                                 cparams.manual_xyb_factors.data());
+    } else {
+      DequantMatricesSetCustomDC(&enc_state->shared.matrices, enc_factors);
+    }
   }
   pixel_type maxval = gi.bitdepth < 32 ? (1u << gi.bitdepth) - 1 : 0;
   if (do_color) {
@@ -665,7 +683,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
       }
       // TODO(veluca): use a custom weighted header if using the weighted
       // predictor.
-      do_transform(gi, maybe_palette, weighted::Header(), pool);
+      do_transform(gi, maybe_palette, weighted::Header(), pool,
+                   cparams.options.zero_tokens);
     }
     // all-minus-one-channel palette (RGB with separate alpha, or CMY with
     // separate K)
@@ -680,7 +699,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
       if (maybe_palette_3.lossy_palette) {
         maybe_palette_3.predictor = delta_pred;
       }
-      do_transform(gi, maybe_palette_3, weighted::Header(), pool);
+      do_transform(gi, maybe_palette_3, weighted::Header(), pool,
+                   cparams.options.zero_tokens);
     }
   }
 
@@ -1103,6 +1123,17 @@ Status ModularFrameEncoder::EncodeGlobalInfo(BitWriter* writer,
   if (cparams.decoding_speed_tier >= 1) {
     params.max_histograms = 12;
   }
+  if (cparams.decoding_speed_tier >= 1 && cparams.responsive) {
+    params.lz77_method = cparams.speed_tier >= SpeedTier::kCheetah
+                             ? HistogramParams::LZ77Method::kRLE
+                         : cparams.speed_tier >= SpeedTier::kKitten
+                             ? HistogramParams::LZ77Method::kLZ77
+                             : HistogramParams::LZ77Method::kOptimal;
+  }
+  if (cparams.decoding_speed_tier >= 2 && cparams.responsive) {
+    params.uint_method = HistogramParams::HybridUintMethod::k000;
+    params.force_huffman = true;
+  }
   BuildAndEncodeHistograms(params, kNumTreeContexts, tree_tokens, &code,
                            &context_map, writer, kLayerModularTree, aux_out);
   WriteTokens(tree_tokens[0], code, context_map, writer, kLayerModularTree,
@@ -1291,7 +1322,8 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
 
     // Local channel palette
     if (cparams.channel_colors_percent > 0 && quality == 100 &&
-        !cparams.lossy_palette && cparams.speed_tier < SpeedTier::kCheetah) {
+        !cparams.lossy_palette && cparams.speed_tier < SpeedTier::kCheetah &&
+        !(cparams.responsive && cparams.decoding_speed_tier >= 1)) {
       // single channel palette (like FLIF's ChannelCompact)
       size_t nb_channels = gi.channel.size() - gi.nb_meta_channels;
       for (size_t i = 0; i < nb_channels; i++) {

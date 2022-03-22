@@ -37,6 +37,8 @@ class SpotColorStage : public RenderPipelineStage {
                           : RenderPipelineChannelMode::kIgnored;
   }
 
+  const char* GetName() const override { return "Spot"; }
+
  private:
   size_t spot_c_;
   const float* spot_color_;

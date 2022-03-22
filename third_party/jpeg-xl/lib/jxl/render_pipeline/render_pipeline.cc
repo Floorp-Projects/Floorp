@@ -36,24 +36,29 @@ std::unique_ptr<RenderPipeline> RenderPipeline::Builder::Finalize(
   } else {
     res = jxl::make_unique<LowMemoryRenderPipeline>();
   }
+
   res->padding_.resize(stages_.size());
-  std::vector<size_t> channel_border(num_c_);
-  for (size_t i = stages_.size(); i > 0; i--) {
-    const auto& stage = stages_[i - 1];
+  for (size_t i = stages_.size(); i-- > 0;) {
+    const auto& stage = stages_[i];
+    res->padding_[i].resize(num_c_);
+    if (i + 1 == stages_.size()) {
+      continue;
+    }
     for (size_t c = 0; c < num_c_; c++) {
       if (stage->GetChannelMode(c) == RenderPipelineChannelMode::kInOut) {
-        channel_border[c] = DivCeil(
-            channel_border[c],
-            1 << std::max(stage->settings_.shift_x, stage->settings_.shift_y));
-        channel_border[c] +=
-            std::max(stage->settings_.border_x, stage->settings_.border_y);
+        res->padding_[i][c].first = DivCeil(res->padding_[i + 1][c].first,
+                                            1 << stage->settings_.shift_x) +
+                                    stage->settings_.border_x;
+        res->padding_[i][c].second = DivCeil(res->padding_[i + 1][c].second,
+                                             1 << stage->settings_.shift_y) +
+                                     stage->settings_.border_y;
+      } else {
+        res->padding_[i][c] = res->padding_[i + 1][c];
       }
     }
-    res->padding_[i - 1] =
-        *std::max_element(channel_border.begin(), channel_border.end());
   }
+
   res->frame_dimensions_ = frame_dimensions;
-  res->uses_noise_ = uses_noise_;
   res->group_completed_passes_.resize(frame_dimensions.num_groups);
   res->channel_shifts_.resize(stages_.size());
   res->channel_shifts_[0].resize(num_c_);
@@ -75,10 +80,15 @@ std::unique_ptr<RenderPipeline> RenderPipeline::Builder::Finalize(
             res->channel_shifts_[i - 1][c].first - stage->settings_.shift_x;
         res->channel_shifts_[i][c].second =
             res->channel_shifts_[i - 1][c].second - stage->settings_.shift_y;
+      } else {
+        res->channel_shifts_[i][c].first = res->channel_shifts_[i - 1][c].first;
+        res->channel_shifts_[i][c].second =
+            res->channel_shifts_[i - 1][c].second;
       }
     }
   }
   res->stages_ = std::move(stages_);
+  res->Init();
   return res;
 }
 
@@ -106,7 +116,7 @@ void RenderPipeline::InputReady(
   ProcessBuffers(group_id, thread_id);
 }
 
-void RenderPipeline::PrepareForThreads(size_t num) {
+void RenderPipeline::PrepareForThreads(size_t num, bool use_group_ids) {
   temp_buffers_.resize(num);
   for (auto& thread_buffer : temp_buffers_) {
     size_t size = 0;
@@ -117,7 +127,7 @@ void RenderPipeline::PrepareForThreads(size_t num) {
       thread_buffer = AllocateArray(sizeof(float) * size);
     }
   }
-  PrepareForThreadsInternal(num);
+  PrepareForThreadsInternal(num, use_group_ids);
 }
 
 void RenderPipelineInput::Done() {

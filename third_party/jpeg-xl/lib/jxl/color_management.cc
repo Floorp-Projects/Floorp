@@ -499,8 +499,10 @@ Status MaybeCreateProfile(const ColorEncoding& c,
   // TODO(lode): manually verify with a reliable tool that this creates correct
   // signature (profile id) for ICC profiles.
   PaddedBytes icc_sum = *icc;
-  memset(icc_sum.data() + 44, 0, 4);
-  memset(icc_sum.data() + 64, 0, 4);
+  if (icc_sum.size() >= 64 + 4) {
+    memset(icc_sum.data() + 44, 0, 4);
+    memset(icc_sum.data() + 64, 0, 4);
+  }
   uint8_t checksum[16];
   ICCComputeMD5(icc_sum, checksum);
 

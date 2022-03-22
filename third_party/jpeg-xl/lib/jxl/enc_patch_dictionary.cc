@@ -783,12 +783,13 @@ void RoundtripPatchFrame(Image3F* reference_frame,
             state->shared.metadata->m.color_encoding.IsGray())));
     JXL_CHECK(DecodeFrame({}, &dec_state, pool, &br, &decoded,
                           *state->shared.metadata, /*constraints=*/nullptr));
+    size_t ref_xsize =
+        dec_state.shared_storage.reference_frames[idx].storage.color()->xsize();
     // if the frame itself uses patches, we need to decode another frame
-    if (!dec_state.shared_storage.reference_frames[idx]
-             .storage.color()
-             ->xsize())
+    if (!ref_xsize) {
       JXL_CHECK(DecodeFrame({}, &dec_state, pool, &br, &decoded,
                             *state->shared.metadata, /*constraints=*/nullptr));
+    }
     JXL_CHECK(br.Close());
     state->shared.reference_frames[idx] =
         std::move(dec_state.shared_storage.reference_frames[idx]);

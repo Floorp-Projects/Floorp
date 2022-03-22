@@ -185,33 +185,20 @@ Status WriteHeaders(CodecMetadata* metadata, BitWriter* writer,
   return true;
 }
 
-Status EncodeFile(const CompressParams& cparams_orig, const CodecInOut* io,
+Status EncodeFile(const CompressParams& params, const CodecInOut* io,
                   PassesEncoderState* passes_enc_state, PaddedBytes* compressed,
                   const JxlCmsInterface& cms, AuxOut* aux_out,
                   ThreadPool* pool) {
   io->CheckMetadata();
   BitWriter writer;
 
-  CompressParams cparams = cparams_orig;
+  CompressParams cparams = params;
   if (io->Main().color_transform != ColorTransform::kNone) {
     // Set the color transform to YCbCr or XYB if the original image is such.
     cparams.color_transform = io->Main().color_transform;
   }
 
-  // TODO(lode): move this to a common CompressParam post-initializer that is
-  // mandatory to be called, so that the encode API can also use it, once the
-  // encode API has the settings for resampling in the first place.
-  if (cparams.resampling == 0) {
-    cparams.resampling = 1;
-    // For very low bit rates, using 2x2 resampling gives better results on
-    // most photographic images, with an adjusted butteraugli score chosen to
-    // give roughly the same amount of bits per pixel.
-    if (!cparams.already_downsampled && cparams.butteraugli_distance >= 20) {
-      cparams.resampling = 2;
-      cparams.butteraugli_distance =
-          6 + ((cparams.butteraugli_distance - 20) * 0.25);
-    }
-  }
+  JXL_RETURN_IF_ERROR(ParamsPostInit(&cparams));
 
   std::unique_ptr<CodecMetadata> metadata = jxl::make_unique<CodecMetadata>();
   JXL_RETURN_IF_ERROR(PrepareCodecMetadataFromIO(cparams, io, metadata.get()));
