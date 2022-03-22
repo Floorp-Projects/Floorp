@@ -118,7 +118,18 @@ function createValueGrip(value, pool, makeObjectGrip) {
       return value;
 
     case "string":
-      return createStringGrip(pool, value);
+      if (stringIsLong(value)) {
+        for (const child of pool.poolChildren()) {
+          if (child instanceof LongStringActor && child.str == value) {
+            return child.form();
+          }
+        }
+
+        const actor = new LongStringActor(pool.conn, value);
+        pool.manage(actor);
+        return actor.form();
+      }
+      return value;
 
     case "number":
       if (value === Infinity) {
