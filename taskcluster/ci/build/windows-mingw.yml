@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
@@ -54,7 +54,6 @@ win32-mingwclang/opt:
 
 win32-mingwclang/debug:
     description: "Win32 MinGW-Clang Debug"
-    worker-type: b-linux-gcp
     index:
         product: firefox
         job-name: win32-mingwclang-debug
@@ -129,7 +128,6 @@ win64-mingwclang/opt:
 
 win64-mingwclang/debug:
     description: "Win64 MinGW-Clang Debug"
-    worker-type: b-linux-gcp
     index:
         product: firefox
         job-name: win64-mingwclang-debug
