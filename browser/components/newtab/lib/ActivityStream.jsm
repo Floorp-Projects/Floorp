@@ -609,6 +609,7 @@ this.ActivityStream = class ActivityStream {
     try {
       this._updateDynamicPrefs();
       this._defaultPrefs.init();
+      Services.obs.addObserver(this, "intl:app-locales-changed");
 
       // Look for outdated user pref values that might have been accidentally
       // persisted when restoring the original pref value at the end of an
@@ -695,6 +696,8 @@ this.ActivityStream = class ActivityStream {
       Services.obs.removeObserver(this, Region.REGION_TOPIC);
     }
 
+    Services.obs.removeObserver(this, "intl:app-locales-changed");
+
     this.store.uninit();
     this.initialized = false;
   }
@@ -749,6 +752,7 @@ this.ActivityStream = class ActivityStream {
 
   observe(subject, topic, data) {
     switch (topic) {
+      case "intl:app-locales-changed":
       case Region.REGION_TOPIC:
         this._updateDynamicPrefs();
         break;
