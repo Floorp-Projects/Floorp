@@ -543,7 +543,7 @@ impl Device {
             }
 
             if SYNC_REGEX.is_match(shell_command) {
-                let arg: &str = &shell_command.replace('\'', "'\"'\"'")[..];
+                let arg: &str = &shell_command.replace("'", "'\"'\"'")[..];
                 return self.execute_host_command(&format!("shell:su -c '{}'", arg), true, false);
             }
 
@@ -570,7 +570,7 @@ impl Device {
             }
 
             if SYNC_REGEX.is_match(shell_command) {
-                let arg: &str = &shell_command.replace('\'', "'\"'\"'")[..];
+                let arg: &str = &shell_command.replace("'", "'\"'\"'")[..];
                 return self.execute_host_command(
                     &format!("shell:run-as {} {}", run_as_package, arg),
                     true,
