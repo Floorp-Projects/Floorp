@@ -292,8 +292,8 @@ dependencies {
     }
     androidTestImplementation "androidx.test.espresso:espresso-intents:$espresso_version"
 
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.9.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.0'
     testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
 
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"

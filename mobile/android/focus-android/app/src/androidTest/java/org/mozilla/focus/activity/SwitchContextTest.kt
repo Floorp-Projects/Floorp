@@ -10,9 +10,8 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.hamcrest.core.IsNull
 import org.junit.After
-import org.junit.Assert.assertThat
+import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -128,7 +127,7 @@ class SwitchContextTest {
         pressHomeKey()
 
         // Wait for launcher
-        assertThat(launcherPackage, IsNull.notNullValue())
+        Assert.assertNotNull(launcherPackage)
         mDevice.wait(
             Until.hasObject(By.pkg(launcherPackage).depth(0)),
             LAUNCH_TIMEOUT.toLong()
