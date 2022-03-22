@@ -762,7 +762,6 @@ button:disabled {
   font-style: italic;
 }
 
-.moz-reader-content code,
 .moz-reader-content pre {
   white-space: pre-wrap;
 }
@@ -842,4 +841,11 @@ table {
 .moz-reader-wide-table {
   overflow-x: auto;
   display: block;
+}
+
+pre code {
+  background-color: var(--main-background);
+  border: 1px solid var(--font-color);
+  display: block;
+  overflow: auto;
 }
