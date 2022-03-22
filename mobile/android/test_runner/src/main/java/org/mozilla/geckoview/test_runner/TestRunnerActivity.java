@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.Map;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
@@ -110,43 +109,6 @@ public class TestRunnerActivity extends Activity {
             @Nullable final String[] permissions,
             @NonNull final Callback callback) {
           callback.grant();
-        }
-      };
-
-  private GeckoSession.PromptDelegate mPromptDelegate =
-      new GeckoSession.PromptDelegate() {
-        Map<BasePrompt, GeckoResult<PromptResponse>> mPromptResults = new HashMap<>();
-        public GeckoSession.PromptDelegate.PromptInstanceDelegate mPromptInstanceDelegate =
-            new GeckoSession.PromptDelegate.PromptInstanceDelegate() {
-              @Override
-              public void onPromptDismiss(
-                  final @NonNull GeckoSession.PromptDelegate.BasePrompt prompt) {
-                mPromptResults.get(prompt).complete(prompt.dismiss());
-              }
-            };
-
-        @Override
-        public GeckoResult<PromptResponse> onAlertPrompt(
-            @NonNull final GeckoSession session, @NonNull final AlertPrompt prompt) {
-          mPromptResults.put(prompt, new GeckoResult<>());
-          prompt.setDelegate(mPromptInstanceDelegate);
-          return mPromptResults.get(prompt);
-        }
-
-        @Override
-        public GeckoResult<PromptResponse> onButtonPrompt(
-            @NonNull final GeckoSession session, @NonNull final ButtonPrompt prompt) {
-          mPromptResults.put(prompt, new GeckoResult<>());
-          prompt.setDelegate(mPromptInstanceDelegate);
-          return mPromptResults.get(prompt);
-        }
-
-        @Override
-        public GeckoResult<PromptResponse> onTextPrompt(
-            @NonNull final GeckoSession session, @NonNull final TextPrompt prompt) {
-          mPromptResults.put(prompt, new GeckoResult<>());
-          prompt.setDelegate(mPromptInstanceDelegate);
-          return mPromptResults.get(prompt);
         }
       };
 
@@ -330,7 +292,6 @@ public class TestRunnerActivity extends Activity {
     session.setNavigationDelegate(mNavigationDelegate);
     session.setContentDelegate(mContentDelegate);
     session.setPermissionDelegate(mPermissionDelegate);
-    session.setPromptDelegate(mPromptDelegate);
 
     final WebExtension.SessionController sessionController = session.getWebExtensionController();
     for (final ExtensionWrapper wrapper : mExtensions.values()) {
