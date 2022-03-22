@@ -87,7 +87,8 @@ class gfxVarReceiver;
   _(UseVAAPI, bool, false)                                         \
   _(WebRenderRequiresHardwareDriver, bool, false)                  \
   _(SupportsThreadsafeGL, bool, false)                             \
-  _(OffscreenCanvasDomainAllowlist, nsCString, nsCString())
+  _(OffscreenCanvasDomainAllowlist, nsCString, nsCString())        \
+  _(AllowWebGPU, bool, false)
 
 /* Add new entries above this line. */
 
