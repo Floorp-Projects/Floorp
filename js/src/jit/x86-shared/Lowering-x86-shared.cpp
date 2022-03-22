@@ -1108,6 +1108,7 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     case wasm::SimdOp::F32x4RelaxedMax:
     case wasm::SimdOp::F64x2RelaxedMin:
     case wasm::SimdOp::F64x2RelaxedMax:
+    case wasm::SimdOp::I16x8RelaxedQ15MulrS:
     case wasm::SimdOp::MozWHPMADDUBSW:
     case wasm::SimdOp::MozWHPMADDWD:
       if (isThreeOpAllowed()) {

@@ -2721,6 +2721,11 @@ void MacroAssembler::q15MulrSatInt16x8(FloatRegister lhs, FloatRegister rhs,
   Sqrdmulh(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
+void MacroAssembler::q15MulrInt16x8Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Sqrdmulh(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 // Integer Negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {

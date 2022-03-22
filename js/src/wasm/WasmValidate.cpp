@@ -1024,7 +1024,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F32x4RelaxedMin):
           case uint32_t(SimdOp::F32x4RelaxedMax):
           case uint32_t(SimdOp::F64x2RelaxedMin):
-          case uint32_t(SimdOp::F64x2RelaxedMax): {
+          case uint32_t(SimdOp::F64x2RelaxedMax):
+          case uint32_t(SimdOp::I16x8RelaxedQ15MulrS): {
             if (!env.v128RelaxedEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }

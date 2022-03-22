@@ -6505,7 +6505,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F32x4RelaxedMin):
           case uint32_t(SimdOp::F32x4RelaxedMax):
           case uint32_t(SimdOp::F64x2RelaxedMin):
-          case uint32_t(SimdOp::F64x2RelaxedMax): {
+          case uint32_t(SimdOp::F64x2RelaxedMax):
+          case uint32_t(SimdOp::I16x8RelaxedQ15MulrS): {
             if (!f.moduleEnv().v128RelaxedEnabled()) {
               return f.iter().unrecognizedOpcode(&op);
             }
