@@ -24,6 +24,7 @@ class InvalidPathException(Exception):
     "mozbuild-reference",
     category="build-dev",
     description="View reference documentation on mozbuild files.",
+    virtualenv_name="docs",
 )
 @CommandArgument(
     "symbol",
@@ -39,10 +40,7 @@ class InvalidPathException(Exception):
     help="Print symbol names only.",
 )
 def reference(command_context, symbol, name_only=False):
-    # mozbuild.sphinx imports some Sphinx modules, so we need to be sure
-    # the optional Sphinx package is installed.
     command_context.activate_virtualenv()
-    command_context.virtualenv_manager.install_pip_package("Sphinx==1.1.3")
 
     from mozbuild.sphinx import (
         format_module,

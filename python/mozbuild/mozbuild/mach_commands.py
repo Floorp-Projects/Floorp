@@ -71,6 +71,7 @@ class StoreDebugParamsAndWarnAction(argparse.Action):
     category="post-build",
     description="Watch and re-build (parts of) the tree.",
     conditions=[conditions.is_firefox],
+    virtualenv_name="watch",
 )
 @CommandArgument(
     "-v",
@@ -93,15 +94,6 @@ def watch(command_context, verbose=False):
         return 1
 
     command_context.activate_virtualenv()
-    try:
-        command_context.virtualenv_manager.install_pip_package("pywatchman==1.4.1")
-    except Exception:
-        print(
-            "Could not install pywatchman from pip. See "
-            "https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching"  # noqa
-        )
-        return 1
-
     from mozbuild.faster_daemon import Daemon
 
     daemon = Daemon(command_context.config_environment)

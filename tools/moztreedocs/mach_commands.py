@@ -111,9 +111,8 @@ def build_docs(
     linkcheck=None,
     verbose=None,
 ):
-
+    command_context.activate_virtualenv()
     # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
-    sys.path.append(mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint"))
     import setup_helper
 
     setup_helper.set_project_root(command_context.topsrcdir)
@@ -132,8 +131,6 @@ def build_docs(
         + os.pathsep
         + os.environ["PATH"]
     )
-
-    command_context.activate_virtualenv()
     command_context.virtualenv_manager.install_pip_requirements(
         os.path.join(here, "requirements.txt")
     )
