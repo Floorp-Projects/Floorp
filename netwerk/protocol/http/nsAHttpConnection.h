@@ -164,6 +164,7 @@ class nsAHttpConnection : public nsISupports {
   virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
   virtual bool ResolvedByTRR() = 0;
   virtual bool GetEchConfigUsed() = 0;
+  virtual PRIntervalTime LastWriteTime() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
@@ -257,7 +258,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   }                                                                          \
   bool GetEchConfigUsed() override {                                         \
     return (!(fwdObject)) ? false : (fwdObject)->GetEchConfigUsed();         \
-  }
+  }                                                                          \
+  PRIntervalTime LastWriteTime() override;
 
 // ThrottleResponse deliberately ommited since we want different implementation
 // for h1 and h2 connections.

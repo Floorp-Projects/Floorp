@@ -27,17 +27,41 @@ add_task(async function test() {
   async function check408retry(server) {
     info(`Testing ${server.constructor.name}`);
     await server.execute(`global.server_name = "${server.constructor.name}";`);
-    await server.registerPathHandler("/test", (req, resp) => {
-      let oldSock = global.socket;
-      global.socket = resp.socket;
-      if (global.socket == oldSock) {
-        resp.writeHead(408);
-        resp.end("stuff");
-        return;
-      }
-      resp.writeHead(200);
-      resp.end(global.server_name);
-    });
+    if (
+      server.constructor.name == "NodeHTTPServer" ||
+      server.constructor.name == "NodeHTTPSServer"
+    ) {
+      await server.registerPathHandler("/test", (req, resp) => {
+        let oldSock = global.socket;
+        global.socket = resp.socket;
+        if (global.socket == oldSock) {
+          setTimeout(
+            arg => {
+              arg.writeHead(408);
+              arg.end("stuff");
+            },
+            1100,
+            resp
+          );
+          return;
+        }
+        resp.writeHead(200);
+        resp.end(global.server_name);
+      });
+    } else {
+      await server.registerPathHandler("/test", (req, resp) => {
+        let oldSock = global.socket;
+        global.socket = resp.socket;
+        if (!global.sent408) {
+          global.sent408 = true;
+          resp.writeHead(408);
+          resp.end("stuff");
+          return;
+        }
+        resp.writeHead(200);
+        resp.end(global.server_name);
+      });
+    }
 
     async function load() {
       let { req, buff } = await loadURL(
@@ -59,5 +83,8 @@ add_task(async function test() {
     await load();
   }
 
-  await with_node_servers([NodeHTTPServer, NodeHTTPSServer], check408retry);
+  await with_node_servers(
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
+    check408retry
+  );
 });
