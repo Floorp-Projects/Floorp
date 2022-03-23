@@ -10,6 +10,8 @@
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "GRefPtr.h"
+#include "nsCOMPtr.h"
 
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;
@@ -20,7 +22,7 @@ inline unsigned char unpremultiply(unsigned char color, unsigned char alpha) {
   return (color * 255 + alpha / 2) / alpha;
 }
 
-GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(
+already_AddRefed<GdkPixbuf> nsImageToPixbuf::ImageToPixbuf(
     imgIContainer* aImage, const mozilla::Maybe<nsIntSize>& aOverrideSize) {
   RefPtr<SourceSurface> surface;
 
@@ -55,15 +57,14 @@ GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(
                                surface->GetSize().height);
 }
 
-GdkPixbuf* nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
-                                                  int32_t aWidth,
-                                                  int32_t aHeight) {
+already_AddRefed<GdkPixbuf> nsImageToPixbuf::SourceSurfaceToPixbuf(
+    SourceSurface* aSurface, int32_t aWidth, int32_t aHeight) {
   MOZ_ASSERT(aWidth <= aSurface->GetSize().width &&
                  aHeight <= aSurface->GetSize().height,
              "Requested rect is bigger than the supplied surface");
 
-  GdkPixbuf* pixbuf =
-      gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, aWidth, aHeight);
+  RefPtr<GdkPixbuf> pixbuf =
+      dont_AddRef(gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, aWidth, aHeight));
   if (!pixbuf) {
     return nullptr;
   }
@@ -116,5 +117,5 @@ GdkPixbuf* nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
 
   dataSurface->Unmap();
 
-  return pixbuf;
+  return pixbuf.forget();
 }

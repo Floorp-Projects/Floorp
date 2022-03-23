@@ -176,17 +176,16 @@ nsLookAndFeel::nsLookAndFeel() {
       nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
 
   if (ShouldUsePortal(PortalKind::Settings)) {
-    GError* error = nullptr;
-    mDBusSettingsProxy = g_dbus_proxy_new_for_bus_sync(
+    GUniquePtr<GError> error;
+    mDBusSettingsProxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
         G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
         "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
-        "org.freedesktop.portal.Settings", nullptr, &error);
+        "org.freedesktop.portal.Settings", nullptr, getter_Transfers(error)));
     if (mDBusSettingsProxy) {
       g_signal_connect(mDBusSettingsProxy, "g-signal",
                        G_CALLBACK(settings_changed_signal_cb), nullptr);
     } else {
       LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
-      g_error_free(error);
     }
   }
 }
@@ -196,7 +195,7 @@ nsLookAndFeel::~nsLookAndFeel() {
     g_signal_handlers_disconnect_by_func(
         mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb),
         nullptr);
-    g_object_unref(mDBusSettingsProxy);
+    mDBusSettingsProxy = nullptr;
   }
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
@@ -1316,15 +1315,15 @@ Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
   if (!mDBusSettingsProxy) {
     return Nothing();
   }
-  GError* error = nullptr;
+  GUniquePtr<GError> error;
   RefPtr<GVariant> variant = dont_AddRef(g_dbus_proxy_call_sync(
       mDBusSettingsProxy, "Read",
       g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
       G_DBUS_CALL_FLAGS_NONE,
-      StaticPrefs::widget_gtk_settings_portal_timeout_ms(), nullptr, &error));
+      StaticPrefs::widget_gtk_settings_portal_timeout_ms(), nullptr,
+      getter_Transfers(error)));
   if (!variant) {
     LOGLNF("color-scheme query error: %s\n", error->message);
-    g_error_free(error);
     return Nothing();
   }
   LOGLNF("color-scheme query result: %s\n", GVariantToString(variant).get());

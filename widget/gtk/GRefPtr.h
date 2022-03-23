@@ -12,6 +12,9 @@
 #include <gtk/gtk.h>
 #include "mozilla/RefPtr.h"
 
+// TODO: Remove this (we should use GDBus instead, which is not deprecated).
+#include <dbus/dbus-glib.h>
+
 namespace mozilla {
 
 template <typename T>
@@ -25,12 +28,17 @@ struct GObjectRefPtrTraits {
   struct RefPtrTraits<type_> : public GObjectRefPtrTraits<type_> {};
 
 GOBJECT_TRAITS(GtkWidget)
+GOBJECT_TRAITS(GFile)
 GOBJECT_TRAITS(GMenu)
 GOBJECT_TRAITS(GMenuItem)
 GOBJECT_TRAITS(GSimpleAction)
 GOBJECT_TRAITS(GSimpleActionGroup)
 GOBJECT_TRAITS(GDBusProxy)
+GOBJECT_TRAITS(GAppInfo)
 GOBJECT_TRAITS(GdkDragContext)
+GOBJECT_TRAITS(GdkPixbuf)
+
+GOBJECT_TRAITS(DBusGProxy)
 
 #undef GOBJECT_TRAITS
 
@@ -38,6 +46,30 @@ template <>
 struct RefPtrTraits<GVariant> {
   static void AddRef(GVariant* aVariant) { g_variant_ref(aVariant); }
   static void Release(GVariant* aVariant) { g_variant_unref(aVariant); }
+};
+
+template <>
+struct RefPtrTraits<GHashTable> {
+  static void AddRef(GHashTable* aObject) { g_hash_table_ref(aObject); }
+  static void Release(GHashTable* aObject) { g_hash_table_unref(aObject); }
+};
+
+template <>
+struct RefPtrTraits<GDBusNodeInfo> {
+  static void AddRef(GDBusNodeInfo* aObject) { g_dbus_node_info_ref(aObject); }
+  static void Release(GDBusNodeInfo* aObject) {
+    g_dbus_node_info_unref(aObject);
+  }
+};
+
+template <>
+struct RefPtrTraits<DBusGConnection> {
+  static void AddRef(DBusGConnection* aObject) {
+    dbus_g_connection_ref(aObject);
+  }
+  static void Release(DBusGConnection* aObject) {
+    dbus_g_connection_unref(aObject);
+  }
 };
 
 }  // namespace mozilla
