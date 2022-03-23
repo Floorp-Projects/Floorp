@@ -40,7 +40,6 @@
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerParent.h"
 #include "ProfilerRustBindings.h"
-#include "mozilla/MozPromise.h"
 #include "shared-libraries.h"
 #include "VTuneProfiler.h"
 
@@ -101,7 +100,6 @@
 #include <type_traits>
 
 #if defined(GP_OS_android)
-#  include "JavaExceptions.h"
 #  include "mozilla/java/GeckoJavaSamplerNatives.h"
 #  include "mozilla/jni/Refs.h"
 #endif
@@ -239,59 +237,6 @@ class GeckoJavaSampler
     }
     return profiler_time();
   };
-
-  static void JavaStringArrayToCharArray(jni::ObjectArray::Param& aJavaArray,
-                                         Vector<const char*>& aCharArray,
-                                         JNIEnv* aJni) {
-    int arraySize = aJavaArray->Length();
-    for (int i = 0; i < arraySize; i++) {
-      jstring javaString =
-          (jstring)(aJni->GetObjectArrayElement(aJavaArray.Get(), i));
-      const char* filterString = aJni->GetStringUTFChars(javaString, 0);
-      // These strings are leaked. FIXME
-      MOZ_RELEASE_ASSERT(aCharArray.append(&filterString, 0));
-    }
-  }
-
-  static void StartProfiler(jni::ObjectArray::Param aFiltersArray,
-                            jni::ObjectArray::Param aFeaturesArray) {
-    JNIEnv* jni = jni::GetEnvForThread();
-    Vector<const char*> filtersTemp;
-    Vector<const char*> featureStringArray;
-
-    javaStringArrayToCharArray(aFiltersArray, filtersTemp, jni);
-    javaStringArrayToCharArray(aFeaturesArray, featureStringArray, jni);
-
-    uint32_t features = 0;
-    features = ParseFeaturesFromStringArray(featureStringArray.begin(),
-                                            featureStringArray.length());
-
-    // 128 * 1024 * 1024 is the entries preset that is given in
-    // devtools/client/performance-new/popup/background.jsm.js
-    profiler_start(PowerOfTwo32(128 * 1024 * 1024), 5.0, features,
-                   filtersTemp.begin(), filtersTemp.length(), 0, Nothing());
-  }
-
-  static void StopProfiler(jni::Object::Param aGeckoResult) {
-    auto result = java::GeckoResult::LocalRef(aGeckoResult);
-    profiler_pause();
-    nsCOMPtr<nsIProfiler> nsProfiler(
-        do_GetService("@mozilla.org/tools/profiler;1"));
-    nsProfiler->GetProfileDataAsGzippedArrayBufferAndroid(0)->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [result](FallibleTArray<uint8_t> compressedProfile) {
-          result->Complete(jni::ByteArray::New(
-              reinterpret_cast<const int8_t*>(compressedProfile.Elements()),
-              compressedProfile.Length()));
-        },
-        [result](nsresult aRv) {
-          char errorString[9];
-          sprintf(errorString, "%08x", aRv);
-          result->CompleteExceptionally(
-              mozilla::java::sdk::IllegalStateException::New(errorString)
-                  .Cast<jni::Throwable>());
-        });
-  }
 };
 #endif
 
