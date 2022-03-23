@@ -1189,12 +1189,9 @@ set_define(
 # ==================================
 
 
-@depends(milestone.is_nightly, "--enable-cranelift")
-def default_wasm_exceptions(is_nightly, cranelift_enabled):
+@depends("--enable-cranelift")
+def default_wasm_exceptions(cranelift_enabled):
     if cranelift_enabled:
-        return
-
-    if not is_nightly:
         return
 
     return True

@@ -1929,6 +1929,7 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
+#  ifdef WASM_PRIVATE_REFTYPES
 static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
   for (auto t : type) {
     if (t.isTypeIndex()) {
@@ -1938,6 +1939,7 @@ static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
 
   return true;
 }
+#  endif  // WASM_PRIVATE_REFTYPES
 
 static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
                       uint32_t* funcTypeIndex) {
