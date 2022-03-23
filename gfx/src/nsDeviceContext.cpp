@@ -211,7 +211,7 @@ already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
   return pContext.forget();
 }
 
-uint32_t nsDeviceContext::GetDepth() {
+nsresult nsDeviceContext::GetDepth(uint32_t& aDepth) {
   nsCOMPtr<nsIScreen> screen;
   FindScreen(getter_AddRefs(screen));
   if (!screen) {
@@ -219,9 +219,9 @@ uint32_t nsDeviceContext::GetDepth() {
     screenManager.GetPrimaryScreen(getter_AddRefs(screen));
     MOZ_ASSERT(screen);
   }
-  int32_t depth = 0;
-  screen->GetColorDepth(&depth);
-  return uint32_t(depth);
+  screen->GetColorDepth(reinterpret_cast<int32_t*>(&aDepth));
+
+  return NS_OK;
 }
 
 nsresult nsDeviceContext::GetDeviceSurfaceDimensions(nscoord& aWidth,
