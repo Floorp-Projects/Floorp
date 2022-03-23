@@ -189,6 +189,12 @@ MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> ReadableStreamCancel(
 already_AddRefed<ReadableStreamDefaultReader>
 AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv);
 
+MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> CreateReadableStream(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    UnderlyingSourceAlgorithmsBase* aAlgorithms,
+    mozilla::Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv);
+
 bool ReadableStreamHasBYOBReader(ReadableStream* aStream);
 bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 
