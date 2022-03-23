@@ -980,7 +980,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
    * If no owner is given, then the user should avoid modifying any state on
    * the face so as not to invalidate the prior owner's modification.
    */
-  bool Lock(void* aOwner = nullptr) CAPABILITY_ACQUIRE(mLock) {
+  bool Lock(const void* aOwner = nullptr) CAPABILITY_ACQUIRE(mLock) {
     mLock.Lock();
     return !aOwner || mLastLockOwner.exchange(aOwner) == aOwner;
   }
@@ -989,7 +989,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
   /** Should be called when a lock owner is destroyed so that we don't have
    * a dangling pointer to a destroyed owner.
    */
-  void ForgetLockOwner(void* aOwner) {
+  void ForgetLockOwner(const void* aOwner) {
     if (aOwner) {
       mLastLockOwner.compareExchange(aOwner, nullptr);
     }
@@ -1002,7 +1002,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
   // Remember the last owner of the lock, even after unlocking, to allow users
   // to avoid reinitializing state on the FT face if the last owner hasn't
   // changed by the next time it is locked with the same owner.
-  Atomic<void*> mLastLockOwner;
+  Atomic<const void*> mLastLockOwner;
 };
 #endif
 

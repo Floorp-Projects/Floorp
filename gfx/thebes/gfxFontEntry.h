@@ -251,7 +251,7 @@ class gfxFontEntry {
   // can be safely dereferenced.
   virtual nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr);
 
-  bool TryGetSVGData(gfxFont* aFont);
+  bool TryGetSVGData(const gfxFont* aFont);
   bool HasSVGGlyph(uint32_t aGlyphId);
   bool GetSVGGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphId,
                           gfxFloat aSize, gfxRect* aResult);
@@ -472,7 +472,7 @@ class gfxFontEntry {
   mozilla::UniquePtr<gfxUserFontData> mUserFontData;
   mozilla::UniquePtr<gfxSVGGlyphs> mSVGGlyphs;
   // list of gfxFonts that are using SVG glyphs
-  nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
+  nsTArray<const gfxFont*> mFontsUsingSVGGlyphs;
   nsTArray<gfxFontFeature> mFeatureSettings;
   nsTArray<gfxFontVariation> mVariationSettings;
   mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, bool>> mSupportedFeatures;

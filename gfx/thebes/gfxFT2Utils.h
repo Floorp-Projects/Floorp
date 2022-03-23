@@ -28,7 +28,7 @@ typedef struct FT_FaceRec_* FT_Face;
  */
 class MOZ_STACK_CLASS gfxFT2LockedFace {
  public:
-  explicit gfxFT2LockedFace(gfxFT2FontBase* aFont)
+  explicit gfxFT2LockedFace(const gfxFT2FontBase* aFont)
       : mGfxFont(aFont), mFace(aFont->LockFTFace()) {}
   ~gfxFT2LockedFace() {
     if (mFace) {
@@ -54,7 +54,7 @@ class MOZ_STACK_CLASS gfxFT2LockedFace {
                                          FT_ULong variantSelector);
   CharVariantFunction FindCharVariantFunction();
 
-  gfxFT2FontBase* MOZ_NON_OWNING_REF mGfxFont;  // owned by caller
+  const gfxFT2FontBase* MOZ_NON_OWNING_REF mGfxFont;  // owned by caller
   FT_Face mFace;
 };
 
