@@ -7,11 +7,14 @@
 #include "nsThreadUtils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory>
 #include "nspr.h"
 #include "nsCOMPtr.h"
+#include "nsITargetShutdownTask.h"
 #include "nsIThread.h"
 #include "nsXPCOM.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/SyncRunnable.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla;
@@ -277,5 +280,99 @@ TEST(Threads, GetCurrentSerialEventTarget)
                           EXPECT_EQ(thread.get(), serialEventTarget.get());
                         }));
   MOZ_ALWAYS_SUCCEEDS(rv);
+  thread->Shutdown();
+}
+
+namespace {
+
+class TestShutdownTask final : public nsITargetShutdownTask {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit TestShutdownTask(std::function<void()> aCallback)
+      : mCallback(std::move(aCallback)) {}
+
+  void TargetShutdown() override {
+    if (mCallback) {
+      mCallback();
+    }
+  }
+
+ private:
+  ~TestShutdownTask() = default;
+  std::function<void()> mCallback;
+};
+
+NS_IMPL_ISUPPORTS(TestShutdownTask, nsITargetShutdownTask)
+
+}  // namespace
+
+TEST(Threads, ShutdownTask)
+{
+  auto shutdownTaskRun = std::make_shared<bool>();
+  auto runnableFromShutdownRun = std::make_shared<bool>();
+
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("Testing Thread", getter_AddRefs(thread));
+  MOZ_ALWAYS_SUCCEEDS(rv);
+
+  nsCOMPtr<nsITargetShutdownTask> shutdownTask = new TestShutdownTask([=] {
+    EXPECT_TRUE(thread->IsOnCurrentThread());
+
+    ASSERT_FALSE(*shutdownTaskRun);
+    *shutdownTaskRun = true;
+
+    nsCOMPtr<nsITargetShutdownTask> dummyTask = new TestShutdownTask([] {});
+    nsresult rv = thread->RegisterShutdownTask(dummyTask);
+    EXPECT_TRUE(rv == NS_ERROR_UNEXPECTED);
+
+    MOZ_ALWAYS_SUCCEEDS(
+        thread->Dispatch(NS_NewRunnableFunction("afterShutdownTask", [=] {
+          EXPECT_TRUE(thread->IsOnCurrentThread());
+
+          nsCOMPtr<nsITargetShutdownTask> dummyTask =
+              new TestShutdownTask([] {});
+          nsresult rv = thread->RegisterShutdownTask(dummyTask);
+          EXPECT_TRUE(rv == NS_ERROR_UNEXPECTED);
+
+          ASSERT_FALSE(*runnableFromShutdownRun);
+          *runnableFromShutdownRun = true;
+        })));
+  });
+  MOZ_ALWAYS_SUCCEEDS(thread->RegisterShutdownTask(shutdownTask));
+
+  ASSERT_FALSE(*shutdownTaskRun);
+  ASSERT_FALSE(*runnableFromShutdownRun);
+
+  RefPtr<mozilla::SyncRunnable> syncWithThread =
+      new mozilla::SyncRunnable(NS_NewRunnableFunction("dummy", [] {}));
+  MOZ_ALWAYS_SUCCEEDS(syncWithThread->DispatchToThread(thread));
+
+  ASSERT_FALSE(*shutdownTaskRun);
+  ASSERT_FALSE(*runnableFromShutdownRun);
+
+  thread->Shutdown();
+
+  ASSERT_TRUE(*shutdownTaskRun);
+  ASSERT_TRUE(*runnableFromShutdownRun);
+}
+
+TEST(Threads, UnregisteredShutdownTask)
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("Testing Thread", getter_AddRefs(thread));
+  MOZ_ALWAYS_SUCCEEDS(rv);
+
+  nsCOMPtr<nsITargetShutdownTask> shutdownTask =
+      new TestShutdownTask([=] { MOZ_CRASH("should not be run"); });
+
+  MOZ_ALWAYS_SUCCEEDS(thread->RegisterShutdownTask(shutdownTask));
+
+  RefPtr<mozilla::SyncRunnable> syncWithThread =
+      new mozilla::SyncRunnable(NS_NewRunnableFunction("dummy", [] {}));
+  MOZ_ALWAYS_SUCCEEDS(syncWithThread->DispatchToThread(thread));
+
+  MOZ_ALWAYS_SUCCEEDS(thread->UnregisterShutdownTask(shutdownTask));
+
   thread->Shutdown();
 }
