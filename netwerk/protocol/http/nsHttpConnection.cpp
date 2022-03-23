@@ -163,7 +163,7 @@ nsresult nsHttpConnection::Init(
 }
 
 void nsHttpConnection::ChangeState(HttpConnectionState newState) {
-  LOG(("nsHttpConnection::ChanfeState %d -> %d [this=%p]", mState, newState,
+  LOG(("nsHttpConnection::ChangeState %d -> %d [this=%p]", mState, newState,
        this));
   mState = newState;
 }
@@ -1214,7 +1214,7 @@ void nsHttpConnection::HandleTunnelResponse(uint16_t responseStatus,
   // socket write request.
 
   if (responseStatus == 200) {
-    ChangeState(HttpConnectionState::TUNNEL_DONE);
+    ChangeState(HttpConnectionState::REQUEST);
   }
   mProxyConnectStream = nullptr;
   bool isHttps = mTransaction ? mTransaction->ConnectionInfo()->EndToEndSSL()
@@ -1782,7 +1782,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
   uint32_t writeAttempts = 0;
 
   if (mTransactionCaps & NS_HTTP_CONNECT_ONLY) {
-    if (!TunnelUsed()) {
+    if (!mConnInfo->UsingConnect()) {
       // A CONNECT has been requested for this connection but will never
       // be performed. This should never happen.
       MOZ_ASSERT(false, "proxy connect will never happen");
@@ -1790,7 +1790,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
       return NS_ERROR_FAILURE;
     }
 
-    if (TunnelCompleted()) {
+    if (mState == HttpConnectionState::REQUEST) {
       // Don't need to check this each write attempt since it is only
       // updated after OnSocketWritable completes.
       // We've already done primary tls (if needed) and sent our CONNECT.
@@ -1954,7 +1954,7 @@ nsresult nsHttpConnection::OnSocketReadable() {
   // Reset mResponseTimeoutEnabled to stop response timeout checks.
   mResponseTimeoutEnabled = false;
 
-  if ((mTransactionCaps & NS_HTTP_CONNECT_ONLY) && !TunnelUsed()) {
+  if ((mTransactionCaps & NS_HTTP_CONNECT_ONLY) && !mConnInfo->UsingConnect()) {
     // A CONNECT has been requested for this connection but will never
     // be performed. This should never happen.
     MOZ_ASSERT(false, "proxy connect will never happen");
@@ -1974,7 +1974,7 @@ nsresult nsHttpConnection::OnSocketReadable() {
   // accommodate exhausted sender TCP congestion windows or minor I/O delays.
   mLastReadTime = now;
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   uint32_t n;
   bool again = true;
 
@@ -2673,10 +2673,11 @@ void nsHttpConnection::HandshakeDoneInternal() {
 }
 
 void nsHttpConnection::SetTunnelSetupDone() {
-  MOZ_ASSERT(mProxyConnectStream);
-  MOZ_ASSERT(mState == HttpConnectionState::SETTING_UP_TUNNEL);
+  MOZ_ASSERT(mProxyConnectStream || mInSpdyTunnel);
+  MOZ_ASSERT((mState == HttpConnectionState::SETTING_UP_TUNNEL) ||
+             mInSpdyTunnel);
 
-  ChangeState(HttpConnectionState::TUNNEL_DONE);
+  ChangeState(HttpConnectionState::REQUEST);
   mProxyConnectStream = nullptr;
 }
 
@@ -2685,7 +2686,7 @@ nsresult nsHttpConnection::CheckTunnelIsNeeded() {
     case HttpConnectionState::UNINITIALIZED: {
       // This is is called first time. Check if we need a tunnel.
       if (!mTransaction->ConnectionInfo()->UsingConnect()) {
-        ChangeState(HttpConnectionState::TUNNEL_NOT_USED);
+        ChangeState(HttpConnectionState::REQUEST);
         return NS_OK;
       }
       ChangeState(HttpConnectionState::SETTING_UP_TUNNEL);
@@ -2701,10 +2702,10 @@ nsresult nsHttpConnection::CheckTunnelIsNeeded() {
       }
       return rv;
     }
-    case HttpConnectionState::TUNNEL_DONE:
-    case HttpConnectionState::TUNNEL_NOT_USED:
+    case HttpConnectionState::REQUEST:
       return NS_OK;
   }
+  return NS_OK;
 }
 
 nsresult nsHttpConnection::SetupProxyConnectStream() {
