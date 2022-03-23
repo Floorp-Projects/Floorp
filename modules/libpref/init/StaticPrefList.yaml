@@ -7721,6 +7721,13 @@
   value: false
   mirror: always
 
+# Is support for CSS overflow: -moz-hidden-unscrollable enabled
+- name: layout.css.overflow-moz-hidden-unscrollable.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for overscroll-behavior enabled?
 - name: layout.css.overscroll-behavior.enabled
   type: bool
