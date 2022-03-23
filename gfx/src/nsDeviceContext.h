@@ -110,7 +110,7 @@ class nsDeviceContext final {
   /**
    * Return the bit depth of the device.
    */
-  uint32_t GetDepth();
+  nsresult GetDepth(uint32_t& aDepth);
 
   /**
    * Get the size of the displayable area of the output device

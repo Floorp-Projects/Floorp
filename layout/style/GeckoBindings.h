@@ -593,11 +593,6 @@ mozilla::StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const mozilla::dom::Document*, bool aUseContent);
 
-mozilla::StyleDynamicRange Gecko_MediaFeatures_DynamicRange(
-    const mozilla::dom::Document*);
-mozilla::StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
-    const mozilla::dom::Document*);
-
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
     const mozilla::dom::Document*);
 

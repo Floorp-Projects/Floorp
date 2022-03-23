@@ -109,7 +109,7 @@ static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
 //
 // This needs to be of the same length and in the same order as
 // LookAndFeel::IntID values.
-static const char sIntPrefs[][45] = {
+static const char sIntPrefs[][43] = {
     "ui.caretBlinkTime",
     "ui.caretBlinkCount",
     "ui.caretWidth",
@@ -176,8 +176,6 @@ static const char sIntPrefs[][45] = {
     "ui.touchDeviceSupportPresent",
     "ui.titlebarRadius",
     "ui.GtkMenuRadius",
-    "ui.dynamicRange",
-    "ui.videoDynamicRange",
 };
 
 static_assert(ArrayLength(sIntPrefs) == size_t(LookAndFeel::IntID::End),
