@@ -7,8 +7,7 @@
 // is initialized with the correct path
 do_get_profile();
 const { BroadcastService } = ChromeUtils.import(
-  "resource://gre/modules/PushBroadcastService.jsm",
-  null
+  "resource://gre/modules/PushBroadcastService.jsm"
 );
 const { JSONFile } = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
 

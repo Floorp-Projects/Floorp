@@ -14,7 +14,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/JSONFile.jsm"
 );
 
-const EXPORTED_SYMBOLS = ["pushBroadcastService"];
+// BroadcastService is exported for test purposes.
+const EXPORTED_SYMBOLS = ["pushBroadcastService", "BroadcastService"];
 
 // We are supposed to ignore any updates with this version.
 const DUMMY_VERSION_STRING = "____NOP____";
