@@ -23,6 +23,10 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
   virtual mozilla::ipc::IPCResult RecvSetDictionary(
       const nsCString& aDictionary, bool* success);
 
+  virtual mozilla::ipc::IPCResult RecvSetDictionaries(
+      const nsTArray<nsCString>& aDictionaries,
+      SetDictionariesResolver&& aResolve);
+
   virtual mozilla::ipc::IPCResult RecvSetDictionaryFromList(
       nsTArray<nsCString>&& aList, SetDictionaryFromListResolver&& aResolve);
 
