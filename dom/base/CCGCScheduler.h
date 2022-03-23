@@ -63,7 +63,6 @@ static const uint32_t kCCPurpleLimit = 200;
 
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
-  MinorGC,        // Run a minor GC (nursery collection)
   WaitToMajorGC,  // We want to start a new major GC
   StartMajorGC,   // The parent says we may begin our major GC
   GCSlice,        // Run a single slice of a major GC
@@ -75,24 +74,12 @@ struct GCRunnerStep {
   JS::GCReason mReason;
 };
 
-// Actions that are output from the CCRunner state machine.
 enum class CCRunnerAction {
-  // Do nothing.
   None,
-
-  // We crossed an eager minor GC threshold in the middle of an incremental CC,
-  // and we have some idle time.
-  MinorGC,
-
-  // Various cleanup actions.
   ForgetSkippable,
   CleanupContentUnbinder,
   CleanupDeferred,
-
-  // Do the actual cycle collection (build the graph etc).
   CycleCollect,
-
-  // All done.
   StopRunning
 };
 
@@ -104,30 +91,20 @@ enum CCRunnerForgetSkippableRemoveChildless {
 };
 
 struct CCRunnerStep {
-  // The action the scheduler is instructing the caller to perform.
+  // The action to scheduler is instructing the caller to perform.
   CCRunnerAction mAction;
 
   // Whether to stop processing actions for this invocation of the timer
   // callback.
   CCRunnerYield mYield;
 
-  union ActionData {
-    // If the action is ForgetSkippable, then whether to remove childless nodes
-    // or not.
-    CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
+  // If the action is ForgetSkippable, then whether to remove childless nodes
+  // or not. (ForgetSkippable is the only action requiring a parameter; if
+  // that changes, this will become a union.)
+  CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
 
-    // If the action is CycleCollect, the reason for the collection.
-    CCReason mCCReason;
-
-    // If the action is MinorGC, the reason for the GC.
-    JS::GCReason mReason;
-
-    MOZ_IMPLICIT ActionData(CCRunnerForgetSkippableRemoveChildless v)
-        : mRemoveChildless(v) {}
-    MOZ_IMPLICIT ActionData(CCReason v) : mCCReason(v) {}
-    MOZ_IMPLICIT ActionData(JS::GCReason v) : mReason(v) {}
-    ActionData() = default;
-  } mParam;
+  // If the action is CycleCollect, the reason for the collection.
+  CCReason mCCReason;
 };
 
 class CCGCScheduler {
@@ -168,7 +145,6 @@ class CCGCScheduler {
   void PokeShrinkingGC();
   void PokeFullGC();
   void MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects);
-  void PokeMinorGC(JS::GCReason aReason);
 
   void UserIsInactive();
   void UserIsActive();
@@ -239,12 +215,6 @@ class CCGCScheduler {
     }
   }
 
-  void SetWantEagerMinorGC(JS::GCReason aReason) {
-    if (mEagerMinorGCReason == JS::GCReason::NO_REASON) {
-      mEagerMinorGCReason = aReason;
-    }
-  }
-
   // Ensure that the current runner does a cycle collection, and trigger a GC
   // after it finishes.
   void EnsureCCThenGC(CCReason aReason) {
@@ -265,15 +235,13 @@ class CCGCScheduler {
   }
 
   // Starting a major GC (incremental or non-incremental).
-  void NoteGCBegin(JS::GCReason aReason);
+  void NoteGCBegin();
 
   // Major GC completed.
   void NoteGCEnd();
 
   // A timer fired, but then decided not to run a GC.
   void NoteWontGC();
-
-  void NoteMinorGCEnd() { mEagerMinorGCReason = JS::GCReason::NO_REASON; }
 
   // This is invoked when we reach the actual cycle collection portion of the
   // overall cycle collection.
@@ -456,13 +424,7 @@ class CCGCScheduler {
     mCCReason = CCReason::NO_REASON;
   }
 
-  bool HasMoreIdleGCRunnerWork() const {
-    return mMajorGCReason != JS::GCReason::NO_REASON ||
-           mEagerMajorGCReason != JS::GCReason::NO_REASON ||
-           mEagerMinorGCReason != JS::GCReason::NO_REASON;
-  }
-
-  GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline) const;
+  GCRunnerStep GetNextGCRunnerAction() const;
 
   CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
                                uint32_t aSuspectedCCObjects);
@@ -534,8 +496,6 @@ class CCGCScheduler {
 
   mozilla::CCReason mCCReason = mozilla::CCReason::NO_REASON;
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
-  JS::GCReason mEagerMajorGCReason = JS::GCReason::NO_REASON;
-  JS::GCReason mEagerMinorGCReason = JS::GCReason::NO_REASON;
 
   bool mIsCompactingOnUserInactive = false;
   bool mIsCollectingCycles = false;

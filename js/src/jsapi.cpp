@@ -1287,22 +1287,15 @@ JS_PUBLIC_API void JS_RemoveExtraGCRootsTracer(JSContext* cx,
   return cx->runtime()->gc.removeBlackRootsTracer(traceOp, data);
 }
 
-JS_PUBLIC_API JS::GCReason JS::WantEagerMinorGC(JSRuntime* rt) {
-  if (rt->gc.nursery().shouldCollect()) {
-    return JS::GCReason::EAGER_NURSERY_COLLECTION;
-  }
-  return JS::GCReason::NO_REASON;
+JS_PUBLIC_API bool JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
+  // Currently, we only collect nursery during idle time.
+  return rt->gc.nursery().shouldCollect();
 }
 
-JS_PUBLIC_API JS::GCReason JS::WantEagerMajorGC(JSRuntime* rt) {
-  return rt->gc.wantMajorGC(true);
-}
-
-JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
-                                                 JS::GCReason reason) {
+JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
   gc::GCRuntime& gc = rt->gc;
   if (gc.nursery().shouldCollect()) {
-    gc.minorGC(reason);
+    gc.minorGC(JS::GCReason::IDLE_TIME_COLLECTION);
   }
 }
 
