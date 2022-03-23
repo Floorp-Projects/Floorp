@@ -74,6 +74,13 @@ class Accessible {
              uint8_t aRoleMapEntryIndex);
 
  public:
+  /**
+   * Return an id for this Accessible which is unique within the document.
+   * Use nsAccUtils::GetAccessibleByID to retrieve an Accessible given an id
+   * returned from this method.
+   */
+  virtual uint64_t ID() const = 0;
+
   virtual Accessible* Parent() const = 0;
 
   virtual role Role() const = 0;
