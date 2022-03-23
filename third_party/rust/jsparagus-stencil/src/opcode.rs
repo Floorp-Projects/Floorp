@@ -122,7 +122,6 @@ macro_rules! using_opcode_database {
                 (BuiltinObject, builtin_object, NULL, 2, 0, 1, JOF_UINT8),
                 (Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC),
                 (CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC),
-                (FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC),
                 (FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC),
                 (CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC),
                 (SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_IC),

@@ -2188,19 +2188,14 @@ void ScriptLoader::MaybePrepareModuleForBytecodeEncodingBeforeExecute(
     ModuleScript* moduleScript = aRequest->mModuleScript;
     JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
 
-    if (JS::IsModuleEvaluated(module)) {
-      // This module is already evaluated, and all imported modules should also
-      // already be evaluated.
-      return;
-    }
-
     if (aRequest->IsMarkedForBytecodeEncoding()) {
       // This module is imported multiple times, and already marked.
       return;
     }
 
-    JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
-    MaybePrepareForBytecodeEncodingBeforeExecute(aRequest, script);
+    if (ShouldCacheBytecode(aRequest)) {
+      aRequest->MarkModuleForBytecodeEncoding();
+    }
   }
 
   for (ModuleLoadRequest* childRequest : aRequest->mImports) {
@@ -2302,7 +2297,7 @@ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
 
 void ScriptLoader::RegisterForBytecodeEncoding(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mCacheInfo);
-  MOZ_ASSERT(aRequest->mScriptForBytecodeEncoding);
+  MOZ_ASSERT(aRequest->IsMarkedForBytecodeEncoding());
   MOZ_DIAGNOSTIC_ASSERT(!aRequest->isInList());
   mBytecodeEncodingQueue.AppendElement(aRequest);
 }
@@ -2419,8 +2414,18 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
                         "scriptloader_bytecode_failed");
   });
 
-  JS::RootedScript script(aCx, aRequest->mScriptForBytecodeEncoding);
-  if (!JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode)) {
+  bool result;
+  if (aRequest->IsModuleRequest()) {
+    ModuleScript* moduleScript = aRequest->AsModuleRequest()->mModuleScript;
+    JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
+    result =
+        JS::FinishIncrementalEncoding(aCx, module, aRequest->mScriptBytecode);
+  } else {
+    JS::RootedScript script(aCx, aRequest->mScriptForBytecodeEncoding);
+    result =
+        JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode);
+  }
+  if (!result) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
     // any other internal error.
     // We don't care the error and just give up encoding.
@@ -2506,9 +2511,18 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal());
 
     if (aes.isSome()) {
-      JS::RootedScript script(aes->cx(), request->mScriptForBytecodeEncoding);
-      if (!JS::FinishIncrementalEncoding(aes->cx(), script,
-                                         request->mScriptBytecode)) {
+      bool result;
+      if (request->IsModuleRequest()) {
+        ModuleScript* moduleScript = request->AsModuleRequest()->mModuleScript;
+        JS::Rooted<JSObject*> module(aes->cx(), moduleScript->ModuleRecord());
+        result = JS::FinishIncrementalEncoding(aes->cx(), module,
+                                               request->mScriptBytecode);
+      } else {
+        JS::RootedScript script(aes->cx(), request->mScriptForBytecodeEncoding);
+        result = JS::FinishIncrementalEncoding(aes->cx(), script,
+                                               request->mScriptBytecode);
+      }
+      if (!result) {
         JS_ClearPendingException(aes->cx());
       }
     }

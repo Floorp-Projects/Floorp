@@ -8,7 +8,7 @@
 </head>
 <body>
 <script>
-let {onSpellCheck} =
+let {maybeOnSpellCheck} =
   SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
 
 function waitForTick() {
@@ -30,7 +30,7 @@ async function waitForOnSpellCheck(
   info(`Waiting for onSpellCheck (${aWhen})...`);
   for (let retry = 0; retry < 100; retry++) {
     await waitForTick();
-    await new Promise(resolve => onSpellCheck(aEditingHost, resolve));
+    await new Promise(resolve => maybeOnSpellCheck(aEditingHost, resolve));
     if (aWaitForNumberOfMisspelledWords === 0) {
       if (aSpellCheckSelection.rangeCount === 0) {
         break;

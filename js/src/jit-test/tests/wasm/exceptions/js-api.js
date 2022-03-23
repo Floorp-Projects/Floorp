@@ -62,20 +62,21 @@ assertErrorMessage(
 );
 
 // Test WebAssembly.Tag methods.
-{
-  let params = [
-    [],
-    ["i32"],
-    ["i32", "i64"],
-    ["f32", "externref"],
-    ["i32", "i64", "f32", "f64"],
-  ];
+// TODO: add runtime detection for js-types
+// {
+//   let params = [
+//     [],
+//     ["i32"],
+//     ["i32", "i64"],
+//     ["f32", "externref"],
+//     ["i32", "i64", "f32", "f64"],
+//   ];
 
-  for (const arg of params) {
-    const tag = new WebAssembly.Tag({ parameters: arg });
-    assertEqArray(tag.type().parameters, arg);
-  }
-}
+//   for (const arg of params) {
+//     const tag = new WebAssembly.Tag({ parameters: arg });
+//     assertEqArray(tag.type().parameters, arg);
+//   }
+// }
 
 // WebAssembly.Exception tests.
 assertErrorMessage(

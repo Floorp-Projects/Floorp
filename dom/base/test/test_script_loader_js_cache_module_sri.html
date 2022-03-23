@@ -215,40 +215,8 @@ const tests = [
       "scriptloader_fallback",
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
-      // Bug 1759206
-      // This file is not encoded because of both module requests
-      // (import and element) don't meet the condition for the encoding.
-      //
-      // Details:
-      //   1. script element for
-      //      file_script_module_sri_import_elem_imported.js triggers
-      //      preload, that has cache info field
-      //   2. import inside file_script_module_sri_import_elem.js creates
-      //      another request for
-      //      file_script_module_sri_import_elem_imported.js , that
-      //      shares the actual request with the prior one and it does not have
-      //      cache info field
-      //   3, import inside file_script_module_sri_import_elem.js
-      //      is handled first, and that compiles the module for
-      //      file_script_module_sri_import_elem_imported.js and registers
-      //      it to the module map
-      //   4. file_script_module_sri_import_elem.js is evaluated, and that
-      //      evaluates the module for
-      //      file_script_module_sri_import_elem_imported.js as well,
-      //      that internally clears the ScriptSlot of the module object
-      //   5. bytecode encoding for file_script_module_sri_import_elem.js
-      //      is handled, but there the request for
-      //      file_script_module_sri_import_elem_imported.js does not have
-      //      cache info field, and it's not encoded
-      //   6. script element for
-      //      file_script_module_sri_import_elem_imported.js is handled
-      //      and evaluated, and it reuses the module registered to the
-      //      module map
-      //   7. bytecode encoding for script element for
-      //      file_script_module_sri_import_elem_imported.js is handled.
-      //      While it has cache info field, the module is already evaluated
-      //      and it doesn't have ScriptSlot, and it's not encoded
-      "scriptloader_no_encode",
+      "scriptloader_encode",
+      "scriptloader_bytecode_saved",
       "test_evaluated",
     ],
   },

@@ -17,6 +17,29 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild() {
   mOwner->DeleteRemoteEngine();
 }
 
+RefPtr<GenericPromise> RemoteSpellcheckEngineChild::SetCurrentDictionaries(
+    const nsTArray<nsCString>& aDictionaries) {
+  RefPtr<mozSpellChecker> spellChecker = mOwner;
+
+  return SendSetDictionaries(aDictionaries)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [spellChecker, dictionaries = aDictionaries.Clone()](bool&& aParam) {
+            if (aParam) {
+              spellChecker->mCurrentDictionaries = dictionaries.Clone();
+              return GenericPromise::CreateAndResolve(true, __func__);
+            }
+            spellChecker->mCurrentDictionaries.Clear();
+            return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                   __func__);
+          },
+          [spellChecker](ResponseRejectReason&& aReason) {
+            spellChecker->mCurrentDictionaries.Clear();
+            return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                   __func__);
+          });
+}
+
 RefPtr<GenericPromise>
 RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
     const nsTArray<nsCString>& aList) {
@@ -26,15 +49,17 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
       GetMainThreadSerialEventTarget(), __func__,
       [spellChecker](Tuple<bool, nsCString>&& aParam) {
         if (!Get<0>(aParam)) {
-          spellChecker->mCurrentDictionary.Truncate();
+          spellChecker->mCurrentDictionaries.Clear();
           return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                  __func__);
         }
-        spellChecker->mCurrentDictionary = std::move(Get<1>(aParam));
+        spellChecker->mCurrentDictionaries.Clear();
+        spellChecker->mCurrentDictionaries.AppendElement(
+            std::move(Get<1>(aParam)));
         return GenericPromise::CreateAndResolve(true, __func__);
       },
       [spellChecker](ResponseRejectReason&& aReason) {
-        spellChecker->mCurrentDictionary.Truncate();
+        spellChecker->mCurrentDictionaries.Clear();
         return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                __func__);
       });

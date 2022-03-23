@@ -21,8 +21,10 @@ from mozversioncontrol import (
 )
 from six import string_types
 
-# https://sentry.prod.mozaws.net/operations/mach/
-_SENTRY_DSN = "https://8228c9aff64949c2ba4a2154dc515f55@sentry.prod.mozaws.net/525"
+# https://sentry.io/organizations/mozilla/projects/mach/
+_SENTRY_DSN = (
+    "https://5cfe351fb3a24e8d82c751252b48722b@o1069899.ingest.sentry.io/6250014"
+)
 
 
 class ErrorReporter(object):

@@ -242,19 +242,42 @@ InlineSpellChecker.prototype = {
     }
 
     var list;
-    var curlang = "";
+    var curlangs = new Set();
     if (this.mRemote) {
       list = this.mRemote.dictionaryList;
-      curlang = this.mRemote.currentDictionary;
+      curlangs = new Set(this.mRemote.currentDictionaries);
     } else if (this.mInlineSpellChecker) {
       var spellchecker = this.mInlineSpellChecker.spellChecker;
       list = spellchecker.GetDictionaryList();
       try {
-        curlang = spellchecker.GetCurrentDictionary();
+        curlangs = new Set(spellchecker.getCurrentDictionaries());
       } catch (e) {}
     }
 
     var sortedList = this.sortDictionaryList(list);
+
+    menu.addEventListener(
+      "command",
+      async evt => {
+        let localeCodes = new Set(curlangs);
+        let localeCode = evt.target.dataset.localeCode;
+        if (localeCodes.has(localeCode)) {
+          localeCodes.delete(localeCode);
+        } else {
+          localeCodes.add(localeCode);
+        }
+        let dictionaries = Array.from(localeCodes);
+        await this.selectDictionaries(dictionaries);
+        // Notify change of dictionary, especially for Thunderbird,
+        // which is otherwise not notified any more.
+        var view = menu.ownerGlobal;
+        var spellcheckChangeEvent = new view.CustomEvent("spellcheck-changed", {
+          detail: { dictionaries },
+        });
+        menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
+      },
+      true
+    );
 
     for (var i = 0; i < sortedList.length; i++) {
       var item = menu.ownerDocument.createXULElement("menuitem");
@@ -266,29 +289,12 @@ InlineSpellChecker.prototype = {
       //      inject regionNames/languageNames FTL and localize using
       //      `l10n-id` here.
       item.setAttribute("label", sortedList[i].displayName);
-      item.setAttribute("type", "radio");
+      item.setAttribute("type", "checkbox");
+      item.setAttribute("selection-type", "multiple");
       this.mDictionaryItems.push(item);
-      if (curlang == sortedList[i].localeCode) {
+      item.dataset.localeCode = sortedList[i].localeCode;
+      if (curlangs.has(sortedList[i].localeCode)) {
         item.setAttribute("checked", "true");
-      } else {
-        var callback = function(me, localeCode) {
-          return function(evt) {
-            me.selectDictionary(localeCode);
-            // Notify change of dictionary, especially for Thunderbird,
-            // which is otherwise not notified any more.
-            var view = menu.ownerGlobal;
-            var spellcheckChangeEvent = new view.CustomEvent(
-              "spellcheck-changed",
-              { detail: { dictionary: localeCode } }
-            );
-            menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
-          };
-        };
-        item.addEventListener(
-          "command",
-          callback(this, sortedList[i].localeCode),
-          true
-        );
       }
       if (insertBefore) {
         menu.insertBefore(item, insertBefore);
@@ -309,16 +315,16 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a dictionary
-  selectDictionary(localeCode) {
+  async selectDictionaries(localeCodes) {
     if (this.mRemote) {
-      this.mRemote.selectDictionary(localeCode);
+      this.mRemote.selectDictionaries(localeCodes);
       return;
     }
     if (!this.mInlineSpellChecker) {
       return;
     }
     var spellchecker = this.mInlineSpellChecker.spellChecker;
-    spellchecker.SetCurrentDictionary(localeCode);
+    await spellchecker.setCurrentDictionaries(localeCodes);
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 
@@ -537,15 +543,15 @@ RemoteSpellChecker.prototype = {
     return this._spellInfo.spellSuggestions;
   },
 
-  get currentDictionary() {
-    return this._spellInfo.currentDictionary;
+  get currentDictionaries() {
+    return this._spellInfo.currentDictionaries;
   },
   get dictionaryList() {
     return this._spellInfo.dictionaryList.slice();
   },
 
-  selectDictionary(localeCode) {
-    this._actor.selectDictionary({ localeCode });
+  selectDictionaries(localeCodes) {
+    this._actor.selectDictionaries({ localeCodes });
   },
 
   replaceMisspelling(suggestion) {

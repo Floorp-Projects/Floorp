@@ -1163,10 +1163,6 @@ void ModuleObject::setMetaObject(JSObject* obj) {
   setReservedSlot(MetaObjectSlot, ObjectValue(*obj));
 }
 
-Scope* ModuleObject::enclosingScope() const {
-  return script()->enclosingScope();
-}
-
 /* static */
 void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   ModuleObject& module = obj->as<ModuleObject>();
@@ -1234,13 +1230,14 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
 
   RootedScript script(cx, self->script());
 
-  // The top-level script if a module is only ever executed once. Clear the
-  // reference at exit to prevent us keeping this alive unnecessarily. This is
-  // kept while executing so it is available to the debugger.
-  // Also, the script reference is used as the condition for
-  // JS::IsModuleEvaluated.
-  auto guardA = mozilla::MakeScopeExit(
-      [&] { self->setReservedSlot(ScriptSlot, UndefinedValue()); });
+  auto guardA = mozilla::MakeScopeExit([&] {
+    if (self->isAsync()) {
+      // Handled in AsyncModuleExecutionFulfilled and
+      // AsyncModuleExecutionRejected.
+      return;
+    }
+    ModuleObject::onTopLevelEvaluationFinished(self);
+  });
 
   RootedModuleEnvironmentObject env(cx, self->environment());
   if (!env) {
@@ -1250,6 +1247,14 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
   }
 
   return Execute(cx, script, env, rval);
+}
+
+/* static */
+void ModuleObject::onTopLevelEvaluationFinished(ModuleObject* module) {
+  // ScriptSlot is used by debugger to access environments during evaluating
+  // the top-level script.
+  // Clear the reference at exit to prevent us keeping this alive unnecessarily.
+  module->setReservedSlot(ScriptSlot, UndefinedValue());
 }
 
 /* static */
@@ -2252,6 +2257,8 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
   // Step 2.
   MOZ_ASSERT(module->isAsyncEvaluating());
 
+  ModuleObject::onTopLevelEvaluationFinished(module);
+
   if (module->hasTopLevelCapability()) {
     MOZ_ASSERT(module->getCycleRoot() == module);
     ModuleObject::topLevelCapabilityResolve(cx, module);
@@ -2327,6 +2334,8 @@ void js::AsyncModuleExecutionRejected(JSContext* cx, HandleModuleObject module,
     MOZ_ASSERT(module->hadEvaluationError());
     return;
   }
+
+  ModuleObject::onTopLevelEvaluationFinished(module);
 
   // Step 3.
   MOZ_ASSERT(!module->hadEvaluationError());

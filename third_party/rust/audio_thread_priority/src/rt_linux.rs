@@ -33,7 +33,7 @@ impl From<dbus::Error> for AudioThreadPriorityError {
 
 impl From<Box<dyn Error>> for AudioThreadPriorityError {
     fn from(error: Box<dyn Error>) -> Self {
-        AudioThreadPriorityError::new(&format!("{}", error.to_string()))
+        AudioThreadPriorityError::new(&error.to_string())
     }
 }
 
@@ -107,7 +107,7 @@ fn rtkit_set_realtime(thread: u64, pid: u64, prio: u32) -> Result<(), Box<dyn Er
     };
     let c = Connection::get_private(BusType::System)?;
     c.send_with_reply_and_block(m, DBUS_SOCKET_TIMEOUT)?;
-    return Ok(());
+    Ok(())
 }
 
 /// Returns the maximum priority, maximum real-time time slice, and the current real-time time
@@ -143,7 +143,7 @@ fn get_limits() -> Result<(i64, u64, libc::rlimit64), AudioThreadPriorityError> 
 
     if unsafe { libc::getrlimit64(libc::RLIMIT_RTTIME, &mut current_limit) } < 0 {
         return Err(AudioThreadPriorityError::new_with_inner(
-            &"getrlimit64",
+            "getrlimit64",
             Box::new(OSError::last_os_error()),
         ));
     }
@@ -192,11 +192,11 @@ pub fn demote_current_thread_from_real_time_internal(
     } < 0
     {
         return Err(AudioThreadPriorityError::new_with_inner(
-            &"could not demote thread",
+            "could not demote thread",
             Box::new(OSError::last_os_error()),
         ));
     }
-    return Ok(());
+    Ok(())
 }
 
 /// This can be called by sandboxed code, it only restores priority to what they were.
@@ -217,11 +217,11 @@ pub fn demote_thread_from_real_time_internal(
     } < 0
     {
         return Err(AudioThreadPriorityError::new_with_inner(
-            &"could not demote thread",
+            "could not demote thread",
             Box::new(OSError::last_os_error()),
         ));
     }
-    return Ok(());
+    Ok(())
 }
 
 /// Get the current thread information, as an opaque struct, that can be serialized and sent
@@ -236,7 +236,7 @@ pub fn get_current_thread_info_internal(
 
     if unsafe { libc::pthread_getschedparam(pthread_id, &mut policy, &mut param) } < 0 {
         return Err(AudioThreadPriorityError::new_with_inner(
-            &"pthread_getschedparam",
+            "pthread_getschedparam",
             Box::new(OSError::last_os_error()),
         ));
     }
@@ -294,20 +294,18 @@ pub fn promote_thread_to_real_time_internal(
     let r = rtkit_set_realtime(thread_id as u64, pid as u64, RT_PRIO_DEFAULT);
 
     match r {
-        Ok(_) => {
-            return Ok(handle);
-        }
+        Ok(_) => Ok(handle),
         Err(e) => {
             if unsafe { libc::setrlimit64(libc::RLIMIT_RTTIME, &limits) } < 0 {
                 return Err(AudioThreadPriorityError::new_with_inner(
-                    &"setrlimit64",
+                    "setrlimit64",
                     Box::new(OSError::last_os_error()),
                 ));
             }
-            return Err(AudioThreadPriorityError::new_with_inner(
-                &"Thread promotion error",
+            Err(AudioThreadPriorityError::new_with_inner(
+                "Thread promotion error",
                 e,
-            ));
+            ))
         }
     }
 }

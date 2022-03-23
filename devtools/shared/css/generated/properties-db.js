@@ -9010,7 +9010,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-hidden-unscrollable",
       "auto",
       "clip",
       "hidden",
@@ -9046,7 +9045,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-hidden-unscrollable",
       "auto",
       "clip",
       "hidden",
@@ -9066,7 +9064,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-hidden-unscrollable",
       "auto",
       "clip",
       "hidden",
@@ -9103,7 +9100,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-hidden-unscrollable",
       "auto",
       "clip",
       "hidden",
@@ -9123,7 +9119,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-hidden-unscrollable",
       "auto",
       "clip",
       "hidden",

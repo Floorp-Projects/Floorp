@@ -2496,16 +2496,6 @@
   value: true
   mirror: always
 
-- name: dom.IntersectionObserver.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: dom.IntersectionObserverExplicitDocumentRoot.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.ipc.cancel_content_js_when_navigating
   type: bool
   value: true
@@ -6793,7 +6783,7 @@
 #if defined(ENABLE_WASM_EXCEPTIONS)
 -   name: javascript.options.wasm_exceptions
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 #endif // defined(ENABLE_WASM_EXCEPTIONS)
 
@@ -7720,6 +7710,13 @@
   type: bool
   value: false
   mirror: always
+
+# Is support for CSS overflow: -moz-hidden-unscrollable enabled
+- name: layout.css.overflow-moz-hidden-unscrollable.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
 
 # Is support for overscroll-behavior enabled?
 - name: layout.css.overscroll-behavior.enabled

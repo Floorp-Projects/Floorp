@@ -93,7 +93,6 @@ def watch(command_context, verbose=False):
         )
         return 1
 
-    command_context.activate_virtualenv()
     from mozbuild.faster_daemon import Daemon
 
     daemon = Daemon(command_context.config_environment)
@@ -198,7 +197,6 @@ def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
 )
 def doctor(command_context, fix=False, verbose=False):
     """Diagnose common build environment problems"""
-    command_context.activate_virtualenv()
     from mozbuild.doctor import run_doctor
 
     return run_doctor(

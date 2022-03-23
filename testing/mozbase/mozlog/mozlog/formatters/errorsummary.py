@@ -127,6 +127,11 @@ class ErrorSummaryFormatter(BaseFormatter):
             "stackwalk_stdout": item.get("stackwalk_stdout"),
             "stackwalk_stderr": item.get("stackwalk_stderr"),
         }
+
+        if item.get("test"):
+            data["group"] = self.test_to_group.get(item["test"], "")
+            self.groups[data["group"]]["status"] = "ERROR"
+
         return self._output("crash", data)
 
     def lint(self, item):

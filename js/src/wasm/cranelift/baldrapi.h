@@ -73,13 +73,12 @@ struct CraneliftStaticEnvironment {
   bool v128_enabled;
   size_t static_memory_bound;
   size_t memory_guard_size;
-  size_t memory_base_tls_offset;
-  size_t instance_tls_offset;
-  size_t interrupt_tls_offset;
-  size_t cx_tls_offset;
+  size_t memory_base_instance_offset;
+  size_t interrupt_instance_offset;
+  size_t cx_instance_offset;
   size_t realm_cx_offset;
-  size_t realm_tls_offset;
-  size_t realm_func_import_tls_offset;
+  size_t realm_instance_offset;
+  size_t realm_func_import_instance_offset;
   size_t size_of_wasm_frame;
 
   // Not bindgen'd because it's inlined.
@@ -241,8 +240,8 @@ const js::wasm::TypeIdDesc* env_func_sig_id(
     const CraneliftModuleEnvironment* env, size_t funcIndex);
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
                           size_t funcIndex);
-size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
-                                  size_t funcIndex);
+size_t env_func_import_instance_offset(const CraneliftModuleEnvironment* env,
+                                       size_t funcIndex);
 bool env_func_is_import(const CraneliftModuleEnvironment* env,
                         size_t funcIndex);
 const js::wasm::FuncType* env_signature(const CraneliftModuleEnvironment* env,
@@ -259,9 +258,9 @@ bool global_isMutable(const js::wasm::GlobalDesc*);
 bool global_isIndirect(const js::wasm::GlobalDesc*);
 BD_ConstantValue global_constantValue(const js::wasm::GlobalDesc*);
 js::wasm::TypeCode global_type(const js::wasm::GlobalDesc*);
-size_t global_tlsOffset(const js::wasm::GlobalDesc*);
+size_t global_instanceOffset(const js::wasm::GlobalDesc*);
 
-size_t table_tlsOffset(const js::wasm::TableDesc*);
+size_t table_instanceOffset(const js::wasm::TableDesc*);
 uint32_t table_initialLimit(const js::wasm::TableDesc*);
 // Returns the maximum limit as an uint32, or UINT32_MAX if not defined.
 uint32_t table_maximumLimit(const js::wasm::TableDesc*);
@@ -274,7 +273,7 @@ const BD_ValType* funcType_results(const js::wasm::FuncType*);
 
 js::wasm::TypeIdDescKind funcType_idKind(const js::wasm::TypeIdDesc*);
 size_t funcType_idImmediate(const js::wasm::TypeIdDesc*);
-size_t funcType_idTlsOffset(const js::wasm::TypeIdDesc*);
+size_t funcType_idInstanceOffset(const js::wasm::TypeIdDesc*);
 
 void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,
                    size_t mappedWords, size_t argsSize, size_t codeOffset);

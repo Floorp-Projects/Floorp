@@ -69,8 +69,6 @@ def is_excluded_directory(directory, exclusions):
 )
 def generate_test_certs(command_context, specifications):
     """Generate test certificates and keys from specifications."""
-
-    command_context.activate_virtualenv()
     import pycert
     import pykey
 

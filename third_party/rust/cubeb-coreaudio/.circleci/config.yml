@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   regular_test:
     macos:  # indicate that we are using the macOS executor
-      xcode: 11.3.0 # indicate our selected version of Xcode
+      xcode: 12.5.1 # indicate our selected version of Xcode
     steps:
       - checkout
       - run: brew install cmake # for libcubeb in cubeb-sys crate

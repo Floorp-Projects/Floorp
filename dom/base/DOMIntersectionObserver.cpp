@@ -106,12 +106,6 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
       observer->mRoot = aOptions.mRoot.Value().GetAsElement();
     } else {
       MOZ_ASSERT(aOptions.mRoot.Value().IsDocument());
-      if (!StaticPrefs::
-              dom_IntersectionObserverExplicitDocumentRoot_enabled()) {
-        aRv.ThrowTypeError<dom::MSG_DOES_NOT_IMPLEMENT_INTERFACE>(
-            "'root' member of IntersectionObserverInit", "Element");
-        return nullptr;
-      }
       observer->mRoot = aOptions.mRoot.Value().GetAsDocument();
     }
   }

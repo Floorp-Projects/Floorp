@@ -258,8 +258,7 @@ impl InstructionWriter {
             | Opcode::Eval
             | Opcode::CallIter
             | Opcode::StrictEval
-            | Opcode::FunCall
-            | Opcode::FunApply => {
+            | Opcode::FunCall => {
                 // callee, this, arguments...
                 2 + (argc as usize)
             }
@@ -787,11 +786,6 @@ impl InstructionWriter {
 
     pub fn call_iter(&mut self, argc: u16) {
         self.emit_argc_op(Opcode::CallIter, argc);
-        self.write_u16(argc);
-    }
-
-    pub fn fun_apply(&mut self, argc: u16) {
-        self.emit_argc_op(Opcode::FunApply, argc);
         self.write_u16(argc);
     }
 

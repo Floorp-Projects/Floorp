@@ -197,7 +197,8 @@ void UIEvent::DuplicatePrivateData() {
                                     mDefaultClientPoint);
   // GetScreenPoint converts mEvent->mRefPoint to right coordinates.
   CSSIntPoint screenPoint =
-      Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
+      Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint)
+          .valueOr(CSSIntPoint{0, 0});
 
   Event::DuplicatePrivateData();
 

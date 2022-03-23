@@ -8,7 +8,7 @@
 /// type.
 pub trait Sample: Send + Copy {
     /// Map f32 in range [-1,1] to sample type
-    fn from_float(f32) -> Self;
+    fn from_float(_: f32) -> Self;
 }
 
 impl Sample for i16 {

@@ -3265,8 +3265,8 @@ WebSocketChannel::Notify(nsITimer* timer) {
     AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
     // mReconnectDelayTimer is only modified on MainThread
   } else if (timer == mReconnectDelayTimer) {
-    MOZ_RELEASE_ASSERT(mConnecting == CONNECTING_DELAYED,
-                       "woke up from delay w/o being delayed?");
+    MOZ_ASSERT(mConnecting == CONNECTING_DELAYED,
+               "woke up from delay w/o being delayed?");
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
     {

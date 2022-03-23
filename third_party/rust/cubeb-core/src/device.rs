@@ -220,8 +220,8 @@ impl DeviceInfoRef {
 
 #[cfg(test)]
 mod tests {
-    use Device;
     use ffi::cubeb_device;
+    use Device;
 
     #[test]
     fn device_device_ref_same_ptr() {
