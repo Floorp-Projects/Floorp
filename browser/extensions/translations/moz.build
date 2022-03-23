@@ -1,4 +1,0 @@
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Translations")
-
-JAR_MANIFESTS += ["jar.mn"]
