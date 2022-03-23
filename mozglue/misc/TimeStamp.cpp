@@ -8,10 +8,8 @@
  * Implementation of the OS-independent methods of the TimeStamp class
  */
 
-#include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Uptime.h"
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
