@@ -345,19 +345,18 @@ function _assertDebugLine(dbg, line, column) {
 
   const markedSpans = lineInfo.handle.markedSpans;
   if (markedSpans && markedSpans.length > 0) {
-    const classMatch =
-      markedSpans.filter(
-        span =>
-          span.marker.className &&
-          span.marker.className.includes("debug-expression")
-      ).length > 0;
-
-    if (column) {
-      const frame = dbg.selectors.getVisibleSelectedFrame();
-      is(frame.location.column, column, `Paused at column ${column}`);
-    }
-
-    ok(classMatch, "expression is highlighted as paused");
+    const hasExpectedDebugLine = markedSpans.some(
+      span =>
+        span.marker.className?.includes("debug-expression") &&
+        // When a precise column is expected, ensure that we have at least
+        // one "debug line" for the column we expect.
+        // (See the React Component: DebugLine.setDebugLine)
+        (!column || span.from == column)
+    );
+    ok(
+      hasExpectedDebugLine,
+      "Got the expected DebugLine. i.e. got the right marker in codemirror visualizing the breakpoint"
+    );
   }
   info(`Paused on line ${line}`);
 }
@@ -384,7 +383,19 @@ function assertPausedAtSourceAndLine(
 
   // Check the pause location
   const pauseLine = getVisibleSelectedFrameLine(dbg);
+  is(
+    pauseLine,
+    expectedLine,
+    "Redux state for currently selected frame's line is correct"
+  );
   const pauseColumn = getVisibleSelectedFrameColumn(dbg);
+  if (expectedColumn) {
+    is(
+      pauseColumn,
+      expectedColumn,
+      "Redux state for currently selected frame's column is correct"
+    );
+  }
   _assertDebugLine(dbg, pauseLine, pauseColumn);
 
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
