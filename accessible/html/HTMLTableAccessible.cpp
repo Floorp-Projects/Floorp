@@ -10,7 +10,6 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "AccAttributes.h"
-#include "CacheConstants.h"
 #include "DocAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "nsTextEquivUtils.h"
@@ -151,10 +150,6 @@ void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       aAttribute == nsGkAtoms::scope) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
-    mDoc->QueueCacheUpdate(this, CacheDomain::Table);
-  } else if (aAttribute == nsGkAtoms::rowspan ||
-             aAttribute == nsGkAtoms::colspan) {
-    mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   }
 }
 
@@ -204,7 +199,8 @@ uint32_t HTMLTableCellAccessible::RowExtent() const {
   return table->RowExtentAt(rowIdx, colIdx);
 }
 
-void HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
+void HTMLTableCellAccessible::ColHeaderCells(
+    nsTArray<LocalAccessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (LocalAccessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -223,7 +219,8 @@ void HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
   if (aCells->IsEmpty()) TableCellAccessible::ColHeaderCells(aCells);
 }
 
-void HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
+void HTMLTableCellAccessible::RowHeaderCells(
+    nsTArray<LocalAccessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (LocalAccessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -528,7 +525,7 @@ uint32_t HTMLTableAccessible::SelectedRowCount() {
   return count;
 }
 
-void HTMLTableAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
+void HTMLTableAccessible::SelectedCells(nsTArray<LocalAccessible*>* aCells) {
   nsTableWrapperFrame* tableFrame = GetTableWrapperFrame();
   if (!tableFrame) return;
 

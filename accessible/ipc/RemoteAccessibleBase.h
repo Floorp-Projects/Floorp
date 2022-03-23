@@ -220,7 +220,10 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   uintptr_t GetWrapper() const { return mWrapper; }
   void SetWrapper(uintptr_t aWrapper) { mWrapper = aWrapper; }
 
-  virtual uint64_t ID() const override { return mID; }
+  /*
+   * Return the ID of the accessible being proxied.
+   */
+  uint64_t ID() const { return mID; }
 
   /**
    * Return the document containing this proxy, or the proxy itself if it is a
@@ -271,8 +274,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) override;
 
-  virtual bool TableIsProbablyForLayout();
-
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();
   RefPtr<const AccAttributes> GetCachedTextAttributes();
@@ -281,9 +282,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
     return IsHyperText() ? static_cast<HyperTextAccessibleBase*>(this)
                          : nullptr;
   }
-
-  virtual TableAccessibleBase* AsTableBase() override;
-  virtual TableCellAccessibleBase* AsTableCellBase() override;
 
   /**
    * Return the id of the dom node this accessible represents.  Note this
@@ -341,7 +339,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   friend Derived;
   friend DocAccessibleParent;
   friend class xpcAccessible;
-  friend class CachedTableCellAccessible;
 
   nsTArray<Derived*> mChildren;
   DocAccessibleParent* mDoc;
