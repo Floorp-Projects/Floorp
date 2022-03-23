@@ -240,7 +240,69 @@ function getVisibleSelectedFrameColumn(dbg) {
   return frame?.location.column;
 }
 
-function assertDebugLine(dbg, line, column) {
+/**
+ * Assert that a given line is breakable or not.
+ * Verify that CodeMirror gutter is grayed out via the empty line classname if not breakable.
+ */
+function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
+  const lineInfo = getCM(dbg).lineInfo(line - 1);
+  // When a line is not breakable, the "empty-line" class is added
+  // and the line is greyed out
+  if (shouldBeBreakable) {
+    ok(
+      !lineInfo.wrapClass?.includes("empty-line"),
+      `${file}:${line} should be breakable`
+    );
+  } else {
+    ok(
+      lineInfo?.wrapClass?.includes("empty-line"),
+      `${file}:${line} should NOT be breakable`
+    );
+  }
+}
+
+/**
+ * Assert that the debugger is highlighting the correct location.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @param {String} source
+ * @param {Number} line
+ * @static
+ */
+function assertHighlightLocation(dbg, source, line) {
+  source = findSource(dbg, source);
+
+  // Check the selected source
+  is(
+    dbg.selectors.getSelectedSource().url,
+    source.url,
+    "source url is correct"
+  );
+
+  // Check the highlight line
+  const lineEl = findElement(dbg, "highlightLine");
+  ok(lineEl, "Line is highlighted");
+
+  is(
+    findAllElements(dbg, "highlightLine").length,
+    1,
+    "Only 1 line is highlighted"
+  );
+
+  ok(isVisibleInEditor(dbg, lineEl), "Highlighted line is visible");
+
+  const cm = getCM(dbg);
+  const lineInfo = cm.lineInfo(line - 1);
+  ok(lineInfo.wrapClass.includes("highlight-line"), "Line is highlighted");
+}
+
+/**
+ * Helper function for assertPausedAtSourceAndLine.
+ *
+ * Assert that CodeMirror reports to be paused at the given line/column.
+ */
+function _assertDebugLine(dbg, line, column) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
   const source = dbg.selectors.getSelectedSource();
@@ -301,66 +363,8 @@ function assertDebugLine(dbg, line, column) {
 }
 
 /**
- * Assert that a given line is breaklable or not.
- * Verify that CodeMirror gutter is grayed out via the empty line classname if not breakable.
- */
-function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  // When a line is not breakable, the "empty-line" class is added
-  // and the line is greyed out
-  if (shouldBeBreakable) {
-    ok(
-      !lineInfo.wrapClass?.includes("empty-line"),
-      `${file}:${line} should be breakable`
-    );
-  } else {
-    ok(
-      lineInfo?.wrapClass?.includes("empty-line"),
-      `${file}:${line} should NOT be breakable`
-    );
-  }
-}
-
-/**
- * Assert that the debugger is highlighting the correct location.
- *
- * @memberof mochitest/asserts
- * @param {Object} dbg
- * @param {String} source
- * @param {Number} line
- * @static
- */
-function assertHighlightLocation(dbg, source, line) {
-  source = findSource(dbg, source);
-
-  // Check the selected source
-  is(
-    dbg.selectors.getSelectedSource().url,
-    source.url,
-    "source url is correct"
-  );
-
-  // Check the highlight line
-  const lineEl = findElement(dbg, "highlightLine");
-  ok(lineEl, "Line is highlighted");
-
-  is(
-    findAllElements(dbg, "highlightLine").length,
-    1,
-    "Only 1 line is highlighted"
-  );
-
-  ok(isVisibleInEditor(dbg, lineEl), "Highlighted line is visible");
-
-  const cm = getCM(dbg);
-  const lineInfo = cm.lineInfo(line - 1);
-  ok(lineInfo.wrapClass.includes("highlight-line"), "Line is highlighted");
-}
-
-/**
  * Make sure the debugger is paused at a certain source ID and line.
  *
- * @memberof mochitest/asserts
  * @param {Object} dbg
  * @param {String} expectedSourceId
  * @param {Number} expectedLine
@@ -381,7 +385,7 @@ function assertPausedAtSourceAndLine(
   // Check the pause location
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   const pauseColumn = getVisibleSelectedFrameColumn(dbg);
-  assertDebugLine(dbg, pauseLine, pauseColumn);
+  _assertDebugLine(dbg, pauseLine, pauseColumn);
 
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 
