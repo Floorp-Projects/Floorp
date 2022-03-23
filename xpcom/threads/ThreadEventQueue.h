@@ -72,14 +72,15 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
                     ThreadEventTarget* aEventTarget);
   };
 
-  nsTArray<NestedQueueItem> mNestedQueues;
+  nsTArray<NestedQueueItem> mNestedQueues GUARDED_BY(mLock);
 
-  Mutex mLock MOZ_UNANNOTATED;
-  CondVar mEventsAvailable;
+  Mutex mLock;
+  CondVar mEventsAvailable GUARDED_BY(mLock);
 
-  bool mEventsAreDoomed = false;
-  nsCOMPtr<nsIThreadObserver> mObserver;
-  bool mIsMainThread;
+  bool mEventsAreDoomed GUARDED_BY(mLock) = false;
+  nsCOMPtr<nsIThreadObserver> mObserver GUARDED_BY(mLock);
+
+  const bool mIsMainThread;
 };
 
 }  // namespace mozilla
