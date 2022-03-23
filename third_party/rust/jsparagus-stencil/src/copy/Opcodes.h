@@ -1739,10 +1739,7 @@
      * iterable") rather than `JSMSG_NOT_FUNCTION` ("x[Symbol.iterator] is not
      * a function"). The `argc` operand must be 0 for this variation.
      *
-     * `JSOp::FunApply` hints to the VM that this is likely a call to the
-     * builtin method `Function.prototype.apply`, an easy optimization target.
-     *
-     * `JSOp::FunCall` similarly hints to the VM that the callee is likely
+     * `JSOp::FunCall` hints to the VM that the callee is likely
      * `Function.prototype.call`.
      *
      * `JSOp::CallIgnoresRv` hints to the VM that the return value is ignored.
@@ -1760,7 +1757,6 @@
      */ \
     MACRO(Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     MACRO(CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
-    MACRO(FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     MACRO(FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     MACRO(CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     /*
@@ -3545,13 +3541,14 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  IF_RECORD_TUPLE(/* empty */, MACRO(226))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
+  MACRO(233)                                   \
   MACRO(234)                                   \
   MACRO(235)                                   \
   MACRO(236)                                   \

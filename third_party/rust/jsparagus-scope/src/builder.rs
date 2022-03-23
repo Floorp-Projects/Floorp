@@ -353,8 +353,11 @@ impl From<BindingIndex> for usize {
 
 #[derive(Debug)]
 struct PossiblyAnnexBFunction {
+    #[allow(dead_code)]
     name: SourceAtomSetIndex,
+    #[allow(dead_code)]
     owner_scope_index: ScopeIndex,
+    #[allow(dead_code)]
     binding_index: BindingIndex,
 
     /// Index of the script in the list of `functions` in the
