@@ -446,7 +446,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   if (mGeckoAccessible->IsLocal()) {
     TableCellAccessible* cell = mGeckoAccessible->AsLocal()->AsTableCell();
-    AutoTArray<LocalAccessible*, 10> headerCells;
+    AutoTArray<Accessible*, 10> headerCells;
     cell->RowHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {
@@ -462,7 +462,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   if (mGeckoAccessible->IsLocal()) {
     TableCellAccessible* cell = mGeckoAccessible->AsLocal()->AsTableCell();
-    AutoTArray<LocalAccessible*, 10> headerCells;
+    AutoTArray<Accessible*, 10> headerCells;
     cell->ColHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {

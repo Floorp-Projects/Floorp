@@ -94,7 +94,7 @@ xpcAccessibleTableCell::GetColumnHeaderCells(nsIArray** aHeaderCells) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  AutoTArray<LocalAccessible*, 10> headerCells;
+  AutoTArray<Accessible*, 10> headerCells;
   Intl()->ColHeaderCells(&headerCells);
 
   nsCOMPtr<nsIMutableArray> cells = do_CreateInstance(NS_ARRAY_CONTRACTID);
@@ -115,7 +115,7 @@ xpcAccessibleTableCell::GetRowHeaderCells(nsIArray** aHeaderCells) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  AutoTArray<LocalAccessible*, 10> headerCells;
+  AutoTArray<Accessible*, 10> headerCells;
   Intl()->RowHeaderCells(&headerCells);
 
   nsCOMPtr<nsIMutableArray> cells = do_CreateInstance(NS_ARRAY_CONTRACTID);

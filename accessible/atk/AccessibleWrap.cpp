@@ -1548,13 +1548,13 @@ LocalAccessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
     return nullptr;
   }
 
-  AutoTArray<LocalAccessible*, 10> headerCells;
+  AutoTArray<Accessible*, 10> headerCells;
   tableCell->ColHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;
   }
 
-  return headerCells[0];
+  return headerCells[0]->AsLocal();
 }
 
 // static
@@ -1581,11 +1581,11 @@ LocalAccessible* AccessibleWrap::GetRowHeader(TableAccessible* aAccessible,
     return nullptr;
   }
 
-  AutoTArray<LocalAccessible*, 10> headerCells;
+  AutoTArray<Accessible*, 10> headerCells;
   tableCell->RowHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;
   }
 
-  return headerCells[0];
+  return headerCells[0]->AsLocal();
 }

@@ -219,7 +219,7 @@ uint32_t ARIAGridAccessible::SelectedRowCount() {
   return count;
 }
 
-void ARIAGridAccessible::SelectedCells(nsTArray<LocalAccessible*>* aCells) {
+void ARIAGridAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   if (IsARIARole(nsGkAtoms::table)) return;
 
   AccIterator rowIter(this, filters::GetRow);
