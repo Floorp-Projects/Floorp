@@ -226,14 +226,8 @@ struct
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<2>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
 
-/* Sadly, we must give further hints to VS2015 to build the following template item */
-#if !defined (_MSC_VER) || defined (__clang__) || (_MSC_VER >= 1910)
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v))>>{} (hb_deref (v)))
-#else
-  template <typename T> constexpr auto
-  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v).hash ())>>{} (hb_deref (v)))
-#endif
 
   template <typename T,
 	    hb_enable_if (std::is_integral<T>::value)> constexpr auto
@@ -504,7 +498,7 @@ struct hb_pair_t
 
   template <typename Q1, typename Q2,
 	    hb_enable_if (hb_is_convertible (T1, Q1) &&
-			  hb_is_convertible (T2, T2))>
+			  hb_is_convertible (T2, Q2))>
   operator hb_pair_t<Q1, Q2> () { return hb_pair_t<Q1, Q2> (first, second); }
 
   hb_pair_t<T1, T2> reverse () const

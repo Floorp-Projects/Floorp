@@ -257,6 +257,29 @@ hb_set_add (hb_set_t       *set,
 }
 
 /**
+ * hb_set_add_sorted_array:
+ * @set: A set
+ * @sorted_codepoints: (array length=num_codepoints): Array of codepoints to add
+ * @num_codepoints: Length of @sorted_codepoints
+ *
+ * Adds @num_codepoints codepoints to a set at once.
+ * The codepoints array must be in increasing order,
+ * with size at least @num_codepoints.
+ *
+ * Since: 4.1.0
+ */
+HB_EXTERN void
+hb_set_add_sorted_array (hb_set_t             *set,
+		         const hb_codepoint_t *sorted_codepoints,
+		         unsigned int          num_codepoints)
+{
+  /* Immutible-safe. */
+  set->add_sorted_array (sorted_codepoints,
+		         num_codepoints,
+		         sizeof(hb_codepoint_t));
+}
+
+/**
  * hb_set_add_range:
  * @set: A set
  * @first: The first element to add to @set

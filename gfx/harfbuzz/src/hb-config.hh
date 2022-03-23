@@ -85,6 +85,7 @@
 #ifdef HB_MINI
 #define HB_NO_AAT
 #define HB_NO_LEGACY
+#define HB_NO_BORING_EXPANSION
 #endif
 
 #if defined(HAVE_CONFIG_OVERRIDE_H) || defined(HB_CONFIG_OVERRIDE_H)
