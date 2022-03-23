@@ -235,14 +235,6 @@ extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
  */
 extern JS_PUBLIC_API JSScript* GetModuleScript(Handle<JSObject*> moduleRecord);
 
-/*
- * Returns true if the top-level script is already evaluted.
- *
- * If there's top-level await, this returns true if the evaluation already
- * reaches the first await.
- */
-extern JS_PUBLIC_API bool IsModuleEvaluated(Handle<JSObject*> moduleRecord);
-
 extern JS_PUBLIC_API JSObject* CreateModuleRequest(
     JSContext* cx, Handle<JSString*> specifierArg);
 extern JS_PUBLIC_API JSString* GetModuleRequestSpecifier(
