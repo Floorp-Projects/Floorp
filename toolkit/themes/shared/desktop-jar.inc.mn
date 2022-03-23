@@ -41,6 +41,7 @@
   skin/classic/global/dirListing/folder.png                (../../shared/dirListing/folder.png)
   skin/classic/global/dirListing/up.png                    (../../shared/dirListing/up.png)
 #endif
+  skin/classic/global/in-content/common-shared.css         (../../shared/in-content/common-shared.css)
   skin/classic/global/in-content/info-pages.css            (../../shared/in-content/info-pages.css)
   skin/classic/global/in-content/toggle-button.css         (../../shared/in-content/toggle-button.css)
   skin/classic/global/icons/arrow-left.svg                 (../../shared/icons/arrow-left.svg)
