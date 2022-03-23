@@ -53,7 +53,7 @@ void TestGC::Run(int aNumSlices) {
   CCReason neededCCAtStartOfGC =
       mScheduler.IsCCNeeded(Now(), SuspectedCCObjects());
 
-  mScheduler.NoteGCBegin(JS::GCReason::API);
+  mScheduler.NoteGCBegin();
 
   for (int slice = 0; slice < aNumSlices; slice++) {
     EXPECT_TRUE(mScheduler.InIncrementalGC());
