@@ -1772,6 +1772,8 @@ package org.mozilla.geckoview {
     method public void addMarker(@NonNull String);
     method @Nullable public Double getProfilerTime();
     method public boolean isProfilerActive();
+    method public void startProfiler(@NonNull String[], @NonNull String[]);
+    method @NonNull public GeckoResult<byte[]> stopProfiler();
   }
 
   public abstract class RuntimeSettings implements Parcelable {

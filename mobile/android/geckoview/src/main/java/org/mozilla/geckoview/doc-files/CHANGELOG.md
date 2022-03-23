@@ -1144,4 +1144,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f4393a16a61b77f77a91788ac6e2bcf366a113b6
+[api-version]: 24b60ce96bd68c81a55110bd1a3c57442dd8c65f
