@@ -332,7 +332,6 @@ class ModuleObject : public NativeObject {
 
   JSScript* maybeScript() const;
   JSScript* script() const;
-  Scope* enclosingScope() const;
   ModuleEnvironmentObject& initialEnvironment() const;
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
