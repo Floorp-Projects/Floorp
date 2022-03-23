@@ -910,6 +910,7 @@ void gfxPlatform::Init() {
   gPlatform->InitAcceleration();
   gPlatform->InitWebRenderConfig();
 
+  gPlatform->InitHardwareVideoConfig();
   gPlatform->InitWebGLConfig();
   gPlatform->InitWebGPUConfig();
   gPlatform->InitWindowOcclusionConfig();
@@ -2705,6 +2706,35 @@ void gfxPlatform::InitWebRenderConfig() {
   // The RemoveShaderCacheFromDiskIfNecessary() needs to be called after
   // WebRenderConfig initialization.
   gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
+}
+
+void gfxPlatform::InitHardwareVideoConfig() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  nsCString message;
+  nsCString failureId;
+
+  FeatureState& featureVP8 = gfxConfig::GetFeature(Feature::VP8_HW_DECODE);
+  featureVP8.EnableByDefault();
+
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_VP8_HW_DECODE, &message,
+                           failureId)) {
+    featureVP8.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+  }
+
+  gfxVars::SetUseVP8HwDecode(featureVP8.IsEnabled());
+
+  FeatureState& featureVP9 = gfxConfig::GetFeature(Feature::VP9_HW_DECODE);
+  featureVP9.EnableByDefault();
+
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_VP9_HW_DECODE, &message,
+                           failureId)) {
+    featureVP9.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+  }
+
+  gfxVars::SetUseVP9HwDecode(featureVP9.IsEnabled());
 }
 
 void gfxPlatform::InitWebGLConfig() {
