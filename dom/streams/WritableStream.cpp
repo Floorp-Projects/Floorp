@@ -699,35 +699,6 @@ AcquireWritableStreamDefaultWriter(WritableStream* aStream, ErrorResult& aRv) {
   return writer.forget();
 }
 
-// https://streams.spec.whatwg.org/#create-writable-stream
-already_AddRefed<WritableStream> CreateWritableStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
-    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
-  // Step 1: Assert: ! IsNonNegativeNumber(highWaterMark) is true.
-  MOZ_ASSERT(IsNonNegativeNumber(aHighWaterMark));
-
-  // Step 2: Let stream be a new WritableStream.
-  // Step 3: Perform ! InitializeWritableStream(stream).
-  auto stream = MakeRefPtr<WritableStream>(aGlobal);
-
-  // Step 4: Let controller be a new WritableStreamDefaultController.
-  auto controller =
-      MakeRefPtr<WritableStreamDefaultController>(aGlobal, *stream);
-
-  // Step 5: Perform ? SetUpWritableStreamDefaultController(stream, controller,
-  // startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm,
-  // highWaterMark, sizeAlgorithm).
-  SetUpWritableStreamDefaultController(aCx, stream, controller, aAlgorithms,
-                                       aHighWaterMark, aSizeAlgorithm, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Step 6: Return stream.
-  return stream.forget();
-}
-
 already_AddRefed<WritableStreamDefaultWriter> WritableStream::GetWriter(
     ErrorResult& aRv) {
   return AcquireWritableStreamDefaultWriter(this, aRv);
