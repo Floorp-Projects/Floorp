@@ -11,7 +11,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
 
@@ -24,36 +23,11 @@ namespace mozilla::dom {
 
 class WritableStreamDefaultController;
 
-class UnderlyingSinkAlgorithmsBase : public nsISupports {
+// https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
+class UnderlyingSinkAlgorithms : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UnderlyingSinkAlgorithmsBase)
-
-  MOZ_CAN_RUN_SCRIPT virtual void StartCallback(
-      JSContext* aCx, WritableStreamDefaultController& aController,
-      JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) = 0;
-
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> WriteCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aChunk,
-      WritableStreamDefaultController& aController, ErrorResult& aRv) = 0;
-
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CloseCallback(
-      JSContext* aCx, ErrorResult& aRv) = 0;
-
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> AbortCallback(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) = 0;
-
- protected:
-  virtual ~UnderlyingSinkAlgorithmsBase() = default;
-};
-
-// https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
-class UnderlyingSinkAlgorithms final : public UnderlyingSinkAlgorithmsBase {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      UnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UnderlyingSinkAlgorithms)
 
   UnderlyingSinkAlgorithms(nsIGlobalObject* aGlobal,
                            JS::HandleObject aUnderlyingSink,
@@ -98,7 +72,7 @@ class UnderlyingSinkAlgorithms final : public UnderlyingSinkAlgorithmsBase {
       ErrorResult& aRv);
 
  protected:
-  ~UnderlyingSinkAlgorithms() override { mozilla::DropJSObjects(this); }
+  virtual ~UnderlyingSinkAlgorithms() { mozilla::DropJSObjects(this); };
 
  private:
   // Virtually const, but are cycle collected
