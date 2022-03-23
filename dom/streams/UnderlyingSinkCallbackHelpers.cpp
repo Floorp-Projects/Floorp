@@ -9,16 +9,24 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(UnderlyingSinkAlgorithms,
-                                         (mGlobal, mStartCallback,
-                                          mWriteCallback, mCloseCallback,
-                                          mAbortCallback),
-                                         (mUnderlyingSink))
-NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkAlgorithms)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkAlgorithms)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnderlyingSinkAlgorithms)
+NS_IMPL_CYCLE_COLLECTION(UnderlyingSinkAlgorithmsBase)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(UnderlyingSinkAlgorithmsBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(UnderlyingSinkAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnderlyingSinkAlgorithmsBase)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(UnderlyingSinkAlgorithmsBase)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(
+    UnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase,
+    (mGlobal, mStartCallback, mWriteCallback, mCloseCallback, mAbortCallback),
+    (mUnderlyingSink))
+NS_IMPL_ADDREF_INHERITED(UnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
+NS_IMPL_RELEASE_INHERITED(UnderlyingSinkAlgorithms,
+                          UnderlyingSinkAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnderlyingSinkAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSinkAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
 void UnderlyingSinkAlgorithms::StartCallback(
