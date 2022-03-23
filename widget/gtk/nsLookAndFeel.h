@@ -150,7 +150,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return mSystemThemeOverridden ? mAltTheme : mSystemTheme;
   }
 
-  GDBusProxy* mDBusSettingsProxy = nullptr;
+  RefPtr<GDBusProxy> mDBusSettingsProxy;
   mozilla::Maybe<ColorScheme> mColorSchemePreference;
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;
