@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 const channelID = "00c7fa13-7b71-447d-bd27-a91abc09d1b2";
 
 function run_test() {

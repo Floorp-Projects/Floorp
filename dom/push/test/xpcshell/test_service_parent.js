@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 function run_test() {
   do_get_profile();
   setPrefs();

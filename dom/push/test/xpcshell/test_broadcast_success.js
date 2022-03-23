@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 // Create the profile directory early to ensure pushBroadcastService
 // is initialized with the correct path
 do_get_profile();

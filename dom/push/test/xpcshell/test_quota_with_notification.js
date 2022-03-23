@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 const userAgentID = "aaabf1f8-2f68-44f1-a920-b88e9e7d7559";
 const nsIPushQuotaManager = Ci.nsIPushQuotaManager;
 
