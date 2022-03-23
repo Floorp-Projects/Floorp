@@ -67,8 +67,6 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
   bool SelectionBoundsAt(int32_t aSelectionNum, nsString& aData,
                          int32_t* aStartOffset, int32_t* aEndOffset);
 
-  virtual bool TableIsProbablyForLayout() override;
-
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {

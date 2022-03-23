@@ -70,10 +70,10 @@ class AccessibleWrap : public LocalAccessible {
 
   static void GetKeyBinding(LocalAccessible* aAccessible, nsAString& aResult);
 
-  static Accessible* GetColumnHeader(TableAccessibleBase* aAccessible,
-                                     int32_t aColIdx);
-  static Accessible* GetRowHeader(TableAccessibleBase* aAccessible,
-                                  int32_t aRowIdx);
+  static LocalAccessible* GetColumnHeader(TableAccessible* aAccessible,
+                                          int32_t aColIdx);
+  static LocalAccessible* GetRowHeader(TableAccessible* aAccessible,
+                                       int32_t aRowIdx);
 
  protected:
   nsresult FireAtkStateChangeEvent(AccEvent* aEvent, AtkObject* aObject);

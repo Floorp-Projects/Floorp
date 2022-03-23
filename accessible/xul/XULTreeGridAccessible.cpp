@@ -62,7 +62,7 @@ uint32_t XULTreeGridAccessible::SelectedRowCount() {
   return SelectedItemCount();
 }
 
-void XULTreeGridAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
+void XULTreeGridAccessible::SelectedCells(nsTArray<LocalAccessible*>* aCells) {
   uint32_t colCount = ColCount(), rowCount = RowCount();
 
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
@@ -489,7 +489,7 @@ uint32_t XULTreeGridCellAccessible::ColIdx() const {
 uint32_t XULTreeGridCellAccessible::RowIdx() const { return mRow; }
 
 void XULTreeGridCellAccessible::ColHeaderCells(
-    nsTArray<Accessible*>* aHeaderCells) {
+    nsTArray<LocalAccessible*>* aHeaderCells) {
   dom::Element* columnElm = mColumn->Element();
 
   LocalAccessible* headerCell = mDoc->GetAccessible(columnElm);

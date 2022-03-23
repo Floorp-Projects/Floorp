@@ -6,8 +6,8 @@
 
 #include "xpcAccessibleTable.h"
 
-#include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
+#include "LocalAccessible.h"
+#include "TableAccessible.h"
 
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
@@ -250,12 +250,12 @@ xpcAccessibleTable::GetSelectedCells(nsIArray** aSelectedCells) {
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoTArray<Accessible*, XPC_TABLE_DEFAULT_SIZE> cellsArray;
+  AutoTArray<LocalAccessible*, XPC_TABLE_DEFAULT_SIZE> cellsArray;
   Intl()->SelectedCells(&cellsArray);
 
   uint32_t totalCount = cellsArray.Length();
   for (uint32_t idx = 0; idx < totalCount; idx++) {
-    Accessible* cell = cellsArray.ElementAt(idx);
+    LocalAccessible* cell = cellsArray.ElementAt(idx);
     selCells->AppendElement(static_cast<nsIAccessible*>(ToXPC(cell)));
   }
 

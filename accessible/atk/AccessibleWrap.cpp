@@ -16,8 +16,8 @@
 #include "RemoteAccessible.h"
 #include "DocAccessibleParent.h"
 #include "RootAccessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
 #include "nsString.h"
@@ -1525,13 +1525,13 @@ void AccessibleWrap::GetKeyBinding(LocalAccessible* aAccessible,
 }
 
 // static
-Accessible* AccessibleWrap::GetColumnHeader(TableAccessibleBase* aAccessible,
-                                            int32_t aColIdx) {
+LocalAccessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
+                                                 int32_t aColIdx) {
   if (!aAccessible) {
     return nullptr;
   }
 
-  Accessible* cell = aAccessible->CellAt(0, aColIdx);
+  LocalAccessible* cell = aAccessible->CellAt(0, aColIdx);
   if (!cell) {
     return nullptr;
   }
@@ -1543,12 +1543,12 @@ Accessible* AccessibleWrap::GetColumnHeader(TableAccessibleBase* aAccessible,
   }
 
   // otherwise get column header for the data cell at the first row.
-  TableCellAccessibleBase* tableCell = cell->AsTableCellBase();
+  TableCellAccessible* tableCell = cell->AsTableCell();
   if (!tableCell) {
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  AutoTArray<LocalAccessible*, 10> headerCells;
   tableCell->ColHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;
@@ -1558,13 +1558,13 @@ Accessible* AccessibleWrap::GetColumnHeader(TableAccessibleBase* aAccessible,
 }
 
 // static
-Accessible* AccessibleWrap::GetRowHeader(TableAccessibleBase* aAccessible,
-                                         int32_t aRowIdx) {
+LocalAccessible* AccessibleWrap::GetRowHeader(TableAccessible* aAccessible,
+                                              int32_t aRowIdx) {
   if (!aAccessible) {
     return nullptr;
   }
 
-  Accessible* cell = aAccessible->CellAt(aRowIdx, 0);
+  LocalAccessible* cell = aAccessible->CellAt(aRowIdx, 0);
   if (!cell) {
     return nullptr;
   }
@@ -1576,12 +1576,12 @@ Accessible* AccessibleWrap::GetRowHeader(TableAccessibleBase* aAccessible,
   }
 
   // otherwise get row header for the data cell at the first column.
-  TableCellAccessibleBase* tableCell = cell->AsTableCellBase();
+  TableCellAccessible* tableCell = cell->AsTableCell();
   if (!tableCell) {
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  AutoTArray<LocalAccessible*, 10> headerCells;
   tableCell->RowHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;

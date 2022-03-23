@@ -15,6 +15,39 @@ namespace mozilla {
 namespace a11y {
 namespace utils {
 
+// convert an array of Gecko accessibles to an NSArray of native accessibles
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray) {
+  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    LocalAccessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
+// convert an array of Gecko proxy accessibles to an NSArray of native
+// accessibles
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray) {
+  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    RemoteAccessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
 /**
  * Get a localized string from the a11y string bundle.
  * Return nil if not found.

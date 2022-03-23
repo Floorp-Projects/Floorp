@@ -10,7 +10,6 @@
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "CacheConstants.h"
-#include "CachedTableAccessible.h"
 #include "DocAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
@@ -2499,28 +2498,18 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
       static_cast<uint32_t>((mParent->IsAlert() || mParent->IsInsideAlert())) &
       eInsideAlert;
 
-  if (TableCellAccessible* cell = AsTableCell()) {
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      CachedTableAccessible::Invalidate(this);
-    } else if (Role() == roles::COLUMNHEADER) {
-      // A new column header is being added. Invalidate the table's header
-      // cache.
-      TableAccessible* table = cell->Table();
-      if (table) {
-        table->GetHeaderCache().Clear();
-      }
+  // if a new column header is being added, invalidate the table's header cache.
+  TableCellAccessible* cell = AsTableCell();
+  if (cell && Role() == roles::COLUMNHEADER) {
+    TableAccessible* table = cell->Table();
+    if (table) {
+      table->GetHeaderCache().Clear();
     }
   }
 }
 
 // LocalAccessible protected
 void LocalAccessible::UnbindFromParent() {
-  // Usually, when a subtree is removed, we do this in
-  // DocAccessible::UncacheChildrenInSubtree. However, that won't get called
-  // when the document is shut down, so we handle that here.
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTable()) {
-    CachedTableAccessible::Invalidate(this);
-  }
   mParent = nullptr;
   mIndexInParent = -1;
   mIndexOfEmbeddedChild = -1;
@@ -3348,47 +3337,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  if (aCacheDomain & CacheDomain::Table) {
-    if (IsTable()) {
-      TableAccessible* table = AsTable();
-      if (table->IsProbablyLayoutTable()) {
-        fields->SetAttribute(nsGkAtoms::layout_guess, true);
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::layout_guess, DeleteEntry());
-      }
-    } else if (TableCellAccessible* cell = AsTableCell()) {
-      // For HTML table cells, we must use the HTMLTableCellAccessible
-      // GetRow/ColExtent methods rather than using the DOM attributes directly.
-      // This is because of things like rowspan="0" which depend on knowing
-      // about thead, tbody, etc., which is info we don't have in the a11y tree.
-      int32_t value = static_cast<int32_t>(cell->RowExtent());
-      if (value != 1) {
-        fields->SetAttribute(nsGkAtoms::rowspan, value);
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::rowspan, DeleteEntry());
-      }
-      value = static_cast<int32_t>(cell->ColExtent());
-      if (value != 1) {
-        fields->SetAttribute(nsGkAtoms::colspan, value);
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::colspan, DeleteEntry());
-      }
-      if (mContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                         nsGkAtoms::headers)) {
-        nsTArray<uint64_t> headers;
-        IDRefsIterator iter(mDoc, mContent, nsGkAtoms::headers);
-        while (LocalAccessible* cell = iter.Next()) {
-          if (cell->IsTableCell()) {
-            headers.AppendElement(cell->ID());
-          }
-        }
-        fields->SetAttribute(nsGkAtoms::headers, std::move(headers));
-      } else {
-        fields->SetAttribute(nsGkAtoms::headers, DeleteEntry());
-      }
-    }
-  }
-
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
@@ -3594,26 +3542,4 @@ void KeyBinding::ToAtkFormat(nsAString& aValue) const {
   if (mModifierMask & kMeta) aValue.AppendLiteral("<Meta>");
 
   aValue.Append(mKey);
-}
-
-TableAccessibleBase* LocalAccessible::AsTableBase() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTable() &&
-      !mContent->IsXULElement()) {
-    // This isn't strictly related to caching, but this new table implementation
-    // is being developed to make caching feasible. We put it behind this pref
-    // to make it easy to test while it's still under development.
-    return CachedTableAccessible::GetFrom(this);
-  }
-  return AsTable();
-}
-
-TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTableCell() &&
-      !mContent->IsXULElement()) {
-    // This isn't strictly related to caching, but this new table implementation
-    // is being developed to make caching feasible. We put it behind this pref
-    // to make it easy to test while it's still under development.
-    return CachedTableCellAccessible::GetFrom(this);
-  }
-  return AsTableCell();
 }
