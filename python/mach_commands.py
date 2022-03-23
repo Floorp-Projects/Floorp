@@ -161,7 +161,6 @@ def run_python_tests(
     extra=None,
     **kwargs,
 ):
-    command_context.activate_virtualenv()
     if test_objects is None:
         from moztest.resolve import TestResolver
 

@@ -19,7 +19,6 @@ For example, the following Mach command would have its 3rd-party dependencies de
     )
     # ...
     def foo_it_command():
-        command_context.activate_virtualenv()
         import specific_dependency
 
 The format of ``<site>_virtualenv_requirements.txt`` files are documented further in the
@@ -39,14 +38,6 @@ There's two ways of using 3rd-party Python dependencies:
 
     For dependencies that meet both restrictions (dependency of Mach/build, *and* has
     native code), see the :ref:`mach-and-build-native-dependencies` section below.
-
-.. note::
-
-    If encountering an ``ImportError``, even after following either of the above techniques,
-    then the issue could be that the package is being imported too soon.
-    Move the import to after ``.activate()``/``.activate_virtualenv()`` to resolve the issue.
-
-    This will be fixed by `bug 1717104 <https://bugzilla.mozilla.org/show_bug.cgi?id=1717104>`__.
 
 .. _python-pip-install:
 

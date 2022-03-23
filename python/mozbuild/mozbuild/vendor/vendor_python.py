@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import mozfile
@@ -22,7 +23,6 @@ class VendorPython(MozbuildObject):
         self.log_manager.enable_unstructured()
 
         vendor_dir = mozpath.join(self.topsrcdir, os.path.join("third_party", "python"))
-        self.activate_virtualenv()
         spec = os.path.join(vendor_dir, "requirements.in")
         requirements = os.path.join(vendor_dir, "requirements.txt")
 
@@ -41,7 +41,7 @@ class VendorPython(MozbuildObject):
             # "--allow-unsafe" is required to vendor pip and setuptools.
             subprocess.check_output(
                 [
-                    self.virtualenv_manager.python_path,
+                    sys.executable,
                     "-m",
                     "piptools",
                     "compile",
@@ -62,7 +62,7 @@ class VendorPython(MozbuildObject):
                 # use requirements.txt to download archived source distributions of all packages
                 subprocess.check_call(
                     [
-                        self.virtualenv_manager.python_path,
+                        sys.executable,
                         "-m",
                         "pip",
                         "download",
