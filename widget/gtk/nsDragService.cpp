@@ -1820,14 +1820,13 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
         LOGDRAGSERVICE(("  do_QueryInterface failed\n"));
         return;
       }
-      GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
+      RefPtr<GdkPixbuf> pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
       if (!pixbuf) {
         LOGDRAGSERVICE(("  ImageToPixbuf failed\n"));
         return;
       }
       gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
       LOGDRAGSERVICE(("  image data set\n"));
-      g_object_unref(pixbuf);
     } else {
       void* tmpData = nullptr;
       uint32_t tmpDataLen = 0;
@@ -1955,12 +1954,11 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
     }
   } else if (surface) {
     if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
-      GdkPixbuf* dragPixbuf = nsImageToPixbuf::SourceSurfaceToPixbuf(
+      RefPtr<GdkPixbuf> dragPixbuf = nsImageToPixbuf::SourceSurfaceToPixbuf(
           surface, dragRect.width, dragRect.height);
       if (dragPixbuf) {
         LOGDRAGSERVICE(("  set drag pixbuf"));
         gtk_drag_set_icon_pixbuf(aContext, dragPixbuf, offsetX, offsetY);
-        g_object_unref(dragPixbuf);
       }
     }
   }
