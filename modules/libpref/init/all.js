@@ -160,7 +160,7 @@ pref("security.xfocsp.errorReporting.automatic", false);
 // 1: Consult CRLite but only collect telemetry.
 // 2: Consult CRLite and enforce both "Revoked" and "Not Revoked" results.
 // 3: Consult CRLite and enforce "Not Revoked" results, but defer to OCSP for "Revoked".
-pref("security.pki.crlite_mode", 1);
+pref("security.pki.crlite_mode", 3);
 
 // Issuer we use to detect MitM proxies. Set to the issuer of the cert of the
 // Firefox update service. The string format is whatever NSS uses to print a DN.
