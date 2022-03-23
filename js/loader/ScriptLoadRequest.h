@@ -174,6 +174,7 @@ class ScriptLoadRequest
   bool IsModuleRequest() const { return mKind == ScriptKind::eModule; }
 
   ModuleLoadRequest* AsModuleRequest();
+  const ModuleLoadRequest* AsModuleRequest() const;
 
   virtual bool IsTopLevel() const { return true; };
 
@@ -277,9 +278,7 @@ class ScriptLoadRequest
 
   void MarkForBytecodeEncoding(JSScript* aScript);
 
-  bool IsMarkedForBytecodeEncoding() const {
-    return !!mScriptForBytecodeEncoding;
-  }
+  bool IsMarkedForBytecodeEncoding() const;
 
   bool IsBytecode() const { return mDataType == DataType::eBytecode; }
 
@@ -332,6 +331,9 @@ class ScriptLoadRequest
 
   // Holds the top-level JSScript that corresponds to the current source, once
   // it is parsed, and planned to be saved in the bytecode cache.
+  //
+  // NOTE: This field is not used for ModuleLoadRequest.
+  //       See ModuleLoadRequest::mIsMarkedForBytecodeEncoding.
   JS::Heap<JSScript*> mScriptForBytecodeEncoding;
 
   // Holds the Cache information, which is used to register the bytecode
