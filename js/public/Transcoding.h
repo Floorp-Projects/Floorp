@@ -83,10 +83,24 @@ inline bool IsTranscodingBytecodeAligned(const void* offset) {
 
 // Finish incremental encoding started by one of:
 //   * JS::CompileAndStartIncrementalEncoding
-//   * JS::FinishOffThreadScriptAndStartIncrementalEncoding
+//   * JS::StartIncrementalEncoding
 //
-// The |script| argument of |FinishIncrementalEncoding| should be the top-level
-// script returned from one of the above.
+// For |JS::CompileAndStartIncrementalEncoding| case, the |script|
+// argument of |FinishIncrementalEncoding| must be the top-level script
+// returned from it.
+//
+// For |JS::StartIncrementalEncoding| case:
+//   * Regular script case
+//     the |script| argument must be the top-level script returned from
+//     |JS::InstantiateGlobalStencil| with the same stencil
+//   * Module script case
+//     the |script| argument must be the script returned by
+//     |JS::GetModuleScript| called on the module returned by
+//     |JS::InstantiateModuleStencil| with the same stencil
+//
+//     NOTE: |JS::GetModuleScript| doesn't work after evaluating the
+//           module script.  For the case, use Handle<JSObject*> variant of
+//           this function below.
 //
 // The |buffer| argument of |FinishIncrementalEncoding| is used for appending
 // the encoded bytecode into the buffer. If any of these functions failed, the
@@ -104,6 +118,15 @@ inline bool IsTranscodingBytecodeAligned(const void* offset) {
 //       malloc, used by MallocAllocPolicy in mozilla::Vector.
 extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
+                                                    TranscodeBuffer& buffer);
+
+// Similar to |JS::FinishIncrementalEncoding|, but receives module obect.
+//
+// The |module| argument must be the module returned by
+// |JS::InstantiateModuleStencil| with the same stencil that's passed to
+// |JS::StartIncrementalEncoding|.
+extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
+                                                    Handle<JSObject*> module,
                                                     TranscodeBuffer& buffer);
 
 // Check if the compile options and script's flag matches.
