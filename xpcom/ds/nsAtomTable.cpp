@@ -186,19 +186,19 @@ static AtomCache sRecentlyUsedMainThreadAtoms;
 // ConcurrentHashTable.
 class nsAtomSubTable {
   friend class nsAtomTable;
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   PLDHashTable mTable;
   nsAtomSubTable();
-  void GCLocked(GCKind aKind);
+  void GCLocked(GCKind aKind) REQUIRES(mLock);
   void AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
-                                    AtomsSizes& aSizes);
+                                    AtomsSizes& aSizes) REQUIRES(mLock);
 
-  AtomTableEntry* Search(AtomTableKey& aKey) const {
+  AtomTableEntry* Search(AtomTableKey& aKey) const REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     return static_cast<AtomTableEntry*>(mTable.Search(&aKey));
   }
 
-  AtomTableEntry* Add(AtomTableKey& aKey) {
+  AtomTableEntry* Add(AtomTableKey& aKey) REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     return static_cast<AtomTableEntry*>(mTable.Add(&aKey));  // Infallible
   }
