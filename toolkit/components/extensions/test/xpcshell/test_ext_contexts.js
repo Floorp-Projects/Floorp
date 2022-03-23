@@ -2,11 +2,18 @@
 
 const global = this;
 
-var { BaseContext, EventManager } = ExtensionCommon;
+var { BaseContext, EventManager, EventEmitter } = ExtensionCommon;
+
+class FakeExtension extends EventEmitter {
+  constructor(id) {
+    super();
+    this.id = id;
+  }
+}
 
 class StubContext extends BaseContext {
   constructor() {
-    let fakeExtension = { id: "test@web.extension" };
+    let fakeExtension = new FakeExtension("test@web.extension");
     super("testEnv", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
@@ -112,7 +119,7 @@ add_task(async function test_post_unload_listeners() {
 
 class Context extends BaseContext {
   constructor(principal) {
-    let fakeExtension = { id: "test@web.extension" };
+    let fakeExtension = new FakeExtension("test@web.extension");
     super("testEnv", fakeExtension);
     Object.defineProperty(this, "principal", {
       value: principal,
