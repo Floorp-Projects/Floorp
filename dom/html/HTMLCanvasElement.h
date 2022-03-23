@@ -345,7 +345,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   bool IsOffscreen() const { return !!mOffscreenCanvas; }
   OffscreenCanvas* GetOffscreenCanvas() const { return mOffscreenCanvas; }
 
-  RefPtr<layers::ImageContainer> GetImageContainer();
+  layers::ImageContainer* GetImageContainer() const { return mImageContainer; }
 
  protected:
   bool mResetLayer;
@@ -359,6 +359,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   RefPtr<CanvasRenderer> mCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<OffscreenCanvasDisplayHelper> mOffscreenDisplay;
+  RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
 
  public:
