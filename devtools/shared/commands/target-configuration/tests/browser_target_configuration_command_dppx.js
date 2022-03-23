@@ -150,7 +150,7 @@ function getDevicePixelRatio(browserOrBrowsingContext) {
   return SpecialPowers.spawn(
     browserOrBrowsingContext,
     [],
-    () => content.devicePixelRatio
+    () => content.browsingContext.top.overrideDPPX || content.devicePixelRatio
   );
 }
 

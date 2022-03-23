@@ -32,17 +32,15 @@ add_task(async () => {
 
   const rect = target.getBoundingClientRect();
   const screenPixelsPerCSSPixel = window.devicePixelRatio;
-  const screenPixelsPerCSSPixelNoOverride =
-    SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixelNoOverride;
 
   let rectOnScreen =
     SpecialPowers.DOMWindowUtils.toScreenRect(rect.x, rect.y, rect.width, rect.height);
   isfuzzy(rectOnScreen.x,
      rect.x * screenPixelsPerCSSPixel +
-     window.mozInnerScreenX * screenPixelsPerCSSPixelNoOverride , 0.01, "x");
+     window.mozInnerScreenX * screenPixelsPerCSSPixel, 0.01, "x");
   isfuzzy(rectOnScreen.y,
      rect.y * screenPixelsPerCSSPixel +
-     window.mozInnerScreenY * screenPixelsPerCSSPixelNoOverride, 0.01, "y");
+     window.mozInnerScreenY * screenPixelsPerCSSPixel, 0.01, "y");
 
   isfuzzy(rectOnScreen.width, rect.width * screenPixelsPerCSSPixel, 0.01, "width");
   isfuzzy(rectOnScreen.height, rect.height * screenPixelsPerCSSPixel, 0.01, "height");

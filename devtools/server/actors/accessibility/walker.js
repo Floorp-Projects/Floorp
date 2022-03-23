@@ -1069,13 +1069,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     return accessible;
   },
 
-  /**
-   * When RDM is used, users can set custom DPR values that are different from the device
-   * they are using. Store true screenPixelsPerCSSPixel value to be able to use accessible
-   * highlighter features correctly.
-   */
   get pixelRatio() {
-    return this.rootWin.windowUtils.screenPixelsPerCSSPixelNoOverride;
+    return this.rootWin.devicePixelRatio;
   },
 
   /**

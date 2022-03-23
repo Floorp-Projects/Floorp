@@ -67,8 +67,7 @@ async function afterpaint() {
     // (ps resolution) * ((apz zoom) / (ps resolution))
     // The fact that we divide by (ps resolution) first, and then multiply by
     // it means the result is not quite equal to (apz zoom).
-    const utils = SpecialPowers.getDOMWindowUtils(window);
-    const deviceScale = utils.screenPixelsPerCSSPixelNoOverride;
+    const deviceScale = window.devicePixelRatio;
     const maxZoom = 10.0;
     if (!within(lastResolution, maxZoom/deviceScale, 0.0001) &&
         !within(await getResolution(), maxZoom/deviceScale, 0.0001) &&
@@ -97,7 +96,7 @@ async function afterpaint() {
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  info("screenPixelsPerCSSPixelNoOverride " + SpecialPowers.getDOMWindowUtils(window).screenPixelsPerCSSPixelNoOverride);
+  info("dpi: " + window.devicePixelRatio);
 
   window.addEventListener("MozAfterPaint", afterpaint);
   let intervalID = setInterval(afterpaint, 16);
