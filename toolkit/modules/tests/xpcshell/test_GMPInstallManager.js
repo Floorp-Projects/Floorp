@@ -49,6 +49,12 @@ Preferences.set("media.gmp-manager.checkContentSignature", false);
 
 do_get_profile();
 
+add_task(function test_setup() {
+  // We should already have a profile from `do_get_profile`, but also need
+  // FOG to be setup for tests that touch it/Glean.
+  Services.fog.initializeFOG();
+});
+
 function run_test() {
   Preferences.set("media.gmp.log.dump", true);
   Preferences.set("media.gmp.log.level", 0);
@@ -520,60 +526,15 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
  * checking is enabled and the signature check passes.
  */
 add_task(async function test_checkForAddons_contentSignatureSuccess() {
-  Preferences.set("media.gmp-manager.checkContentSignature", true);
+  const previousUrlOverride = setupContentSigTestPrefs();
 
-  // Store the old pref so we can restore it and avoid messing with other tests.
-  let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
-    GMPPrefs.KEY_URL_OVERRIDE,
-    ""
-  );
-
-  const testServer = new HttpServer();
-  // Start the server so we can grab the identity. We need to know this so the
-  // server can reference itself in the handlers that will be set up.
-  testServer.start();
-  const baseUri =
-    testServer.identity.primaryScheme +
-    "://" +
-    testServer.identity.primaryHost +
-    ":" +
-    testServer.identity.primaryPort;
-
-  let goodXml = readStringFromFile(do_get_file("good.xml"));
-  // This sig is generated using the following command at mozilla-central root
-  // `cat toolkit/mozapps/extensions/test/xpcshell/data/productaddons/good.xml | ./mach python security/manager/ssl/tests/unit/test_content_signing/pysign.py`
-  // If test certificates are regenerated, this signature must also be.
-  const goodXmlContentSignature =
-    "7QYnPqFoOlS02BpDdIRIljzmPr6BFwPs1z1y8KJUBlnU7EVG6FbnXmVVt5Op9wDzgvhXX7th8qFJvpPOZs_B_tHRDNJ8SK0HN95BAN15z3ZW2r95SSHmU-fP2JgoNOR3";
-
-  // Setup endpoint to handle x5u lookups correctly.
-  const validX5uPath = "/valid_x5u";
-  const validCertChain = [
-    readStringFromFile(do_get_file("content_signing_aus_ee.pem")),
-    readStringFromFile(do_get_file("content_signing_int.pem")),
-    readStringFromFile(do_get_file("content_signing_root.pem")),
-  ];
-  testServer.registerPathHandler(validX5uPath, (req, res) => {
-    res.write(validCertChain.join("\n"));
-  });
-  const validX5uUrl = baseUri + validX5uPath;
-
-  // Handler for path that serves valid xml with valid signature.
-  const validContentSignatureHeader = `x5u=${validX5uUrl}; p384ecdsa=${goodXmlContentSignature}`;
-  const updatePath = "/valid_update.xml";
-  testServer.registerPathHandler(updatePath, (req, res) => {
-    res.setHeader("content-signature", validContentSignatureHeader);
-    res.write(goodXml);
-  });
+  const xmlFetchResultHistogram = resetGmpTelemetryAndGetHistogram();
 
   // Override our root so that test cert chains will be valid.
   setCertRoot("content_signing_root.pem");
 
-  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
-
-  const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
-    "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
-  );
+  const testServerInfo = getTestServerForContentSignatureTests();
+  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, testServerInfo.validUpdateUri);
 
   let installManager = new GMPInstallManager();
   try {
@@ -596,14 +557,13 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
 
   // # Ok content sig fetches should be 1, all others should be 0.
   TelemetryTestUtils.assertHistogram(xmlFetchResultHistogram, 2, 1);
+  // Glean values should reflect the same.
+  Assert.equal(
+    Glean.gmp.updateXmlFetchResult.content_sig_success.testGetValue(),
+    1
+  );
 
-  // Tidy up afterwards.
-  if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-    Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
-  } else {
-    Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
-  }
-  Preferences.set("media.gmp-manager.checkContentSignature", false);
+  revertContentSigTestPrefs(previousUrlOverride);
 });
 
 /**
@@ -611,37 +571,14 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
  * checking is enabled and the signature check fails.
  */
 add_task(async function test_checkForAddons_contentSignatureFailure() {
-  Preferences.set("media.gmp-manager.checkContentSignature", true);
+  const previousUrlOverride = setupContentSigTestPrefs();
 
-  // Store the old pref so we can restore it and avoid messing with other tests.
-  let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
+  const xmlFetchResultHistogram = resetGmpTelemetryAndGetHistogram();
+
+  const testServerInfo = getTestServerForContentSignatureTests();
+  Preferences.set(
     GMPPrefs.KEY_URL_OVERRIDE,
-    ""
-  );
-
-  const testServer = new HttpServer();
-  // Start the server so we can grab the identity. We need to know this so the
-  // server can reference itself in the handlers that will be set up.
-  testServer.start();
-  const baseUri =
-    testServer.identity.primaryScheme +
-    "://" +
-    testServer.identity.primaryHost +
-    ":" +
-    testServer.identity.primaryPort;
-
-  let goodXml = readStringFromFile(do_get_file("good.xml"));
-
-  const updatePath = "/invalid_update.xml";
-  testServer.registerPathHandler(updatePath, (req, res) => {
-    // Content signature header omitted.
-    res.write(goodXml);
-  });
-
-  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
-
-  const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
-    "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+    testServerInfo.missingContentSigUri
   );
 
   let installManager = new GMPInstallManager();
@@ -668,14 +605,13 @@ add_task(async function test_checkForAddons_contentSignatureFailure() {
 
   // # Failed content sig fetches should be 1, all others should be 0.
   TelemetryTestUtils.assertHistogram(xmlFetchResultHistogram, 3, 1);
+  // Glean values should reflect the content sig algo failed.
+  Assert.equal(
+    Glean.gmp.updateXmlFetchResult.content_sig_missing_data.testGetValue(),
+    1
+  );
 
-  // Tidy up afterwards.
-  if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-    Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
-  } else {
-    Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
-  }
-  Preferences.set("media.gmp-manager.checkContentSignature", false);
+  revertContentSigTestPrefs(previousUrlOverride);
 });
 
 /**
@@ -1222,4 +1158,110 @@ function createNewZipFile(zipName, data) {
   stream.close();
   info("zip file created on disk at: " + zipFile.path);
   return zipFile;
+}
+
+/***
+ * Set up pref(s) as appropriate for content sig tests. Return the value of our
+ * current GMP url override so it can be restored at test teardown.
+ */
+
+function setupContentSigTestPrefs() {
+  Preferences.set("media.gmp-manager.checkContentSignature", true);
+
+  // Return the URL override so tests can restore it to its previous value
+  // once they're done.
+  return Preferences.get(GMPPrefs.KEY_URL_OVERRIDE, "");
+}
+
+/***
+ * Revert prefs used for content signature tests.
+ *
+ * @param previousUrlOverride - The GMP URL override value prior to test being
+ * run. The function will revert the URL back to this, or reset the URL if no
+ * value is passed.
+ */
+function revertContentSigTestPrefs(previousUrlOverride) {
+  if (previousUrlOverride) {
+    Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, previousUrlOverride);
+  } else {
+    Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+  }
+  Preferences.set("media.gmp-manager.checkContentSignature", false);
+}
+
+/***
+ * Reset telemetry data related to gmp updates, and get the histogram
+ * associated with MEDIA_GMP_UPDATE_XML_FETCH_RESULT.
+ *
+ * @returns The freshly cleared MEDIA_GMP_UPDATE_XML_FETCH_RESULT histogram.
+ */
+function resetGmpTelemetryAndGetHistogram() {
+  Services.fog.testResetFOG();
+  return TelemetryTestUtils.getAndClearHistogram(
+    "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+  );
+}
+
+/***
+ * Sets up a `HttpServer` for use in content singature checking tests. This
+ * server will expose different endpoints that can be used to simulate different
+ * pass and failure scenarios when fetching an update.xml file.
+ *
+ * @returns An object that has the following properties
+ * - testServer - the HttpServer itself.
+ * - validUpdateUri - a URI that should return a valid update xml + content sig.
+ * - missingContentSigUri - a URI that returns a valid update xml, but misses the content sig header.
+ * - badContentSigUri - a URI that returns a valid update xml, but provides data that is not a content sig in the header.
+ * - invalidContentSigUri - a URI that returns a valid update xml, but provides an incorrect content sig.
+ */
+function getTestServerForContentSignatureTests() {
+  const testServer = new HttpServer();
+  // Start the server so we can grab the identity. We need to know this so the
+  // server can reference itself in the handlers that will be set up.
+  testServer.start();
+  const baseUri =
+    testServer.identity.primaryScheme +
+    "://" +
+    testServer.identity.primaryHost +
+    ":" +
+    testServer.identity.primaryPort;
+
+  let goodXml = readStringFromFile(do_get_file("good.xml"));
+  // This sig is generated using the following command at mozilla-central root
+  // `cat toolkit/mozapps/extensions/test/xpcshell/data/productaddons/good.xml | ./mach python security/manager/ssl/tests/unit/test_content_signing/pysign.py`
+  // If test certificates are regenerated, this signature must also be.
+  const goodXmlContentSignature =
+    "7QYnPqFoOlS02BpDdIRIljzmPr6BFwPs1z1y8KJUBlnU7EVG6FbnXmVVt5Op9wDzgvhXX7th8qFJvpPOZs_B_tHRDNJ8SK0HN95BAN15z3ZW2r95SSHmU-fP2JgoNOR3";
+
+  // Setup endpoint to handle x5u lookups correctly.
+  const validX5uPath = "/valid_x5u";
+  const validCertChain = [
+    readStringFromFile(do_get_file("content_signing_aus_ee.pem")),
+    readStringFromFile(do_get_file("content_signing_int.pem")),
+    readStringFromFile(do_get_file("content_signing_root.pem")),
+  ];
+  testServer.registerPathHandler(validX5uPath, (req, res) => {
+    res.write(validCertChain.join("\n"));
+  });
+  const validX5uUrl = baseUri + validX5uPath;
+
+  // Handler for path that serves valid xml with valid signature.
+  const validContentSignatureHeader = `x5u=${validX5uUrl}; p384ecdsa=${goodXmlContentSignature}`;
+  const validUpdatePath = "/valid_update.xml";
+  testServer.registerPathHandler(validUpdatePath, (req, res) => {
+    res.setHeader("content-signature", validContentSignatureHeader);
+    res.write(goodXml);
+  });
+
+  const missingContentSigPath = "/update_missing_content_sig.xml";
+  testServer.registerPathHandler(missingContentSigPath, (req, res) => {
+    // Content signature header omitted.
+    res.write(goodXml);
+  });
+
+  return {
+    testServer,
+    validUpdateUri: baseUri + validUpdatePath,
+    missingContentSigUri: baseUri + missingContentSigPath,
+  };
 }
