@@ -157,7 +157,7 @@ uint32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
 
   if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
-      dx->GetDepth(depth);
+      depth = dx->GetDepth();
     }
   }
 
