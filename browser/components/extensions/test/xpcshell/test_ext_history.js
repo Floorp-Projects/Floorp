@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "PlacesTestUtils",
@@ -16,6 +20,15 @@ ChromeUtils.defineModuleGetter(
   this,
   "ExtensionCommon",
   "resource://gre/modules/ExtensionCommon.jsm"
+);
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
 );
 
 add_task(async function test_delete() {
@@ -218,33 +231,33 @@ add_task(async function test_delete() {
   await extension.unload();
 });
 
-add_task(async function test_search() {
-  const SINGLE_VISIT_URL = "http://example.com/";
-  const DOUBLE_VISIT_URL = "http://example.com/2/";
-  const MOZILLA_VISIT_URL = "http://mozilla.com/";
-  const REFERENCE_DATE = new Date();
-  // pages/visits to add via History.insert
-  const PAGE_INFOS = [
-    {
-      url: SINGLE_VISIT_URL,
-      title: `test visit for ${SINGLE_VISIT_URL}`,
-      visits: [{ date: new Date(Number(REFERENCE_DATE) - 1000) }],
-    },
-    {
-      url: DOUBLE_VISIT_URL,
-      title: `test visit for ${DOUBLE_VISIT_URL}`,
-      visits: [
-        { date: REFERENCE_DATE },
-        { date: new Date(Number(REFERENCE_DATE) - 2000) },
-      ],
-    },
-    {
-      url: MOZILLA_VISIT_URL,
-      title: `test visit for ${MOZILLA_VISIT_URL}`,
-      visits: [{ date: new Date(Number(REFERENCE_DATE) - 3000) }],
-    },
-  ];
+const SINGLE_VISIT_URL = "http://example.com/";
+const DOUBLE_VISIT_URL = "http://example.com/2/";
+const MOZILLA_VISIT_URL = "http://mozilla.com/";
+const REFERENCE_DATE = new Date();
+// pages/visits to add via History.insert
+const PAGE_INFOS = [
+  {
+    url: SINGLE_VISIT_URL,
+    title: `test visit for ${SINGLE_VISIT_URL}`,
+    visits: [{ date: new Date(Number(REFERENCE_DATE) - 1000) }],
+  },
+  {
+    url: DOUBLE_VISIT_URL,
+    title: `test visit for ${DOUBLE_VISIT_URL}`,
+    visits: [
+      { date: REFERENCE_DATE },
+      { date: new Date(Number(REFERENCE_DATE) - 2000) },
+    ],
+  },
+  {
+    url: MOZILLA_VISIT_URL,
+    title: `test visit for ${MOZILLA_VISIT_URL}`,
+    visits: [{ date: new Date(Number(REFERENCE_DATE) - 3000) }],
+  },
+];
 
+add_task(async function test_search() {
   function background(BGSCRIPT_REFERENCE_DATE) {
     const futureTime = Date.now() + 24 * 60 * 60 * 1000;
 
@@ -786,3 +799,76 @@ add_task(async function test_on_visited() {
 
   await extension.unload();
 });
+
+add_task(
+  {
+    pref_set: [["extensions.eventPages.enabled", true]],
+  },
+  async function test_history_event_page() {
+    await AddonTestUtils.promiseStartupManager();
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        browser_specific_settings: { gecko: { id: "eventpage@history" } },
+        permissions: ["history"],
+        background: { persistent: false },
+      },
+      background() {
+        browser.history.onVisited.addListener(() => {
+          browser.test.sendMessage("onVisited");
+        });
+        browser.history.onVisitRemoved.addListener(() => {
+          browser.test.sendMessage("onVisitRemoved");
+        });
+        browser.history.onTitleChanged.addListener(() => {});
+        browser.test.sendMessage("ready");
+      },
+    });
+
+    const EVENTS = ["onVisited", "onVisitRemoved", "onTitleChanged"];
+    await PlacesUtils.history.clear();
+
+    await extension.startup();
+    await extension.awaitMessage("ready");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "history", event, {
+        primed: false,
+      });
+    }
+
+    // test events waken background
+    await extension.terminateBackground();
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "history", event, {
+        primed: true,
+      });
+    }
+
+    await PlacesUtils.history.insertMany(PAGE_INFOS);
+
+    await extension.awaitMessage("ready");
+    await extension.awaitMessage("onVisited");
+    ok(true, "persistent event woke background");
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "history", event, {
+        primed: false,
+      });
+    }
+
+    await AddonTestUtils.promiseRestartManager();
+    await extension.awaitStartup();
+
+    for (let event of EVENTS) {
+      assertPersistentListeners(extension, "history", event, {
+        primed: true,
+      });
+    }
+
+    await PlacesUtils.history.clear();
+    await extension.awaitMessage("ready");
+    await extension.awaitMessage("onVisitRemoved");
+
+    await extension.unload();
+    await AddonTestUtils.promiseShutdownManager();
+  }
+);
