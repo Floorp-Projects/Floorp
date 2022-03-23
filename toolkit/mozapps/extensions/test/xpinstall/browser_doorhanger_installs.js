@@ -1464,6 +1464,8 @@ add_task(async function() {
       // These tests currently depends on InstallTrigger.install.
       ["extensions.InstallTrigger.enabled", true],
       ["extensions.InstallTriggerImpl.enabled", true],
+      // Relax the user input requirements while running this test.
+      ["xpinstall.userActivation.required", false],
     ],
   });
 
