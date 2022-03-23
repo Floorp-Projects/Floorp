@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-DelayedRunnable::DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
+DelayedRunnable::DelayedRunnable(already_AddRefed<nsISerialEventTarget> aTarget,
                                  already_AddRefed<nsIRunnable> aRunnable,
                                  uint32_t aDelay)
     : mozilla::Runnable("DelayedRunnable"),

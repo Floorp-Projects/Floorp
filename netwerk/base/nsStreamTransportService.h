@@ -14,19 +14,15 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/DelayedRunnable.h"
 #include "mozilla/Mutex.h"
 
 class nsIThreadPool;
 
 namespace mozilla {
-class DelayedRunnable;
-
 namespace net {
 
 class nsStreamTransportService final : public nsIStreamTransportService,
                                        public nsIEventTarget,
-                                       public nsIDelayedRunnableObserver,
                                        public nsIObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -38,19 +34,13 @@ class nsStreamTransportService final : public nsIStreamTransportService,
 
   nsStreamTransportService();
 
-  void OnDelayedRunnableCreated(DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableRan(DelayedRunnable* aRunnable) override;
-
  private:
   ~nsStreamTransportService();
 
   nsCOMPtr<nsIThreadPool> mPool GUARDED_BY(mShutdownLock);
 
-  DataMutex<nsTArray<RefPtr<DelayedRunnable>>> mScheduledDelayedRunnables;
-
   mozilla::Mutex mShutdownLock{"nsStreamTransportService.mShutdownLock"};
-  bool mIsShutdown GUARDED_BY(mShutdownLock) {false};
+  bool mIsShutdown GUARDED_BY(mShutdownLock){false};
 };
 
 }  // namespace net
