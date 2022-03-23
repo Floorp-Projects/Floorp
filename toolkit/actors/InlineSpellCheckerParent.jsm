@@ -9,9 +9,9 @@
 var EXPORTED_SYMBOLS = ["InlineSpellCheckerParent"];
 
 class InlineSpellCheckerParent extends JSWindowActorParent {
-  selectDictionary({ localeCode }) {
-    this.sendAsyncMessage("InlineSpellChecker:selectDictionary", {
-      localeCode,
+  selectDictionaries({ localeCodes }) {
+    this.sendAsyncMessage("InlineSpellChecker:selectDictionaries", {
+      localeCodes,
     });
   }
 
