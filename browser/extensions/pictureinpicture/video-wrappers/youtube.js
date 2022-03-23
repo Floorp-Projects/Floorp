@@ -48,6 +48,9 @@ class PictureInPictureVideoWrapper {
       });
     }
   }
+  shouldHideToggle(video) {
+    return !!video.closest(".ytd-video-preview");
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
