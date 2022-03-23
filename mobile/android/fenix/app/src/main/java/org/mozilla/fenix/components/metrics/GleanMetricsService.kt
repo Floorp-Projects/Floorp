@@ -13,7 +13,6 @@ import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
-import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
@@ -146,45 +145,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.DefaultBrowserNotifTapped -> EventWrapper<NoExtraKeys>(
             { Events.defaultBrowserNotifTapped.record(it) }
-        )
-        is Event.OpenedBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.open.record(it) }
-        )
-        is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.openInNewTab.record(it) }
-        )
-        is Event.OpenedBookmarksInNewTabs -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.openInNewTabs.record(it) }
-        )
-        is Event.OpenedBookmarkInPrivateTab -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.openInPrivateTab.record(it) }
-        )
-        is Event.OpenedBookmarksInPrivateTabs -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.openInPrivateTabs.record(it) }
-        )
-        is Event.EditedBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.edited.record(it) }
-        )
-        is Event.MovedBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.moved.record(it) }
-        )
-        is Event.RemoveBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.removed.record(it) }
-        )
-        is Event.RemoveBookmarks -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.multiRemoved.record(it) }
-        )
-        is Event.ShareBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.shared.record(it) }
-        )
-        is Event.CopyBookmark -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.copied.record(it) }
-        )
-        is Event.AddBookmarkFolder -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.folderAdd.record(it) }
-        )
-        is Event.RemoveBookmarkFolder -> EventWrapper<NoExtraKeys>(
-            { BookmarksManagement.folderRemove.record(it) }
         )
         is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
             { CustomTab.menu.record(it) }
@@ -818,6 +778,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
         is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null
+        else -> null
     }
 
 /**

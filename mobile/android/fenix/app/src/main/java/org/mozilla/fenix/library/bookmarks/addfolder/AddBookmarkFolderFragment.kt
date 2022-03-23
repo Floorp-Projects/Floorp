@@ -21,8 +21,9 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentEditBookmarkBinding
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -107,7 +108,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     )
                     sharedViewModel.selectedFolder =
                         requireComponents.core.bookmarksStorage.getTree(newGuid)
-                    requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)
+                    BookmarksManagement.folderAdd.record(NoExtras())
                     withContext(Main) {
                         Navigation.findNavController(requireActivity(), R.id.container)
                             .popBackStack()

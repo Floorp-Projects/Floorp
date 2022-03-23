@@ -35,7 +35,9 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
@@ -221,14 +223,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 openItemsInNewTab { node -> node.url }
 
                 showTabTray()
-                metrics?.track(Event.OpenedBookmarksInNewTabs)
+                BookmarksManagement.openInNewTabs.record(NoExtras())
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
                 openItemsInNewTab(private = true) { node -> node.url }
 
                 showTabTray()
-                metrics?.track(Event.OpenedBookmarksInPrivateTabs)
+                BookmarksManagement.openInPrivateTabs.record(NoExtras())
                 true
             }
             R.id.share_bookmark_multi_select -> {
@@ -420,8 +422,17 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         return {
             deleteSelectedBookmarks(pendingBookmarksToDelete)
             pendingBookmarkDeletionJob = null
-            // Since this runs in a coroutine, we can't depend upon the fragment still being attached
-            metrics?.track(event)
+            when (event) {
+                is Event.RemoveBookmarkFolder ->
+                    BookmarksManagement.folderRemove.record(NoExtras())
+                is Event.RemoveBookmarks ->
+                    BookmarksManagement.multiRemoved.record(NoExtras())
+                is Event.RemoveBookmark ->
+                    BookmarksManagement.removed.record(NoExtras())
+                else -> {
+                    throw IllegalArgumentException("Illegal event type in getDeleteOperation")
+                }
+            }
             refreshBookmarks()
         }
     }

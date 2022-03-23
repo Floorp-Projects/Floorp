@@ -6,17 +6,29 @@ package org.mozilla.fenix.library.bookmarks
 
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
+@RunWith(FenixRobolectricTestRunner::class) // For GleanTestRule
 class BookmarkFragmentInteractorTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var interactor: BookmarkFragmentInteractor
 
@@ -52,10 +64,10 @@ class BookmarkFragmentInteractorTest {
     fun `open a bookmark item`() {
         interactor.open(item)
 
-        verifyOrder {
-            bookmarkController.handleBookmarkTapped(item)
-            metrics.track(Event.OpenedBookmark)
-        }
+        verify { bookmarkController.handleBookmarkTapped(item) }
+        assertTrue(BookmarksManagement.open.testHasValue())
+        assertEquals(1, BookmarksManagement.open.testGetValue().size)
+        assertNull(BookmarksManagement.open.testGetValue().single().extra)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -121,40 +133,40 @@ class BookmarkFragmentInteractorTest {
     fun `copy a bookmark item`() {
         interactor.onCopyPressed(item)
 
-        verifyOrder {
-            bookmarkController.handleCopyUrl(item)
-            metrics.track(Event.CopyBookmark)
-        }
+        verify { bookmarkController.handleCopyUrl(item) }
+        assertTrue(BookmarksManagement.copied.testHasValue())
+        assertEquals(1, BookmarksManagement.copied.testGetValue().size)
+        assertNull(BookmarksManagement.copied.testGetValue().single().extra)
     }
 
     @Test
     fun `share a bookmark item`() {
         interactor.onSharePressed(item)
 
-        verifyOrder {
-            bookmarkController.handleBookmarkSharing(item)
-            metrics.track(Event.ShareBookmark)
-        }
+        verify { bookmarkController.handleBookmarkSharing(item) }
+        assertTrue(BookmarksManagement.shared.testHasValue())
+        assertEquals(1, BookmarksManagement.shared.testGetValue().size)
+        assertNull(BookmarksManagement.shared.testGetValue().single().extra)
     }
 
     @Test
     fun `open a bookmark item in a new tab`() {
         interactor.onOpenInNormalTab(item)
 
-        verifyOrder {
-            bookmarkController.handleOpeningBookmark(item, BrowsingMode.Normal)
-            metrics.track(Event.OpenedBookmarkInNewTab)
-        }
+        verify { bookmarkController.handleOpeningBookmark(item, BrowsingMode.Normal) }
+        assertTrue(BookmarksManagement.openInNewTab.testHasValue())
+        assertEquals(1, BookmarksManagement.openInNewTab.testGetValue().size)
+        assertNull(BookmarksManagement.openInNewTab.testGetValue().single().extra)
     }
 
     @Test
     fun `open a bookmark item in a private tab`() {
         interactor.onOpenInPrivateTab(item)
 
-        verifyOrder {
-            bookmarkController.handleOpeningBookmark(item, BrowsingMode.Private)
-            metrics.track(Event.OpenedBookmarkInPrivateTab)
-        }
+        verify { bookmarkController.handleOpeningBookmark(item, BrowsingMode.Private) }
+        assertTrue(BookmarksManagement.openInPrivateTab.testHasValue())
+        assertEquals(1, BookmarksManagement.openInPrivateTab.testGetValue().size)
+        assertNull(BookmarksManagement.openInPrivateTab.testGetValue().single().extra)
     }
 
     @Test

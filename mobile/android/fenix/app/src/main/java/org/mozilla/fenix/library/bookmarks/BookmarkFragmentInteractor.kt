@@ -6,6 +6,8 @@ package org.mozilla.fenix.library.bookmarks
 
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -53,7 +55,7 @@ class BookmarkFragmentInteractor(
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let {
             bookmarksController.handleCopyUrl(item)
-            metrics.track(Event.CopyBookmark)
+            BookmarksManagement.copied.record(NoExtras())
         }
     }
 
@@ -61,7 +63,7 @@ class BookmarkFragmentInteractor(
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let {
             bookmarksController.handleBookmarkSharing(item)
-            metrics.track(Event.ShareBookmark)
+            BookmarksManagement.shared.record(NoExtras())
         }
     }
 
@@ -69,7 +71,7 @@ class BookmarkFragmentInteractor(
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let {
             bookmarksController.handleOpeningBookmark(item, BrowsingMode.Normal)
-            metrics.track(Event.OpenedBookmarkInNewTab)
+            BookmarksManagement.openInNewTab.record(NoExtras())
         }
     }
 
@@ -77,7 +79,7 @@ class BookmarkFragmentInteractor(
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let {
             bookmarksController.handleOpeningBookmark(item, BrowsingMode.Private)
-            metrics.track(Event.OpenedBookmarkInPrivateTab)
+            BookmarksManagement.openInPrivateTab.record(NoExtras())
         }
     }
 
@@ -106,7 +108,7 @@ class BookmarkFragmentInteractor(
         Do exhaustive when (item.type) {
             BookmarkNodeType.ITEM -> {
                 bookmarksController.handleBookmarkTapped(item)
-                metrics.track(Event.OpenedBookmark)
+                BookmarksManagement.open.record(NoExtras())
             }
             BookmarkNodeType.FOLDER -> bookmarksController.handleBookmarkExpand(item)
             BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot open separators")
