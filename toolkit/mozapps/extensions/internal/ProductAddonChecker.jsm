@@ -74,11 +74,21 @@ async function conservativeFetch(input) {
     const request = new ServiceRequest({ mozAnon: true });
     request.timeout = TIMEOUT_DELAY_MS;
 
-    request.onerror = () =>
-      reject(new TypeError("NetworkError: Network request failed"));
-    request.ontimeout = () =>
-      reject(new TypeError("Timeout: Network request failed"));
-    request.onabort = () => reject(new DOMException("Aborted", "AbortError"));
+    request.onerror = () => {
+      let err = new TypeError("NetworkError: Network request failed");
+      err.addonCheckerErr = ProductAddonChecker.NETWORK_REQUEST_ERR;
+      reject(err);
+    };
+    request.ontimeout = () => {
+      let err = new TypeError("Timeout: Network request failed");
+      err.addonCheckerErr = ProductAddonChecker.NETWORK_TIMEOUT_ERR;
+      reject(err);
+    };
+    request.onabort = () => {
+      let err = new DOMException("Aborted", "AbortError");
+      err.addonCheckerErr = ProductAddonChecker.ABORT_ERR;
+      reject(err);
+    };
     request.onload = () => {
       const responseAttributes = {
         status: request.status,
@@ -107,17 +117,20 @@ async function conservativeFetch(input) {
  *         The contents of the 'content-signature' header received along with
  *         `data`.
  * @return A promise that will resolve to nothing if the signature verification
- *         succeeds, or rejects on failure, with an Error containing a string
- *         that explains what failed.
+ *         succeeds, or rejects on failure, with an Error that sets its
+ *         addonCheckerErr property disambiguate failure cases and a message
+ *         explaining the error.
  */
 async function verifyGmpContentSignature(data, contentSignatureHeader) {
   if (!contentSignatureHeader) {
     logger.warn(
       "Unexpected missing content signature header during content signature validation"
     );
-    throw new Error(
+    let err = new Error(
       "Content signature validation failed: missing content signature header"
     );
+    err.addonCheckerErr = ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR;
+    throw err;
   }
   // Split out the header. It should contain a the following fields, separated by a semicolon
   // - x5u - a URI to the cert chain. See also https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.5
@@ -148,14 +161,18 @@ async function verifyGmpContentSignature(data, contentSignatureHeader) {
 
   if (!x5u) {
     logger.warn("Unexpected missing x5u during content signature validation");
-    throw new Error("Content signature validation failed: missing x5u");
+    let err = Error("Content signature validation failed: missing x5u");
+    err.addonCheckerErr = ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR;
+    throw err;
   }
 
   if (!signature) {
     logger.warn(
       "Unexpected missing signature during content signature validation"
     );
-    throw new Error("Content signature validation failed: missing signature");
+    let err = Error("Content signature validation failed: missing signature");
+    err.addonCheckerErr = ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR;
+    throw err;
   }
 
   // The x5u field should contain the location of the cert chain, fetch it.
@@ -177,12 +194,16 @@ async function verifyGmpContentSignature(data, contentSignatureHeader) {
     );
   } catch (err) {
     logger.warn(`Unexpected error while validating content signature: ${err}`);
-    throw new Error(`Content signature validation failed: ${err}`);
+    let newErr = new Error(`Content signature validation failed: ${err}`);
+    newErr.addonCheckerErr = ProductAddonChecker.VERIFICATION_FAILED_ERR;
+    throw newErr;
   }
 
   if (!valid) {
     logger.warn("Unexpected invalid content signature found during validation");
-    throw new Error("Content signature is not valid");
+    let err = new Error("Content signature is not valid");
+    err.addonCheckerErr = ProductAddonChecker.VERIFICATION_INVALID_ERR;
+    throw err;
   }
 }
 
@@ -240,6 +261,13 @@ function downloadXMLWithRequest(
       logger.warn(message);
       let ex = new Error(message);
       ex.status = status;
+      if (event.type == "error") {
+        ex.addonCheckerErr = ProductAddonChecker.NETWORK_REQUEST_ERR;
+      } else if (event.type == "abort") {
+        ex.addonCheckerErr = ProductAddonChecker.ABORT_ERR;
+      } else if (event.type == "timeout") {
+        ex.addonCheckerErr = ProductAddonChecker.NETWORK_TIMEOUT_ERR;
+      }
       reject(ex);
     };
 
@@ -252,6 +280,7 @@ function downloadXMLWithRequest(
       } catch (ex) {
         logger.error("Request failed certificate checks: " + ex);
         ex.status = getRequestStatus(request);
+        ex.addonCheckerErr = ProductAddonChecker.VERIFICATION_FAILED_ERR;
         reject(ex);
         return;
       }
@@ -318,11 +347,13 @@ async function downloadXML(
 function parseXML(document) {
   // Check that the root element is correct
   if (document.documentElement.localName != "updates") {
-    throw new Error(
+    let err = new Error(
       "got node name: " +
         document.documentElement.localName +
         ", expected: updates"
     );
+    err.addonCheckerErr = ProductAddonChecker.XML_PARSE_ERR;
+    throw err;
   }
 
   // Check if there are any addons elements in the updates element
@@ -505,6 +536,15 @@ var verifyFile = async function(properties, path) {
 };
 
 const ProductAddonChecker = {
+  // More specific error names to help debug and report failures.
+  NETWORK_REQUEST_ERR: "NetworkRequestError",
+  NETWORK_TIMEOUT_ERR: "NetworkTimeoutError",
+  ABORT_ERR: "AbortError", // Doesn't have network prefix to work with existing convention.
+  VERIFICATION_MISSING_DATA_ERR: "VerificationMissingDataError",
+  VERIFICATION_FAILED_ERR: "VerificationFailedError",
+  VERIFICATION_INVALID_ERR: "VerificationInvalidError",
+  XML_PARSE_ERR: "XMLParseError",
+
   /**
    * Downloads a list of add-ons from a URL optionally testing the SSL
    * certificate for certain attributes, and/or testing the content signature.
@@ -521,7 +561,9 @@ const ProductAddonChecker = {
    *         response header. Failure to verify will result in an error.
    * @return a promise that resolves to an object containing the list of add-ons
    *         and whether the local fallback was used, or rejects with a JS
-   *         exception in case of error.
+   *         exception in case of error. In the case of an error, a best effort
+   *         is made to set the error addonCheckerErr property to one of the
+   *         more specific names used by the product addon checker.
    */
   getProductAddonList(
     url,
