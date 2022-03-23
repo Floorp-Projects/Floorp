@@ -445,6 +445,12 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   bool lookupImport(jsid name, ModuleEnvironmentObject** envOut,
                     mozilla::Maybe<PropertyInfo>* propOut);
 
+  // If `env` or any enclosing environment is a ModuleEnvironmentObject,
+  // return that ModuleEnvironmentObject; else null.
+  //
+  // `env` may be a DebugEnvironmentProxy, but not a hollow environment.
+  static ModuleEnvironmentObject* find(JSObject* env);
+
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                              MutableHandleObject objp, PropertyResult* propp);
@@ -1020,7 +1026,8 @@ class DebugEnvironmentProxy : public ProxyObject {
   EnvironmentObject& environment() const;
   JSObject& enclosingEnvironment() const;
 
-  /* May only be called for proxies to function call objects. */
+  // May only be called for proxies to function call objects or modules
+  // with top-level-await.
   ArrayObject* maybeSnapshot() const;
   void initSnapshot(ArrayObject& snapshot);
 
