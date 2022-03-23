@@ -465,9 +465,6 @@ void CCGCScheduler::PokeFullGC() {
 
 void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
                            TimeDuration aDelay) {
-  MOZ_ASSERT(aReason != JS::GCReason::NO_REASON);
-  MOZ_ASSERT(aReason != JS::GCReason::EAGER_NURSERY_COLLECTION);
-
   if (mDidShutdown) {
     return;
   }
@@ -503,24 +500,6 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
                          : StaticPrefs::javascript_options_gc_delay());
   first = false;
   EnsureGCRunner(delay);
-}
-
-void CCGCScheduler::PokeMinorGC(JS::GCReason aReason) {
-  MOZ_ASSERT(aReason != JS::GCReason::NO_REASON);
-
-  if (mDidShutdown) {
-    return;
-  }
-
-  SetWantEagerMinorGC(aReason);
-
-  if (mGCRunner || mHaveAskedParent || mCCRunner) {
-    // There's already a runner, or there will be, so just return.
-    return;
-  }
-
-  // Immediately start looking for idle time to run the minor GC.
-  EnsureGCRunner(0);
 }
 
 void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
