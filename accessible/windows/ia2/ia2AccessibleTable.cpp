@@ -512,7 +512,7 @@ ia2AccessibleTable::get_selectedCells(IUnknown*** aCells,
   TableAccessible* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
-  AutoTArray<LocalAccessible*, 30> cells;
+  AutoTArray<Accessible*, 30> cells;
   table->SelectedCells(&cells);
   if (cells.IsEmpty()) return S_FALSE;
 
@@ -521,8 +521,7 @@ ia2AccessibleTable::get_selectedCells(IUnknown*** aCells,
   if (!*aCells) return E_OUTOFMEMORY;
 
   for (uint32_t i = 0; i < cells.Length(); i++) {
-    RefPtr<IAccessible> cell;
-    cells[i]->GetNativeInterface(getter_AddRefs(cell));
+    RefPtr<IAccessible> cell = MsaaAccessible::GetFrom(cells[i]);
     cell.forget(&(*aCells)[i]);
   }
 

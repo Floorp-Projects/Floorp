@@ -53,7 +53,9 @@ class RemoteAccessible;
 class Relation;
 class RootAccessible;
 class TableAccessible;
+class TableAccessibleBase;
 class TableCellAccessible;
+class TableCellAccessibleBase;
 class TextLeafAccessible;
 class XULLabelAccessible;
 class XULTreeAccessible;
@@ -499,6 +501,9 @@ class LocalAccessible : public nsISupports, public Accessible {
   const TableCellAccessible* AsTableCell() const {
     return const_cast<LocalAccessible*>(this)->AsTableCell();
   }
+
+  virtual TableAccessibleBase* AsTableBase() override;
+  virtual TableCellAccessibleBase* AsTableCellBase() override;
 
   TextLeafAccessible* AsTextLeaf();
 

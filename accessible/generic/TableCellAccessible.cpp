@@ -12,7 +12,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-void TableCellAccessible::RowHeaderCells(nsTArray<LocalAccessible*>* aCells) {
+void TableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
   uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
   TableAccessible* table = Table();
   if (!table) return;
@@ -106,7 +106,7 @@ LocalAccessible* TableCellAccessible::PrevColHeader() {
   return nullptr;
 }
 
-void TableCellAccessible::ColHeaderCells(nsTArray<LocalAccessible*>* aCells) {
+void TableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
   for (LocalAccessible* cell = PrevColHeader(); cell;
        cell = cell->AsTableCell()->PrevColHeader()) {
     aCells->AppendElement(cell);
