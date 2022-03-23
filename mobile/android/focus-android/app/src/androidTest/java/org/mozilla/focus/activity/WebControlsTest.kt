@@ -11,11 +11,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
-import org.mozilla.focus.helpers.Constants.PackageName.GMAIL_APP
-import org.mozilla.focus.helpers.Constants.PackageName.PHONE_APP
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.StringsHelper.GMAIL_APP
+import org.mozilla.focus.helpers.StringsHelper.PHONE_APP
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
