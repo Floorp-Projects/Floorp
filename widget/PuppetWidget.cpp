@@ -944,6 +944,7 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
     return;
   }
   mCursor = aCursor;
+  mUpdateCursor = false;
 }
 
 void PuppetWidget::SetChild(PuppetWidget* aChild) {
