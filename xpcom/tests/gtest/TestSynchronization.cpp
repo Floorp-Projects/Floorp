@@ -237,6 +237,7 @@ TEST(Synchronization, AutoLock)
 //-----------------------------------------------------------------------------
 // AutoTryLock tests
 //
+// The thread owns assertions make mutex analysis throw spurious warnings
 TEST(Synchronization, AutoTryLock)
 NO_THREAD_SAFETY_ANALYSIS {
   Mutex l1 MOZ_UNANNOTATED("autotrylock");
