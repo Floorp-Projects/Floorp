@@ -508,6 +508,8 @@ bool SVGImageFrame::CreateWebRenderCommands(
         return true;
       }
 
+      mImageContainer->GetResolution().ApplyTo(nativeWidth, nativeHeight);
+
       auto preserveAspectRatio = imgElem->mPreserveAspectRatio.GetAnimValue();
       uint16_t align = preserveAspectRatio.GetAlign();
       uint16_t meetOrSlice = preserveAspectRatio.GetMeetOrSlice();
