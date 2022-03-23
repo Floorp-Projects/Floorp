@@ -215,6 +215,8 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:logins", "about:logins?*", "about:loginsimportreport"],
+    allFrames: true,
+    remoteTypes: ["privilegedabout"],
   },
 
   AboutNewTab: {
