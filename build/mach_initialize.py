@@ -104,6 +104,7 @@ def _maybe_activate_mozillabuild_environment():
         return
 
     mozillabuild = Path(os.environ.get("MOZILLABUILD", r"C:\mozilla-build"))
+    os.environ.setdefault("MOZILLABUILD", str(mozillabuild))
     assert mozillabuild.exists(), (
         f'MozillaBuild was not found at "{mozillabuild}".\n'
         "If it's installed in a different location, please "
@@ -111,25 +112,17 @@ def _maybe_activate_mozillabuild_environment():
         "accordingly."
     )
 
-    for entry in os.environ.get("PATH", "").split(os.pathsep):
-        entry = Path(entry)
-        if mozillabuild in entry.parents:
-            # We're already running with MozillaBuild directories in our PATH: either
-            # that's because we're inside the MozillaBuild shell, or the active developer
-            # has manually set up the PATH entries.
-            return
-
     use_msys2 = (mozillabuild / "msys2").exists()
     if use_msys2:
         mozillabuild_msys_tools_path = mozillabuild / "msys2" / "usr" / "bin"
     else:
         mozillabuild_msys_tools_path = mozillabuild / "msys" / "bin"
 
-    os.environ.setdefault("MOZILLABUILD", str(mozillabuild))
-    os.environ["PATH"] += (
-        f"{os.pathsep}{mozillabuild_msys_tools_path}"
-        f"{os.pathsep}{mozillabuild / 'bin'}"
-    )
+    paths_to_add = [mozillabuild_msys_tools_path, mozillabuild / "bin"]
+    existing_paths = [Path(p) for p in os.environ.get("PATH", "").split(os.pathsep)]
+    for new_path in paths_to_add:
+        if new_path not in existing_paths:
+            os.environ["PATH"] += f"{os.pathsep}{new_path}"
 
 
 def initialize(topsrcdir):
