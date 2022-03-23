@@ -94,7 +94,6 @@ include = [
   "Platform",
   "PrefersColorScheme",
   "PrefersContrast",
-  "DynamicRange",
   "FillRule",
   "FontDisplay",
   "FontFaceSourceListComponent",
