@@ -210,7 +210,7 @@ uint32_t XULListboxAccessible::SelectedRowCount() {
   return selectedRowCount >= 0 ? selectedRowCount : 0;
 }
 
-void XULListboxAccessible::SelectedCells(nsTArray<LocalAccessible*>* aCells) {
+void XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
       Elm()->AsXULMultiSelectControl();
   NS_ASSERTION(control,

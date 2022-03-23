@@ -199,8 +199,7 @@ uint32_t HTMLTableCellAccessible::RowExtent() const {
   return table->RowExtentAt(rowIdx, colIdx);
 }
 
-void HTMLTableCellAccessible::ColHeaderCells(
-    nsTArray<LocalAccessible*>* aCells) {
+void HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (LocalAccessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -219,8 +218,7 @@ void HTMLTableCellAccessible::ColHeaderCells(
   if (aCells->IsEmpty()) TableCellAccessible::ColHeaderCells(aCells);
 }
 
-void HTMLTableCellAccessible::RowHeaderCells(
-    nsTArray<LocalAccessible*>* aCells) {
+void HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (LocalAccessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -525,7 +523,7 @@ uint32_t HTMLTableAccessible::SelectedRowCount() {
   return count;
 }
 
-void HTMLTableAccessible::SelectedCells(nsTArray<LocalAccessible*>* aCells) {
+void HTMLTableAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   nsTableWrapperFrame* tableFrame = GetTableWrapperFrame();
   if (!tableFrame) return;
 

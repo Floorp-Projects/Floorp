@@ -7,59 +7,22 @@
 #ifndef mozilla_a11y_TableCellAccessible_h__
 #define mozilla_a11y_TableCellAccessible_h__
 
-#include "nsTArray.h"
-#include <stdint.h>
+#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "TableAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 
 class LocalAccessible;
-class TableAccessible;
 
 /**
- * Abstract interface implemented by table cell accessibles.
+ * Base class for LocalAccessible table cell implementations.
  */
-class TableCellAccessible {
+class TableCellAccessible : public TableCellAccessibleBase {
  public:
-  /**
-   * Return the table this cell is in.
-   */
-  virtual TableAccessible* Table() const = 0;
-
-  /**
-   * Return the column of the table this cell is in.
-   */
-  virtual uint32_t ColIdx() const = 0;
-
-  /**
-   * Return the row of the table this cell is in.
-   */
-  virtual uint32_t RowIdx() const = 0;
-
-  /**
-   * Return the column extent of this cell.
-   */
-  virtual uint32_t ColExtent() const { return 1; }
-
-  /**
-   * Return the row extent of this cell.
-   */
-  virtual uint32_t RowExtent() const { return 1; }
-
-  /**
-   * Return the column header cells for this cell.
-   */
-  virtual void ColHeaderCells(nsTArray<LocalAccessible*>* aCells);
-
-  /**
-   * Return the row header cells for this cell.
-   */
-  virtual void RowHeaderCells(nsTArray<LocalAccessible*>* aCells);
-
-  /**
-   * Returns true if this cell is selected.
-   */
-  virtual bool Selected() = 0;
+  virtual TableAccessible* Table() const override = 0;
+  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells) override;
+  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) override;
 
  private:
   LocalAccessible* PrevColHeader();

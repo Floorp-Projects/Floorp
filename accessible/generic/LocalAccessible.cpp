@@ -3543,3 +3543,9 @@ void KeyBinding::ToAtkFormat(nsAString& aValue) const {
 
   aValue.Append(mKey);
 }
+
+TableAccessibleBase* LocalAccessible::AsTableBase() { return AsTable(); }
+
+TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
+  return AsTableCell();
+}

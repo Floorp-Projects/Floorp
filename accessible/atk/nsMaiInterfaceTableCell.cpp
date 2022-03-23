@@ -117,15 +117,15 @@ static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
 
 static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
   if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
-    AutoTArray<LocalAccessible*, 10> headers;
+    AutoTArray<Accessible*, 10> headers;
     accWrap->AsTableCell()->ColHeaderCells(&headers);
     if (headers.IsEmpty()) {
       return nullptr;
     }
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
-    for (LocalAccessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header);
+    for (Accessible* header : headers) {
+      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
@@ -155,15 +155,15 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
 
 static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
   if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
-    AutoTArray<LocalAccessible*, 10> headers;
+    AutoTArray<Accessible*, 10> headers;
     accWrap->AsTableCell()->RowHeaderCells(&headers);
     if (headers.IsEmpty()) {
       return nullptr;
     }
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
-    for (LocalAccessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header);
+    for (Accessible* header : headers) {
+      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
