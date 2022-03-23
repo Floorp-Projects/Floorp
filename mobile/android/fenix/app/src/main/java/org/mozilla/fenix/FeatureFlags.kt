@@ -72,7 +72,7 @@ object FeatureFlags {
     /**
      * Enables showing the option to clear site data.
      */
-    val showClearSiteData = Config.channel.isNightlyOrDebug
+    const val showClearSiteData = true
 
     /**
      * Enables showing the wallpaper functionality.
