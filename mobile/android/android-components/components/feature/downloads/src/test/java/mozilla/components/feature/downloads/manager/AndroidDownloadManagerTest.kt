@@ -81,6 +81,7 @@ class AndroidDownloadManagerTest {
         grantPermissions()
 
         val id = downloadManager.download(download)!!
+        store.waitUntilIdle()
         notifyDownloadFailed(id)
         shadowOf(getMainLooper()).idle()
         assertTrue(downloadStopped)
