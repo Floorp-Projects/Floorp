@@ -499,8 +499,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::UseAccessibilityTheme:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
       break;
-    case IntID::VideoDynamicRange:
-      aResult = nsCocoaFeatures::OnHighSierraOrLater();
       break;
     default:
       aResult = 0;
