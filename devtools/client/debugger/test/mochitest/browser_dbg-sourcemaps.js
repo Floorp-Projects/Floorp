@@ -68,21 +68,18 @@ add_task(async function() {
 
   invokeInTab("keepMeAlive");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, entrySrc.id, 15);
 
   await stepIn(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "times2.js").id, 2);
 
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOver(dbg);
-  assertPausedLocation(dbg);
-  assertDebugLine(dbg, 3);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "times2.js").id, 3);
 
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOut(dbg);
-  assertPausedLocation(dbg);
-
-  assertDebugLine(dbg, 16);
+  assertPausedAtSourceAndLine(dbg, entrySrc.id, 16);
 });
 
 function assertBreakpointExists(dbg, source, line) {

@@ -240,24 +240,6 @@ function getVisibleSelectedFrameColumn(dbg) {
   return frame?.location.column;
 }
 
-/**
- * Assert that the debugger pause location is correctly rendered.
- *
- * @memberof mochitest/asserts
- * @param {Object} dbg
- * @static
- */
-function assertPausedLocation(dbg) {
-  ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
-
-  // Check the pause location
-  const pauseLine = getVisibleSelectedFrameLine(dbg);
-  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
-  assertDebugLine(dbg, pauseLine, pauseColumn);
-
-  ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
-}
-
 function assertDebugLine(dbg, line, column) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
@@ -394,7 +376,14 @@ function assertPausedAtSourceAndLine(
   assertPaused(dbg);
 
   // Check that the paused location is correctly rendered.
-  assertPausedLocation(dbg);
+  ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
+
+  // Check the pause location
+  const pauseLine = getVisibleSelectedFrameLine(dbg);
+  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
+  assertDebugLine(dbg, pauseLine, pauseColumn);
+
+  ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
@@ -404,14 +393,16 @@ function assertPausedAtSourceAndLine(
     ? frames[0].generatedLocation
     : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
-  ok(
-    line == expectedLine,
+  is(
+    line,
+    expectedLine,
     `Frame paused at line ${line}, but expected line ${expectedLine}`
   );
 
   if (expectedColumn) {
-    ok(
-      column == expectedColumn,
+    is(
+      column,
+      expectedColumn,
       `Frame paused at column ${column}, but expected column ${expectedColumn}`
     );
   }
@@ -1007,7 +998,7 @@ async function invokeWithBreakpoint(
     return;
   }
 
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, filename).id, line, column);
 
   await removeBreakpoint(dbg, source.id, line, column);
 
@@ -1208,10 +1199,10 @@ const keyMappings = {
   pauseKey: { code: "VK_F8" },
   resumeKey: { code: "VK_F8" },
   stepOverKey: { code: "VK_F10" },
-  stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux } },
+  stepInKey: { code: "VK_F11" },
   stepOutKey: {
     code: "VK_F11",
-    modifiers: { ctrlKey: isLinux, shiftKey: true },
+    modifiers: { shiftKey: true },
   },
 };
 
