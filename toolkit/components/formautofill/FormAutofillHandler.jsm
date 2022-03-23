@@ -29,6 +29,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "CreditCardTelemetry",
+  "resource://autofill/FormAutofillTelemetryUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "FormAutofillHeuristics",
   "resource://autofill/FormAutofillHeuristics.jsm"
 );
@@ -682,14 +687,9 @@ class FormAutofillSection {
         this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
 
         if (isCreditCardField) {
-          Services.telemetry.recordEvent(
-            "creditcard",
-            "filled_modified",
-            "cc_form",
+          CreditCardTelemetry.recordFilledModified(
             this.flowId,
-            {
-              field_name: targetFieldDetail.fieldName,
-            }
+            targetFieldDetail
           );
         }
 
@@ -992,28 +992,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return;
     }
 
-    // Record which fields could be identified
-    let identified = new Set();
-    fieldDetails.forEach(detail => identified.add(detail.fieldName));
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "detected",
-      "cc_form",
-      this.flowId,
-      {
-        cc_name_found: identified.has("cc-name") ? "true" : "false",
-        cc_number_found: identified.has("cc-number") ? "true" : "false",
-        cc_exp_found:
-          identified.has("cc-exp") ||
-          (identified.has("cc-exp-month") && identified.has("cc-exp-year"))
-            ? "true"
-            : "false",
-      }
-    );
-    Services.telemetry.scalarAdd(
-      "formautofill.creditCards.detected_sections_count",
-      1
-    );
+    CreditCardTelemetry.recordFormDetected(this.flowId, fieldDetails);
 
     // Check whether the section is in an <iframe>; and, if so,
     // watch for the <iframe> to pagehide.
@@ -1332,44 +1311,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return false;
     }
 
-    // Calculate values for telemetry
-    let extra = {
-      cc_name: "unavailable",
-      cc_number: "unavailable",
-      cc_exp: "unavailable",
-    };
-
-    for (let fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
-      let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
-      if (
-        fieldDetail.state == FIELD_STATES.NORMAL &&
-        (ChromeUtils.getClassName(element) == "HTMLSelectElement" ||
-          (ChromeUtils.getClassName(element) == "HTMLInputElement" &&
-            element.value.length))
-      ) {
-        state = "user_filled";
-      }
-      switch (fieldDetail.fieldName) {
-        case "cc-name":
-          extra.cc_name = state;
-          break;
-        case "cc-number":
-          extra.cc_number = state;
-          break;
-        case "cc-exp":
-        case "cc-exp-month":
-        case "cc-exp-year":
-          extra.cc_exp = state;
-          break;
-      }
-    }
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "filled",
-      "cc_form",
+    CreditCardTelemetry.recordFormFilled(
       this.flowId,
-      extra
+      this.fieldDetails,
+      profile
     );
     return true;
   }
