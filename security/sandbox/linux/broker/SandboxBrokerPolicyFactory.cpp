@@ -62,12 +62,6 @@ static const int deny = SandboxBroker::FORCE_DENY;
 }  // namespace
 
 static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
-  // Bug 1384178: Mesa driver loader
-  aPolicy->AddPrefix(rdonly, "/sys/dev/char/226:");
-
-  // Bug 1480755: Mesa tries to probe /sys paths in turn
-  aPolicy->AddAncestors("/sys/dev/char/");
-
   // Bug 1401666: Mesa driver loader part 2: Mesa <= 12 using libudev
   if (auto dir = opendir("/dev/dri")) {
     while (auto entry = readdir(dir)) {
@@ -77,16 +71,27 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
         if (stat(devPath.get(), &sb) == 0 && S_ISCHR(sb.st_mode)) {
           // For both the DRI node and its parent (the physical
           // device), allow reading the "uevent" file.
-          static const Array<const char*, 2> kSuffixes = {"", "/device"};
+          static const Array<nsCString, 2> kSuffixes = {""_ns, "/device"_ns};
+          nsPrintfCString prefix("/sys/dev/char/%u:%u", major(sb.st_rdev),
+                                 minor(sb.st_rdev));
           for (const auto suffix : kSuffixes) {
-            nsPrintfCString sysPath("/sys/dev/char/%u:%u%s", major(sb.st_rdev),
-                                    minor(sb.st_rdev), suffix);
+            nsCString sysPath(prefix + suffix);
+
             // libudev will expand the symlink but not do full
             // canonicalization, so it will leave in ".." path
             // components that will be realpath()ed in the
             // broker.  To match this, allow the canonical paths.
             UniqueFreePtr<char[]> realSysPath(realpath(sysPath.get(), nullptr));
             if (realSysPath) {
+              // https://gitlab.freedesktop.org/mesa/drm/-/commit/3988580e4c0f4b3647a0c6af138a3825453fe6e0
+              // > term = strrchr(real_path, '/');
+              // > if (term && strncmp(term, "/virtio", 7) == 0)
+              // >     *term = 0;
+              char *term = strrchr(realSysPath.get(), '/');
+              if (term && strncmp(term, "/virtio", 7) == 0) {
+                *term = 0;
+              }
+
               constexpr const char* kMesaAttrSuffixes[] = {
                   "config",    "device",           "revision",
                   "subsystem", "subsystem_device", "subsystem_vendor",
@@ -97,11 +102,21 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
                                          attrSuffix);
                 aPolicy->AddPath(rdonly, attrPath.get());
               }
-              // Allowing stat-ing the parent dirs
+              // Allowing stat-ing and readlink-ing the parent dirs
               nsPrintfCString basePath("%s/", realSysPath.get());
-              aPolicy->AddAncestors(basePath.get());
+              aPolicy->AddAncestors(basePath.get(), rdonly);
             }
           }
+
+          // https://gitlab.freedesktop.org/mesa/drm/-/commit/a02900133b32dd4a7d6da4966f455ab337e80dfc
+          // > strncpy(path, device_path, PATH_MAX);
+          // > strncat(path, "/subsystem", PATH_MAX);
+          // >
+          // > if (readlink(path, link, PATH_MAX) < 0)
+          // >     return -errno;
+          nsCString subsystemPath(prefix + "/device/subsystem"_ns);
+          aPolicy->AddPath(rdonly, subsystemPath.get());
+          aPolicy->AddAncestors(subsystemPath.get(), rdonly);
         }
       }
     }
@@ -700,8 +715,6 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   if (!headless && HasAtiDrivers()) {
     policy->AddDir(rdonly, "/opt/amdgpu/share");
     policy->AddPath(rdonly, "/sys/module/amdgpu");
-    // AMDGPU-PRO's MESA version likes to readlink a lot of things here
-    policy->AddDir(access, "/sys");
   }
 
   mCommonContentPolicy.reset(policy);
