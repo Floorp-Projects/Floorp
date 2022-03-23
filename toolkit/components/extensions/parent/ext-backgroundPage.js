@@ -30,16 +30,6 @@ XPCOMUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
   );
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "backgroundIdleTimeout",
-  "extensions.background.idle.timeout",
-  30000,
-  null,
-  // Minimum 100ms, max 5min
-  delay => Math.min(Math.max(delay, 100), 5 * 60 * 1000)
-);
-
 // Responsible for the background_page section of the manifest.
 class BackgroundPage extends HiddenExtensionPage {
   constructor(extension, options) {
@@ -313,26 +303,6 @@ this.backgroundPage = class extends ExtensionAPI {
     return this.bgInstance.build();
   }
 
-  observe(subject, topic, data) {
-    if (topic == "timer-callback") {
-      let { extension } = this;
-      this.clearIdleTimer();
-      extension?.terminateBackground();
-    }
-  }
-
-  clearIdleTimer() {
-    this.backgroundTimer?.cancel();
-    this.backgroundTimer = null;
-  }
-
-  resetIdleTimer() {
-    this.clearIdleTimer();
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.init(this, backgroundIdleTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-    this.backgroundTimer = timer;
-  }
-
   async primeBackground(isInStartup = true) {
     let { extension } = this;
 
@@ -374,34 +344,7 @@ this.backgroundPage = class extends ExtensionAPI {
       return bgStartupPromise;
     };
 
-    let resetBackgroundIdle = () => {
-      this.clearIdleTimer();
-      if (!this.extension || extension.persistentBackground) {
-        // Extension was already shut down or is persistent and
-        // does not idle timout.
-        return;
-      }
-      // TODO remove at an appropriate point in the future prior
-      // to general availability.  There may be some racy conditions
-      // with idle timeout between an event starting and the event firing
-      // but we still want testing with an idle timeout.
-      if (
-        !Services.prefs.getBoolPref("extensions.background.idle.enabled", true)
-      ) {
-        return;
-      }
-
-      this.resetIdleTimer();
-    };
-
-    // Listen for events from the EventManager
-    extension.on("background-script-reset-idle", resetBackgroundIdle);
-    // After the background is started, initiate the first timer
-    extension.once("background-script-started", resetBackgroundIdle);
-
     extension.terminateBackground = async () => {
-      this.clearIdleTimer();
-      extension.off("background-script-reset-idle", resetBackgroundIdle);
       await bgStartupPromise;
       this.onShutdown(false);
       EventManager.clearPrimedListeners(this.extension, false);
@@ -455,9 +398,6 @@ this.backgroundPage = class extends ExtensionAPI {
   }
 
   onShutdown(isAppShutdown) {
-    // Ensure there is no backgroundTimer running
-    this.clearIdleTimer();
-
     if (this.bgInstance) {
       this.bgInstance.shutdown(isAppShutdown);
       this.bgInstance = null;
