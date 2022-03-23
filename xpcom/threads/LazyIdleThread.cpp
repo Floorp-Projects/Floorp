@@ -399,6 +399,16 @@ LazyIdleThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 }
 
 NS_IMETHODIMP
+LazyIdleThread::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+LazyIdleThread::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
   if (mThread) {
     return mThread->GetRunningEventDelay(aDelay, aStart);

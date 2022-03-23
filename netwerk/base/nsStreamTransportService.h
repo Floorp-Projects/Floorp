@@ -5,7 +5,6 @@
 #ifndef nsStreamTransportService_h__
 #define nsStreamTransportService_h__
 
-#include "nsIDelayedRunnableObserver.h"
 #include "nsIStreamTransportService.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"

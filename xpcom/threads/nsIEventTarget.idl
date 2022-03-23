@@ -10,9 +10,12 @@
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Atomics.h"
+
+class nsITargetShutdownTask;
 %}
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
+[ptr] native nsITargetShutdownTask(nsITargetShutdownTask);
 
 [builtinclass, scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
 interface nsIEventTarget : nsISupports
@@ -166,6 +169,45 @@ public:
    * that delay is zero.
    */
   [noscript] void delayedDispatch(in alreadyAddRefed_nsIRunnable event, in unsigned long delay);
+
+  /**
+   * Register an task to be run on this event target when it begins shutting
+   * down.  Shutdown tasks may be run in any order, and this function may be
+   * called from any thread.
+   *
+   * The event target may or may not continue accepting events during or after
+   * the shutdown task. The precise behaviour here depends on the event target.
+   *
+   * @param task
+   *   The task to be registered to the target thread.
+   *   NOTE that unlike `dispatch`, this will not leak the task if it fails.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that task is null.
+   * @throws NS_ERROR_NOT_IMPLEMENTED
+   *   Indicates that this event target doesn't support shutdown tasks.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is already shutting down, and no longer
+   *   accepting events.
+   */
+  [noscript] void registerShutdownTask(in nsITargetShutdownTask task);
+
+  /**
+   * Unregisters an task previously registered with registerShutdownTask.  This
+   * function may be called from any thread.
+   *
+   * @param task
+   *   The task previously registered with registerShutdownTask
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that task is null.
+   * @throws NS_ERROR_NOT_IMPLEMENTED
+   *   Indicates that this event target doesn't support shutdown tasks.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is already shutting down, and no longer
+   *   accepting events, or that the shutdown task cannot be found.
+   */
+  [noscript] void unregisterShutdownTask(in nsITargetShutdownTask task);
 };
 
 %{C++

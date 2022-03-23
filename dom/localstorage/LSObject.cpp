@@ -1195,6 +1195,16 @@ NestedEventTargetWrapper::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
       "NestedEventTargetWrapper");
 }
 
+NS_IMETHODIMP
+NestedEventTargetWrapper::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NestedEventTargetWrapper::UnregisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 

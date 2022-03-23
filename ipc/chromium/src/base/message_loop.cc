@@ -16,6 +16,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ProfilerRunnable.h"
+#include "nsIEventTarget.h"
+#include "nsITargetShutdownTask.h"
 #include "nsThreadUtils.h"
 
 #if defined(OS_MACOSX)
@@ -85,10 +87,28 @@ static LPTOP_LEVEL_EXCEPTION_FILTER GetTopSEHFilter() {
 //------------------------------------------------------------------------------
 
 class MessageLoop::EventTarget : public nsISerialEventTarget,
+                                 public nsITargetShutdownTask,
                                  public MessageLoop::DestructionObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
+
+  void TargetShutdown() override {
+    nsTArray<nsCOMPtr<nsITargetShutdownTask>> shutdownTasks;
+    {
+      mozilla::MutexAutoLock lock(mMutex);
+      if (mShutdownTasksRun) {
+        return;
+      }
+      mShutdownTasksRun = true;
+      shutdownTasks = std::move(mShutdownTasks);
+      mShutdownTasks.Clear();
+    }
+
+    for (auto& task : shutdownTasks) {
+      task->TargetShutdown();
+    }
+  }
 
   explicit EventTarget(MessageLoop* aLoop)
       : mMutex("MessageLoop::EventTarget"), mLoop(aLoop) {
@@ -100,18 +120,25 @@ class MessageLoop::EventTarget : public nsISerialEventTarget,
     if (mLoop) {
       mLoop->RemoveDestructionObserver(this);
     }
+    MOZ_ASSERT(mShutdownTasks.IsEmpty());
   }
 
   void WillDestroyCurrentMessageLoop() override {
-    mozilla::MutexAutoLock lock(mMutex);
-    // The MessageLoop is being destroyed and we are called from its destructor
-    // There's no real need to remove ourselves from the destruction observer
-    // list. But it makes things look tidier.
-    mLoop->RemoveDestructionObserver(this);
-    mLoop = nullptr;
+    {
+      mozilla::MutexAutoLock lock(mMutex);
+      // The MessageLoop is being destroyed and we are called from its
+      // destructor There's no real need to remove ourselves from the
+      // destruction observer list. But it makes things look tidier.
+      mLoop->RemoveDestructionObserver(this);
+      mLoop = nullptr;
+    }
+
+    TargetShutdown();
   }
 
   mozilla::Mutex mMutex;
+  bool mShutdownTasksRun GUARDED_BY(mMutex) = false;
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks GUARDED_BY(mMutex);
   MessageLoop* mLoop GUARDED_BY(mMutex);
 };
 
@@ -165,6 +192,26 @@ MessageLoop::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MessageLoop::EventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  mozilla::MutexAutoLock lock(mMutex);
+  if (!mLoop || mShutdownTasksRun) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  MOZ_ASSERT(!mShutdownTasks.Contains(aTask));
+  mShutdownTasks.AppendElement(aTask);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessageLoop::EventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  mozilla::MutexAutoLock lock(mMutex);
+  if (!mLoop || mShutdownTasksRun) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mShutdownTasks.RemoveElement(aTask) ? NS_OK : NS_ERROR_UNEXPECTED;
+}
+
 //------------------------------------------------------------------------------
 
 // static
@@ -175,7 +222,7 @@ void MessageLoop::set_current(MessageLoop* loop) { get_tls_ptr().Set(loop); }
 
 static mozilla::Atomic<int32_t> message_loop_id_seq(0);
 
-MessageLoop::MessageLoop(Type type, nsIEventTarget* aEventTarget)
+MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
     : type_(type),
       id_(++message_loop_id_seq),
       nestable_tasks_allowed_(true),
@@ -257,7 +304,9 @@ MessageLoop::MessageLoop(Type type, nsIEventTarget* aEventTarget)
   // We want GetCurrentSerialEventTarget() to return the real nsThread if it
   // will be used to dispatch tasks. However, under all other cases; we'll want
   // it to return this MessageLoop's EventTarget.
-  if (!pump_->GetXPCOMThread()) {
+  if (nsISerialEventTarget* thread = pump_->GetXPCOMThread()) {
+    MOZ_ALWAYS_SUCCEEDS(thread->RegisterShutdownTask(mEventTarget));
+  } else {
     mozilla::SerialEventTargetGuard::Set(mEventTarget);
   }
 }
@@ -379,7 +428,7 @@ void MessageLoop::PostIdleTask(already_AddRefed<nsIRunnable> task) {
 // Possibly called on a background thread!
 void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task,
                                   int delay_ms) {
-  if (nsIEventTarget* target = pump_->GetXPCOMThread()) {
+  if (nsISerialEventTarget* target = pump_->GetXPCOMThread()) {
     nsresult rv;
     if (delay_ms) {
       rv = target->DelayedDispatch(std::move(task), delay_ms);

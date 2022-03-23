@@ -85,6 +85,14 @@ struct RunnableQueue : nsISerialEventTarget {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  NS_IMETHOD RegisterShutdownTask(nsITargetShutdownTask*) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD UnregisterShutdownTask(nsITargetShutdownTask*) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // nsISupports methods
 
   NS_DECL_THREADSAFE_ISUPPORTS

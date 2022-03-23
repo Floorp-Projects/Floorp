@@ -30,7 +30,6 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 
-class nsIEventTarget;
 class nsISerialEventTarget;
 
 namespace mozilla {
@@ -200,7 +199,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   // Normally, it is not necessary to instantiate a MessageLoop.  Instead, it
   // is typical to make use of the current thread's MessageLoop instance.
   explicit MessageLoop(Type type = TYPE_DEFAULT,
-                       nsIEventTarget* aEventTarget = nullptr);
+                       nsISerialEventTarget* aEventTarget = nullptr);
   ~MessageLoop();
 
   // Returns the type passed to the constructor.

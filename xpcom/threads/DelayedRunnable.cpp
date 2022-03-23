@@ -15,62 +15,99 @@ DelayedRunnable::DelayedRunnable(already_AddRefed<nsISerialEventTarget> aTarget,
                                  uint32_t aDelay)
     : mozilla::Runnable("DelayedRunnable"),
       mTarget(aTarget),
-      mObserver(do_QueryInterface(mTarget)),
-      mWrappedRunnable(aRunnable),
       mDelayedFrom(TimeStamp::NowLoRes()),
-      mDelay(aDelay) {
-  MOZ_DIAGNOSTIC_ASSERT(mObserver,
-                        "Target must implement nsIDelayedRunnableObserver");
-}
+      mDelay(aDelay),
+      mWrappedRunnable(aRunnable) {}
 
 nsresult DelayedRunnable::Init() {
-  mObserver->OnDelayedRunnableCreated(this);
-  return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
-                                 nsITimer::TYPE_ONE_SHOT, mTarget);
-}
+  MutexAutoLock lock(mMutex);
+  if (!mWrappedRunnable) {
+    MOZ_ASSERT_UNREACHABLE();
+    return NS_ERROR_INVALID_ARG;
+  }
 
-void DelayedRunnable::CancelTimer() {
-  MOZ_ASSERT(mTarget->IsOnCurrentThread());
-  mTimer->Cancel();
+  nsresult rv = mTarget->RegisterShutdownTask(this);
+  if (NS_FAILED(rv)) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        rv == NS_ERROR_UNEXPECTED,
+        "DelayedRunnable target must support RegisterShutdownTask");
+    NS_WARNING("DelayedRunnable init after target is shutdown");
+    return rv;
+  }
+
+  rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
+                               nsITimer::TYPE_ONE_SHOT, mTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mTarget->UnregisterShutdownTask(this);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP DelayedRunnable::Run() {
-  MOZ_ASSERT(mTimer, "DelayedRunnable without Init?");
+  MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
-  // Already ran?
-  if (!mWrappedRunnable) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsIRunnable> runnable;
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mTimer, "Init() must have been called");
 
-  // Are we too early?
-  if ((mozilla::TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() <
-      mDelay) {
-    if (mObserver) {
-      mObserver->OnDelayedRunnableScheduled(this);
+    // Already ran?
+    if (!mWrappedRunnable) {
+      return NS_OK;
     }
-    return NS_OK;  // Let the nsITimer run us.
+
+    // Are we too early?
+    if ((mozilla::TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() <
+        mDelay) {
+      return NS_OK;  // Let the nsITimer run us.
+    }
+
+    mTimer->Cancel();
+    mTarget->UnregisterShutdownTask(this);
+    runnable = mWrappedRunnable.forget();
   }
 
-  mTimer->Cancel();
-  return DoRun();
+  AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
+  return runnable->Run();
 }
 
 NS_IMETHODIMP DelayedRunnable::Notify(nsITimer* aTimer) {
-  // If we already ran, the timer should have been canceled.
-  MOZ_ASSERT(mWrappedRunnable);
+  MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
-  if (mObserver) {
-    mObserver->OnDelayedRunnableRan(this);
+  nsCOMPtr<nsIRunnable> runnable;
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mTimer, "Init() must have been called");
+
+    // We may have already run due to races
+    if (!mWrappedRunnable) {
+      return NS_OK;
+    }
+
+    mTarget->UnregisterShutdownTask(this);
+    runnable = mWrappedRunnable.forget();
   }
-  return DoRun();
+
+  AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
+  return runnable->Run();
 }
 
-nsresult DelayedRunnable::DoRun() {
-  nsCOMPtr<nsIRunnable> r = std::move(mWrappedRunnable);
-  AUTO_PROFILE_FOLLOWING_RUNNABLE(r);
-  return r->Run();
+void DelayedRunnable::TargetShutdown() {
+  MOZ_ASSERT(mTarget->IsOnCurrentThread());
+
+  // Called at shutdown
+  MutexAutoLock lock(mMutex);
+  if (!mWrappedRunnable) {
+    return;
+  }
+  mWrappedRunnable = nullptr;
+
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback,
+                            nsITargetShutdownTask)
 
 }  // namespace mozilla
