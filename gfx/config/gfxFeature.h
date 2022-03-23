@@ -41,7 +41,9 @@ namespace gfx {
   _(WINDOW_OCCLUSION, Feature, "WINDOW_OCCLUSION")                       \
   _(VAAPI, Feature, "VA-API video decoding")                             \
   _(VIDEO_OVERLAY, Feature, "video overlay")                             \
-  /* Add new entries above this comment */
+  _(VP8_HW_DECODE, Feature, "VP8 hardware decoding")                     \
+  _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")
+/* Add new entries above this comment */
 
 enum class Feature : uint32_t {
 #define MAKE_ENUM(name, type, desc) name,
