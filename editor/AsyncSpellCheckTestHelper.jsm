@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["onSpellCheck"];
+var EXPORTED_SYMBOLS = ["maybeOnSpellCheck", "onSpellCheck"];
 
 const SPELL_CHECK_ENDED_TOPIC = "inlineSpellChecker-spellCheck-ended";
 const SPELL_CHECK_STARTED_TOPIC = "inlineSpellChecker-spellCheck-started";
@@ -24,7 +24,7 @@ const SPELL_CHECK_STARTED_TOPIC = "inlineSpellChecker-spellCheck-started";
  *                         of the event loop have passed to determine it has not
  *                         started.
  */
-function onSpellCheck(editableElement, callback) {
+function maybeOnSpellCheck(editableElement, callback) {
   let editor = editableElement.editor;
   if (!editor) {
     let win = editableElement.ownerGlobal;
@@ -72,9 +72,9 @@ function onSpellCheck(editableElement, callback) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(
     function tick() {
-      // Wait an arbitrarily large number -- 50 -- turns of the event loop before
+      // Wait an arbitrarily large number -- 100 -- turns of the event loop before
       // declaring that no spell checks will start.
-      if (waitingForEnded || ++count < 50) {
+      if (waitingForEnded || ++count < 100) {
         return;
       }
       timer.cancel();
@@ -84,5 +84,24 @@ function onSpellCheck(editableElement, callback) {
     },
     0,
     Ci.nsITimer.TYPE_REPEATING_SLACK
+  );
+}
+
+/**
+ * Waits until spell checking has stopped on the given element.
+ *
+ * @param editableElement  The element being spell checked.
+ * @param callback         Called when spell check has completed or enough turns
+ *                         of the event loop have passed to determine it has not
+ *                         started.
+ */
+function onSpellCheck(editableElement, callback) {
+  const { TestUtils } = ChromeUtils.import(
+    "resource://testing-common/TestUtils.jsm"
+  );
+
+  let editor = editableElement.editor;
+  TestUtils.topicObserved(SPELL_CHECK_ENDED_TOPIC, s => s == editor).then(
+    callback
   );
 }

@@ -95,7 +95,7 @@ SimpleTest.waitForFocus(async () => {
 
       SpecialPowers.Cu.import(
         "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-      .onSpellCheck(aElement, () => {
+      .maybeOnSpellCheck(aElement, () => {
         SimpleTest.executeSoon(() => {
           aElement.addEventListener("beforeinput", onBeforeInput);
           aElement.addEventListener("input", onInput);

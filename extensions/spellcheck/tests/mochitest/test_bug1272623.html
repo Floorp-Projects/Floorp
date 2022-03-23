@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 
   async function performCorrection(misspelled, area) {
     synthesizeMouseAtCenter($(misspelled), {}, window);
-    await new Promise(resolve => onSpellCheck($(area), resolve));
+    await new Promise(resolve => maybeOnSpellCheck($(area), resolve));
     synthesizeMouseAtCenter($(misspelled), {type: 'contextmenu'}, window);
 
     // Perform the spelling correction
@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
   }
 
   add_task(async function() {
-    /* global onSpellCheck */
+    /* global maybeOnSpellCheck */
     SpecialPowers.Cu.import(
       "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 

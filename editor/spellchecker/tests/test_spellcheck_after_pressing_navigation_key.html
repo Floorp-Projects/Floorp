@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1729653
 <body>
 <textarea rows="20" cols="50">That undfgdfg seems OK.</textarea>
 <script>
-let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+let {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
 
 function waitForTick() {
   return new Promise(resolve => SimpleTest.executeSoon(resolve));
@@ -21,7 +21,7 @@ function waitForTick() {
 
 function waitForOnSpellCheck(aTextArea) {
   info("Waiting for onSpellCheck...");
-  return new Promise(resolve => onSpellCheck(aTextArea, resolve));
+  return new Promise(resolve => maybeOnSpellCheck(aTextArea, resolve));
 }
 
 /** Test for Bug 1729653 **/
