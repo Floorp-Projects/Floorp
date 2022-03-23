@@ -154,4 +154,29 @@ public class ProfilerController {
   public void addMarker(@NonNull final String aMarkerName) {
     addMarker(aMarkerName, null, null, null);
   }
+
+  /**
+   * Start the Gecko profiler with the given settings. This is used by embedders which want to
+   * control the profiler from the embedding app. This allows them to provide an easier access point
+   * to profiling, as an alternative to the traditional way of using a desktop Firefox instance
+   * connected via USB + adb.
+   *
+   * @param aFilters The list of threads to profile, as an array of string of thread names filters.
+   *     Each filter is used as a case-insensitive substring match against the actual thread names.
+   * @param aFeaturesArr The list of profiler features to enable for profiling, as a string array.
+   */
+  public void startProfiler(
+      @NonNull final String[] aFilters, @NonNull final String[] aFeaturesArr) {
+    GeckoJavaSampler.startProfiler(aFilters, aFeaturesArr);
+  }
+
+  /**
+   * Stop the profiler and capture the recorded profile. This method is asynchronous.
+   *
+   * @return GeckoResult for the captured profile. The profile is returned as a byte[] buffer
+   *     containing a gzip-compressed payload (with gzip header) of the profile JSON.
+   */
+  public @NonNull GeckoResult<byte[]> stopProfiler() {
+    return GeckoJavaSampler.stopProfiler();
+  }
 }

@@ -463,6 +463,47 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
   return NS_OK;
 }
 
+nsresult CompressString(const nsCString& aString,
+                        FallibleTArray<uint8_t>& aOutBuff) {
+  // Compress a buffer via zlib (as with `compress()`), but emit a
+  // gzip header as well. Like `compress()`, this is limited to 4GB in
+  // size, but that shouldn't be an issue for our purposes.
+  uLongf outSize = compressBound(aString.Length());
+  if (!aOutBuff.SetLength(outSize, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  int zerr;
+  z_stream stream;
+  stream.zalloc = nullptr;
+  stream.zfree = nullptr;
+  stream.opaque = nullptr;
+  stream.next_out = (Bytef*)aOutBuff.Elements();
+  stream.avail_out = aOutBuff.Length();
+  stream.next_in = (z_const Bytef*)aString.Data();
+  stream.avail_in = aString.Length();
+
+  // A windowBits of 31 is the default (15) plus 16 for emitting a
+  // gzip header; a memLevel of 8 is the default.
+  zerr =
+      deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                   /* windowBits */ 31, /* memLevel */ 8, Z_DEFAULT_STRATEGY);
+  if (zerr != Z_OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  zerr = deflate(&stream, Z_FINISH);
+  outSize = stream.total_out;
+  deflateEnd(&stream);
+
+  if (zerr != Z_STREAM_END) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aOutBuff.TruncateLength(outSize);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
                                                JSContext* aCx,
@@ -500,46 +541,13 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
               return;
             }
 
-            // Compress a buffer via zlib (as with `compress()`), but emit a
-            // gzip header as well. Like `compress()`, this is limited to 4GB in
-            // size, but that shouldn't be an issue for our purposes.
-            uLongf outSize = compressBound(aResult.Length());
             FallibleTArray<uint8_t> outBuff;
-            if (!outBuff.SetLength(outSize, fallible)) {
-              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+            nsresult result = CompressString(aResult, outBuff);
+
+            if (result != NS_OK) {
+              promise->MaybeReject(result);
               return;
             }
-
-            int zerr;
-            z_stream stream;
-            stream.zalloc = nullptr;
-            stream.zfree = nullptr;
-            stream.opaque = nullptr;
-            stream.next_out = (Bytef*)outBuff.Elements();
-            stream.avail_out = outBuff.Length();
-            stream.next_in = (z_const Bytef*)aResult.Data();
-            stream.avail_in = aResult.Length();
-
-            // A windowBits of 31 is the default (15) plus 16 for emitting a
-            // gzip header; a memLevel of 8 is the default.
-            zerr = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
-                                /* windowBits */ 31, /* memLevel */ 8,
-                                Z_DEFAULT_STRATEGY);
-            if (zerr != Z_OK) {
-              promise->MaybeReject(NS_ERROR_FAILURE);
-              return;
-            }
-
-            zerr = deflate(&stream, Z_FINISH);
-            outSize = stream.total_out;
-            deflateEnd(&stream);
-
-            if (zerr != Z_STREAM_END) {
-              promise->MaybeReject(NS_ERROR_FAILURE);
-              return;
-            }
-
-            outBuff.TruncateLength(outSize);
 
             JSContext* cx = jsapi.cx();
             JSObject* typedArray = dom::ArrayBuffer::Create(
@@ -984,6 +992,31 @@ void nsProfiler::GatheredOOPProfile(base::ProcessId aChildPid,
   // Not finished yet, restart the timer to let any remaining child enough time
   // to do their profile-streaming.
   RestartGatheringTimer();
+}
+
+RefPtr<nsProfiler::GatheringPromiseAndroid>
+nsProfiler::GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!profiler_is_active()) {
+    return GatheringPromiseAndroid::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  return StartGathering(aSinceTime)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [](const nsCString& profileResult) {
+            FallibleTArray<uint8_t> outBuff;
+            nsresult result = CompressString(profileResult, outBuff);
+            if (result != NS_OK) {
+              return GatheringPromiseAndroid::CreateAndReject(result, __func__);
+            }
+            return GatheringPromiseAndroid::CreateAndResolve(std::move(outBuff),
+                                                             __func__);
+          },
+          [](nsresult aRv) {
+            return GatheringPromiseAndroid::CreateAndReject(aRv, __func__);
+          });
 }
 
 RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
