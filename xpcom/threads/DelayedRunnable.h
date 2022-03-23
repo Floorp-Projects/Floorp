@@ -18,7 +18,7 @@ namespace mozilla {
 
 class DelayedRunnable : public Runnable, public nsITimerCallback {
  public:
-  DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
+  DelayedRunnable(already_AddRefed<nsISerialEventTarget> aTarget,
                   already_AddRefed<nsIRunnable> aRunnable, uint32_t aDelay);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,7 +37,7 @@ class DelayedRunnable : public Runnable, public nsITimerCallback {
   ~DelayedRunnable() = default;
   nsresult DoRun();
 
-  const nsCOMPtr<nsIEventTarget> mTarget;
+  const nsCOMPtr<nsISerialEventTarget> mTarget;
   const nsCOMPtr<nsIDelayedRunnableObserver> mObserver;
   nsCOMPtr<nsIRunnable> mWrappedRunnable;
   nsCOMPtr<nsITimer> mTimer;

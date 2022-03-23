@@ -77,6 +77,10 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   // time to discover the gateway's MAC address.
   nsCOMPtr<nsITimer> mNetworkIdTimer;
 
+  // Scheduled timers used to delay querying of the DNS suffix list when
+  // triggered by a network change. Guarded by mMutex.
+  nsTArray<nsCOMPtr<nsITimer>> mDNSConfigChangedTimers;
+
   // IP address used to check the route for public traffic.
   struct in_addr mRouteCheckIPv4;
 };
