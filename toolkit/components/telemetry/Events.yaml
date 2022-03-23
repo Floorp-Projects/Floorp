@@ -564,6 +564,44 @@ creditcard:
         Additionally, it may include input elements that are not rendered as user-modifiable, such as hidden fields as well as <button> elements.
       fields_auto: Number of fields in the `submitted` event that were autofilled
       fields_modified: Number of fields in a `submitted` event that were autofilled and later modified
+  cc_form_v2:
+    description: >-
+      User interactions for credit card autofill forms
+      Expected values are store in extra_keys and are varies depends on the methods
+        'detected': Recorded when a form is recognized as a credit card form.
+                    "True" when the field is identified in the form, "False" otherwise
+        'popup_shown': Recorded when autofill popup is shown. Using field_name to record the field
+                       that triggers this event
+        'filled': Recorded when a form is autofiled. Possible values are
+                  `filled`, `not_filled`, `user_filled` or `unavailable`
+        'filled_modified': Recorded when a field is autofilled and then modified by the user.
+                           Using field_name to record the field that triggers this event.
+        'submitted': Recorded when a form is submitted. Possible values are `autofilled`, `user_filled` or `unavailable`
+        'cleared' Recorded when a form is cleared . Using field_name to record the field that triggers this event
+    objects:
+      - "cc_form_v2"
+    methods:
+      - "detected"
+      - "popup_shown"
+      - "filled"
+      - "filled_modified"
+      - "submitted"
+      - "cleared"
+    bug_numbers: [1757731]
+    notification_emails: ["tgiles@mozilla.com", "dlee@mozilla.com"]
+    expiry_version: never
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+    extra_keys:
+      cc_name: cardholder name field result. Used by `detected`, `filled`, and `filled_modified` methods.
+      cc_number: credit card number field result
+      cc_type: credit card type result
+      cc_exp: credit card expiration date
+      cc_exp_month: credit card expiration month
+      cc_exp_year: credit card expiration year
+      field_name: Name of the field being affected by the method. Used by `popup_shown` and `filled_modified` methods.
 
 extensions.data:
   migrateResult:

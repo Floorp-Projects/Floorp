@@ -689,7 +689,7 @@ class FormAutofillSection {
         if (isCreditCardField) {
           CreditCardTelemetry.recordFilledModified(
             this.flowId,
-            targetFieldDetail
+            targetFieldDetail.fieldName
           );
         }
 
