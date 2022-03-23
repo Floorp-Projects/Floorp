@@ -40,8 +40,6 @@ class InvalidPathException(Exception):
     help="Print symbol names only.",
 )
 def reference(command_context, symbol, name_only=False):
-    command_context.activate_virtualenv()
-
     from mozbuild.sphinx import (
         format_module,
         function_reference,

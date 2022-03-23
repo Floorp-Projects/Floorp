@@ -471,19 +471,15 @@ def create_parser_testpaths():
     return parser
 
 
-def setup(command_context):
-    command_context.activate_virtualenv()
-
-
 @Command(
     "web-platform-tests",
     category="testing",
     conditions=[conditions.is_firefox_or_android],
     description="Run web-platform-tests.",
     parser=create_parser_wpt,
+    virtualenv_name="wpt",
 )
 def run_web_platform_tests(command_context, **params):
-    setup(command_context)
     if params["product"] is None:
         if conditions.is_android(command_context):
             params["product"] = "firefox_android"
@@ -543,8 +539,6 @@ def run_wpt(command_context, **params):
     virtualenv_name="wpt",
 )
 def update_web_platform_tests(command_context, **params):
-    setup(command_context)
-
     wpt_updater = command_context._spawn(WebPlatformTestsUpdater)
     logger = wpt_updater.setup_logging(**params)
     return wpt_updater.run_update(logger, **params)
@@ -565,9 +559,9 @@ def update_wpt(command_context, **params):
     category="testing",
     description="Update web-platform-test manifests.",
     parser=create_parser_manifest_update,
+    virtualenv_name="wpt",
 )
 def wpt_manifest_update(command_context, **params):
-    setup(command_context)
     wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
     wpt_runner = WebPlatformTestsRunner(wpt_setup)
     logger = wpt_runner.setup_logging(**params)
@@ -583,9 +577,9 @@ def wpt_manifest_update(command_context, **params):
     category="testing",
     description="Run the wpt server",
     parser=create_parser_serve,
+    virtualenv_name="wpt",
 )
 def wpt_serve(command_context, **params):
-    setup(command_context)
     import logging
 
     logger = logging.getLogger("web-platform-tests")
@@ -624,7 +618,6 @@ def wpt_meta_merge(command_context, **params):
     virtualenv_name="wpt",
 )
 def wpt_unittest(command_context, **params):
-    setup(command_context)
     runner = command_context._spawn(WebPlatformTestsUnittestRunner)
     return 0 if runner.run(**params) else 1
 

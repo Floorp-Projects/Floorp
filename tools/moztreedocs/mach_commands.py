@@ -111,7 +111,6 @@ def build_docs(
     linkcheck=None,
     verbose=None,
 ):
-    command_context.activate_virtualenv()
     # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
     import setup_helper
 
