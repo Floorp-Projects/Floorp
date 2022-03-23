@@ -1,0 +1,124 @@
+<html>
+<head>
+  <title>Test for bug 1695598</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="text/javascript">
+    let scrollEvents = 100;
+    let i = 0;
+
+    // Scroll points
+    let numscrolls = 0;
+    let last_numscrolls = 0;
+    let start_scrolly = 0;
+    let missed_events = 0;
+    let missed_scroll_updates = 0;
+
+    let utils = SpecialPowers.getDOMWindowUtils(window);
+
+    let timeStamp = document.timeline.currentTime;
+    async function sendScrollEvent(aRafTimestamp) {
+      if (i < scrollEvents) {
+        if (timeStamp == document.timeline.currentTime) {
+          // If we are in a rAF callback at the same time stamp we've already
+          // sent a key event, skip it, otherwise we will not get the
+          // corresponding scroll event for the key event since it will be
+          // coalesced into a single scroll event.
+          window.requestAnimationFrame(sendScrollEvent);
+          return;
+        }
+        timeStamp = document.timeline.currentTime;
+        // Sent a key event in a setTimeout callback so that it will be
+        // processed in between nsRefreshDriver::Tick calls, thus the async
+        // scroll triggered by the key event is going to be processed on the
+        // main-thread before RepaintRequests are processed inside
+        // nsRefreshDriver::Tick, which results there's an async scroll when
+        // RepaintRequests are processed.
+        setTimeout(async () => {
+          window.synthesizeKey("KEY_ArrowDown");
+          i++;
+          // "apz-repaints-flush" is notified in an early runner of
+          // nsRefreshDriver, which means it will be delivered inside
+          // a nsRefreshDriver::Tick call before rAF callbacks.
+          await promiseOnlyApzControllerFlushedWithoutSetTimeout();
+
+          // Wait an animationiteration event since animation events are fired
+          // before rAF callbacks and after scroll events so that it's a good
+          // place to tell whether the expected scroll event got fired or not.
+          await promiseOneEvent(document.getElementById("animation"),
+                                "animationiteration", null);
+          if (numscrolls == last_numscrolls) {
+            missed_events++;
+          }
+          if (window.scrollY <= start_scrolly) {
+            missed_scroll_updates++;
+          }
+          last_numscrolls = numscrolls;
+          start_scrolly = window.scrollY;
+          window.requestAnimationFrame(sendScrollEvent);
+        }, 0);
+      } else {
+        // There's a race condition even if we got an "apz-repaints-flush"
+        // notification but any scroll event isn't fired and scroll position
+        // isn't updated since the notification was corresponding to a layers
+        // update triggered by the key event above, which means there was no
+        // repaint request corresponding to APZ animation sample in the time
+        // frame. We allow the case here in the half of key events.
+        ok(missed_events < scrollEvents / 2, `missed event firing ${missed_events} times`);
+        ok(missed_scroll_updates < scrollEvents / 2, `missed scroll update ${missed_scroll_updates} times`);
+        endTest();
+      }
+    }
+
+    async function endTest() {
+      document.removeEventListener("scroll", gotScroll);
+      subtestDone();
+    }
+
+    function gotScroll() {
+      numscrolls++;
+    }
+
+    function startTest() {
+      document.addEventListener("scroll", gotScroll);
+      window.requestAnimationFrame(sendScrollEvent);
+    }
+
+    if (!isApzEnabled()) {
+      SimpleTest.ok(true, "APZ not enabled, skipping test");
+      subtestDone();
+    }
+
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(startTest);
+  </script>
+  <style>
+  #content {
+    height: 10000vh;
+    background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+  }
+  @keyframes anim {
+    from { opacity: 0; }; /* To avoid churning this scroll test */
+    to { opacity: 0; };
+  }
+  #animation {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    visibility: hidden; /* for skipping restyles on the main-thread */
+    animation-name: anim;
+    animation-iteration-count: infinite;
+    animation-duration: 1ms; /* to get an animationiteration event in each tick */
+  }
+  </style>
+</head>
+<body>
+  <div id="animation"></div>
+  <div id="content">
+  </div>
+</body>
+</html>
