@@ -4516,6 +4516,18 @@ JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
   return true;
 }
 
+JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
+                                                 JS::Handle<JSObject*> module,
+                                                 TranscodeBuffer& buffer) {
+  if (!module->as<ModuleObject>()
+           .scriptSourceObject()
+           ->source()
+           ->xdrFinalizeEncoder(cx, buffer)) {
+    return false;
+  }
+  return true;
+}
+
 bool JS::IsWasmModuleObject(HandleObject obj) {
   return obj->canUnwrapAs<WasmModuleObject>();
 }
