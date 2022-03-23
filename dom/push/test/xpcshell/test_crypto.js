@@ -1,8 +1,7 @@
 "use strict";
 
 const { getCryptoParamsFromHeaders, PushCrypto } = ChromeUtils.import(
-  "resource://gre/modules/PushCrypto.jsm",
-  null
+  "resource://gre/modules/PushCrypto.jsm"
 );
 
 const REJECT_PADDING = { padding: "reject" };
