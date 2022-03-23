@@ -40,15 +40,12 @@ function extractChromeRoot(path) {
 function setInstallTriggerPrefs() {
   Services.prefs.setBoolPref("extensions.InstallTrigger.enabled", true);
   Services.prefs.setBoolPref("extensions.InstallTriggerImpl.enabled", true);
-  // Relax the user input requirements while running tests that call this test helper.
-  Services.prefs.setBoolPref("xpinstall.userActivation.required", false);
   registerCleanupFunction(clearInstallTriggerPrefs);
 }
 
 function clearInstallTriggerPrefs() {
   Services.prefs.clearUserPref("extensions.InstallTrigger.enabled");
   Services.prefs.clearUserPref("extensions.InstallTriggerImpl.enabled");
-  Services.prefs.clearUserPref("xpinstall.userActivation.required");
 }
 
 /**
