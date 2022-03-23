@@ -1209,7 +1209,7 @@ limitations under the License.
   }
 
   function onLoad() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.IntersectionObserver.enabled", true]]}, next);
+    next();
   }
 
   SimpleTest.waitForExplicitFinish();
