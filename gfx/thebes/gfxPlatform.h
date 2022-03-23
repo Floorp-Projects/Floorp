@@ -805,6 +805,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   virtual void InitAcceleration();
   virtual void InitWebRenderConfig();
+  void InitHardwareVideoConfig();
   virtual void InitWebGLConfig();
   virtual void InitWebGPUConfig();
   virtual void InitWindowOcclusionConfig();
