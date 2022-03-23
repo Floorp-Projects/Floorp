@@ -4,7 +4,6 @@
 
 #include "CCGCScheduler.h"
 
-#include "js/GCAPI.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -232,8 +231,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
       return false;
 
     case GCRunnerAction::MinorGC:
-      JS::MaybeRunNurseryCollection(CycleCollectedJSRuntime::Get()->Runtime(),
-                                    step.mReason);
+      JS::RunIdleTimeGCTask(CycleCollectedJSRuntime::Get()->Runtime());
       NoteMinorGCEnd();
       return HasMoreIdleGCRunnerWork();
 
@@ -808,7 +806,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
   }
 
   if (mEagerMinorGCReason != JS::GCReason::NO_REASON && !aDeadline.IsNull()) {
-    return {CCRunnerAction::MinorGC, Continue, mEagerMinorGCReason};
+    return {CCRunnerAction::MinorGC, Continue};
   }
 
   switch (mCCRunnerState) {
@@ -895,7 +893,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
       // CycleCollecting: continue running slices until done.
     case CCRunnerState::CycleCollecting: {
       CCRunnerStep step{CCRunnerAction::CycleCollect, Yield};
-      step.mParam.mCCReason = mCCReason;
+      step.mCCReason = mCCReason;
       mCCReason = CCReason::SLICE;  // Set reason for following slices.
       return step;
     }
