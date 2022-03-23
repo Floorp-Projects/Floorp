@@ -26,6 +26,13 @@ add_task(async function() {
 
   // Make sure the thread is paused in the right source and location
   await waitForPaused(dbg);
+  const selectedSource = dbg.selectors.getSelectedSource();
+  ok(
+    !selectedSource.url,
+    "The selected source is the console evaluation and doesn't have a URL"
+  );
   is(getCM(dbg).getValue(), "debugger");
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, selectedSource.id, 1);
+
+  await resume(dbg);
 });

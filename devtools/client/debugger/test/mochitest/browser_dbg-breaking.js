@@ -18,10 +18,8 @@ add_task(async function() {
   // reload.
   await addBreakpoint(dbg, "doc-scripts.html", 21);
 
-  reload(dbg);
+  await reload(dbg, "doc-scripts.html");
 
-  await waitForDispatch(dbg.store, "NAVIGATE");
-  await waitForSelectedSource(dbg, "doc-scripts.html");
   await waitForPaused(dbg);
 
   let whyPaused = await waitFor(
@@ -29,12 +27,15 @@ add_task(async function() {
   );
   is(whyPaused, "Paused on breakpoint");
 
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "doc-scripts.html").id, 21);
   await resume(dbg);
 
   info("Create an eval script that pauses itself.");
   invokeInTab("doEval");
   await waitForPaused(dbg);
+  const source = getSelectedSource();
+  ok(!source.url, "It is an eval source");
+  assertPausedAtSourceAndLine(dbg, source.id, 2);
 
   whyPaused = await waitFor(
     () => dbg.win.document.querySelector(".why-paused")?.innerText
@@ -42,11 +43,11 @@ add_task(async function() {
   is(whyPaused, "Paused on debugger statement");
 
   await resume(dbg);
-  const source = getSelectedSource();
-  ok(!source.url, "It is an eval source");
 
   await addBreakpoint(dbg, source, 5);
   invokeInTab("evaledFunc");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 5);
+
+  await resume(dbg);
 });
