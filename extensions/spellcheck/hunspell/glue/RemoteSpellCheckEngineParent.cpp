@@ -23,6 +23,16 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionary(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaries(
+    const nsTArray<nsCString>& aDictionaries,
+    SetDictionariesResolver&& aResolve) {
+  mSpellChecker->SetCurrentDictionaries(aDictionaries)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [aResolve]() { aResolve(true); }, [aResolve]() { aResolve(false); });
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
     nsTArray<nsCString>&& aList, SetDictionaryFromListResolver&& aResolve) {
   for (auto& dictionary : aList) {

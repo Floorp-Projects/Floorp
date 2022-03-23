@@ -20,6 +20,15 @@ parent:
 
   sync SetDictionary(nsCString aDictionary) returns (bool success);
 
+  /*
+   * Set multiple current dictionaries from a list of dictionary names.
+   *
+   * @aDictionaries An array of dictionary names to use. If the array is empty,
+   *                no dictionary will be used.
+   * @aSuccess      true if setting the dictionaries succeeded, false otherwise.
+   */
+  async SetDictionaries(nsCString[] aDictionaries) returns (bool success);
+
   async Suggest(nsString aWord, uint32_t aCount) returns (nsString[] aSuggestions);
 
   /*

@@ -19,6 +19,9 @@ class RemoteSpellcheckEngineChild
   explicit RemoteSpellcheckEngineChild(mozSpellChecker* aOwner);
   virtual ~RemoteSpellcheckEngineChild();
 
+  RefPtr<GenericPromise> SetCurrentDictionaries(
+      const nsTArray<nsCString>& aDictionaries);
+
   RefPtr<GenericPromise> SetCurrentDictionaryFromList(
       const nsTArray<nsCString>& aList);
 
