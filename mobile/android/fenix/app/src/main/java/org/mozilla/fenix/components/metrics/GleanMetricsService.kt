@@ -34,7 +34,6 @@ import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
@@ -587,9 +586,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.AddonsOpenInSettings -> EventWrapper<NoExtraKeys>(
             { Addons.openAddonsInSettings.record(it) }
-        )
-        is Event.StudiesSettings -> EventWrapper<NoExtraKeys>(
-            { Preferences.studiesPreferenceEnabled.record(it) }
         )
         is Event.AddonsOpenInToolbarMenu -> EventWrapper(
             { Addons.openAddonInToolbarMenu.record(it) },

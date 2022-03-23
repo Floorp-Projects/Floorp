@@ -179,7 +179,6 @@ sealed class Event {
             )
     }
     object AddonsOpenInSettings : Event()
-    object StudiesSettings : Event()
     object VoiceSearchTapped : Event()
     object SearchWidgetInstalled : Event()
     object ChangedToDefaultBrowser : Event()

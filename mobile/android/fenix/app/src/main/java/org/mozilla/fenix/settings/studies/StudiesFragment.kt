@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.databinding.SettingsStudiesBinding
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 
@@ -41,7 +40,6 @@ class StudiesFragment : Fragment() {
             requireContext().settings(),
             experiments,
             ::isAttached,
-            requireContext().metrics
         ).bind()
 
         return binding.root

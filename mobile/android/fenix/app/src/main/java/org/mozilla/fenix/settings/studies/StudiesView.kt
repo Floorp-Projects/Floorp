@@ -22,10 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
+import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.SettingsStudiesBinding
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
@@ -43,7 +43,6 @@ class StudiesView(
     private val settings: Settings,
     private val experiments: NimbusApi,
     private val isAttached: () -> Boolean,
-    private val metrics: MetricController
 ) : StudiesAdapterDelegate {
     private val logger = Logger("StudiesView")
 
@@ -56,7 +55,7 @@ class StudiesView(
         provideStudiesSwitch().isChecked = settings.isExperimentationEnabled
         provideStudiesSwitch().setOnClickListener {
             val isChecked = provideStudiesSwitch().isChecked
-            metrics.track(Event.StudiesSettings)
+            Preferences.studiesPreferenceEnabled.record(NoExtras())
             provideStudiesTitle().text = getSwitchCheckedTitle()
             val builder = AlertDialog.Builder(context)
                 .setPositiveButton(
