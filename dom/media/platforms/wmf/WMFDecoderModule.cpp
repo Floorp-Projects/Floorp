@@ -272,7 +272,8 @@ bool WMFDecoderModule::HasH264() {
 
 /* static */
 bool WMFDecoderModule::HasVP8() {
-  return sUsableVPXMFT &&
+  // Some Intel HW MFTs would crash on VP8 decoding.
+  return sUsableVPXMFT && gfx::gfxVars::UseVP8HwDecode() &&
          CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP80>();
 }
 
