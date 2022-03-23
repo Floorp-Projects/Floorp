@@ -1008,7 +1008,17 @@ WebGLVertexAttrib0Status WebGLContext::WhatDoesVertexAttrib0Need() const {
              : WebGLVertexAttrib0Status::EmulatedInitializedArray;
 }
 
-bool WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount) {
+bool WebGLContext::DoFakeVertexAttrib0(const uint64_t totalVertCount) {
+  if (gl->WorkAroundDriverBugs() && gl->IsMesa()) {
+    // Padded/strided to vec4, so 4x4bytes.
+    const auto effectiveVertAttribBytes =
+        CheckedInt<int32_t>(totalVertCount) * 4 * 4;
+    if (!effectiveVertAttribBytes.isValid()) {
+      ErrorOutOfMemory("`offset + count` too large for Mesa.");
+      return false;
+    }
+  }
+
   const auto whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
   if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
     return true;
@@ -1051,14 +1061,14 @@ bool WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount) {
   ////
 
   const auto bytesPerVert = sizeof(mFakeVertexAttrib0Data);
-  const auto checked_dataSize = CheckedUint32(vertexCount) * bytesPerVert;
+  const auto checked_dataSize = CheckedUint32(totalVertCount) * bytesPerVert;
   if (!checked_dataSize.isValid()) {
     ErrorOutOfMemory(
         "Integer overflow trying to construct a fake vertex attrib 0"
         " array for a draw-operation with %" PRIu64
         " vertices. Try"
         " reducing the number of vertices.",
-        vertexCount);
+        totalVertCount);
     return false;
   }
   const auto dataSize = checked_dataSize.value();
