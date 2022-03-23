@@ -23,9 +23,10 @@ internal interface PocketRecommendationsDao {
      */
     @Transaction
     suspend fun cleanOldAndInsertNewPocketStories(stories: List<PocketStoryEntity>) {
-        val newStoriesUrls = stories.map { it.url }
+        // If any url changed that story is obsolete and should be deleted.
+        val newStoriesUrls = stories.map { it.url to it.imageUrl }
         val oldStoriesToDelete = getPocketStories()
-            .filterNot { it.url in newStoriesUrls }
+            .filterNot { newStoriesUrls.contains(it.url to it.imageUrl) }
         delete(oldStoriesToDelete)
 
         insertPocketStories(stories)

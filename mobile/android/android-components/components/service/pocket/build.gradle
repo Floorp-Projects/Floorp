@@ -43,10 +43,12 @@ dependencies {
 
     testImplementation Dependencies.kotlin_reflect
 
+    testImplementation Dependencies.androidx_arch_core_testing
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_robolectric
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')
