@@ -527,8 +527,6 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
                                      bool aWantsAnimations);
   void RemoveReceiver(nsMutationReceiver* aReceiver);
 
-  already_AddRefed<nsIVariant> TakeRecords();
-
   void GetAllSubtreeObserversFor(nsINode* aNode,
                                  nsTArray<nsMutationReceiver*>& aObservers);
   void ScheduleForRun();
