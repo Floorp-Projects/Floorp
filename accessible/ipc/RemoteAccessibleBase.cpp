@@ -634,6 +634,10 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
         attributes->SetAttribute(nsGkAtoms::tableCellIndex, cellIdx);
       }
     }
+
+    if (bool layoutGuess = TableIsProbablyForLayout()) {
+      attributes->SetAttribute(nsGkAtoms::layout_guess, layoutGuess);
+    }
   }
 
   return attributes.forget();
@@ -981,6 +985,18 @@ TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
     return CachedTableCellAccessible::GetFrom(this);
   }
   return nullptr;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  if (mCachedFields) {
+    if (auto layoutGuess =
+            mCachedFields->GetAttribute<bool>(nsGkAtoms::layout_guess)) {
+      return *layoutGuess;
+    }
+  }
+  return false;
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

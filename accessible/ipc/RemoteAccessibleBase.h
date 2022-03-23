@@ -271,6 +271,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) override;
 
+  virtual bool TableIsProbablyForLayout();
+
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();
   RefPtr<const AccAttributes> GetCachedTextAttributes();

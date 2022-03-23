@@ -15,6 +15,7 @@
 #include "nsIAccessiblePivot.h"
 #include "Pivot.h"
 #include "RemoteAccessible.h"
+#include "TableAccessible.h"
 #include "TableCellAccessible.h"
 
 namespace mozilla::a11y {
@@ -250,6 +251,14 @@ Accessible* CachedTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
     return nullptr;
   }
   return mCells[cellIdx].Acc(mAcc);
+}
+
+bool CachedTableAccessible::IsProbablyLayoutTable() {
+  if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
+    return remoteAcc->TableIsProbablyForLayout();
+  }
+  TableAccessible* localTable = mAcc->AsLocal()->AsTable();
+  return localTable->IsProbablyLayoutTable();
 }
 
 /* static */
