@@ -42,8 +42,11 @@ TaskDispatcher& TaskQueue::TailDispatcher() {
 nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
                                    uint32_t aFlags, DispatchReason aReason) {
   mQueueMonitor.AssertCurrentThreadOwns();
-  if (mIsShutdown) {
-    return NS_ERROR_FAILURE;
+
+  // Continue to allow dispatches after shutdown until the last message has been
+  // processed, at which point no more messages will be accepted.
+  if (mIsShutdown && !mIsRunning) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   AbstractThread* currentThread;
