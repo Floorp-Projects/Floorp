@@ -124,6 +124,10 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   friend class HttpConnectionForceIO;
 
+  [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
+                                               const char*, uint32_t, uint32_t,
+                                               uint32_t*);
+
   // When a persistent connection is in the connection manager idle
   // connection pool, the nsHttpConnection still reads errors and hangups
   // on the socket so that it can be proactively released if the server
@@ -156,6 +160,10 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   int64_t ContentBytesWritten() { return mContentBytesWritten; }
 
+  [[nodiscard]] static nsresult MakeConnectString(nsAHttpTransaction* trans,
+                                                  nsHttpRequestHead* request,
+                                                  nsACString& result,
+                                                  bool h2ws);
   void SetupSecondaryTLS(
       nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
   void SetInSpdyTunnel(bool arg);
@@ -190,35 +198,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   bool IsForWebSocket() { return mForWebSocket; }
 
-  // The following functions are related to setting up a tunnel.
-  [[nodiscard]] static nsresult MakeConnectString(nsAHttpTransaction* trans,
-                                                  nsHttpRequestHead* request,
-                                                  nsACString& result,
-                                                  bool h2ws);
-  [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
-                                               const char*, uint32_t, uint32_t,
-                                               uint32_t*);
-
  private:
-  enum HttpConnectionState {
-    UNINITIALIZED,
-    SETTING_UP_TUNNEL,
-    REQUEST,
-  } mState{HttpConnectionState::UNINITIALIZED};
-  void ChangeState(HttpConnectionState newState);
-
-  // Tunnel retated functions:
-  bool TunnelSetupInProgress() { return mState == SETTING_UP_TUNNEL; }
-  void SetTunnelSetupDone();
-  nsresult CheckTunnelIsNeeded();
-  nsresult SetupProxyConnectStream();
-  nsresult SendConnectRequest(void* closure, uint32_t* transactionBytes);
-
-  void HandleTunnelResponse(uint16_t responseStatus, bool* reset);
-  void HandleWebSocketResponse(nsHttpRequestHead* requestHead,
-                               nsHttpResponseHead* responseHead,
-                               uint16_t responseStatus);
-
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
   enum TCPKeepaliveConfig {
     kTCPKeepaliveDisabled = 0,
@@ -234,6 +214,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
   [[nodiscard]] nsresult OnSocketWritable();
   [[nodiscard]] nsresult OnSocketReadable();
+
+  [[nodiscard]] nsresult SetupProxyConnect();
 
   PRIntervalTime IdleTime();
   bool IsAlive();
@@ -282,6 +264,9 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult mSocketInCondition{NS_ERROR_NOT_INITIALIZED};
   nsresult mSocketOutCondition{NS_ERROR_NOT_INITIALIZED};
 
+  nsCOMPtr<nsIInputStream> mProxyConnectStream;
+  nsCOMPtr<nsIInputStream> mRequestStream;
+
   RefPtr<TLSFilterTransaction> mTLSFilter;
   nsWeakPtr mWeakTrans;  // Http2ConnectTransaction *
 
@@ -312,8 +297,10 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool mKeepAliveMask{true};
   bool mDontReuse{false};
   bool mIsReused{false};
+  bool mCompletedProxyConnect{false};
   bool mLastTransactionExpectedNoContent{false};
   bool mIdleMonitoring{false};
+  bool mProxyConnectInProgress{false};
   bool mInSpdyTunnel{false};
   bool mForcePlainText{false};
 
@@ -404,8 +391,6 @@ class nsHttpConnection final : public HttpConnectionBase,
  private:
   bool mThroughCaptivePortal;
   int64_t mTotalBytesWritten = 0;  // does not include CONNECT tunnel
-
-  nsCOMPtr<nsIInputStream> mProxyConnectStream;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
