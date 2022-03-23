@@ -5,8 +5,6 @@
 
 Cu.importGlobalProperties(["crypto"]);
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 var db;
 
 function done() {

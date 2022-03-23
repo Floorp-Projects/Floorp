@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 var db;
 var unregisterDefers = {};
 var userAgentID = "4ce480ef-55b2-4f83-924c-dcd35ab978b4";

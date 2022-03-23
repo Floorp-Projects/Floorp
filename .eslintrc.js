@@ -541,7 +541,6 @@ module.exports = {
     {
       // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
       files: [
-        "dom/push/test/xpcshell/head.js",
         "dom/push/test/xpcshell/test_broadcast_success.js",
         "dom/push/test/xpcshell/test_crypto.js",
         "toolkit/mozapps/extensions/internal/AddonTestUtils.jsm",

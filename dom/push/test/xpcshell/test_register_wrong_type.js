@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService } = serviceExports;
-
 const userAgentID = "c293fdc5-a75e-4eb1-af88-a203991c0787";
 
 function run_test() {

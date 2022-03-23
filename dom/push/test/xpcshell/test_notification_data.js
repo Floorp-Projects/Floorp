@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 let db;
 let userAgentID = "f5b47f8d-771f-4ea3-b999-91c135f8766d";
 
