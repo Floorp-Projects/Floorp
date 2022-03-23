@@ -19,6 +19,7 @@
 #include <fontconfig/fontconfig.h>
 
 #include "GRefPtr.h"
+#include "GUniquePtr.h"
 #include "nsGtkUtils.h"
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
