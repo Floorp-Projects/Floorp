@@ -39,6 +39,11 @@ add_setup(async () => {
 
 add_task(async function test_stripFragments() {
   Assert.equal(
+    Snapshots.stripFragments(),
+    undefined,
+    "stripFragments should handle undefined as an argument"
+  );
+  Assert.equal(
     Snapshots.stripFragments(TEST_FRAGMENT_URL1),
     TEST_URL1,
     "stripFragments should remove fragments"
