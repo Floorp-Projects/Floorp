@@ -257,6 +257,7 @@ class monitor_device_notifications;
 
 struct cubeb {
   cubeb_ops const * ops = &wasapi_ops;
+  owned_critical_section lock;
   cubeb_strings * device_ids;
   /* Device enumerator to get notifications when the
      device collection change. */
@@ -756,6 +757,8 @@ char const *
 intern_device_id(cubeb * ctx, wchar_t const * id)
 {
   XASSERT(id);
+
+  auto_lock lock(ctx->lock);
 
   char const * tmp = wstr_to_utf8(id);
   if (!tmp) {
@@ -1495,6 +1498,7 @@ get_endpoint(com_ptr<IMMDevice> & device, LPCWSTR devid)
 HRESULT
 register_collection_notification_client(cubeb * context)
 {
+  context->lock.assert_current_thread_owns();
   XASSERT(!context->device_collection_enumerator &&
           !context->collection_notification_client);
   HRESULT hr = CoCreateInstance(
@@ -1523,6 +1527,7 @@ register_collection_notification_client(cubeb * context)
 HRESULT
 unregister_collection_notification_client(cubeb * context)
 {
+  context->lock.assert_current_thread_owns();
   XASSERT(context->device_collection_enumerator &&
           context->collection_notification_client);
   HRESULT hr = context->device_collection_enumerator
@@ -1653,6 +1658,7 @@ wasapi_init(cubeb ** context, char const * context_name)
   cubeb * ctx = new cubeb();
 
   ctx->ops = &wasapi_ops;
+  auto_lock lock(ctx->lock);
   if (cubeb_strings_init(&ctx->device_ids) != CUBEB_OK) {
     delete ctx;
     return CUBEB_ERROR;
@@ -1727,6 +1733,7 @@ stop_and_join_render_thread(cubeb_stream * stm)
 void
 wasapi_destroy(cubeb * context)
 {
+  auto_lock lock(context->lock);
   XASSERT(!context->device_collection_enumerator &&
           !context->collection_notification_client);
 
@@ -2502,7 +2509,8 @@ setup_wasapi_stream(cubeb_stream * stm)
       has_output(stm) && !stm->has_dummy_output ? &output_params : nullptr,
       target_sample_rate, stm->data_callback, stm->user_ptr,
       stm->voice ? CUBEB_RESAMPLER_QUALITY_VOIP
-                 : CUBEB_RESAMPLER_QUALITY_DESKTOP));
+                 : CUBEB_RESAMPLER_QUALITY_DESKTOP,
+      CUBEB_RESAMPLER_RECLOCK_NONE));
   if (!stm->resampler) {
     LOG("Could not get a resampler");
     return CUBEB_ERROR;
@@ -3344,6 +3352,7 @@ wasapi_register_device_collection_changed(
     cubeb_device_collection_changed_callback collection_changed_callback,
     void * user_ptr)
 {
+  auto_lock lock(context->lock);
   if (devtype == CUBEB_DEVICE_TYPE_UNKNOWN) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
