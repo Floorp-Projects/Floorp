@@ -114,7 +114,7 @@ TEST(cubeb, tone)
     cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   cubeb_stream_start(stream);
-  delay(500);
+  delay(5000);
   cubeb_stream_stop(stream);
 
   ASSERT_TRUE(user_data->position.load());

@@ -23,6 +23,10 @@ macro_rules! ffi_type_heap {
         pub struct $owned(*mut $ctype);
 
         impl $owned {
+            /// # Safety
+            ///
+            /// This function is unsafe because it dereferences the given `ptr` pointer.
+            /// The caller should ensure that pointer is valid.
             #[inline]
             pub unsafe fn from_ptr(ptr: *mut $ctype) -> $owned {
                 $owned(ptr)
@@ -100,11 +104,19 @@ macro_rules! ffi_type_heap {
         pub struct $borrowed($crate::ffi_types::Opaque);
 
         impl $borrowed {
+            /// # Safety
+            ///
+            /// This function is unsafe because it dereferences the given `ptr` pointer.
+            /// The caller should ensure that pointer is valid.
             #[inline]
             pub unsafe fn from_ptr<'a>(ptr: *mut $ctype) -> &'a Self {
                 &*(ptr as *mut _)
             }
 
+            /// # Safety
+            ///
+            /// This function is unsafe because it dereferences the given `ptr` pointer.
+            /// The caller should ensure that pointer is valid.
             #[inline]
             pub unsafe fn from_ptr_mut<'a>(ptr: *mut $ctype) -> &'a mut Self {
                 &mut *(ptr as *mut _)
@@ -194,11 +206,19 @@ macro_rules! ffi_type_stack {
         pub struct $borrowed($crate::ffi_types::Opaque);
 
         impl $borrowed {
+            /// # Safety
+            ///
+            /// This function is unsafe because it dereferences the given `ptr` pointer.
+            /// The caller should ensure that pointer is valid.
             #[inline]
             pub unsafe fn from_ptr<'a>(ptr: *mut $ctype) -> &'a Self {
                 &*(ptr as *mut _)
             }
 
+            /// # Safety
+            ///
+            /// This function is unsafe because it dereferences the given `ptr` pointer.
+            /// The caller should ensure that pointer is valid.
             #[inline]
             pub unsafe fn from_ptr_mut<'a>(ptr: *mut $ctype) -> &'a mut Self {
                 &mut *(ptr as *mut _)

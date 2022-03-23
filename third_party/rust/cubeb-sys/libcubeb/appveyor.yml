@@ -1,9 +1,0 @@
-version: 1.0.{build}
-install:
-- cmd: git submodule update --init --recursive
-build_script:
-- cmd: |-
-    cd c:\projects\cubeb
-    cmake .
-    cmake --build . --config Debug
-

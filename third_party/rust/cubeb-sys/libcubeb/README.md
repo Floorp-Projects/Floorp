@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/kinetiknz/cubeb.svg?branch=master)](https://travis-ci.org/kinetiknz/cubeb)
-[![Build status](https://ci.appveyor.com/api/projects/status/osv2r0m1j1nt9csr/branch/master?svg=true)](https://ci.appveyor.com/project/kinetiknz/cubeb/branch/master)
+[![Build Status](https://github.com/mozilla/cubeb/actions/workflows/build.yml/badge.svg)](https://github.com/mozilla/cubeb/actions/workflows/build.yml)
 
 See INSTALL.md for build instructions.
 

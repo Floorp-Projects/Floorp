@@ -3,13 +3,15 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-#![cfg_attr(feature = "cargo-clippy", allow(float_cmp))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp))]
 
 #[macro_use]
 extern crate cubeb_backend;
 
-use cubeb_backend::{ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef,
-                    DeviceType, Ops, Result, Stream, StreamOps, StreamParams, StreamParamsRef};
+use cubeb_backend::{
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Ops, Result,
+    Stream, StreamOps, StreamParams, StreamParamsRef,
+};
 use std::ffi::CStr;
 use std::os::raw::c_void;
 use std::ptr;

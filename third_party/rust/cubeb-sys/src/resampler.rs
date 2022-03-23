@@ -17,6 +17,13 @@ cubeb_enum! {
     }
 }
 
+cubeb_enum! {
+    pub enum cubeb_resampler_reclock {
+        CUBEB_RESAMPLER_RECLOCK_NONE,
+        CUBEB_RESAMPLER_RECLOCK_INPUT,
+    }
+}
+
 extern "C" {
     pub fn cubeb_resampler_create(
         stream: *mut cubeb_stream,
@@ -26,6 +33,7 @@ extern "C" {
         callback: cubeb_data_callback,
         user_ptr: *mut c_void,
         quality: cubeb_resampler_quality,
+        reclock: cubeb_resampler_reclock,
     ) -> *mut cubeb_resampler;
 
     pub fn cubeb_resampler_fill(

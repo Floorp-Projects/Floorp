@@ -1,7 +1,3 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 use crate::mach_sys::*;
 use crate::AudioThreadPriorityError;
 use libc::{pthread_self, pthread_t};
@@ -33,7 +29,7 @@ extern "C" {
 // can't use size_of in const fn just now in stable, use a macro for now.
 macro_rules! THREAD_TIME_CONSTRAINT_POLICY_COUNT {
     () => {
-        (size_of::<thread_time_constraint_policy_data_t>() / size_of::<integer_t>()) as u32;
+        (size_of::<thread_time_constraint_policy_data_t>() / size_of::<integer_t>()) as u32
     };
 }
 
@@ -43,9 +39,15 @@ pub struct RtPriorityHandleInternal {
     previous_time_constraint_policy: thread_time_constraint_policy_data_t,
 }
 
+impl Default for RtPriorityHandleInternal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RtPriorityHandleInternal {
     pub fn new() -> RtPriorityHandleInternal {
-        return RtPriorityHandleInternal {
+        RtPriorityHandleInternal {
             tid: 0,
             previous_time_constraint_policy: thread_time_constraint_policy_data_t {
                 period: 0,
@@ -53,7 +55,7 @@ impl RtPriorityHandleInternal {
                 constraint: 0,
                 preemptible: 0,
             },
-        };
+        }
     }
 }
 
@@ -61,9 +63,8 @@ pub fn demote_current_thread_from_real_time_internal(
     rt_priority_handle: RtPriorityHandleInternal,
 ) -> Result<(), AudioThreadPriorityError> {
     unsafe {
-        let rv: kern_return_t;
         let mut h = rt_priority_handle;
-        rv = thread_policy_set(
+        let rv: kern_return_t = thread_policy_set(
             h.tid,
             THREAD_TIME_CONSTRAINT_POLICY,
             (&mut h.previous_time_constraint_policy) as *mut _ as thread_policy_t,
@@ -78,7 +79,7 @@ pub fn demote_current_thread_from_real_time_internal(
         info!("thread {} priority restored.", h.tid);
     }
 
-    return Ok(());
+    Ok(())
 }
 
 pub fn promote_current_thread_to_real_time_internal(
@@ -95,14 +96,12 @@ pub fn promote_current_thread_to_real_time_internal(
 
     unsafe {
         let tid: mach_port_t = pthread_mach_thread_np(pthread_self());
-        let mut rv: kern_return_t;
         let mut time_constraints = thread_time_constraint_policy_data_t {
             period: 0,
             computation: 0,
             constraint: 0,
             preemptible: 0,
         };
-        let mut count: mach_msg_type_number_t;
 
         // Get current thread attributes, to revert back to the correct setting later if needed.
         rt_priority_handle.tid = tid;
@@ -111,8 +110,8 @@ pub fn promote_current_thread_to_real_time_internal(
         // returning, it means there are no current settings because of other factor, and the
         // default was returned instead.
         let mut get_default: boolean_t = 0;
-        count = THREAD_TIME_CONSTRAINT_POLICY_COUNT!();
-        rv = thread_policy_get(
+        let mut count: mach_msg_type_number_t = THREAD_TIME_CONSTRAINT_POLICY_COUNT!();
+        let mut rv: kern_return_t = thread_policy_get(
             tid,
             THREAD_TIME_CONSTRAINT_POLICY,
             (&mut time_constraints) as *mut _ as thread_policy_t,
@@ -136,9 +135,10 @@ pub fn promote_current_thread_to_real_time_internal(
 
         let ms2abs: f32 = ((timebase_info.denom as f32) / timebase_info.numer as f32) * 1000000.;
 
+        // Computation time is half of constraint, per macOS 12 behaviour.
         time_constraints = thread_time_constraint_policy_data_t {
             period: (cb_duration * ms2abs) as u32,
-            computation: (0.3 * ms2abs) as u32, // fixed 300us computation time
+            computation: (cb_duration / 2.0 * ms2abs) as u32,
             constraint: (cb_duration * ms2abs) as u32,
             preemptible: 1, // true
         };

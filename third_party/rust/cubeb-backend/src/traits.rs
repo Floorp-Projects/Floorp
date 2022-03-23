@@ -3,8 +3,10 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use cubeb_core::{Context, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Result, Stream,
-                 StreamParams, StreamParamsRef};
+use cubeb_core::{
+    Context, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Result, Stream, StreamParams,
+    StreamParamsRef,
+};
 use ffi;
 use std::ffi::CStr;
 use std::os::raw::c_void;
@@ -21,7 +23,7 @@ pub trait ContextOps {
         collection: &DeviceCollectionRef,
     ) -> Result<()>;
     fn device_collection_destroy(&mut self, collection: &mut DeviceCollectionRef) -> Result<()>;
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
     fn stream_init(
         &mut self,
         stream_name: Option<&CStr>,
