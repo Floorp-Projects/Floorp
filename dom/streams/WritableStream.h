@@ -28,7 +28,6 @@ namespace mozilla::dom {
 class Promise;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
-class UnderlyingSinkAlgorithmsBase;
 
 class WritableStream : public nsISupports, public nsWrapperCache {
  public:
@@ -180,11 +179,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
-
-MOZ_CAN_RUN_SCRIPT already_AddRefed<WritableStream> CreateWritableStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
-    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
 inline bool IsWritableStreamLocked(WritableStream* aStream) {
   return aStream->Locked();
