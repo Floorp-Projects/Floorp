@@ -2630,7 +2630,7 @@ pictureinpicture:
     description: >
       Records the method for closing the Picture-in-Picture window.
     extra_keys:
-      reason: Will be "close-button", "unpip", "pagehide", "fullscreen", "setup-failure", "close-player-shortcut", "context-menu", or "video-el-remove"
+      reason: Will be "close-button", "unpip", "pagehide", "fullscreen", "setup-failure", "close-player-shortcut", "context-menu", "video-el-remove", or "video-el-emptied"
     notification_emails:
       - mconley@mozilla.com
       - mtigley@mozilla.com
