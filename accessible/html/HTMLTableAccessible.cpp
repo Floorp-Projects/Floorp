@@ -151,9 +151,9 @@ void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       aAttribute == nsGkAtoms::scope) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
-  }
-  if (aAttribute == nsGkAtoms::rowspan || aAttribute == nsGkAtoms::colspan ||
-      aAttribute == nsGkAtoms::headers) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Table);
+  } else if (aAttribute == nsGkAtoms::rowspan ||
+             aAttribute == nsGkAtoms::colspan) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   }
 }
