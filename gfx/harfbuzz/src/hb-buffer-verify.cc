@@ -397,7 +397,8 @@ hb_buffer_t::verify (hb_buffer_t        *text_buffer,
     ret = false;
   if (!buffer_verify_unsafe_to_break (this, text_buffer, font, features, num_features, shapers))
     ret = false;
-  if (!buffer_verify_unsafe_to_concat (this, text_buffer, font, features, num_features, shapers))
+  if ((flags & HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT) != 0 &&
+      !buffer_verify_unsafe_to_concat (this, text_buffer, font, features, num_features, shapers))
     ret = false;
   if (!ret)
   {
