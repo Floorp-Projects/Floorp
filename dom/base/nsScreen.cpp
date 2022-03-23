@@ -63,7 +63,9 @@ int32_t nsScreen::GetPixelDepth(ErrorResult& aRv) {
     return -1;
   }
 
-  return context->GetDepth();
+  uint32_t depth;
+  context->GetDepth(depth);
+  return depth;
 }
 
 nsPIDOMWindowOuter* nsScreen::GetOuter() const {
