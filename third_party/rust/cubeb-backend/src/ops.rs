@@ -39,6 +39,7 @@ pub struct Ops {
         ) -> c_int,
     >,
     pub destroy: Option<unsafe extern "C" fn(context: *mut ffi::cubeb)>,
+    #[allow(clippy::type_complexity)]
     pub stream_init: Option<
         unsafe extern "C" fn(
             context: *mut ffi::cubeb,
@@ -68,12 +69,16 @@ pub struct Ops {
     pub stream_set_name:
         Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream, name: *const c_char) -> c_int>,
     pub stream_get_current_device: Option<
-        unsafe extern "C" fn(stream: *mut ffi::cubeb_stream, device: *mut *mut ffi::cubeb_device)
-            -> c_int,
+        unsafe extern "C" fn(
+            stream: *mut ffi::cubeb_stream,
+            device: *mut *mut ffi::cubeb_device,
+        ) -> c_int,
     >,
     pub stream_device_destroy: Option<
-        unsafe extern "C" fn(stream: *mut ffi::cubeb_stream, device: *mut ffi::cubeb_device)
-            -> c_int,
+        unsafe extern "C" fn(
+            stream: *mut ffi::cubeb_stream,
+            device: *mut ffi::cubeb_device,
+        ) -> c_int,
     >,
     pub stream_register_device_changed_callback: Option<
         unsafe extern "C" fn(

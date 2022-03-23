@@ -8,7 +8,7 @@ function load()
   textarea.focus();
 
   SpecialPowers.Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(textarea, () => {
+  .maybeOnSpellCheck(textarea, () => {
     let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
     let sc = isc.spellChecker;
 

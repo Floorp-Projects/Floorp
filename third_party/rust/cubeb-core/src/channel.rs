@@ -67,9 +67,9 @@ impl From<ffi::cubeb_channel> for ChannelLayout {
     }
 }
 
-impl Into<ffi::cubeb_channel> for ChannelLayout {
-    fn into(self) -> ffi::cubeb_channel {
-        self.bits()
+impl From<ChannelLayout> for ffi::cubeb_channel {
+    fn from(x: ChannelLayout) -> Self {
+        x.bits()
     }
 }
 

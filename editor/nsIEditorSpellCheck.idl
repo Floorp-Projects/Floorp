@@ -119,14 +119,15 @@ interface nsIEditorSpellCheck : nsISupports
   Array<ACString> GetDictionaryList();
 
   /**
-   * @see mozSpellChecker::GetCurrentDictionary
+   * @see mozSpellChecker::GetCurrentDictionaries
    */
-  ACString      GetCurrentDictionary();
+  Array<ACString> getCurrentDictionaries();
 
   /**
-   * @see mozSpellChecker::SetCurrentDictionary
+   * @see mozSpellChecker::SetCurrentDictionaries
    */
-  void          SetCurrentDictionary(in ACString dictionary);
+  [implicit_jscontext]
+  Promise       setCurrentDictionaries(in Array<ACString> dictionaries);
 
   /**
    * Call this to free up the spell checking object. It will also save the

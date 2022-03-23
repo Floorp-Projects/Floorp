@@ -157,7 +157,7 @@ impl AsyncRead for UnixStream {
     }
 
     fn read_buf<B: BufMut>(&mut self, buf: &mut B) -> Poll<usize, io::Error> {
-        <&UnixStream>::read_buf(&mut &*self, buf)
+        tokio_io::AsyncRead::read_buf(&mut &*self, buf)
     }
 }
 

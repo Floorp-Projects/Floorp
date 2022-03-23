@@ -178,8 +178,6 @@ def run_perftest(command_context, **kwargs):
     "-v", "--verbose", action="store_true", default=False, help="Verbose mode"
 )
 def run_tests(command_context, **kwargs):
-    command_context.activate_virtualenv()
-
     from pathlib import Path
     from mozperftest.utils import temporary_env
 

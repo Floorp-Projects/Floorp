@@ -696,7 +696,6 @@ def get_jsshell_parser():
     description="Run benchmarks in the SpiderMonkey JS shell.",
 )
 def run_jsshelltests(command_context, **kwargs):
-    command_context.activate_virtualenv()
     from jsshell import benchmark
 
     return benchmark.run(**kwargs)

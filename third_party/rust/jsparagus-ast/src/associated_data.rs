@@ -40,6 +40,7 @@ impl SourceLocationAccessor for Key {
 
 #[derive(Debug)]
 struct Item<ValueT> {
+    #[allow(dead_code)]
     key: Key,
     value: ValueT,
 }

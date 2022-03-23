@@ -27,6 +27,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Components.h"
+#include "mozilla/GRefPtr.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/gfx/2D.h"
@@ -3064,7 +3065,7 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
   }
 
   nsIntSize rasterSize = size * gtkScale;
-  GdkPixbuf* pixbuf =
+  RefPtr<GdkPixbuf> pixbuf =
       nsImageToPixbuf::ImageToPixbuf(aCursor.mContainer, Some(rasterSize));
   if (!pixbuf) {
     return nullptr;
@@ -3074,16 +3075,13 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
   // is of course not documented anywhere...
   // So add one if there isn't one yet
   if (!gdk_pixbuf_get_has_alpha(pixbuf)) {
-    GdkPixbuf* alphaBuf = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
-    g_object_unref(pixbuf);
-    pixbuf = alphaBuf;
-    if (!alphaBuf) {
+    RefPtr<GdkPixbuf> alphaBuf =
+        dont_AddRef(gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0));
+    pixbuf = std::move(alphaBuf);
+    if (!pixbuf) {
       return nullptr;
     }
   }
-
-  auto CleanupPixBuf =
-      mozilla::MakeScopeExit([&]() { g_object_unref(pixbuf); });
 
   cairo_surface_t* surface =
       gdk_cairo_surface_create_from_pixbuf(pixbuf, gtkScale, nullptr);
@@ -3092,7 +3090,7 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
   }
 
   auto CleanupSurface =
-      mozilla::MakeScopeExit([&]() { cairo_surface_destroy(surface); });
+      MakeScopeExit([&]() { cairo_surface_destroy(surface); });
 
   return gdk_cursor_new_from_surface(gdk_display_get_default(), surface,
                                      aCursor.mHotspotX, aCursor.mHotspotY);

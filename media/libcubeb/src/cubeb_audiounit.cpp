@@ -2707,7 +2707,8 @@ audiounit_setup_stream(cubeb_stream * stm)
   stm->resampler.reset(cubeb_resampler_create(
       stm, has_input(stm) ? &input_unconverted_params : NULL,
       has_output(stm) ? &stm->output_stream_params : NULL, target_sample_rate,
-      stm->data_callback, stm->user_ptr, CUBEB_RESAMPLER_QUALITY_DESKTOP));
+      stm->data_callback, stm->user_ptr, CUBEB_RESAMPLER_QUALITY_DESKTOP,
+      CUBEB_RESAMPLER_RECLOCK_NONE));
   if (!stm->resampler) {
     LOG("(%p) Could not create resampler.", stm);
     return CUBEB_ERROR;

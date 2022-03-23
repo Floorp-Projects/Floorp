@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=432225
 
 /** Test for Bug 432225 **/
 
-let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+let {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(runTest);
@@ -57,7 +57,7 @@ function addWords(aLimit) {
   getEdit().focus();
   sendString("aa OK ");
   gMisspeltWords.push("aa");
-  onSpellCheck(editDoc(), function() {
+  maybeOnSpellCheck(editDoc(), function() {
     addWords(aLimit - 1);
   });
 }

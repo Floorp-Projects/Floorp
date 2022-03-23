@@ -58,15 +58,15 @@
 //! }
 //! ```
 
-use {ContextRef, DeviceId, Error, Result, State, StreamParamsRef};
 use cubeb_core;
 use ffi;
-use std::{ops, panic, ptr};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
 use std::os::raw::{c_long, c_void};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
+use std::{ops, panic, ptr};
+use {ContextRef, DeviceId, Error, Result, State, StreamParamsRef};
 
 pub type DataCallback<F> = dyn FnMut(&[F], &mut [F]) -> isize + Send + Sync + 'static;
 pub type StateCallback = dyn FnMut(State) + Send + Sync + 'static;
@@ -78,8 +78,7 @@ pub struct StreamCallbacks<F> {
     pub(crate) device_changed: Option<Box<DeviceChangedCallback>>,
 }
 
-pub struct Stream<F>(ManuallyDrop<cubeb_core::Stream>,
-                     PhantomData<*const F>);
+pub struct Stream<F>(ManuallyDrop<cubeb_core::Stream>, PhantomData<*const F>);
 
 impl<F> Stream<F> {
     fn new(s: cubeb_core::Stream) -> Stream<F> {
@@ -115,15 +114,7 @@ pub struct StreamBuilder<'a, F> {
 
 impl<'a, F> StreamBuilder<'a, F> {
     pub fn new() -> StreamBuilder<'a, F> {
-        StreamBuilder {
-            name: None,
-            input: None,
-            output: None,
-            latency: None,
-            data_cb: None,
-            state_cb: None,
-            device_changed_cb: None,
-        }
+        Default::default()
     }
 
     pub fn data_callback<D>(&mut self, cb: D) -> &mut Self
@@ -191,10 +182,11 @@ impl<'a, F> StreamBuilder<'a, F> {
             device_changed: self.device_changed_cb,
         }));
 
-        let stream_name = self.name.as_ref().and_then(|n| Some(n.as_c_str()));
+        let stream_name = self.name.as_deref();
         let (input_device, input_stream_params) =
             self.input.map_or((ptr::null(), None), |x| (x.0, Some(x.1)));
-        let (output_device, output_stream_params) = self.output
+        let (output_device, output_stream_params) = self
+            .output
             .map_or((ptr::null(), None), |x| (x.0, Some(x.1)));
         let latency = self.latency.unwrap_or(1);
         let data_callback: ffi::cubeb_data_callback = Some(data_cb_c::<F>);
@@ -210,7 +202,7 @@ impl<'a, F> StreamBuilder<'a, F> {
                 latency,
                 data_callback,
                 state_callback,
-                cbs as *mut _
+                cbs as *mut _,
             )?
         };
         if has_device_changed {
@@ -219,6 +211,20 @@ impl<'a, F> StreamBuilder<'a, F> {
             stream.register_device_changed_callback(device_changed_callback)?;
         }
         Ok(Stream::new(stream))
+    }
+}
+
+impl<'a, F> Default for StreamBuilder<'a, F> {
+    fn default() -> Self {
+        StreamBuilder {
+            name: None,
+            input: None,
+            output: None,
+            latency: None,
+            data_cb: None,
+            state_cb: None,
+            device_changed_cb: None,
+        }
     }
 }
 

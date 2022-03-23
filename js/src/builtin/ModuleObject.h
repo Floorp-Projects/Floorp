@@ -332,7 +332,6 @@ class ModuleObject : public NativeObject {
 
   JSScript* maybeScript() const;
   JSScript* script() const;
-  Scope* enclosingScope() const;
   ModuleEnvironmentObject& initialEnvironment() const;
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
@@ -365,6 +364,8 @@ class ModuleObject : public NativeObject {
   uint32_t getAsyncEvaluatingPostOrder() const;
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
+
+  static void onTopLevelEvaluationFinished(ModuleObject* module);
 
   static bool appendAsyncParentModule(JSContext* cx, HandleModuleObject self,
                                       HandleModuleObject parent);

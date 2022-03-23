@@ -108,13 +108,14 @@ function continueTest(evt) {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function() {
+  .onSpellCheck(elem, async function() {
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictionaries;
     try {
-      var dict = spellchecker.GetCurrentDictionary();
+      currentDictionaries = spellchecker.getCurrentDictionaries();
     } catch (e) {}
 
-    if (!dict && !retrying) {
+    if (!currentDictionaries && !retrying) {
       // It's possible for an asynchronous font-list update to cause a reflow
       // that disrupts the async spell-check and results in not getting a
       // current dictionary here; if that happens, we retry the same testcase
@@ -122,6 +123,8 @@ function continueTest(evt) {
       info(`No current dictionary: retrying testcase ${loadCount}`);
       retrying = true;
     } else {
+      is(currentDictionaries.length, 1, "expected one dictionary");
+      let dict = currentDictionaries[0];
       if (tests[loadCount][2] != "*") {
         is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
       } else if (is_en_US && tests[loadCount][0].startsWith("en")) {
@@ -142,7 +145,7 @@ function continueTest(evt) {
       content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false";
     } else {
       // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
-      script.sendAsyncMessage("destroy");
+      await script.sendQuery("destroy");
 
       SimpleTest.finish();
     }

@@ -361,13 +361,13 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       v128_enabled(false),
       static_memory_bound(0),
       memory_guard_size(0),
-      memory_base_tls_offset(Instance::offsetOfMemoryBase()),
-      instance_tls_offset(Instance::offsetOfInstance()),
-      interrupt_tls_offset(Instance::offsetOfInterrupt()),
-      cx_tls_offset(Instance::offsetOfCx()),
+      memory_base_instance_offset(Instance::offsetOfMemoryBase()),
+      interrupt_instance_offset(Instance::offsetOfInterrupt()),
+      cx_instance_offset(Instance::offsetOfCx()),
       realm_cx_offset(JSContext::offsetOfRealm()),
-      realm_tls_offset(Instance::offsetOfRealm()),
-      realm_func_import_tls_offset(offsetof(FuncImportInstanceData, realm)),
+      realm_instance_offset(Instance::offsetOfRealm()),
+      realm_func_import_instance_offset(
+          offsetof(FuncImportInstanceData, realm)),
       size_of_wasm_frame(sizeof(wasm::Frame)) {
 }
 
@@ -380,8 +380,8 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
 //
 // This function translates between the two.
 
-static size_t globalToTlsOffset(size_t globalOffset) {
-  return offsetof(wasm::Instance, globalArea) + globalOffset;
+static size_t globalToInstanceOffset(size_t globalOffset) {
+  return wasm::Instance::offsetOfGlobalArea() + globalOffset;
 }
 
 CraneliftModuleEnvironment::CraneliftModuleEnvironment(
@@ -470,9 +470,10 @@ bool env_is_func_valid_for_ref(const CraneliftModuleEnvironment* env,
   return env->env->funcs[index].canRefFunc();
 }
 
-size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
-                                  size_t funcIndex) {
-  return globalToTlsOffset(env->env->funcImportGlobalDataOffsets[funcIndex]);
+size_t env_func_import_instance_offset(const CraneliftModuleEnvironment* env,
+                                       size_t funcIndex) {
+  return globalToInstanceOffset(
+      env->env->funcImportGlobalDataOffsets[funcIndex]);
 }
 
 bool env_func_is_import(const CraneliftModuleEnvironment* env,
@@ -651,13 +652,13 @@ void wasm::CraneliftFreeReusableData(void* ptr) {
 // Callbacks from Rust to C++.
 
 // Offsets assumed by the `make_heap()` function.
-static_assert(offsetof(wasm::Instance, memoryBase) == 0, "memory base moved");
+static_assert(wasm::Instance::offsetOfMemoryBase() == 0, "memory base moved");
 
 // The translate_call() function in wasm2clif.rs depends on these offsets.
 static_assert(offsetof(wasm::FuncImportInstanceData, code) == 0,
               "Import code field moved");
 static_assert(offsetof(wasm::FuncImportInstanceData, instance) == sizeof(void*),
-              "Import tls moved");
+              "Import instance data moved");
 
 // Global
 
@@ -704,14 +705,14 @@ TypeCode global_type(const GlobalDesc* global) {
   return global->type().packed().typeCode();
 }
 
-size_t global_tlsOffset(const GlobalDesc* global) {
-  return globalToTlsOffset(global->offset());
+size_t global_instanceOffset(const GlobalDesc* global) {
+  return globalToInstanceOffset(global->offset());
 }
 
 // TableDesc
 
-size_t table_tlsOffset(const TableDesc* table) {
-  return globalToTlsOffset(table->globalDataOffset);
+size_t table_instanceOffset(const TableDesc* table) {
+  return globalToInstanceOffset(table->globalDataOffset);
 }
 
 uint32_t table_initialLimit(const TableDesc* table) {
@@ -752,8 +753,8 @@ size_t funcType_idImmediate(const TypeIdDesc* funcTypeId) {
   return funcTypeId->immediate();
 }
 
-size_t funcType_idTlsOffset(const TypeIdDesc* funcTypeId) {
-  return globalToTlsOffset(funcTypeId->globalDataOffset());
+size_t funcType_idInstanceOffset(const TypeIdDesc* funcTypeId) {
+  return globalToInstanceOffset(funcTypeId->globalDataOffset());
 }
 
 void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,

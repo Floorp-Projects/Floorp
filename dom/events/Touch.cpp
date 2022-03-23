@@ -169,7 +169,8 @@ void Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent) {
       Event::GetClientCoords(aPresContext, aEvent, mRefPoint, mClientPoint);
   mPagePoint =
       Event::GetPageCoords(aPresContext, aEvent, mRefPoint, mClientPoint);
-  mScreenPoint = Event::GetScreenCoords(aPresContext, aEvent, mRefPoint);
+  mScreenPoint =
+      Event::GetScreenCoords(aPresContext, aEvent, mRefPoint).extract();
   mPointsInitialized = true;
 }
 

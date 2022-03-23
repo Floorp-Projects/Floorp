@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 var userAgentID = "9a2f9efe-2ebb-4bcb-a5d9-9e2b73d30afe";
 var channelID = "264c2ba0-f6db-4e84-acdb-bd225b62d9e3";
 

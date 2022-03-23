@@ -217,11 +217,10 @@ NS_IMETHODIMP
 nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
 
 // Can't be accessed by multiple threads yet
-nsresult nsAsyncStreamCopier::InitInternal(nsIInputStream* source,
-                                           nsIOutputStream* sink,
-                                           nsIEventTarget* target,
-                                           uint32_t chunkSize, bool closeSource,
-                                           bool closeSink) {
+nsresult nsAsyncStreamCopier::InitInternal(
+    nsIInputStream* source, nsIOutputStream* sink, nsIEventTarget* target,
+    uint32_t chunkSize, bool closeSource,
+    bool closeSink) NO_THREAD_SAFETY_ANALYSIS {
   NS_ASSERTION(!mSource && !mSink, "Init() called more than once");
   if (chunkSize == 0) {
     chunkSize = nsIOService::gDefaultSegmentSize;

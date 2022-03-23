@@ -833,7 +833,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
       return;
     }
 
-    GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
+    RefPtr<GdkPixbuf> pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
     if (!pixbuf) {
       LOGCLIP("    nsImageToPixbuf::ImageToPixbuf() failed!\n");
       return;
@@ -842,7 +842,6 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     LOGCLIP("    Setting pixbuf image data as %s\n",
             GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
     gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
-    g_object_unref(pixbuf);
     return;
   }
 

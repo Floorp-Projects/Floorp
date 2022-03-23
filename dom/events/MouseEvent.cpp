@@ -235,7 +235,8 @@ CSSIntPoint MouseEvent::ScreenPoint(CallerType aCallerType) const {
                                   CSSIntPoint(0, 0));
   }
 
-  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint)
+      .extract();
 }
 
 LayoutDeviceIntPoint MouseEvent::ScreenPointLayoutDevicePix() const {

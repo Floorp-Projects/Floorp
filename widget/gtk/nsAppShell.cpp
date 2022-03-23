@@ -19,6 +19,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/Unused.h"
+#include "mozilla/GUniquePtr.h"
 #include "mozilla/WidgetUtils.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
@@ -37,8 +38,7 @@
 #  include "nsWaylandDisplay.h"
 #endif
 
-using mozilla::LazyLogModule;
-using mozilla::Unused;
+using namespace mozilla;
 using mozilla::widget::HeadlessScreenHelper;
 using mozilla::widget::ScreenHelperGTK;
 using mozilla::widget::ScreenManager;
@@ -195,13 +195,12 @@ static DBusHandlerResult ConnectionSignalFilter(DBusConnection* aConnection,
 // https://github.com/lcp/NetworkManager/blob/240f47c892b4e935a3e92fc09eb15163d1fa28d8/src/nm-sleep-monitor-systemd.c
 // Use login1 to signal sleep and wake notifications.
 void nsAppShell::StartDBusListening() {
-  GError* error = nullptr;
-  mDBusConnection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  GUniquePtr<GError> error;
+  mDBusConnection = dbus_g_bus_get(DBUS_BUS_SYSTEM, getter_Transfers(error));
   if (!mDBusConnection) {
     NS_WARNING(nsPrintfCString("gds: Failed to open connection to bus %s\n",
                                error->message)
                    .get());
-    g_error_free(error);
     return;
   }
 
