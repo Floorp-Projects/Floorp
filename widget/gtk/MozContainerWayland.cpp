@@ -244,13 +244,18 @@ static void moz_container_wayland_frame_callback_handler(
   {
     // Protect mozcontainer internals changes by container_lock.
     MutexAutoLock lock(*wl_container->container_lock);
+    // It's possible that container is already unmapped so quit in such case.
+    if (!wl_container->surface) {
+      LOGWAYLAND("  container in unmapped, quit.");
+      MOZ_DIAGNOSTIC_ASSERT(wl_container->initial_draw_cbs.empty(),
+                            "MozContainer should be unmapped.");
+      return;
+    }
     g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
     if (wl_container->ready_to_draw) {
       return;
     }
     wl_container->ready_to_draw = true;
-    MOZ_DIAGNOSTIC_ASSERT(wl_container->surface,
-                          "Should have surface if we're ready to draw");
     cbs = std::move(wl_container->initial_draw_cbs);
   }
 
