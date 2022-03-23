@@ -258,7 +258,8 @@ already_AddRefed<nsIThreadObserver> ThreadEventQueue::GetObserver() {
   return do_AddRef(mObserver);
 }
 
-already_AddRefed<nsIThreadObserver> ThreadEventQueue::GetObserverOnThread() {
+already_AddRefed<nsIThreadObserver> ThreadEventQueue::GetObserverOnThread()
+    NO_THREAD_SAFETY_ANALYSIS {
   // only written on this thread
   return do_AddRef(mObserver);
 }
