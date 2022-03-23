@@ -30,4 +30,4 @@ toolkit.jar:
   skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
   skin/classic/global/icons/error-64.png                             (icons/error-64.png)
   skin/classic/global/icons/question-64.png                          (icons/question-64.png)
-* skin/classic/global/in-content/common.css                          (in-content/common.css)
+  skin/classic/global/in-content/common.css                          (in-content/common.css)
