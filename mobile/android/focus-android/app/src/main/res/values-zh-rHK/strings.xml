@@ -377,6 +377,9 @@
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">私隱就習以為常</string>
 
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">將 %1$s 設定為你嘅預設瀏覽器，當你由其他 app 度開啟網頁嘅時候，都能夠得益於私隱瀏覽。</string>
+
     <string name="firstrun_close_button">明白晒！</string>
     <string name="firstrun_skip_button">略過</string>
     <string name="firstrun_next_button">下一步</string>
@@ -526,6 +529,8 @@
     <string name="tab_crash_report_title">Tab 冧檔</string>
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">對唔住。呢個 tab 發生問題。</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">作為私隱瀏覽器，我哋無法儲存或還原呢個 tab。</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">關閉 Tab</string>
 
