@@ -11,9 +11,7 @@
 #endif  // XP_WIN
 
 #include <stdint.h>
-#include <inttypes.h>
 
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Assertions.h"
 
