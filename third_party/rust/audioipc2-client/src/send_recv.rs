@@ -12,7 +12,7 @@ where
     E: Into<Option<c_int>>,
 {
     match e.into() {
-        Some(e) => unsafe { Error::from_raw(e) },
+        Some(e) => Error::from_raw(e),
         None => Error::error(),
     }
 }

@@ -34,7 +34,6 @@ pub fn get_device_model_uid(
     }
 }
 
-#[allow(dead_code)] // `pub` for running test
 pub fn get_device_transport_type(
     id: AudioDeviceID,
     devtype: DeviceType,
@@ -286,6 +285,23 @@ pub fn get_stream_latency(
     }
 }
 
+pub fn get_clock_domain(
+    id: AudioStreamID,
+    devtype: DeviceType,
+) -> std::result::Result<u32, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::ClockDomain, devtype);
+    let mut size = mem::size_of::<u32>();
+    let mut clock_domain: u32 = 0;
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut clock_domain);
+    if err == NO_ERR {
+        Ok(clock_domain)
+    } else {
+        Err(err)
+    }
+}
+
 pub enum Property {
     DeviceBufferFrameSizeRange,
     DeviceIsAlive,
@@ -306,6 +322,7 @@ pub enum Property {
     ModelUID,
     StreamLatency,
     TransportType,
+    ClockDomain,
 }
 
 impl From<Property> for AudioObjectPropertySelector {
@@ -330,6 +347,7 @@ impl From<Property> for AudioObjectPropertySelector {
             Property::ModelUID => kAudioDevicePropertyModelUID,
             Property::StreamLatency => kAudioStreamPropertyLatency,
             Property::TransportType => kAudioDevicePropertyTransportType,
+            Property::ClockDomain => kAudioDevicePropertyClockDomain,
         }
     }
 }

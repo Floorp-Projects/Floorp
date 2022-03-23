@@ -243,7 +243,11 @@ fn u32_to_string(data: u32) -> String {
     String::from_utf8_lossy(&buffer).to_string()
 }
 
-pub fn test_get_all_devices() -> Vec<AudioObjectID> {
+pub enum DeviceFilter {
+    ExcludeCubebAggregate,
+    IncludeCubebAggregate,
+}
+pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
     let mut devices = Vec::new();
     let address = AudioObjectPropertyAddress {
         mSelector: kAudioHardwarePropertyDevices,
@@ -284,40 +288,60 @@ pub fn test_get_all_devices() -> Vec<AudioObjectID> {
     for device in devices.iter() {
         assert_ne!(*device, kAudioObjectUnknown);
     }
+
+    match filter {
+        DeviceFilter::ExcludeCubebAggregate => {
+            devices.retain(|&device| {
+                if let Ok(uid) = get_device_global_uid(device) {
+                    let uid = uid.into_string();
+                    !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
+                } else {
+                    true
+                }
+            });
+        }
+        _ => {}
+    }
+
     devices
 }
 
 pub fn test_get_devices_in_scope(scope: Scope) -> Vec<AudioObjectID> {
-    let mut devices = test_get_all_devices();
+    let mut devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregate);
     devices.retain(|device| test_device_in_scope(*device, scope.clone()));
     devices
 }
 
-fn test_print_devices_in_scope(devices: &Vec<AudioObjectID>, scope: Scope) {
+pub fn get_devices_info_in_scope(scope: Scope) -> Vec<TestDeviceInfo> {
+    fn print_info(info: &TestDeviceInfo) {
+        println!("{:>4}: {}\n\tuid: {}", info.id, info.label, info.uid);
+    }
+
     println!(
         "\n{:?} devices\n\
          --------------------",
         scope
     );
+
+    let mut infos = vec![];
+    let devices = test_get_devices_in_scope(scope.clone());
     for device in devices {
-        let info = TestDeviceInfo::new(*device, scope.clone());
-        print_info(&info);
+        infos.push(TestDeviceInfo::new(device, scope.clone()));
+        print_info(infos.last().unwrap());
     }
     println!("");
 
-    fn print_info(info: &TestDeviceInfo) {
-        println!("{:>4}: {}\n\tuid: {}", info.id, info.label, info.uid);
-    }
+    infos
 }
 
 #[derive(Debug)]
-struct TestDeviceInfo {
-    id: AudioObjectID,
-    label: String,
-    uid: String,
+pub struct TestDeviceInfo {
+    pub id: AudioObjectID,
+    pub label: String,
+    pub uid: String,
 }
 impl TestDeviceInfo {
-    fn new(id: AudioObjectID, scope: Scope) -> Self {
+    pub fn new(id: AudioObjectID, scope: Scope) -> Self {
         Self {
             id,
             label: Self::get_label(id, scope.clone()),
@@ -602,13 +626,13 @@ pub struct TestDeviceSwitcher {
 
 impl TestDeviceSwitcher {
     pub fn new(scope: Scope) -> Self {
-        let devices = test_get_devices_in_scope(scope.clone());
+        let infos = get_devices_info_in_scope(scope.clone());
+        let devices: Vec<AudioObjectID> = infos.into_iter().map(|info| info.id).collect();
         let current = test_get_default_device(scope.clone()).unwrap();
         let index = devices
             .iter()
             .position(|device| *device == current)
             .unwrap();
-        test_print_devices_in_scope(&devices, scope.clone());
         Self {
             scope: scope,
             devices: devices,
@@ -1138,11 +1162,12 @@ fn test_get_raw_stream<F>(
     operation(&mut stream);
 }
 
-pub fn test_get_stream_with_default_callbacks_by_type<F>(
+pub fn test_get_stream_with_default_data_callback_by_type<F>(
     name: &'static str,
     stm_type: StreamType,
     input_device: Option<AudioObjectID>,
     output_device: Option<AudioObjectID>,
+    state_callback: extern "C" fn(*mut ffi::cubeb_stream, *mut c_void, ffi::cubeb_state),
     data: *mut c_void,
     operation: F,
 ) where
@@ -1172,12 +1197,13 @@ pub fn test_get_stream_with_default_callbacks_by_type<F>(
         ptr::null_mut()
     };
 
-    test_ops_stream_operation_with_default_callbacks(
+    test_ops_stream_operation_with_default_data_callback(
         name,
         in_device,
         in_params,
         out_device,
         out_params,
+        state_callback,
         data,
         |stream| {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
@@ -1213,12 +1239,13 @@ fn get_dummy_stream_params(scope: Scope) -> ffi::cubeb_stream_params {
     stream_params
 }
 
-fn test_ops_stream_operation_with_default_callbacks<F>(
+fn test_ops_stream_operation_with_default_data_callback<F>(
     name: &'static str,
     input_device: ffi::cubeb_devid,
     input_stream_params: *mut ffi::cubeb_stream_params,
     output_device: ffi::cubeb_devid,
     output_stream_params: *mut ffi::cubeb_stream_params,
+    state_callback: extern "C" fn(*mut ffi::cubeb_stream, *mut c_void, ffi::cubeb_state),
     data: *mut c_void,
     operation: F,
 ) where
@@ -1236,15 +1263,6 @@ fn test_ops_stream_operation_with_default_callbacks<F>(
         data,
         operation,
     );
-
-    extern "C" fn state_callback(
-        stream: *mut ffi::cubeb_stream,
-        _user_ptr: *mut c_void,
-        state: ffi::cubeb_state,
-    ) {
-        assert!(!stream.is_null());
-        assert_ne!(state, ffi::CUBEB_STATE_ERROR);
-    }
 
     extern "C" fn data_callback(
         stream: *mut ffi::cubeb_stream,

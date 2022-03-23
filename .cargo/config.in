@@ -35,17 +35,17 @@ rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c"
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"
 replace-with = "vendored-sources"
-rev = "f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+rev = "df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
 
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "dea28d0c7d9952bbf430701ee244f6a4349c98f1"
+rev = "b313a83c0a0becf6115f6002510081a3537562ee"
 
 [source."https://github.com/mozilla/audioipc-2"]
 git = "https://github.com/mozilla/audioipc-2"
 replace-with = "vendored-sources"
-rev = "515bb210a93f520642fd3a60f391652680b3e988"
+rev = "405b8208a8fb32e13db87c252aba9b371ae47859"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
@@ -65,7 +65,7 @@ rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 [source."https://github.com/kinetiknz/audioipc-2"]
 git = "https://github.com/kinetiknz/audioipc-2"
 replace-with = "vendored-sources"
-rev = "8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
+rev = "f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
 
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
