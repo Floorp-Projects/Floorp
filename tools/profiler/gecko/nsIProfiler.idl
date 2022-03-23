@@ -9,7 +9,6 @@
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsStringFwd.h"
-#include "mozilla/MozPromise.h"
 %}
 
 [ref] native nsCString(const nsCString);
@@ -191,8 +190,4 @@ interface nsIProfiler : nsISupports
    * Dump the collected profile to a file.
    */
   void dumpProfileToFile(in string aFilename);
-
-  %{C++
-  virtual RefPtr<mozilla::MozPromise<FallibleTArray<uint8_t>, nsresult, true>> GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) = 0;
-  %}
 };

@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.geckoview.GeckoResult;
 
 /**
  * Takes samples and adds markers for Java threads for the Gecko profiler.
@@ -772,22 +771,6 @@ public class GeckoJavaSampler {
       sSamplingFuture.set(null);
       sMarkerStorage.stop();
     }
-  }
-
-  @WrapForJNI(dispatchTo = "gecko", stubName = "StartProfiler")
-  private static native void startProfilerNative(String[] aFilters, String[] aFeaturesArr);
-
-  @WrapForJNI(dispatchTo = "gecko", stubName = "StopProfiler")
-  private static native void stopProfilerNative(GeckoResult<byte[]> aResult);
-
-  public static void startProfiler(final String[] aFilters, final String[] aFeaturesArr) {
-    startProfilerNative(aFilters, aFeaturesArr);
-  }
-
-  public static GeckoResult<byte[]> stopProfiler() {
-    final GeckoResult<byte[]> result = new GeckoResult<byte[]>();
-    stopProfilerNative(result);
-    return result;
   }
 
   /** Returns the device brand and model as a string. */
