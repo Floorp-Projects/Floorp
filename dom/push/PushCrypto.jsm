@@ -15,7 +15,8 @@ XPCOMUtils.defineLazyGetter(this, "gDOMBundle", () =>
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
-const EXPORTED_SYMBOLS = ["PushCrypto"];
+// getCryptoParamsFromHeaders is exported for test purposes.
+const EXPORTED_SYMBOLS = ["PushCrypto", "getCryptoParamsFromHeaders"];
 
 const UTF8 = new TextEncoder("utf-8");
 
