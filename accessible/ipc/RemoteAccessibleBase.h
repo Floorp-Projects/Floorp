@@ -280,6 +280,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                          : nullptr;
   }
 
+  virtual TableAccessibleBase* AsTableBase() override;
+  virtual TableCellAccessibleBase* AsTableCellBase() override;
+
   /**
    * Return the id of the dom node this accessible represents.  Note this
    * should probably only be used for testing.
