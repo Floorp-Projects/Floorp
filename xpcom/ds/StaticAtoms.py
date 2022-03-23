@@ -1009,8 +1009,6 @@ STATIC_ATOMS = [
     Atom("prefersReducedMotion", "prefers-reduced-motion"),
     Atom("prefersColorScheme", "prefers-color-scheme"),
     Atom("prefersContrast", "prefers-contrast"),
-    Atom("dynamicRange", "dynamic-range"),
-    Atom("videoDynamicRange", "video-dynamic-range"),
     Atom("prefix", "prefix"),
     Atom("preload", "preload"),
     Atom("preserve", "preserve"),
