@@ -49,6 +49,7 @@
 
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Uptime.h"
 
 #if !defined(__wasi__)
 #  include <pthread.h>

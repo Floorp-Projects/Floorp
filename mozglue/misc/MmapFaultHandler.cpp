@@ -8,8 +8,9 @@
 
 #if defined(XP_UNIX) && !defined(XP_DARWIN) && !defined(__wasi__)
 
-#  include "mozilla/Assertions.h"
+#  include "PlatformMutex.h"
 #  include "mozilla/Atomics.h"
+#  include "mozilla/MemoryChecking.h"
 #  include "mozilla/ThreadLocal.h"
 #  include <signal.h>
 #  include <cstring>
