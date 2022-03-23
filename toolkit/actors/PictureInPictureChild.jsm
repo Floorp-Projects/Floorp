@@ -101,6 +101,39 @@ XPCOMUtils.defineLazyGetter(this, "gSiteOverrides", () => {
   return PictureInPictureToggleChild.getSiteOverrides();
 });
 
+/**
+ * Creates and returns an instance of the PictureInPictureChildVideoWrapper class responsible
+ * for applying site-specific wrapper methods around the original video.
+ *
+ * The Picture-In-Picture add-on can use this to provide site-specific wrappers for
+ * sites that require special massaging to control.
+ * @param {Object} pipChild reference to PictureInPictureChild class calling this function
+ * @param {Element} originatingVideo
+ *   The <video> element to wrap.
+ * @returns {PictureInPictureChildVideoWrapper} instance of PictureInPictureChildVideoWrapper
+ */
+function applyWrapper(pipChild, originatingVideo) {
+  let originatingDoc = originatingVideo.ownerDocument;
+  let originatingDocumentURI = originatingDoc.documentURI;
+
+  let overrides = gSiteOverrides.find(([matcher]) => {
+    return matcher.matches(originatingDocumentURI);
+  });
+
+  // gSiteOverrides is a list of tuples where the first element is the MatchPattern
+  // for a supported site and the second is the actual overrides object for it.
+  // TODO: Remove NIGHTLY_BUILD check (see Bug 1751793).
+  let wrapperPath =
+    AppConstants.NIGHTLY_BUILD && overrides
+      ? overrides[1].videoWrapperScriptPath
+      : null;
+  return new PictureInPictureChildVideoWrapper(
+    wrapperPath,
+    originatingVideo,
+    pipChild
+  );
+}
+
 class PictureInPictureLauncherChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
@@ -931,13 +964,19 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         "1.0"
       );
 
+      if (!this.videoWrapper) {
+        this.videoWrapper = applyWrapper(this, video);
+      }
+
       // Do we have any toggle overrides? If so, try to apply them.
       for (let [override, { policy, visibilityThreshold }] of siteOverrides) {
         if (
           (policy || visibilityThreshold) &&
           override.matches(this.document.documentURI)
         ) {
-          state.togglePolicy = policy || TOGGLE_POLICIES.DEFAULT;
+          state.togglePolicy = this.videoWrapper?.shouldHideToggle(video)
+            ? TOGGLE_POLICIES.HIDDEN
+            : policy || TOGGLE_POLICIES.DEFAULT;
           state.toggleVisibilityThreshold =
             visibilityThreshold || visibilityThresholdPref;
           break;
@@ -1782,38 +1821,6 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
-   * Creates an instance of the PictureInPictureChildVideoWrapper class responsible
-   * for applying site-specific wrapper methods around the original video.
-   *
-   * The Picture-In-Picture add-on can use this to provide site-specific wrappers for
-   * sites that require special massaging to control.
-   *
-   * @param {Element} originatingVideo
-   *   The <video> element to wrap.
-   */
-  applyWrapper(originatingVideo) {
-    let originatingDoc = originatingVideo.ownerDocument;
-    let originatingDocumentURI = originatingDoc.documentURI;
-
-    let overrides = gSiteOverrides.find(([matcher]) => {
-      return matcher.matches(originatingDocumentURI);
-    });
-
-    // gSiteOverrides is a list of tuples where the first element is the MatchPattern
-    // for a supported site and the second is the actual overrides object for it.
-    // TODO: Remove NIGHTLY_BUILD check (see Bug 1751793).
-    let wrapperPath =
-      AppConstants.NIGHTLY_BUILD && overrides
-        ? overrides[1].videoWrapperScriptPath
-        : null;
-    this.videoWrapper = new PictureInPictureChildVideoWrapper(
-      wrapperPath,
-      originatingVideo,
-      this
-    );
-  }
-
-  /**
    * Runs in an instance of PictureInPictureChild for the
    * player window's content, and not the originating video
    * content. Sets up the player so that it clones the originating
@@ -1841,7 +1848,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       return;
     }
 
-    this.applyWrapper(originatingVideo);
+    this.videoWrapper = applyWrapper(this, originatingVideo);
 
     let loadPromise = new Promise(resolve => {
       this.contentWindow.addEventListener("load", resolve, {
@@ -2415,6 +2422,15 @@ class PictureInPictureChildVideoWrapper {
       ],
       fallback: () => {},
       validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  shouldHideToggle(video) {
+    return this.#callWrapperMethod({
+      name: "shouldHideToggle",
+      args: [video],
+      fallback: () => false,
+      validateRetVal: retVal => this.#isBoolean(retVal),
     });
   }
 }
