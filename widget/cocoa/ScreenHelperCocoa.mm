@@ -87,8 +87,27 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
   frame = [aScreen visibleFrame];
   LayoutDeviceIntRect availRect =
       nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
-  NSWindowDepth depth = [aScreen depth];
-  uint32_t pixelDepth = NSBitsPerPixelFromDepth(depth);
+
+  // aScreen may be capable of displaying multiple pixel depths, for example by
+  // transitioning to an HDR-capable depth when required by a window displayed on
+  // the screen. We want to note the maximum capabilities of the screen, so we use
+  // the largest depth it offers.
+  uint32_t pixelDepth = 0;
+  const NSWindowDepth* depths = [aScreen supportedWindowDepths];
+  for (size_t d = 0; NSWindowDepth depth = depths[d]; d++) {
+    uint32_t bpp = NSBitsPerPixelFromDepth(depth);
+    if (bpp > pixelDepth) {
+      pixelDepth = bpp;
+    }
+  }
+
+  // But it confuses content if we return too-high a value here. Cap depth with
+  // a value that matches what Chrome returns for high bpp screens.
+  static const uint32_t MAX_REPORTED_PIXEL_DEPTH = 30;
+  if (pixelDepth > MAX_REPORTED_PIXEL_DEPTH) {
+    pixelDepth = MAX_REPORTED_PIXEL_DEPTH;
+  }
+
   float dpi = 96.0f;
   CGDirectDisplayID displayID =
       [[[aScreen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
