@@ -352,6 +352,12 @@ var BrowserUtils = {
 
     return language.startsWith("en-") && region.toLowerCase() == "us";
   },
+
+  // Return true if Send to Device emails are supported for user's locale
+  sendToDeviceEmailsSupported() {
+    const userLocale = Services.locale.appLocaleAsBCP47.toLowerCase();
+    return this.emailSupportedLocales.has(userLocale);
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -375,6 +381,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "vpnDisallowedRegions",
   "browser.vpn_promo.disallowed_regions",
   "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+  null,
+  stringPrefToSet
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BrowserUtils,
+  "emailSupportedLocales",
+  "browser.send_to_device_locales",
+  "de,en-GB,en-US,es-AR,es-CL,es-ES,es-MX,fr,id,pl,pt-BR,ru,zh-TW",
   null,
   stringPrefToSet
 );
