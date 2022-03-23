@@ -210,8 +210,7 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void AfterProcessTask(uint32_t aRecursionDepth);
 
-  // Check whether any eager thresholds have been reached, which would mean
-  // an idle GC task (minor or major) would be useful.
+  // Check whether we need an idle minor GC task.
   virtual void MaybePokeGC();
 
   uint32_t RecursionDepth() const;
