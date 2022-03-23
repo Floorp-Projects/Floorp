@@ -128,14 +128,6 @@ InstallTrigger.prototype = {
   },
 
   install(installs, callback) {
-    if (Services.prefs.getBoolPref("xpinstall.userActivation.required", true)) {
-      if (!this._window.windowUtils.isHandlingUserInput) {
-        throw new this._window.Error(
-          "InstallTrigger.install can only be called from a user input handler"
-        );
-      }
-    }
-
     let keys = Object.keys(installs);
     if (keys.length > 1) {
       throw new this._window.Error("Only one XPI may be installed at a time");

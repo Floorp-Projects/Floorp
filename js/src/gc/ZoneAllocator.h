@@ -185,6 +185,8 @@ class ZoneAllocator : public JS::shadow::Zone,
   gc::JitHeapThreshold jitHeapThreshold;
 
   // Use counts for memory that can be referenced by more than one GC thing.
+  // Memory recorded here is also recorded in mallocHeapSize.  This structure
+  // is used to avoid over-counting in mallocHeapSize.
   gc::SharedMemoryMap sharedMemoryUseCounts;
 
  private:

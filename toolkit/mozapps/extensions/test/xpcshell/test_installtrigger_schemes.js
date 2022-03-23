@@ -28,8 +28,6 @@ add_task(
     pref_set: [
       ["extensions.InstallTrigger.enabled", true],
       ["extensions.InstallTriggerImpl.enabled", true],
-      // Relax the user input requirements while running this test.
-      ["xpinstall.userActivation.required", false],
     ],
   },
   async function test_InstallTriggerThrows_on_unsupported_xpi_schemes_blob() {
@@ -51,8 +49,6 @@ add_task(
     pref_set: [
       ["extensions.InstallTrigger.enabled", true],
       ["extensions.InstallTriggerImpl.enabled", true],
-      // Relax the user input requirements while running this test.
-      ["xpinstall.userActivation.required", false],
     ],
   },
   async function test_InstallTriggerThrows_on_unsupported_xpi_schemes_data() {
