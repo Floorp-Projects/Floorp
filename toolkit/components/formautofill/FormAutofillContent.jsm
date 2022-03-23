@@ -784,6 +784,14 @@ var FormAutofillContent = {
     }
 
     this.activeSection.clearPopulatedForm();
+
+    let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
+    if (FormAutofillUtils.isCreditCardField(fieldName)) {
+      CreditCardTelemetry.recordFormCleared(
+        this.activeSection?.flowId,
+        fieldName
+      );
+    }
   },
 
   previewProfile(doc) {
@@ -856,10 +864,13 @@ var FormAutofillContent = {
       formFillController.passwordPopupAutomaticallyOpened
     );
 
-    CreditCardTelemetry.recordPopupShown(
-      this.activeSection?.flowId,
-      FormAutofillContent.activeFieldDetail?.fieldName
-    );
+    let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
+    if (FormAutofillUtils.isCreditCardField(fieldName)) {
+      CreditCardTelemetry.recordPopupShown(
+        this.activeSection?.flowId,
+        fieldName
+      );
+    }
   },
 
   _markAsAutofillField(field) {
