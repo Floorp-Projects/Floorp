@@ -129,6 +129,11 @@ ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   return static_cast<ModuleLoadRequest*>(this);
 }
 
+const ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() const {
+  MOZ_ASSERT(IsModuleRequest());
+  return static_cast<const ModuleLoadRequest*>(this);
+}
+
 void ScriptLoadRequest::SetBytecode() {
   MOZ_ASSERT(IsUnknownDataType());
   mDataType = DataType::eBytecode;
@@ -141,9 +146,18 @@ void ScriptLoadRequest::ClearScriptSource() {
 }
 
 void ScriptLoadRequest::MarkForBytecodeEncoding(JSScript* aScript) {
+  MOZ_ASSERT(!IsModuleRequest());
   MOZ_ASSERT(!IsMarkedForBytecodeEncoding());
   mScriptForBytecodeEncoding = aScript;
   HoldJSObjects(this);
+}
+
+bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
+  if (IsModuleRequest()) {
+    return AsModuleRequest()->IsModuleMarkedForBytecodeEncoding();
+  }
+
+  return !!mScriptForBytecodeEncoding;
 }
 
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
