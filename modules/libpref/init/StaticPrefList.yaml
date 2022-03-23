@@ -7243,7 +7243,7 @@
 # is rendered again with the latest visible partial area.
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # One of several prefs affecting the maximum area to pre-render when animating
