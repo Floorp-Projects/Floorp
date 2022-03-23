@@ -323,7 +323,8 @@ cubeb_resampler_create(cubeb_stream * stream,
                        cubeb_stream_params * input_params,
                        cubeb_stream_params * output_params,
                        unsigned int target_rate, cubeb_data_callback callback,
-                       void * user_ptr, cubeb_resampler_quality quality)
+                       void * user_ptr, cubeb_resampler_quality quality,
+                       cubeb_resampler_reclock reclock)
 {
   cubeb_sample_format format;
 
@@ -337,13 +338,13 @@ cubeb_resampler_create(cubeb_stream * stream,
 
   switch (format) {
   case CUBEB_SAMPLE_S16NE:
-    return cubeb_resampler_create_internal<short>(stream, input_params,
-                                                  output_params, target_rate,
-                                                  callback, user_ptr, quality);
+    return cubeb_resampler_create_internal<short>(
+        stream, input_params, output_params, target_rate, callback, user_ptr,
+        quality, reclock);
   case CUBEB_SAMPLE_FLOAT32NE:
-    return cubeb_resampler_create_internal<float>(stream, input_params,
-                                                  output_params, target_rate,
-                                                  callback, user_ptr, quality);
+    return cubeb_resampler_create_internal<float>(
+        stream, input_params, output_params, target_rate, callback, user_ptr,
+        quality, reclock);
   default:
     assert(false);
     return nullptr;

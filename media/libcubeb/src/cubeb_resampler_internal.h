@@ -496,7 +496,8 @@ cubeb_resampler_create_internal(cubeb_stream * stream,
                                 cubeb_stream_params * output_params,
                                 unsigned int target_rate,
                                 cubeb_data_callback callback, void * user_ptr,
-                                cubeb_resampler_quality quality)
+                                cubeb_resampler_quality quality,
+                                cubeb_resampler_reclock reclock)
 {
   std::unique_ptr<cubeb_resampler_speex_one_way<T>> input_resampler = nullptr;
   std::unique_ptr<cubeb_resampler_speex_one_way<T>> output_resampler = nullptr;

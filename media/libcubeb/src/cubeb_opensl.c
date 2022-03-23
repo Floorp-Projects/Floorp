@@ -1479,7 +1479,8 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream,
   stm->resampler = cubeb_resampler_create(
       stm, input_stream_params ? &input_params : NULL,
       output_stream_params ? &output_params : NULL, target_sample_rate,
-      data_callback, user_ptr, CUBEB_RESAMPLER_QUALITY_DEFAULT);
+      data_callback, user_ptr, CUBEB_RESAMPLER_QUALITY_DEFAULT,
+      CUBEB_RESAMPLER_RECLOCK_NONE);
   if (!stm->resampler) {
     LOG("Failed to create resampler");
     opensl_stream_destroy(stm);
