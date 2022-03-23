@@ -365,6 +365,8 @@ class ModuleObject : public NativeObject {
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
 
+  static void onTopLevelEvaluationFinished(ModuleObject* module);
+
   static bool appendAsyncParentModule(JSContext* cx, HandleModuleObject self,
                                       HandleModuleObject parent);
 
