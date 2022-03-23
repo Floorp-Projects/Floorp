@@ -545,11 +545,11 @@ bool Event::IsDispatchStopped() { return mEvent->PropagationStopped(); }
 WidgetEvent* Event::WidgetEventPtr() { return mEvent; }
 
 // static
-CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
-                                   WidgetEvent* aEvent,
-                                   LayoutDeviceIntPoint aPoint) {
+Maybe<CSSIntPoint> Event::GetScreenCoords(nsPresContext* aPresContext,
+                                          WidgetEvent* aEvent,
+                                          LayoutDeviceIntPoint aPoint) {
   if (PointerLockManager::IsLocked()) {
-    return EventStateManager::sLastScreenPoint;
+    return Some(EventStateManager::sLastScreenPoint);
   }
 
   if (!aEvent || (aEvent->mClass != eMouseEventClass &&
@@ -559,14 +559,14 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
                   aEvent->mClass != eTouchEventClass &&
                   aEvent->mClass != eDragEventClass &&
                   aEvent->mClass != eSimpleGestureEventClass)) {
-    return CSSIntPoint(0, 0);
+    return Nothing();
   }
 
   // Doing a straight conversion from LayoutDeviceIntPoint to CSSIntPoint
   // seem incorrect, but it is needed to maintain legacy functionality.
   WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
   if (!aPresContext || !(guiEvent && guiEvent->mWidget)) {
-    return CSSIntPoint(aPoint.x, aPoint.y);
+    return Some(CSSIntPoint(aPoint.x, aPoint.y));
   }
 
   // (Potentially) transform the point from the coordinate space of an
@@ -587,7 +587,7 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
       guiEvent->mWidget->TopLevelWidgetToScreenOffset(),
       aPresContext->DeviceContext()->AppUnitsPerDevPixel());
 
-  return CSSPixel::FromAppUnitsRounded(pt);
+  return Some(CSSPixel::FromAppUnitsRounded(pt));
 }
 
 // static
