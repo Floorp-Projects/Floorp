@@ -124,8 +124,12 @@ const gTests = {
 
     is(window.devicePixelRatio, dppx,
       "devicePixelRatio overridden; fullZoom ignored");
+    is(SpecialPowers.wrap(window).devicePixelRatio, originalDPR * zoom,
+      "devicePixelRatio is right for privileged code");
     is(frameWindow.devicePixelRatio, dppx,
       "frame's devicePixelRatio overridden; fullZoom ignored");
+    is(SpecialPowers.wrap(frameWindow).devicePixelRatio, originalDPR * zoom,
+      "frame's devicePixelRatio is right for privileged code");
 
     await setOverrideDPPX(0);
 
