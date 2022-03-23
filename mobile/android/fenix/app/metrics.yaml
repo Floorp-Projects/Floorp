@@ -429,11 +429,12 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/19956
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/19959#issuecomment-882539619
+      - https://github.com/mozilla-mobile/fenix/pull/24409
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 101
+    expires: 113
 
 onboarding:
   fxa_auto_signin:
