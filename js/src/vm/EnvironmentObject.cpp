@@ -225,7 +225,6 @@ EnvT* FindEnclosingEnv(JSObject* env) {
   return &env->as<EnvT>();
 }
 
-
 CallObject* CallObject::find(JSObject* env) {
   return FindEnclosingEnv<CallObject>(env);
 }
