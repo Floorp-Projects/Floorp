@@ -111,23 +111,13 @@ struct CCRunnerStep {
   // callback.
   CCRunnerYield mYield;
 
-  union ActionData {
-    // If the action is ForgetSkippable, then whether to remove childless nodes
-    // or not.
-    CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
+  // If the action is ForgetSkippable, then whether to remove childless nodes
+  // or not. (ForgetSkippable is the only action requiring a parameter; if
+  // that changes, this will become a union.)
+  CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
 
-    // If the action is CycleCollect, the reason for the collection.
-    CCReason mCCReason;
-
-    // If the action is MinorGC, the reason for the GC.
-    JS::GCReason mReason;
-
-    MOZ_IMPLICIT ActionData(CCRunnerForgetSkippableRemoveChildless v)
-        : mRemoveChildless(v) {}
-    MOZ_IMPLICIT ActionData(CCReason v) : mCCReason(v) {}
-    MOZ_IMPLICIT ActionData(JS::GCReason v) : mReason(v) {}
-    ActionData() = default;
-  } mParam;
+  // If the action is CycleCollect, the reason for the collection.
+  CCReason mCCReason;
 };
 
 class CCGCScheduler {
