@@ -131,20 +131,29 @@ class mozSpellChecker final {
   nsresult GetDictionaryList(nsTArray<nsCString>* aDictionaryList);
 
   /**
-   * Returns a string representing the current dictionary.
-   * @param aDictionary will contain the name of the dictionary.
+   * Returns a string representing the current dictionaries.
+   * @param aDictionaries will contain the names of the dictionaries.
    * This name is the same string that is in the list returned
    * by GetDictionaryList().
    */
-  nsresult GetCurrentDictionary(nsACString& aDictionary);
+  nsresult GetCurrentDictionaries(nsTArray<nsCString>& aDictionaries);
 
   /**
-   * Tells the spellchecker to use a specific dictionary.
+   * Tells the spellchecker to use the specified dictionary.
    * @param aDictionary a string that is in the list returned
-   * by GetDictionaryList() or an empty string. If aDictionary is
-   * empty string, spellchecker will be disabled.
+   * by GetDictionaryList() or an empty string . If aDictionary is
+   * an empty array, the spellchecker will be disabled.
    */
-  nsresult SetCurrentDictionary(const nsACString& aDictionary);
+  nsresult SetCurrentDictionary(const nsCString& aDictionary);
+
+  /**
+   * Tells the spellchecker to use the specified dictionaries.
+   * @param aDictionaries an array of strings that is in the list returned
+   * by GetDictionaryList() or an empty array. If aDictionaries is
+   * an empty array, the spellchecker will be disabled.
+   */
+  RefPtr<mozilla::GenericPromise> SetCurrentDictionaries(
+      const nsTArray<nsCString>& aDictionaries);
 
   /**
    * Tells the spellchecker to use a specific dictionary from list.
@@ -170,7 +179,7 @@ class mozSpellChecker final {
   nsCOMPtr<mozISpellCheckingEngine> mSpellCheckingEngine;
   bool mFromStart;
 
-  nsCString mCurrentDictionary;
+  nsTArray<nsCString> mCurrentDictionaries;
 
   MOZ_CAN_RUN_SCRIPT
   nsresult SetupDoc(int32_t* outBlockOffset);
