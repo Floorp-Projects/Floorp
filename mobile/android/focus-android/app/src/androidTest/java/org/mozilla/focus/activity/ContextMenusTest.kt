@@ -10,67 +10,161 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.StringsHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getImageTestAsset
 import org.mozilla.focus.helpers.TestHelper
+import org.mozilla.focus.helpers.TestHelper.appContext
+import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.focus.helpers.TestHelper.permAllowBtn
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // These tests check the interaction with various context menu options
 @RunWith(AndroidJUnit4ClassRunner::class)
 class ContextMenusTest {
     private lateinit var webServer: MockWebServer
-
     private val featureSettingsHelper = FeatureSettingsHelper()
+    private var fileName: String = ""
 
     @get: Rule
-    var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+    var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
 
-    @Rule
-    @JvmField
+    @get: Rule
     val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setup() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        webServer = MockWebServer()
-        webServer.enqueue(TestHelper.createMockResponseFromAsset("tab1.html"))
-        webServer.enqueue(TestHelper.createMockResponseFromAsset("tab2.html"))
+
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
     }
 
     @After
     fun tearDown() {
         webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
+        deleteFileUsingDisplayName(appContext.applicationContext, fileName)
+    }
+
+    @SmokeTest
+    @Test
+    fun linkedImageContextMenuItemsTest() {
+        val imagesTestPage = getImageTestAsset(webServer)
+        val imageAssetUrl = webServer.url("download.jpg").toString()
+
+        searchScreen {
+        }.loadPage(imagesTestPage.url) {
+            longPressLink("download icon")
+            verifyImageContextMenu(true, imageAssetUrl)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun simpleImageContextMenuItemsTest() {
+        val imagesTestPage = getImageTestAsset(webServer)
+        val imageAssetUrl = webServer.url("rabbit.jpg").toString()
+
+        searchScreen {
+        }.loadPage(imagesTestPage.url) {
+            longPressLink("rabbit.jpg")
+            verifyImageContextMenu(false, imageAssetUrl)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun linkContextMenuItemsTest() {
+        val tab1Page = getGenericTabAsset(webServer, 1)
+        val tab2Page = getGenericTabAsset(webServer, 2)
+
+        searchScreen {
+        }.loadPage(tab1Page.url) {
+            verifyPageContent("Tab 1")
+            longPressLink("Tab 2")
+            verifyLinkContextMenu(tab2Page.url)
+        }
     }
 
     @SmokeTest
     @Test
     fun copyLinkAddressTest() {
-        val tab1Url = webServer.url("tab1.html").toString()
-        val tab2Url = webServer.url("tab2.html").toString()
+        val tab1Page = getGenericTabAsset(webServer, 1)
+        val tab2Page = getGenericTabAsset(webServer, 2)
 
         searchScreen {
-        }.loadPage(tab1Url) {
+        }.loadPage(tab1Page.url) {
             verifyPageContent("Tab 1")
             longPressLink("Tab 2")
-            verifyLinkContextMenu(tab2Url)
+            verifyLinkContextMenu(tab2Page.url)
             clickContextMenuCopyLink()
-        }
-
-        searchScreen {
-            clickToolbar()
+        }.openSearchBar {
             clearSearchBar()
             longPressSearchBar()
-            pasteAndLoadLink()
-        }
-
-        browserScreen {
+        }.pasteAndLoadLink {
             progressBar.waitUntilGone(TestHelper.waitingTime)
-            verifyPageURL(tab2Url)
+            verifyPageURL(tab2Page.url)
+        }
+    }
+
+    @Test
+    fun copyImageLocationTest() {
+        val imagesTestPage = getImageTestAsset(webServer)
+        val imageAssetUrl = webServer.url("rabbit.jpg").toString()
+
+        searchScreen {
+        }.loadPage(imagesTestPage.url) {
+            longPressLink("rabbit.jpg")
+            verifyImageContextMenu(false, imageAssetUrl)
+            clickCopyImageLocation()
+        }.openSearchBar {
+            clearSearchBar()
+            longPressSearchBar()
+        }.pasteAndLoadLink {
+            progressBar.waitUntilGone(TestHelper.waitingTime)
+            verifyPageURL(imageAssetUrl)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun saveImageTest() {
+        val imagesTestPage = getImageTestAsset(webServer)
+        fileName = "rabbit.jpg"
+
+        searchScreen {
+        }.loadPage(imagesTestPage.url) {
+            longPressLink(fileName)
+        }.clickSaveImage {
+            // If permission dialog appears on devices with API<30, grant it
+            if (permAllowBtn.exists()) {
+                permAllowBtn.click()
+            }
+            verifyDownloadConfirmationMessage(fileName)
+            openDownloadedFile()
+            assertNativeAppOpens(StringsHelper.GOOGLE_PHOTOS)
+        }
+    }
+
+    @Test
+    fun shareImageTest() {
+        val imagesTestPage = getImageTestAsset(webServer)
+
+        searchScreen {
+        }.loadPage(imagesTestPage.url) {
+            longPressLink("rabbit.jpg")
+            clickShareImage()
+            verifyShareAppsListOpened()
         }
     }
 }

@@ -19,7 +19,9 @@ import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.StringsHelper.GOOGLE_PHOTOS
 import org.mozilla.focus.helpers.TestHelper
+import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
@@ -146,15 +148,15 @@ class DownloadFileTest {
 
         downloadRobot {
             clickDownloadIconAsset()
-            // If permission dialog appears, grant it
+            // If permission dialog appears on devices with API<30, grant it
             if (TestHelper.permAllowBtn.waitForExists(waitingTime)) {
                 TestHelper.permAllowBtn.click()
             }
             verifyDownloadDialog(downloadFileName)
             clickDownloadButton()
-            verifySnackBarText("finished")
+            verifyDownloadConfirmationMessage(downloadFileName)
             openDownloadedFile()
-            verifyPhotosOpens()
+            assertNativeAppOpens(GOOGLE_PHOTOS)
         }
     }
 }

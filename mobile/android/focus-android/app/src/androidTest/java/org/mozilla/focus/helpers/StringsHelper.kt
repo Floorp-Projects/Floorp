@@ -12,4 +12,6 @@ object StringsHelper {
     const val FR_LANGUAGE_SYSTEM_DEFAULT = "Valeur par défaut du système"
     const val EN_LANGUAGE_MENU_HEADING = "Language"
     const val EN_FRENCH_LOCALE = "Français"
+    const val GOOGLE_PHOTOS = "com.google.android.apps.photos"
+    const val GOOGLE_CHROME = "com.google.android.apps.chrome"
 }

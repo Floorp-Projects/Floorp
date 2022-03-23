@@ -150,7 +150,25 @@ class BrowserRobot {
         shareLink.check(matches(isDisplayed()))
     }
 
-    fun clickContextMenuCopyLink() = copyLink.perform(click())
+    fun verifyImageContextMenu(hasLink: Boolean, linkAddress: String) {
+        onView(withId(R.id.titleView)).check(matches(withText(linkAddress)))
+        if (hasLink) {
+            openLinkInPrivateTab.check(matches(isDisplayed()))
+            downloadLink.check(matches(isDisplayed()))
+        }
+        copyLink.check(matches(isDisplayed()))
+        shareLink.check(matches(isDisplayed()))
+        shareImage.check(matches(isDisplayed()))
+        openImageInNewTab.check(matches(isDisplayed()))
+        saveImage.check(matches(isDisplayed()))
+        copyImageLocation.check(matches(isDisplayed()))
+    }
+
+    fun clickContextMenuCopyLink(): ViewInteraction = copyLink.perform(click())
+
+    fun clickShareImage(): ViewInteraction = shareImage.perform(click())
+
+    fun clickCopyImageLocation(): ViewInteraction = copyImageLocation.perform(click())
 
     fun clickLinkMatchingText(expectedText: String) {
         mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
@@ -312,11 +330,11 @@ class BrowserRobot {
     }
 
     fun enterFindInPageQuery(expectedText: String) {
-        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime)
+        mDevice.wait(Until.findObject(By.res("$packageName:id/find_in_page_query_text")), waitingTime)
         findInPageQuery.perform(ViewActions.clearText())
-        mDevice.wait(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
+        mDevice.wait(Until.gone(By.res("$packageName:id/find_in_page_result_text")), waitingTime)
         findInPageQuery.perform(ViewActions.typeText(expectedText))
-        mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
+        mDevice.wait(Until.findObject(By.res("$packageName:id/find_in_page_result_text")), waitingTime)
     }
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
@@ -409,6 +427,13 @@ class BrowserRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickSaveImage(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            saveImage.perform(click())
+
+            DownloadRobot().interact()
+            return DownloadRobot.Transition()
+        }
     }
 }
 
@@ -476,6 +501,17 @@ private val copyLink = onView(withText("Copy link"))
 
 private val shareLink = onView(withText("Share link"))
 
+// Image long-tap context menu items
+private val openImageInNewTab = onView(withText("Open image in new tab"))
+
+private val downloadLink = onView(withText("Download link"))
+
+private val saveImage = onView(withText("Save image"))
+
+private val copyImageLocation = onView(withText("Copy image location"))
+
+private val shareImage = onView(withText("Share image"))
+
 // Find in page toolbar
 private val findInPageQuery = onView(withId(R.id.find_in_page_query_text))
 
@@ -510,7 +546,7 @@ private val dropDownForm =
         UiSelector()
             .resourceId("dropDown")
             .className("android.widget.Spinner")
-            .packageName("$packageName")
+            .packageName(packageName)
     )
 
 private val submitDropDownButton =
@@ -524,7 +560,7 @@ private val textInputBox =
     mDevice.findObject(
         UiSelector()
             .resourceId("textInput")
-            .packageName("$packageName")
+            .packageName(packageName)
     )
 
 private val submitTextInputButton =
@@ -539,7 +575,7 @@ private val calendarForm =
         UiSelector()
             .resourceId("calendar")
             .className("android.widget.Spinner")
-            .packageName("$packageName")
+            .packageName(packageName)
     )
 
 val submitDateButton =

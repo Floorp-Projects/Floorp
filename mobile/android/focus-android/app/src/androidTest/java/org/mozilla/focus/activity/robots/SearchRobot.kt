@@ -67,22 +67,8 @@ class SearchRobot {
         searchBar.longClick()
     }
 
-    fun pasteAndLoadLink() {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            try {
-                mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
-                val pasteText = mDevice.findObject(By.textContains("Paste"))
-                pasteText.click()
-                mDevice.pressEnter()
-                break
-            } catch (e: NullPointerException) {
-                longPressSearchBar()
-            }
-        }
-    }
-
     fun clearSearchBar() = clearSearchButton.click()
+
     fun verifySearchSuggestionsContain(title: String) {
         assertTrue(
             suggestionsList.getChild(UiSelector().textContains(title)).waitForExists(waitingTime)
@@ -106,6 +92,24 @@ class SearchRobot {
                     geckoEngineView.waitForExists(waitingTime) ||
                         trackingProtectionDialog.waitForExists(waitingTime)
                 )
+            }
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun pasteAndLoadLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            var currentTries = 0
+            while (currentTries++ < 3) {
+                try {
+                    mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
+                    val pasteText = mDevice.findObject(By.textContains("Paste"))
+                    pasteText.click()
+                    mDevice.pressEnter()
+                    break
+                } catch (e: NullPointerException) {
+                    SearchRobot().longPressSearchBar()
+                }
             }
 
             BrowserRobot().interact()

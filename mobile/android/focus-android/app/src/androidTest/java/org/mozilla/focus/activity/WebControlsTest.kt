@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
-import androidx.test.espresso.intent.Intents
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -15,7 +14,7 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.Constants.PackageName.GMAIL_APP
 import org.mozilla.focus.helpers.Constants.PackageName.PHONE_APP
 import org.mozilla.focus.helpers.FeatureSettingsHelper
-import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
@@ -30,7 +29,7 @@ class WebControlsTest {
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
-    var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+    var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
 
     @Rule
     @JvmField
@@ -42,14 +41,12 @@ class WebControlsTest {
         webServer.start()
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        Intents.init()
     }
 
     @After
     fun tearDown() {
         webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
-        Intents.release()
     }
 
     @SmokeTest

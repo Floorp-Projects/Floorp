@@ -151,13 +151,6 @@ object TestHelper {
         Assert.assertTrue(geckoView.waitForExists(waitingTime))
     }
 
-    @JvmField
-    var nextBtn = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/next")
-            .enabled(true)
-    )
-
     /********* Main View Locators  */
     @JvmField
     var menuButton = Espresso.onView(
@@ -165,14 +158,6 @@ object TestHelper {
             ViewMatchers.withId(R.id.menuView),
             ViewMatchers.isDisplayed()
         )
-    )
-
-    /********* Web View Locators  */
-    @JvmField
-    var browserURLbar = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/display_url")
-            .clickable(true)
     )
 
     @JvmField
@@ -227,21 +212,6 @@ object TestHelper {
         UiSelector()
             .text("Your browsing history has been erased.")
             .resourceId(packageName + ":id/snackbar_text")
-            .enabled(true)
-    )
-
-    @JvmField
-    var lockIcon = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/lock")
-            .description("Secure connection")
-    )
-
-    @JvmField
-    var notificationBarDeleteItem = mDevice.findObject(
-        UiSelector()
-            .text("Erase browsing history")
-            .resourceId("android:id/text")
             .enabled(true)
     )
 
@@ -309,13 +279,6 @@ object TestHelper {
         UiSelector()
             .resourceId("android:id/resolver_list")
             .enabled(true)
-    )
-
-    /********* Settings Menu Item Locators  */
-    @JvmField
-    var settingsMenu = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/recycler_view")
     )
 
     @JvmStatic
@@ -420,7 +383,9 @@ object TestHelper {
 
     fun assertNativeAppOpens(appPackageName: String) {
         try {
-            intended(toPackage(appPackageName))
+            if (isPackageInstalled(packageName)) {
+                intended(toPackage(appPackageName))
+            }
         } catch (e: AssertionFailedError) {
             e.printStackTrace()
         }

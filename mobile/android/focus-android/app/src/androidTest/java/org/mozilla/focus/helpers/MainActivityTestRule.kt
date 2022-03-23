@@ -73,7 +73,6 @@ open class MainActivityIntentsTestRule(launchActivity: Boolean = true, private v
 
     override fun afterActivityFinished() {
         super.afterActivityFinished()
-
         ThreadUtils.postToMainThread {
             InstrumentationRegistry
                 .getInstrumentation()
