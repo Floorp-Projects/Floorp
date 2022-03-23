@@ -291,6 +291,15 @@ StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
   return StylePrefersContrast::NoPreference;
 }
 
+StyleDynamicRange Gecko_MediaFeatures_DynamicRange(const Document* aDocument) {
+  return StyleDynamicRange::Standard;
+}
+
+StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
+    const Document* aDocument) {
+  return StyleDynamicRange::Standard;
+}
+
 static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
                                                   LookAndFeel::IntID aID) {
   MOZ_ASSERT(aID == LookAndFeel::IntID::PrimaryPointerCapabilities ||
