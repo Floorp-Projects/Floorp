@@ -185,6 +185,5 @@ class InterventionTest(MozbuildObject):
     virtualenv_name="webcompat",
 )
 def test_interventions(command_context, **params):
-    command_context.activate_virtualenv()
     intervention_test = command_context._spawn(InterventionTest)
     return 0 if intervention_test.run(**params) else 1
