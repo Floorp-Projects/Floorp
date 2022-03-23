@@ -7,16 +7,11 @@
 #ifndef __FFmpegVideoFramePool_h__
 #define __FFmpegVideoFramePool_h__
 
-#include "FFmpegVideoDecoder.h"
-#include "FFmpegLibWrapper.h"
-
 #include "mozilla/layers/DMABUFSurfaceImage.h"
 #include "mozilla/widget/DMABufLibWrapper.h"
 #include "mozilla/widget/DMABufSurface.h"
 
 namespace mozilla {
-
-class VideoFramePool;
 
 // VideoFrameSurface holds a reference to GPU data with a video frame.
 //
@@ -47,8 +42,19 @@ class VideoFramePool;
 // Unfortunately there isn't any obvious way how to mark particular VASurface
 // as used. The best we can do is to hold a reference to particular AVBuffer
 // from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
-class VideoFrameSurface {
-  friend class VideoFramePool;
+template <int V>
+class VideoFrameSurface {};
+template <>
+class VideoFrameSurface<LIBAV_VER>;
+
+template <int V>
+class VideoFramePool {};
+template <>
+class VideoFramePool<LIBAV_VER>;
+
+template <>
+class VideoFrameSurface<LIBAV_VER> {
+  friend class VideoFramePool<LIBAV_VER>;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameSurface)
@@ -97,23 +103,24 @@ class VideoFrameSurface {
 };
 
 // VideoFramePool class is thread-safe.
-class VideoFramePool final {
+template <>
+class VideoFramePool<LIBAV_VER> {
  public:
   VideoFramePool();
   ~VideoFramePool();
 
-  RefPtr<VideoFrameSurface> GetVideoFrameSurface(
+  RefPtr<VideoFrameSurface<LIBAV_VER>> GetVideoFrameSurface(
       VADRMPRIMESurfaceDescriptor& aVaDesc, AVCodecContext* aAVCodecContext,
       AVFrame* aAVFrame, FFmpegLibWrapper* aLib);
   void ReleaseUnusedVAAPIFrames();
 
  private:
-  RefPtr<VideoFrameSurface> GetFreeVideoFrameSurface();
+  RefPtr<VideoFrameSurface<LIBAV_VER>> GetFreeVideoFrameSurface();
 
  private:
   // Protect mDMABufSurfaces pool access
   Mutex mSurfaceLock MOZ_UNANNOTATED;
-  nsTArray<RefPtr<VideoFrameSurface>> mDMABufSurfaces;
+  nsTArray<RefPtr<VideoFrameSurface<LIBAV_VER>>> mDMABufSurfaces;
   // We may fail to create texture over DMABuf memory due to driver bugs so
   // check that before we export first DMABuf video frame.
   Maybe<bool> mTextureCreationWorks;

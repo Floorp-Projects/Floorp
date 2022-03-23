@@ -15,11 +15,11 @@
 
 namespace mozilla {
 
-RefPtr<layers::Image> VideoFrameSurface::GetAsImage() {
+RefPtr<layers::Image> VideoFrameSurface<LIBAV_VER>::GetAsImage() {
   return new layers::DMABUFSurfaceImage(mSurface);
 }
 
-VideoFrameSurface::VideoFrameSurface(DMABufSurface* aSurface)
+VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
     : mSurface(aSurface),
       mLib(nullptr),
       mAVHWFramesContext(nullptr),
@@ -34,9 +34,9 @@ VideoFrameSurface::VideoFrameSurface(DMABufSurface* aSurface)
              mSurface->GetUID());
 }
 
-void VideoFrameSurface::LockVAAPIData(AVCodecContext* aAVCodecContext,
-                                      AVFrame* aAVFrame,
-                                      FFmpegLibWrapper* aLib) {
+void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
+    AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
+    FFmpegLibWrapper* aLib) {
   FFMPEG_LOG("VideoFrameSurface: VAAPI locking dmabuf surface UID = %d",
              mSurface->GetUID());
   mLib = aLib;
@@ -44,7 +44,7 @@ void VideoFrameSurface::LockVAAPIData(AVCodecContext* aAVCodecContext,
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
 }
 
-void VideoFrameSurface::ReleaseVAAPIData(bool aForFrameRecycle) {
+void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   FFMPEG_LOG("VideoFrameSurface: VAAPI releasing dmabuf surface UID = %d",
              mSurface->GetUID());
 
@@ -67,21 +67,22 @@ void VideoFrameSurface::ReleaseVAAPIData(bool aForFrameRecycle) {
   }
 }
 
-VideoFrameSurface::~VideoFrameSurface() {
+VideoFrameSurface<LIBAV_VER>::~VideoFrameSurface() {
   FFMPEG_LOG("VideoFrameSurface: deleting dmabuf surface UID = %d",
              mSurface->GetUID());
   // We're about to quit, no need to recycle the frames.
   ReleaseVAAPIData(/* aForFrameRecycle */ false);
 }
 
-VideoFramePool::VideoFramePool() : mSurfaceLock("VideoFramePoolSurfaceLock") {}
+VideoFramePool<LIBAV_VER>::VideoFramePool()
+    : mSurfaceLock("VideoFramePoolSurfaceLock") {}
 
-VideoFramePool::~VideoFramePool() {
+VideoFramePool<LIBAV_VER>::~VideoFramePool() {
   MutexAutoLock lock(mSurfaceLock);
   mDMABufSurfaces.Clear();
 }
 
-void VideoFramePool::ReleaseUnusedVAAPIFrames() {
+void VideoFramePool<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
   MutexAutoLock lock(mSurfaceLock);
   for (const auto& surface : mDMABufSurfaces) {
     if (!surface->IsUsed()) {
@@ -90,7 +91,8 @@ void VideoFramePool::ReleaseUnusedVAAPIFrames() {
   }
 }
 
-RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
+RefPtr<VideoFrameSurface<LIBAV_VER>>
+VideoFramePool<LIBAV_VER>::GetFreeVideoFrameSurface() {
   for (auto& surface : mDMABufSurfaces) {
     if (surface->IsUsed()) {
       continue;
@@ -101,7 +103,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
   return nullptr;
 }
 
-RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
+RefPtr<VideoFrameSurface<LIBAV_VER>>
+VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
     VADRMPRIMESurfaceDescriptor& aVaDesc, AVCodecContext* aAVCodecContext,
     AVFrame* aAVFrame, FFmpegLibWrapper* aLib) {
   if (aVaDesc.fourcc != VA_FOURCC_NV12 && aVaDesc.fourcc != VA_FOURCC_YV12 &&
@@ -111,7 +114,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
   }
 
   MutexAutoLock lock(mSurfaceLock);
-  RefPtr<VideoFrameSurface> videoSurface = GetFreeVideoFrameSurface();
+  RefPtr<VideoFrameSurface<LIBAV_VER>> videoSurface =
+      GetFreeVideoFrameSurface();
   if (!videoSurface) {
     RefPtr<DMABufSurfaceYUV> surface =
         DMABufSurfaceYUV::CreateYUVSurface(aVaDesc);
@@ -119,7 +123,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       return nullptr;
     }
     FFMPEG_LOG("Created new VA-API DMABufSurface UID = %d", surface->GetUID());
-    RefPtr<VideoFrameSurface> surf = new VideoFrameSurface(surface);
+    RefPtr<VideoFrameSurface<LIBAV_VER>> surf =
+        new VideoFrameSurface<LIBAV_VER>(surface);
     if (!mTextureCreationWorks) {
       mTextureCreationWorks = Some(surface->VerifyTextureCreation());
     }
