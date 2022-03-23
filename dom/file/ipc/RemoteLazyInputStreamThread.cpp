@@ -6,6 +6,7 @@
 
 #include "RemoteLazyInputStreamThread.h"
 
+#include "ErrorList.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -239,6 +240,16 @@ RemoteLazyInputStreamThread::DispatchFromScript(nsIRunnable* aRunnable,
 NS_IMETHODIMP
 RemoteLazyInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>,
                                              uint32_t) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteLazyInputStreamThread::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteLazyInputStreamThread::UnregisterShutdownTask(nsITargetShutdownTask*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
