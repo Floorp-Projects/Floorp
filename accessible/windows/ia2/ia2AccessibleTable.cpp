@@ -11,19 +11,18 @@
 #include "AccessibleTable_i.c"
 #include "AccessibleTable2_i.c"
 
-#include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
-#include "Statistics.h"
-#include "TableAccessible.h"
-
+#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/TableAccessibleBase.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "Statistics.h"
 
 using namespace mozilla::a11y;
 
-TableAccessible* ia2AccessibleTable::TableAcc() {
-  AccessibleWrap* acc = LocalAcc();
-  return acc ? acc->AsTable() : nullptr;
+TableAccessibleBase* ia2AccessibleTable::TableAcc() {
+  Accessible* acc = Acc();
+  return acc ? acc->AsTableBase() : nullptr;
 }
 
 // IUnknown
@@ -64,14 +63,13 @@ ia2AccessibleTable::get_caption(IUnknown** aAccessible) {
   if (!aAccessible) return E_INVALIDARG;
 
   *aAccessible = nullptr;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
-  AccessibleWrap* caption = static_cast<AccessibleWrap*>(table->Caption());
+  Accessible* caption = table->Caption();
   if (!caption) return S_FALSE;
 
-  RefPtr<IAccessible> result;
-  caption->GetNativeInterface(getter_AddRefs(result));
+  RefPtr<IAccessible> result = MsaaAccessible::GetFrom(caption);
   result.forget(aAccessible);
   return S_OK;
 }
@@ -82,7 +80,7 @@ ia2AccessibleTable::get_childIndex(long aRowIdx, long aColIdx,
   if (!aChildIdx) return E_INVALIDARG;
 
   *aChildIdx = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || aColIdx < 0 ||
@@ -99,7 +97,7 @@ ia2AccessibleTable::get_columnDescription(long aColIdx, BSTR* aDescription) {
   if (!aDescription) return E_INVALIDARG;
 
   *aDescription = nullptr;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
@@ -119,7 +117,7 @@ ia2AccessibleTable::get_columnExtentAt(long aRowIdx, long aColIdx,
   if (!aSpan) return E_INVALIDARG;
 
   *aSpan = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || aColIdx < 0 ||
@@ -146,7 +144,7 @@ ia2AccessibleTable::get_columnIndex(long aCellIdx, long* aColIdx) {
   if (!aColIdx) return E_INVALIDARG;
 
   *aColIdx = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aCellIdx < 0) {
@@ -167,7 +165,7 @@ ia2AccessibleTable::get_nColumns(long* aColCount) {
   if (!aColCount) return E_INVALIDARG;
 
   *aColCount = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   *aColCount = table->ColCount();
@@ -179,7 +177,7 @@ ia2AccessibleTable::get_nRows(long* aRowCount) {
   if (!aRowCount) return E_INVALIDARG;
 
   *aRowCount = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   *aRowCount = table->RowCount();
@@ -196,7 +194,7 @@ ia2AccessibleTable::get_nSelectedColumns(long* aColCount) {
   if (!aColCount) return E_INVALIDARG;
 
   *aColCount = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   *aColCount = table->SelectedColCount();
@@ -208,7 +206,7 @@ ia2AccessibleTable::get_nSelectedRows(long* aRowCount) {
   if (!aRowCount) return E_INVALIDARG;
 
   *aRowCount = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   *aRowCount = table->SelectedRowCount();
@@ -221,7 +219,7 @@ ia2AccessibleTable::get_rowDescription(long aRowIdx, BSTR* aDescription) {
   if (!aDescription) return E_INVALIDARG;
 
   *aDescription = nullptr;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
@@ -240,7 +238,7 @@ ia2AccessibleTable::get_rowExtentAt(long aRowIdx, long aColIdx, long* aSpan) {
   if (!aSpan) return E_INVALIDARG;
 
   *aSpan = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || aColIdx < 0 ||
@@ -267,7 +265,7 @@ ia2AccessibleTable::get_rowIndex(long aCellIdx, long* aRowIdx) {
   if (!aRowIdx) return E_INVALIDARG;
 
   *aRowIdx = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aCellIdx < 0) {
@@ -290,7 +288,7 @@ ia2AccessibleTable::get_selectedChildren(long aMaxChildren, long** aChildren,
 
   *aChildren = nullptr;
   *aNChildren = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<uint32_t, 30> cellIndices;
@@ -336,7 +334,7 @@ ia2AccessibleTable::get_isColumnSelected(long aColIdx, boolean* aIsSelected) {
   if (!aIsSelected) return E_INVALIDARG;
 
   *aIsSelected = false;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
@@ -351,7 +349,7 @@ ia2AccessibleTable::get_isRowSelected(long aRowIdx, boolean* aIsSelected) {
   if (!aIsSelected) return E_INVALIDARG;
 
   *aIsSelected = false;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
@@ -367,7 +365,7 @@ ia2AccessibleTable::get_isSelected(long aRowIdx, long aColIdx,
   if (!aIsSelected) return E_INVALIDARG;
 
   *aIsSelected = false;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || aColIdx < 0 ||
@@ -381,7 +379,7 @@ ia2AccessibleTable::get_isSelected(long aRowIdx, long aColIdx,
 
 STDMETHODIMP
 ia2AccessibleTable::selectRow(long aRowIdx) {
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
@@ -393,7 +391,7 @@ ia2AccessibleTable::selectRow(long aRowIdx) {
 
 STDMETHODIMP
 ia2AccessibleTable::selectColumn(long aColIdx) {
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
@@ -405,7 +403,7 @@ ia2AccessibleTable::selectColumn(long aColIdx) {
 
 STDMETHODIMP
 ia2AccessibleTable::unselectRow(long aRowIdx) {
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
@@ -417,7 +415,7 @@ ia2AccessibleTable::unselectRow(long aRowIdx) {
 
 STDMETHODIMP
 ia2AccessibleTable::unselectColumn(long aColIdx) {
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
@@ -441,7 +439,7 @@ ia2AccessibleTable::get_rowColumnExtentsAtIndex(long aCellIdx, long* aRowIdx,
   *aRowExtents = 0;
   *aColExtents = 0;
   *aIsSelected = false;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   if (aCellIdx < 0) {
@@ -477,15 +475,13 @@ ia2AccessibleTable::get_cellAt(long aRowIdx, long aColIdx, IUnknown** aCell) {
 
   *aCell = nullptr;
 
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
-  AccessibleWrap* cell =
-      static_cast<AccessibleWrap*>(table->CellAt(aRowIdx, aColIdx));
+  Accessible* cell = table->CellAt(aRowIdx, aColIdx);
   if (!cell) return E_INVALIDARG;
 
-  RefPtr<IAccessible> result;
-  cell->GetNativeInterface(getter_AddRefs(result));
+  RefPtr<IAccessible> result = MsaaAccessible::GetFrom(cell);
   result.forget(aCell);
   return S_OK;
 }
@@ -495,7 +491,7 @@ ia2AccessibleTable::get_nSelectedCells(long* aCellCount) {
   if (!aCellCount) return E_INVALIDARG;
 
   *aCellCount = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   *aCellCount = table->SelectedCellCount();
@@ -509,7 +505,7 @@ ia2AccessibleTable::get_selectedCells(IUnknown*** aCells,
 
   *aCells = nullptr;
   *aNSelectedCells = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<Accessible*, 30> cells;
@@ -535,7 +531,7 @@ ia2AccessibleTable::get_selectedColumns(long** aColumns, long* aNColumns) {
 
   *aColumns = nullptr;
   *aNColumns = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<uint32_t, 30> colIndices;
@@ -557,7 +553,7 @@ ia2AccessibleTable::get_selectedRows(long** aRows, long* aNRows) {
 
   *aRows = nullptr;
   *aNRows = 0;
-  TableAccessible* table = TableAcc();
+  TableAccessibleBase* table = TableAcc();
   if (!table) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<uint32_t, 30> rowIndices;
