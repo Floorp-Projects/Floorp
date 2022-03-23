@@ -479,6 +479,7 @@ void HTMLCanvasElement::Destroy() {
   if (mOffscreenDisplay) {
     mOffscreenDisplay->Destroy();
     mOffscreenDisplay = nullptr;
+    mImageContainer = nullptr;
   }
 
   if (mContextObserver) {
@@ -1198,6 +1199,11 @@ void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
 }
 
 void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
+  // Cache the current ImageContainer to avoid contention on the mutex.
+  if (mOffscreenDisplay) {
+    mImageContainer = mOffscreenDisplay->GetImageContainer();
+  }
+
   // We don't need to flush anything here; if there's no frame or if
   // we plan to reframe we don't need to invalidate it anyway.
   nsIFrame* frame = GetPrimaryFrame();
@@ -1271,8 +1277,9 @@ bool HTMLCanvasElement::GetOpaqueAttr() {
 }
 
 CanvasContextType HTMLCanvasElement::GetCurrentContextType() {
-  if (mOffscreenDisplay) {
-    return mOffscreenDisplay->GetContextType();
+  if (mCurrentContextType == CanvasContextType::NoContext &&
+      mOffscreenDisplay) {
+    mCurrentContextType = mOffscreenDisplay->GetContextType();
   }
   return mCurrentContextType;
 }
@@ -1469,13 +1476,6 @@ webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
   }
 
   return static_cast<webgpu::CanvasContext*>(GetCurrentContext());
-}
-
-RefPtr<ImageContainer> HTMLCanvasElement::GetImageContainer() {
-  if (mOffscreenDisplay) {
-    return mOffscreenDisplay->GetImageContainer();
-  }
-  return nullptr;
 }
 
 }  // namespace mozilla::dom
