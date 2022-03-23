@@ -38,6 +38,7 @@ nsWifiMonitor::nsWifiMonitor()
 NS_IMETHODIMP
 nsWifiMonitor::Observe(nsISupports* subject, const char* topic,
                        const char16_t* data) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!strcmp(topic, "xpcom-shutdown")) {
     LOG(("Shutting down\n"));
 
@@ -54,7 +55,9 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
        mThread.get(), aListener));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!aListener) return NS_ERROR_NULL_POINTER;
+  if (!aListener) {
+    return NS_ERROR_NULL_POINTER;
+  }
   if (!mKeepGoing) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -73,7 +76,9 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
 
   if (!mThread) {
     rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread), this);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   mListeners.AppendElement(
@@ -90,7 +95,9 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener* aListener) {
        mThread.get(), aListener));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!aListener) return NS_ERROR_NULL_POINTER;
+  if (!aListener) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
