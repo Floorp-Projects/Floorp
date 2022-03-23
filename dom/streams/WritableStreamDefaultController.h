@@ -84,8 +84,8 @@ class WritableStreamDefaultController final : public nsISupports,
     mStrategySizeAlgorithm = aStrategySizeAlgorithm;
   }
 
-  UnderlyingSinkAlgorithms* GetAlgorithms() { return mAlgorithms; }
-  void SetAlgorithms(UnderlyingSinkAlgorithms* aAlgorithms) {
+  UnderlyingSinkAlgorithmsBase* GetAlgorithms() { return mAlgorithms; }
+  void SetAlgorithms(UnderlyingSinkAlgorithmsBase* aAlgorithms) {
     mAlgorithms = aAlgorithms;
   }
 
@@ -128,14 +128,14 @@ class WritableStreamDefaultController final : public nsISupports,
   double mStrategyHWM = 0.0;
 
   RefPtr<QueuingStrategySize> mStrategySizeAlgorithm;
-  RefPtr<UnderlyingSinkAlgorithms> mAlgorithms;
+  RefPtr<UnderlyingSinkAlgorithmsBase> mAlgorithms;
   RefPtr<WritableStream> mStream;
 };
 
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
-    UnderlyingSinkAlgorithms* aSinkCallbacks, double aHighWaterMark,
+    UnderlyingSinkAlgorithmsBase* aSinkCallbacks, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
