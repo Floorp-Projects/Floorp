@@ -1692,7 +1692,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
   switch (aProgress) {
     case JS::GC_CYCLE_BEGIN: {
       // Prevent cycle collections and shrinking during incremental GC.
-      sScheduler.NoteGCBegin(aDesc.reason_);
+      sScheduler.NoteGCBegin();
       sCurrentGCStartTime = TimeStamp::Now();
       break;
     }
