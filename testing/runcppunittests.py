@@ -272,8 +272,8 @@ def extract_unittests_from_args(args, environ, manifest_path):
             else:
                 tests.append((os.path.abspath(p), 1))
 
-    # we skip the existence check here because not all tests are built
-    # for all platforms (and it will fail on Windows anyway)
+    # We don't use the manifest parser's existence-check only because it will
+    # fail on Windows due to the `.exe` suffix.
     active_tests = mp.active_tests(exists=False, disabled=False, **environ)
     suffix = ".exe" if mozinfo.isWin else ""
     if binary_path:
@@ -294,16 +294,18 @@ def extract_unittests_from_args(args, environ, manifest_path):
             ]
         )
 
-    # skip and warn for any tests in the manifest that are not found
-    final_tests = []
+    # Manually confirm that all tests named in the manifest exist.
+    errors = False
     log = mozlog.get_default_logger()
     for test in tests:
-        if os.path.isfile(test[0]):
-            final_tests.append(test)
-        else:
-            log.warning("test file not found: %s - skipped" % test[0])
+        if not os.path.isfile(test[0]):
+            errors = True
+            log.error("test file not found: %s" % test[0])
 
-    return final_tests
+    if errors:
+        raise RuntimeError("One or more cppunittests not found; aborting.")
+
+    return tests
 
 
 def update_mozinfo():
