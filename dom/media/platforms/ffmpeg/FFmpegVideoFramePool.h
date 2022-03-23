@@ -7,22 +7,52 @@
 #ifndef __FFmpegVideoFramePool_h__
 #define __FFmpegVideoFramePool_h__
 
+#include "FFmpegVideoDecoder.h"
+#include "FFmpegLibWrapper.h"
+
 #include "mozilla/layers/DMABUFSurfaceImage.h"
 #include "mozilla/widget/DMABufLibWrapper.h"
 #include "mozilla/widget/DMABufSurface.h"
 
 namespace mozilla {
 
-// VideoFrameSurface holds a reference to GPU data with a video frame.
+class VideoFramePool;
+class VideoFrameSurfaceVAAPI;
+
+class VideoFrameSurface {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameSurface)
+
+  VideoFrameSurface() = default;
+
+  virtual VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() { return nullptr; }
+
+  virtual void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) = 0;
+  virtual void SetColorRange(gfx::ColorRange aColorRange) = 0;
+
+  virtual RefPtr<DMABufSurfaceYUV> GetDMABufSurface() { return nullptr; };
+  virtual RefPtr<layers::Image> GetAsImage() = 0;
+
+  // Don't allow VideoFrameSurface plain copy as it leads to
+  // unexpected DMABufSurface/HW buffer releases and we don't want to
+  // deep copy them.
+  VideoFrameSurface(const VideoFrameSurface&) = delete;
+  const VideoFrameSurface& operator=(VideoFrameSurface const&) = delete;
+
+ protected:
+  virtual ~VideoFrameSurface(){};
+};
+
+// VideoFrameSurfaceVAAPI holds a reference to GPU data with a video frame.
 //
 // Actual GPU pixel data are stored at DMABufSurface and
 // DMABufSurface is passed to gecko GL rendering pipeline via.
 // DMABUFSurfaceImage.
 //
-// VideoFrameSurface can optionally hold VA-API ffmpeg related data to keep
+// VideoFrameSurfaceVAAPI can optionally hold VA-API ffmpeg related data to keep
 // GPU data locked untill we need them.
 //
-// VideoFrameSurface is used for both HW accelerated video decoding
+// VideoFrameSurfaceVAAPI is used for both HW accelerated video decoding
 // (VA-API) and ffmpeg SW decoding.
 //
 // VA-API scenario
@@ -42,24 +72,13 @@ namespace mozilla {
 // Unfortunately there isn't any obvious way how to mark particular VASurface
 // as used. The best we can do is to hold a reference to particular AVBuffer
 // from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
-template <int V>
-class VideoFrameSurface {};
-template <>
-class VideoFrameSurface<LIBAV_VER>;
-
-template <int V>
-class VideoFramePool {};
-template <>
-class VideoFramePool<LIBAV_VER>;
-
-template <>
-class VideoFrameSurface<LIBAV_VER> {
-  friend class VideoFramePool<LIBAV_VER>;
+class VideoFrameSurfaceVAAPI final : public VideoFrameSurface {
+  friend class VideoFramePool;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameSurface)
+  explicit VideoFrameSurfaceVAAPI(DMABufSurface* aSurface);
 
-  explicit VideoFrameSurface(DMABufSurface* aSurface);
+  VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() final { return this; }
 
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mSurface->GetAsDMABufSurfaceYUV()->SetYUVColorSpace(aColorSpace);
@@ -73,12 +92,6 @@ class VideoFrameSurface<LIBAV_VER> {
   };
 
   RefPtr<layers::Image> GetAsImage();
-
-  // Don't allow VideoFrameSurface plain copy as it leads to
-  // unexpected DMABufSurface/HW buffer releases and we don't want to
-  // deep copy them.
-  VideoFrameSurface(const VideoFrameSurface&) = delete;
-  const VideoFrameSurface& operator=(VideoFrameSurface const&) = delete;
 
  protected:
   // Lock VAAPI related data
@@ -94,7 +107,7 @@ class VideoFrameSurface<LIBAV_VER> {
   void MarkAsUsed() { mSurface->GlobalRefAdd(); }
 
  private:
-  virtual ~VideoFrameSurface();
+  virtual ~VideoFrameSurfaceVAAPI();
 
   const RefPtr<DMABufSurface> mSurface;
   const FFmpegLibWrapper* mLib;
@@ -103,24 +116,23 @@ class VideoFrameSurface<LIBAV_VER> {
 };
 
 // VideoFramePool class is thread-safe.
-template <>
-class VideoFramePool<LIBAV_VER> {
+class VideoFramePool final {
  public:
   VideoFramePool();
   ~VideoFramePool();
 
-  RefPtr<VideoFrameSurface<LIBAV_VER>> GetVideoFrameSurface(
+  RefPtr<VideoFrameSurface> GetVideoFrameSurface(
       VADRMPRIMESurfaceDescriptor& aVaDesc, AVCodecContext* aAVCodecContext,
       AVFrame* aAVFrame, FFmpegLibWrapper* aLib);
   void ReleaseUnusedVAAPIFrames();
 
  private:
-  RefPtr<VideoFrameSurface<LIBAV_VER>> GetFreeVideoFrameSurface();
+  RefPtr<VideoFrameSurface> GetFreeVideoFrameSurface();
 
  private:
   // Protect mDMABufSurfaces pool access
   Mutex mSurfaceLock MOZ_UNANNOTATED;
-  nsTArray<RefPtr<VideoFrameSurface<LIBAV_VER>>> mDMABufSurfaces;
+  nsTArray<RefPtr<VideoFrameSurfaceVAAPI>> mDMABufSurfaces;
   // We may fail to create texture over DMABuf memory due to driver bugs so
   // check that before we export first DMABuf video frame.
   Maybe<bool> mTextureCreationWorks;

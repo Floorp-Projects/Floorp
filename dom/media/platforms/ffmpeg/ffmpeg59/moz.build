@@ -30,9 +30,6 @@ if CONFIG["MOZ_WAYLAND"]:
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
     DEFINES["MOZ_WAYLAND_USE_VAAPI"] = 1
     USE_LIBS += ["mozva"]
-    UNIFIED_SOURCES += [
-        "../FFmpegVideoFramePool.cpp",
-    ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
