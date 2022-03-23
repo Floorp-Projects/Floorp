@@ -86,6 +86,7 @@ class EditorSpellCheck final : public nsIEditorSpellCheck {
 
   nsresult DictionaryFetched(DictionaryFetcher* aFetchState);
 
+  void SetDictionarySucceeded(DictionaryFetcher* aFetcher);
   void SetFallbackDictionary(DictionaryFetcher* aFetcher);
 
  public:
