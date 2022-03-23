@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ARIAMap.h"
+#include "CachedTableAccessible.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
@@ -17,6 +18,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
@@ -47,6 +49,10 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
       GetAccService()->GetCachedXPCDocument(Document());
   if (xpcDoc) {
     xpcDoc->NotifyOfShutdown(static_cast<Derived*>(this));
+  }
+
+  if (IsTable() || IsTableCell()) {
+    CachedTableAccessible::Invalidate(this);
   }
 
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc accessibles
@@ -618,6 +624,16 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     if (RefPtr<nsAtom> display = DisplayStyle()) {
       attributes->SetAttribute(nsGkAtoms::display, display);
     }
+
+    if (TableCellAccessibleBase* cell = AsTableCellBase()) {
+      TableAccessibleBase* table = cell->Table();
+      uint32_t row = cell->RowIdx();
+      uint32_t col = cell->ColIdx();
+      int32_t cellIdx = table->CellIndexAt(row, col);
+      if (cellIdx != -1) {
+        attributes->SetAttribute(nsGkAtoms::tableCellIndex, cellIdx);
+      }
+    }
   }
 
   return attributes.forget();
@@ -947,6 +963,24 @@ void RemoteAccessibleBase<Derived>::TakeSelection() {
 template <class Derived>
 void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
   Unused << mDoc->SendSetSelected(mID, aSelect);
+}
+
+template <class Derived>
+TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  if (IsTable()) {
+    return CachedTableAccessible::GetFrom(this);
+  }
+  return nullptr;
+}
+
+template <class Derived>
+TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  if (IsTableCell()) {
+    return CachedTableCellAccessible::GetFrom(this);
+  }
+  return nullptr;
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;
