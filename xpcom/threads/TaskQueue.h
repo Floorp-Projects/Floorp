@@ -14,7 +14,6 @@
 #include "mozilla/Queue.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
-#include "nsIDelayedRunnableObserver.h"
 #include "nsIDirectTaskDispatcher.h"
 #include "nsThreadUtils.h"
 
@@ -47,9 +46,7 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue : public AbstractThread,
-                  public nsIDirectTaskDispatcher,
-                  public nsIDelayedRunnableObserver {
+class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   class EventTargetWrapper;
 
  public:
@@ -92,10 +89,8 @@ class TaskQueue : public AbstractThread,
   // So we can access nsIEventTarget::Dispatch(nsIRunnable*, uint32_t aFlags)
   using nsIEventTarget::Dispatch;
 
-  // nsIDelayedRunnableObserver
-  void OnDelayedRunnableCreated(DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableRan(DelayedRunnable* aRunnable) override;
+  NS_IMETHOD RegisterShutdownTask(nsITargetShutdownTask* aTask) override;
+  NS_IMETHOD UnregisterShutdownTask(nsITargetShutdownTask* aTask) override;
 
   using CancelPromise = MozPromise<bool, bool, false>;
 
@@ -137,11 +132,6 @@ class TaskQueue : public AbstractThread,
   nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable, uint32_t aFlags,
                           DispatchReason aReason = NormalDispatch);
 
-  RefPtr<CancelPromise> CancelDelayedRunnablesLocked();
-
-  // Cancels any scheduled DelayedRunnables on this TaskQueue.
-  void CancelDelayedRunnablesImpl();
-
   void MaybeResolveShutdown() {
     mQueueMonitor.AssertCurrentThreadOwns();
     if (mIsShutdown && !mIsRunning) {
@@ -152,8 +142,8 @@ class TaskQueue : public AbstractThread,
 
   nsCOMPtr<nsIEventTarget> mTarget;
 
-  // Monitor that protects the queue, mIsRunning and
-  // mDelayedRunnablesCancelPromise;
+  // Monitor that protects the queue, mIsRunning, mIsShutdown and
+  // mShutdownTasks;
   Monitor mQueueMonitor MOZ_UNANNOTATED;
 
   typedef struct TaskStruct {
@@ -164,17 +154,8 @@ class TaskQueue : public AbstractThread,
   // Queue of tasks to run.
   Queue<TaskStruct> mTasks;
 
-  // DelayedRunnables (from DelayedDispatch) that are managed by their
-  // respective timers, but have not yet run. Accessed only on this
-  // TaskQueue.
-  nsTArray<RefPtr<DelayedRunnable>> mScheduledDelayedRunnables;
-
-  // Manages resolving mDelayedRunnablesCancelPromise.
-  MozPromiseHolder<CancelPromise> mDelayedRunnablesCancelHolder;
-
-  // Set once the task to cancel all pending DelayedRunnables has been
-  // dispatched. Guarded by mQueueMonitor.
-  RefPtr<CancelPromise> mDelayedRunnablesCancelPromise;
+  // List of tasks to run during shutdown.
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks;
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread

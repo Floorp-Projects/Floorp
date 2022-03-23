@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsStreamTransportService.h"
+#include "ErrorList.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
@@ -295,6 +296,16 @@ nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable> task,
 NS_IMETHODIMP
 nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                           uint32_t aDelayMs) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStreamTransportService::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStreamTransportService::UnregisterShutdownTask(nsITargetShutdownTask*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

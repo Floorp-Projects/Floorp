@@ -34,14 +34,12 @@ MOZ_THREAD_LOCAL(AbstractThread*) AbstractThread::sCurrentThreadTLS;
 
 class XPCOMThreadWrapper final : public AbstractThread,
                                  public nsIThreadObserver,
-                                 public nsIDirectTaskDispatcher,
-                                 public nsIDelayedRunnableObserver {
+                                 public nsIDirectTaskDispatcher {
  public:
   XPCOMThreadWrapper(nsIThreadInternal* aThread, bool aRequireTailDispatch,
                      bool aOnThread)
       : AbstractThread(aRequireTailDispatch),
         mThread(aThread),
-        mDelayedRunnableObserver(do_QueryInterface(mThread)),
         mDirectTaskDispatcher(do_QueryInterface(aThread)),
         mOnThread(aOnThread) {
     MOZ_DIAGNOSTIC_ASSERT(mThread && mDirectTaskDispatcher);
@@ -96,6 +94,14 @@ class XPCOMThreadWrapper final : public AbstractThread,
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
   using AbstractThread::Dispatch;
+
+  NS_IMETHOD RegisterShutdownTask(nsITargetShutdownTask* aTask) override {
+    return mThread->RegisterShutdownTask(aTask);
+  }
+
+  NS_IMETHOD UnregisterShutdownTask(nsITargetShutdownTask* aTask) override {
+    return mThread->UnregisterShutdownTask(aTask);
+  }
 
   bool IsCurrentThreadIn() const override {
     return mThread->IsOnCurrentThread();
@@ -164,22 +170,8 @@ class XPCOMThreadWrapper final : public AbstractThread,
     return mDirectTaskDispatcher->HaveDirectTasks(aResult);
   }
 
-  //-----------------------------------------------------------------------------
-  // nsIDelayedRunnableObserver
-  //-----------------------------------------------------------------------------
-  void OnDelayedRunnableCreated(DelayedRunnable* aRunnable) override {
-    mDelayedRunnableObserver->OnDelayedRunnableCreated(aRunnable);
-  }
-  void OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) override {
-    mDelayedRunnableObserver->OnDelayedRunnableScheduled(aRunnable);
-  }
-  void OnDelayedRunnableRan(DelayedRunnable* aRunnable) override {
-    mDelayedRunnableObserver->OnDelayedRunnableRan(aRunnable);
-  }
-
  private:
   const RefPtr<nsIThreadInternal> mThread;
-  const nsCOMPtr<nsIDelayedRunnableObserver> mDelayedRunnableObserver;
   const nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher;
   std::unique_ptr<AutoTaskDispatcher> mTailDispatcher;
   const bool mOnThread;
@@ -240,8 +232,6 @@ class XPCOMThreadWrapper final : public AbstractThread,
 NS_INTERFACE_MAP_BEGIN(XPCOMThreadWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIThreadObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDirectTaskDispatcher)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDelayedRunnableObserver,
-                                     mDelayedRunnableObserver)
 NS_INTERFACE_MAP_END_INHERITING(AbstractThread)
 
 NS_IMPL_ADDREF_INHERITED(XPCOMThreadWrapper, AbstractThread)

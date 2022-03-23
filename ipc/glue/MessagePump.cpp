@@ -58,7 +58,7 @@ class DoWorkRunnable final : public CancelableRunnable,
 } /* namespace ipc */
 } /* namespace mozilla */
 
-MessagePump::MessagePump(nsIEventTarget* aEventTarget)
+MessagePump::MessagePump(nsISerialEventTarget* aEventTarget)
     : mEventTarget(aEventTarget) {
   mDoWorkEvent = new DoWorkRunnable(this);
 }
@@ -163,13 +163,13 @@ void MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime) {
                                       nsITimer::TYPE_ONE_SHOT);
 }
 
-nsIEventTarget* MessagePump::GetXPCOMThread() {
+nsISerialEventTarget* MessagePump::GetXPCOMThread() {
   if (mEventTarget) {
     return mEventTarget;
   }
 
   // Main thread
-  return GetMainThreadEventTarget();
+  return GetMainThreadSerialEventTarget();
 }
 
 void MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate) {
