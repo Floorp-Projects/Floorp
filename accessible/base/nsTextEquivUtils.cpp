@@ -105,6 +105,26 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
 nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
                                                           nsAString* aString) {
   if (aContent->IsText()) {
+    bool isHTMLBlock = false;
+
+    nsIContent* parentContent = aContent->GetFlattenedTreeParent();
+    if (parentContent) {
+      nsIFrame* frame = parentContent->GetPrimaryFrame();
+      if (frame) {
+        // If this text is inside a block level frame (as opposed to span
+        // level), we need to add spaces around that block's text, so we don't
+        // get words jammed together in final name.
+        const nsStyleDisplay* display = frame->StyleDisplay();
+        if (display->IsBlockOutsideStyle() ||
+            display->mDisplay == StyleDisplay::TableCell) {
+          isHTMLBlock = true;
+          if (!aString->IsEmpty()) {
+            aString->Append(char16_t(' '));
+          }
+        }
+      }
+    }
+
     if (aContent->TextLength() > 0) {
       nsIFrame* frame = aContent->GetPrimaryFrame();
       if (frame) {
@@ -115,6 +135,9 @@ nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
       } else {
         // If aContent is an object that is display: none, we have no a frame.
         aContent->GetAsText()->AppendTextTo(*aString);
+      }
+      if (isHTMLBlock && !aString->IsEmpty()) {
+        aString->Append(char16_t(' '));
       }
     }
 
@@ -161,27 +184,10 @@ nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
 nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
                                                 nsAString* aString) {
   // XXX: is it necessary to care the accessible is not a document?
-  bool isHTMLBlock = false;
   if (aAccessible->IsLocal() && aAccessible->AsLocal()->IsContent()) {
-    nsIContent* content = aAccessible->AsLocal()->GetContent();
-    nsresult rv = AppendTextEquivFromTextContent(content, aString);
+    nsresult rv = AppendTextEquivFromTextContent(
+        aAccessible->AsLocal()->GetContent(), aString);
     if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED) return rv;
-    if (!content->IsText()) {
-      nsIFrame* frame = content->GetPrimaryFrame();
-      if (frame) {
-        // If this is a block level frame (as opposed to span level), we need to
-        // add spaces around that block's text, so we don't get words jammed
-        // together in final name.
-        const nsStyleDisplay* display = frame->StyleDisplay();
-        if (display->IsBlockOutsideStyle() ||
-            display->mDisplay == StyleDisplay::TableCell) {
-          isHTMLBlock = true;
-          if (!aString->IsEmpty()) {
-            aString->Append(char16_t(' '));
-          }
-        }
-      }
-    }
   }
 
   bool isEmptyTextEquiv = true;
@@ -214,15 +220,9 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   // Implementation of h. step
   if (isEmptyTextEquiv && !text.IsEmpty()) {
     AppendString(aString, text);
-    if (isHTMLBlock) {
-      aString->Append(char16_t(' '));
-    }
     return NS_OK;
   }
 
-  if (!isEmptyTextEquiv && isHTMLBlock) {
-    aString->Append(char16_t(' '));
-  }
   return rv;
 }
 
