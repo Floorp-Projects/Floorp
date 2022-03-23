@@ -2,8 +2,7 @@
 libpref is a generic key/value store that is used to implement *prefs*, a term
 that encompasses a variety of things.
 
-- Feature enable/disable flags (e.g. `dom.IntersectionObserver.enabled`,
-  `xpinstall.signatures.required`).
+- Feature enable/disable flags (e.g. `xpinstall.signatures.required`).
 - User preferences (e.g. things set from `about:preferences`)
 - Internal application parameters (e.g.
   `javascript.options.mem.nursery.max_kb`).

@@ -2496,16 +2496,6 @@
   value: true
   mirror: always
 
-- name: dom.IntersectionObserver.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: dom.IntersectionObserverExplicitDocumentRoot.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.ipc.cancel_content_js_when_navigating
   type: bool
   value: true
