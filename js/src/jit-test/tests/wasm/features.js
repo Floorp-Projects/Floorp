@@ -36,11 +36,6 @@ let nightlyOnlyFeatures = [
     )`
   ],
   [
-    'exceptions',
-    wasmExceptionsEnabled(),
-    `(module (type (func)) (tag (type 0)))`
-  ],
-  [
     'function-references',
     wasmFunctionReferencesEnabled(),
     `(module (func (param (ref extern))))`
@@ -83,6 +78,11 @@ for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
 
 let releasedFeatures = [
   ['threads', wasmThreadsEnabled(), `(module (memory 1 1 shared))`],
+  [
+    'exceptions',
+    wasmExceptionsEnabled(),
+    `(module (type (func)) (tag (type 0)))`
+  ],
 ];
 
 for (let [name, enabled, test] of releasedFeatures) {
