@@ -59,6 +59,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=cubeb");
     if windows {
         println!("cargo:rustc-link-lib=dylib=avrt");
+        println!("cargo:rustc-link-lib=dylib=ksuser");
         println!("cargo:rustc-link-lib=dylib=ole32");
         println!("cargo:rustc-link-lib=dylib=user32");
         println!("cargo:rustc-link-lib=dylib=winmm");

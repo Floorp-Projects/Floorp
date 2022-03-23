@@ -22,7 +22,8 @@ pub fn init<T: Into<Vec<u8>>>(ctx_name: T) -> Result<Context> {
                     handle,
                     "Requested backend `{}', got `{}'",
                     backend, ctx_backend
-                ).unwrap();
+                )
+                .unwrap();
             }
         }
     }

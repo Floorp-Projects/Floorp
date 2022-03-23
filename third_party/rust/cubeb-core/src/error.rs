@@ -1,7 +1,7 @@
 use ffi;
-use std::{error, fmt};
 use std::ffi::NulError;
 use std::os::raw::c_int;
+use std::{error, fmt};
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -26,6 +26,7 @@ pub struct Error {
 }
 
 impl Error {
+    #[allow(clippy::self_named_constructors)]
     pub fn error() -> Self {
         Error {
             code: ErrorCode::Error,
@@ -52,7 +53,7 @@ impl Error {
         }
     }
 
-    pub unsafe fn from_raw(code: c_int) -> Error {
+    pub fn from_raw(code: c_int) -> Error {
         let code = match code {
             ffi::CUBEB_ERROR_INVALID_FORMAT => ErrorCode::InvalidFormat,
             ffi::CUBEB_ERROR_INVALID_PARAMETER => ErrorCode::InvalidParameter,
@@ -62,7 +63,7 @@ impl Error {
             _ => ErrorCode::Error,
         };
 
-        Error { code: code }
+        Error { code }
     }
 
     pub fn code(&self) -> ErrorCode {
@@ -100,19 +101,19 @@ impl error::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{:?}", self)
     }
 }
 
 impl From<ErrorCode> for Error {
     fn from(code: ErrorCode) -> Error {
-        Error { code: code }
+        Error { code }
     }
 }
 
 impl From<NulError> for Error {
     fn from(_: NulError) -> Error {
-        unsafe { Error::from_raw(ffi::CUBEB_ERROR) }
+        Error::from_raw(ffi::CUBEB_ERROR)
     }
 }
 
@@ -126,7 +127,7 @@ mod tests {
         macro_rules! test {
             ( $($raw:ident => $err:ident),* ) => {{
                 $(
-                    let e = unsafe { Error::from_raw(ffi::$raw) };
+                    let e = Error::from_raw(ffi::$raw);
                     assert_eq!(e.raw_code(), ffi::$raw);
                     assert_eq!(e.code(), ErrorCode::$err);
                 )*

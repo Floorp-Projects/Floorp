@@ -39,7 +39,7 @@ The tests that may affect others are marked `#[ignore]`.
 They will be run by `cargo test ... -- --ignored ...`
 after finishing normal tests.
 Most of the tests are executed in `run_tests.sh`.
-Only those tests commented with *FIXIT* are left.
+Only those tests commented with *FIXME* are left.
 
 ### Git Hooks
 
