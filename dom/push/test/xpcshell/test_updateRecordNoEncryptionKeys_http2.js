@@ -7,10 +7,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
 
-XPCOMUtils.defineLazyGetter(this, "serverPort", function() {
-  return httpServer.identity.primaryPort;
-});
-
 function listenHandler(metadata, response) {
   Assert.ok(true, "Start listening");
   httpServer.stop(do_test_finished);
