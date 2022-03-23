@@ -170,34 +170,116 @@ GMPInstallManager.prototype = {
 
   /**
    * Records telemetry results on if fetching update.xml from Balrog succeeded
-   * and the method that was used to verify the response from Balrog.
+   * when content signature was used to verify the response from Balrog.
    * @param didGetAddonList
    *        A boolean indicating if an update.xml containing the addon list was
    *        successfully fetched (true) or not (false).
-   * @param checkContentSignature
-   *        If the update.xml response was verified using a content signature.
-   *        If this is false, then it's assumed that response was
-   *        verified using cert pinning.
+   * @param err
+   *        The error that was thrown (if it exists) for the failure case. This
+   *        is expected to have a addonCheckerErr member which provides further
+   *        information on why the addon checker failed.
    */
-  recordUpdateXmlTelemetry(didGetAddonList, checkContentSignature) {
-    let log = getScopedLogger("GMPInstallManager.recordUpdateXmlTelemetry");
-
+  recordUpdateXmlTelemetryForContentSignature(didGetAddonList, err = null) {
+    let log = getScopedLogger(
+      "GMPInstallManager.recordUpdateXmlTelemetryForContentSignature"
+    );
     try {
       let updateResultHistogram = Services.telemetry.getHistogramById(
         "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
       );
 
+      // The non-glean telemetry used here will be removed in future and just
+      // the glean data will be gathered.
       if (didGetAddonList) {
-        if (checkContentSignature) {
-          updateResultHistogram.add("content_sig_ok");
-        } else {
-          updateResultHistogram.add("cert_pinning_ok");
-        }
-      } else if (checkContentSignature) {
-        updateResultHistogram.add("content_sig_fail");
-      } else {
-        updateResultHistogram.add("cert_pinning_fail");
+        updateResultHistogram.add("content_sig_ok");
+        Glean.gmp.updateXmlFetchResult.content_sig_success.add(1);
+        return;
       }
+      // All remaining cases are failure cases.
+      updateResultHistogram.add("content_sig_fail");
+      if (!err?.addonCheckerErr) {
+        // Unknown error case. If this is happening we should audit error paths
+        // to identify why we're not getting an error, or not getting it
+        // labelled.
+        Glean.gmp.updateXmlFetchResult.content_sig_unknown_error.add(1);
+        return;
+      }
+      const errorToHistogramMap = {
+        [ProductAddonChecker.NETWORK_REQUEST_ERR]:
+          "content_sig_net_request_error",
+        [ProductAddonChecker.NETWORK_TIMEOUT_ERR]: "content_sig_net_timeout",
+        [ProductAddonChecker.ABORT_ERR]: "content_sig_abort",
+        [ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR]:
+          "content_sig_missing_data",
+        [ProductAddonChecker.VERIFICATION_FAILED_ERR]: "content_sig_failed",
+        [ProductAddonChecker.VERIFICATION_INVALID_ERR]: "content_sig_invalid",
+        [ProductAddonChecker.XML_PARSE_ERR]: "content_sig_xml_parse_error",
+      };
+      let metricID =
+        errorToHistogramMap[err.addonCheckerErr] ?? "content_sig_unknown_error";
+      let metric = Glean.gmp.updateXmlFetchResult[metricID];
+      metric.add(1);
+    } catch (e) {
+      // We don't expect this path to be hit, but we don't want telemetry
+      // failures to break GMP updates, so catch any issues here and let the
+      // update machinery continue.
+      log.error(
+        `Failed to record telemetry result of getProductAddonList, got error: ${e}`
+      );
+    }
+  },
+
+  /**
+   * Records telemetry results on if fetching update.xml from Balrog succeeded
+   * when cert pinning was used to verify the response from Balrog. This
+   * should be removed once we're no longer using cert pinning.
+   * @param didGetAddonList
+   *        A boolean indicating if an update.xml containing the addon list was
+   *        successfully fetched (true) or not (false).
+   * @param err
+   *        The error that was thrown (if it exists) for the failure case. This
+   *        is expected to have a addonCheckerErr member which provides further
+   *        information on why the addon checker failed.
+   */
+  recordUpdateXmlTelemetryForCertPinning(didGetAddonList, err = null) {
+    let log = getScopedLogger(
+      "GMPInstallManager.recordUpdateXmlTelemetryForCertPinning"
+    );
+    try {
+      let updateResultHistogram = Services.telemetry.getHistogramById(
+        "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+      );
+
+      // The non-glean telemetry used here will be removed in future and just
+      // the glean data will be gathered.
+      if (didGetAddonList) {
+        updateResultHistogram.add("cert_pinning_ok");
+        Glean.gmp.updateXmlFetchResult.cert_pin_success.add(1);
+        return;
+      }
+      // All remaining cases are failure cases.
+      updateResultHistogram.add("cert_pinning_fail");
+      if (!err?.addonCheckerErr) {
+        // Unknown error case. If this is happening we should audit error paths
+        // to identify why we're not getting an error, or not getting it
+        // labelled.
+        Glean.gmp.updateXmlFetchResult.cert_pin_unknown_error.add(1);
+        return;
+      }
+      const errorToHistogramMap = {
+        [ProductAddonChecker.NETWORK_REQUEST_ERR]: "cert_pin_net_request_error",
+        [ProductAddonChecker.NETWORK_TIMEOUT_ERR]: "cert_pin_net_timeout",
+        [ProductAddonChecker.ABORT_ERR]: "cert_pin_abort",
+        [ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR]:
+          "cert_pin_missing_data",
+        [ProductAddonChecker.VERIFICATION_FAILED_ERR]: "cert_pin_failed",
+        [ProductAddonChecker.VERIFICATION_INVALID_ERR]: "cert_pin_invalid",
+        [ProductAddonChecker.XML_PARSE_ERR]: "cert_pin_xml_parse_error",
+      };
+      let metricID =
+        errorToHistogramMap[err.addonCheckerErr] ?? "cert_pin_unknown_error";
+      let metric = Glean.gmp.updateXmlFetchResult[metricID];
+      metric.add(1);
     } catch (e) {
       // We don't expect this path to be hit, but we don't want telemetry
       // failures to break GMP updates, so catch any issues here and let the
@@ -270,11 +352,19 @@ GMPInstallManager.prototype = {
       checkContentSignature
     )
       .then(res => {
-        this.recordUpdateXmlTelemetry(true, checkContentSignature);
+        if (checkContentSignature) {
+          this.recordUpdateXmlTelemetryForContentSignature(true);
+        } else {
+          this.recordUpdateXmlTelemetryForCertPinning(true);
+        }
         return res;
       })
-      .catch(() => {
-        this.recordUpdateXmlTelemetry(false, checkContentSignature);
+      .catch(err => {
+        if (checkContentSignature) {
+          this.recordUpdateXmlTelemetryForContentSignature(false, err);
+        } else {
+          this.recordUpdateXmlTelemetryForCertPinning(false, err);
+        }
         return downloadLocalConfig();
       });
 

@@ -154,6 +154,10 @@ add_task(async function test_missing_content_signature_header() {
   } catch (e) {
     Assert.ok(true, "Should fail to get addon list");
     Assert.equal(
+      e.addonCheckerErr,
+      ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR
+    );
+    Assert.equal(
       e.message,
       "Content signature validation failed: missing content signature header"
     );
@@ -172,6 +176,10 @@ add_task(async function test_incomplete_content_signature_header() {
   } catch (e) {
     Assert.ok(true, "Should fail to get addon list");
     Assert.equal(
+      e.addonCheckerErr,
+      ProductAddonChecker.VERIFICATION_MISSING_DATA_ERR
+    );
+    Assert.equal(
       e.message,
       "Content signature validation failed: missing signature"
     );
@@ -189,6 +197,10 @@ add_task(async function test_bad_x5u_content_signature_header() {
     Assert.ok(false, "Should fail to get addon list");
   } catch (e) {
     Assert.ok(true, "Should fail to get addon list");
+    Assert.equal(
+      e.addonCheckerErr,
+      ProductAddonChecker.VERIFICATION_INVALID_ERR
+    );
     Assert.equal(e.message, "Content signature is not valid");
   }
 });
