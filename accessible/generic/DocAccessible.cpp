@@ -1323,6 +1323,19 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // cache, which listens for the following event.
     if (acc->IsTable() || acc->IsTableRow() || acc->IsTableCell()) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, acc);
+      LocalAccessible* table;
+      if (acc->IsTable()) {
+        table = acc;
+      } else {
+        for (table = acc->LocalParent(); table; table = table->LocalParent()) {
+          if (table->IsTable()) {
+            break;
+          }
+        }
+      }
+      if (table && table->IsTable()) {
+        QueueCacheUpdate(acc, CacheDomain::Table);
+      }
     }
 
     // The accessible can be reparented or reordered in its parent.

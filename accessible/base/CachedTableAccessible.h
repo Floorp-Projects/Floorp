@@ -258,6 +258,8 @@ class CachedTableAccessible final : public TableAccessibleBase {
 
   virtual Accessible* AsAccessible() override { return mAcc; }
 
+  virtual bool IsProbablyLayoutTable() override;
+
  private:
   explicit CachedTableAccessible(Accessible* aAcc);
 
