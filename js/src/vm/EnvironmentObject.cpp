@@ -202,16 +202,17 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
   return callobj;
 }
 
-CallObject* CallObject::find(JSObject* env) {
+template <class EnvT>
+EnvT* FindEnclosingEnv(JSObject* env) {
   for (;;) {
-    if (env->is<CallObject>()) {
+    if (env->is<EnvT>()) {
       break;
     } else if (env->is<EnvironmentObject>()) {
       env = &env->as<EnvironmentObject>().enclosingEnvironment();
     } else if (env->is<DebugEnvironmentProxy>()) {
       EnvironmentObject& unwrapped =
           env->as<DebugEnvironmentProxy>().environment();
-      if (unwrapped.is<CallObject>()) {
+      if (unwrapped.is<EnvT>()) {
         env = &unwrapped;
         break;
       }
@@ -221,7 +222,16 @@ CallObject* CallObject::find(JSObject* env) {
       return nullptr;
     }
   }
-  return &env->as<CallObject>();
+  return &env->as<EnvT>();
+}
+
+
+CallObject* CallObject::find(JSObject* env) {
+  return FindEnclosingEnv<CallObject>(env);
+}
+
+ModuleEnvironmentObject* ModuleEnvironmentObject::find(JSObject* env) {
+  return FindEnclosingEnv<ModuleEnvironmentObject>(env);
 }
 
 CallObject* CallObject::createHollowForDebug(JSContext* cx,
@@ -2396,9 +2406,19 @@ ArrayObject* DebugEnvironmentProxy::maybeSnapshot() const {
 }
 
 void DebugEnvironmentProxy::initSnapshot(ArrayObject& o) {
-  MOZ_ASSERT_IF(
-      maybeSnapshot() != nullptr,
-      CallObject::find(&environment())->callee().isGeneratorOrAsync());
+#ifdef DEBUG
+  if (maybeSnapshot()) {
+    auto* callObj = CallObject::find(&environment());
+    if (callObj) {
+      MOZ_ASSERT(callObj->callee().isGeneratorOrAsync());
+    } else {
+      auto* moduleEnv = ModuleEnvironmentObject::find(&environment());
+      MOZ_ASSERT(moduleEnv);
+      MOZ_ASSERT(moduleEnv->module().isAsync());
+    }
+  }
+#endif
+
   setReservedSlot(SNAPSHOT_SLOT, ObjectValue(o));
 }
 
