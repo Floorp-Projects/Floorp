@@ -15,11 +15,11 @@
 
 namespace mozilla {
 
-RefPtr<layers::Image> VideoFrameSurfaceVAAPI::GetAsImage() {
+RefPtr<layers::Image> VideoFrameSurface::GetAsImage() {
   return new layers::DMABUFSurfaceImage(mSurface);
 }
 
-VideoFrameSurfaceVAAPI::VideoFrameSurfaceVAAPI(DMABufSurface* aSurface)
+VideoFrameSurface::VideoFrameSurface(DMABufSurface* aSurface)
     : mSurface(aSurface),
       mLib(nullptr),
       mAVHWFramesContext(nullptr),
@@ -30,22 +30,22 @@ VideoFrameSurfaceVAAPI::VideoFrameSurfaceVAAPI(DMABufSurface* aSurface)
   MOZ_ASSERT(mSurface);
   MOZ_RELEASE_ASSERT(mSurface->GetAsDMABufSurfaceYUV());
   mSurface->GlobalRefCountCreate();
-  FFMPEG_LOG("VideoFrameSurfaceVAAPI: creating surface UID = %d",
+  FFMPEG_LOG("VideoFrameSurface: creating surface UID = %d",
              mSurface->GetUID());
 }
 
-void VideoFrameSurfaceVAAPI::LockVAAPIData(AVCodecContext* aAVCodecContext,
-                                           AVFrame* aAVFrame,
-                                           FFmpegLibWrapper* aLib) {
-  FFMPEG_LOG("VideoFrameSurfaceVAAPI: VAAPI locking dmabuf surface UID = %d",
+void VideoFrameSurface::LockVAAPIData(AVCodecContext* aAVCodecContext,
+                                      AVFrame* aAVFrame,
+                                      FFmpegLibWrapper* aLib) {
+  FFMPEG_LOG("VideoFrameSurface: VAAPI locking dmabuf surface UID = %d",
              mSurface->GetUID());
   mLib = aLib;
   mAVHWFramesContext = aLib->av_buffer_ref(aAVCodecContext->hw_frames_ctx);
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
 }
 
-void VideoFrameSurfaceVAAPI::ReleaseVAAPIData(bool aForFrameRecycle) {
-  FFMPEG_LOG("VideoFrameSurfaceVAAPI: VAAPI releasing dmabuf surface UID = %d",
+void VideoFrameSurface::ReleaseVAAPIData(bool aForFrameRecycle) {
+  FFMPEG_LOG("VideoFrameSurface: VAAPI releasing dmabuf surface UID = %d",
              mSurface->GetUID());
 
   // It's possible to unref GPU data while IsUsed() is still set.
@@ -67,8 +67,8 @@ void VideoFrameSurfaceVAAPI::ReleaseVAAPIData(bool aForFrameRecycle) {
   }
 }
 
-VideoFrameSurfaceVAAPI::~VideoFrameSurfaceVAAPI() {
-  FFMPEG_LOG("VideoFrameSurfaceVAAPI: deleting dmabuf surface UID = %d",
+VideoFrameSurface::~VideoFrameSurface() {
+  FFMPEG_LOG("VideoFrameSurface: deleting dmabuf surface UID = %d",
              mSurface->GetUID());
   // We're about to quit, no need to recycle the frames.
   ReleaseVAAPIData(/* aForFrameRecycle */ false);
@@ -84,9 +84,8 @@ VideoFramePool::~VideoFramePool() {
 void VideoFramePool::ReleaseUnusedVAAPIFrames() {
   MutexAutoLock lock(mSurfaceLock);
   for (const auto& surface : mDMABufSurfaces) {
-    auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI();
-    if (!vaapiSurface->IsUsed()) {
-      vaapiSurface->ReleaseVAAPIData();
+    if (!surface->IsUsed()) {
+      surface->ReleaseVAAPIData();
     }
   }
 }
@@ -96,8 +95,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
     if (surface->IsUsed()) {
       continue;
     }
-    auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI();
-    vaapiSurface->ReleaseVAAPIData();
+    surface->ReleaseVAAPIData();
     return surface;
   }
   return nullptr;
@@ -121,7 +119,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       return nullptr;
     }
     FFMPEG_LOG("Created new VA-API DMABufSurface UID = %d", surface->GetUID());
-    RefPtr<VideoFrameSurfaceVAAPI> surf = new VideoFrameSurfaceVAAPI(surface);
+    RefPtr<VideoFrameSurface> surf = new VideoFrameSurface(surface);
     if (!mTextureCreationWorks) {
       mTextureCreationWorks = Some(surface->VerifyTextureCreation());
     }
@@ -138,11 +136,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     }
     FFMPEG_LOG("Reusing VA-API DMABufSurface UID = %d", surface->GetUID());
   }
-
-  auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI();
-  vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
-  vaapiSurface->MarkAsUsed();
-
+  videoSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
+  videoSurface->MarkAsUsed();
   return videoSurface;
 }
 
