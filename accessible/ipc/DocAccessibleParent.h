@@ -281,6 +281,13 @@ class DocAccessibleParent : public RemoteAccessible,
 #endif
 
   // Accessible
+  virtual Accessible* Parent() const override {
+    if (IsTopLevel()) {
+      return OuterDocOfRemoteBrowser();
+    }
+    return RemoteParent();
+  }
+
   virtual int32_t IndexInParent() const override {
     if (IsTopLevel() && OuterDocOfRemoteBrowser()) {
       // An OuterDoc can only have 1 child.
