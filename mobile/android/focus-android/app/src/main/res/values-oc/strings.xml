@@ -493,6 +493,15 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">La benvenguda a %1$s !</string>
 
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Quand Incognito rescontra Invisible</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Navegatz coma se vos agachavan pas</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Una confidencialitat adaptada a cada situacion</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Començar de navegar</string>
 

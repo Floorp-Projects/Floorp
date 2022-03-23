@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -19,6 +19,12 @@
     <string name="feedback_erase">你嘅瀏覽歷史已被刪除。</string>
 
     <string name="feedback_erase2">瀏覽歷史已被刪除</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Tab 嘅瀏覽歷史記錄已被刪除。</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">搜索%1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">分享…</string>
@@ -59,6 +65,10 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">已阻止追蹤器</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">關閉呢個功能可能會修復一啲網站問題</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">攔截內容</string>
 
@@ -95,8 +105,23 @@
     <string name="shortcut_erase_long_label">刪除瀏覽記錄</string>
 
 
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">私隱搜尋</string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">私隱同安全</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">追蹤器、Cookies、數據選擇</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">關於 %1$s、說明</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">加強追蹤保護</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">網頁內容</string>
@@ -106,6 +131,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">一般</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">預設瀏覽器、語言</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">數據收集同使用</string>
@@ -126,6 +154,9 @@
 
     <!-- Text that is shown below a "switch" preference that is disabled. -->
     <string name="preference_state_off">關閉</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">自動完成網址</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">熱門網站</string>
@@ -150,6 +181,9 @@
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">加入自訂網址</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">數據選擇</string>
 
     <!-- Title of the screen for removing custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_remove">移除自訂網址</string>
@@ -193,6 +227,15 @@
     <string name="preference_privacy_block_analytics_summary">用嚟收集、分析並測量點擊同捲動之類嘅活動</string>
     <string name="preference_privacy_block_social">阻擋社交媒體追蹤器</string>
 
+    <string name="preference_privacy_category_cookies">阻擋 Cookies</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">唔使喇，唔該</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">淨係阻擋第三方追蹤器 Cookies</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">淨係阻擋第三方 Cookies</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">好吖，唔該晒</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">隱形</string>
@@ -207,6 +250,17 @@
     <string name="preference_category_performance">效能</string>
     <string name="preference_performance_block_webfonts">阻擋網絡字型</string>
 
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">或會導致遺失圖標或圖片</string>
+
+    <string name="preference_performance_block_javascript">阻擋 JavaScript</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">將 %1$s 設定為預設瀏覽器</string>
+
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry2">傳送使用狀況數據</string>
 
@@ -219,6 +273,15 @@
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">關於 %1$s</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">已安裝嘅搜尋引擎</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">揀選搜尋引擎</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">還原預設嘅搜尋引擎</string>
+
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
     <string name="preference_search_add2">+ 加入另一個搜尋引擎</string>
@@ -226,6 +289,9 @@
     <string name="preference_search_remove">移除</string>
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">加入另一個搜尋引擎</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">揀選你鍾意嘅引擎：</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">加入搜尋引擎</string>
@@ -247,6 +313,15 @@
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">清除輸入</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">收到</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">安全連線</string>
+
     <!-- This text is not visible. Instead it will be read by the accessibility service once we start
      loading a website -->
     <string name="accessibility_announcement_loading">載入緊</string>
@@ -258,8 +333,15 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">更多選項</string>
 
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">更多選項掣</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">前往下一頁</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">重新整理網站</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">返去上一頁</string>
@@ -267,7 +349,22 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
     <string name="content_description_stop">停止載入網站</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">返去先前嗰個 app</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">已阻擋嘅追蹤器數目</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">阻擋追蹤器</string>
+
     <string name="your_rights">你嘅權利</string>
+
+    <string name="external_app_prompt_title">用另一個 app 開啟連結</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">係咪要離開私隱瀏覽？</string>
 
     <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
     <string name="download_snackbar_finished">%1$s 已完成</string>
@@ -276,6 +373,9 @@
     <string name="download_snackbar_open">開啟</string>
 
     <string name="error_hostLookup_title">搵唔到伺服器</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">私隱就習以為常</string>
 
     <string name="firstrun_close_button">明白晒！</string>
     <string name="firstrun_skip_button">略過</string>
@@ -303,7 +403,34 @@
     <string name="gv_prompt_password_hint">密碼</string>
     <string name="gv_prompt_clear">清除</string>
 
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">安全連線</string>
+    <string name="security_popup_insecure_connection">不安全連線</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">經 %1$s 驗證</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">網站安全性</string>
     <string name="preference_autocomplete_duplicate_url_error">已經有呢個網址</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">喺呢頁搵嘢</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">喺呢頁搵嘢</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">第 %1$d 個，共 %2$d 個</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">搵下一個結果</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">搵上一個結果</string>
 
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">請求桌面版網頁</string>
@@ -317,15 +444,33 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">使用者研究</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox 可能周不時會安裝同展開研究。</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">想知多啲</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">程式將會結束以便套用更改</string>
 
     <!-- Title of the remove studies button -->
     <string name="studies_remove">移除</string>
 
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">生效</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">透過 USB/Wi-Fi 遙距除錯</string>
+
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
     <string name="biometric_auth_title">解鎖 %1$s</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">指紋圖標</string>
 
     <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
      This is displayed during the authentication flow as the app launches. -->
@@ -349,11 +494,20 @@
 
     <!-- Tips displayed on the home view -->
 
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">已開啟新嘅 tab</string>
+
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">切換</string>
 
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">立即切換去新 tab 度嘅連結</string>
+
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">安全瀏覽</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">安全瀏覽</string>
+
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">阻擋潛在嘅危險同欺詐網站</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外</string>
@@ -362,8 +516,26 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">移除所有網站</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">阻擋 Cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">你想唔想阻擋Cookies？</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Tab 冧檔</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">對唔住。呢個 tab 發生問題。</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">關閉 Tab</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">傳送冧檔報告畀 Mozilla</string>
+
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">自 %s 起已阻擋嘅追蹤器數目</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">內容</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
@@ -374,6 +546,11 @@
     <string name="analytics">數據分析</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="enhanced_tracking_protection">加強追蹤保護</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">安全連線</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">不安全連線</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">返回</string>
@@ -391,4 +568,5 @@
     <string name="preference_dark_theme">深色</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">按省電模式決定</string>
+
     </resources>
