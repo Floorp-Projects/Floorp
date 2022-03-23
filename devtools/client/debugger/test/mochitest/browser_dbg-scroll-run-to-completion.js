@@ -8,7 +8,11 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scroll-run-to-completion.html");
   invokeInTab("pauseOnce", "doc-scroll-run-to-completion.html");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-scroll-run-to-completion.html").id,
+    20
+  );
 
   await checkEvaluateInTopFrame(dbg, "window.scrollBy(0, 10);", undefined);
 

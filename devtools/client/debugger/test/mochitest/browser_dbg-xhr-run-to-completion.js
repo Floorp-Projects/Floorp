@@ -11,7 +11,11 @@ add_task(async function() {
   invokeInTab("singleRequest", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);
   await waitForSelectedLocation(dbg, 23);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-xhr-run-to-completion.html").id,
+    23
+  );
 
   const onTestPassed = once(Services.ppmm, "test passed");
   await resume(dbg);
@@ -25,13 +29,25 @@ add_task(async function() {
   const dbg = await initDebugger("doc-xhr-run-to-completion.html");
   invokeInTab("multipleRequests", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-xhr-run-to-completion.html").id,
+    31
+  );
   await resume(dbg);
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-xhr-run-to-completion.html").id,
+    33
+  );
   await resume(dbg);
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-xhr-run-to-completion.html").id,
+    34
+  );
   const onTestPassed = once(Services.ppmm, "test passed");
   await resume(dbg);
   await onTestPassed;
