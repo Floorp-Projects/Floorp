@@ -1155,17 +1155,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute Node nodeObservedByIMEContentObserver;
 
   /**
-   * Get the number of screen pixels per CSS pixel,
-   * not taking into account any override of the device pixel scale
-   * that's imposed by Responsive Design Mode.
-   *
-   * This is needed to e.g. correctly translate "window.mozInnerScreenX/Y"
-   * into device pixels even when "window" is the window of a document
-   * inside an RDM pane.
-   */
-  readonly attribute float screenPixelsPerCSSPixelNoOverride;
-
-  /**
    * Get the current zoom factor.
    * This is _approximately_ the same as nsIContentViewer.fullZoom,
    * but takes into account Gecko's quantization of the zoom factor, which is

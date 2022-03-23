@@ -2189,19 +2189,6 @@ nsDOMWindowUtils::GetViewId(Element* aElement, nsViewID* aResult) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetScreenPixelsPerCSSPixelNoOverride(float* aScreenPixels) {
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
-    *aScreenPixels = 1.0;
-    return NS_OK;
-  }
-
-  *aScreenPixels =
-      float(AppUnitsPerCSSPixel()) / float(presContext->AppUnitsPerDevPixel());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetFullZoom(float* aFullZoom) {
   *aFullZoom = 1.0f;
 
