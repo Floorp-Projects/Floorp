@@ -92,7 +92,7 @@ class AppRequestInterceptor(
         if (hasUserGesture && isSameDomain && uri.startsWith(AMO_BASE_URL)) {
 
             // Check if this is a request to install an add-on.
-            val matchResult = AMO_INSTALL_URL_REGEX.toRegex().matchEntire(uri)
+            val matchResult = AMO_INSTALL_URL_REGEX.toRegex().find(uri)
             if (matchResult != null) {
 
                 // Navigate and trigger add-on installation.

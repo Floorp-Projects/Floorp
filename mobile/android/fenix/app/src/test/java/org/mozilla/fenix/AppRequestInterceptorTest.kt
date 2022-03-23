@@ -65,6 +65,24 @@ class AppRequestInterceptorTest {
     }
 
     @Test
+    fun `GIVEN valid request to install add-on WHEN url is provided with query parameters THEN start add-on installation`() {
+        val addonId = "12345678"
+        val result = interceptor.onLoadRequest(
+            engineSession = mockk(),
+            uri = "https://addons.mozilla.org/android/downloads/file/$addonId/test.xpi?queryParam=test",
+            lastUri = "https://addons.mozilla.org/en-US/firefox/",
+            hasUserGesture = true,
+            isSameDomain = true,
+            isDirectNavigation = false,
+            isRedirect = false,
+            isSubframeRequest = false
+        )
+
+        verify { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)) }
+        assertEquals(RequestInterceptor.InterceptionResponse.Deny, result)
+    }
+
+    @Test
     fun `GIVEN request to install add-on WHEN on a different domain THEN no add-on installation is started`() {
         every { testContext.components.services } returns Services(testContext, mockk(relaxed = true))
         val result = interceptor.onLoadRequest(
