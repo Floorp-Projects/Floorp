@@ -1233,8 +1233,6 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
   // The top-level script if a module is only ever executed once. Clear the
   // reference at exit to prevent us keeping this alive unnecessarily. This is
   // kept while executing so it is available to the debugger.
-  // Also, the script reference is used as the condition for
-  // JS::IsModuleEvaluated.
   auto guardA = mozilla::MakeScopeExit(
       [&] { self->setReservedSlot(ScriptSlot, UndefinedValue()); });
 
