@@ -350,21 +350,24 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
   static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
+  // These functions are the new, nuanced functions
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
+  static bool ShouldResistFingerprinting(
+      nsIPrincipal* aPrincipal,
+      const mozilla::OriginAttributes& aOriginAttributes);
 
   /**
-   *Implement a legacy RFP function to provide an explination as to
-   * why they are using the original RFP call. Given that there is a gradual
-   *carry over of ShouldResistFingerprinting calls to a nuanced API, some
-   *features still require a legacy function. In this case, the context of the
-   *call is not reviewed. The intent of this is to have an explanation as to why
-   *the developer is using the legacy function call over of the nuanced one. The
-   *implementation of this function will include accepting a char* to provide
-   *the explanation o why the developer is using the legacy function as opposed
-   *to nuanced preference.
+   * Implement a RFP function that only checks the pref, and does not take
+   * into account any additional context such as PBM mode or Web Extensions.
+   *
+   * It requires an explanation for why the coarse check is being used instead
+   * of the nuanced check. While there is a gradual cut over of
+   * ShouldResistFingerprinting calls to a nuanced API, some features still
+   * require a legacy function. (Additionally, we sometimes use the coarse
+   * check first, to avoid running additional code to support a nuanced check.)
    */
-  static bool ShouldResistFingerprinting(const char* aChar);
+  static bool ShouldResistFingerprinting(const char* aJustification);
 
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();
