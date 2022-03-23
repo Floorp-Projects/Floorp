@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1497480
 
 /** Test for Bug 1497480 **/
 let gMisspeltWords = [];
-let onSpellCheck = SpecialPowers.Cu.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).onSpellCheck;
+let maybeOnSpellCheck = SpecialPowers.Cu.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).maybeOnSpellCheck;
 
 const template = document.createElement("template");
 template.innerHTML = `<div id="target" contenteditable>Test</div>`;
@@ -52,7 +52,7 @@ add_task(async function() {
   // Wait for first full spell-checking.
   synthesizeMouseAtCenter(outOfTarget, {}, window);
   await new Promise((resolve) => {
-    onSpellCheck(outOfTarget, function() {
+    maybeOnSpellCheck(outOfTarget, function() {
       resolve();
     });
   });
@@ -65,7 +65,7 @@ add_task(async function() {
   gMisspeltWords.push("spellechek");
   synthesizeMouseAtCenter(outOfTarget, {}, window);
   await new Promise((resolve) => {
-    onSpellCheck(target, function() {
+    maybeOnSpellCheck(target, function() {
       ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
          "Spell-checking should be performed when anchor navigates away from ShadowDOM");
       SimpleTest.executeSoon(resolve);
@@ -80,7 +80,7 @@ add_task(async function() {
   gMisspeltWords.push("spellechck");
   synthesizeKey("KEY_Enter", {}, window);
   await new Promise((resolve) => {
-    onSpellCheck(target, function() {
+    maybeOnSpellCheck(target, function() {
       ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
          "Spell-checking should be performed when pressing enter in contenteditable in ShadowDOM");
       SimpleTest.executeSoon(resolve);

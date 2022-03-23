@@ -32,13 +32,12 @@ var script;
 /** Test for Bug 1209414 **/
 /*
  * All we want to do in this test is change the spelling using a right-click and selection from the menu.
- * This is necessary since all the other tests use SetCurrentDictionary() which doesn't reflect
+ * This is necessary since all the other tests use setCurrentDictionaries() which doesn't reflect
  * user behaviour.
  */
 
-var onSpellCheck =
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm").onSpellCheck;
+let {maybeOnSpellCheck, onSpellCheck} = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
@@ -73,11 +72,9 @@ SimpleTest.waitForFocus(async function() {
 
       // Select Language from the menu.  Take a look at
       // toolkit/modules/InlineSpellChecker.jsm to see how the menu works.
-
       contextMenu.ownerDocument.getElementById("spell-check-dictionary-en-US")
                  .doCommand();
       contextMenu.hidePopup();
-
       return state;
     });
     addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
@@ -94,15 +91,14 @@ SimpleTest.waitForFocus(async function() {
   editor_de = SpecialPowers.wrap(elem_de).editor;
   editor_de.setSpellcheckUserOverride(true);
 
-  onSpellCheck(elem_de, function() {
+  maybeOnSpellCheck(elem_de, function() {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
     var spellchecker = inlineSpellChecker.spellChecker;
-    try {
-      var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch (e) {}
+    let currentDictionaries = spellchecker.getCurrentDictionaries();
 
     // Check that the German dictionary is loaded and that the spell check has worked.
-    is(currentDictonary, "de-DE", "expected de-DE");
+    is(currentDictionaries.length, 1, "expected one dictionary");
+    is(currentDictionaries[0], "de-DE", "expected de-DE");
     // eslint-disable-next-line no-useless-concat
     is(getMisspelledWords(editor_de), "today" + "is" + "a" + "good" + "day", "some misspelled words expected: today is a good day");
 
@@ -110,7 +106,7 @@ SimpleTest.waitForFocus(async function() {
     elem_de.focus();
 
     // Make sure all spell checking action is done before right-click to select the en-US dictionary.
-    onSpellCheck(elem_de, function() {
+    maybeOnSpellCheck(elem_de, function() {
       synthesizeMouse(elem_de, 2, 2, { type: "contextmenu", button: 2 }, window);
     });
   });
@@ -120,25 +116,24 @@ async function handlePopup() {
   var state = await script.sendQuery("hidepopup");
   is(state, "open", "checking if popup is open");
 
-  onSpellCheck(elem_de, function() {
+  onSpellCheck(elem_de, async function() {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
     var spellchecker = inlineSpellChecker.spellChecker;
-    let currentDictonary;
-    try {
-      currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch (e) {}
+    let currentDictionaries = spellchecker.getCurrentDictionaries();
 
     // Check that the English dictionary is loaded and that the spell check has worked.
-    is(currentDictonary, "en-US", "expected en-US");
-    // eslint-disable-next-line no-useless-concat
-    is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter", "some misspelled words expected: heute ist ein guter");
+    is(currentDictionaries.length, 2, "expected two dictionaries");
+    is(currentDictionaries[0], "de-DE", "expected de-DE");
+    is(currentDictionaries[1], "en-US", "expected en-US");
+    is(getMisspelledWords(editor_de), "", "No misspelled words expected");
 
     // Remove the fake de_DE dictionary again.
-    script.sendAsyncMessage("destroy");
+    await script.sendQuery("destroy");
 
     // This will clear the content preferences and reset "spellchecker.dictionary".
-    spellchecker.SetCurrentDictionary("");
-    SimpleTest.finish();
+    spellchecker.setCurrentDictionaries([]).then(() => {
+      SimpleTest.finish();
+    });
   });
 }
 

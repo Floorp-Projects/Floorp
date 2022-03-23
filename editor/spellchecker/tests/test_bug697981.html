@@ -27,6 +27,11 @@ var elem_de;
 var editor_de;
 var script;
 
+var maybeOnSpellCheck =
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+               .maybeOnSpellCheck;
+
 var onSpellCheck =
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
@@ -69,14 +74,15 @@ function deFocus() {
   editor_de.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_de, function() {
+  maybeOnSpellCheck(elem_de, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
-      var currentDictonary = spellchecker.GetCurrentDictionary();
+      var currentDictionaries = spellchecker.getCurrentDictionaries();
     } catch (e) {}
 
     // Check that the German dictionary is loaded and that the spell check has worked.
-    is(currentDictonary, "de-DE", "expected de-DE");
+    is(currentDictionaries.length, 1, "expected one dictionary");
+    is(currentDictionaries[0], "de-DE", "expected de-DE");
     is(getMisspelledWords(editor_de), "German", "one misspelled word expected: German");
 
     // Now focus the other textarea, which requires English spelling.
@@ -90,15 +96,13 @@ function enFocus() {
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_en, function() {
-    var spellchecker = inlineSpellChecker.spellChecker;
-    let currentDictonary;
-    try {
-      currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch (e) {}
+  onSpellCheck(elem_en, async function() {
+    let spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictionaries = spellchecker.getCurrentDictionaries();
 
     // Check that the English dictionary is loaded and that the spell check has worked.
-    is(currentDictonary, "en-US", "expected en-US");
+    is(currentDictionaries.length, 1, "expected one dictionary");
+    is(currentDictionaries[0], "en-US", "expected en-US");
     is(getMisspelledWords(editor_en), "Nogoodword", "one misspelled word expected: Nogoodword");
 
     // So far all was boring. The important thing is whether the spell check result
@@ -107,7 +111,7 @@ function enFocus() {
     is(getMisspelledWords(editor_de), "German", "one misspelled word expected: German");
 
     // Remove the fake de_DE dictionary again.
-    script.sendAsyncMessage("destroy");
+    await script.sendQuery("destroy");
 
     // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
     elem_de.onfocus = null;
@@ -115,14 +119,15 @@ function enFocus() {
     elem_de.focus();
 
     // After removal, the de_DE editor should refresh the spelling with en-US.
-    onSpellCheck(elem_de, function() {
+    maybeOnSpellCheck(elem_de, function() {
       spellchecker = inlineSpellChecker.spellChecker;
       try {
-        currentDictonary = spellchecker.GetCurrentDictionary();
+        currentDictionaries = spellchecker.getCurrentDictionaries();
       } catch (e) {}
 
       // Check that the default English dictionary is loaded and that the spell check has worked.
-      is(currentDictonary, "en-US", "expected en-US");
+      is(currentDictionaries.length, 1, "expected one dictionary");
+      is(currentDictionaries[0], "en-US", "expected en-US");
       // eslint-disable-next-line no-useless-concat
       is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter",
          "some misspelled words expected: heute ist ein guter");

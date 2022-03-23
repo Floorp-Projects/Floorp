@@ -12,12 +12,12 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
-  const { onSpellCheck } = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm");
+  const { maybeOnSpellCheck } = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm");
   const editor = document.querySelector("div[contenteditable]");
   async function replaceWord(aMisspelledWord, aCorrectWord, aReplaceAll) {
     const editorObj = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
     const inlineSpellChecker = editorObj.getInlineSpellChecker(true);
-    await new Promise(resolve => onSpellCheck(editor, resolve));
+    await new Promise(resolve => maybeOnSpellCheck(editor, resolve));
     const editorSpellCheck = inlineSpellChecker.spellChecker;
     editorObj.beginTransaction();
     try {

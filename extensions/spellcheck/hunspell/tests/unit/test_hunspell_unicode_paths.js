@@ -34,7 +34,7 @@ add_task(async function() {
   await OS.File.writeAtomic(affPath, new TextEncoder().encode(""));
 
   spellCheck.loadDictionariesFromDir(baseDir);
-  spellCheck.dictionary = "dict";
+  spellCheck.dictionaries = ["dict"];
 
   ok(
     spellCheck.check(WORD),

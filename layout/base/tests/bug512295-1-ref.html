@@ -14,7 +14,7 @@ x
   div.focus();
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
-  onSpellCheck(div, function () {
+  maybeOnSpellCheck(div, function () {
     var sel = window.getSelection();
     sel.removeAllRanges();
     var range = document.createRange();
