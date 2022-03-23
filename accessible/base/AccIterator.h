@@ -23,7 +23,7 @@ namespace a11y {
 class AccIterable {
  public:
   virtual ~AccIterable() {}
-  virtual Accessible* Next() = 0;
+  virtual LocalAccessible* Next() = 0;
 
  private:
   friend class Relation;

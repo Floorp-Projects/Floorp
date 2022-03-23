@@ -59,14 +59,14 @@ MsaaAccessible* MsaaAccessible::Create(Accessible* aAcc) {
   if (aAcc->IsDoc()) {
     return new MsaaDocAccessible(aAcc);
   }
-  if (aAcc->IsTable()) {
-    return new ia2AccessibleTable(aAcc);
-  }
-  if (aAcc->IsTableCell()) {
-    return new ia2AccessibleTableCell(aAcc);
-  }
   if (localAcc) {
     // XXX These classes don't support RemoteAccessible yet.
+    if (aAcc->IsTable()) {
+      return new ia2AccessibleTable(aAcc);
+    }
+    if (aAcc->IsTableCell()) {
+      return new ia2AccessibleTableCell(aAcc);
+    }
     if (aAcc->IsApplication()) {
       return new ia2AccessibleApplication(aAcc);
     }

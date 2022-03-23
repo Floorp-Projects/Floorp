@@ -69,13 +69,6 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       },
       [&aValueString](const UniquePtr<gfx::Matrix4x4>& val) {
         aValueString.AppendPrintf("Matrix4x4=%s", ToString(*val).c_str());
-      },
-      [&aValueString](const nsTArray<uint64_t>& val) {
-        for (size_t i = 0; i < val.Length() - 1; i++) {
-          aValueString.AppendInt(val[i]);
-          aValueString.Append(u", ");
-        }
-        aValueString.AppendInt(val[val.Length() - 1]);
       });
 }
 
@@ -172,11 +165,6 @@ void AccAttributes::CopyTo(AccAttributes* aDest) const {
         [](const UniquePtr<gfx::Matrix4x4>& val) {
           MOZ_ASSERT_UNREACHABLE(
               "Trying to copy an AccAttributes containing a matrix");
-        },
-        [](const nsTArray<uint64_t>& val) {
-          // We don't copy arrays.
-          MOZ_ASSERT_UNREACHABLE(
-              "Trying to copy an AccAttributes containing an array");
         });
   }
 }

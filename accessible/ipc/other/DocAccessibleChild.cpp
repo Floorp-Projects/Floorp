@@ -844,11 +844,12 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvColHeaderCells(
     const uint64_t& aID, nsTArray<uint64_t>* aCells) {
   TableCellAccessible* acc = IdToTableCellAccessible(aID);
   if (acc) {
-    AutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<LocalAccessible*, 10> headerCells;
     acc->ColHeaderCells(&headerCells);
     aCells->SetCapacity(headerCells.Length());
-    for (Accessible* header : headerCells) {
-      aCells->AppendElement(header->ID());
+    for (uint32_t i = 0; i < headerCells.Length(); ++i) {
+      aCells->AppendElement(
+          reinterpret_cast<uint64_t>(headerCells[i]->UniqueID()));
     }
   }
 
@@ -859,11 +860,12 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvRowHeaderCells(
     const uint64_t& aID, nsTArray<uint64_t>* aCells) {
   TableCellAccessible* acc = IdToTableCellAccessible(aID);
   if (acc) {
-    AutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<LocalAccessible*, 10> headerCells;
     acc->RowHeaderCells(&headerCells);
     aCells->SetCapacity(headerCells.Length());
-    for (Accessible* header : headerCells) {
-      aCells->AppendElement(header->ID());
+    for (uint32_t i = 0; i < headerCells.Length(); ++i) {
+      aCells->AppendElement(
+          reinterpret_cast<uint64_t>(headerCells[i]->UniqueID()));
     }
   }
 
@@ -1104,11 +1106,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvTableSelectedCells(
     const uint64_t& aID, nsTArray<uint64_t>* aCellIDs) {
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    AutoTArray<Accessible*, 30> cells;
+    AutoTArray<LocalAccessible*, 30> cells;
     acc->SelectedCells(&cells);
     aCellIDs->SetCapacity(cells.Length());
-    for (Accessible* cell : cells) {
-      aCellIDs->AppendElement(cell->ID());
+    for (uint32_t i = 0; i < cells.Length(); ++i) {
+      aCellIDs->AppendElement(reinterpret_cast<uint64_t>(cells[i]->UniqueID()));
     }
   }
 
@@ -1204,9 +1206,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkTableColumnHeader(
 #ifdef MOZ_ACCESSIBILITY_ATK
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    Accessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
+    LocalAccessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
     if (header) {
-      *aHeader = header->ID();
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
       *aOk = true;
     }
   }
@@ -1223,9 +1225,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkTableRowHeader(
 #ifdef MOZ_ACCESSIBILITY_ATK
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    Accessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
+    LocalAccessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
     if (header) {
-      *aHeader = header->ID();
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
       *aOk = true;
     }
   }

@@ -6,46 +6,40 @@
 
 #include "InterfaceInitFuncs.h"
 
+#include "LocalAccessible-inl.h"
+#include "AccessibleWrap.h"
 #include "nsAccUtils.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
 #include "nsArrayUtils.h"
 
 #include "mozilla/Likely.h"
 
-using namespace mozilla;
 using namespace mozilla::a11y;
 
 extern "C" {
 static gint GetColumnSpanCB(AtkTableCell* aCell) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return 0;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    return static_cast<gint>(acc->AsTableCellBase()->ColExtent());
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell));
+  if (accWrap) {
+    return accWrap->AsTableCell()->ColExtent();
   }
 
-  if (RemoteAccessible* proxy = acc->AsRemote()) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aCell))) {
     return proxy->ColExtent();
   }
 
   return 0;
 }
 
-static gint GetRowSpanCB(AtkTableCell* aCell) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return 0;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    return static_cast<gint>(acc->AsTableCellBase()->RowExtent());
+static gboolean GetRowSpanCB(AtkTableCell* aCell) {
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell));
+  if (accWrap) {
+    return accWrap->AsTableCell()->RowExtent();
   }
 
-  if (RemoteAccessible* proxy = acc->AsRemote()) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aCell))) {
     return proxy->RowExtent();
   }
 
@@ -53,12 +47,8 @@ static gint GetRowSpanCB(AtkTableCell* aCell) {
 }
 
 static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return false;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    TableCellAccessibleBase* cell = acc->AsTableCellBase();
+  if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
+    TableCellAccessible* cell = accWrap->AsTableCell();
     if (!cell) {
       return false;
     }
@@ -67,7 +57,7 @@ static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
     return true;
   }
 
-  if (RemoteAccessible* proxy = acc->AsRemote()) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aCell))) {
     uint32_t rowIdx = 0, colIdx = 0;
     proxy->GetPosition(&rowIdx, &colIdx);
     *aCol = colIdx;
@@ -80,12 +70,8 @@ static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
 
 static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
                                    gint* aColExtent, gint* aRowExtent) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return false;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    TableCellAccessibleBase* cellAcc = acc->AsTableCellBase();
+  if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
+    TableCellAccessible* cellAcc = accWrap->AsTableCell();
     if (!cellAcc) {
       return false;
     }
@@ -96,7 +82,7 @@ static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
     return true;
   }
 
-  if (RemoteAccessible* proxy = acc->AsRemote()) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aCell))) {
     uint32_t colIdx = 0, rowIdx = 0, colExtent = 0, rowExtent = 0;
     proxy->GetColRowExtents(&colIdx, &rowIdx, &colExtent, &rowExtent);
     *aCol = colIdx;
@@ -110,18 +96,15 @@ static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
 }
 
 static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aTableCell));
-  if (!acc) {
-    return nullptr;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    TableAccessibleBase* table = acc->AsTableCellBase()->Table();
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTableCell));
+  if (accWrap) {
+    TableAccessible* table = accWrap->AsTableCell()->Table();
     if (!table) {
       return nullptr;
     }
 
-    Accessible* tableAcc = table->AsAccessible();
-    return tableAcc ? GetWrapperFor(tableAcc) : nullptr;
+    LocalAccessible* tableAcc = table->AsAccessible();
+    return tableAcc ? AccessibleWrap::GetAtkObject(tableAcc) : nullptr;
   }
 
   if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aTableCell))) {
@@ -133,20 +116,16 @@ static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
 }
 
 static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return nullptr;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    AutoTArray<Accessible*, 10> headers;
-    acc->AsTableCellBase()->ColHeaderCells(&headers);
+  if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
+    AutoTArray<LocalAccessible*, 10> headers;
+    accWrap->AsTableCell()->ColHeaderCells(&headers);
     if (headers.IsEmpty()) {
       return nullptr;
     }
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
-    for (Accessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
+    for (LocalAccessible* header : headers) {
+      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header);
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
@@ -175,20 +154,16 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
 }
 
 static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
-  if (!acc) {
-    return nullptr;
-  }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    AutoTArray<Accessible*, 10> headers;
-    acc->AsTableCellBase()->RowHeaderCells(&headers);
+  if (AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aCell))) {
+    AutoTArray<LocalAccessible*, 10> headers;
+    accWrap->AsTableCell()->RowHeaderCells(&headers);
     if (headers.IsEmpty()) {
       return nullptr;
     }
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
-    for (Accessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
+    for (LocalAccessible* header : headers) {
+      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header);
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
