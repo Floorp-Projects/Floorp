@@ -376,6 +376,7 @@ impl FromStr for ObjDir {
 #[derive(Debug)]
 struct BuildTree {
     moz: MozillaTree,
+    #[allow(dead_code)]
     jsp: JsparagusTree,
     mozconfig: PathBuf,
 }

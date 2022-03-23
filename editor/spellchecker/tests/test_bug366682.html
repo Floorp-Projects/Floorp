@@ -47,7 +47,7 @@ function runTest() {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-               .onSpellCheck(editDoc().documentElement, evalTest);
+               .maybeOnSpellCheck(editDoc().documentElement, evalTest);
 }
 
 function evalTest() {

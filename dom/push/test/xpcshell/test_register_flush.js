@@ -3,10 +3,7 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
-
 const userAgentID = "9ce1e6d3-7bdb-4fe9-90a5-def1d64716f1";
-const channelID = "c26892c5-6e08-4c16-9f0c-0044697b4d85";
 
 function run_test() {
   do_get_profile();

@@ -28,9 +28,9 @@ var editor_de;
 var selcon_de;
 var script;
 
-var onSpellCheck =
+var maybeOnSpellCheck =
   SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm").onSpellCheck;
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm").maybeOnSpellCheck;
 
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
@@ -66,7 +66,7 @@ SimpleTest.waitForFocus(async function() {
 function deFocus() {
   elem_de = document.getElementById("de-DE");
 
-  onSpellCheck(elem_de, function() {
+  maybeOnSpellCheck(elem_de, function() {
     var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
     editor_de = editingSession.getEditorForWindow(window);
     selcon_de = editor_de.selectionController;
@@ -88,15 +88,14 @@ function enFocus() {
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_en, function() {
+  maybeOnSpellCheck(elem_en, async function() {
     var spellchecker = inlineSpellChecker.spellChecker;
-    let currentDictonary;
-    try {
-      currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch (e) {}
+    let currentDictionaries = spellchecker.getCurrentDictionaries();
+    is(currentDictionaries.length, 1, "expected one dictionary");
+    let currentDictionary = currentDictionaries[0];
 
     // Check that the English dictionary is loaded and that the spell check has worked.
-    is(currentDictonary, "en-US", "expected en-US");
+    is(currentDictionary, "en-US", "expected en-US");
     is(getMisspelledWords(editor_en), "Nogoodword", "one misspelled word expected: Nogoodword");
 
     // So far all was boring. The important thing is whether the spell check result
@@ -106,7 +105,7 @@ function enFocus() {
     is(sel.toString(), "German", "one misspelled word expected: German");
 
     // Remove the fake de_DE dictionary again.
-    script.sendAsyncMessage("destroy");
+    await script.sendQuery("destroy");
 
     // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
     elem_de.onfocus = null;
@@ -114,7 +113,7 @@ function enFocus() {
     elem_de.focus();
 
     // After removal, the de_DE editor should refresh the spelling with en-US.
-    onSpellCheck(elem_de, function() {
+    maybeOnSpellCheck(elem_de, function() {
       var endSel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
       // eslint-disable-next-line no-useless-concat
       is(endSel.toString(), "heute" + "ist" + "ein" + "guter",

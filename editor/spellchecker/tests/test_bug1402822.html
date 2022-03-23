@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1402822
+-->
+<head>
+  <title>Test for Bug 1209414</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1209414">Mozilla Bug 1209414</a>
+<p id="display"></p>
+</div>
+
+<textarea id="editor">heute ist ein guter Tag - today is a good day</textarea>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Ci = SpecialPowers.Ci;
+
+let {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+function getMisspelledWords(editor) {
+  return editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
+}
+
+/** Test for Bug 1402822 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(start);
+async function start() {
+  /* global actorParent */
+  /* eslint-env mozilla/frame-script */
+  let script = SpecialPowers.loadChromeScript(() => {
+    // eslint-disable-next-line mozilla/use-services
+    let dir = Cc["@mozilla.org/file/directory_service;1"]
+                .getService(Ci.nsIProperties)
+                .get("CurWorkD", Ci.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("spellchecker");
+    dir.append("tests");
+
+    let hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+                     .getService(Ci.mozISpellCheckingEngine);
+
+    // Install de-DE dictionary.
+    let de_DE = dir.clone();
+    de_DE.append("de-DE");
+    hunspell.addDirectory(de_DE);
+
+    addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
+    addMessageListener("de_DE-exists", () => de_DE.exists());
+  });
+  is(await script.sendQuery("de_DE-exists"), true,
+     "true expected (de_DE directory should exist)");
+
+  let textarea = document.getElementById("editor");
+  let editor = SpecialPowers.wrap(textarea).editor;
+  textarea.focus();
+
+  maybeOnSpellCheck(textarea, () => {
+    let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
+    ok(isc, "Inline spell checker should exist after focus and spell check");
+    let spellchecker = isc.spellChecker;
+
+    spellchecker.setCurrentDictionaries(["en-US"]).then(() => {
+      let currentDictionaries = spellchecker.getCurrentDictionaries();
+
+      is(currentDictionaries.length, 1, "expected one dictionary");
+      is(currentDictionaries[0], "en-US", "expected en-US");
+      is(getMisspelledWords(editor), "heuteisteinguter", "some misspelled words expected: heuteisteinguter");
+      spellchecker.setCurrentDictionaries(["en-US", "de-DE"]).then(() => {
+        textarea.blur();
+        textarea.focus();
+        maybeOnSpellCheck(textarea, () => {
+          currentDictionaries = spellchecker.getCurrentDictionaries();
+
+          is(currentDictionaries.length, 2, "expected two dictionaries");
+          is(currentDictionaries[0], "en-US", "expected en-US");
+          is(currentDictionaries[1], "de-DE", "expected de-DE");
+          is(getMisspelledWords(editor), "", "No misspelled words expected");
+
+          spellchecker.setCurrentDictionaries(["de-DE"]).then(() => {
+            textarea.blur();
+            textarea.focus();
+            maybeOnSpellCheck(textarea, async function() {
+              currentDictionaries = spellchecker.getCurrentDictionaries();
+
+              is(currentDictionaries.length, 1, "expected one dictionary");
+              is(currentDictionaries[0], "de-DE", "expected de-DE");
+              is(getMisspelledWords(editor), "todayisagoodday", "some misspelled words expected: todayisagoodday");
+
+              // Remove the fake de_DE dictionary again.
+              await script.sendQuery("destroy");
+
+              // This will clear the content preferences and reset "spellchecker.dictionary".
+              spellchecker.setCurrentDictionaries([]).then(() => {
+                SimpleTest.finish();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

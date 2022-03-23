@@ -21,6 +21,11 @@ typedef enum {
   CUBEB_RESAMPLER_QUALITY_DESKTOP
 } cubeb_resampler_quality;
 
+typedef enum {
+  CUBEB_RESAMPLER_RECLOCK_NONE,
+  CUBEB_RESAMPLER_RECLOCK_INPUT
+} cubeb_resampler_reclock;
+
 /**
  * Create a resampler to adapt the requested sample rate into something that
  * is accepted by the audio backend.
@@ -44,7 +49,8 @@ cubeb_resampler_create(cubeb_stream * stream,
                        cubeb_stream_params * input_params,
                        cubeb_stream_params * output_params,
                        unsigned int target_rate, cubeb_data_callback callback,
-                       void * user_ptr, cubeb_resampler_quality quality);
+                       void * user_ptr, cubeb_resampler_quality quality,
+                       cubeb_resampler_reclock reclock);
 
 /**
  * Fill the buffer with frames acquired using the data callback. Resampling will

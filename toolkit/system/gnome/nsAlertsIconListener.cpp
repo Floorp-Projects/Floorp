@@ -16,11 +16,15 @@
 #include "nsIObserverService.h"
 #include "nsCRT.h"
 #include "mozilla/XREAppData.h"
+#include "mozilla/GRefPtr.h"
+#include "mozilla/GUniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include <dlfcn.h>
 #include <gdk/gdk.h>
 
-extern const mozilla::StaticXREAppData* gAppData;
+using namespace mozilla;
+extern const StaticXREAppData* gAppData;
 
 static bool gHasActions = false;
 static bool gHasCaps = false;
@@ -64,7 +68,8 @@ static void notify_closed_marshal(GClosure* closure, GValue* return_value,
   NS_RELEASE(alert);
 }
 
-static GdkPixbuf* GetPixbufFromImgRequest(imgIRequest* aRequest) {
+static already_AddRefed<GdkPixbuf> GetPixbufFromImgRequest(
+    imgIRequest* aRequest) {
   nsCOMPtr<imgIContainer> image;
   nsresult rv = aRequest->GetImage(getter_AddRefs(image));
   if (NS_FAILED(rv)) {
@@ -145,14 +150,8 @@ nsAlertsIconListener::OnImageMissing(nsISupports*) {
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnImageReady(nsISupports*, imgIRequest* aRequest) {
-  GdkPixbuf* imagePixbuf = GetPixbufFromImgRequest(aRequest);
-  if (!imagePixbuf) {
-    ShowAlert(nullptr);
-  } else {
-    ShowAlert(imagePixbuf);
-    g_object_unref(imagePixbuf);
-  }
-
+  RefPtr<GdkPixbuf> imagePixbuf = GetPixbufFromImgRequest(aRequest);
+  ShowAlert(imagePixbuf);
   return NS_OK;
 }
 
@@ -202,10 +201,9 @@ nsresult nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf) {
   g_closure_set_marshal(closure, notify_closed_marshal);
   mClosureHandler =
       g_signal_connect_closure(mNotification, "closed", closure, FALSE);
-  GError* error = nullptr;
-  if (!notify_notification_show(mNotification, &error)) {
+  GUniquePtr<GError> error;
+  if (!notify_notification_show(mNotification, getter_Transfers(error))) {
     NS_WARNING(error->message);
-    g_error_free(error);
     return NS_ERROR_FAILURE;
   }
 
@@ -253,10 +251,9 @@ nsresult nsAlertsIconListener::Close() {
     return NS_OK;
   }
 
-  GError* error = nullptr;
-  if (!notify_notification_close(mNotification, &error)) {
+  GUniquePtr<GError> error;
+  if (!notify_notification_close(mNotification, getter_Transfers(error))) {
     NS_WARNING(error->message);
-    g_error_free(error);
     return NS_ERROR_FAILURE;
   }
 

@@ -15,15 +15,15 @@ interface mozIPersonalDictionary;
 [scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
 interface mozISpellCheckingEngine : nsISupports {
   /**
-   * The name of the current dictionary. Is either a value from
-   * getDictionaryList or the empty string if no dictionary is selected.
-   * Setting this attribute to a value not in getDictionaryList will throw
-   * NS_ERROR_FILE_NOT_FOUND.
+   * The names of the dictionaries currently used. These are either values
+   * from getDictionaryList or the empty array if no dictionary is selected.
+   * Setting this attribute to contain a value not in getDictionaryList will
+   * throw NS_ERROR_FILE_NOT_FOUND.
    *
-   * If the dictionary is changed to no dictionary (the empty string), an
+   * If the dictionaries are changed to no dictionary (the empty array), an
    * observer is allowed to set another dictionary before it returns.
    */
-  attribute ACString dictionary;
+  attribute Array<ACString> dictionaries;
 
   /**
    * the personal dictionary

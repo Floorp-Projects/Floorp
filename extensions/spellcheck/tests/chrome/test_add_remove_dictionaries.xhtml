@@ -27,12 +27,12 @@ function getDictionaryList(editor) {
 
 function getCurrentDictionary(editor) {
   var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
-  return spellchecker.GetCurrentDictionary();
+  return spellchecker.getCurrentDictionaries()[0];
 }
 
 function setCurrentDictionary(editor, dictionary) {
   var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
-  spellchecker.SetCurrentDictionary(dictionary);
+  return spellchecker.setCurrentDictionaries([dictionary]);
 }
 
 function RunTest() {
@@ -65,9 +65,9 @@ function RunTest() {
   ok(map.exists());
   hunspell.addDirectory(map);
 
-  const {onSpellCheck} = ChromeUtils.import(
+  const {maybeOnSpellCheck} = ChromeUtils.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm");
-  onSpellCheck(textbox, function () {
+    maybeOnSpellCheck(textbox, function () {
 
     // test that base and map dictionaries are available
     var dicts = getDictionaryList(editor);
@@ -75,48 +75,48 @@ function RunTest() {
     isnot(dicts.indexOf("maputf"), -1, "map is available");
 
     // select base dictionary
-    setCurrentDictionary(editor, "base-utf");
+    setCurrentDictionary(editor, "base-utf").then(() => {
+      /* eslint-disable no-useless-concat */
+      maybeOnSpellCheck(textbox, function () {
+        // test that base dictionary is in use
+        is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
+        is(getCurrentDictionary(editor), "base-utf", "current dictionary");
 
-    /* eslint-disable no-useless-concat */
-    onSpellCheck(textbox, function () {
-      // test that base dictionary is in use
-      is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
-      is(getCurrentDictionary(editor), "base-utf", "current dictionary");
+        // select map dictionary
+        setCurrentDictionary(editor, "maputf").then(() => {
+          // Focus again, so the spelling gets updated.
+          textbox.blur();
+          textbox.focus();
 
-      // select map dictionary
-      setCurrentDictionary(editor, "maputf");
+          maybeOnSpellCheck(textbox, function () {
+            // test that map dictionary is in use
+            is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (1)");
+            is(getCurrentDictionary(editor), "maputf", "current dictionary");
 
-      // Focus again, so the spelling gets updated.
-      textbox.blur();
-      textbox.focus();
+            // uninstall map dictionary
+            hunspell.removeDirectory(map);
 
-      onSpellCheck(textbox, function () {
-        // test that map dictionary is in use
-        is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (1)");
-        is(getCurrentDictionary(editor), "maputf", "current dictionary");
+            // Focus again, so the spelling gets updated.
+            textbox.blur();
+            textbox.focus();
 
-        // uninstall map dictionary
-        hunspell.removeDirectory(map);
+            maybeOnSpellCheck(textbox, function () {
+              // test that map dictionary is not in use
+              isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (2)");
+              isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
 
-        // Focus again, so the spelling gets updated.
-        textbox.blur();
-        textbox.focus();
+              // test that base dictionary is available and map dictionary is unavailable
+              var dicts = getDictionaryList(editor);
+              isnot(dicts.indexOf("base-utf"), -1, "base is available");
+              is(dicts.indexOf("maputf"), -1, "map is unavailable");
 
-        onSpellCheck(textbox, function () {
-          // test that map dictionary is not in use
-          isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (2)");
-          isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
+              // uninstall base dictionary
+              hunspell.removeDirectory(base);
 
-          // test that base dictionary is available and map dictionary is unavailable
-          var dicts = getDictionaryList(editor);
-          isnot(dicts.indexOf("base-utf"), -1, "base is available");
-          is(dicts.indexOf("maputf"), -1, "map is unavailable");
-
-          // uninstall base dictionary
-          hunspell.removeDirectory(base);
-
-          onSpellCheck(textbox, function () {
-            SimpleTest.finish();
+              maybeOnSpellCheck(textbox, function () {
+                SimpleTest.finish();
+              });
+            });
           });
         });
       });

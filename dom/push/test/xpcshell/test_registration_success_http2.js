@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
-
 var serverPort = -1;
 
 function run_test() {

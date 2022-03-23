@@ -50,12 +50,24 @@ bool ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
       nsAutoCString specOrigin;
       specURL->Origin(specOrigin);
 
+      // Linkable about URIs end up with a nested inner scheme of moz-safe-about
+      // which will have been captured in the originNoSuffix but the spec and
+      // its resulting specOrigin will not have this transformed scheme, so
+      // ignore the "moz-safe-" prefix when the originURL has that transformed
+      // scheme.
+      if (originURL->Scheme().Equals("moz-safe-about")) {
+        return specOrigin == originOrigin ||
+               specOrigin == Substring(originOrigin, 9 /*moz-safe-*/,
+                                       specOrigin.Length());
+      }
+
       // For now require Clients to have a principal where both its
       // originNoSuffix and spec have the same origin.  This will
       // exclude a variety of unusual combinations within the browser
       // but its adequate for the features need to support right now.
       // If necessary we could expand this function to handle more
       // cases in the future.
+
       return specOrigin == originOrigin;
     }
     default: {
@@ -107,6 +119,16 @@ bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
       // Generally any origin can also open javascript: windows and workers.
       if (scheme.LowerCaseEqualsLiteral("javascript")) {
         return true;
+      }
+
+      // Linkable about URIs end up with a nested inner scheme of moz-safe-about
+      // but the url and its resulting origin will not have this transformed
+      // scheme, so ignore the "moz-safe-" prefix when the principal has that
+      // transformed scheme.
+      if (principalURL->Scheme().Equals("moz-safe-about")) {
+        return origin == principalOrigin ||
+               origin ==
+                   Substring(principalOrigin, 9 /*moz-safe-*/, origin.Length());
       }
 
       // Otherwise don't support this URL type in the clients sub-system for

@@ -7,8 +7,7 @@
  * https://w3c.github.io/IntersectionObserver/
  */
 
-[ProbablyShortLivingWrapper, Pref="dom.IntersectionObserver.enabled",
- Exposed=Window]
+[ProbablyShortLivingWrapper, Exposed=Window]
 interface IntersectionObserverEntry {
   [Constant]
   readonly attribute DOMHighResTimeStamp time;
@@ -26,8 +25,7 @@ interface IntersectionObserverEntry {
   readonly attribute Element target;
 };
 
-[Pref="dom.IntersectionObserver.enabled",
- Exposed=Window]
+[Exposed=Window]
 interface IntersectionObserver {
   [Throws]
   constructor(IntersectionCallback intersectionCallback,

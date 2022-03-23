@@ -6,7 +6,20 @@
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",
+  pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  PushCrypto: "resource://gre/modules/PushCrypto.jsm",
+  PushService: "resource://gre/modules/PushService.jsm",
+  PushServiceHttp2: "resource://gre/modules/PushService.jsm",
+  PushServiceWebSocket: "resource://gre/modules/PushService.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 var {
   clearInterval,
   clearTimeout,
@@ -15,30 +28,7 @@ var {
   setTimeout,
   setTimeoutWithTarget,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-var { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
-var { PlacesUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesUtils.jsm"
-);
-var { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
-);
-var { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "pushBroadcastService",
-  "resource://gre/modules/PushBroadcastService.jsm",
-  {}
-);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushServiceComponent",
@@ -46,10 +36,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPushService"
 );
 
-const serviceExports = ChromeUtils.import(
-  "resource://gre/modules/PushService.jsm",
-  null
-);
 const servicePrefs = new Preferences("dom.push.");
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
@@ -62,7 +48,7 @@ var isParent =
 // Stop and clean up after the PushService.
 Services.obs.addObserver(function observe(subject, topic, data) {
   Services.obs.removeObserver(observe, topic);
-  serviceExports.PushService.uninit();
+  PushService.uninit();
   // Occasionally, `profile-change-teardown` and `xpcom-shutdown` will fire
   // before the PushService and AlarmService finish writing to IndexedDB. This
   // causes spurious errors and crashes, so we spin the event loop to let the

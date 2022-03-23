@@ -71,7 +71,7 @@ var InlineSpellCheckerContent = {
       overMisspelling: spellChecker.overMisspelling,
       misspelling: spellChecker.mMisspelling,
       spellSuggestions,
-      currentDictionary: spellChecker.mInlineSpellChecker.spellChecker.GetCurrentDictionary(),
+      currentDictionaries: spellChecker.mInlineSpellChecker.spellChecker.getCurrentDictionaries(),
       dictionaryList,
     };
   },
@@ -103,8 +103,8 @@ var InlineSpellCheckerContent = {
     return suggestions;
   },
 
-  selectDictionary(localeCode) {
-    this._spellChecker.selectDictionary(localeCode);
+  selectDictionaries(localeCodes) {
+    this._spellChecker.selectDictionaries(localeCodes);
   },
 
   replaceMisspelling(suggestion) {

@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -171,9 +172,9 @@ class Event : public nsISupports, public nsWrapperCache {
                                    WidgetEvent* aEvent,
                                    LayoutDeviceIntPoint aPoint,
                                    CSSIntPoint aDefaultPoint);
-  static CSSIntPoint GetScreenCoords(nsPresContext* aPresContext,
-                                     WidgetEvent* aEvent,
-                                     LayoutDeviceIntPoint aPoint);
+  static Maybe<CSSIntPoint> GetScreenCoords(nsPresContext* aPresContext,
+                                            WidgetEvent* aEvent,
+                                            LayoutDeviceIntPoint aPoint);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static CSSIntPoint GetOffsetCoords(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,

@@ -169,7 +169,7 @@ add_task(async function test_validation() {
 const WORD = "Flehgragh";
 
 add_task(async function test_registration() {
-  spellCheck.dictionary = "en-US";
+  spellCheck.dictionaries = ["en-US"];
 
   ok(!spellCheck.check(WORD), "Word should not pass check before add-on loads");
 

@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "nsSize.h"
 
 class imgIContainer;
@@ -23,15 +24,11 @@ class nsImageToPixbuf final {
  public:
   // Friendlier version of ConvertImageToPixbuf for callers inside of
   // widget
-  /**
-   * The return value of all these, if not null, should be
-   * released as needed by the caller using g_object_unref.
-   */
-  static GdkPixbuf* ImageToPixbuf(
+  static already_AddRefed<GdkPixbuf> ImageToPixbuf(
       imgIContainer* aImage,
       const mozilla::Maybe<nsIntSize>& aOverrideSize = mozilla::Nothing());
-  static GdkPixbuf* SourceSurfaceToPixbuf(SourceSurface* aSurface,
-                                          int32_t aWidth, int32_t aHeight);
+  static already_AddRefed<GdkPixbuf> SourceSurfaceToPixbuf(
+      SourceSurface* aSurface, int32_t aWidth, int32_t aHeight);
 
  private:
   ~nsImageToPixbuf() = default;

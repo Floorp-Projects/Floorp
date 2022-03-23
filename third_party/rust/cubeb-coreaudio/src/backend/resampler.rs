@@ -7,6 +7,7 @@ use std::ptr;
 pub struct Resampler(AutoRelease<ffi::cubeb_resampler>);
 
 impl Resampler {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         stream: *mut ffi::cubeb_stream,
         mut input_params: Option<ffi::cubeb_stream_params>,
@@ -14,6 +15,8 @@ impl Resampler {
         target_rate: c_uint,
         data_callback: ffi::cubeb_data_callback,
         user_ptr: *mut c_void,
+        quality: ffi::cubeb_resampler_quality,
+        reclock: ffi::cubeb_resampler_reclock,
     ) -> Self {
         let raw_resampler = unsafe {
             let in_params = if input_params.is_some() {
@@ -33,7 +36,8 @@ impl Resampler {
                 target_rate,
                 data_callback,
                 user_ptr,
-                ffi::CUBEB_RESAMPLER_QUALITY_DESKTOP,
+                quality,
+                reclock,
             )
         };
         assert!(!raw_resampler.is_null(), "Failed to create resampler");

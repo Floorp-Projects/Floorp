@@ -2422,7 +2422,8 @@ var XPIProvider = {
    *        unregistered.
    */
   unregisterDictionaries(aDicts) {
-    let origDict = spellCheck.dictionary;
+    let origDicts = spellCheck.dictionaries.slice();
+    let toRemove = [];
 
     for (let [lang, uri] of Object.entries(aDicts)) {
       if (
@@ -2430,12 +2431,14 @@ var XPIProvider = {
         this.dictionaries.hasOwnProperty(lang)
       ) {
         spellCheck.addDictionary(lang, this.dictionaries[lang]);
-
-        if (lang == origDict) {
-          spellCheck.dictionary = origDict;
-        }
+      } else {
+        toRemove.push(lang);
       }
     }
+
+    spellCheck.dictionaries = origDicts.filter(
+      lang => !toRemove.includes(lang)
+    );
   },
 
   /**

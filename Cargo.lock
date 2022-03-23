@@ -191,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "audio_thread_priority"
-version = "0.23.4"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cec7141c59547709f640219f15512026d416c0ca8ce7a5ac1524923ee65be2cb"
+checksum = "8b7cd1bfd03dab20ad72e0c5e58d65818d62c0d199d8dec8361053d0f073dbae"
 dependencies = [
  "cfg-if 0.1.10",
  "dbus",
@@ -206,7 +206,7 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -235,12 +235,11 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
  "cubeb-backend",
- "fallible_collections",
  "futures 0.1.31",
  "futures-cpupool",
  "log",
@@ -250,7 +249,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
+source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -266,7 +265,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
 dependencies = [
  "arrayvec 0.7.2",
  "ashmem",
@@ -292,7 +291,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -303,7 +302,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=8e3c4c1b1edbd19cfafc833c3254f12731af31c4#8e3c4c1b1edbd19cfafc833c3254f12731af31c4"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -845,7 +844,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=b313a83c0a0becf6115f6002510081a3537562ee#b313a83c0a0becf6115f6002510081a3537562ee"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -1117,27 +1116,27 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "cubeb"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33c84c136ac07ad218df6ca1b3ca0f0a1f7358ce059ea13a2c5527d4311c36c0"
+checksum = "d47c8cc00b8034e996d7dd262956a0d904c1e1d0d521d22c99801420b38484bd"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-backend"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3b874bbad81519f5a7e3fe6fdd29821d08c3ffb445f818a97f3ff11e1d6ec48"
+checksum = "e3d1cd779dd013686571104bbc98f2bcde1e732764b8ad394efaea86b064227d"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-core"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40aa77fed9bd627aaf11654c4d2753038d43d0f10abb6651db6e9330f81270e9"
+checksum = "04aabcd7fa088330b5f25b2f92cd1c2d80d0232e114e5bdaa682bb65103d57d9"
 dependencies = [
  "bitflags",
  "cubeb-sys",
@@ -1146,7 +1145,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bbf430701ee244f6a4349c98f1#dea28d0c7d9952bbf430701ee244f6a4349c98f1"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=b313a83c0a0becf6115f6002510081a3537562ee#b313a83c0a0becf6115f6002510081a3537562ee"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -1163,8 +1162,8 @@ dependencies = [
 
 [[package]]
 name = "cubeb-pulse"
-version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+version = "0.4.0"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -1175,9 +1174,9 @@ dependencies = [
 
 [[package]]
 name = "cubeb-sys"
-version = "0.9.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe27afa13cacb7028569922a814f17bb210517b26db67f905a95fd8151ce3794"
+checksum = "da8f61339785526e9488f4902ef09d83483fa7fc2c6f6f6f80bb8ae04af03818"
 dependencies = [
  "cmake",
  "pkg-config",
@@ -2605,7 +2604,7 @@ version = "0.3.100"
 [[package]]
 name = "jsparagus"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "jsparagus-ast",
  "jsparagus-emitter",
@@ -2619,7 +2618,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-ast"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "bumpalo",
  "indexmap",
@@ -2628,7 +2627,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-emitter"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "bumpalo",
  "byteorder",
@@ -2641,7 +2640,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-generated-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "bumpalo",
  "jsparagus-ast",
@@ -2651,12 +2650,12 @@ dependencies = [
 [[package]]
 name = "jsparagus-json-log"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 
 [[package]]
 name = "jsparagus-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "arrayvec 0.5.2",
  "bumpalo",
@@ -2668,7 +2667,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-scope"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "indexmap",
  "jsparagus-ast",
@@ -2678,7 +2677,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-stencil"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=eee6b112b1c29a663cbe316bc8f46b5c062269fe#eee6b112b1c29a663cbe316bc8f46b5c062269fe"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=f856904f19032afb4d3920f6827b2349ba5dd647#f856904f19032afb4d3920f6827b2349ba5dd647"
 dependencies = [
  "jsparagus-ast",
 ]
@@ -4098,7 +4097,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -4107,7 +4106,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02#f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
 dependencies = [
  "libc",
 ]

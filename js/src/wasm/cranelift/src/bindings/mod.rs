@@ -125,8 +125,8 @@ impl GlobalDesc {
     }
 
     /// Get the offset from the `InstanceReg` to the memory representing this global variable.
-    pub fn tls_offset(self) -> usize {
-        unsafe { low_level::global_tlsOffset(self.0) }
+    pub fn instance_offset(self) -> usize {
+        unsafe { low_level::global_instanceOffset(self.0) }
     }
 
     pub fn content_type(self) -> wasmparser::Type {
@@ -139,8 +139,8 @@ pub struct TableDesc(*const low_level::TableDesc);
 
 impl TableDesc {
     /// Get the offset from the `InstanceReg` to the `wasm::TableInstanceData` representing this table.
-    pub fn tls_offset(self) -> usize {
-        unsafe { low_level::table_tlsOffset(self.0) }
+    pub fn instance_offset(self) -> usize {
+        unsafe { low_level::table_instanceOffset(self.0) }
     }
 
     pub fn element_type(self) -> wasmparser::Type {
@@ -210,8 +210,8 @@ impl TypeIdDesc {
     pub(crate) fn id_immediate(&self) -> usize {
         unsafe { low_level::funcType_idImmediate(self.ptr) }
     }
-    pub(crate) fn id_tls_offset(&self) -> usize {
-        unsafe { low_level::funcType_idTlsOffset(self.ptr) }
+    pub(crate) fn id_instance_offset(&self) -> usize {
+        unsafe { low_level::funcType_idInstanceOffset(self.ptr) }
     }
 }
 
@@ -305,8 +305,8 @@ impl<'a> ModuleEnvironment<'a> {
     pub fn func_sig_index(&self, func_index: FuncIndex) -> SignatureIndex {
         SignatureIndex::new(unsafe { low_level::env_func_sig_index(self.env, func_index.index()) })
     }
-    pub fn func_import_tls_offset(&self, func_index: FuncIndex) -> usize {
-        unsafe { low_level::env_func_import_tls_offset(self.env, func_index.index()) }
+    pub fn func_import_instance_offset(&self, func_index: FuncIndex) -> usize {
+        unsafe { low_level::env_func_import_instance_offset(self.env, func_index.index()) }
     }
     pub fn func_is_import(&self, func_index: FuncIndex) -> bool {
         unsafe { low_level::env_func_is_import(self.env, func_index.index()) }

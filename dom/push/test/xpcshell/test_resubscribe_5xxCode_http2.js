@@ -5,8 +5,6 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
-
 var httpServer = null;
 
 XPCOMUtils.defineLazyGetter(this, "serverPort", function() {

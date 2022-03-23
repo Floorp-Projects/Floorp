@@ -65,6 +65,33 @@ import pytest
             id="missing_test_end_with_test_status_ok",
             marks=pytest.mark.xfail,  # status is OK but should be ERROR
         ),
+        pytest.param(
+            [
+                (
+                    "suite_start",
+                    {
+                        "manifestA": ["test_foo", "test_bar", "test_baz"],
+                        "manifestB": ["test_something"],
+                    },
+                ),
+                ("test_start", "test_foo"),
+                ("test_end", "test_foo", "SKIP"),
+                ("test_start", "test_bar"),
+                ("test_end", "test_bar", "CRASH"),
+                ("test_start", "test_something"),
+                ("test_end", "test_something", "OK"),
+                ("test_start", "test_baz"),
+                ("test_end", "test_baz", "FAIL", "FAIL"),
+                ("suite_end",),
+            ],
+            """
+                {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
+                {"test": "test_bar", "subtest": null, "group": "manifestA", "status": "CRASH", "expected": "OK", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 4}
+                {"group": "manifestA", "status": "ERROR", "duration": 70, "action": "group_result", "line": 9}
+                {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
+            """.strip(),
+            id="crash_and_group_status",
+        ),
     ),
 )
 def test_errorsummary(monkeypatch, get_logger, logs, expected):

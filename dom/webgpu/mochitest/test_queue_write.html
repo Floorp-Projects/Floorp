@@ -24,7 +24,9 @@ const func = async function() {
 };
 
 SimpleTest.waitForExplicitFinish();
-func().finally(() => SimpleTest.finish());
+func()
+  .catch((e) => ok(false, "Unhandled exception " + e))
+  .finally(() => SimpleTest.finish());
 
 </script>
 </body>

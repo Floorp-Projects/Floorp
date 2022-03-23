@@ -636,7 +636,13 @@ void RemoteWorkerChild::CloseWorkerOnMainThread(State& aState) {
   // WorkerPrivate::Cancel.
 
   if (aState.is<Pending>()) {
-    aState.as<Pending>().mWorkerPrivate->Cancel();
+    // SharedWorkerOp::MaybeStart would not block terminate operation while
+    // RemoteWorkerChild::mState is still Pending, and the
+    // Pending.mWorkerPrivate is still nullptr. For the case, just switching the
+    // State to PendingTerminated.
+    if (aState.as<Pending>().mWorkerPrivate) {
+      aState.as<Pending>().mWorkerPrivate->Cancel();
+    }
     TransitionStateToPendingTerminated(aState);
     return;
   }

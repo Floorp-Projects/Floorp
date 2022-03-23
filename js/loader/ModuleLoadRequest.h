@@ -9,6 +9,7 @@
 
 #include "ScriptLoadRequest.h"
 #include "ModuleLoaderBase.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/MozPromise.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -77,6 +78,14 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     return mRootModule;
   }
 
+  bool IsModuleMarkedForBytecodeEncoding() const {
+    return mIsMarkedForBytecodeEncoding;
+  }
+  void MarkModuleForBytecodeEncoding() {
+    MOZ_ASSERT(!IsModuleMarkedForBytecodeEncoding());
+    mIsMarkedForBytecodeEncoding = true;
+  }
+
  private:
   void LoadFinished();
   void CancelImports();
@@ -88,6 +97,11 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Is this the top level request for a dynamic module import?
   const bool mIsDynamicImport;
+
+  // True if this module is planned to be saved in the bytecode cache.
+  // ModuleLoadRequest doesn't use ScriptLoadRequest::mScriptForBytecodeEncoding
+  // field because the JSScript reference isn't always avaialble for module.
+  bool mIsMarkedForBytecodeEncoding = false;
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.

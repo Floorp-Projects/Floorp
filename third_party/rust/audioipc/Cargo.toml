@@ -12,14 +12,13 @@ edition = "2018"
 [dependencies]
 bincode = "1.3"
 bytes = "0.4"
-cubeb = "0.9"
+cubeb = "0.10"
 futures = "0.1.29"
 log = "0.4"
 serde = "1"
 serde_derive = "1"
 tokio = "0.1"
 tokio-io = "0.1"
-audio_thread_priority = "0.23.4"
 
 [target.'cfg(unix)'.dependencies]
 iovec = "0.1"
@@ -28,6 +27,11 @@ mio = "0.6.19"
 mio-uds = "0.6.7"
 tokio-reactor = "0.1"
 memmap2 = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies.audio_thread_priority]
+version = "0.26.0"
+default_features = false
+features = ["winapi"]
 
 [target.'cfg(windows)'.dependencies]
 mio = "0.6.19"

@@ -338,7 +338,8 @@ void test_resampler_duplex(uint32_t input_channels, uint32_t output_channels,
 
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params, target_rate,
-                           data_cb_resampler, (void*)&state, CUBEB_RESAMPLER_QUALITY_VOIP);
+                           data_cb_resampler, (void*)&state, CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
 
   long latency = cubeb_resampler_latency(resampler);
 
@@ -484,8 +485,8 @@ TEST(cubeb, resampler_output_only_noop)
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, nullptr, &output_params, target_rate,
                            test_output_only_noop_data_cb, nullptr,
-                           CUBEB_RESAMPLER_QUALITY_VOIP);
-
+                           CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
   const long out_frames = 128;
   float out_buffer[out_frames];
   long got;
@@ -523,7 +524,8 @@ TEST(cubeb, resampler_drain)
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, nullptr, &output_params, target_rate,
                            test_drain_data_cb, &cb_count,
-                           CUBEB_RESAMPLER_QUALITY_VOIP);
+                           CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
 
   const long out_frames = 128;
   float out_buffer[out_frames];
@@ -572,7 +574,8 @@ TEST(cubeb, resampler_passthrough_output_only)
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, nullptr, &output_params,
                            target_rate, cb_passthrough_resampler_output, nullptr,
-                           CUBEB_RESAMPLER_QUALITY_VOIP);
+                           CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
 
   float output_buffer[output_channels * 256];
 
@@ -616,7 +619,8 @@ TEST(cubeb, resampler_passthrough_input_only)
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, nullptr,
                            target_rate, cb_passthrough_resampler_input, nullptr,
-                           CUBEB_RESAMPLER_QUALITY_VOIP);
+                           CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
 
   float input_buffer[input_channels * 256];
 
@@ -737,7 +741,8 @@ TEST(cubeb, resampler_passthrough_duplex_callback_reordering)
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params,
                            target_rate, cb_passthrough_resampler_duplex, &c,
-                           CUBEB_RESAMPLER_QUALITY_VOIP);
+                           CUBEB_RESAMPLER_QUALITY_VOIP,
+                           CUBEB_RESAMPLER_RECLOCK_NONE);
 
   const long BUF_BASE_SIZE = 256;
   float input_buffer_prebuffer[input_channels * BUF_BASE_SIZE * 2];
@@ -820,7 +825,7 @@ TEST(cubeb, resampler_drift_drop_data)
     cubeb_resampler * resampler =
       cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params,
         target_rate, cb_passthrough_resampler_duplex, &c,
-        CUBEB_RESAMPLER_QUALITY_VOIP);
+        CUBEB_RESAMPLER_QUALITY_VOIP, CUBEB_RESAMPLER_RECLOCK_NONE);
 
     const long BUF_BASE_SIZE = 256;
 

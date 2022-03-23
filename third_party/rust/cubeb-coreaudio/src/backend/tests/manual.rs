@@ -1,6 +1,6 @@
 use super::utils::{
     test_get_devices_in_scope, test_ops_context_operation, test_ops_stream_operation, Scope,
-    StreamType, TestDeviceSwitcher,
+    StreamType, TestDeviceInfo, TestDeviceSwitcher,
 };
 use super::*;
 use std::io;
@@ -285,18 +285,74 @@ fn test_stream_tester() {
             }
         }
 
+        let device_selector = |scope: Scope| -> AudioObjectID {
+            loop {
+                println!(
+                    "Select {} device:\n",
+                    if scope == Scope::Input {
+                        "input"
+                    } else {
+                        "output"
+                    }
+                );
+                let mut list = vec![];
+                list.push(kAudioObjectUnknown);
+                println!("{:>4}: System default", 0);
+                let devices = test_get_devices_in_scope(scope.clone());
+                for (idx, device) in devices.iter().enumerate() {
+                    list.push(*device);
+                    let info = TestDeviceInfo::new(*device, scope.clone());
+                    println!(
+                        "{:>4}: {}\n\tAudioObjectID: {}\n\tuid: {}",
+                        idx + 1,
+                        info.label,
+                        device,
+                        info.uid
+                    );
+                }
+
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let n: usize = match input.trim().parse() {
+                    Err(_) => {
+                        println!("Invalid option. Try again.\n");
+                        continue;
+                    }
+                    Ok(n) => n,
+                };
+                if n >= list.len() {
+                    println!("Invalid option. Try again.\n");
+                    continue;
+                }
+                return list[n];
+            }
+        };
+
         let mut input_params = get_dummy_stream_params(Scope::Input);
         let mut output_params = get_dummy_stream_params(Scope::Output);
 
-        let input_stream_params = if stream_type.contains(StreamType::INPUT) {
-            &mut input_params as *mut ffi::cubeb_stream_params
+        let (input_device, input_stream_params) = if stream_type.contains(StreamType::INPUT) {
+            (
+                device_selector(Scope::Input),
+                &mut input_params as *mut ffi::cubeb_stream_params,
+            )
         } else {
-            ptr::null_mut()
+            (
+                kAudioObjectUnknown, /* default input device */
+                ptr::null_mut(),
+            )
         };
-        let output_stream_params = if stream_type.contains(StreamType::OUTPUT) {
-            &mut output_params as *mut ffi::cubeb_stream_params
+
+        let (output_device, output_stream_params) = if stream_type.contains(StreamType::OUTPUT) {
+            (
+                device_selector(Scope::Output),
+                &mut output_params as *mut ffi::cubeb_stream_params,
+            )
         } else {
-            ptr::null_mut()
+            (
+                kAudioObjectUnknown, /* default output device */
+                ptr::null_mut(),
+            )
         };
 
         let stream_name = CString::new("stream tester").unwrap();
@@ -307,9 +363,9 @@ fn test_stream_tester() {
                     context_ptr,
                     stream_ptr,
                     stream_name.as_ptr(),
-                    ptr::null_mut(), // default input device
+                    input_device as ffi::cubeb_devid,
                     input_stream_params,
-                    ptr::null_mut(), // default output device
+                    output_device as ffi::cubeb_devid,
                     output_stream_params,
                     4096, // latency
                     Some(data_callback),
@@ -328,7 +384,6 @@ fn test_stream_tester() {
             state: ffi::cubeb_state,
         ) {
             assert!(!stream.is_null());
-            assert_ne!(state, ffi::CUBEB_STATE_ERROR);
             let s = State::from(state);
             println!("state: {:?}", s);
         }

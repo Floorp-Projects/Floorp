@@ -19,7 +19,7 @@
 <div id="edit1" contenteditable=true></div>
 
 <script>
-const {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+const {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
 
 SimpleTest.waitForExplicitFinish();
 
@@ -52,7 +52,7 @@ async function test_with_single_quote(input) {
   synthesizeKey("e");
   synthesizeKey("s");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   let editor = getEditor(input);
   // isSpellingCheckOk is defined in spellcheck.js
   ok(isSpellingCheckOk(editor, misspeltWords), "no misspelt words");
@@ -61,7 +61,7 @@ async function test_with_single_quote(input) {
   synthesizeKey("\'");
   is(input.value || input.textContent, "doesn\'", "");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   // XXX This won't work since mozInlineSpellWordUtil::SplitDOM removes
   // last single quote unfortunately that is during inputting.
   // isSpellingCheckOk is defined in spellcheck.js
@@ -71,7 +71,7 @@ async function test_with_single_quote(input) {
   synthesizeKey(" ");
   is(input.value || input.textContent, "doesn\' ", "");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   misspeltWords.push("doesn");
   // isSpellingCheckOk is defined in spellcheck.js
   ok(isSpellingCheckOk(editor, misspeltWords), "should run spellchecker");
@@ -95,7 +95,7 @@ async function test_with_twice_characters(input, ch) {
   // trigger spellchecker
   synthesizeKey(" ");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   misspeltWords.push("doesn");
   let editor = getEditor(input);
   // isSpellingCheckOk is defined in spellcheck.js
@@ -115,7 +115,7 @@ async function test_between_single_quote(input) {
   synthesizeKey("t");
   synthesizeKey("\'");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   let editor = getEditor(input);
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker between single qoute");
@@ -141,14 +141,14 @@ async function test_with_email(input) {
   synthesizeKey("o");
   synthesizeKey("m");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   let editor = getEditor(input);
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker for email address");
 
   synthesizeKey(" ");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   ok(isSpellingCheckOk(editor, misspeltWords),
      "no misspelt words due to email address");
 }
@@ -175,14 +175,14 @@ async function test_with_url(input) {
   synthesizeKey("o");
   synthesizeKey("m");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   let editor = getEditor(input);
   ok(isSpellingCheckOk(editor, misspeltWords),
      "don't run spellchecker for URL");
 
   synthesizeKey(" ");
 
-  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(input, resolve); });
   ok(isSpellingCheckOk(editor, misspeltWords),
      "no misspelt words due to URL");
 }

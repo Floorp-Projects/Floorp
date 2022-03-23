@@ -66,12 +66,15 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/UniquePtr.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
+#include "nsTHashMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozHunspellAllocator.h"
 
@@ -100,9 +103,6 @@ class mozHunspell final : public mozISpellCheckingEngine,
 
   void LoadDictionaryList(bool aNotifyChildProcesses);
 
-  // helper method for converting a word to the charset of the dictionary
-  nsresult ConvertCharset(const nsAString& aStr, std::string& aDst);
-
   NS_DECL_NSIMEMORYREPORTER
 
  protected:
@@ -111,19 +111,25 @@ class mozHunspell final : public mozISpellCheckingEngine,
   void DictionariesChanged(bool aNotifyChildProcesses);
 
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
-  mozilla::UniquePtr<mozilla::Encoder> mEncoder;
-  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 
   // Hashtable matches dictionary name to .aff file
   nsInterfaceHashtable<nsStringHashKey, nsIURI> mDictionaries;
-  nsString mDictionary;
-  nsCString mAffixFileName;
 
   // dynamic dirs used to search for dictionaries
   nsCOMArray<nsIFile> mDynamicDirectories;
   nsInterfaceHashtable<nsStringHashKey, nsIURI> mDynamicDictionaries;
 
-  RLBoxHunspell* mHunspell;
+  struct DictionaryData {
+    mozilla::UniquePtr<mozilla::Encoder> mEncoder;
+    mozilla::UniquePtr<mozilla::Decoder> mDecoder;
+    mozilla::UniquePtr<RLBoxHunspell> mHunspell;
+    nsCString mAffixFileName;
+
+    // helper method for converting a word to the charset of the dictionary
+    nsresult ConvertCharset(const nsAString& aStr, std::string& aDst);
+  };
+
+  nsTHashMap<nsCStringHashKey, DictionaryData> mHunspells;
 };
 
 #endif

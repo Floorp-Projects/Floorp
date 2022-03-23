@@ -396,31 +396,31 @@ nsresult mozSpellChecker::GetDictionaryList(
   return NS_OK;
 }
 
-nsresult mozSpellChecker::GetCurrentDictionary(nsACString& aDictionary) {
+nsresult mozSpellChecker::GetCurrentDictionaries(
+    nsTArray<nsCString>& aDictionaries) {
   if (XRE_IsContentProcess()) {
-    aDictionary = mCurrentDictionary;
+    aDictionaries = mCurrentDictionaries.Clone();
     return NS_OK;
   }
 
   if (!mSpellCheckingEngine) {
-    aDictionary.Truncate();
+    aDictionaries.Clear();
     return NS_OK;
   }
 
-  return mSpellCheckingEngine->GetDictionary(aDictionary);
+  return mSpellCheckingEngine->GetDictionaries(aDictionaries);
 }
 
-nsresult mozSpellChecker::SetCurrentDictionary(const nsACString& aDictionary) {
+nsresult mozSpellChecker::SetCurrentDictionary(const nsCString& aDictionary) {
   if (XRE_IsContentProcess()) {
-    nsCString wrappedDict = nsCString(aDictionary);
+    mCurrentDictionaries.Clear();
     bool isSuccess;
-    mEngine->SendSetDictionary(wrappedDict, &isSuccess);
+    mEngine->SendSetDictionary(aDictionary, &isSuccess);
     if (!isSuccess) {
-      mCurrentDictionary.Truncate();
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    mCurrentDictionary = wrappedDict;
+    mCurrentDictionaries.AppendElement(aDictionary);
     return NS_OK;
   }
 
@@ -438,18 +438,19 @@ nsresult mozSpellChecker::SetCurrentDictionary(const nsACString& aDictionary) {
   rv = GetEngineList(&spellCheckingEngines);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsTArray<nsCString> dictionaries;
+  dictionaries.AppendElement(aDictionary);
   for (int32_t i = 0; i < spellCheckingEngines.Count(); i++) {
-    // We must set mSpellCheckingEngine before we call SetDictionary, since
-    // SetDictionary calls back to this spell checker to check if the
+    // We must set mSpellCheckingEngine before we call SetDictionaries, since
+    // SetDictionaries calls back to this spell checker to check if the
     // dictionary was set
     mSpellCheckingEngine = spellCheckingEngines[i];
-
-    rv = mSpellCheckingEngine->SetDictionary(aDictionary);
+    rv = mSpellCheckingEngine->SetDictionaries(dictionaries);
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<mozIPersonalDictionary> personalDictionary =
           do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
-      mSpellCheckingEngine->SetPersonalDictionary(personalDictionary.get());
+      mSpellCheckingEngine->SetPersonalDictionary(personalDictionary);
 
       mConverter = new mozEnglishWordUtils;
       return NS_OK;
@@ -462,6 +463,54 @@ nsresult mozSpellChecker::SetCurrentDictionary(const nsACString& aDictionary) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaries(
+    const nsTArray<nsCString>& aDictionaries) {
+  if (XRE_IsContentProcess()) {
+    // mCurrentDictionaries will be set by RemoteSpellCheckEngineChild
+    return mEngine->SetCurrentDictionaries(aDictionaries);
+  }
+
+  // Calls to mozISpellCheckingEngine::SetDictionary might destroy us
+  RefPtr<mozSpellChecker> kungFuDeathGrip = this;
+
+  mSpellCheckingEngine = nullptr;
+
+  if (aDictionaries.IsEmpty()) {
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
+
+  nsresult rv;
+  nsCOMArray<mozISpellCheckingEngine> spellCheckingEngines;
+  rv = GetEngineList(&spellCheckingEngines);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  for (int32_t i = 0; i < spellCheckingEngines.Count(); i++) {
+    // We must set mSpellCheckingEngine before we call SetDictionaries, since
+    // SetDictionaries calls back to this spell checker to check if the
+    // dictionary was set
+    mSpellCheckingEngine = spellCheckingEngines[i];
+    rv = mSpellCheckingEngine->SetDictionaries(aDictionaries);
+
+    if (NS_SUCCEEDED(rv)) {
+      mCurrentDictionaries = aDictionaries.Clone();
+
+      nsCOMPtr<mozIPersonalDictionary> personalDictionary =
+          do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
+      mSpellCheckingEngine->SetPersonalDictionary(personalDictionary);
+
+      mConverter = new mozEnglishWordUtils;
+      return GenericPromise::CreateAndResolve(true, __func__);
+    }
+  }
+
+  mSpellCheckingEngine = nullptr;
+
+  // We could not find any engine with the requested dictionary
+  return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+}
+
 RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
     const nsTArray<nsCString>& aList) {
   if (aList.IsEmpty()) {
@@ -469,7 +518,7 @@ RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
   }
 
   if (XRE_IsContentProcess()) {
-    // mCurrentDictionary will be set by RemoteSpellCheckEngineChild
+    // mCurrentDictionaries will be set by RemoteSpellCheckEngineChild
     return mEngine->SetCurrentDictionaryFromList(aList);
   }
 

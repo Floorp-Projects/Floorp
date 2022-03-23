@@ -15,14 +15,14 @@
 add_task(async function() {
   await new Promise(resolve => SimpleTest.waitForFocus(resolve));
 
-  let { onSpellCheck } =
+  let { maybeOnSpellCheck } =
     SpecialPowers.Cu.import(
       "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
 
   let element = document.getElementById("en-US");
   element.focus();
 
-  await new Promise(resolve => onSpellCheck(element, resolve));
+  await new Promise(resolve => maybeOnSpellCheck(element, resolve));
 
   let editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   let editor = editingSession.getEditorForWindow(window);

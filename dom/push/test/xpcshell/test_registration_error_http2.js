@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
-
 function run_test() {
   do_get_profile();
   run_next_test();

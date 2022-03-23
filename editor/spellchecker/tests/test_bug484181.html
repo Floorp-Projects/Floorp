@@ -46,14 +46,14 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  const {onSpellCheck} = SpecialPowers.Cu.import(
+  const {maybeOnSpellCheck} = SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
-  onSpellCheck(edit, function() {
+  maybeOnSpellCheck(edit, function() {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
        "All misspellings before editing are accounted for.");
 
     append(" becaz I'm a lulcat!");
-    onSpellCheck(edit, function() {
+    maybeOnSpellCheck(edit, function() {
       gMisspeltWords.push("becaz");
       gMisspeltWords.push("lulcat");
       ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
