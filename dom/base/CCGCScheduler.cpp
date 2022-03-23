@@ -135,7 +135,6 @@ void CCGCScheduler::NoteGCBegin(JS::GCReason aReason) {
 void CCGCScheduler::NoteGCEnd() {
   mMajorGCReason = JS::GCReason::NO_REASON;
   mEagerMajorGCReason = JS::GCReason::NO_REASON;
-  mEagerMinorGCReason = JS::GCReason::NO_REASON;
 
   mInIncrementalGC = false;
   mCCBlockStart = TimeStamp();
@@ -229,11 +228,6 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
     case GCRunnerAction::None:
       KillGCRunner();
       return false;
-
-    case GCRunnerAction::MinorGC:
-      JS::RunIdleTimeGCTask(CycleCollectedJSRuntime::Get()->Runtime());
-      NoteMinorGCEnd();
-      return HasMoreIdleGCRunnerWork();
 
     case GCRunnerAction::WaitToMajorGC: {
       MOZ_ASSERT(!mHaveAskedParent, "GCRunner alive after asking the parent");
@@ -475,7 +469,7 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
   }
 
   if (mGCRunner || mHaveAskedParent) {
-    // There's already a GC runner, or there will be, so just return.
+    // There's already a GC runner, there or will be, so just return.
     return;
   }
 
@@ -805,10 +799,6 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
     return {CCRunnerAction::StopRunning, Yield};
   }
 
-  if (mEagerMinorGCReason != JS::GCReason::NO_REASON && !aDeadline.IsNull()) {
-    return {CCRunnerAction::MinorGC, Continue};
-  }
-
   switch (mCCRunnerState) {
       // ReducePurple: a GC ran (or we otherwise decided to try CC'ing). Wait
       // for some amount of time (kCCDelay, or less if incremental GC blocked
@@ -922,10 +912,6 @@ GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) const {
       return {mReadyForMajorGC ? GCRunnerAction::StartMajorGC
                                : GCRunnerAction::WaitToMajorGC,
               mEagerMajorGCReason};
-    }
-
-    if (mEagerMinorGCReason != JS::GCReason::NO_REASON) {
-      return {GCRunnerAction::MinorGC, mEagerMinorGCReason};
     }
   }
 
