@@ -65,36 +65,37 @@ var loadListener = async function(evt) {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function() {
-    var spellchecker = inlineSpellChecker.spellChecker;
-    try {
-      var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch (e) {}
+  .onSpellCheck(elem, async function() {
+    let spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictionaries = spellchecker.getCurrentDictionaries();
+
+    is(currentDictionaries.length, 1, "expected one dictionary");
+    let currentDictionary = currentDictionaries[0];
 
     if (firstLoad) {
       firstLoad = false;
 
       // First time around, we get a random dictionary based on the language "en".
-      if (currentDictonary == "en-GB") {
-        spellchecker.SetCurrentDictionary("en-US");
+      if (currentDictionary == "en-GB") {
         expected = "en-US";
-      } else if (currentDictonary == "en-US") {
-        spellchecker.SetCurrentDictionary("en-GB");
+      } else if (currentDictionary == "en-US") {
         expected = "en-GB";
       } else {
         is(true, false, "Neither en-US nor en-GB are current");
       }
-      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=false";
+      spellchecker.setCurrentDictionaries([expected]).then(() => {
+        content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=false";});
     } else {
-      is(currentDictonary, expected, expected + " expected");
+      is(currentDictionary, expected, expected + " expected");
       content.removeEventListener("load", loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
-      script.sendAsyncMessage("destroy");
+      await script.sendQuery("destroy");
 
       // This will clear the content preferences and reset "spellchecker.dictionary".
-      spellchecker.SetCurrentDictionary("");
-      SimpleTest.finish();
+      spellchecker.setCurrentDictionaries([]).then(() => {
+        SimpleTest.finish();
+      });
     }
   });
 };

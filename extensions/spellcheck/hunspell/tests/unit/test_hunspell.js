@@ -188,7 +188,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
   Assert.ok(good.exists() || bad.exists() || sug.exists());
 
   dump("Setting dictionary to " + name + "\n");
-  checker.dictionary = name;
+  checker.dictionaries = [name];
 
   if (good.exists()) {
     var good_counter = 0;

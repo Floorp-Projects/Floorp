@@ -35,18 +35,20 @@ function init() {
         ok(list.length > 0, "At least one dictionary should be present");
 
         var lang = list[0];
-        spellchecker.spellChecker.SetCurrentDictionary(lang);
-
-        onSpellCheck(textarea, function() {
+        spellchecker.spellChecker.setCurrentDictionaries([lang]).then(() => {
+          onSpellCheck(textarea, function() {
             try {
-                var dictionary =
-                    spellchecker.spellChecker.GetCurrentDictionary();
+                var dictionaries =
+                    spellchecker.spellChecker.getCurrentDictionaries();
             } catch (e) {}
-            is(dictionary, lang, "Unexpected spell check dictionary");
+            is(dictionaries.length, 1, "Expected one dictionary");
+            is(dictionaries[0], lang, "Unexpected spell check dictionary");
 
             // This will clear the content preferences and reset "spellchecker.dictionary".
-            spellchecker.spellChecker.SetCurrentDictionary("");
-            SimpleTest.finish();
+            spellchecker.spellChecker.setCurrentDictionaries([]).then(() => {
+              SimpleTest.finish();
+            });
+          });
         });
     });
 }

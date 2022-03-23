@@ -17,7 +17,7 @@
 <div id="contenteditable" contenteditable=true>kkkk&#xf6;kkkk</div>
 
 <script>
-const {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+const {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
 
 SimpleTest.waitForExplicitFinish();
 
@@ -36,13 +36,13 @@ SimpleTest.waitForFocus(async () => {
   synthesizeKey(" ");
 
   // Run spell checker
-  await new Promise((resolve) => { onSpellCheck(contenteditable, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(contenteditable, resolve); });
 
   synthesizeKey("a");
   synthesizeKey("a");
   synthesizeKey("a");
 
-  await new Promise((resolve) => { onSpellCheck(contenteditable, resolve); });
+  await new Promise((resolve) => { maybeOnSpellCheck(contenteditable, resolve); });
   let editor = getEditor();
   // isSpellingCheckOk is defined in spellcheck.js
   // eslint-disable-next-line no-undef
