@@ -16,9 +16,6 @@
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
 #  include "mozilla/layers/TextureClient.h"
 #endif
-#ifdef MOZ_WAYLAND_USE_VAAPI
-#  include "FFmpegVideoFramePool.h"
-#endif
 
 struct _VADRMPRIMESurfaceDescriptor;
 typedef struct _VADRMPRIMESurfaceDescriptor VADRMPRIMESurfaceDescriptor;
@@ -26,6 +23,7 @@ typedef struct _VADRMPRIMESurfaceDescriptor VADRMPRIMESurfaceDescriptor;
 namespace mozilla {
 
 class ImageBufferWrapper;
+class VideoFramePool;
 
 template <int V>
 class FFmpegVideoDecoder : public FFmpegDataDecoder<V> {};
@@ -137,7 +135,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   AVBufferRef* mVAAPIDeviceContext;
   bool mEnableHardwareDecoding;
   VADisplay mDisplay;
-  UniquePtr<VideoFramePool<LIBAV_VER>> mVideoFramePool;
+  UniquePtr<VideoFramePool> mVideoFramePool;
   static nsTArray<AVCodecID> mAcceleratedFormats;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
