@@ -386,23 +386,23 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
   rSet.revents = 0;
 
   retVal = poll(&rSet, 1, 1000);
-  if (retVal < 0 && errno != EINTR)  // continue if interrupted
-  {
-    // poll failed
-    return false;
-  } else if (retVal == 0) {
-    // poll timed out
-    return true;
-  } else if (!(rSet.revents & POLLIN)) {
-    // not event on camera handle
-    return true;
-  }
-
   {
     MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;
+    }
+
+    if (retVal < 0 && errno != EINTR)  // continue if interrupted
+    {
+      // poll failed
+      return false;
+    } else if (retVal == 0) {
+      // poll timed out
+      return true;
+    } else if (!(rSet.revents & POLLIN)) {
+      // not event on camera handle
+      return true;
     }
 
     if (_captureStarted) {
