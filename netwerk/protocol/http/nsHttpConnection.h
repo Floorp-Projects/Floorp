@@ -406,6 +406,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   int64_t mTotalBytesWritten = 0;  // does not include CONNECT tunnel
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
+
+  bool mClosed{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
