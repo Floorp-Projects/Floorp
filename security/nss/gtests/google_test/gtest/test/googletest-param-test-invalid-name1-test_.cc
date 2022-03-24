@@ -27,14 +27,17 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 #include "gtest/gtest.h"
 
 namespace {
 class DummyTest : public ::testing::TestWithParam<const char *> {};
 
-TEST_P(DummyTest, Dummy) {}
+TEST_P(DummyTest, Dummy) {
+}
 
-INSTANTIATE_TEST_SUITE_P(InvalidTestName, DummyTest,
+INSTANTIATE_TEST_SUITE_P(InvalidTestName,
+                         DummyTest,
                          ::testing::Values("InvalidWithQuotes"),
                          ::testing::PrintToStringParamName());
 
@@ -44,3 +47,4 @@ int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+

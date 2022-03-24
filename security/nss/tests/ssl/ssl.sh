@@ -471,7 +471,7 @@ ssl_auth()
       elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       else
-          cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          cparam=`echo $cparam | sed -e 's;\([^\\]\)_;\1 ;g' -e 's;\\\\_;_;g' -e "s/TestUser/$USER_NICKNAME/g" `
           if [ "$ectype" = "SNI" ]; then
               cparam=`echo $cparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
               sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
@@ -483,7 +483,7 @@ ssl_auth()
 	      SERVER_VMIN=tls1.0
 	      SERVER_VMAX=tls1.3
 	  fi
-          start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
+          start_selfserv `echo "$sparam" | sed -e 's;\([^\\]\)_;\1 ;g' -e 's;\\\\_;_;g'`
 
           echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
           echo "        ${cparam}  < ${REQUEST_FILE}"
@@ -754,7 +754,10 @@ ssl_crl_ssl()
         fi
         servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
         pwd=`echo $cparam | grep nss`
+        # did we select TestUser?
         user=`echo $cparam | grep TestUser`
+        # did we explicitly select a cert?
+        auto=`echo $cparam | grep '\\-n'`
         _cparam=$cparam
         case $servarg in
             1) if [ -z "$pwd" -o -z "$user" ]; then
@@ -763,14 +766,24 @@ ssl_crl_ssl()
                  rev_modvalue=254
                fi
                ;;
-            2) rev_modvalue=254 ;;
+            2) if [ -z "$auto" ]; then
+                 rev_modvalue=0
+               else
+                 rev_modvalue=254
+               fi
+               ;;
             3) if [ -z "$pwd" -o -z "$user" ]; then
                 rev_modvalue=0
                 else
                 rev_modvalue=1
                 fi
                 ;;
-            4) rev_modvalue=1 ;;
+            4) if [ -z "$auto" ]; then
+                rev_modvalue=0
+                else
+                rev_modvalue=1
+                fi
+                ;;
         esac
         TEMP_NUM=0
         while [ $TEMP_NUM -lt $CRL_GROUP_RANGE ]
@@ -778,8 +791,8 @@ ssl_crl_ssl()
           CURR_SER_NUM=`expr ${CRL_GROUP_BEGIN} + ${TEMP_NUM}`
           TEMP_NUM=`expr $TEMP_NUM + 1`
           USER_NICKNAME="TestUser${CURR_SER_NUM}"
-          cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
-          start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
+          cparam=`echo $_cparam | sed -e 's;\([^\\]\)_;\1 ;g' -e 's;\\\\_;_;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          start_selfserv `echo "$sparam" | sed -e 's;\([^\\]\)_;\1 ;g' -e 's;\\\\_;_;g'`
 
           echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} $verbose \\"
           echo "        ${cparam}  < ${REQUEST_FILE}"
@@ -1246,7 +1259,7 @@ ssl_crl_cache()
             CURR_SER_NUM=`expr ${CRL_GRP_1_BEGIN} + ${TEMP_NUM}`
             TEMP_NUM=`expr $TEMP_NUM + 1`
             USER_NICKNAME="TestUser${CURR_SER_NUM}"
-            cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+            cparam=`echo $_cparam | sed -e 's;\([^\]\)_;\1 ;g' -e 's;\\_;_;g' -e "s/TestUser/$USER_NICKNAME/g" `
 
             echo "Server Args: $SERV_ARG"
             echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} $verbose \\"

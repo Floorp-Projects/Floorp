@@ -34,25 +34,26 @@
 
 // GOOGLETEST_CM0001 DO NOT DELETE
 
-#ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
-#define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
+#ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
+#define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
 
 #include "gtest/internal/gtest-port.h"
 
 #if GTEST_OS_LINUX
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+# include <stdlib.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <unistd.h>
 #endif  // GTEST_OS_LINUX
 
 #if GTEST_HAS_EXCEPTIONS
-#include <stdexcept>
+# include <stdexcept>
 #endif
 
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
+#include <cstdint>
 #include <iomanip>
 #include <limits>
 #include <map>
@@ -75,34 +76,43 @@
 // the current line number.  For more details, see
 // http://www.parashift.com/c++-faq-lite/misc-technical-issues.html#faq-39.6
 #define GTEST_CONCAT_TOKEN_(foo, bar) GTEST_CONCAT_TOKEN_IMPL_(foo, bar)
-#define GTEST_CONCAT_TOKEN_IMPL_(foo, bar) foo##bar
+#define GTEST_CONCAT_TOKEN_IMPL_(foo, bar) foo ## bar
 
 // Stringifies its argument.
-#define GTEST_STRINGIFY_(name) #name
+// Work around a bug in visual studio which doesn't accept code like this:
+//
+//   #define GTEST_STRINGIFY_(name) #name
+//   #define MACRO(a, b, c) ... GTEST_STRINGIFY_(a) ...
+//   MACRO(, x, y)
+//
+// Complaining about the argument to GTEST_STRINGIFY_ being empty.
+// This is allowed by the spec.
+#define GTEST_STRINGIFY_HELPER_(name, ...) #name
+#define GTEST_STRINGIFY_(...) GTEST_STRINGIFY_HELPER_(__VA_ARGS__, )
 
 namespace proto2 {
-class Message;
+class MessageLite;
 }
 
 namespace testing {
 
 // Forward declarations.
 
-class AssertionResult;  // Result of an assertion.
-class Message;          // Represents a failure message.
-class Test;             // Represents a test.
-class TestInfo;         // Information about a test.
-class TestPartResult;   // Result of a test part.
-class UnitTest;         // A collection of test suites.
+class AssertionResult;                 // Result of an assertion.
+class Message;                         // Represents a failure message.
+class Test;                            // Represents a test.
+class TestInfo;                        // Information about a test.
+class TestPartResult;                  // Result of a test part.
+class UnitTest;                        // A collection of test suites.
 
 template <typename T>
 ::std::string PrintToString(const T& value);
 
 namespace internal {
 
-struct TraceInfo;    // Information about a trace point.
-class TestInfoImpl;  // Opaque implementation of TestInfo
-class UnitTestImpl;  // Opaque implementation of UnitTest
+struct TraceInfo;                      // Information about a trace point.
+class TestInfoImpl;                    // Opaque implementation of TestInfo
+class UnitTestImpl;                    // Opaque implementation of UnitTest
 
 // The text used in failure messages to indicate the start of the
 // stack trace.
@@ -111,7 +121,6 @@ GTEST_API_ extern const char kStackTraceMarker[];
 // An IgnoredValue object can be implicitly constructed from ANY value.
 class IgnoredValue {
   struct Sink {};
-
  public:
   // This constructor template allows any value to be implicitly
   // converted to IgnoredValue.  The object has no data member and
@@ -127,13 +136,13 @@ class IgnoredValue {
 };
 
 // Appends the user-supplied message to the Google-Test-generated message.
-GTEST_API_ std::string AppendUserMessage(const std::string& gtest_msg,
-                                         const Message& user_msg);
+GTEST_API_ std::string AppendUserMessage(
+    const std::string& gtest_msg, const Message& user_msg);
 
 #if GTEST_HAS_EXCEPTIONS
 
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(
-    4275 /* an exported class was derived from a class that was not exported */)
+GTEST_DISABLE_MSC_WARNINGS_PUSH_(4275 \
+/* an exported class was derived from a class that was not exported */)
 
 // This exception is thrown by (and only by) a failed Google Test
 // assertion when GTEST_FLAG(throw_on_failure) is true (if exceptions
@@ -203,8 +212,10 @@ GTEST_API_ AssertionResult EqFailure(const char* expected_expression,
 
 // Constructs a failure message for Boolean assertions such as EXPECT_TRUE.
 GTEST_API_ std::string GetBoolAssertionFailureMessage(
-    const AssertionResult& assertion_result, const char* expression_text,
-    const char* actual_predicate_value, const char* expected_predicate_value);
+    const AssertionResult& assertion_result,
+    const char* expression_text,
+    const char* actual_predicate_value,
+    const char* expected_predicate_value);
 
 // This template class represents an IEEE floating-point number
 // (either single-precision or double-precision, depending on the
@@ -245,11 +256,11 @@ class FloatingPoint {
   // Constants.
 
   // # of bits in a number.
-  static const size_t kBitCount = 8 * sizeof(RawType);
+  static const size_t kBitCount = 8*sizeof(RawType);
 
   // # of fraction bits in a number.
   static const size_t kFractionBitCount =
-      std::numeric_limits<RawType>::digits - 1;
+    std::numeric_limits<RawType>::digits - 1;
 
   // # of exponent bits in a number.
   static const size_t kExponentBitCount = kBitCount - 1 - kFractionBitCount;
@@ -258,8 +269,8 @@ class FloatingPoint {
   static const Bits kSignBitMask = static_cast<Bits>(1) << (kBitCount - 1);
 
   // The mask for the fraction bits.
-  static const Bits kFractionBitMask = ~static_cast<Bits>(0) >>
-                                       (kExponentBitCount + 1);
+  static const Bits kFractionBitMask =
+    ~static_cast<Bits>(0) >> (kExponentBitCount + 1);
 
   // The mask for the exponent bits.
   static const Bits kExponentBitMask = ~(kSignBitMask | kFractionBitMask);
@@ -276,7 +287,7 @@ class FloatingPoint {
   //
   // See the following article for more details on ULP:
   // http://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
-  static const size_t kMaxUlps = 4;
+  static const uint32_t kMaxUlps = 4;
 
   // Constructs a FloatingPoint from a raw floating-point number.
   //
@@ -298,7 +309,9 @@ class FloatingPoint {
   }
 
   // Returns the floating-point number that represent positive infinity.
-  static RawType Infinity() { return ReinterpretBits(kExponentBitMask); }
+  static RawType Infinity() {
+    return ReinterpretBits(kExponentBitMask);
+  }
 
   // Returns the maximum representable finite floating-point number.
   static RawType Max();
@@ -306,7 +319,7 @@ class FloatingPoint {
   // Non-static methods
 
   // Returns the bits that represents this number.
-  const Bits& bits() const { return u_.bits_; }
+  const Bits &bits() const { return u_.bits_; }
 
   // Returns the exponent bits of this number.
   Bits exponent_bits() const { return kExponentBitMask & u_.bits_; }
@@ -335,8 +348,8 @@ class FloatingPoint {
     // a NAN must return false.
     if (is_nan() || rhs.is_nan()) return false;
 
-    return DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_) <=
-           kMaxUlps;
+    return DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_)
+        <= kMaxUlps;
   }
 
  private:
@@ -361,7 +374,7 @@ class FloatingPoint {
   //
   // Read http://en.wikipedia.org/wiki/Signed_number_representations
   // for more details on signed number representations.
-  static Bits SignAndMagnitudeToBiased(const Bits& sam) {
+  static Bits SignAndMagnitudeToBiased(const Bits &sam) {
     if (kSignBitMask & sam) {
       // sam represents a negative number.
       return ~sam + 1;
@@ -373,8 +386,8 @@ class FloatingPoint {
 
   // Given two numbers in the sign-and-magnitude representation,
   // returns the distance between them as an unsigned number.
-  static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits& sam1,
-                                                     const Bits& sam2) {
+  static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits &sam1,
+                                                     const Bits &sam2) {
     const Bits biased1 = SignAndMagnitudeToBiased(sam1);
     const Bits biased2 = SignAndMagnitudeToBiased(sam2);
     return (biased1 >= biased2) ? (biased1 - biased2) : (biased2 - biased1);
@@ -386,13 +399,9 @@ class FloatingPoint {
 // We cannot use std::numeric_limits<T>::max() as it clashes with the max()
 // macro defined by <windows.h>.
 template <>
-inline float FloatingPoint<float>::Max() {
-  return FLT_MAX;
-}
+inline float FloatingPoint<float>::Max() { return FLT_MAX; }
 template <>
-inline double FloatingPoint<double>::Max() {
-  return DBL_MAX;
-}
+inline double FloatingPoint<double>::Max() { return DBL_MAX; }
 
 // Typedefs the instances of the FloatingPoint template class that we
 // care to use.
@@ -511,6 +520,7 @@ struct SuiteApiResolver : T {
 
   static SetUpTearDownSuiteFuncType GetSetUpCaseOrSuite(const char* filename,
                                                         int line_num) {
+#ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_
     SetUpTearDownSuiteFuncType test_case_fp =
         GetNotDefaultOrNull(&T::SetUpTestCase, &Test::SetUpTestCase);
     SetUpTearDownSuiteFuncType test_suite_fp =
@@ -522,10 +532,16 @@ struct SuiteApiResolver : T {
         << filename << ":" << line_num;
 
     return test_case_fp != nullptr ? test_case_fp : test_suite_fp;
+#else
+    (void)(filename);
+    (void)(line_num);
+    return &T::SetUpTestSuite;
+#endif
   }
 
   static SetUpTearDownSuiteFuncType GetTearDownCaseOrSuite(const char* filename,
                                                            int line_num) {
+#ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_
     SetUpTearDownSuiteFuncType test_case_fp =
         GetNotDefaultOrNull(&T::TearDownTestCase, &Test::TearDownTestCase);
     SetUpTearDownSuiteFuncType test_suite_fp =
@@ -537,6 +553,11 @@ struct SuiteApiResolver : T {
         << filename << ":" << line_num;
 
     return test_case_fp != nullptr ? test_case_fp : test_suite_fp;
+#else
+    (void)(filename);
+    (void)(line_num);
+    return &T::TearDownTestSuite;
+#endif
   }
 };
 
@@ -545,11 +566,11 @@ struct SuiteApiResolver : T {
 //
 // Arguments:
 //
-//   test_suite_name:   name of the test suite
+//   test_suite_name:  name of the test suite
 //   name:             name of the test
-//   type_param        the name of the test's type parameter, or NULL if
+//   type_param:       the name of the test's type parameter, or NULL if
 //                     this is not a typed or a type-parameterized test.
-//   value_param       text representation of the test's value parameter,
+//   value_param:      text representation of the test's value parameter,
 //                     or NULL if this is not a type-parameterized test.
 //   code_location:    code location where the test is defined
 //   fixture_class_id: ID of the test fixture class
@@ -569,10 +590,8 @@ GTEST_API_ TestInfo* MakeAndRegisterTestInfo(
 // and returns false.  None of pstr, *pstr, and prefix can be NULL.
 GTEST_API_ bool SkipPrefix(const char* prefix, const char** pstr);
 
-#if GTEST_HAS_TYPED_TEST || GTEST_HAS_TYPED_TEST_P
-
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(
-    4251 /* class A needs to have dll-interface to be used by clients of class B */)
+GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
+/* class A needs to have dll-interface to be used by clients of class B */)
 
 // State of the definition of a type-parameterized test suite.
 class GTEST_API_ TypedTestSuitePState {
@@ -610,7 +629,8 @@ class GTEST_API_ TypedTestSuitePState {
   // Verifies that registered_tests match the test names in
   // defined_test_names_; returns registered_tests if successful, or
   // aborts the program otherwise.
-  const char* VerifyRegisteredTestNames(const char* file, int line,
+  const char* VerifyRegisteredTestNames(const char* test_suite_name,
+                                        const char* file, int line,
                                         const char* registered_tests);
 
  private:
@@ -634,8 +654,7 @@ inline const char* SkipComma(const char* str) {
   if (comma == nullptr) {
     return nullptr;
   }
-  while (IsSpace(*(++comma))) {
-  }
+  while (IsSpace(*(++comma))) {}
   return comma;
 }
 
@@ -649,7 +668,7 @@ inline std::string GetPrefixUntilComma(const char* str) {
 // Splits a given string on a given delimiter, populating a given
 // vector with the fields.
 void SplitString(const ::std::string& str, char delimiter,
-                 ::std::vector<::std::string>* dest);
+                 ::std::vector< ::std::string>* dest);
 
 // The default argument to the template below for the case when the user does
 // not provide a name generator.
@@ -666,7 +685,7 @@ struct NameGeneratorSelector {
 };
 
 template <typename NameGenerator>
-void GenerateNamesRecursively(Types0, std::vector<std::string>*, int) {}
+void GenerateNamesRecursively(internal::None, std::vector<std::string>*, int) {}
 
 template <typename NameGenerator, typename Types>
 void GenerateNamesRecursively(Types, std::vector<std::string>* result, int i) {
@@ -733,7 +752,7 @@ class TypeParameterizedTest {
 
 // The base case for the compile time recursion.
 template <GTEST_TEMPLATE_ Fixture, class TestSel>
-class TypeParameterizedTest<Fixture, TestSel, Types0> {
+class TypeParameterizedTest<Fixture, TestSel, internal::None> {
  public:
   static bool Register(const char* /*prefix*/, const CodeLocation&,
                        const char* /*case_name*/, const char* /*test_names*/,
@@ -743,6 +762,11 @@ class TypeParameterizedTest<Fixture, TestSel, Types0> {
     return true;
   }
 };
+
+GTEST_API_ void RegisterTypeParameterizedTestSuite(const char* test_suite_name,
+                                                   CodeLocation code_location);
+GTEST_API_ void RegisterTypeParameterizedTestSuiteInstantiation(
+    const char* case_name);
 
 // TypeParameterizedTestSuite<Fixture, Tests, Types>::Register()
 // registers *all combinations* of 'Tests' and 'Types' with Google
@@ -756,13 +780,14 @@ class TypeParameterizedTestSuite {
                        const char* test_names,
                        const std::vector<std::string>& type_names =
                            GenerateNames<DefaultNameGenerator, Types>()) {
-    std::string test_name =
-        StripTrailingSpaces(GetPrefixUntilComma(test_names));
+    RegisterTypeParameterizedTestSuiteInstantiation(case_name);
+    std::string test_name = StripTrailingSpaces(
+        GetPrefixUntilComma(test_names));
     if (!state->TestExists(test_name)) {
       fprintf(stderr, "Failed to get code location for test %s.%s at %s.",
               case_name, test_name.c_str(),
-              FormatFileLocation(code_location.file.c_str(), code_location.line)
-                  .c_str());
+              FormatFileLocation(code_location.file.c_str(),
+                                 code_location.line).c_str());
       fflush(stderr);
       posix::Abort();
     }
@@ -785,7 +810,7 @@ class TypeParameterizedTestSuite {
 
 // The base case for the compile time recursion.
 template <GTEST_TEMPLATE_ Fixture, typename Types>
-class TypeParameterizedTestSuite<Fixture, Templates0, Types> {
+class TypeParameterizedTestSuite<Fixture, internal::None, Types> {
  public:
   static bool Register(const char* /*prefix*/, const CodeLocation&,
                        const TypedTestSuitePState* /*state*/,
@@ -795,8 +820,6 @@ class TypeParameterizedTestSuite<Fixture, Templates0, Types> {
     return true;
   }
 };
-
-#endif  // GTEST_HAS_TYPED_TEST || GTEST_HAS_TYPED_TEST_P
 
 // Returns the current OS stack trace as an std::string.
 //
@@ -808,8 +831,8 @@ class TypeParameterizedTestSuite<Fixture, Templates0, Types> {
 // For example, if Foo() calls Bar(), which in turn calls
 // GetCurrentOsStackTraceExceptTop(..., 1), Foo() will be included in
 // the trace but Bar() and GetCurrentOsStackTraceExceptTop() won't.
-GTEST_API_ std::string GetCurrentOsStackTraceExceptTop(UnitTest* unit_test,
-                                                       int skip_count);
+GTEST_API_ std::string GetCurrentOsStackTraceExceptTop(
+    UnitTest* unit_test, int skip_count);
 
 // Helpers for suppressing warnings on unreachable code or constant
 // condition.
@@ -829,6 +852,16 @@ struct GTEST_API_ ConstCharPtr {
   const char* value;
 };
 
+// Helper for declaring std::string within 'if' statement
+// in pre C++17 build environment.
+struct TrueWithString {
+  TrueWithString() = default;
+  explicit TrueWithString(const char* str) : value(str) {}
+  explicit TrueWithString(const std::string& str) : value(str) {}
+  explicit operator bool() const { return true; }
+  std::string value;
+};
+
 // A simple Linear Congruential Generator for generating random
 // numbers with a uniform distribution.  Unlike rand() and srand(), it
 // doesn't use global state (and therefore can't interfere with user
@@ -836,18 +869,18 @@ struct GTEST_API_ ConstCharPtr {
 // but it's good enough for our purposes.
 class GTEST_API_ Random {
  public:
-  static const UInt32 kMaxRange = 1u << 31;
+  static const uint32_t kMaxRange = 1u << 31;
 
-  explicit Random(UInt32 seed) : state_(seed) {}
+  explicit Random(uint32_t seed) : state_(seed) {}
 
-  void Reseed(UInt32 seed) { state_ = seed; }
+  void Reseed(uint32_t seed) { state_ = seed; }
 
   // Generates a random number from [0, range).  Crashes if 'range' is
   // 0 or greater than kMaxRange.
-  UInt32 Generate(UInt32 range);
+  uint32_t Generate(uint32_t range);
 
  private:
-  UInt32 state_;
+  uint32_t state_;
   GTEST_DISALLOW_COPY_AND_ASSIGN_(Random);
 };
 
@@ -855,12 +888,34 @@ class GTEST_API_ Random {
 #define GTEST_REMOVE_REFERENCE_AND_CONST_(T) \
   typename std::remove_const<typename std::remove_reference<T>::type>::type
 
-// IsAProtocolMessage<T>::value is a compile-time bool constant that's
-// true if and only if T is type proto2::Message or a subclass of it.
+// HasDebugStringAndShortDebugString<T>::value is a compile-time bool constant
+// that's true if and only if T has methods DebugString() and ShortDebugString()
+// that return std::string.
 template <typename T>
-struct IsAProtocolMessage
-    : public bool_constant<
-          std::is_convertible<const T*, const ::proto2::Message*>::value> {};
+class HasDebugStringAndShortDebugString {
+ private:
+  template <typename C>
+  static auto CheckDebugString(C*) -> typename std::is_same<
+      std::string, decltype(std::declval<const C>().DebugString())>::type;
+  template <typename>
+  static std::false_type CheckDebugString(...);
+
+  template <typename C>
+  static auto CheckShortDebugString(C*) -> typename std::is_same<
+      std::string, decltype(std::declval<const C>().ShortDebugString())>::type;
+  template <typename>
+  static std::false_type CheckShortDebugString(...);
+
+  using HasDebugStringType = decltype(CheckDebugString<T>(nullptr));
+  using HasShortDebugStringType = decltype(CheckShortDebugString<T>(nullptr));
+
+ public:
+  static constexpr bool value =
+      HasDebugStringType::value && HasShortDebugStringType::value;
+};
+
+template <typename T>
+constexpr bool HasDebugStringAndShortDebugString<T>::value;
 
 // When the compiler sees expression IsContainerTest<C>(0), if C is an
 // STL-style container class, the first overload of IsContainerTest
@@ -899,9 +954,7 @@ IsContainer IsContainerTest(int /* dummy */) {
 
 typedef char IsNotContainer;
 template <class C>
-IsNotContainer IsContainerTest(long /* dummy */) {
-  return '\0';
-}
+IsNotContainer IsContainerTest(long /* dummy */) { return '\0'; }
 
 // Trait to detect whether a type T is a hash table.
 // The heuristic used is that the type contains an inner type `hasher` and does
@@ -964,13 +1017,11 @@ bool ArrayEq(const T* lhs, size_t size, const U* rhs);
 
 // This generic version is used when k is 0.
 template <typename T, typename U>
-inline bool ArrayEq(const T& lhs, const U& rhs) {
-  return lhs == rhs;
-}
+inline bool ArrayEq(const T& lhs, const U& rhs) { return lhs == rhs; }
 
 // This overload is used when k >= 1.
 template <typename T, typename U, size_t N>
-inline bool ArrayEq(const T (&lhs)[N], const U (&rhs)[N]) {
+inline bool ArrayEq(const T(&lhs)[N], const U(&rhs)[N]) {
   return internal::ArrayEq(lhs, N, rhs);
 }
 
@@ -980,7 +1031,8 @@ inline bool ArrayEq(const T (&lhs)[N], const U (&rhs)[N]) {
 template <typename T, typename U>
 bool ArrayEq(const T* lhs, size_t size, const U* rhs) {
   for (size_t i = 0; i != size; i++) {
-    if (!internal::ArrayEq(lhs[i], rhs[i])) return false;
+    if (!internal::ArrayEq(lhs[i], rhs[i]))
+      return false;
   }
   return true;
 }
@@ -990,7 +1042,8 @@ bool ArrayEq(const T* lhs, size_t size, const U* rhs) {
 template <typename Iter, typename Element>
 Iter ArrayAwareFind(Iter begin, Iter end, const Element& elem) {
   for (Iter it = begin; it != end; ++it) {
-    if (internal::ArrayEq(*it, elem)) return it;
+    if (internal::ArrayEq(*it, elem))
+      return it;
   }
   return end;
 }
@@ -1004,13 +1057,11 @@ void CopyArray(const T* from, size_t size, U* to);
 
 // This generic version is used when k is 0.
 template <typename T, typename U>
-inline void CopyArray(const T& from, U* to) {
-  *to = from;
-}
+inline void CopyArray(const T& from, U* to) { *to = from; }
 
 // This overload is used when k >= 1.
 template <typename T, typename U, size_t N>
-inline void CopyArray(const T (&from)[N], U (*to)[N]) {
+inline void CopyArray(const T(&from)[N], U(*to)[N]) {
   internal::CopyArray(from, N, *to);
 }
 
@@ -1063,7 +1114,8 @@ class NativeArray {
   }
 
   ~NativeArray() {
-    if (clone_ != &NativeArray::InitRef) delete[] array_;
+    if (clone_ != &NativeArray::InitRef)
+      delete[] array_;
   }
 
   // STL-style container methods.
@@ -1071,7 +1123,8 @@ class NativeArray {
   const_iterator begin() const { return array_; }
   const_iterator end() const { return array_ + size_; }
   bool operator==(const NativeArray& rhs) const {
-    return size() == rhs.size() && ArrayEq(begin(), size(), rhs.begin());
+    return size() == rhs.size() &&
+        ArrayEq(begin(), size(), rhs.begin());
   }
 
  private:
@@ -1098,8 +1151,6 @@ class NativeArray {
   const Element* array_;
   size_t size_;
   void (NativeArray::*clone_)(const Element*, size_t);
-
-  GTEST_DISALLOW_ASSIGN_(NativeArray);
 };
 
 // Backport of std::index_sequence.
@@ -1123,32 +1174,44 @@ struct DoubleSequence<false, IndexSequence<I...>, sizeofT> {
 // Backport of std::make_index_sequence.
 // It uses O(ln(N)) instantiation depth.
 template <size_t N>
-struct MakeIndexSequence
-    : DoubleSequence<N % 2 == 1, typename MakeIndexSequence<N / 2>::type,
+struct MakeIndexSequenceImpl
+    : DoubleSequence<N % 2 == 1, typename MakeIndexSequenceImpl<N / 2>::type,
                      N / 2>::type {};
 
 template <>
-struct MakeIndexSequence<0> : IndexSequence<> {};
+struct MakeIndexSequenceImpl<0> : IndexSequence<> {};
 
-// FIXME: This implementation of ElemFromList is O(1) in instantiation depth,
-// but it is O(N^2) in total instantiations. Not sure if this is the best
-// tradeoff, as it will make it somewhat slow to compile.
-template <typename T, size_t, size_t>
-struct ElemFromListImpl {};
+template <size_t N>
+using MakeIndexSequence = typename MakeIndexSequenceImpl<N>::type;
 
-template <typename T, size_t I>
-struct ElemFromListImpl<T, I, I> {
-  using type = T;
+template <typename... T>
+using IndexSequenceFor = typename MakeIndexSequence<sizeof...(T)>::type;
+
+template <size_t>
+struct Ignore {
+  Ignore(...);  // NOLINT
 };
 
-// Get the Nth element from T...
-// It uses O(1) instantiation depth.
-template <size_t N, typename I, typename... T>
-struct ElemFromList;
+template <typename>
+struct ElemFromListImpl;
+template <size_t... I>
+struct ElemFromListImpl<IndexSequence<I...>> {
+  // We make Ignore a template to solve a problem with MSVC.
+  // A non-template Ignore would work fine with `decltype(Ignore(I))...`, but
+  // MSVC doesn't understand how to deal with that pack expansion.
+  // Use `0 * I` to have a single instantiation of Ignore.
+  template <typename R>
+  static R Apply(Ignore<0 * I>..., R (*)(), ...);
+};
 
-template <size_t N, size_t... I, typename... T>
-struct ElemFromList<N, IndexSequence<I...>, T...>
-    : ElemFromListImpl<T, N, I>... {};
+template <size_t N, typename... T>
+struct ElemFromList {
+  using type =
+      decltype(ElemFromListImpl<typename MakeIndexSequence<N>::type>::Apply(
+          static_cast<T (*)()>(nullptr)...));
+};
+
+struct FlatTupleConstructTag {};
 
 template <typename... T>
 class FlatTuple;
@@ -1158,11 +1221,11 @@ struct FlatTupleElemBase;
 
 template <typename... T, size_t I>
 struct FlatTupleElemBase<FlatTuple<T...>, I> {
-  using value_type =
-      typename ElemFromList<I, typename MakeIndexSequence<sizeof...(T)>::type,
-                            T...>::type;
+  using value_type = typename ElemFromList<I, T...>::type;
   FlatTupleElemBase() = default;
-  explicit FlatTupleElemBase(value_type t) : value(std::move(t)) {}
+  template <typename Arg>
+  explicit FlatTupleElemBase(FlatTupleConstructTag, Arg&& t)
+      : value(std::forward<Arg>(t)) {}
   value_type value;
 };
 
@@ -1174,13 +1237,35 @@ struct FlatTupleBase<FlatTuple<T...>, IndexSequence<Idx...>>
     : FlatTupleElemBase<FlatTuple<T...>, Idx>... {
   using Indices = IndexSequence<Idx...>;
   FlatTupleBase() = default;
-  explicit FlatTupleBase(T... t)
-      : FlatTupleElemBase<FlatTuple<T...>, Idx>(std::move(t))... {}
+  template <typename... Args>
+  explicit FlatTupleBase(FlatTupleConstructTag, Args&&... args)
+      : FlatTupleElemBase<FlatTuple<T...>, Idx>(FlatTupleConstructTag{},
+                                                std::forward<Args>(args))... {}
+
+  template <size_t I>
+  const typename ElemFromList<I, T...>::type& Get() const {
+    return FlatTupleElemBase<FlatTuple<T...>, I>::value;
+  }
+
+  template <size_t I>
+  typename ElemFromList<I, T...>::type& Get() {
+    return FlatTupleElemBase<FlatTuple<T...>, I>::value;
+  }
+
+  template <typename F>
+  auto Apply(F&& f) -> decltype(std::forward<F>(f)(this->Get<Idx>()...)) {
+    return std::forward<F>(f)(Get<Idx>()...);
+  }
+
+  template <typename F>
+  auto Apply(F&& f) const -> decltype(std::forward<F>(f)(this->Get<Idx>()...)) {
+    return std::forward<F>(f)(Get<Idx>()...);
+  }
 };
 
 // Analog to std::tuple but with different tradeoffs.
 // This class minimizes the template instantiation depth, thus allowing more
-// elements that std::tuple would. std::tuple has been seen to require an
+// elements than std::tuple would. std::tuple has been seen to require an
 // instantiation depth of more than 10x the number of elements in some
 // implementations.
 // FlatTuple and ElemFromList are not recursive and have a fixed depth
@@ -1191,21 +1276,17 @@ template <typename... T>
 class FlatTuple
     : private FlatTupleBase<FlatTuple<T...>,
                             typename MakeIndexSequence<sizeof...(T)>::type> {
-  using Indices = typename FlatTuple::FlatTupleBase::Indices;
+  using Indices = typename FlatTupleBase<
+      FlatTuple<T...>, typename MakeIndexSequence<sizeof...(T)>::type>::Indices;
 
  public:
   FlatTuple() = default;
-  explicit FlatTuple(T... t) : FlatTuple::FlatTupleBase(std::move(t)...) {}
+  template <typename... Args>
+  explicit FlatTuple(FlatTupleConstructTag tag, Args&&... args)
+      : FlatTuple::FlatTupleBase(tag, std::forward<Args>(args)...) {}
 
-  template <size_t I>
-  const typename ElemFromList<I, Indices, T...>::type& Get() const {
-    return static_cast<const FlatTupleElemBase<FlatTuple, I>*>(this)->value;
-  }
-
-  template <size_t I>
-  typename ElemFromList<I, Indices, T...>::type& Get() {
-    return static_cast<FlatTupleElemBase<FlatTuple, I>*>(this)->value;
-  }
+  using FlatTuple::FlatTupleBase::Apply;
+  using FlatTuple::FlatTupleBase::Get;
 };
 
 // Utility functions to be called with static_assert to induce deprecation
@@ -1238,9 +1319,25 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() { return true; }
 }  // namespace internal
 }  // namespace testing
 
-#define GTEST_MESSAGE_AT_(file, line, message, result_type)             \
-  ::testing::internal::AssertHelper(result_type, file, line, message) = \
-      ::testing::Message()
+namespace std {
+// Some standard library implementations use `struct tuple_size` and some use
+// `class tuple_size`. Clang warns about the mismatch.
+// https://reviews.llvm.org/D55466
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+template <typename... Ts>
+struct tuple_size<testing::internal::FlatTuple<Ts...>>
+    : std::integral_constant<size_t, sizeof...(Ts)> {};
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+}  // namespace std
+
+#define GTEST_MESSAGE_AT_(file, line, message, result_type) \
+  ::testing::internal::AssertHelper(result_type, file, line, message) \
+    = ::testing::Message()
 
 #define GTEST_MESSAGE_(message, result_type) \
   GTEST_MESSAGE_AT_(__FILE__, __LINE__, message, result_type)
@@ -1260,20 +1357,74 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() { return true; }
 // Suppress MSVC warning 4072 (unreachable code) for the code following
 // statement if it returns or throws (or doesn't return or throw in some
 // situations).
+// NOTE: The "else" is important to keep this expansion to prevent a top-level
+// "else" from attaching to our "if".
 #define GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement) \
   if (::testing::internal::AlwaysTrue()) {                        \
     statement;                                                    \
+  } else                     /* NOLINT */                         \
+    static_assert(true, "")  // User must have a semicolon after expansion.
+
+#if GTEST_HAS_EXCEPTIONS
+
+namespace testing {
+namespace internal {
+
+class NeverThrown {
+ public:
+  const char* what() const noexcept {
+    return "this exception should never be thrown";
   }
+};
+
+}  // namespace internal
+}  // namespace testing
+
+#if GTEST_HAS_RTTI
+
+#define GTEST_EXCEPTION_TYPE_(e) ::testing::internal::GetTypeName(typeid(e))
+
+#else  // GTEST_HAS_RTTI
+
+#define GTEST_EXCEPTION_TYPE_(e) \
+  std::string { "an std::exception-derived error" }
+
+#endif  // GTEST_HAS_RTTI
+
+#define GTEST_TEST_THROW_CATCH_STD_EXCEPTION_(statement, expected_exception)   \
+  catch (typename std::conditional<                                            \
+         std::is_same<typename std::remove_cv<typename std::remove_reference<  \
+                          expected_exception>::type>::type,                    \
+                      std::exception>::value,                                  \
+         const ::testing::internal::NeverThrown&, const std::exception&>::type \
+             e) {                                                              \
+    gtest_msg.value = "Expected: " #statement                                  \
+                      " throws an exception of type " #expected_exception      \
+                      ".\n  Actual: it throws ";                               \
+    gtest_msg.value += GTEST_EXCEPTION_TYPE_(e);                               \
+    gtest_msg.value += " with description \"";                                 \
+    gtest_msg.value += e.what();                                               \
+    gtest_msg.value += "\".";                                                  \
+    goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                \
+  }
+
+#else  // GTEST_HAS_EXCEPTIONS
+
+#define GTEST_TEST_THROW_CATCH_STD_EXCEPTION_(statement, expected_exception)
+
+#endif  // GTEST_HAS_EXCEPTIONS
 
 #define GTEST_TEST_THROW_(statement, expected_exception, fail)              \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                             \
-  if (::testing::internal::ConstCharPtr gtest_msg = "") {                   \
+  if (::testing::internal::TrueWithString gtest_msg{}) {                    \
     bool gtest_caught_expected = false;                                     \
     try {                                                                   \
       GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);            \
     } catch (expected_exception const&) {                                   \
       gtest_caught_expected = true;                                         \
-    } catch (...) {                                                         \
+    }                                                                       \
+    GTEST_TEST_THROW_CATCH_STD_EXCEPTION_(statement, expected_exception)    \
+    catch (...) {                                                           \
       gtest_msg.value = "Expected: " #statement                             \
                         " throws an exception of type " #expected_exception \
                         ".\n  Actual: it throws a different type.";         \
@@ -1285,69 +1436,88 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() { return true; }
                         ".\n  Actual: it throws nothing.";                  \
       goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);           \
     }                                                                       \
-  } else                                                                    \
+  } else /*NOLINT*/                                                         \
     GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__)                   \
-        : fail(gtest_msg.value)
+        : fail(gtest_msg.value.c_str())
 
-#define GTEST_TEST_NO_THROW_(statement, fail)                       \
-  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                     \
-  if (::testing::internal::AlwaysTrue()) {                          \
-    try {                                                           \
-      GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);    \
-    } catch (...) {                                                 \
+#if GTEST_HAS_EXCEPTIONS
+
+#define GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_()                \
+  catch (std::exception const& e) {                               \
+    gtest_msg.value = "it throws ";                               \
+    gtest_msg.value += GTEST_EXCEPTION_TYPE_(e);                  \
+    gtest_msg.value += " with description \"";                    \
+    gtest_msg.value += e.what();                                  \
+    gtest_msg.value += "\".";                                     \
+    goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); \
+  }
+
+#else  // GTEST_HAS_EXCEPTIONS
+
+#define GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_()
+
+#endif  // GTEST_HAS_EXCEPTIONS
+
+#define GTEST_TEST_NO_THROW_(statement, fail) \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
+  if (::testing::internal::TrueWithString gtest_msg{}) { \
+    try { \
+      GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
+    } \
+    GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_() \
+    catch (...) { \
+      gtest_msg.value = "it throws."; \
       goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); \
-    }                                                               \
-  } else                                                            \
-    GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__)         \
-        : fail("Expected: " #statement                              \
-               " doesn't throw an exception.\n"                     \
-               "  Actual: it throws.")
+    } \
+  } else \
+    GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__): \
+      fail(("Expected: " #statement " doesn't throw an exception.\n" \
+            "  Actual: " + gtest_msg.value).c_str())
 
-#define GTEST_TEST_ANY_THROW_(statement, fail)                       \
-  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                      \
-  if (::testing::internal::AlwaysTrue()) {                           \
-    bool gtest_caught_any = false;                                   \
-    try {                                                            \
-      GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);     \
-    } catch (...) {                                                  \
-      gtest_caught_any = true;                                       \
-    }                                                                \
-    if (!gtest_caught_any) {                                         \
+#define GTEST_TEST_ANY_THROW_(statement, fail) \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
+  if (::testing::internal::AlwaysTrue()) { \
+    bool gtest_caught_any = false; \
+    try { \
+      GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
+    } \
+    catch (...) { \
+      gtest_caught_any = true; \
+    } \
+    if (!gtest_caught_any) { \
       goto GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__); \
-    }                                                                \
-  } else                                                             \
-    GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__)         \
-        : fail("Expected: " #statement                               \
-               " throws an exception.\n"                             \
-               "  Actual: it doesn't.")
+    } \
+  } else \
+    GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__): \
+      fail("Expected: " #statement " throws an exception.\n" \
+           "  Actual: it doesn't.")
+
 
 // Implements Boolean test assertions such as EXPECT_TRUE. expression can be
 // either a boolean expression or an AssertionResult. text is a textual
-// represenation of expression as it was passed into the EXPECT_TRUE.
+// representation of expression as it was passed into the EXPECT_TRUE.
 #define GTEST_TEST_BOOLEAN_(expression, text, actual, expected, fail) \
-  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                       \
-  if (const ::testing::AssertionResult gtest_ar_ =                    \
-          ::testing::AssertionResult(expression))                     \
-    ;                                                                 \
-  else                                                                \
-    fail(::testing::internal::GetBoolAssertionFailureMessage(         \
-             gtest_ar_, text, #actual, #expected)                     \
-             .c_str())
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
+  if (const ::testing::AssertionResult gtest_ar_ = \
+      ::testing::AssertionResult(expression)) \
+    ; \
+  else \
+    fail(::testing::internal::GetBoolAssertionFailureMessage(\
+        gtest_ar_, text, #actual, #expected).c_str())
 
-#define GTEST_TEST_NO_FATAL_FAILURE_(statement, fail)                          \
-  GTEST_AMBIGUOUS_ELSE_BLOCKER_                                                \
-  if (::testing::internal::AlwaysTrue()) {                                     \
+#define GTEST_TEST_NO_FATAL_FAILURE_(statement, fail) \
+  GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
+  if (::testing::internal::AlwaysTrue()) { \
     ::testing::internal::HasNewFatalFailureHelper gtest_fatal_failure_checker; \
-    GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);                 \
-    if (gtest_fatal_failure_checker.has_new_fatal_failure()) {                 \
-      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__);            \
-    }                                                                          \
-  } else                                                                       \
-    GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__)                    \
-        : fail("Expected: " #statement                                         \
-               " doesn't generate new fatal "                                  \
-               "failures in the current thread.\n"                             \
-               "  Actual: it does.")
+    GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
+    if (gtest_fatal_failure_checker.has_new_fatal_failure()) { \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__); \
+    } \
+  } else \
+    GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__): \
+      fail("Expected: " #statement " doesn't generate new fatal " \
+           "failures in the current thread.\n" \
+           "  Actual: it does.")
 
 // Expands to the name of the class that implements the given test.
 #define GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) \
@@ -1362,13 +1532,16 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() { return true; }
   class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)                    \
       : public parent_class {                                                 \
    public:                                                                    \
-    GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() {}                   \
-                                                                              \
-   private:                                                                   \
-    virtual void TestBody();                                                  \
-    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;     \
+    GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() = default;           \
+    ~GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() override = default; \
     GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name,   \
                                                            test_name));       \
+    GTEST_DISALLOW_MOVE_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name,   \
+                                                           test_name));       \
+                                                                              \
+   private:                                                                   \
+    void TestBody() override;                                                 \
+    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;     \
   };                                                                          \
                                                                               \
   ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_suite_name,          \
@@ -1384,4 +1557,4 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() { return true; }
               test_suite_name, test_name)>);                                  \
   void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
 
-#endif  // GTEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
+#endif  // GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_

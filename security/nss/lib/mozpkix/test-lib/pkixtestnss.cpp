@@ -353,6 +353,15 @@ TestVerifyRSAPKCS1SignedData(Input data, DigestAlgorithm digestAlgorithm,
 }
 
 Result
+TestVerifyRSAPSSSignedData(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo)
+{
+  InitNSSIfNeeded();
+  return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
+      subjectPublicKeyInfo, nullptr);
+}
+
+Result
 TestDigestBuf(Input item,
               DigestAlgorithm digestAlg,
               /*out*/ uint8_t* digestBuf,

@@ -17,7 +17,6 @@
 #include "blapii.h"
 #include "secitem.h"
 #include "mpi.h"
-#include "mpprime.h"
 #include "secmpi.h"
 
 #define KEA_DERIVED_SECRET_LEN 128
@@ -437,7 +436,7 @@ KEA_PrimeCheck(SECItem *prime)
     MP_DIGITS(&p) = 0;
     CHECK_MPI_OK(mp_init(&p));
     SECITEM_TO_MPINT(*prime, &p);
-    CHECK_MPI_OK(mpp_pprime(&p, dh_prime_testcount(prime->len)));
+    CHECK_MPI_OK(mpp_pprime_secure(&p, dh_prime_testcount(prime->len)));
 cleanup:
     mp_clear(&p);
     return err ? PR_FALSE : PR_TRUE;
