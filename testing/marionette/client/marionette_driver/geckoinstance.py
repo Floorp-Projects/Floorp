@@ -587,6 +587,8 @@ class DesktopInstance(GeckoInstance):
         "browser.sessionstore.resume_from_crash": False,
         # Don't check for the default web browser during startup
         "browser.shell.checkDefaultBrowser": False,
+        # Disable session restore infobar
+        "browser.startup.couldRestoreSession.count": -1,
         # Needed for branded builds to prevent opening a second tab on startup
         "browser.startup.homepage_override.mstone": "ignore",
         # Start with a blank page by default
