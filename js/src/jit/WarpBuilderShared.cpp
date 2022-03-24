@@ -28,7 +28,7 @@ bool WarpBuilderShared::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
   MOZ_ASSERT(!ins->isMovable());
 
   MResumePoint* resumePoint = MResumePoint::New(
-      alloc(), ins->block(), loc.toRawBytecode(), MResumePoint::ResumeAfter);
+      alloc(), ins->block(), loc.toRawBytecode(), ResumeMode::ResumeAfter);
   if (!resumePoint) {
     return false;
   }

@@ -73,7 +73,7 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
     bool reachablePC;
     jsbytecode* bailPC = pc();
 
-    if (mode() == MResumePoint::ResumeAfter) {
+    if (mode() == ResumeMode::ResumeAfter) {
       bailPC = GetNextPc(pc());
     }
 
@@ -83,8 +83,7 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
     }
 
     if (reachablePC) {
-      JSOp bailOp = JSOp(*bailPC);
-      if (bailOp == JSOp::FunCall) {
+      if (mode() == ResumeMode::InlinedFunCall) {
         // For fun.call(this, ...); the reconstructStackDepth will
         // include the this. When inlining that is not included.  So the
         // exprStackSlots will be one less.
@@ -95,7 +94,7 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
         // contains a callee function that should never have been there
         // and we might just be capturing an uneventful property site,
         // in which case there won't have been any violence.
-        MOZ_ASSERT_IF(!IsIonInlinableGetterOrSetterOp(bailOp),
+        MOZ_ASSERT_IF(mode() != ResumeMode::InlinedAccessor,
                       exprStack == stackDepth);
       }
     }
