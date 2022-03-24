@@ -65,7 +65,6 @@ nsConsoleService::nsConsoleService()
       mMaximumSize(250),
       mDeliveringMessage(false),
       mLock("nsConsoleService.mLock") {
-
 #ifdef XP_WIN
   // This environment variable controls whether the console service
   // should be prevented from putting output to the attached debugger.

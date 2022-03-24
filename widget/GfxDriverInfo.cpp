@@ -477,8 +477,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x9710, 0x9715);
       break;
     case DeviceFamily::NvidiaWebRenderBlocked:
-      APPEND_RANGE(0x0190, 0x019e); // early tesla
-      APPEND_RANGE(0x0500, 0x05df); // C67-C68
+      APPEND_RANGE(0x0190, 0x019e);  // early tesla
+      APPEND_RANGE(0x0500, 0x05df);  // C67-C68
       break;
     case DeviceFamily::NvidiaRolloutWebRender:
       APPEND_RANGE(0x0400, 0x04ff);
