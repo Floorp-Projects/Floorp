@@ -123,8 +123,7 @@ class TransparentModeImpl : public TransparentMode {
 class LegacyTransparentModeImpl : public TransparentMode {
  public:
   explicit LegacyTransparentModeImpl(const EchoCanceller3Config& config)
-      : bounded_erl_(config.ep_strength.bounded_erl),
-        linear_and_stable_echo_path_(
+      : linear_and_stable_echo_path_(
             config.echo_removal_control.linear_and_stable_echo_path),
         active_blocks_since_sane_filter_(kBlocksSinceConsistentEstimateInit),
         non_converged_sequence_size_(kBlocksSinceConvergencedFilterInit) {}
@@ -197,9 +196,7 @@ class LegacyTransparentModeImpl : public TransparentMode {
       finite_erl_recently_detected_ = true;
     }
 
-    if (bounded_erl_) {
-      transparency_activated_ = false;
-    } else if (finite_erl_recently_detected_) {
+    if (finite_erl_recently_detected_) {
       transparency_activated_ = false;
     } else if (sane_filter_recently_seen &&
                recent_convergence_during_activity_) {
@@ -212,7 +209,6 @@ class LegacyTransparentModeImpl : public TransparentMode {
   }
 
  private:
-  const bool bounded_erl_;
   const bool linear_and_stable_echo_path_;
   size_t capture_block_counter_ = 0;
   bool transparency_activated_ = false;
@@ -229,7 +225,7 @@ class LegacyTransparentModeImpl : public TransparentMode {
 
 std::unique_ptr<TransparentMode> TransparentMode::Create(
     const EchoCanceller3Config& config) {
-  if (DeactivateTransparentMode()) {
+  if (config.ep_strength.bounded_erl || DeactivateTransparentMode()) {
     return nullptr;
   }
   if (DeactivateTransparentModeHmm()) {
