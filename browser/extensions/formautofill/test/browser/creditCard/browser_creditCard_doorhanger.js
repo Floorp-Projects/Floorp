@@ -47,11 +47,13 @@ add_task(async function test_submit_creditCard_saved() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
+
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+
       await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -65,9 +67,9 @@ add_task(async function test_submit_creditCard_saved() {
 
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await onChanged;
     }
   );
+  await onChanged;
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -98,14 +100,13 @@ add_task(async function test_submit_untouched_creditCard_form() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+  let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -151,13 +152,11 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-
   // This test triggers two form submission events so cc 'timesUsed' count is 2.
   // The first submission is triggered by standard form submission, and the
   // second is triggered by page hiding.
-  const EXPECTED_TIMES_USED_COUNT = 2;
-  let notifyUsedCounter = EXPECTED_TIMES_USED_COUNT;
+  const EXPECTED_ON_USED_COUNT = 2;
+  let notifyUsedCounter = EXPECTED_ON_USED_COUNT;
   let onUsed = TestUtils.topicObserved(
     "formautofill-storage-changed",
     (subject, data) => {
@@ -170,6 +169,9 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       let iframeBC = browser.browsingContext.children[0];
       await openPopupForSubframe(browser, iframeBC, "form #cc-name");
 
@@ -193,7 +195,7 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
   is(creditCards.length, 1, "Still 1 credit card");
   is(
     creditCards[0].timesUsed,
-    EXPECTED_TIMES_USED_COUNT,
+    EXPECTED_ON_USED_COUNT,
     "timesUsed field set to 2"
   );
   is(
@@ -209,12 +211,12 @@ add_task(async function test_iframe_unload_save_card() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
       let iframeBC = browser.browsingContext.children[0];
-      let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await focusUpdateSubmitForm(
         "#cc-name",
         iframeBC,
@@ -240,9 +242,9 @@ add_task(async function test_iframe_unload_save_card() {
 
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await onChanged;
     }
   );
+  await onChanged;
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -265,10 +267,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+  let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -289,7 +288,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
       await clickDoorhangerButton(MAIN_BUTTON);
     }
   );
-  await onUsed;
+  await onChanged;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
@@ -310,6 +309,8 @@ add_task(async function test_submit_duplicate_creditCard_form() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
+
+  let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -329,6 +330,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
       is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
     }
   );
+  await onUsed;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
@@ -351,6 +353,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
+
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -548,10 +551,8 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   await saveCreditCard(TEST_CREDIT_CARD_3);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+
+  let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -568,7 +569,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
       await clickDoorhangerButton(MAIN_BUTTON);
     }
   );
-  await onUsed;
+  await onChanged;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
@@ -597,15 +598,16 @@ add_task(async function test_update_autofill_form_name() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+
+  let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       let promiseShown = promiseNotificationShown();
+
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -621,7 +623,7 @@ add_task(async function test_update_autofill_form_name() {
       await clickDoorhangerButton(MAIN_BUTTON);
     }
   );
-  await onUsed;
+  await onChanged;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
@@ -655,14 +657,13 @@ add_task(async function test_update_autofill_form_exp_date() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+  let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       let promiseShown = promiseNotificationShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -677,10 +678,9 @@ add_task(async function test_update_autofill_form_exp_date() {
       });
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await osKeyStoreLoginShown;
     }
   );
-  await onUsed;
+  await onChanged;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
@@ -714,12 +714,14 @@ add_task(async function test_create_new_autofill_form() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       let promiseShown = promiseNotificationShown();
-      let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -734,9 +736,9 @@ add_task(async function test_create_new_autofill_form() {
       await promiseShown;
       await clickDoorhangerButton(SECONDARY_BUTTON);
       await osKeyStoreLoginShown;
-      await onChanged;
     }
   );
+  await onChanged;
 
   creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit cards in storage");
@@ -775,14 +777,13 @@ add_task(async function test_update_duplicate_autofill_form() {
   });
   let creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit card in storage");
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
+  let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
+      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
+        true
+      );
       await openPopupOn(browser, "form #cc-number");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -814,11 +815,11 @@ add_task(async function test_update_duplicate_autofill_form() {
 });
 
 add_task(async function test_submit_creditCard_with_invalid_network() {
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -832,9 +833,9 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
 
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await onChanged;
     }
   );
+  await onChanged;
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -894,6 +895,7 @@ add_task(async function test_submit_third_party_creditCard_logo() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  await removeAllRecords();
 });
 
 add_task(async function test_update_third_party_creditCard_logo() {
@@ -907,6 +909,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -940,6 +943,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  await onChanged;
   await removeAllRecords();
 });
 
@@ -993,6 +997,7 @@ add_task(async function test_update_generic_creditCard_logo() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
+  let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -1026,5 +1031,6 @@ add_task(async function test_update_generic_creditCard_logo() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  await onChanged;
   await removeAllRecords();
 });

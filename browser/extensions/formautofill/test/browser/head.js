@@ -9,7 +9,7 @@
             ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
+            sleep, waitForStorageChangedEvents, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
             openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
@@ -205,6 +205,28 @@ function getDisplayedPopupItems(
 
 async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Wait for "formautofill-storage-changed" events
+ *
+ * @param {Array<string>} eventTypes
+ *        eventType must be one of the following:
+ *        `add`, `update`, `remove`, `notifyUsed`, `removeAll`, `reconcile`
+ *
+ * @returns {Promise} resolves when all events are received
+ */
+async function waitForStorageChangedEvents(...eventTypes) {
+  return Promise.all(
+    eventTypes.map(type =>
+      TestUtils.topicObserved(
+        "formautofill-storage-changed",
+        (subject, data) => {
+          return data == type;
+        }
+      )
+    )
+  );
 }
 
 /**
