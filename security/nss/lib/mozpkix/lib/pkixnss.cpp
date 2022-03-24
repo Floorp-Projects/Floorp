@@ -57,10 +57,11 @@ SubjectPublicKeyInfoToSECKEYPublicKey(Input subjectPublicKeyInfo,
   return Success;
 }
 
+template<size_t N>
 Result
 VerifySignedData(SECKEYPublicKey* publicKey, CK_MECHANISM_TYPE mechanism,
     SECItem* params, SECItem* signature, SECItem* data,
-    SECOidTag (&policyTags)[3], void* pkcs11PinArg)
+    SECOidTag (&policyTags)[N], void* pkcs11PinArg)
 {
   // Hash and signature algorithms can be disabled by policy in NSS. However,
   // the policy engine in NSS is not currently sophisticated enough to, for
@@ -75,7 +76,7 @@ VerifySignedData(SECKEYPublicKey* publicKey, CK_MECHANISM_TYPE mechanism,
       return MapPRErrorCodeToResult(PR_GetError());
     }
     if (!(policyFlags & NSS_USE_ALG_IN_ANY_SIGNATURE)) {
-      return MapPRErrorCodeToResult(SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED);
+      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
     }
   }
   SECStatus srv = PK11_VerifyWithMechanism(publicKey, mechanism, params,
@@ -129,6 +130,57 @@ VerifyRSAPKCS1SignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
   SECOidTag policyTags[3] =
       { signaturePolicyTag, hashPolicyTag, combinedPolicyTag };
   return VerifySignedData(publicKey.get(), mechanism, nullptr, &signatureItem,
+      &dataItem, policyTags, pkcs11PinArg);
+}
+
+Result
+VerifyRSAPSSSignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
+    Input signature, Input subjectPublicKeyInfo, void* pkcs11PinArg)
+{
+  ScopedSECKEYPublicKey publicKey;
+  Result rv = SubjectPublicKeyInfoToSECKEYPublicKey(subjectPublicKeyInfo,
+      publicKey);
+  if (rv != Success) {
+    return rv;
+  }
+  SECItem signatureItem(UnsafeMapInputToSECItem(signature));
+  SECItem dataItem(UnsafeMapInputToSECItem(data));
+  CK_MECHANISM_TYPE mechanism;
+  SECOidTag signaturePolicyTag = SEC_OID_PKCS1_RSA_PSS_SIGNATURE;
+  SECOidTag hashPolicyTag;
+  CK_RSA_PKCS_PSS_PARAMS rsaPSSParams;
+  switch (digestAlgorithm) {
+    case DigestAlgorithm::sha512:
+      mechanism = CKM_SHA512_RSA_PKCS_PSS;
+      hashPolicyTag = SEC_OID_SHA512;
+      rsaPSSParams.hashAlg = CKM_SHA512;
+      rsaPSSParams.mgf = CKG_MGF1_SHA512;
+      rsaPSSParams.sLen = 64;
+      break;
+    case DigestAlgorithm::sha384:
+      mechanism = CKM_SHA384_RSA_PKCS_PSS;
+      hashPolicyTag = SEC_OID_SHA384;
+      rsaPSSParams.hashAlg = CKM_SHA384;
+      rsaPSSParams.mgf = CKG_MGF1_SHA384;
+      rsaPSSParams.sLen = 48;
+      break;
+    case DigestAlgorithm::sha256:
+      mechanism = CKM_SHA256_RSA_PKCS_PSS;
+      hashPolicyTag = SEC_OID_SHA256;
+      rsaPSSParams.hashAlg = CKM_SHA256;
+      rsaPSSParams.mgf = CKG_MGF1_SHA256;
+      rsaPSSParams.sLen = 32;
+      break;
+    case DigestAlgorithm::sha1:
+      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+      break;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+  }
+  SECItem params;
+  params.data = reinterpret_cast<unsigned char*>(&rsaPSSParams);
+  params.len = sizeof(CK_RSA_PKCS_PSS_PARAMS);
+  SECOidTag policyTags[2] = { signaturePolicyTag, hashPolicyTag };
+  return VerifySignedData(publicKey.get(), mechanism, &params, &signatureItem,
       &dataItem, policyTags, pkcs11PinArg);
 }
 

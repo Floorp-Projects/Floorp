@@ -566,14 +566,16 @@ async function scheduleLinux(name, overrides, args = "") {
     name: `${name} w/ gcc-4.8`,
     env: {
       CC: "gcc-4.8",
-      CCC: "g++-4.8"
+      CCC: "g++-4.8",
+      // gcc-4.8 has incomplete c++11 support
+      NSS_DISABLE_GTESTS: "1",
     },
     // Use -Ddisable-intelhw_sha=1, GYP doesn't have a proper GCC version
     // check for Intel SHA support.
     command: [
       "/bin/bash",
       "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh -Ddisable_intel_hw_sha=1"
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh",
     ],
     symbol: "gcc-4.8"
   }));
@@ -612,6 +614,15 @@ async function scheduleLinux(name, overrides, args = "") {
       CCC: "g++-10",
     },
     symbol: "gcc-10"
+  }));
+
+  queue.scheduleTask(merge(extra_base, {
+    name: `${name} w/ gcc-11`,
+    env: {
+      CC: "gcc-11",
+      CCC: "g++-11",
+    },
+    symbol: "gcc-11"
   }));
 
   queue.scheduleTask(merge(extra_base, {

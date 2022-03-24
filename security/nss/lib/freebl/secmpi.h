@@ -52,3 +52,12 @@
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE); \
             break;                                    \
     }
+
+/* Fill the `used` digits of an mp_int with random bits */
+mp_err mpp_random_secure(mp_int *a);
+
+/* Pseudo-primality testing using `mpp_random_secure` to choose Miller-Rabin base */
+mp_err mpp_pprime_secure(mp_int *a, int nt);
+
+/* Variant of `mpp_make_prime` using `mpp_random_secure` to choose Miller-Rabin base */
+mp_err mpp_make_prime_secure(mp_int *start, mp_size nBits, mp_size strong);

@@ -24,7 +24,6 @@
 #define TLS13_ECH_VERSION 0xfe0d
 #define TLS13_ECH_SIGNAL_LEN 8
 #define TLS13_ECH_AEAD_TAG_LEN 16
-#define TLS13_ECH_GREASE_SNI_LEN 100
 
 static const char kHpkeInfoEch[] = "tls ech";
 static const char hHkdfInfoEchConfigID[] = "tls ech config id";

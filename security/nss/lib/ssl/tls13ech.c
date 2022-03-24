@@ -1845,6 +1845,7 @@ tls13_ComputeEchHelloRetryTranscript(sslSocket *ss, const PRUint8 *sh, unsigned 
      *  This segment calculates the hash of the Client Hello
      *  TODO(djackson@mozilla.com) - Replace with existing function?
      *  e.g. tls13_ReinjectHandshakeTranscript
+     *  TODO(djackson@mozilla.com) - Replace with streaming version
      */
     if (!ss->ssl3.hs.helloRetry || !ss->sec.isServer) {
         /*
@@ -1912,7 +1913,7 @@ tls13_ComputeEchHelloRetryTranscript(sslSocket *ss, const PRUint8 *sh, unsigned 
     }
     PR_ASSERT(tls13_Debug_CheckXtnBegins(sh + absEchOffset - 4, ssl_tls13_encrypted_client_hello_xtn));
     /* The HRR up to the ECH Xtn signal */
-    rv = sslBuffer_Append(out, sh, shLen - absEchOffset);
+    rv = sslBuffer_Append(out, sh, absEchOffset);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -1926,6 +1927,7 @@ tls13_ComputeEchHelloRetryTranscript(sslSocket *ss, const PRUint8 *sh, unsigned 
     if (rv != SECSuccess) {
         goto loser;
     }
+    PR_ASSERT(out->len == tls13_GetHashSize(ss) + 4 + shLen + 4);
     return SECSuccess;
 loser:
     sslBuffer_Clear(out);
@@ -1941,6 +1943,9 @@ tls13_ComputeEchServerHelloTranscript(sslSocket *ss, const PRUint8 *sh, unsigned
                           SSL3_RANDOM_LENGTH - TLS13_ECH_SIGNAL_LEN;
     PORT_Assert(sh && shLen > offset);
     PORT_Assert(TLS13_ECH_SIGNAL_LEN <= SSL3_RANDOM_LENGTH);
+
+    /* TODO(djackson@mozilla.com) - Replace with streaming version */
+
     rv = sslBuffer_AppendBuffer(out, chSource);
     if (rv != SECSuccess) {
         goto loser;
@@ -2138,7 +2143,7 @@ tls13_MaybeGreaseEch(sslSocket *ss, const sslBuffer *preamble, sslBuffer *buf)
     if (rv != SECSuccess) {
         goto loser; /* Code set */
     }
-    rv = tls13_PadChInner(&encodedCh, TLS13_ECH_GREASE_SNI_LEN, strlen(ss->url));
+    rv = tls13_PadChInner(&encodedCh, ss->ssl3.hs.greaseEchSize, strlen(ss->url));
 
     payloadLen = encodedCh.len;
     payloadLen += TLS13_ECH_AEAD_TAG_LEN; /* Aead tag */

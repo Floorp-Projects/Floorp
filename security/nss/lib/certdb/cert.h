@@ -1315,6 +1315,21 @@ SECStatus CERT_FilterCertListByCANames(CERTCertList *certList, int nCANames,
 SECStatus CERT_FilterCertListForUserCerts(CERTCertList *certList);
 
 /*
+ * Filter a list of certificates, removing those certs that don't match the
+ * nickname.
+ */
+SECStatus CERT_FilterCertListByNickname(CERTCertList *certList, char *nickname,
+                                        void *pwarg);
+
+/* return true if cert is in cert list */
+PRBool CERT_IsInList(const CERTCertificate *cert, const CERTCertList *certList);
+
+/* returned certList is the intersection of the certs on certList and the
+ * certs on filterList */
+SECStatus CERT_FilterCertListByCertList(CERTCertList *certList,
+                                        const CERTCertList *filterList);
+
+/*
  * Collect the nicknames from all certs in a CertList.  If the cert is not
  * valid, append a string to that nickname.
  *

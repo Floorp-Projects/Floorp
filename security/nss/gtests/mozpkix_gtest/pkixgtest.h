@@ -155,6 +155,12 @@ class EverythingFailsByDefaultTrustDomain : public TrustDomain {
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
+  Result VerifyRSAPSSSignedData(Input, DigestAlgorithm, Input, Input) override {
+    ADD_FAILURE();
+    return NotReached("VerifyRSAPSSSignedData should not be called",
+                      Result::FATAL_ERROR_LIBRARY_FAILURE);
+  }
+
   Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA,
                                    KeyPurposeId) override {
     ADD_FAILURE();
