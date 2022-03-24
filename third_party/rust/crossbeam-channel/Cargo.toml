@@ -13,13 +13,24 @@
 edition = "2018"
 rust-version = "1.36"
 name = "crossbeam-channel"
-version = "0.5.2"
+version = "0.5.4"
 description = "Multi-producer multi-consumer channels for message passing"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-channel"
-keywords = ["channel", "mpmc", "select", "golang", "message"]
-categories = ["algorithms", "concurrency", "data-structures"]
+keywords = [
+    "channel",
+    "mpmc",
+    "select",
+    "golang",
+    "message",
+]
+categories = [
+    "algorithms",
+    "concurrency",
+    "data-structures",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
+
 [dependencies.cfg-if]
 version = "1"
 
@@ -27,6 +38,7 @@ version = "1"
 version = "0.8"
 optional = true
 default-features = false
+
 [dev-dependencies.num_cpus]
 version = "1.13.0"
 

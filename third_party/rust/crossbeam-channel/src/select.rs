@@ -22,12 +22,13 @@ use crate::utils;
 // This is a private API that is used by the select macro.
 #[derive(Debug, Default)]
 pub struct Token {
-    pub at: flavors::at::AtToken,
-    pub array: flavors::array::ArrayToken,
-    pub list: flavors::list::ListToken,
-    pub never: flavors::never::NeverToken,
-    pub tick: flavors::tick::TickToken,
-    pub zero: flavors::zero::ZeroToken,
+    pub(crate) at: flavors::at::AtToken,
+    pub(crate) array: flavors::array::ArrayToken,
+    pub(crate) list: flavors::list::ListToken,
+    #[allow(dead_code)]
+    pub(crate) never: flavors::never::NeverToken,
+    pub(crate) tick: flavors::tick::TickToken,
+    pub(crate) zero: flavors::zero::ZeroToken,
 }
 
 /// Identifier associated with an operation by a specific thread on a specific channel.
@@ -486,7 +487,7 @@ pub fn select_timeout<'a>(
     handles: &mut [(&'a dyn SelectHandle, usize, *const u8)],
     timeout: Duration,
 ) -> Result<SelectedOperation<'a>, SelectTimeoutError> {
-    select_deadline(handles, Instant::now() + timeout)
+    select_deadline(handles, utils::convert_timeout_to_deadline(timeout))
 }
 
 /// Blocks until a given deadline, or until one of the operations becomes ready and selects it.
@@ -1042,7 +1043,7 @@ impl<'a> Select<'a> {
     /// }
     /// ```
     pub fn ready_timeout(&mut self, timeout: Duration) -> Result<usize, ReadyTimeoutError> {
-        self.ready_deadline(Instant::now() + timeout)
+        self.ready_deadline(utils::convert_timeout_to_deadline(timeout))
     }
 
     /// Blocks until a given deadline, or until one of the operations becomes ready.
