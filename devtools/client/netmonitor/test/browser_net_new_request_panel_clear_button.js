@@ -4,16 +4,15 @@
 "use strict";
 
 /**
- * Test if the New Request panel shows up as a expected when opened from the toolbar
+ * Test cleaning a custom request.
  */
-
 add_task(async function() {
   // Turn on the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Resetting the pref
   await pushPref("devtools.netmonitor.customRequest", "");
 
-  const { monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
+  const { monitor, tab } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -24,32 +23,37 @@ add_task(async function() {
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  info("Open the HTTP Custom Panel through the toolbar button");
-  let HTTPCustomRequestButton = document.querySelector(
-    "#netmonitor-toolbar-container .devtools-http-custom-request-icon"
+  const { getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
   );
-  ok(HTTPCustomRequestButton, "The Toolbar button should be visible.");
+
+  await performRequests(monitor, tab, 1);
+
+  info("selecting first request");
+  const firstRequestItem = document.querySelectorAll(".request-list-item")[0];
+  EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequestItem);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequestItem);
+
+  info("Opening the new request panel");
   const waitForPanels = waitForDOM(
     document,
     ".monitor-panel .network-action-bar"
   );
-  HTTPCustomRequestButton.click();
+  getContextMenuItem(monitor, "request-list-context-resend").click();
   await waitForPanels;
 
+  const request = getSelectedRequest(store.getState());
+
+  // Check if the panel is updated with the content by the request clicked
+  const urlValue = document.querySelector(".http-custom-url-value");
   is(
-    !!document.querySelector("#network-action-bar-HTTP-custom-request-panel"),
-    true,
-    "The 'New Request' header should be visible when the pref is true."
-  );
-  is(
-    !!document.querySelector(
-      ".devtools-button.devtools-http-custom-request-icon.checked"
-    ),
-    true,
-    "The toolbar button should be highlighted"
+    urlValue.textContent,
+    request.url,
+    "The URL in the form should match the request we clicked"
   );
 
-  info("if the default state is empty");
+  info("Clicking on the clear button");
+  document.querySelector("#http-custom-request-clear-button").click();
   is(
     document.querySelector(".http-custom-method-value").value,
     "GET",
@@ -72,24 +76,6 @@ add_task(async function() {
     document.querySelector("#http-custom-postdata-value").textContent,
     "",
     "The Post body input should be empty"
-  );
-
-  // Turn off the pref
-  await pushPref("devtools.netmonitor.features.newEditAndResend", false);
-  info("Close the panel to update the interface after changing the pref");
-  const closePanel = document.querySelector(
-    ".network-action-bar .tabs-navigation .sidebar-toggle"
-  );
-  closePanel.click();
-
-  info("Check if the toolbar button is hidden when the pref is false");
-  HTTPCustomRequestButton = document.querySelector(
-    "#netmonitor-toolbar-container .devtools-http-custom-request-icon"
-  );
-  is(
-    !!HTTPCustomRequestButton,
-    false,
-    "The toolbar button should be hidden when the pref is false."
   );
 
   await teardown(monitor);
