@@ -847,7 +847,7 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
     } else {
       colorTex = mozFb->ColorTex();
     }
-    
+
     // DrawBlit handles ColorMask itself.
     gl->BlitHelper()->DrawBlitTextureToFramebuffer(
         colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
