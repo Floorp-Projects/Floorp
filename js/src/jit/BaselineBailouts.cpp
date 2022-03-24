@@ -10,6 +10,7 @@
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "jit/arm/Simulator-arm.h"
+#include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -1286,6 +1287,61 @@ bool BaselineStackBuilder::envChainSlotCanBeOptimized() {
   return true;
 }
 
+bool jit::AssertBailoutStackDepth(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, ResumeMode mode,
+                                  uint32_t exprStackSlots) {
+  if (mode == ResumeMode::ResumeAfter) {
+    pc = GetNextPc(pc);
+  }
+
+  uint32_t expectedDepth;
+  bool reachablePC;
+  if (!ReconstructStackDepth(cx, script, pc, &expectedDepth, &reachablePC)) {
+    return false;
+  }
+  if (!reachablePC) {
+    return true;
+  }
+
+  JSOp op = JSOp(*pc);
+
+  if (mode == ResumeMode::InlinedFunCall) {
+    // For inlined fun.call(this, ...); the reconstructed stack depth will
+    // include the |this|, but the exprStackSlots won't.
+    // Exception: if there are no arguments, the depths do match.
+    MOZ_ASSERT(IsInvokeOp(op));
+    if (GET_ARGC(pc) > 0) {
+      MOZ_ASSERT(expectedDepth == exprStackSlots + 1);
+    } else {
+      MOZ_ASSERT(expectedDepth == exprStackSlots);
+    }
+    return true;
+  }
+
+  if (mode == ResumeMode::InlinedAccessor) {
+    // Accessors coming out of ion are inlined via a complete lie perpetrated by
+    // the compiler internally. Ion just rearranges the stack, and pretends that
+    // it looked like a call all along.
+    // This means that the depth is actually one *more* than expected by the
+    // interpreter, as there is now a JSFunction, |this| and [arg], rather than
+    // the expected |this| and [arg].
+    // If the inlined accessor is a GetElem operation, the numbers do match, but
+    // that's just because GetElem expects one more item on the stack. Note that
+    // none of that was pushed, but it's still reflected in exprStackSlots.
+    MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op));
+    if (IsGetElemOp(op)) {
+      MOZ_ASSERT(exprStackSlots == expectedDepth);
+    } else {
+      MOZ_ASSERT(exprStackSlots == expectedDepth + 1);
+    }
+    return true;
+  }
+
+  // In all other cases, the depth must match.
+  MOZ_ASSERT(exprStackSlots == expectedDepth);
+  return true;
+}
+
 bool BaselineStackBuilder::validateFrame() {
   const uint32_t frameSize = framePushed();
   blFrame()->setDebugFrameSize(frameSize);
@@ -1295,38 +1351,8 @@ bool BaselineStackBuilder::validateFrame() {
   MOZ_ASSERT(blFrame()->debugNumValueSlots() >= script_->nfixed());
   MOZ_ASSERT(blFrame()->debugNumValueSlots() <= script_->nslots());
 
-  uint32_t expectedDepth;
-  bool reachablePC;
-  jsbytecode* pcForStackDepth = resumeAfter() ? GetNextPc(pc_) : pc_;
-  if (!ReconstructStackDepth(cx_, script_, pcForStackDepth, &expectedDepth,
-                             &reachablePC)) {
-    return false;
-  }
-  if (!reachablePC) {
-    return true;
-  }
-
-  if (resumeMode() == ResumeMode::InlinedFunCall) {
-    // For fun.call(this, ...); the reconstructed stack depth will
-    // include the this. When inlining that is not included.
-    // So the exprStackSlots will be one less.
-    MOZ_ASSERT(expectedDepth - exprStackSlots() <= 1);
-  } else if (resumeMode() == ResumeMode::InlinedAccessor) {
-    // Accessors coming out of ion are inlined via a complete
-    // lie perpetrated by the compiler internally. Ion just rearranges
-    // the stack, and pretends that it looked like a call all along.
-    // This means that the depth is actually one *more* than expected
-    // by the interpreter, as there is now a JSFunction, |this| and [arg],
-    // rather than the expected |this| and [arg].
-    // If the inlined accessor is a getelem operation, the numbers do match,
-    // but that's just because getelem expects one more item on the stack.
-    // Note that none of that was pushed, but it's still reflected
-    // in exprStackSlots.
-    MOZ_ASSERT(exprStackSlots() - expectedDepth == (IsGetElemOp(op_) ? 0 : 1));
-  } else {
-    MOZ_ASSERT(exprStackSlots() == expectedDepth);
-  }
-  return true;
+  return AssertBailoutStackDepth(cx_, script_, pc_, resumeMode(),
+                                 exprStackSlots());
 }
 #endif
 
