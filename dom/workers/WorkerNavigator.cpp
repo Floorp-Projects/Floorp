@@ -176,10 +176,7 @@ uint64_t WorkerNavigator::HardwareConcurrency() const {
   RuntimeService* rts = RuntimeService::GetService();
   MOZ_ASSERT(rts);
 
-  WorkerPrivate* aWorkerPrivate = GetCurrentThreadWorkerPrivate();
-  bool rfp = aWorkerPrivate->ShouldResistFingerprinting();
-
-  return rts->ClampedHardwareConcurrency(rfp);
+  return rts->ClampedHardwareConcurrency();
 }
 
 StorageManager* WorkerNavigator::Storage() {
