@@ -61,13 +61,6 @@ already_AddRefed<PlatformDecoderModule> WMFDecoderModule::Create() {
   return wmf.forget();
 }
 
-WMFDecoderModule::~WMFDecoderModule() {
-  if (mWMFInitialized) {
-    DebugOnly<HRESULT> hr = wmf::MFShutdown();
-    NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
-  }
-}
-
 static bool IsRemoteAcceleratedCompositor(
     layers::KnowsCompositor* aKnowsCompositor) {
   if (!aKnowsCompositor) {
@@ -105,13 +98,12 @@ static bool CanCreateMFTDecoder(const GUID& aCategory, const GUID& aInSubtype) {
   // is not.
   bool canCreateDecoder = false;
   mozilla::mscom::EnsureMTA([&]() -> void {
-    if (FAILED(wmf::MFStartup())) {
+    if (!wmf::MediaFoundationInitializer::HasInitialized()) {
       return;
     }
     RefPtr<MFTDecoder> decoder(new MFTDecoder());
     canCreateDecoder =
         SUCCEEDED(decoder->Create(aCategory, aInSubtype, outSubtype));
-    wmf::MFShutdown();
   });
   return canCreateDecoder;
 }
@@ -185,8 +177,8 @@ int WMFDecoderModule::GetNumDecoderThreads() {
 }
 
 nsresult WMFDecoderModule::Startup() {
-  mWMFInitialized = SUCCEEDED(wmf::MFStartup());
-  return mWMFInitialized ? NS_OK : NS_ERROR_FAILURE;
+  return wmf::MediaFoundationInitializer::HasInitialized() ? NS_OK
+                                                           : NS_ERROR_FAILURE;
 }
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(

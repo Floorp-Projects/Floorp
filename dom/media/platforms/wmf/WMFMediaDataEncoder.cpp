@@ -40,12 +40,11 @@ static const GUID CodecToSubtype(MediaDataEncoder::CodecType aCodec) {
 bool CanCreateWMFEncoder(MediaDataEncoder::CodecType aCodec) {
   bool canCreate = false;
   mscom::EnsureMTA([&]() {
-    if (FAILED(wmf::MFStartup())) {
+    if (!wmf::MediaFoundationInitializer::HasInitialized()) {
       return;
     }
     RefPtr<MFTEncoder> enc(new MFTEncoder());
     canCreate = SUCCEEDED(enc->Create(CodecToSubtype(aCodec)));
-    wmf::MFShutdown();
   });
   return canCreate;
 }
@@ -70,7 +69,7 @@ RefPtr<MediaDataEncoder::InitPromise> WMFMediaDataEncoder<T>::ProcessInit() {
   MOZ_ASSERT(!mEncoder,
              "Should not initialize encoder again without shutting down");
 
-  if (FAILED(wmf::MFStartup())) {
+  if (!wmf::MediaFoundationInitializer::HasInitialized()) {
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     RESULT_DETAIL("Can't create the MFT encoder.")),
@@ -82,7 +81,6 @@ RefPtr<MediaDataEncoder::InitPromise> WMFMediaDataEncoder<T>::ProcessInit() {
   mscom::EnsureMTA([&]() { hr = InitMFTEncoder(encoder); });
 
   if (FAILED(hr)) {
-    wmf::MFShutdown();
     WMF_ENC_LOGE("init MFTEncoder: error = 0x%X", hr);
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -437,7 +435,6 @@ RefPtr<ShutdownPromise> WMFMediaDataEncoder<T>::Shutdown() {
                        if (self->mEncoder) {
                          self->mEncoder->Destroy();
                          self->mEncoder = nullptr;
-                         wmf::MFShutdown();
                        }
                        return ShutdownPromise::CreateAndResolve(true, __func__);
                      });

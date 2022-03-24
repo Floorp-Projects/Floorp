@@ -22,6 +22,11 @@
 #include <wmcodecdsp.h>
 #include <codecapi.h>
 
+#include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticMutex.h"
+#include "nsThreadUtils.h"
+
 // The Windows headers helpfully declare min and max macros, which don't
 // compile in the presence of std::min and std::max and unified builds.
 // So undef them here.
@@ -35,19 +40,76 @@
 namespace mozilla {
 namespace wmf {
 
-// If successful, loads all required WMF DLLs and calls the WMF MFStartup()
-// function. This delegates the WMF MFStartup() call to the MTA thread if
-// the current thread is not MTA. This is to ensure we always interact with
-// WMF from threads with the same COM compartment model.
-HRESULT MFStartup();
+// A helper class for automatically starting and shuting down the Media
+// Foundation. Prior to using Media Foundation in a process, users should call
+// MediaFoundationInitializer::HasInitialized() to ensure Media Foundation is
+// initialized. Users should also check the result of this call, in case the
+// internal call to MFStartup fails. The first check to HasInitialized will
+// cause the helper to start up Media Foundation and set up a runnable to handle
+// Media Foundation shutdown at XPCOM shutdown. Calls after the first will not
+// cause any extra startups or shutdowns, so it's safe to check multiple times
+// in the same process. Users do not need to do any manual shutdown, the helper
+// will handle this internally.
+class MediaFoundationInitializer final {
+ public:
+  ~MediaFoundationInitializer() {
+    if (mHasInitialized) {
+      if (FAILED(MFShutdown())) {
+        NS_WARNING("MFShutdown failed");
+      }
+    }
+  }
+  static bool HasInitialized() {
+    if (sIsShutdown) {
+      return false;
+    }
+    return Get()->mHasInitialized;
+  }
+ private:
+  static MediaFoundationInitializer* Get() {
+    {
+      StaticMutexAutoLock lock(sCreateMutex);
+      if (!sInitializer) {
+        sInitializer.reset(new MediaFoundationInitializer());
+        GetMainThreadSerialEventTarget()->Dispatch(
+            NS_NewRunnableFunction("MediaFoundationInitializer::Get", [&] {
+              // Need to run this before MTA thread gets destroyed.
+              RunOnShutdown([&] {
+                sInitializer.reset();
+                sIsShutdown = true;
+              }, ShutdownPhase::XPCOMShutdown);
+            }));
+      }
+    }
+    return sInitializer.get();
+  }
 
-// Calls the WMF MFShutdown() function. Call this once for every time
-// wmf::MFStartup() succeeds. Note: does not unload the WMF DLLs loaded by
-// MFStartup(); leaves them in memory to save I/O at next MFStartup() call.
-// This delegates the WMF MFShutdown() call to the MTA thread if the current
-// thread is not MTA. This is to ensure we always interact with
-// WMF from threads with the same COM compartment model.
-HRESULT MFShutdown();
+  MediaFoundationInitializer()
+    : mHasInitialized(SUCCEEDED(MFStartup())) {
+    if (!mHasInitialized) {
+      NS_WARNING("MFStartup failed");
+    }
+  }
+
+  // If successful, loads all required WMF DLLs and calls the WMF MFStartup()
+  // function. This delegates the WMF MFStartup() call to the MTA thread if
+  // the current thread is not MTA. This is to ensure we always interact with
+  // WMF from threads with the same COM compartment model.
+  HRESULT MFStartup();
+
+  // Calls the WMF MFShutdown() function. Call this once for every time
+  // wmf::MFStartup() succeeds. Note: does not unload the WMF DLLs loaded by
+  // MFStartup(); leaves them in memory to save I/O at next MFStartup() call.
+  // This delegates the WMF MFShutdown() call to the MTA thread if the current
+  // thread is not MTA. This is to ensure we always interact with
+  // WMF from threads with the same COM compartment model.
+  HRESULT MFShutdown();
+
+  static inline UniquePtr<MediaFoundationInitializer> sInitializer;
+  static inline StaticMutex sCreateMutex;
+  static inline Atomic<bool> sIsShutdown{false};
+  const bool mHasInitialized;
+};
 
 // All functions below are wrappers around the corresponding WMF function,
 // and automatically locate and call the corresponding function in the WMF DLLs.

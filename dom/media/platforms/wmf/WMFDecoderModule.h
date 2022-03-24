@@ -49,9 +49,7 @@ class WMFDecoderModule : public PlatformDecoderModule {
 
  private:
   WMFDecoderModule() = default;
-  virtual ~WMFDecoderModule();
-
-  bool mWMFInitialized = false;
+  virtual ~WMFDecoderModule() = default;
 };
 
 }  // namespace mozilla
