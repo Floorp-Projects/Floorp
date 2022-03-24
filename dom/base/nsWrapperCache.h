@@ -339,28 +339,27 @@ class JS_HAZ_ROOTED nsWrapperCache {
  private:
   void SetWrapperJSObject(JSObject* aWrapper);
 
-  FlagsType GetWrapperFlags() const {
-    // These are used from workers and from the main thread (but shouldn't be
-    // used on the main thread during the Servo traversal).
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
-    return mFlags.Get() & kWrapperFlagsMask;
-  }
+  // We'd like to assert that these aren't used from servo threads, but we don't
+  // have a great way to do that because:
+  //  * We can't just assert that they get used on the main thread, because
+  //    these are used from workers.
+  //  * We can't just assert that they aren't used when IsInServoTraversal(),
+  //    because the traversal has a sequential, main-thread-only phase, where we
+  //    run animations that can fiddle with JS promises.
+  FlagsType GetWrapperFlags() const { return mFlags.Get() & kWrapperFlagsMask; }
 
   bool HasWrapperFlag(FlagsType aFlag) const {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlag & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
     return !!(mFlags.Get() & aFlag);
   }
 
   void SetWrapperFlags(FlagsType aFlagsToSet) {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlagsToSet & ~kWrapperFlagsMask) == 0,
                "Bad wrapper flag bits");
     mFlags.Set(mFlags.Get() | aFlagsToSet);
   }
 
   void UnsetWrapperFlags(FlagsType aFlagsToUnset) {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlagsToUnset & ~kWrapperFlagsMask) == 0,
                "Bad wrapper flag bits");
     mFlags.Set(mFlags.Get() & ~aFlagsToUnset);
