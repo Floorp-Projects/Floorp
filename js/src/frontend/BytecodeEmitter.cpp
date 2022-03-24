@@ -8070,7 +8070,7 @@ ParseNode* BytecodeEmitter::getCoordNode(ParseNode* callNode,
                                          ParseNode* calleeNode, JSOp op,
                                          ListNode* argsList) {
   ParseNode* coordNode = callNode;
-  if (op == JSOp::Call || op == JSOp::SpreadCall || op == JSOp::FunCall) {
+  if (op == JSOp::Call || op == JSOp::SpreadCall) {
     // Default to using the location of the `(` itself.
     // obj[expr]() // expression
     //          ^  // column coord

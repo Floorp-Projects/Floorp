@@ -1871,10 +1871,6 @@ bool WarpBuilder::build_CallIter(BytecodeLocation loc) {
   return buildCallOp(loc);
 }
 
-bool WarpBuilder::build_FunCall(BytecodeLocation loc) {
-  return buildCallOp(loc);
-}
-
 bool WarpBuilder::build_New(BytecodeLocation loc) { return buildCallOp(loc); }
 
 bool WarpBuilder::build_SuperCall(BytecodeLocation loc) {
