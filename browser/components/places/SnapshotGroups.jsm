@@ -284,6 +284,8 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   Use -1 to specify no limit.
    * @param {boolean} [options.hidden]
    *   Pass true to also return hidden groups.
+   * @param {boolean} [options.countHidden]
+   *   Pass true to include hidden snapshots in the count.
    * @param {string} [options.builder]
    *   Limit searching snapshot groups to results from a particular builder.
    * @param {boolean} [options.skipMinimum]
@@ -297,6 +299,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     limit = 50,
     builder = undefined,
     hidden = false,
+    countHidden = false,
     skipMinimum = false,
   } = {}) {
     let db = await PlacesUtils.promiseDBConnection();
@@ -304,6 +307,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     let params = {};
     let sizeFragment = [];
     let limitFragment = "";
+    let joinFragment = "";
     if (!skipMinimum) {
       sizeFragment.push("HAVING snapshot_count >= :minGroupSize");
       params.minGroupSize = MIN_GROUP_SIZE;
@@ -329,6 +333,10 @@ const SnapshotGroups = new (class SnapshotGroups {
       whereTerms.push("g.hidden = 0");
     }
 
+    if (!countHidden) {
+      joinFragment = "AND s.hidden = 0";
+    }
+
     let where = whereTerms.length ? `WHERE ${whereTerms.join(" AND ")}` : "";
 
     let rows = await db.executeCached(
@@ -342,14 +350,14 @@ const SnapshotGroups = new (class SnapshotGroups {
               SELECT preview_image_url, url
               FROM moz_places_metadata_snapshots sns
               JOIN moz_places_metadata_groups_to_snapshots gs USING(place_id)
-              JOIN moz_places h ON h.id = gs.place_id
+              JOIN moz_places h ON h.id = gs.place_id AND gs.hidden = 0
               WHERE gs.group_id = g.id
               ORDER BY sns.last_interaction_at ASC
               LIMIT 2
               )
             ) AS image_urls
       FROM moz_places_metadata_snapshots_groups g
-      LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
+      LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id ${joinFragment}
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
       ${where}
       GROUP BY g.id ${sizeFragment.join(" ")}

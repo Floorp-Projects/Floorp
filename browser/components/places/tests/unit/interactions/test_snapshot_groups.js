@@ -6,7 +6,9 @@
  */
 
 const TEST_URL1 = "https://example.com/";
+const TEST_IMAGE_URL1 = "https://example.com/preview1.png";
 const TEST_URL2 = "https://example.com/12345";
+const TEST_IMAGE_URL2 = "https://example.com/preview2.png";
 const TEST_URL3 = "https://example.com/67890";
 const TEST_URL4 = "https://example.com/135246";
 const TEST_URL5 = "https://example.com/531246";
@@ -92,7 +94,7 @@ add_task(async function test_add_and_query() {
   });
 
   info("add a featured image for second oldest snapshot");
-  let previewImageURL = "https://example.com/preview2.png";
+  let previewImageURL = TEST_IMAGE_URL2;
   await PlacesUtils.history.update({
     url: TEST_URL2,
     previewImageURL,
@@ -108,7 +110,7 @@ add_task(async function test_add_and_query() {
   });
 
   info("add a featured image for the oldest snapshot");
-  previewImageURL = "https://example.com/preview1.png";
+  previewImageURL = TEST_IMAGE_URL1;
   await PlacesUtils.history.update({
     url: TEST_URL1,
     previewImageURL,
@@ -444,8 +446,27 @@ add_task(async function test_get_snapshots_sortBy() {
 add_task(async function test_get_snapshots_hidden() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+  Assert.equal(
+    groups[0].snapshotCount,
+    3,
+    "Should have the correct count of snapshots"
+  );
 
   await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, true);
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(
+    groups[0].snapshotCount,
+    2,
+    "Should have the correct count of snapshots when not counting hidden ones"
+  );
+
+  groups = await SnapshotGroups.query({ skipMinimum: true, countHidden: true });
+  Assert.equal(
+    groups[0].snapshotCount,
+    3,
+    "Should have the correct count of snapshots when counting hidden ones"
+  );
 
   let snapshots = await SnapshotGroups.getSnapshots({
     id: groups[0].id,
@@ -467,6 +488,13 @@ add_task(async function test_get_snapshots_hidden() {
 
   await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, false);
 
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(
+    groups[0].snapshotCount,
+    3,
+    "Should have the correct count of snapshots when not counting hidden ones"
+  );
+
   snapshots = await SnapshotGroups.getSnapshots({
     id: groups[0].id,
     sortBy: "last_interaction_at",
@@ -477,6 +505,24 @@ add_task(async function test_get_snapshots_hidden() {
     { url: TEST_URL2 },
     { url: TEST_URL1 },
   ]);
+});
+
+add_task(async function test_snapshot_image_with_hidden() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  // The images were set on TEST_URL1/TEST_URL2 in an earlier test.
+  assertSnapshotGroup(groups[0], {
+    imageUrl: TEST_IMAGE_URL1,
+  });
+
+  await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL1, true);
+
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  info("Should use the oldest non-hidden image");
+  assertSnapshotGroup(groups[0], {
+    imageUrl: TEST_IMAGE_URL2,
+  });
 });
 
 add_task(async function test_minimum_size() {
