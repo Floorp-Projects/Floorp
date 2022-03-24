@@ -156,6 +156,9 @@ void ReadableStreamDefaultControllerError(
 void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController);
 
+Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
+    ReadableStreamDefaultController* aController);
+
 }  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultController_h
