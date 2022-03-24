@@ -25,9 +25,8 @@ void ScrollLinkedEffectDetector::PositioningPropertyMutated() {
   }
 }
 
-ScrollLinkedEffectDetector::ScrollLinkedEffectDetector(
-    dom::Document* aDoc, const TimeStamp& aTimeStamp)
-    : mDocument(aDoc), mTimeStamp(aTimeStamp) {
+ScrollLinkedEffectDetector::ScrollLinkedEffectDetector(dom::Document* aDoc)
+    : mDocument(aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   sDepth++;
 }
@@ -38,7 +37,7 @@ ScrollLinkedEffectDetector::~ScrollLinkedEffectDetector() {
     // We have exited all (possibly-nested) scroll event dispatches,
     // record whether or not we found an effect, and reset state
     if (sFoundScrollLinkedEffect) {
-      mDocument->ReportHasScrollLinkedEffect(mTimeStamp);
+      mDocument->ReportHasScrollLinkedEffect();
       sFoundScrollLinkedEffect = false;
     }
   }

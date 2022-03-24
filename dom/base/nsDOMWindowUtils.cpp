@@ -4736,13 +4736,3 @@ nsDOMWindowUtils::GetSuspendedByBrowsingContextGroup(bool* aResult) {
   *aResult = inner->GetWasSuspendedByGroup();
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetHasScrollLinkedEffect(bool* aResult) {
-  Document* doc = GetDocument();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-  *aResult = doc->HasScrollLinkedEffect();
-  return NS_OK;
-}

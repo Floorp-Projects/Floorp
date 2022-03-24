@@ -146,18 +146,14 @@ use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
-    fn invoke(&self, property_id: Option<NonCustomPropertyId>);
+    fn invoke(&self);
 }
 
 impl ClosureHelper for DeclarationBlockMutationClosure {
     #[inline]
-    fn invoke(&self, property_id: Option<NonCustomPropertyId>) {
+    fn invoke(&self) {
         if let Some(function) = self.function.as_ref() {
-            let gecko_prop_id = match property_id {
-                Some(p) => p.to_nscsspropertyid(),
-                None => nsCSSPropertyID::eCSSPropertyExtra_variable,
-            };
-            unsafe { function(self.data, gecko_prop_id) }
+            unsafe { function(self.data) };
         }
     }
 }
@@ -4661,7 +4657,6 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(
 
 #[inline(always)]
 fn set_property_to_declarations(
-    non_custom_property_id: Option<NonCustomPropertyId>,
     block: &RawServoDeclarationBlock,
     parsed_declarations: &mut SourcePropertyDeclaration,
     before_change_closure: DeclarationBlockMutationClosure,
@@ -4675,7 +4670,7 @@ fn set_property_to_declarations(
         return false;
     }
 
-    before_change_closure.invoke(non_custom_property_id);
+    before_change_closure.invoke();
     write_locked_arc(block, |decls: &mut PropertyDeclarationBlock| {
         decls.update(parsed_declarations.drain(), importance, &mut updates)
     });
@@ -4696,7 +4691,6 @@ fn set_property(
 ) -> bool {
     let mut source_declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data.ptr());
-    let non_custom_property_id = property_id.non_custom_id();
     let result = parse_property_into(
         &mut source_declarations,
         property_id,
@@ -4720,7 +4714,6 @@ fn set_property(
     };
 
     set_property_to_declarations(
-        non_custom_property_id,
         declarations,
         &mut source_declarations,
         before_change_closure,
@@ -4761,13 +4754,10 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
     animation_value: &RawServoAnimationValue,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    let animation_value = AnimationValue::as_arc(&animation_value);
-    let non_custom_property_id = animation_value.id().into();
     let mut source_declarations =
-        SourcePropertyDeclaration::with_one(animation_value.uncompute());
+        SourcePropertyDeclaration::with_one(AnimationValue::as_arc(&animation_value).uncompute());
 
     set_property_to_declarations(
-        Some(non_custom_property_id),
         declarations,
         &mut source_declarations,
         before_change_closure,
@@ -4816,7 +4806,7 @@ fn remove_property(
         None => return false,
     };
 
-    before_change_closure.invoke(property_id.non_custom_id());
+    before_change_closure.invoke();
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.remove_property(&property_id, first_declaration)
     });
