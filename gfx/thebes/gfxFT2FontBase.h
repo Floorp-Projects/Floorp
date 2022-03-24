@@ -51,8 +51,7 @@ class gfxFT2FontBase : public gfxFont {
                             uint32_t variation_selector) override;
   bool ProvidesGlyphWidths() const override { return true; }
   int32_t GetGlyphWidth(uint16_t aGID) override;
-  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                      bool aTight) const override;
+  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
   FontType GetType() const override { return FONT_TYPE_FT2; }
 
@@ -62,8 +61,8 @@ class gfxFT2FontBase : public gfxFont {
                              const nsTArray<gfxFontVariation>& aVariations,
                              FT_Face aFTFace);
 
-  FT_Face LockFTFace() const;
-  void UnlockFTFace() const;
+  FT_Face LockFTFace();
+  void UnlockFTFace();
 
  private:
   uint32_t GetCharExtents(uint32_t aChar, gfxFloat* aWidth,
@@ -72,12 +71,12 @@ class gfxFT2FontBase : public gfxFont {
   // Get advance (and optionally bounds) of a single glyph from FreeType,
   // and return true, or return false if we failed.
   bool GetFTGlyphExtents(uint16_t aGID, int32_t* aWidth,
-                         mozilla::gfx::IntRect* aBounds = nullptr) const;
+                         mozilla::gfx::IntRect* aBounds = nullptr);
 
  protected:
   void InitMetrics();
-  const Metrics& GetHorizontalMetrics() const override { return mMetrics; }
-  FT_Vector GetEmboldenStrength(FT_Face aFace) const;
+  const Metrics& GetHorizontalMetrics() override;
+  FT_Vector GetEmboldenStrength(FT_Face aFace);
 
   RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
 
@@ -134,10 +133,9 @@ class gfxFT2FontBase : public gfxFont {
   };
 
   const GlyphMetrics& GetCachedGlyphMetrics(
-      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr) const;
+      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr);
 
-  mutable mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, GlyphMetrics>>
-      mGlyphMetrics;
+  mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, GlyphMetrics>> mGlyphMetrics;
 };
 
 // Helper classes used for clearing out user font data when FT font

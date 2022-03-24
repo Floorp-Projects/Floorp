@@ -51,9 +51,10 @@ gfxGDIFont::~gfxGDIFont() {
   delete mMetrics;
 }
 
-gfxFont* gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption) const {
+UniquePtr<gfxFont> gfxGDIFont::CopyWithAntialiasOption(
+    AntialiasOption anAAOption) {
   auto entry = static_cast<GDIFontEntry*>(mFontEntry.get());
-  return new gfxGDIFont(entry, &mStyle, anAAOption);
+  return MakeUnique<gfxGDIFont>(entry, &mStyle, anAAOption);
 }
 
 bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
@@ -70,28 +71,21 @@ bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                             aLanguage, aVertical, aRounding, aShapedText);
 }
 
+const gfxFont::Metrics& gfxGDIFont::GetHorizontalMetrics() { return *mMetrics; }
+
 already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  if (ScaledFont* scaledFont = mAzureScaledFont) {
-    return do_AddRef(scaledFont);
+  if (!mAzureScaledFont) {
+    LOGFONT lf;
+    GetObject(GetHFONT(), sizeof(LOGFONT), &lf);
+
+    mAzureScaledFont = Factory::CreateScaledFontForGDIFont(
+        &lf, GetUnscaledFont(), GetAdjustedSize());
+    InitializeScaledFont();
   }
 
-  LOGFONT lf;
-  GetObject(GetHFONT(), sizeof(LOGFONT), &lf);
-
-  RefPtr<ScaledFont> newScaledFont = Factory::CreateScaledFontForGDIFont(
-      &lf, GetUnscaledFont(), GetAdjustedSize());
-  if (!newScaledFont) {
-    return nullptr;
-  }
-
-  InitializeScaledFont(newScaledFont);
-
-  if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
-    Unused << newScaledFont.forget();
-  }
-  ScaledFont* scaledFont = mAzureScaledFont;
-  return do_AddRef(scaledFont);
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  return scaledFont.forget();
 }
 
 gfxFont::RunMetrics gfxGDIFont::Measure(const gfxTextRun* aTextRun,
@@ -491,8 +485,7 @@ int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
   });
 }
 
-bool gfxGDIFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                bool aTight) const {
+bool gfxGDIFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
   DCForMetrics dc;
   AutoSelectFont fs(dc, GetHFONT());
 
