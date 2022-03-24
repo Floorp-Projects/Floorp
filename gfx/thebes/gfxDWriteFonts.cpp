@@ -107,12 +107,7 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
   ComputeMetrics(anAAOption);
 }
 
-gfxDWriteFont::~gfxDWriteFont() {
-  if (auto* scaledFont = mAzureScaledFontGDI.exchange(nullptr)) {
-    scaledFont->Release();
-  }
-  delete mMetrics;
-}
+gfxDWriteFont::~gfxDWriteFont() { delete mMetrics; }
 
 /* static */
 bool gfxDWriteFont::InitDWriteSupport() {
@@ -277,12 +272,17 @@ void gfxDWriteFont::UpdateClearTypeVars() {
                                     pixelGeometry, renderingModePref);
 }
 
-gfxFont* gfxDWriteFont::CopyWithAntialiasOption(
-    AntialiasOption anAAOption) const {
+UniquePtr<gfxFont> gfxDWriteFont::CopyWithAntialiasOption(
+    AntialiasOption anAAOption) {
   auto entry = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
   RefPtr<UnscaledFontDWrite> unscaledFont =
       static_cast<UnscaledFontDWrite*>(mUnscaledFont.get());
-  return new gfxDWriteFont(unscaledFont, entry, &mStyle, mFontFace, anAAOption);
+  return MakeUnique<gfxDWriteFont>(unscaledFont, entry, &mStyle, mFontFace,
+                                   anAAOption);
+}
+
+const gfxFont::Metrics& gfxDWriteFont::GetHorizontalMetrics() {
+  return *mMetrics;
 }
 
 bool gfxDWriteFont::GetFakeMetricsForArialBlack(
@@ -743,7 +743,7 @@ gfxFloat gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph) {
 }
 
 bool gfxDWriteFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                   bool aTight) const {
+                                   bool aTight) {
   DWRITE_GLYPH_METRICS m;
   HRESULT hr = mFontFace->GetDesignGlyphMetrics(&aGID, 1, &m, FALSE);
   if (FAILED(hr)) {
@@ -780,50 +780,32 @@ void gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
 already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  bool useClearType = UsingClearType();
-  if (mAzureScaledFontUsedClearType != useClearType) {
-    if (auto* oldScaledFont = mAzureScaledFont.exchange(nullptr)) {
-      oldScaledFont->Release();
-    }
-    if (auto* oldScaledFont = mAzureScaledFontGDI.exchange(nullptr)) {
-      oldScaledFont->Release();
-    }
+  if (mAzureScaledFontUsedClearType != UsingClearType()) {
+    mAzureScaledFont = nullptr;
+    mAzureScaledFontGDI = nullptr;
   }
   bool forceGDI = aRunParams.allowGDI && GetForceGDIClassic();
-  ScaledFont* scaledFont = forceGDI ? mAzureScaledFontGDI : mAzureScaledFont;
-  if (scaledFont) {
-    return do_AddRef(scaledFont);
-  }
+  RefPtr<ScaledFont>& azureScaledFont =
+      forceGDI ? mAzureScaledFontGDI : mAzureScaledFont;
+  if (!azureScaledFont) {
+    gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+    bool useEmbeddedBitmap =
+        (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
+         forceGDI) &&
+        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
 
-  gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-  bool useEmbeddedBitmap =
-      (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
-       forceGDI) &&
-      fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
-
-  const gfxFontStyle* fontStyle = GetStyle();
-  RefPtr<ScaledFont> newScaledFont = Factory::CreateScaledFontForDWriteFont(
-      mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-      useEmbeddedBitmap, ApplySyntheticBold(), forceGDI);
-  if (!newScaledFont) {
-    return nullptr;
-  }
-  InitializeScaledFont(newScaledFont);
-
-  if (forceGDI) {
-    if (mAzureScaledFontGDI.compareExchange(nullptr, newScaledFont.get())) {
-      Unused << newScaledFont.forget();
-      mAzureScaledFontUsedClearType = useClearType;
+    const gfxFontStyle* fontStyle = GetStyle();
+    azureScaledFont = Factory::CreateScaledFontForDWriteFont(
+        mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
+        useEmbeddedBitmap, ApplySyntheticBold(), forceGDI);
+    if (!azureScaledFont) {
+      return nullptr;
     }
-    scaledFont = mAzureScaledFontGDI;
-  } else {
-    if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
-      Unused << newScaledFont.forget();
-      mAzureScaledFontUsedClearType = useClearType;
-    }
-    scaledFont = mAzureScaledFont;
+    InitializeScaledFont(azureScaledFont);
+    mAzureScaledFontUsedClearType = UsingClearType();
   }
-  return do_AddRef(scaledFont);
+
+  return do_AddRef(azureScaledFont);
 }
 
 bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {
