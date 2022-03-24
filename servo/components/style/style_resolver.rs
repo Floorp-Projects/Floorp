@@ -452,7 +452,6 @@ where
         );
         let mut applicable_declarations = ApplicableDeclarationList::new();
 
-        let map = &mut self.context.thread_local.selector_flags;
         let bloom_filter = self.context.thread_local.bloom_filter.filter();
         let nth_index_cache = &mut self.context.thread_local.nth_index_cache;
         let mut matching_context = MatchingContext::new_for_visited(
@@ -466,9 +465,8 @@ where
         let stylist = &self.context.shared.stylist;
         let implemented_pseudo = self.element.implemented_pseudo_element();
         {
-            let resolving_element = self.element;
             let mut set_selector_flags = |element: &E, flags: ElementSelectorFlags| {
-                resolving_element.apply_selector_flags(map, element, flags);
+                element.apply_selector_flags(flags);
             };
 
             // Compute the primary rule node.
@@ -543,10 +541,8 @@ where
             self.context.shared.quirks_mode(),
         );
 
-        let map = &mut self.context.thread_local.selector_flags;
-        let resolving_element = self.element;
         let mut set_selector_flags = |element: &E, flags: ElementSelectorFlags| {
-            resolving_element.apply_selector_flags(map, element, flags);
+            element.apply_selector_flags(flags);
         };
 
         // NB: We handle animation rules for ::before and ::after when
