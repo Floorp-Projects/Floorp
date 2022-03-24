@@ -154,7 +154,7 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
   }
 }
 
-static Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
+Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
     ReadableStreamDefaultController* aController) {
   ReadableStream::ReaderState state = aController->GetStream()->State();
   if (state == ReadableStream::ReaderState::Errored) {
