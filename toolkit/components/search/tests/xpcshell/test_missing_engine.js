@@ -6,13 +6,6 @@
 
 "use strict";
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
-);
-
-const SEARCH_SERVICE_TOPIC = "browser-search-service";
-const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
-
 const GOOD_CONFIG = [
   {
     webExtension: {
@@ -40,23 +33,6 @@ const BAD_CONFIG = [
   },
 ];
 
-function listenFor(name, key) {
-  let notifyObserved = false;
-  let obs = (subject, topic, data) => {
-    if (data == key) {
-      notifyObserved = true;
-    }
-  };
-  Services.obs.addObserver(obs, name);
-
-  return () => {
-    Services.obs.removeObserver(obs, name);
-    return notifyObserved;
-  };
-}
-
-let configurationStub;
-
 add_task(async function setup() {
   SearchTestUtils.useMockIdleService();
   await AddonTestUtils.promiseStartupManager();
@@ -68,11 +44,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_startup_with_missing() {
-  configurationStub = await SearchTestUtils.useTestEngines(
-    "data",
-    null,
-    BAD_CONFIG
-  );
+  await SearchTestUtils.useTestEngines("data", null, BAD_CONFIG);
 
   const result = await Services.search.init();
   Assert.ok(

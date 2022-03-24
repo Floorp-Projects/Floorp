@@ -3,16 +3,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
-});
-
-const {
-  promiseRestartManager,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 async function getEngineNames() {
   let engines = await Services.search.getEngines();

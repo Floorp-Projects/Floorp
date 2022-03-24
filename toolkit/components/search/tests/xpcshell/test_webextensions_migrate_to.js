@@ -7,8 +7,6 @@
 
 "use strict";
 
-const kExtensionID = "simple@tests.mozilla.org";
-
 add_task(async function setup() {
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
