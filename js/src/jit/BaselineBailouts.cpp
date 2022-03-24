@@ -10,6 +10,7 @@
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "jit/arm/Simulator-arm.h"
+#include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -114,6 +115,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   jsbytecode* pc_ = nullptr;
   JSOp op_ = JSOp::Nop;
+  mozilla::Maybe<ResumeMode> resumeMode_;
   uint32_t exprStackSlots_ = 0;
   void* prevFramePtr_ = nullptr;
   Maybe<BufferPointer<BaselineFrame>> blFrame_;
@@ -224,8 +226,10 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return !catchingException() && iter_.resumeAfter();
   }
 
+  ResumeMode resumeMode() const { return *resumeMode_; }
+
   bool needToSaveCallerArgs() const {
-    return IsIonInlinableGetterOrSetterOp(op_);
+    return resumeMode() == ResumeMode::InlinedAccessor;
   }
 
   [[nodiscard]] bool enlarge() {
@@ -546,6 +550,7 @@ bool BaselineStackBuilder::initFrame() {
   pc_ = catchingException() ? excInfo_->resumePC()
                             : script_->offsetToPC(iter_.pcOffset());
   op_ = JSOp(*pc_);
+  resumeMode_ = mozilla::Some(iter_.resumeMode());
 
   return true;
 }
@@ -744,7 +749,7 @@ bool BaselineStackBuilder::buildFixedSlots() {
   return true;
 }
 
-// The caller side of inlined JSOp::FunCall and accessors must look
+// The caller side of inlined js::fun_call and accessors must look
 // like the function wasn't inlined.
 bool BaselineStackBuilder::fixUpCallerArgs(
     MutableHandleValueVector savedCallerArgs, bool* fixedUp) {
@@ -753,18 +758,20 @@ bool BaselineStackBuilder::fixUpCallerArgs(
   // Inlining of SpreadCall-like frames not currently supported.
   MOZ_ASSERT(!IsSpreadOp(op_));
 
-  if (op_ != JSOp::FunCall && !needToSaveCallerArgs()) {
+  if (resumeMode() != ResumeMode::InlinedFunCall && !needToSaveCallerArgs()) {
     return true;
   }
 
   // Calculate how many arguments are consumed by the inlined call.
   // All calls pass |callee| and |this|.
   uint32_t inlinedArgs = 2;
-  if (op_ == JSOp::FunCall) {
+  if (resumeMode() == ResumeMode::InlinedFunCall) {
     // The first argument to an inlined FunCall becomes |this|,
     // if it exists. The rest are passed normally.
+    MOZ_ASSERT(IsInvokeOp(op_));
     inlinedArgs += GET_ARGC(pc_) > 0 ? GET_ARGC(pc_) - 1 : 0;
   } else {
+    MOZ_ASSERT(resumeMode() == ResumeMode::InlinedAccessor);
     MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op_));
     // Setters are passed one argument. Getters are passed none.
     if (IsSetPropOp(op_)) {
@@ -787,11 +794,11 @@ bool BaselineStackBuilder::fixUpCallerArgs(
     }
   }
 
-  // When we inline JSOp::FunCall, we bypass the native and inline the
+  // When we inline js::fun_call, we bypass the native and inline the
   // target directly. When rebuilding the stack, we need to fill in
   // the right number of slots to make it look like the js_native was
   // actually called.
-  if (op_ == JSOp::FunCall) {
+  if (resumeMode() == ResumeMode::InlinedFunCall) {
     // We must transform the stack from |target, this, args| to
     // |js_fun_call, target, this, args|. The value of |js_fun_call|
     // will never be observed, so we push |undefined| for it, followed
@@ -994,7 +1001,7 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
         return false;
       }
     }
-  } else if (op_ == JSOp::FunCall && GET_ARGC(pc_) == 0) {
+  } else if (resumeMode() == ResumeMode::InlinedFunCall && GET_ARGC(pc_) == 0) {
     // When calling FunCall with 0 arguments, we push |undefined|
     // for this. See BaselineCacheIRCompiler::pushFunCallArguments.
     MOZ_ASSERT(!pushedNewTarget);
@@ -1012,8 +1019,10 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
     callee = *blFrame()->valueSlot(calleeSlot);
 
   } else {
+    MOZ_ASSERT(resumeMode() == ResumeMode::InlinedStandardCall ||
+               resumeMode() == ResumeMode::InlinedFunCall);
     actualArgc = GET_ARGC(pc_);
-    if (op_ == JSOp::FunCall) {
+    if (resumeMode() == ResumeMode::InlinedFunCall) {
       // See BaselineCacheIRCompiler::pushFunCallArguments.
       MOZ_ASSERT(actualArgc > 0);
       actualArgc--;
@@ -1278,6 +1287,61 @@ bool BaselineStackBuilder::envChainSlotCanBeOptimized() {
   return true;
 }
 
+bool jit::AssertBailoutStackDepth(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, ResumeMode mode,
+                                  uint32_t exprStackSlots) {
+  if (mode == ResumeMode::ResumeAfter) {
+    pc = GetNextPc(pc);
+  }
+
+  uint32_t expectedDepth;
+  bool reachablePC;
+  if (!ReconstructStackDepth(cx, script, pc, &expectedDepth, &reachablePC)) {
+    return false;
+  }
+  if (!reachablePC) {
+    return true;
+  }
+
+  JSOp op = JSOp(*pc);
+
+  if (mode == ResumeMode::InlinedFunCall) {
+    // For inlined fun.call(this, ...); the reconstructed stack depth will
+    // include the |this|, but the exprStackSlots won't.
+    // Exception: if there are no arguments, the depths do match.
+    MOZ_ASSERT(IsInvokeOp(op));
+    if (GET_ARGC(pc) > 0) {
+      MOZ_ASSERT(expectedDepth == exprStackSlots + 1);
+    } else {
+      MOZ_ASSERT(expectedDepth == exprStackSlots);
+    }
+    return true;
+  }
+
+  if (mode == ResumeMode::InlinedAccessor) {
+    // Accessors coming out of ion are inlined via a complete lie perpetrated by
+    // the compiler internally. Ion just rearranges the stack, and pretends that
+    // it looked like a call all along.
+    // This means that the depth is actually one *more* than expected by the
+    // interpreter, as there is now a JSFunction, |this| and [arg], rather than
+    // the expected |this| and [arg].
+    // If the inlined accessor is a GetElem operation, the numbers do match, but
+    // that's just because GetElem expects one more item on the stack. Note that
+    // none of that was pushed, but it's still reflected in exprStackSlots.
+    MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op));
+    if (IsGetElemOp(op)) {
+      MOZ_ASSERT(exprStackSlots == expectedDepth);
+    } else {
+      MOZ_ASSERT(exprStackSlots == expectedDepth + 1);
+    }
+    return true;
+  }
+
+  // In all other cases, the depth must match.
+  MOZ_ASSERT(exprStackSlots == expectedDepth);
+  return true;
+}
+
 bool BaselineStackBuilder::validateFrame() {
   const uint32_t frameSize = framePushed();
   blFrame()->setDebugFrameSize(frameSize);
@@ -1287,38 +1351,8 @@ bool BaselineStackBuilder::validateFrame() {
   MOZ_ASSERT(blFrame()->debugNumValueSlots() >= script_->nfixed());
   MOZ_ASSERT(blFrame()->debugNumValueSlots() <= script_->nslots());
 
-  uint32_t expectedDepth;
-  bool reachablePC;
-  jsbytecode* pcForStackDepth = resumeAfter() ? GetNextPc(pc_) : pc_;
-  if (!ReconstructStackDepth(cx_, script_, pcForStackDepth, &expectedDepth,
-                             &reachablePC)) {
-    return false;
-  }
-  if (!reachablePC) {
-    return true;
-  }
-
-  if (op_ == JSOp::FunCall) {
-    // For fun.call(this, ...); the reconstructed stack depth will
-    // include the this. When inlining that is not included.
-    // So the exprStackSlots will be one less.
-    MOZ_ASSERT(expectedDepth - exprStackSlots() <= 1);
-  } else if (iter_.moreFrames() && IsIonInlinableGetterOrSetterOp(op_)) {
-    // Accessors coming out of ion are inlined via a complete
-    // lie perpetrated by the compiler internally. Ion just rearranges
-    // the stack, and pretends that it looked like a call all along.
-    // This means that the depth is actually one *more* than expected
-    // by the interpreter, as there is now a JSFunction, |this| and [arg],
-    // rather than the expected |this| and [arg].
-    // If the inlined accessor is a getelem operation, the numbers do match,
-    // but that's just because getelem expects one more item on the stack.
-    // Note that none of that was pushed, but it's still reflected
-    // in exprStackSlots.
-    MOZ_ASSERT(exprStackSlots() - expectedDepth == (IsGetElemOp(op_) ? 0 : 1));
-  } else {
-    MOZ_ASSERT(exprStackSlots() == expectedDepth);
-  }
-  return true;
+  return AssertBailoutStackDepth(cx_, script_, pc_, resumeMode(),
+                                 exprStackSlots());
 }
 #endif
 

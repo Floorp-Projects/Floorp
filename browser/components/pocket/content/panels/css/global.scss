@@ -33,6 +33,22 @@ hr {
   line-height: 1.23em;
 }
 
+.header_small {
+  margin: 12px 0 8px;
+  font-size: 0.84em;
+  line-height: 1.07em;
+}
+
+.header_flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header_center {
+  text-align: center;
+}
+
 p {
   margin: 8px 0;
   font-size: 0.84em;

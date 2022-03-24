@@ -57,7 +57,7 @@ If ``ffmpeg`` is listed as FAIL, try `downloading ffmpeg manually <https://ffmpe
 OSX
 """
 
-`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__ **(unresolved)**
+`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__ **(resolved)**
 
 **Current Status**: ``convert`` and ``compare`` fail to install. Rebuilding Firefox and running browsertime setup has not shown to resolve this issue.
 

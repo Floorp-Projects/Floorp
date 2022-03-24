@@ -87,7 +87,7 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
               // > term = strrchr(real_path, '/');
               // > if (term && strncmp(term, "/virtio", 7) == 0)
               // >     *term = 0;
-              char *term = strrchr(realSysPath.get(), '/');
+              char* term = strrchr(realSysPath.get(), '/');
               if (term && strncmp(term, "/virtio", 7) == 0) {
                 *term = 0;
               }

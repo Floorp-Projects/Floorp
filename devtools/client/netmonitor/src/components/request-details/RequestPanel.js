@@ -190,7 +190,7 @@ class RequestPanel extends Component {
     const { request, targetSearchResult } = this.props;
     const { filterText, rawRequestPayloadDisplayed } = this.state;
     const { formDataSections, mimeType, requestPostData } = request;
-    const postData = requestPostData ? requestPostData.postData.text : null;
+    const postData = requestPostData ? requestPostData.postData?.text : null;
 
     if ((!formDataSections || formDataSections.length === 0) && !postData) {
       return div({ className: "empty-notice" }, REQUEST_EMPTY_TEXT);

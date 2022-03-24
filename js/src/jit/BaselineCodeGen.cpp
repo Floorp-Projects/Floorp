@@ -4495,11 +4495,6 @@ bool BaselineCodeGen<Handler>::emit_SuperCall() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_FunCall() {
-  return emitCall(JSOp::FunCall);
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Eval() {
   return emitCall(JSOp::Eval);
 }

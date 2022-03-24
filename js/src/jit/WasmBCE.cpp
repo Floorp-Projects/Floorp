@@ -45,7 +45,13 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
           MWasmBoundsCheck* bc = def->toWasmBoundsCheck();
           MDefinition* addr = bc->index();
 
-          // Eliminate constant-address bounds checks to addresses below
+          // We only support bounds check elimination on wasm memory, not
+          // tables. See bug 1625891.
+          if (!bc->isMemory()) {
+            continue;
+          }
+
+          // Eliminate constant-address memory bounds checks to addresses below
           // the heap minimum.
           //
           // The payload of the MConstant will be Double if the constant

@@ -4,8 +4,29 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+.popup-notification-panel::part(content) {
+  /* To keep the rounded borders of the panel, we use overflow: hidden; from the
+   * panel-no-padding class to ensure the contents are clipped to the border box.
+   * That causes us to override the "display" property so that the height of the
+   * contents is computed correctly. */
+  display: flex;
+  /* Make multiple popupnotifications stack vertically. */
+  flex-direction: column;
+}
+
+.popup-notification-panel > popupnotification:not([hidden]) {
+  /* Since the anonymous parent (::part(content)) has display: flex, sizing
+   * computations work better with display: block; than with the XUL default
+   * display: -moz-box; */
+  display: block;
+}
+
 popupnotification {
   font: caption;
+}
+
+popupnotificationcontent {
+  margin-top: .5em;
 }
 
 .popup-notification-header-container,
@@ -51,6 +72,14 @@ popupnotification {
   display: none;
 }
 
+@media (-moz-platform: windows) {
+  /* Swap the primary and secondary action, because Windows
+   * platform conventions put the primary action on the left. */
+  .panel-footer > .popup-notification-primary-button:not([default]) {
+    order: -1;
+  }
+}
+
 .popup-notification-secondary-button:not([dropmarkerhidden="true"]) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
@@ -85,6 +114,14 @@ popupnotification {
   display: -moz-box;
   padding: 0;
   margin: 0;
+}
+
+@media (-moz-platform: windows) {
+  /* Override default icon size which is too small for this dropdown */
+  .popup-notification-dropmarker > .button-box > .button-menu-dropmarker {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker::part(icon) {

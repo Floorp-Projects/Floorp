@@ -221,6 +221,14 @@ xul|label[disabled="true"] {
   background-color: var(--button-primary-active-bgcolor);
 }
 
+@media (-moz-platform: windows) {
+  /* Swap the primary and secondary action, because Windows
+   * platform conventions put the primary action on the left. */
+  .panel-footer > button[default] {
+    order: -1;
+  }
+}
+
 /* Autoscroll popup */
 
 .autoscroller {

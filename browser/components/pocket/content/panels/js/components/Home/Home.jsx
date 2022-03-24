@@ -9,14 +9,6 @@ import PopularTopics from "../PopularTopics/PopularTopics";
 import Button from "../Button/Button";
 import panelMessaging from "../../messages";
 
-function encodeThumbnail(rawSource) {
-  return rawSource
-    ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
-        rawSource
-      )}`
-    : null;
-}
-
 function Home(props) {
   const { locale, topics, pockethost, hideRecentSaves } = props;
   const [{ articles, status }, setArticlesState] = useState({
@@ -52,16 +44,7 @@ function Home(props) {
         }
 
         setArticlesState({
-          articles: data.map(item => ({
-            url: item.resolved_url,
-            // Using array notation because there is a key titled `1` (`images` is an object)
-            thumbnail: encodeThumbnail(
-              item?.top_image_url || item?.images?.["1"]?.src
-            ),
-            alt: "thumbnail image",
-            title: item.resolved_title,
-            publisher: item.domain_metadata?.name,
-          })),
+          articles: data,
           status: "success",
         });
       });

@@ -221,6 +221,9 @@ var dataProviders = {
         Ci.nsIHttpProtocolHandler
       ).userAgent,
       safeMode: Services.appinfo.inSafeMode,
+      memorySizeBytes: Services.sysinfo.getProperty("memsize"),
+      diskAvailableBytes: Services.dirsvc.get("ProfD", Ci.nsIFile)
+        .diskSpaceAvailable,
     };
 
     if (Services.sysinfo.getProperty("name") == "Windows_NT") {

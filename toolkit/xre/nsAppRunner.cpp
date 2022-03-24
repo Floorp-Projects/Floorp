@@ -5466,7 +5466,21 @@ nsresult XREMain::XRE_mainRun() {
     // files can't override JS engine start-up prefs.
     mDirProvider.FinishInitializingUserPrefs();
 
-    nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
+    nsCOMPtr<nsIFile> workingDir;
+    rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
+                                getter_AddRefs(workingDir));
+    if (NS_FAILED(rv)) {
+      // No working dir? This can happen if it gets deleted before we start.
+      workingDir = nullptr;
+    }
+
+    cmdLine = new nsCommandLine();
+
+    rv = cmdLine->Init(gArgc, gArgv, workingDir,
+                       nsICommandLine::STATE_INITIAL_LAUNCH);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY, cmdLine);
 
     appStartup = components::AppStartup::Service();
     NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
@@ -5487,21 +5501,7 @@ nsresult XREMain::XRE_mainRun() {
 
     appStartup->GetShuttingDown(&mShuttingDown);
 
-    nsCOMPtr<nsIFile> workingDir;
-    rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
-                                getter_AddRefs(workingDir));
-    if (NS_FAILED(rv)) {
-      // No working dir? This can happen if it gets deleted before we start.
-      workingDir = nullptr;
-    }
-
     if (!mShuttingDown) {
-      cmdLine = new nsCommandLine();
-
-      rv = cmdLine->Init(gArgc, gArgv, workingDir,
-                         nsICommandLine::STATE_INITIAL_LAUNCH);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
       /* Special-case services that need early access to the command
           line. */
       nsCOMPtr<nsIObserverService> obsService =

@@ -1238,8 +1238,9 @@ class FunctionCompiler {
       actualBase = extended;
     }
 
-    auto* ins = MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
-                                      bytecodeOffset());
+    auto* ins =
+        MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
+                              bytecodeOffset(), MWasmBoundsCheck::Memory);
     curBlock_->add(ins);
     actualBase = ins;
 
@@ -1659,45 +1660,139 @@ class FunctionCompiler {
     return load;
   }
 
-  MInstruction* storeGlobalVar(uint32_t globalDataOffset, bool isIndirect,
-                               MDefinition* v) {
+  bool storeGlobalVar(uint32_t lineOrBytecode, uint32_t globalDataOffset,
+                      bool isIndirect, MDefinition* v) {
     if (inDeadCode()) {
-      return nullptr;
+      return true;
     }
 
-    MInstruction* store;
-    MInstruction* valueAddr = nullptr;
     if (isIndirect) {
       // Pull a pointer to the value out of Instance::globalArea, then
       // store through that pointer.
-      auto* cellPtr =
+      auto* valueAddr =
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
                                   /*isConst=*/true, tlsPointer_);
-      curBlock_->add(cellPtr);
+      curBlock_->add(valueAddr);
+
+      // Handle a store to a ref-typed field specially
       if (v->type() == MIRType::RefOrNull) {
-        valueAddr = cellPtr;
-        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
-                                   AliasSet::WasmGlobalCell);
-      } else {
-        store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
+        // Load the previous value for the post-write barrier
+        auto* prevValue =
+            MWasmLoadGlobalCell::New(alloc(), MIRType::RefOrNull, valueAddr);
+        curBlock_->add(prevValue);
+
+        // Store the new value
+        auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                         AliasSet::WasmGlobalCell);
+        curBlock_->add(store);
+
+        // Call the post-write barrier
+        return postBarrierPrecise(lineOrBytecode, valueAddr, prevValue);
       }
-    } else {
-      // Store the value directly in Instance::globalArea.
-      if (v->type() == MIRType::RefOrNull) {
-        valueAddr = MWasmDerivedPointer::New(
-            alloc(), tlsPointer_,
-            wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
-        curBlock_->add(valueAddr);
-        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
-                                   AliasSet::WasmGlobalVar);
-      } else {
-        store =
-            MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
-      }
+
+      auto* store = MWasmStoreGlobalCell::New(alloc(), v, valueAddr);
+      curBlock_->add(store);
+      return true;
     }
+    // Or else store the value directly in Instance::globalArea.
+
+    // Handle a store to a ref-typed field specially
+    if (v->type() == MIRType::RefOrNull) {
+      // Compute the address of the ref-typed global
+      auto* valueAddr = MWasmDerivedPointer::New(
+          alloc(), tlsPointer_,
+          wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
+      curBlock_->add(valueAddr);
+
+      // Load the previous value for the post-write barrier
+      auto* prevValue =
+          MWasmLoadGlobalCell::New(alloc(), MIRType::RefOrNull, valueAddr);
+      curBlock_->add(prevValue);
+
+      // Store the new value
+      auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                       AliasSet::WasmGlobalVar);
+      curBlock_->add(store);
+
+      // Call the post-write barrier
+      return postBarrierPrecise(lineOrBytecode, valueAddr, prevValue);
+    }
+
+    auto* store =
+        MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+    curBlock_->add(store);
+    return true;
+  }
+
+  MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
+                              MIRType type) {
+    uint32_t globalDataOffset =
+        wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
+    auto* load = MWasmLoadTls::New(alloc(), tlsPointer_, globalDataOffset, type,
+                                   AliasSet::Load(AliasSet::WasmTableMeta));
+    curBlock_->add(load);
+    return load;
+  }
+
+  MDefinition* loadTableLength(const TableDesc& table) {
+    return loadTableField(table, offsetof(TableInstanceData, length), MIRType::Int32);
+  }
+
+  MDefinition* loadTableElements(const TableDesc& table) {
+    return loadTableField(table, offsetof(TableInstanceData, elements),
+                          MIRType::Pointer);
+  }
+
+  MDefinition* tableGetAnyRef(const TableDesc& table, MDefinition* index) {
+    // Load the table length and perform a bounds check with spectre index
+    // masking
+    auto* length = loadTableLength(table);
+    auto* check = MWasmBoundsCheck::New(
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+    curBlock_->add(check);
+    if (JitOptions.spectreIndexMasking) {
+      index = check;
+    }
+
+    // Load the table elements and load the element
+    auto* elements = loadTableElements(table);
+    auto* element = MWasmLoadTableElement::New(alloc(), elements, index);
+    curBlock_->add(element);
+    return element;
+  }
+
+  [[nodiscard]] bool tableSetAnyRef(const TableDesc& table, MDefinition* index,
+                                    MDefinition* value,
+                                    uint32_t lineOrBytecode) {
+    // Load the table length and perform a bounds check with spectre index
+    // masking
+    auto* length = loadTableLength(table);
+    auto* check = MWasmBoundsCheck::New(
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+    curBlock_->add(check);
+    if (JitOptions.spectreIndexMasking) {
+      index = check;
+    }
+
+    // Load the table elements
+    auto* elements = loadTableElements(table);
+
+    // Load the previous value
+    auto* prevValue = MWasmLoadTableElement::New(alloc(), elements, index);
+    curBlock_->add(prevValue);
+
+    // Compute the value's location for the post barrier
+    auto* loc =
+        MWasmDerivedIndexPointer::New(alloc(), elements, index, ScalePointer);
+    curBlock_->add(loc);
+
+    // Store the new value
+    auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, loc, value,
+                                     AliasSet::WasmTableElement);
     curBlock_->add(store);
 
-    return valueAddr;
+    // Perform the post barrier
+    return postBarrierPrecise(lineOrBytecode, loc, prevValue);
   }
 
   void addInterruptCheck() {
@@ -1708,14 +1803,17 @@ class FunctionCompiler {
         MWasmInterruptCheck::New(alloc(), tlsPointer_, bytecodeOffset()));
   }
 
-  bool postBarrierFilteringCall(uint32_t lineOrBytecode,
-                                MDefinition* barrierAddr) {
-    const SymbolicAddressSignature& callee = SASigPostBarrierFiltering;
+  bool postBarrierPrecise(uint32_t lineOrBytecode, MDefinition* valueAddr,
+                          MDefinition* value) {
+    const SymbolicAddressSignature& callee = SASigPostBarrierPrecise;
     CallCompileState args;
     if (!passInstance(callee.argTypes[0], &args)) {
       return false;
     }
-    if (!passArg(barrierAddr, callee.argTypes[1], &args)) {
+    if (!passArg(valueAddr, callee.argTypes[1], &args)) {
+      return false;
+    }
+    if (!passArg(value, callee.argTypes[2], &args)) {
       return false;
     }
     finishCall(&args);
@@ -3075,7 +3173,7 @@ class FunctionCompiler {
   }
 
   bool emitNewException(MDefinition* tag, MDefinition** exception) {
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    uint32_t bytecodeOffset = readBytecodeOffset();
     const SymbolicAddressSignature& callee = SASigExceptionNew;
     CallCompileState args;
     if (!passInstance(callee.argTypes[0], &args)) {
@@ -3087,14 +3185,14 @@ class FunctionCompiler {
     if (!finishCall(&args)) {
       return false;
     }
-    return builtinInstanceMethodCall(callee, lineOrBytecode, args, exception);
+    return builtinInstanceMethodCall(callee, bytecodeOffset, args, exception);
   }
 
   bool emitThrow(uint32_t tagIndex, const DefVector& argValues) {
     if (inDeadCode()) {
       return true;
     }
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    uint32_t bytecodeOffset = readBytecodeOffset();
 
     // Load the tag
     MDefinition* tag = loadTag(tagIndex);
@@ -3133,12 +3231,22 @@ class FunctionCompiler {
         continue;
       }
 
+      // Compute the address of the field
       auto* fieldAddr = MWasmDerivedPointer::New(alloc(), data, offset);
       if (!fieldAddr) {
         return false;
       }
       curBlock_->add(fieldAddr);
 
+      // Load the previous value
+      auto* prevValue = MWasmLoadObjectDataField::New(alloc(), exception, data,
+                                                      offset, ToMIRType(type));
+      if (!prevValue) {
+        return false;
+      }
+      curBlock_->add(prevValue);
+
+      // Store the new value
       auto* store = MWasmStoreObjectDataRefField::New(
           alloc(), tlsPointer_, exception, fieldAddr, argValues[i]);
       if (!store) {
@@ -3146,7 +3254,8 @@ class FunctionCompiler {
       }
       curBlock_->add(store);
 
-      if (!postBarrierFilteringCall(lineOrBytecode, fieldAddr)) {
+      // Call the post-write barrier
+      if (!postBarrierPrecise(bytecodeOffset, fieldAddr, prevValue)) {
         return false;
       }
     }
@@ -3181,7 +3290,7 @@ class FunctionCompiler {
 
     // If there is no surrounding catching block, call an instance method to
     // throw the exception.
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    uint32_t bytecodeOffset = readBytecodeOffset();
     const SymbolicAddressSignature& callee = SASigThrowException;
     CallCompileState args;
     if (!passInstance(callee.argTypes[0], &args)) {
@@ -3193,7 +3302,7 @@ class FunctionCompiler {
     if (!finishCall(&args)) {
       return false;
     }
-    if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
+    if (!builtinInstanceMethodCall(callee, bytecodeOffset, args)) {
       return false;
     }
     unreachableTrap();
@@ -3226,12 +3335,24 @@ class FunctionCompiler {
 
   /************************************************************ DECODING ***/
 
+  // AsmJS adds a line number to `callSiteLineNums` for certain operations that
+  // are represented by a JS call, such as math builtins. We use these line
+  // numbers when calling builtins. This method will read from
+  // `callSiteLineNums` when we are using AsmJS, or else return the current
+  // bytecode offset.
+  //
+  // This method MUST be called from opcodes that AsmJS will emit a call site
+  // line number for, or else the arrays will get out of sync. Other opcodes
+  // must use `readBytecodeOffset` below.
   uint32_t readCallSiteLineOrBytecode() {
     if (!func_.callSiteLineNums.empty()) {
       return func_.callSiteLineNums[lastReadCallSite_++];
     }
     return iter_.lastOpcodeOffset();
   }
+
+  // Return the current bytecode offset.
+  uint32_t readBytecodeOffset() { return iter_.lastOpcodeOffset(); }
 
 #if DEBUG
   bool done() const { return iter_.done(); }
@@ -3934,7 +4055,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
 }
 
 static bool EmitSetGlobal(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   uint32_t id;
   MDefinition* value;
@@ -3944,19 +4065,13 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
 
   const GlobalDesc& global = f.moduleEnv().globals[id];
   MOZ_ASSERT(global.isMutable());
-  MInstruction* barrierAddr =
-      f.storeGlobalVar(global.offset(), global.isIndirect(), value);
-
-  if (barrierAddr) {
-    // We always call the C++ postbarrier because the location will never be in
-    // the nursery, and the value stored will very frequently be in the nursery.
-    // The C++ postbarrier performs any necessary filtering.
-    return f.postBarrierFilteringCall(lineOrBytecode, barrierAddr);
-  }
-  return true;
+  return f.storeGlobalVar(bytecodeOffset, global.offset(), global.isIndirect(),
+                          value);
 }
 
 static bool EmitTeeGlobal(FunctionCompiler& f) {
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
+
   uint32_t id;
   MDefinition* value;
   if (!f.iter().readTeeGlobal(&id, &value)) {
@@ -3966,8 +4081,8 @@ static bool EmitTeeGlobal(FunctionCompiler& f) {
   const GlobalDesc& global = f.moduleEnv().globals[id];
   MOZ_ASSERT(global.isMutable());
 
-  f.storeGlobalVar(global.offset(), global.isIndirect(), value);
-  return true;
+  return f.storeGlobalVar(bytecodeOffset, global.offset(), global.isIndirect(),
+                          value);
 }
 
 template <typename MIRClass>
@@ -4433,7 +4548,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
 }
 
 static bool EmitMemoryGrow(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       f.isNoMemOrMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
@@ -4454,7 +4569,7 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -4463,7 +4578,7 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
 }
 
 static bool EmitMemorySize(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       f.isNoMemOrMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64;
@@ -4480,7 +4595,7 @@ static bool EmitMemorySize(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -4565,7 +4680,7 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   MOZ_ASSERT(type == ValType::I32 || type == ValType::I64);
   MOZ_ASSERT(SizeOf(type) == byteSize);
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       f.isNoMemOrMem32()
@@ -4608,7 +4723,7 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -4626,7 +4741,7 @@ static bool EmitFence(FunctionCompiler& f) {
 }
 
 static bool EmitWake(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       f.isNoMemOrMem32() ? SASigWakeM32 : SASigWakeM64;
@@ -4661,7 +4776,7 @@ static bool EmitWake(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -4690,7 +4805,7 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
 
 static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
                             MDefinition* src, MDefinition* len) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       (f.moduleEnv().usesSharedMemory()
@@ -4718,7 +4833,7 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitMemCopyInlineM32(FunctionCompiler& f, MDefinition* dst,
@@ -4894,7 +5009,7 @@ static bool EmitTableCopy(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee = SASigTableCopy;
   CallCompileState args;
@@ -4929,7 +5044,7 @@ static bool EmitTableCopy(FunctionCompiler& f) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
@@ -4942,7 +5057,7 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       isData ? SASigDataDrop : SASigElemDrop;
@@ -4961,12 +5076,12 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
                             MDefinition* val, MDefinition* len) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       (f.moduleEnv().usesSharedMemory()
@@ -4995,7 +5110,7 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitMemFillInlineM32(FunctionCompiler& f, MDefinition* start,
@@ -5126,7 +5241,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee =
       isMem ? (f.isMem32() ? SASigMemInitM32 : SASigMemInitM64)
@@ -5164,7 +5279,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 // Note, table.{get,grow,set} on table(funcref) are currently rejected by the
@@ -5181,7 +5296,7 @@ static bool EmitTableFill(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee = SASigTableFill;
   CallCompileState args;
@@ -5212,7 +5327,7 @@ static bool EmitTableFill(FunctionCompiler& f) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitTableGet(FunctionCompiler& f) {
@@ -5226,9 +5341,19 @@ static bool EmitTableGet(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
+  if (table.elemType.tableRepr() == TableRepr::Ref) {
+    MDefinition* ret = f.tableGetAnyRef(table, index);
+    if (!ret) {
+      return false;
+    }
+    f.iter().setResult(ret);
+    return true;
+  }
 
-  const SymbolicAddressSignature& callee = SASigTableGet;
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
+
+  const SymbolicAddressSignature& callee = SASigTableGetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5254,7 +5379,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -5274,7 +5399,7 @@ static bool EmitTableGrow(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee = SASigTableGrow;
   CallCompileState args;
@@ -5304,7 +5429,7 @@ static bool EmitTableGrow(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -5324,9 +5449,14 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableSet;
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
+  if (table.elemType.tableRepr() == TableRepr::Ref) {
+    return f.tableSetAnyRef(table, index, value, bytecodeOffset);
+  }
+
+  const SymbolicAddressSignature& callee = SASigTableSetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5353,7 +5483,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitTableSize(FunctionCompiler& f) {
@@ -5366,33 +5496,14 @@ static bool EmitTableSize(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  const TableDesc& table = f.moduleEnv().tables[tableIndex];
 
-  const SymbolicAddressSignature& callee = SASigTableSize;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
+  MDefinition* length = f.loadTableLength(table);
+  if (!length) {
     return false;
   }
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
-  if (!tableIndexArg) {
-    return false;
-  }
-  if (!f.passArg(tableIndexArg, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  f.iter().setResult(ret);
+  f.iter().setResult(length);
   return true;
 }
 
@@ -5406,7 +5517,7 @@ static bool EmitRefFunc(FunctionCompiler& f) {
     return true;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   const SymbolicAddressSignature& callee = SASigRefFunc;
   CallCompileState args;
@@ -5429,7 +5540,7 @@ static bool EmitRefFunc(FunctionCompiler& f) {
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
     return false;
   }
 
@@ -5676,7 +5787,7 @@ static bool EmitIntrinsic(FunctionCompiler& f) {
     return false;
   }
 
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
   const SymbolicAddressSignature& callee = intrinsic->signature;
 
   CallCompileState args;
@@ -5695,7 +5806,7 @@ static bool EmitIntrinsic(FunctionCompiler& f) {
 
   f.finishCall(&args);
 
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
 static bool EmitBodyExprs(FunctionCompiler& f) {

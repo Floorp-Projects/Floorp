@@ -348,7 +348,7 @@ MOZ_ALWAYS_INLINE unsigned StackUses(jsbytecode* pc) {
       /* stack: fun, this, [argc arguments] */
       MOZ_ASSERT(op == JSOp::Call || op == JSOp::CallIgnoresRv ||
                  op == JSOp::Eval || op == JSOp::CallIter ||
-                 op == JSOp::StrictEval || op == JSOp::FunCall);
+                 op == JSOp::StrictEval);
       return 2 + GET_ARGC(pc);
   }
 }

@@ -112,16 +112,16 @@ enum class SymbolicAddress {
   TableCopy,
   ElemDrop,
   TableFill,
-  TableGet,
+  TableGetFunc,
   TableGrow,
   TableInit,
-  TableSet,
-  TableSize,
+  TableSetFunc,
   RefFunc,
   RefTest,
   RttSub,
   PreBarrierFiltering,
   PostBarrier,
+  PostBarrierPrecise,
   PostBarrierFiltering,
   StructNew,
 #if defined(ENABLE_WASM_EXCEPTIONS)
@@ -236,14 +236,14 @@ extern const SymbolicAddressSignature SASigMemInitM64;
 extern const SymbolicAddressSignature SASigTableCopy;
 extern const SymbolicAddressSignature SASigElemDrop;
 extern const SymbolicAddressSignature SASigTableFill;
-extern const SymbolicAddressSignature SASigTableGet;
+extern const SymbolicAddressSignature SASigTableGetFunc;
 extern const SymbolicAddressSignature SASigTableGrow;
 extern const SymbolicAddressSignature SASigTableInit;
-extern const SymbolicAddressSignature SASigTableSet;
-extern const SymbolicAddressSignature SASigTableSize;
+extern const SymbolicAddressSignature SASigTableSetFunc;
 extern const SymbolicAddressSignature SASigRefFunc;
 extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
+extern const SymbolicAddressSignature SASigPostBarrierPrecise;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
 #ifdef ENABLE_WASM_EXCEPTIONS
