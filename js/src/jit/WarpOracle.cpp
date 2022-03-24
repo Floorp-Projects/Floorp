@@ -470,7 +470,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Call:
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
-      case JSOp::FunCall:
       case JSOp::New:
       case JSOp::SuperCall:
       case JSOp::SpreadCall:
