@@ -100,7 +100,7 @@ class WorkerMessageHandler {
       }
 
       testMessageProcessed = true;
-      handler.send("test", data instanceof Uint8Array && data[0] === 255);
+      handler.send("test", data instanceof Uint8Array);
     });
     handler.on("configure", function wphConfigure(data) {
       (0, _util.setVerbosityLevel)(data.verbosity);
@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.14.13';
+    const workerVersion = '2.14.102';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -713,7 +713,6 @@ exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
 exports.isAscii = isAscii;
-exports.isSameOrigin = isSameOrigin;
 exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
 exports.setVerbosityLevel = setVerbosityLevel;
@@ -1101,23 +1100,6 @@ function assert(cond, msg) {
   if (!cond) {
     unreachable(msg);
   }
-}
-
-function isSameOrigin(baseUrl, otherUrl) {
-  let base;
-
-  try {
-    base = new URL(baseUrl);
-
-    if (!base.origin || base.origin === "null") {
-      return false;
-    }
-  } catch (e) {
-    return false;
-  }
-
-  const other = new URL(otherUrl, base);
-  return base.origin === other.origin;
 }
 
 function _isValidProtocol(url) {
@@ -2007,10 +1989,8 @@ class RefSet {
     this._set.delete(ref.toString());
   }
 
-  forEach(callback) {
-    for (const ref of this._set.values()) {
-      callback(ref);
-    }
+  [Symbol.iterator]() {
+    return this._set.values();
   }
 
   clear() {
@@ -2046,10 +2026,8 @@ class RefSetCache {
     this._map.set(ref.toString(), this.get(aliasRef));
   }
 
-  forEach(callback) {
-    for (const value of this._map.values()) {
-      callback(value);
-    }
+  [Symbol.iterator]() {
+    return this._map.values();
   }
 
   clear() {
@@ -3604,8 +3582,6 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _xfa_fonts = __w_pdfjs_require__(12);
 
-var _stream = __w_pdfjs_require__(10);
-
 var _annotation = __w_pdfjs_require__(22);
 
 var _base_stream = __w_pdfjs_require__(9);
@@ -3617,6 +3593,8 @@ var _catalog = __w_pdfjs_require__(64);
 var _cleanup_helper = __w_pdfjs_require__(66);
 
 var _parser = __w_pdfjs_require__(27);
+
+var _stream = __w_pdfjs_require__(10);
 
 var _object_loader = __w_pdfjs_require__(71);
 
@@ -4092,17 +4070,7 @@ function find(stream, signature, limit = 1024, backwards = false) {
 }
 
 class PDFDocument {
-  constructor(pdfManager, arg) {
-    let stream;
-
-    if (arg instanceof _base_stream.BaseStream) {
-      stream = arg;
-    } else if ((0, _util.isArrayBuffer)(arg)) {
-      stream = new _stream.Stream(arg);
-    } else {
-      throw new Error("PDFDocument: Unknown argument type");
-    }
-
+  constructor(pdfManager, stream) {
     if (stream.length <= 0) {
       throw new _util.InvalidPDFException("The PDF file is empty, i.e. its size is zero bytes.");
     }
@@ -10235,9 +10203,10 @@ class PartialEvaluator {
       }
     }
 
-    processed.forEach(ref => {
+    for (const ref of processed) {
       nonBlendModesSet.put(ref);
-    });
+    }
+
     return false;
   }
 
@@ -10433,8 +10402,14 @@ class PartialEvaluator {
     const maxImageSize = this.options.maxImageSize;
 
     if (maxImageSize !== -1 && w * h > maxImageSize) {
-      (0, _util.warn)("Image exceeded maximum allowed size and was removed.");
-      return;
+      const msg = "Image exceeded maximum allowed size and was removed.";
+
+      if (this.options.ignoreErrors) {
+        (0, _util.warn)(msg);
+        return;
+      }
+
+      throw new Error(msg);
     }
 
     let optionalContent;
@@ -26573,6 +26548,27 @@ class Font {
       locaEntries.sort((a, b) => {
         return a.index - b.index;
       });
+
+      for (i = 0; i < numGlyphs; i++) {
+        const {
+          offset,
+          endOffset
+        } = locaEntries[i];
+
+        if (offset !== 0 || endOffset !== 0) {
+          break;
+        }
+
+        const nextOffset = locaEntries[i + 1].offset;
+
+        if (nextOffset === 0) {
+          continue;
+        }
+
+        locaEntries[i].endOffset = nextOffset;
+        break;
+      }
+
       const missingGlyphs = Object.create(null);
       let writeOffset = 0;
       itemEncode(locaData, 0, writeOffset);
@@ -39394,9 +39390,9 @@ class GlobalImageCache {
   get _byteSize() {
     let byteSize = 0;
 
-    this._imageCache.forEach(imageData => {
+    for (const imageData of this._imageCache) {
       byteSize += imageData.byteSize;
-    });
+    }
 
     return byteSize;
   }
@@ -42377,42 +42373,34 @@ class Catalog {
     return (0, _util.shadow)(this, "jsActions", actions);
   }
 
-  fontFallback(id, handler) {
-    const promises = [];
-    this.fontCache.forEach(function (promise) {
-      promises.push(promise);
-    });
-    return Promise.all(promises).then(translatedFonts => {
-      for (const translatedFont of translatedFonts) {
-        if (translatedFont.loadedName === id) {
-          translatedFont.fallback(handler);
-          return;
-        }
+  async fontFallback(id, handler) {
+    const translatedFonts = await Promise.all(this.fontCache);
+
+    for (const translatedFont of translatedFonts) {
+      if (translatedFont.loadedName === id) {
+        translatedFont.fallback(handler);
+        return;
       }
-    });
+    }
   }
 
-  cleanup(manuallyTriggered = false) {
+  async cleanup(manuallyTriggered = false) {
     (0, _cleanup_helper.clearGlobalCaches)();
     this.globalImageCache.clear(manuallyTriggered);
     this.pageKidsCountCache.clear();
     this.pageIndexCache.clear();
     this.nonBlendModesSet.clear();
-    const promises = [];
-    this.fontCache.forEach(function (promise) {
-      promises.push(promise);
-    });
-    return Promise.all(promises).then(translatedFonts => {
-      for (const {
-        dict
-      } of translatedFonts) {
-        delete dict.cacheKey;
-      }
+    const translatedFonts = await Promise.all(this.fontCache);
 
-      this.fontCache.clear();
-      this.builtInCMapCache.clear();
-      this.standardFontDataCache.clear();
-    });
+    for (const {
+      dict
+    } of translatedFonts) {
+      delete dict.cacheKey;
+    }
+
+    this.fontCache.clear();
+    this.builtInCMapCache.clear();
+    this.standardFontDataCache.clear();
   }
 
   async getPageDict(pageIndex) {
@@ -61873,8 +61861,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.13';
-const pdfjsBuild = '234aa9a50';
+const pdfjsVersion = '2.14.102';
+const pdfjsBuild = 'db4f3adc5';
 })();
 
 /******/ 	return __webpack_exports__;

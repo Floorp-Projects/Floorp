@@ -1400,17 +1400,23 @@ class AForm {
   }
 
   _parseDate(cFormat, cDate) {
-    const ddate = Date.parse(cDate);
+    let date = null;
 
-    if (isNaN(ddate)) {
-      try {
-        return this._util.scand(cFormat, cDate);
-      } catch (error) {
-        return null;
+    try {
+      date = this._util.scand(cFormat, cDate);
+    } catch (error) {}
+
+    if (!date) {
+      date = Date.parse(cDate);
+
+      if (isNaN(date)) {
+        date = null;
+      } else {
+        date = new Date(date);
       }
-    } else {
-      return new Date(ddate);
     }
+
+    return date;
   }
 
   AFMergeChange(event = globalThis.event) {
@@ -4699,6 +4705,10 @@ class Util extends _pdf_object.PDFObject {
   }
 
   scand(cFormat, cDate) {
+    if (typeof cDate !== "string") {
+      return new Date(cDate);
+    }
+
     if (cDate === "") {
       return new Date();
     }
@@ -4857,16 +4867,16 @@ class Util extends _pdf_object.PDFObject {
 
     const [re, actions] = this._scandCache.get(cFormat);
 
-    const matches = new RegExp(re, "g").exec(cDate);
+    const matches = new RegExp(`^${re}$`, "g").exec(cDate);
 
     if (!matches || matches.length !== actions.length + 1) {
       return null;
     }
 
     const data = {
-      year: 0,
+      year: 2000,
       month: 0,
-      day: 0,
+      day: 1,
       hours: 0,
       minutes: 0,
       seconds: 0,
@@ -4937,8 +4947,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.13';
-const pdfjsBuild = '234aa9a50';
+const pdfjsVersion = '2.14.102';
+const pdfjsBuild = 'db4f3adc5';
 })();
 
 /******/ 	return __webpack_exports__;
