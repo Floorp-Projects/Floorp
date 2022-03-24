@@ -173,6 +173,7 @@ rtc_library("rnn_vad_with_level") {
     "../../../common_audio",
     "../../../rtc_base:checks",
     "rnn_vad",
+    "rnn_vad:rnn_vad_common",
   ]
 }
 
