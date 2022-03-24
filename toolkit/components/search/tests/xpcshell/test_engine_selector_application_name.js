@@ -66,14 +66,6 @@ const CONFIG = [
   },
 ];
 
-function fetchWithConfig(name, version) {
-  Services.appinfo = { name, version };
-  return engineSelector.fetchEngineConfiguration({
-    locale: "default",
-    region: "default",
-  });
-}
-
 const engineSelector = new SearchEngineSelector();
 
 const tests = [
