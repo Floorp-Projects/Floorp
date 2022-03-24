@@ -118,19 +118,26 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
           "Starting frame; implicit %u, formals %u, fixed %zu, exprs %u",
           implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
-  uint32_t pcoff = script->pcToOffset(pc());
-  JitSpew(JitSpew_IonSnapshots, "Writing pc offset %u, nslots %u", pcoff,
-          nallocs);
-  writer.writeUnsigned(pcoff);
+  uint32_t pcOff = script->pcToOffset(pc());
+  JitSpew(JitSpew_IonSnapshots, "Writing pc offset %u, mode %s, nslots %u",
+          pcOff, ResumeModeToString(mode()), nallocs);
+
+  uint32_t pcOffAndMode =
+      (pcOff << RResumePoint::PCOffsetShift) | uint32_t(mode());
+  MOZ_RELEASE_ASSERT((pcOffAndMode >> RResumePoint::PCOffsetShift) == pcOff,
+                     "pcOff doesn't fit in pcOffAndMode");
+  writer.writeUnsigned(pcOffAndMode);
+
   writer.writeUnsigned(nallocs);
   return true;
 }
 
 RResumePoint::RResumePoint(CompactBufferReader& reader) {
-  pcOffset_ = reader.readUnsigned();
+  pcOffsetAndMode_ = reader.readUnsigned();
   numOperands_ = reader.readUnsigned();
-  JitSpew(JitSpew_IonSnapshots, "Read RResumePoint (pc offset %u, nslots %u)",
-          pcOffset_, numOperands_);
+  JitSpew(JitSpew_IonSnapshots,
+          "Read RResumePoint (pc offset %u, mode %s, nslots %u)", pcOffset(),
+          ResumeModeToString(mode()), numOperands_);
 }
 
 bool RResumePoint::recover(JSContext* cx, SnapshotIterator& iter) const {
