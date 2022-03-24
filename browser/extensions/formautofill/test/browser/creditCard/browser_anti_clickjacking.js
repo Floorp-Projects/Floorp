@@ -39,8 +39,9 @@ add_task(async function test_active_delay() {
     // are things we need to check between these steps.
     await SimpleTest.promiseFocus(browser);
     const start = performance.now();
-    await focusAndWaitForFieldsIdentified(browser, focusInput);
-    await expectPopupOpen(browser);
+    await runAndWaitForAutocompletePopupOpen(browser, async () => {
+      await focusAndWaitForFieldsIdentified(browser, focusInput);
+    });
     const firstItem = getDisplayedPopupItems(browser)[0];
     ok(firstItem.disabled, "Popup should be disbled upon opening.");
     is(
@@ -92,9 +93,10 @@ add_task(async function test_no_delay() {
       // Open the popup -- we don't use openPopupOn() because there
       // are things we need to check between these steps.
       await SimpleTest.promiseFocus(browser);
-      await focusAndWaitForFieldsIdentified(browser, focusInput);
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await expectPopupOpen(browser);
+      await runAndWaitForAutocompletePopupOpen(browser, async () => {
+        await focusAndWaitForFieldsIdentified(browser, focusInput);
+        await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      });
       const firstItem = getDisplayedPopupItems(browser)[0];
       ok(!firstItem.disabled, "Popup should be enabled upon opening.");
       is(
