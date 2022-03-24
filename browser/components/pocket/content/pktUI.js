@@ -367,6 +367,14 @@ var pktUI = (function() {
         pktUIMessaging.sendMessageToPanel(saveLinkMessageId, successResponse);
         SaveToPocket.itemSaved();
 
+        if (item?.resolved_id && item?.resolved_id !== "0") {
+          pktApi.getArticleInfo(item.resolved_url, {
+            success(data) {
+              pktUIMessaging.sendMessageToPanel("PKT_renderSavedStory", data);
+            },
+          });
+        }
+
         getAndShowRecsForItem(item, {
           success(data) {
             pktUIMessaging.sendMessageToPanel("PKT_renderItemRecs", data);

@@ -2,31 +2,165 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../Header/Header";
+import Button from "../Button/Button";
 import ArticleList from "../ArticleList/ArticleList";
+import panelMessaging from "../../messages";
 
 function Saved(props) {
-  const { similarRecs, savedStory } = props;
+  const { locale } = props;
+  // savedStatus can be success, loading, or error.
+  const [
+    { savedStatus, savedErrorId, itemId },
+    setSavedStatusState,
+  ] = useState({ savedStatus: "loading" });
+  // removedStatus can be removed, removing, or error.
+  const [
+    { removedStatus, removedErrorMessage },
+    setRemovedStatusState,
+  ] = useState({});
+  const [savedStory, setSavedStoryState] = useState();
+  const [similarRecs, setSimilarRecsState] = useState();
+
+  function removeItem(event) {
+    event.preventDefault();
+    setRemovedStatusState({ removedStatus: "removing" });
+    panelMessaging.sendMessage(
+      "PKT_deleteItem",
+      {
+        itemId,
+      },
+      function(resp) {
+        const { data } = resp;
+        if (data.status == "success") {
+          setRemovedStatusState({ removedStatus: "removed" });
+        } else if (data.status == "error") {
+          let errorMessage = "";
+          // The server returns English error messages, so in the case of
+          // non English, we do our best with a generic translated error.
+          if (data.error.message && locale?.startsWith("en")) {
+            errorMessage = data.error.message;
+          }
+          setRemovedStatusState({
+            removedStatus: "error",
+            removedErrorMessage: errorMessage,
+          });
+        }
+      }
+    );
+  }
+
+  useEffect(() => {
+    // Wait confirmation of save before flipping to final saved state
+    panelMessaging.addMessageListener("PKT_saveLink", function(resp) {
+      const { data } = resp;
+      if (data.status == "error") {
+        // Use localizedKey or fallback to a generic catch all error.
+        setSavedStatusState({
+          savedStatus: "error",
+          savedErrorId:
+            data?.error?.localizedKey || "pocket-panel-saved-error-generic",
+        });
+        return;
+      }
+
+      // Success, so no localized error id needed.
+      setSavedStatusState({
+        savedStatus: "success",
+        itemId: data.item.item_id,
+        savedErrorId: "",
+      });
+    });
+
+    panelMessaging.addMessageListener("PKT_renderSavedStory", function(resp) {
+      setSavedStoryState(resp?.data?.item_preview);
+    });
+
+    panelMessaging.addMessageListener("PKT_renderItemRecs", function(resp) {
+      const { data } = resp;
+      setSimilarRecsState(data?.recommendations?.map(rec => rec.item));
+    });
+
+    // tell back end we're ready
+    panelMessaging.sendMessage("PKT_show_saved");
+  }, []);
+
+  if (savedStatus === "error") {
+    return (
+      <div className="stp_panel_container">
+        <div className="stp_panel stp_panel_error">
+          <div className="stp_panel_error_icon" />
+          <h3
+            className="header_large"
+            data-l10n-id="pocket-panel-saved-error-not-saved"
+          />
+          <p data-l10n-id={savedErrorId} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="stp_panel_container">
-      <div className="stp_panel stp_panel_home">
+      <div className="stp_panel stp_panel_saved">
         <Header>
-          <a>
+          <Button style="primary">
             <span data-l10n-id="pocket-panel-header-my-list"></span>
-          </a>
+          </Button>
         </Header>
         <hr />
-        {savedStory && (
+        {!removedStatus && savedStatus === "success" && (
           <>
-            <p data-l10n-id="pocket-panel-saved-page-saved"></p>
-            <ArticleList articles={[savedStory]} />
-            <span data-l10n-id="pocket-panel-button-add-tags"></span>
-            <span data-l10n-id="pocket-panel-saved-remove-page"></span>
+            <h3 className="header_large header_flex">
+              <span data-l10n-id="pocket-panel-saved-page-saved-b" />
+              <Button style="text" url="google.com" onClick={removeItem}>
+                <span data-l10n-id="pocket-panel-button-remove"></span>
+              </Button>
+            </h3>
+            {savedStory && (
+              <ArticleList articles={[savedStory]} savedArticle={true} />
+            )}
+            <h3
+              className="header_small"
+              data-l10n-id="pocket-panel-cta-add-tags"
+            />
+            {similarRecs?.length && locale?.startsWith("en") && (
+              <>
+                <hr />
+                <h3 className="header_medium">Similar Stories</h3>
+                <ArticleList articles={similarRecs} />
+              </>
+            )}
           </>
         )}
-        <hr />
-        {similarRecs?.length && <ArticleList articles={similarRecs} />}
+        {savedStatus === "loading" && (
+          <h3
+            className="header_large"
+            data-l10n-id="pocket-panel-saved-saving-tags"
+          />
+        )}
+        {removedStatus === "removing" && (
+          <h3
+            className="header_large header_center"
+            data-l10n-id="pocket-panel-saved-processing-remove"
+          />
+        )}
+        {removedStatus === "removed" && (
+          <h3
+            className="header_large header_center"
+            data-l10n-id="pocket-panel-saved-removed"
+          />
+        )}
+        {removedStatus === "error" && (
+          <>
+            <h3
+              className="header_large"
+              data-l10n-id="pocket-panel-saved-error-remove"
+            />
+            {removedErrorMessage && <p>{removedErrorMessage}</p>}
+          </>
+        )}
       </div>
     </div>
   );
