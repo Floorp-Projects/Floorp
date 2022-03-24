@@ -237,6 +237,14 @@ Result AppTrustDomain::VerifyRSAPKCS1SignedData(Input data,
                                      subjectPublicKeyInfo, nullptr);
 }
 
+Result AppTrustDomain::VerifyRSAPSSSignedData(Input data,
+                                              DigestAlgorithm digestAlgorithm,
+                                              Input signature,
+                                              Input subjectPublicKeyInfo) {
+  return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
+                                   subjectPublicKeyInfo, nullptr);
+}
+
 Result AppTrustDomain::CheckECDSACurveIsAcceptable(
     EndEntityOrCA /*endEntityOrCA*/, NamedCurve curve) {
   switch (curve) {
