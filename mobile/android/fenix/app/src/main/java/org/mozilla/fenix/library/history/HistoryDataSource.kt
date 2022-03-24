@@ -14,12 +14,13 @@ class HistoryDataSource(
     private val historyProvider: PagedHistoryProvider
 ) : PagingSource<Int, History>() {
 
-    // having any value but null creates visual glitches in case or swipe to refresh and immediate
-    // scroll down
+    // The refresh key is set to null so that it will always reload the entire list for any data
+    // updates such as pull to refresh, and return the user to the start of the list.
     override fun getRefreshKey(state: PagingState<Int, History>): Int? = null
 
-    // params.key is expected to be null for the initial load or a refresh
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, History> {
+        // Get the offset of the last loaded page or default to 0 when it is null, on the initial
+        // load or a refresh.
         val offset = params.key ?: 0
         val historyItems = historyProvider.getHistory(offset, params.loadSize).run {
             positionWithOffset(offset)
@@ -29,10 +30,9 @@ class HistoryDataSource(
         } else {
             (offset + historyItems.size) + 1
         }
-        // prevKey is needed in case load would work upwards, so passing null is fine
         return LoadResult.Page(
             data = historyItems,
-            prevKey = null,
+            prevKey = null, // Only paging forward.
             nextKey = nextOffset
         )
     }

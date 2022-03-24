@@ -68,9 +68,12 @@ class SitePermissionsExceptionsFragment :
                 ) {
                     showEmptyListMessage()
                 } else {
-                    hideEmptyListMessage()
+                    if (itemCount != 0) {
+                        hideEmptyListMessage()
+                    }
                 }
             }
+            recyclerView.adapter = this
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
@@ -85,8 +88,6 @@ class SitePermissionsExceptionsFragment :
                 adapter.submitData(it)
             }
         }
-
-        recyclerView.adapter = adapter
     }
 
     private fun hideEmptyListMessage() {

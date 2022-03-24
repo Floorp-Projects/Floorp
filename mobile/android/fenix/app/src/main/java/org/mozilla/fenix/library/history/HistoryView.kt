@@ -65,7 +65,6 @@ class HistoryView(
         binding.swipeRefresh.setColorSchemeColors(primaryTextColor)
         binding.swipeRefresh.setOnRefreshListener {
             interactor.onRequestSync()
-            binding.historyList.scrollToPosition(0)
         }
     }
 
