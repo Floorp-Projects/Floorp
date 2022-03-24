@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/TransformStreamDefaultController.h"
 
+#include "TransformerCallbackHelpers.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TransformStream.h"
@@ -14,15 +15,19 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
-    TransformStreamDefaultController, (mGlobal, mTransformCallback),
-    (mTransformer))
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStreamDefaultController, mGlobal,
+                                      mTransformerAlgorithms)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransformStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransformStreamDefaultController)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStreamDefaultController)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+void TransformStreamDefaultController::SetAlgorithms(
+    TransformerAlgorithms* aTransformerAlgorithms) {
+  mTransformerAlgorithms = aTransformerAlgorithms;
+}
 
 TransformStreamDefaultController::TransformStreamDefaultController(
     nsIGlobalObject* aGlobal)
@@ -70,7 +75,7 @@ void TransformStreamDefaultController::Terminate(ErrorResult& aRv) {
 void SetUpTransformStreamDefaultController(
     JSContext* aCx, TransformStream& aStream,
     TransformStreamDefaultController& aController,
-    TransformStreamDefaultController::TransformAlgorithm aTransformAlgorithm) {
+    TransformerAlgorithms& aTransformerAlgorithms) {
   // Step 1. Assert: stream implements TransformStream.
   // Step 2. Assert: stream.[[controller]] is undefined.
   MOZ_ASSERT(!aStream.Controller());
@@ -82,10 +87,8 @@ void SetUpTransformStreamDefaultController(
   aStream.SetController(&aController);
 
   // Step 5. Set controller.[[transformAlgorithm]] to transformAlgorithm.
-  aController.SetTransformAlgorithm(aTransformAlgorithm);
-
   // Step 6. Set controller.[[flushAlgorithm]] to flushAlgorithm.
-  // TODO
+  aController.SetAlgorithms(&aTransformerAlgorithms);
 }
 
 // https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
@@ -93,68 +96,16 @@ void SetUpTransformStreamDefaultControllerFromTransformer(
     JSContext* aCx, TransformStream& aStream, JS::HandleObject aTransformer,
     Transformer& aTransformerDict) {
   // Step 1. Let controller be a new TransformStreamDefaultController.
-  RefPtr<TransformStreamDefaultController> controller =
-      new TransformStreamDefaultController(aStream.GetParentObject());
+  auto controller =
+      MakeRefPtr<TransformStreamDefaultController>(aStream.GetParentObject());
 
-  TransformStreamDefaultController::TransformAlgorithm transformAlgorithm;
-  if (!aTransformerDict.mTransform.WasPassed()) {
-    // Step 2. Let transformAlgorithm be the following steps, taking a chunk
-    // argument:
-    transformAlgorithm = [](JSContext* aCx,
-                            TransformStreamDefaultController& aController,
-                            JS::HandleValue aChunk,
-                            ErrorResult& aRv) -> already_AddRefed<Promise> {
-      MOZ_ASSERT(!aController.GetTransformCallback());
-      MOZ_ASSERT(!aController.GetTransformer());
+  // Step 2 - 5:
+  auto algorithms = MakeRefPtr<TransformerAlgorithms>(
+      aStream.GetParentObject(), aTransformer, aTransformerDict);
 
-      // Step 2.1. Let result be
-      // TransformStreamDefaultControllerEnqueue(controller, chunk).
-      // TODO
-
-      // Step 2.2. If result is an abrupt completion, return a promise rejected
-      // with result.[[Value]].
-      // TODO
-
-      // Step 2.3. Otherwise, return a promise resolved with undefined.
-      return Promise::CreateResolvedWithUndefined(aController.GetParentObject(),
-                                                  aRv);
-    };
-  } else {
-    // Step 4. If transformerDict["transform"] exists, set transformAlgorithm to
-    // an algorithm which takes an argument chunk and returns the result of
-    // invoking transformerDict["transform"] with argument list « chunk,
-    // controller » and callback this value transformer.
-    controller->SetTransformerMembers(aTransformerDict.mTransform.Value(),
-                                      aTransformer);
-    transformAlgorithm =
-        [](JSContext* aCx, TransformStreamDefaultController& aController,
-           JS::HandleValue aChunk, ErrorResult& aRv)
-            MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> already_AddRefed<Promise> {
-      MOZ_ASSERT(aController.GetTransformCallback());
-      MOZ_ASSERT(aController.GetTransformer());
-      JS::RootedObject thisObj(aCx, aController.GetTransformer());
-      RefPtr<TransformerTransformCallback> callback =
-          aController.GetTransformCallback();
-      return callback->Call(
-          thisObj, aChunk, aController, aRv,
-          "TransformStreamDefaultController.[[transformAlgorithm]]",
-          CallbackObject::eRethrowExceptions);
-    };
-  }
-
-  // Step 3. Let flushAlgorithm be an algorithm which returns a promise
-  // resolved with undefined.
-  // TODO
-
-  // Step 5. If transformerDict["flush"] exists, set flushAlgorithm to an
-  // algorithm which returns the result of invoking transformerDict["flush"]
-  // with argument list « controller » and callback this value transformer.
-  // TODO
-
-  // Perform ! SetUpTransformStreamDefaultController(stream, controller,
+  // Step 6: Perform ! SetUpTransformStreamDefaultController(stream, controller,
   // transformAlgorithm, flushAlgorithm).
-  SetUpTransformStreamDefaultController(aCx, aStream, *controller,
-                                        transformAlgorithm);
+  SetUpTransformStreamDefaultController(aCx, aStream, *controller, *algorithms);
 }
 
 }  // namespace mozilla::dom
