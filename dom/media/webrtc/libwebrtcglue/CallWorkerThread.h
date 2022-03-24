@@ -37,6 +37,9 @@ class CallWorkerThread final : public AbstractThread,
   DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                   uint32_t aDelayMs) override;
 
+  NS_IMETHOD RegisterShutdownTask(nsITargetShutdownTask* aTask) override;
+  NS_IMETHOD UnregisterShutdownTask(nsITargetShutdownTask* aTask) override;
+
   const UniquePtr<TaskQueueWrapper<DeletionPolicy::NonBlocking>>
       mWebrtcTaskQueue;
 
@@ -77,6 +80,16 @@ CallWorkerThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
   RefPtr<nsIRunnable> event = aEvent;
   return mWebrtcTaskQueue->mTaskQueue->DelayedDispatch(
       mWebrtcTaskQueue->CreateTaskRunner(std::move(event)), aDelayMs);
+}
+
+NS_IMETHODIMP CallWorkerThread::RegisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return mWebrtcTaskQueue->mTaskQueue->RegisterShutdownTask(aTask);
+}
+
+NS_IMETHODIMP CallWorkerThread::UnregisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return mWebrtcTaskQueue->mTaskQueue->UnregisterShutdownTask(aTask);
 }
 
 //-----------------------------------------------------------------------------

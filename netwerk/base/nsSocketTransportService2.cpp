@@ -299,6 +299,18 @@ nsSocketTransportService::DelayedDispatch(already_AddRefed<nsIRunnable>,
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::RegisterShutdownTask(nsITargetShutdownTask* task) {
+  nsCOMPtr<nsIThread> thread = GetThreadSafely();
+  return thread ? thread->RegisterShutdownTask(task) : NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::UnregisterShutdownTask(nsITargetShutdownTask* task) {
+  nsCOMPtr<nsIThread> thread = GetThreadSafely();
+  return thread ? thread->UnregisterShutdownTask(task) : NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::IsOnCurrentThread(bool* result) {
   *result = OnSocketThread();
   return NS_OK;

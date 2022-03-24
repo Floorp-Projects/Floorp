@@ -43,6 +43,10 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   void Disconnect(const MutexAutoLock& aProofOfLock) final {}
 
+  nsresult RegisterShutdownTask(nsITargetShutdownTask* aTask) final;
+  nsresult UnregisterShutdownTask(nsITargetShutdownTask* aTask) final;
+  void RunShutdownTasks() final;
+
   already_AddRefed<nsISerialEventTarget> PushEventQueue() final;
   void PopEventQueue(nsIEventTarget* aTarget) final;
 
@@ -79,6 +83,8 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   bool mEventsAreDoomed GUARDED_BY(mLock) = false;
   nsCOMPtr<nsIThreadObserver> mObserver GUARDED_BY(mLock);
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks GUARDED_BY(mLock);
+  bool mShutdownTasksRun GUARDED_BY(mLock) = false;
 
   const bool mIsMainThread;
 };

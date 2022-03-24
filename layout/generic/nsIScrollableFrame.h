@@ -413,12 +413,24 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Returns whether there's an async scroll going on.
    *
-   * The argument allows a subtle distinction that's needed for APZ. When
-   * `IncludeApzAnimation::No` is given, ongoing APZ animations that have
-   * already been synced to the main thread are not included, which is needed so
-   * that APZ can keep syncing the scroll offset properly.
+   * The argument allows a subtle distinction that's needed for APZ. APZ scroll
+   * animations that are requested from the main thread go through three states:
+   * 1) pending, when the main thread has recorded that it wants apz to do a
+   * scroll animation, 2) requested, when the main thread has sent the request
+   * to the compositor (but it hasn't necessarily arrived yet), and 3) in
+   * progress, after apz has responded to the main thread that is got the
+   * request. When `IncludeApzAnimation::No` is given, APZ animations in any of
+   * the three states are not included, which is needed so that APZ can keep
+   * syncing the scroll offset properly. When
+   * `IncludeApzAnimation::PendingAndRequestedOnly` is given, only APZ
+   * animations in the pending or requested state are included, this is needed
+   * when saving the state of a scroll frame (we want to save the mDestination
+   * of the animation, but the repaint request that informs the main thread that
+   * the animation is in progress will also overwrite mDestination with the
+   * current scroll position). When `IncludeApzAnimation::Yes` is given, APZ
+   * animations in any state are included, this is what all other callers use.
    */
-  enum class IncludeApzAnimation : bool { No, Yes };
+  enum class IncludeApzAnimation : uint8_t { No, PendingAndRequestedOnly, Yes };
   virtual bool IsScrollAnimating(
       IncludeApzAnimation = IncludeApzAnimation::Yes) = 0;
 

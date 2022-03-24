@@ -54,9 +54,6 @@ class BackgroundEventTarget final : public nsIEventTarget {
   already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
       const char* aName);
 
-  using CancelPromise = TaskQueue::CancelPromise::AllPromiseType;
-  RefPtr<CancelPromise> CancelBackgroundDelayedRunnables();
-
   void BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>&);
   void FinishShutdown();
 
@@ -68,7 +65,6 @@ class BackgroundEventTarget final : public nsIEventTarget {
 
   Mutex mMutex MOZ_UNANNOTATED;
   nsTArray<RefPtr<TaskQueue>> mTaskQueues;
-  bool mIsBackgroundDelayedRunnablesCanceled;
 };
 
 NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
@@ -183,6 +179,16 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+BackgroundEventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BackgroundEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void BackgroundEventTarget::BeginShutdown(
     nsTArray<RefPtr<ShutdownPromise>>& promises) {
   for (auto& queue : mTaskQueues) {
@@ -203,19 +209,6 @@ BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
   mTaskQueues.AppendElement(queue);
 
   return queue.forget();
-}
-
-auto BackgroundEventTarget::CancelBackgroundDelayedRunnables()
-    -> RefPtr<CancelPromise> {
-  MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mMutex);
-  mIsBackgroundDelayedRunnablesCanceled = true;
-  nsTArray<RefPtr<TaskQueue::CancelPromise>> promises;
-  for (const auto& tq : mTaskQueues) {
-    promises.AppendElement(tq->CancelDelayedRunnables());
-  }
-  return TaskQueue::CancelPromise::All(GetMainThreadSerialEventTarget(),
-                                       promises);
 }
 
 extern "C" {
@@ -372,6 +365,8 @@ void nsThreadManager::Shutdown() {
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
 
+  mMainThread->mEvents->RunShutdownTasks();
+
   nsTArray<RefPtr<ShutdownPromise>> promises;
   mBackgroundEventTarget->BeginShutdown(promises);
 
@@ -423,8 +418,6 @@ void nsThreadManager::Shutdown() {
   // so there's no need to worry about them. We only have to wait for all
   // in-flight asynchronous thread shutdowns to complete.
   mMainThread->WaitForAllAsynchronousShutdowns();
-
-  mMainThread->mEventTarget->NotifyShutdown();
 
   // In case there are any more events somehow...
   NS_ProcessPendingEvents(mMainThread);
@@ -512,19 +505,6 @@ nsThreadManager::CreateBackgroundTaskQueue(const char* aName) {
   }
 
   return mBackgroundEventTarget->CreateBackgroundTaskQueue(aName);
-}
-
-void nsThreadManager::CancelBackgroundDelayedRunnables() {
-  if (!mInitialized) {
-    return;
-  }
-
-  bool canceled = false;
-  mBackgroundEventTarget->CancelBackgroundDelayedRunnables()->Then(
-      GetMainThreadSerialEventTarget(), __func__, [&] { canceled = true; });
-  mozilla::SpinEventLoopUntil(
-      "nsThreadManager::CancelBackgroundDelayedRunnables"_ns,
-      [&]() { return canceled; });
 }
 
 nsThread* nsThreadManager::GetCurrentThread() {

@@ -59,13 +59,12 @@ nsConsoleService::MessageElement::~MessageElement() = default;
 
 nsConsoleService::nsConsoleService()
     : mCurrentSize(0),
+      // XXX grab this from a pref!
+      // hm, but worry about circularity, bc we want to be able to report
+      // prefs errs...
+      mMaximumSize(250),
       mDeliveringMessage(false),
       mLock("nsConsoleService.mLock") {
-  // XXX grab this from a pref!
-  // hm, but worry about circularity, bc we want to be able to report
-  // prefs errs...
-  mMaximumSize = 250;
-
 #ifdef XP_WIN
   // This environment variable controls whether the console service
   // should be prevented from putting output to the attached debugger.

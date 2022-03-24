@@ -65,7 +65,7 @@ class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
   nsISeekableStream* MOZ_NON_OWNING_REF mWeakSeekableInputStream;
   nsITellableStream* MOZ_NON_OWNING_REF mWeakTellableInputStream;
 
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
   struct WaitClosureOnly {
     WaitClosureOnly(AsyncWaitRunnable* aRunnable, nsIEventTarget* aEventTarget);
@@ -77,13 +77,13 @@ class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
   // This is set when AsyncWait is called with a callback and with
   // WAIT_CLOSURE_ONLY as flag.
   // This is protected by mLock.
-  Maybe<WaitClosureOnly> mWaitClosureOnly;
+  Maybe<WaitClosureOnly> mWaitClosureOnly GUARDED_BY(mLock);
 
   // This is protected by mLock.
-  RefPtr<AsyncWaitRunnable> mAsyncWaitCallback;
+  RefPtr<AsyncWaitRunnable> mAsyncWaitCallback GUARDED_BY(mLock);
 
   // This is protected by mLock.
-  bool mClosed;
+  bool mClosed GUARDED_BY(mLock);
 };
 
 }  // namespace mozilla

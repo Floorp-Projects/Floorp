@@ -802,6 +802,10 @@ this.tabs = class extends ExtensionAPI {
               tabListener.initializingTabs.add(nativeTab);
             }
 
+            if (createProperties.muted) {
+              nativeTab.toggleMuteAudio(extension.id);
+            }
+
             return tabManager.convert(nativeTab, currentTabSize);
           });
         },

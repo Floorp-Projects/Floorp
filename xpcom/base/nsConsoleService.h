@@ -87,26 +87,27 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
   nsresult MaybeForwardScriptError(nsIConsoleMessage* aMessage, bool* sent);
 
   void ClearMessagesForWindowID(const uint64_t innerID);
-  void ClearMessages();
+  void ClearMessages() REQUIRES(mLock);
 
-  mozilla::LinkedList<MessageElement> mMessages;
+  mozilla::LinkedList<MessageElement> mMessages GUARDED_BY(mLock);
 
   // The current size of mMessages.
-  uint32_t mCurrentSize;
+  uint32_t mCurrentSize GUARDED_BY(mLock);
 
   // The maximum size of mMessages.
-  uint32_t mMaximumSize;
+  const uint32_t mMaximumSize;
 
   // Are we currently delivering a console message on the main thread? If
   // so, we suppress incoming messages on the main thread only, to avoid
   // infinite repitition.
+  // Only touched on MainThread
   bool mDeliveringMessage;
 
   // Listeners to notify whenever a new message is logged.
-  ListenerHash mListeners;
+  ListenerHash mListeners GUARDED_BY(mLock);
 
   // To serialize interesting methods.
-  mozilla::Mutex mLock MOZ_UNANNOTATED;
+  mozilla::Mutex mLock;
 };
 
 #endif /* __nsconsoleservice_h__ */

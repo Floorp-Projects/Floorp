@@ -173,9 +173,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void) {
 NS_IMPL_QUERY_INTERFACE(SharedThreadPool, nsIThreadPool, nsIEventTarget)
 
 SharedThreadPool::SharedThreadPool(const nsCString& aName, nsIThreadPool* aPool)
-    : mName(aName), mPool(aPool), mRefCnt(0) {
-  mEventTarget = aPool;
-}
+    : mName(aName), mPool(aPool), mRefCnt(0) {}
 
 SharedThreadPool::~SharedThreadPool() = default;
 
