@@ -162,7 +162,7 @@ ICCacheIRStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
 Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
                                            BytecodeLocation loc) {
   if (loc.isInvokeOp()) {
-    Maybe<InlinableCallData> call = FindInlinableCallData(stub, loc);
+    Maybe<InlinableCallData> call = FindInlinableCallData(stub);
     if (call.isSome()) {
       return call;
     }
@@ -182,8 +182,7 @@ Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
   return mozilla::Nothing();
 }
 
-Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub,
-                                               BytecodeLocation loc) {
+Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub) {
   Maybe<InlinableCallData> data;
 
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
@@ -271,15 +270,6 @@ Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub,
     // Warp only supports inlining Standard and FunCall calls.
     if (flags.getArgFormat() != CallFlags::Standard &&
         flags.getArgFormat() != CallFlags::FunCall) {
-      return mozilla::Nothing();
-    }
-    // Warp assumes any inlining at JSOp::FunCall ops is for js::fun_call and
-    // that any fun-call-specific inlining is at JSOp::FunCall ops. Bailouts and
-    // numActualArgs recovery (in InlineFrameIterator::findNextFrame) depend on
-    // this.
-    bool isFunCallOp = loc.getOp() == JSOp::FunCall;
-    bool isFunCall = flags.getArgFormat() == CallFlags::FunCall;
-    if (isFunCallOp != isFunCall) {
       return mozilla::Nothing();
     }
     data->calleeOperand = calleeGuardOperand;
@@ -422,9 +412,10 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
   return data;
 }
 
-// Return the number of actual arguments that will be passed to the
-// target function.
-static uint32_t GetCalleeNumActuals(BytecodeLocation loc) {
+// Return the maximum number of actual arguments that will be passed to the
+// target function. This may be an overapproximation, for example when inlining
+// js::fun_call we may omit an argument.
+static uint32_t GetMaxCalleeNumActuals(BytecodeLocation loc) {
   switch (loc.getOp()) {
     case JSOp::GetProp:
     case JSOp::GetElem:
@@ -435,12 +426,6 @@ static uint32_t GetCalleeNumActuals(BytecodeLocation loc) {
     case JSOp::StrictSetProp:
       // Setters pass 1 argument.
       return 1;
-
-    case JSOp::FunCall: {
-      // If FunCall is passed arguments, one of them will become |this|.
-      uint32_t callArgc = loc.getCallArgc();
-      return callArgc > 0 ? callArgc - 1 : 0;
-    }
 
     case JSOp::Call:
     case JSOp::CallIgnoresRv:
@@ -484,12 +469,12 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
     return false;
   }
 
-  uint32_t calleeNumActuals = GetCalleeNumActuals(loc);
+  uint32_t maxCalleeNumActuals = GetMaxCalleeNumActuals(loc);
   if (script->needsArgsObj() &&
-      calleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
+      maxCalleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
     JitSpew(JitSpew_WarpTrialInlining,
             "SKIP: needs arguments object with %u actual args (maximum %u)",
-            calleeNumActuals, ArgumentsObject::MaxInlinedArgs);
+            maxCalleeNumActuals, ArgumentsObject::MaxInlinedArgs);
     return false;
   }
 
@@ -499,7 +484,7 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
     return false;
   }
 
-  if (TooManyFormalArguments(calleeNumActuals)) {
+  if (TooManyFormalArguments(maxCalleeNumActuals)) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: argc too large: %u",
             unsigned(loc.getCallArgc()));
     return false;
@@ -637,7 +622,7 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
   MOZ_ASSERT(!icScript_->hasInlinedChild(fallback->pcOffset()));
 
   // Look for a CallScriptedFunction with a known target.
-  Maybe<InlinableCallData> data = FindInlinableCallData(stub, loc);
+  Maybe<InlinableCallData> data = FindInlinableCallData(stub);
   if (data.isNothing()) {
     return true;
   }
@@ -648,10 +633,6 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
   if (!shouldInline(data->target, stub, loc)) {
     return true;
   }
-
-  // We only inline FunCall if we are calling the js::fun_call builtin.
-  MOZ_ASSERT_IF(loc.getOp() == JSOp::FunCall,
-                data->callFlags.getArgFormat() == CallFlags::FunCall);
 
   ICScript* newICScript = createInlinedICScript(data->target, loc);
   if (!newICScript) {
@@ -762,7 +743,6 @@ bool TrialInliner::tryInlining() {
       case JSOp::Call:
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
-      case JSOp::FunCall:
       case JSOp::New:
       case JSOp::SuperCall:
         if (!maybeInlineCall(entry, fallback, loc)) {

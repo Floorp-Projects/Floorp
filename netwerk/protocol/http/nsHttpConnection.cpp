@@ -835,6 +835,8 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
   LOG(("nsHttpConnection::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));
 
+  mClosed = true;
+
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mTlsHandshakeComplitionPending = false;
   mContinueHandshakeDone = nullptr;
@@ -2529,18 +2531,20 @@ bool nsHttpConnection::GetEchConfigUsed() {
 
 NS_IMETHODIMP
 nsHttpConnection::HandshakeDone() {
-  mTlsHandshakeComplitionPending = true;
+  if (!mClosed) {
+    mTlsHandshakeComplitionPending = true;
 
-  // HandshakeDone needs to be dispatched so that it is not called inside
-  // nss locks.
-  RefPtr<nsHttpConnection> self(this);
-  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-      "nsHttpConnection::HandshakeDoneInternal", [self{std::move(self)}]() {
-        if (self->mTlsHandshakeComplitionPending) {
-          self->HandshakeDoneInternal();
-          self->mTlsHandshakeComplitionPending = false;
-        }
-      }));
+    // HandshakeDone needs to be dispatched so that it is not called inside
+    // nss locks.
+    RefPtr<nsHttpConnection> self(this);
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "nsHttpConnection::HandshakeDoneInternal", [self{std::move(self)}]() {
+          if (self->mTlsHandshakeComplitionPending && !self->mClosed) {
+            self->HandshakeDoneInternal();
+            self->mTlsHandshakeComplitionPending = false;
+          }
+        }));
+  }
   return NS_OK;
 }
 

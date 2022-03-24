@@ -25,8 +25,16 @@ template <typename T>
 class RustCell {
  public:
   RustCell() : mValue() {}
+  explicit RustCell(T aValue) : mValue(aValue) {}
 
   T Get() const { return mValue; }
+  void Set(T aValue) { mValue = aValue; }
+
+  // That this API doesn't mirror the API of rust's Cell because all values in
+  // C++ effectively act like they're wrapped in Cell<...> already, so this type
+  // only exists for FFI purposes.
+  T* AsPtr() { return &mValue; }
+  const T* AsPtr() const { return &mValue; }
 
  private:
   T mValue;

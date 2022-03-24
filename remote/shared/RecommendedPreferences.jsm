@@ -107,6 +107,9 @@ const COMMON_PREFERENCES = new Map([
   // as it is picked up at runtime.
   ["browser.shell.checkDefaultBrowser", false],
 
+  // Disable session restore infobar
+  ["browser.startup.couldRestoreSession.count", -1],
+
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
 

@@ -225,6 +225,12 @@ class ExceptionBailoutInfo {
 
 [[nodiscard]] bool FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg);
 
+#ifdef DEBUG
+[[nodiscard]] bool AssertBailoutStackDepth(JSContext* cx, JSScript* script,
+                                           jsbytecode* pc, ResumeMode mode,
+                                           uint32_t exprStackSlots);
+#endif
+
 }  // namespace jit
 }  // namespace js
 

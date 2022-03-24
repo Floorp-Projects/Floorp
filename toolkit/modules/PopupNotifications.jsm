@@ -501,8 +501,6 @@ PopupNotifications.prototype = {
    *                     different icons.
    *        popupIconURL:
    *                     A string. URL of the image to be displayed in the popup.
-   *                     Normally specified in CSS using list-style-image and the
-   *                     .popup-notification-icon[popupid=...] selector.
    *        learnMoreURL:
    *                     A string URL. Setting this property will make the
    *                     prompt display a "Learn More" link that, when clicked,

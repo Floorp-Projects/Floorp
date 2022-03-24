@@ -596,10 +596,12 @@ class MergeState {
       return true;
     }
 
-    if (type == DisplayItemType::TYPE_SUBDOCUMENT) {
+    if (type == DisplayItemType::TYPE_SUBDOCUMENT ||
+        type == DisplayItemType::TYPE_STICKY_POSITION) {
       // nsDisplaySubDocument::mShouldFlatten can change without an invalidation
       // (and is the reason we unconditionally build the subdocument item), so
       // always use the new one to make sure we get the right value.
+      // Same for |nsDisplayStickyPosition::mShouldFlatten|.
       return true;
     }
 

@@ -262,7 +262,7 @@ static bool EncodeBase64Web(vector<uint8_t> aBinary, string& aEncoded) {
 void ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
                                    string& aOutRequest,
                                    SessionType aSessionType) {
-  assert(aKeyIDs.size() && aOutRequest.empty());
+  assert(!aKeyIDs.empty() && aOutRequest.empty());
 
   aOutRequest.append("{\"kids\":[");
   for (size_t i = 0; i < aKeyIDs.size(); i++) {

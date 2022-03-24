@@ -8,8 +8,6 @@
 
 "use strict";
 
-const SEARCH_PREF = SearchUtils.BROWSER_SEARCH_PREF;
-
 const EXPECTED_ORDER = [
   // Default engines
   "Test search engine",

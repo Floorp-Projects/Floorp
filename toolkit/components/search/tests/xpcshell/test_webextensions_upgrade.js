@@ -3,11 +3,7 @@
 
 "use strict";
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines("data1");

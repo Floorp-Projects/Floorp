@@ -28,10 +28,12 @@
   skin/classic/global/commonDialog.css                     (../../shared/commonDialog.css)
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
   skin/classic/global/findbar.css                          (../../shared/findbar.css)
+  skin/classic/global/global-shared.css                    (../../shared/global-shared.css)
   skin/classic/global/menu-scrolling.css                   (../../shared/menu-scrolling.css)
+  skin/classic/global/menulist-shared.css                  (../../shared/menulist-shared.css)
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
-  skin/classic/global/shared/menulist.css                  (../../shared/menulist.css)
+  skin/classic/global/popupnotification.css                (../../shared/popupnotification.css)
   skin/classic/global/tree.css                             (../../shared/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
 #ifdef XP_MACOSX

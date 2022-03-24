@@ -7,9 +7,6 @@ path:build/moz.configure/init.configure
 path:build/moz.configure/util.configure
 # Used for bootstrapping the mach driver.
 path:build/mach_initialize.py
-path:build/build_virtualenv_packages.txt
-path:build/common_virtualenv_packages.txt
-path:build/mach_virtualenv_packages.txt
 path:build/psutil_requirements.txt
 path:build/zstandard_requirements.txt
 path:mach

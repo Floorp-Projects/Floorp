@@ -17,7 +17,7 @@ use crate::utils::Spinlock;
 use crate::waker::Waker;
 
 /// A pointer to a packet.
-pub struct ZeroToken(*mut ());
+pub(crate) struct ZeroToken(*mut ());
 
 impl Default for ZeroToken {
     fn default() -> Self {
@@ -363,7 +363,6 @@ impl<T> Channel<T> {
     }
 
     /// Returns the capacity of the channel.
-    #[allow(clippy::unnecessary_wraps)] // This is intentional.
     pub(crate) fn capacity(&self) -> Option<usize> {
         Some(0)
     }

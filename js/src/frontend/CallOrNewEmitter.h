@@ -280,7 +280,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
  private:
   [[nodiscard]] bool isCall() const {
     return op_ == JSOp::Call || op_ == JSOp::CallIgnoresRv ||
-           op_ == JSOp::SpreadCall || isEval() || isFunCall();
+           op_ == JSOp::SpreadCall || isEval();
   }
 
   [[nodiscard]] bool isNew() const {
@@ -295,8 +295,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
     return op_ == JSOp::Eval || op_ == JSOp::StrictEval ||
            op_ == JSOp::SpreadEval || op_ == JSOp::StrictSpreadEval;
   }
-
-  [[nodiscard]] bool isFunCall() const { return op_ == JSOp::FunCall; }
 
   [[nodiscard]] bool isSpread() const { return IsSpreadOp(op_); }
 

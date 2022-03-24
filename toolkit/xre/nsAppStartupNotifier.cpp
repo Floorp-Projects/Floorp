@@ -16,7 +16,8 @@
 using namespace mozilla;
 
 /* static */
-nsresult nsAppStartupNotifier::NotifyObservers(const char* aCategory) {
+nsresult nsAppStartupNotifier::NotifyObservers(const char* aCategory,
+                                               nsISupports* aSubject) {
   NS_ENSURE_ARG(aCategory);
   nsresult rv;
 
@@ -53,7 +54,7 @@ nsresult nsAppStartupNotifier::NotifyObservers(const char* aCategory) {
       nsCOMPtr<nsIObserver> startupObserver =
           do_QueryInterface(startupInstance, &rv);
       if (NS_SUCCEEDED(rv)) {
-        rv = startupObserver->Observe(nullptr, aCategory, nullptr);
+        rv = startupObserver->Observe(aSubject, aCategory, nullptr);
 
         // mainly for debugging if you want to know if your observer worked.
         NS_ASSERTION(NS_SUCCEEDED(rv), "Startup Observer failed!\n");

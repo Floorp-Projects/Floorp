@@ -417,6 +417,22 @@ hr {
   line-height: 1.23em;
 }
 
+.header_small {
+  margin: 12px 0 8px;
+  font-size: 0.84em;
+  line-height: 1.07em;
+}
+
+.header_flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header_center {
+  text-align: center;
+}
+
 p {
   margin: 8px 0;
   font-size: 0.84em;
@@ -2070,6 +2086,7 @@ body.theme_dark .stp_popular_topics .stp_popular_topic .stp_popular_topic_link {
   padding: 0;
   list-style: none;
 }
+.stp_article_list .stp_article_list_saved_article,
 .stp_article_list .stp_article_list_link {
   display: flex;
   border-radius: 4px;
@@ -2091,6 +2108,10 @@ body.theme_dark .stp_article_list .stp_article_list_link:hover {
   margin-inline-end: 8px;
   background-color: #ECECEE;
 }
+.stp_article_list .stp_article_list_thumb:-moz-broken,
+.stp_article_list .stp_article_list_thumb_placeholder:-moz-broken {
+  display: none;
+}
 .stp_article_list .stp_article_list_header {
   font-style: normal;
   font-weight: 600;
@@ -2098,6 +2119,11 @@ body.theme_dark .stp_article_list .stp_article_list_link:hover {
   line-height: 1.27em;
   color: #15141A;
   margin: 0 0 4px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
+  word-break: break-word;
 }
 body.theme_dark .stp_article_list .stp_article_list_header {
   color: #FBFBFE;
@@ -2217,6 +2243,18 @@ body.stp_signup_body {
   width: 82px;
   float: inline-end;
   margin-inline-start: 16px;
+}
+
+.stp_panel_error {
+  margin: 23px 0 32px;
+}
+.stp_panel_error .stp_panel_error_icon {
+  float: inline-start;
+  margin-block: 6px 16px;
+  margin-inline: 7px 17px;
+  background-image: url(../img/pocketerror@1x.png);
+  height: 44px;
+  width: 44px;
 }
 
 /*# sourceMappingURL=main.compiled.css.map */

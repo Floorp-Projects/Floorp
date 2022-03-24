@@ -38,6 +38,8 @@ struct PRFileDesc;
  * 'MT''safe' reading from the zipfile is performed through JARInputStream,
  * which maintains its own file descriptor, allowing for multiple reads
  * concurrently from the same zip file.
+ *
+ * nsZipArchives are accessed from multiple threads.
  */
 
 /**
@@ -85,21 +87,15 @@ class nsZipArchive final {
  public:
   static const char* sFileCorruptedReason;
 
-  /** constructing does not open the archive. See OpenArchive() */
-  nsZipArchive();
-
   /**
    * OpenArchive
-   *
-   * It's an error to call this more than once on the same nsZipArchive
-   * object. If we were allowed to use exceptions this would have been
-   * part of the constructor
    *
    * @param   aZipHandle  The nsZipHandle used to access the zip
    * @param   aFd         Optional PRFileDesc for Windows readahead optimization
    * @return  status code
    */
-  nsresult OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd = nullptr);
+  static already_AddRefed<nsZipArchive> OpenArchive(nsZipHandle* aZipHandle,
+                                                    PRFileDesc* aFd = nullptr);
 
   /**
    * OpenArchive
@@ -109,7 +105,7 @@ class nsZipArchive final {
    * @param   aFile         The file used to access the zip
    * @return  status code
    */
-  nsresult OpenArchive(nsIFile* aFile);
+  static already_AddRefed<nsZipArchive> OpenArchive(nsIFile* aFile);
 
   /**
    * Test the integrity of items in this archive by running
@@ -121,11 +117,6 @@ class nsZipArchive final {
    * @return  status code
    */
   nsresult Test(const char* aEntryName);
-
-  /**
-   * Closes an open archive.
-   */
-  nsresult CloseArchive();
 
   /**
    * GetItem
@@ -163,7 +154,7 @@ class nsZipArchive final {
   /*
    * Gets an undependent handle to the mapped file.
    */
-  nsZipHandle* GetFD();
+  nsZipHandle* GetFD() const;
 
   /**
    * Gets the data offset.
@@ -179,8 +170,6 @@ class nsZipArchive final {
    */
   const uint8_t* GetData(nsZipItem* aItem);
 
-  bool GetComment(nsACString& aComment);
-
   /**
    * Gets the amount of memory taken up by the archive's mapping.
    * @return the size
@@ -194,30 +183,28 @@ class nsZipArchive final {
   NS_METHOD_(MozExternalRefCountType) Release(void);
 
  private:
+  nsZipArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd, nsresult& aRv);
+
   //--- private members ---
   mozilla::ThreadSafeAutoRefCnt mRefCnt; /* ref count */
   NS_DECL_OWNINGTHREAD
 
-  nsZipItem* mFiles[ZIP_TABSIZE];
-  mozilla::ArenaAllocator<1024, sizeof(void*)> mArena;
-
-  const char* mCommentPtr;
-  uint16_t mCommentLen;
-
-  // Whether we synthesized the directory entries
-  bool mBuiltSynthetics;
-
+  // These fields are all effectively const after the constructor
   // file handle
-  RefPtr<nsZipHandle> mFd;
-
+  const RefPtr<nsZipHandle> mFd;
   // file URI, for logging
   nsCString mURI;
-
   // Is true if we use zipLog to log accesses in jar/zip archives. This helper
   // variable avoids grabbing zipLog's lock when not necessary.
+  // Effectively const after constructor
   bool mUseZipLog;
 
   mozilla::Mutex mLock{"nsZipArchive"};
+  // all of the following members are guarded by mLock:
+  nsZipItem* mFiles[ZIP_TABSIZE];
+  mozilla::ArenaAllocator<1024, sizeof(void*)> mArena;
+  // Whether we synthesized the directory entries
+  bool mBuiltSynthetics;
 
  private:
   //--- private methods ---

@@ -1817,6 +1817,10 @@ uint32_t SnapshotIterator::pcOffset() const {
   return resumePoint()->pcOffset();
 }
 
+ResumeMode SnapshotIterator::resumeMode() const {
+  return resumePoint()->mode();
+}
+
 void SnapshotIterator::skipInstruction() {
   MOZ_ASSERT(snapshot_.numAllocationsRead() == 0);
   size_t numOperands = instruction()->numOperands();
@@ -2043,18 +2047,23 @@ void InlineFrameIterator::findNextFrame() {
 
   size_t i = 1;
   for (; i <= remaining && si_.moreFrames(); i++) {
+    ResumeMode mode = si_.resumeMode();
     MOZ_ASSERT(IsIonInlinableOp(JSOp(*pc_)));
 
     // Recover the number of actual arguments from the script.
     if (IsInvokeOp(JSOp(*pc_))) {
+      MOZ_ASSERT(mode == ResumeMode::InlinedStandardCall ||
+                 mode == ResumeMode::InlinedFunCall);
       numActualArgs_ = GET_ARGC(pc_);
-      if (JSOp(*pc_) == JSOp::FunCall && numActualArgs_ > 0) {
+      if (mode == ResumeMode::InlinedFunCall && numActualArgs_ > 0) {
         numActualArgs_--;
       }
     } else if (IsGetPropPC(pc_) || IsGetElemPC(pc_)) {
+      MOZ_ASSERT(mode == ResumeMode::InlinedAccessor);
       numActualArgs_ = 0;
     } else {
       MOZ_RELEASE_ASSERT(IsSetPropPC(pc_));
+      MOZ_ASSERT(mode == ResumeMode::InlinedAccessor);
       numActualArgs_ = 1;
     }
 
