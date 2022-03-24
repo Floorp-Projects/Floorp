@@ -733,7 +733,7 @@ impl RenderBackend {
         }
     }
 
-    fn next_namespace_id(&self) -> IdNamespace {
+    pub fn next_namespace_id() -> IdNamespace {
         IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
     }
 
@@ -908,7 +908,7 @@ impl RenderBackend {
         match msg {
             ApiMsg::CloneApi(sender) => {
                 assert!(!self.namespace_alloc_by_client);
-                sender.send(self.next_namespace_id()).unwrap();
+                sender.send(Self::next_namespace_id()).unwrap();
             }
             ApiMsg::CloneApiByClient(namespace_id) => {
                 assert!(self.namespace_alloc_by_client);
