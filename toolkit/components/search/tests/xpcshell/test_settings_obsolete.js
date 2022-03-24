@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { getAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
-);
-
 async function loadSettingsFile(settingsFile, name) {
   let settings = await readJSONFile(do_get_file(settingsFile));
 

@@ -7,11 +7,7 @@
 // AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION == 5;
 Services.prefs.setIntPref("extensions.enabledScopes", 5);
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 const TEST_CONFIG = [
   {
