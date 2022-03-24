@@ -1349,6 +1349,7 @@ Document::Document(const char* aContentType)
       mHasDisplayDocument(false),
       mFontFaceSetDirty(true),
       mDidFireDOMContentLoaded(true),
+      mHasScrollLinkedEffect(false),
       mFrameRequestCallbacksScheduled(false),
       mIsTopLevelContentDocument(false),
       mIsContentDocument(false),
@@ -16030,31 +16031,15 @@ FontFaceSet* Document::Fonts() {
   return mFontFaceSet;
 }
 
-void Document::ReportHasScrollLinkedEffect(const TimeStamp& aTimeStamp) {
-  MOZ_ASSERT(!aTimeStamp.IsNull());
-
-  if (!mLastScrollLinkedEffectDetectionTime.IsNull() &&
-      mLastScrollLinkedEffectDetectionTime >= aTimeStamp) {
+void Document::ReportHasScrollLinkedEffect() {
+  if (mHasScrollLinkedEffect) {
+    // We already did this once for this document, don't do it again.
     return;
   }
-
-  if (mLastScrollLinkedEffectDetectionTime.IsNull()) {
-    // Report to console just once.
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, "Async Pan/Zoom"_ns, this,
-        nsContentUtils::eLAYOUT_PROPERTIES, "ScrollLinkedEffectFound3");
-  }
-
-  mLastScrollLinkedEffectDetectionTime = aTimeStamp;
-}
-
-bool Document::HasScrollLinkedEffect() const {
-  if (nsPresContext* pc = GetPresContext()) {
-    return mLastScrollLinkedEffectDetectionTime ==
-           pc->RefreshDriver()->MostRecentRefresh();
-  }
-
-  return false;
+  mHasScrollLinkedEffect = true;
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, "Async Pan/Zoom"_ns, this,
+      nsContentUtils::eLAYOUT_PROPERTIES, "ScrollLinkedEffectFound3");
 }
 
 void Document::SetSHEntryHasUserInteraction(bool aHasInteraction) {

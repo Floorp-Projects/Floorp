@@ -45,13 +45,27 @@ class ActiveLayerTracker {
    * @param aProperty the property that has changed
    */
   static void NotifyRestyle(nsIFrame* aFrame, nsCSSPropertyID aProperty);
-
+  /**
+   * Mark aFrame as being known to have an animation of aProperty.
+   * Any such marking will time out after a short period.
+   * aNewValue and aDOMCSSDecl are used to determine whether the property's
+   * value has changed.
+   */
+  static void NotifyAnimated(nsIFrame* aFrame, nsCSSPropertyID aProperty,
+                             const nsACString& aNewValue,
+                             nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
    * Notify that a property in the inline style rule of aFrame's element
    * has been modified.
+   * This notification is incomplete --- not all modifications to inline
+   * style will trigger this.
+   * aNewValue and aDOMCSSDecl are used to determine whether the property's
+   * value has changed.
    */
   static void NotifyInlineStyleRuleModified(nsIFrame* aFrame,
-                                            nsCSSPropertyID aProperty);
+                                            nsCSSPropertyID aProperty,
+                                            const nsACString& aNewValue,
+                                            nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
    * Notify that a frame needs to be repainted. This is important for layering
    * decisions where, say, aFrame's transform is updated from JS, but we need

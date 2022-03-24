@@ -5864,8 +5864,7 @@ void ScrollFrameHelper::FireScrollEvent() {
   // Fire viewport scroll events at the document (where they
   // will bubble to the window)
   mozilla::layers::ScrollLinkedEffectDetector detector(
-      content->GetComposedDoc(),
-      presContext->RefreshDriver()->MostRecentRefresh());
+      content->GetComposedDoc());
   if (mIsRoot) {
     if (RefPtr<Document> doc = content->GetUncomposedDoc()) {
       // TODO: Bug 1506441
