@@ -40,7 +40,7 @@ class AdaptiveModeLevelEstimator {
       bool use_saturation_protector,
       float initial_saturation_margin_db,
       float extra_saturation_margin_db);
-  void UpdateEstimation(const VadWithLevel::LevelAndProbability& vad_data);
+  void UpdateEstimation(const VadLevelAnalyzer::Result& vad_level);
   float LatestLevelEstimate() const;
   void Reset();
   bool LevelEstimationIsConfident() const {

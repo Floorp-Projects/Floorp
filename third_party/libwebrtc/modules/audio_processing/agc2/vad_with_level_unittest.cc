@@ -13,7 +13,7 @@
 #include "rtc_base/gunit.h"
 
 namespace webrtc {
-namespace test {
+namespace {
 
 TEST(AutomaticGainController2VadWithLevelEstimator,
      PeakLevelGreaterThanRmsLevel) {
@@ -28,13 +28,12 @@ TEST(AutomaticGainController2VadWithLevelEstimator,
   AudioFrameView<float> frame_view(&channel0, 1, frame.size());
 
   // Compute audio frame levels (the VAD result is ignored).
-  VadWithLevel vad_with_level;
-  auto levels_and_vad_prob = vad_with_level.AnalyzeFrame(frame_view);
+  VadLevelAnalyzer analyzer;
+  auto levels_and_vad_prob = analyzer.AnalyzeFrame(frame_view);
 
   // Compare peak and RMS levels.
-  EXPECT_LT(levels_and_vad_prob.speech_rms_dbfs,
-            levels_and_vad_prob.speech_peak_dbfs);
+  EXPECT_LT(levels_and_vad_prob.rms_dbfs, levels_and_vad_prob.peak_dbfs);
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace webrtc

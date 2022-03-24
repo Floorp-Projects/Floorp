@@ -26,7 +26,7 @@ struct SignalWithLevels {
 
   float input_level_dbfs = -1.f;
   float input_noise_level_dbfs = -1.f;
-  VadWithLevel::LevelAndProbability vad_result;
+  VadLevelAnalyzer::Result vad_result;
   float limiter_audio_level_dbfs = -1.f;
   bool estimate_is_confident = false;
   AudioFrameView<float> float_frame;

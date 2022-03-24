@@ -47,9 +47,9 @@ void AdaptiveAgc::Process(AudioFrameView<float> float_frame,
   apm_data_dumper_->DumpRaw("agc2_vad_probability",
                             signal_with_levels.vad_result.speech_probability);
   apm_data_dumper_->DumpRaw("agc2_vad_rms_dbfs",
-                            signal_with_levels.vad_result.speech_rms_dbfs);
+                            signal_with_levels.vad_result.rms_dbfs);
   apm_data_dumper_->DumpRaw("agc2_vad_peak_dbfs",
-                            signal_with_levels.vad_result.speech_peak_dbfs);
+                            signal_with_levels.vad_result.peak_dbfs);
 
   speech_level_estimator_.UpdateEstimation(signal_with_levels.vad_result);
 
