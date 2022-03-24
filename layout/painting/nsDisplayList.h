@@ -5527,7 +5527,8 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
                           const nsDisplayStickyPosition& aOther)
       : nsDisplayOwnLayer(aBuilder, aOther),
         mContainerASR(aOther.mContainerASR),
-        mClippedToDisplayPort(aOther.mClippedToDisplayPort) {
+        mClippedToDisplayPort(aOther.mClippedToDisplayPort),
+        mShouldFlatten(false) {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
   }
 
@@ -5559,6 +5560,14 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   bool CanMoveAsync() override { return true; }
 
+  void SetShouldFlatten(bool aShouldFlatten) {
+    mShouldFlatten = aShouldFlatten;
+  }
+
+  bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) final {
+    return mShouldFlatten;
+  }
+
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
@@ -5585,6 +5594,9 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
   // checkerboarded. Note that the sticky item will still be subject to the
   // scrollport clip.
   bool mClippedToDisplayPort;
+
+  // True if this item should be flattened away.
+  bool mShouldFlatten;
 };
 
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
