@@ -778,97 +778,6 @@ let JSWINDOWACTORS = {
   },
 };
 
-(function earlyBlankFirstPaint() {
-  let startTime = Cu.now();
-  if (
-    AppConstants.platform == "macosx" ||
-    Services.startup.wasSilentlyStarted ||
-    !Services.prefs.getBoolPref("browser.startup.blankWindow", false)
-  ) {
-    return;
-  }
-
-  // Until bug 1450626 and bug 1488384 are fixed, skip the blank window when
-  // using a non-default theme.
-  if (
-    !Services.startup.showedPreXULSkeletonUI &&
-    Services.prefs.getCharPref(
-      "extensions.activeThemeID",
-      "default-theme@mozilla.org"
-    ) != "default-theme@mozilla.org"
-  ) {
-    return;
-  }
-
-  let store = Services.xulStore;
-  let getValue = attr =>
-    store.getValue(AppConstants.BROWSER_CHROME_URL, "main-window", attr);
-  let width = getValue("width");
-  let height = getValue("height");
-
-  // The clean profile case isn't handled yet. Return early for now.
-  if (!width || !height) {
-    return;
-  }
-
-  let browserWindowFeatures =
-    "chrome,all,dialog=no,extrachrome,menubar,resizable,scrollbars,status," +
-    "location,toolbar,personalbar";
-  let win = Services.ww.openWindow(
-    null,
-    "about:blank",
-    null,
-    browserWindowFeatures,
-    null
-  );
-
-  // Hide the titlebar if the actual browser window will draw in it.
-  let hiddenTitlebar = Services.appinfo.drawInTitlebar;
-  if (hiddenTitlebar) {
-    win.windowUtils.setChromeMargin(0, 2, 2, 2);
-  }
-
-  let docElt = win.document.documentElement;
-  docElt.setAttribute("screenX", getValue("screenX"));
-  docElt.setAttribute("screenY", getValue("screenY"));
-
-  // The sizemode="maximized" attribute needs to be set before first paint.
-  let sizemode = getValue("sizemode");
-  if (sizemode == "maximized") {
-    docElt.setAttribute("sizemode", sizemode);
-
-    // Set the size to use when the user leaves the maximized mode.
-    // The persisted size is the outer size, but the height/width
-    // attributes set the inner size.
-    let appWin = win.docShell.treeOwner
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIAppWindow);
-    height -= appWin.outerToInnerHeightDifferenceInCSSPixels;
-    width -= appWin.outerToInnerWidthDifferenceInCSSPixels;
-    docElt.setAttribute("height", height);
-    docElt.setAttribute("width", width);
-  } else {
-    // Setting the size of the window in the features string instead of here
-    // causes the window to grow by the size of the titlebar.
-    win.resizeTo(width, height);
-  }
-
-  // Set this before showing the window so that graphics code can use it to
-  // decide to skip some expensive code paths (eg. starting the GPU process).
-  docElt.setAttribute("windowtype", "navigator:blank");
-
-  // The window becomes visible after OnStopRequest, so make this happen now.
-  win.stop();
-
-  ChromeUtils.addProfilerMarker("earlyBlankFirstPaint", startTime);
-  win.openTime = Cu.now();
-
-  let { TelemetryTimestamps } = ChromeUtils.import(
-    "resource://gre/modules/TelemetryTimestamps.jsm"
-  );
-  TelemetryTimestamps.add("blankWindowShown");
-})();
-
 XPCOMUtils.defineLazyGetter(
   this,
   "WeaveService",
@@ -1187,6 +1096,9 @@ BrowserGlue.prototype = {
         // Allow certain viewable internally types to be opened from downloads.
         DownloadsViewableInternally.register();
 
+        break;
+      case "app-startup":
+        this._earlyBlankFirstPaint(subject);
         break;
     }
   },
@@ -1522,6 +1434,104 @@ BrowserGlue.prototype = {
       },
       buttons
     );
+  },
+
+  _earlyBlankFirstPaint(cmdLine) {
+    let startTime = Cu.now();
+    if (
+      AppConstants.platform == "macosx" ||
+      Services.startup.wasSilentlyStarted ||
+      !Services.prefs.getBoolPref("browser.startup.blankWindow", false)
+    ) {
+      return;
+    }
+
+    // Until bug 1450626 and bug 1488384 are fixed, skip the blank window when
+    // using a non-default theme.
+    if (
+      !Services.startup.showedPreXULSkeletonUI &&
+      Services.prefs.getCharPref(
+        "extensions.activeThemeID",
+        "default-theme@mozilla.org"
+      ) != "default-theme@mozilla.org"
+    ) {
+      return;
+    }
+
+    let store = Services.xulStore;
+    let getValue = attr =>
+      store.getValue(AppConstants.BROWSER_CHROME_URL, "main-window", attr);
+    let width = getValue("width");
+    let height = getValue("height");
+
+    // The clean profile case isn't handled yet. Return early for now.
+    if (!width || !height) {
+      return;
+    }
+
+    let browserWindowFeatures =
+      "chrome,all,dialog=no,extrachrome,menubar,resizable,scrollbars,status," +
+      "location,toolbar,personalbar";
+    // This needs to be set when opening the window to ensure that the AppUserModelID
+    // is set correctly on Windows. Without it, initial launches with `-private-window`
+    // will show up under the regular Firefox taskbar icon first, and then switch
+    // to the Private Browsing icon shortly thereafter.
+    if (cmdLine.findFlag("private-window", false) != -1) {
+      browserWindowFeatures += ",private";
+    }
+    let win = Services.ww.openWindow(
+      null,
+      "about:blank",
+      null,
+      browserWindowFeatures,
+      null
+    );
+
+    // Hide the titlebar if the actual browser window will draw in it.
+    let hiddenTitlebar = Services.appinfo.drawInTitlebar;
+    if (hiddenTitlebar) {
+      win.windowUtils.setChromeMargin(0, 2, 2, 2);
+    }
+
+    let docElt = win.document.documentElement;
+    docElt.setAttribute("screenX", getValue("screenX"));
+    docElt.setAttribute("screenY", getValue("screenY"));
+
+    // The sizemode="maximized" attribute needs to be set before first paint.
+    let sizemode = getValue("sizemode");
+    if (sizemode == "maximized") {
+      docElt.setAttribute("sizemode", sizemode);
+
+      // Set the size to use when the user leaves the maximized mode.
+      // The persisted size is the outer size, but the height/width
+      // attributes set the inner size.
+      let appWin = win.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow);
+      height -= appWin.outerToInnerHeightDifferenceInCSSPixels;
+      width -= appWin.outerToInnerWidthDifferenceInCSSPixels;
+      docElt.setAttribute("height", height);
+      docElt.setAttribute("width", width);
+    } else {
+      // Setting the size of the window in the features string instead of here
+      // causes the window to grow by the size of the titlebar.
+      win.resizeTo(width, height);
+    }
+
+    // Set this before showing the window so that graphics code can use it to
+    // decide to skip some expensive code paths (eg. starting the GPU process).
+    docElt.setAttribute("windowtype", "navigator:blank");
+
+    // The window becomes visible after OnStopRequest, so make this happen now.
+    win.stop();
+
+    ChromeUtils.addProfilerMarker("earlyBlankFirstPaint", startTime);
+    win.openTime = Cu.now();
+
+    let { TelemetryTimestamps } = ChromeUtils.import(
+      "resource://gre/modules/TelemetryTimestamps.jsm"
+    );
+    TelemetryTimestamps.add("blankWindowShown");
   },
 
   _firstWindowTelemetry(aWindow) {
