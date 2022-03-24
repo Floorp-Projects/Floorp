@@ -31,6 +31,8 @@ class RTC_EXPORT NV12Buffer : public NV12BufferInterface {
                                                int height,
                                                int stride_y,
                                                int stride_uv);
+  static rtc::scoped_refptr<NV12Buffer> Copy(
+      const I420BufferInterface& i420_buffer);
 
   rtc::scoped_refptr<I420BufferInterface> ToI420() override;
 

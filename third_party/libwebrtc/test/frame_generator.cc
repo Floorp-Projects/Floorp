@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "api/video/i010_buffer.h"
+#include "api/video/nv12_buffer.h"
 #include "api/video/video_rotation.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
@@ -70,7 +71,8 @@ FrameGeneratorInterface::VideoFrameData SquareGenerator::NextFrame() {
   rtc::scoped_refptr<VideoFrameBuffer> buffer = nullptr;
   switch (type_) {
     case OutputType::kI420:
-    case OutputType::kI010: {
+    case OutputType::kI010:
+    case OutputType::kNV12: {
       buffer = CreateI420Buffer(width_, height_);
       break;
     }
@@ -96,6 +98,8 @@ FrameGeneratorInterface::VideoFrameData SquareGenerator::NextFrame() {
 
   if (type_ == OutputType::kI010) {
     buffer = I010Buffer::Copy(*buffer->ToI420());
+  } else if (type_ == OutputType::kNV12) {
+    buffer = NV12Buffer::Copy(*buffer->ToI420());
   }
 
   return VideoFrameData(buffer, absl::nullopt);
