@@ -5,11 +5,11 @@ Using third-party Python packages
 Mach and its associated commands have a variety of 3rd-party Python dependencies. Many of these
 are vendored in ``third_party/python``, while others are installed at runtime via ``pip``.
 
-The dependencies of Mach itself can be found at ``build/mach_virtualenv_packages.txt``. Mach commands
-may have additional dependencies which are specified at ``build/<site>_virtualenv_packages.txt``.
+The dependencies of Mach itself can be found at ``python/sites/mach.txt``. Mach commands
+may have additional dependencies which are specified at ``python/sites/<site>.txt``.
 
 For example, the following Mach command would have its 3rd-party dependencies declared at
-``build/foo_virtualenv_packages.txt``.
+``python/sites/foo.txt``.
 
 .. code:: python
 
@@ -45,7 +45,7 @@ There's two ways of using 3rd-party Python dependencies:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To add a ``pip install``-d package dependency, add it to your site's
-``build/<site>_virtualenv_packages.txt`` manifest file:
+``python/sites/<site>.txt`` manifest file:
 
 .. code::
 
@@ -72,7 +72,7 @@ into the ``third_party/python`` directory.
 
 Next, add that package and any new transitive dependencies (you'll see them added in
 ``third_party/python/requirements.txt``) to the associated site's dependency manifest in
-``build/<site>_virtualenv_packages.txt``:
+``python/sites/<site>.txt``:
 
 .. code::
 
@@ -226,4 +226,4 @@ other, more mature commands may still only be compatible with a much older versi
 
     If a Mach command's dependency conflicts with a vendored package, and that vendored package
     isn't needed by Mach itself, then that vendored dependency should be moved from
-    ``mach_virtualenv_packages.txt`` to its associated environment.
+    ``python/sites/mach.txt`` to its associated environment.
