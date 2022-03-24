@@ -9,7 +9,8 @@
             ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
+            sleep, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
+            openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
@@ -204,6 +205,31 @@ function getDisplayedPopupItems(
 
 async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Wait until the element found matches the expected autofill value
+ *
+ * Note. This function assumes the element is in a form whose id is "form"
+ *
+ * @param {Object} target
+ *        The target in which to run the task.
+ * @param {string} selector
+ *        A selector used to query the element.
+ * @param {string} value
+ *        The expected autofilling value for the element
+ */
+async function waitForAutofill(target, selector, value) {
+  await SpecialPowers.spawn(target, [selector, value], async function(
+    selector,
+    val
+  ) {
+    await ContentTaskUtils.waitForCondition(() => {
+      let form = content.document.getElementById("form");
+      let element = form.querySelector(selector);
+      return element.value == val;
+    }, "Credit card detail never fills");
+  });
 }
 
 /**

@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 /*
   We use arbitrary timeouts here to ensure that the input event queue is cleared
@@ -111,11 +110,10 @@ add_task(async function test_submit_untouched_creditCard_form() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
+      await waitForAutofill(browser, "#cc-name", "John Doe");
+
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -174,14 +172,14 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
     async function(browser) {
       let iframeBC = browser.browsingContext.children[0];
       await openPopupForSubframe(browser, iframeBC, "form #cc-name");
+
       EventUtils.synthesizeKey("VK_DOWN", {});
       EventUtils.synthesizeKey("VK_RETURN", {});
       await osKeyStoreLoginShown;
+      await waitForAutofill(iframeBC, "#cc-name", "John Doe");
+
       await SpecialPowers.spawn(iframeBC, [], async function() {
         let form = content.document.getElementById("form");
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -612,18 +610,12 @@ add_task(async function test_update_autofill_form_name() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
+      await waitForAutofill(browser, "#cc-name", "John Doe");
+
       await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          return name.value == "John Doe";
-        }, "Credit card detail never fills");
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.setUserInput("User 1");
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
       });
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
@@ -676,18 +668,12 @@ add_task(async function test_update_autofill_form_exp_date() {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
+      await waitForAutofill(browser, "#cc-name", "John Doe");
+
       await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          return name.value == "John Doe";
-        }, "Credit card detail never fills");
         let form = content.document.getElementById("form");
         let year = form.querySelector("#cc-exp-year");
         year.setUserInput("2019");
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
       });
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
@@ -737,18 +723,12 @@ add_task(async function test_create_new_autofill_form() {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await waitForAutofill(browser, "#cc-name", "John Doe");
+
       await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          return name.value == "John Doe";
-        }, "Credit card detail never fills");
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
         name.setUserInput("User 1");
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
       });
 
       await promiseShown;
@@ -806,13 +786,9 @@ add_task(async function test_update_duplicate_autofill_form() {
       await openPopupOn(browser, "form #cc-number");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let number = form.querySelector("#cc-number");
-          return number.value == "6387060366272981";
-        }, "Should be the first credit card number");
+      await waitForAutofill(browser, "#cc-number", "6387060366272981");
 
+      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
         // Change number to the second credit card number
         let form = content.document.getElementById("form");
         let number = form.querySelector("#cc-number");
