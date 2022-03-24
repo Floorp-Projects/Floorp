@@ -987,20 +987,37 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
   input_image_ = &input_image;
 
   // Keep reference to buffer until encode completes.
-  rtc::scoped_refptr<I420BufferInterface> i420_buffer;
+  rtc::scoped_refptr<const VideoFrameBuffer> video_frame_buffer;
   const I010BufferInterface* i010_buffer;
   rtc::scoped_refptr<const I010BufferInterface> i010_copy;
   switch (profile_) {
     case VP9Profile::kProfile0: {
-      i420_buffer = input_image.video_frame_buffer()->ToI420();
-      // Image in vpx_image_t format.
-      // Input image is const. VPX's raw image is not defined as const.
-      raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(i420_buffer->DataY());
-      raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(i420_buffer->DataU());
-      raw_->planes[VPX_PLANE_V] = const_cast<uint8_t*>(i420_buffer->DataV());
-      raw_->stride[VPX_PLANE_Y] = i420_buffer->StrideY();
-      raw_->stride[VPX_PLANE_U] = i420_buffer->StrideU();
-      raw_->stride[VPX_PLANE_V] = i420_buffer->StrideV();
+      if (input_image.video_frame_buffer()->type() ==
+          VideoFrameBuffer::Type::kNV12) {
+        const NV12BufferInterface* nv12_buffer =
+            input_image.video_frame_buffer()->GetNV12();
+        video_frame_buffer = nv12_buffer;
+        MaybeRewrapRawWithFormat(VPX_IMG_FMT_NV12);
+        raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(nv12_buffer->DataY());
+        raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(nv12_buffer->DataUV());
+        raw_->planes[VPX_PLANE_V] = raw_->planes[VPX_PLANE_U] + 1;
+        raw_->stride[VPX_PLANE_Y] = nv12_buffer->StrideY();
+        raw_->stride[VPX_PLANE_U] = nv12_buffer->StrideUV();
+        raw_->stride[VPX_PLANE_V] = nv12_buffer->StrideUV();
+      } else {
+        rtc::scoped_refptr<I420BufferInterface> i420_buffer =
+            input_image.video_frame_buffer()->ToI420();
+        video_frame_buffer = i420_buffer;
+        MaybeRewrapRawWithFormat(VPX_IMG_FMT_I420);
+        // Image in vpx_image_t format.
+        // Input image is const. VPX's raw image is not defined as const.
+        raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(i420_buffer->DataY());
+        raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(i420_buffer->DataU());
+        raw_->planes[VPX_PLANE_V] = const_cast<uint8_t*>(i420_buffer->DataV());
+        raw_->stride[VPX_PLANE_Y] = i420_buffer->StrideY();
+        raw_->stride[VPX_PLANE_U] = i420_buffer->StrideU();
+        raw_->stride[VPX_PLANE_V] = i420_buffer->StrideV();
+      }
       break;
     }
     case VP9Profile::kProfile1: {
@@ -1710,6 +1727,18 @@ VP9EncoderImpl::ParseQualityScalerConfig(std::string group_name) {
   config.high_qp = high_qp.Get();
 
   return config;
+}
+
+void VP9EncoderImpl::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
+  if (!raw_) {
+    raw_ = vpx_img_wrap(nullptr, fmt, codec_.width, codec_.height, 1, nullptr);
+  } else if (raw_->fmt != fmt) {
+    RTC_LOG(INFO) << "Switching VP9 encoder pixel format to "
+                  << (fmt == VPX_IMG_FMT_NV12 ? "NV12" : "I420");
+    vpx_img_free(raw_);
+    raw_ = vpx_img_wrap(nullptr, fmt, codec_.width, codec_.height, 1, nullptr);
+  }
+  // else no-op since the image is already in the right format.
 }
 
 VP9DecoderImpl::VP9DecoderImpl()

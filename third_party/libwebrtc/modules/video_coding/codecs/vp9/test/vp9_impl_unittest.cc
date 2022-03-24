@@ -89,11 +89,23 @@ class TestVp9Impl : public VideoCodecUnitTest {
   }
 };
 
+class TestVp9ImplForPixelFormat
+    : public TestVp9Impl,
+      public ::testing::WithParamInterface<
+          test::FrameGeneratorInterface::OutputType> {
+ protected:
+  void SetUp() override {
+    input_frame_generator_ = test::CreateSquareFrameGenerator(
+        kWidth, kHeight, GetParam(), absl::optional<int>());
+    TestVp9Impl::SetUp();
+  }
+};
+
 // Disabled on ios as flake, see https://crbug.com/webrtc/7057
 #if defined(WEBRTC_IOS)
-TEST_F(TestVp9Impl, DISABLED_EncodeDecode) {
+TEST_P(TestVp9ImplForPixelFormat, DISABLED_EncodeDecode) {
 #else
-TEST_F(TestVp9Impl, EncodeDecode) {
+TEST_P(TestVp9ImplForPixelFormat, EncodeDecode) {
 #endif
   VideoFrame input_frame = NextInputFrame();
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(input_frame, nullptr));
@@ -120,7 +132,7 @@ TEST_F(TestVp9Impl, EncodeDecode) {
             color_space.chroma_siting_vertical());
 }
 
-TEST_F(TestVp9Impl, DecodedColorSpaceFromBitstream) {
+TEST_P(TestVp9ImplForPixelFormat, DecodedColorSpaceFromBitstream) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(NextInputFrame(), nullptr));
   EncodedImage encoded_frame;
   CodecSpecificInfo codec_specific_info;
@@ -138,7 +150,7 @@ TEST_F(TestVp9Impl, DecodedColorSpaceFromBitstream) {
   EXPECT_FALSE(decoded_frame->color_space()->hdr_metadata());
 }
 
-TEST_F(TestVp9Impl, DecodedQpEqualsEncodedQp) {
+TEST_P(TestVp9ImplForPixelFormat, DecodedQpEqualsEncodedQp) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(NextInputFrame(), nullptr));
   EncodedImage encoded_frame;
   CodecSpecificInfo codec_specific_info;
@@ -152,6 +164,27 @@ TEST_F(TestVp9Impl, DecodedQpEqualsEncodedQp) {
   ASSERT_TRUE(decoded_frame);
   ASSERT_TRUE(decoded_qp);
   EXPECT_EQ(encoded_frame.qp_, *decoded_qp);
+}
+
+TEST_F(TestVp9Impl, SwitchInputPixelFormatsWithoutReconfigure) {
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(NextInputFrame(), nullptr));
+  EncodedImage encoded_frame;
+  CodecSpecificInfo codec_specific_info;
+  ASSERT_TRUE(WaitForEncodedFrame(&encoded_frame, &codec_specific_info));
+
+  // Change the input frame type from I420 to NV12, encoding should still work.
+  input_frame_generator_ = test::CreateSquareFrameGenerator(
+      kWidth, kHeight, test::FrameGeneratorInterface::OutputType::kNV12,
+      absl::optional<int>());
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(NextInputFrame(), nullptr));
+  ASSERT_TRUE(WaitForEncodedFrame(&encoded_frame, &codec_specific_info));
+
+  // Flipping back to I420, encoding should still work.
+  input_frame_generator_ = test::CreateSquareFrameGenerator(
+      kWidth, kHeight, test::FrameGeneratorInterface::OutputType::kI420,
+      absl::optional<int>());
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(NextInputFrame(), nullptr));
+  ASSERT_TRUE(WaitForEncodedFrame(&encoded_frame, &codec_specific_info));
 }
 
 TEST(Vp9ImplTest, ParserQpEqualsEncodedQp) {
@@ -1741,4 +1774,12 @@ TEST_F(TestVp9Impl, HandlesEmptyInitDecode) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder->Release());
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    TestVp9ImplForPixelFormat,
+    TestVp9ImplForPixelFormat,
+    ::testing::Values(test::FrameGeneratorInterface::OutputType::kI420,
+                      test::FrameGeneratorInterface::OutputType::kNV12),
+    [](const auto& info) {
+      return test::FrameGeneratorInterface::OutputTypeToString(info.param);
+    });
 }  // namespace webrtc

@@ -33,6 +33,7 @@ class FrameGeneratorInterface {
   };
 
   enum class OutputType { kI420, kI420A, kI010, kNV12 };
+  static const char* OutputTypeToString(OutputType type);
 
   virtual ~FrameGeneratorInterface() = default;
 
