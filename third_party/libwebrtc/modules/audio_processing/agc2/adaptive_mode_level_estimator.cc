@@ -50,15 +50,15 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
       apm_data_dumper_(apm_data_dumper) {}
 
 void AdaptiveModeLevelEstimator::UpdateEstimation(
-    const VadWithLevel::LevelAndProbability& vad_data) {
-  RTC_DCHECK_GT(vad_data.speech_rms_dbfs, -150.f);
-  RTC_DCHECK_LT(vad_data.speech_rms_dbfs, 50.f);
-  RTC_DCHECK_GT(vad_data.speech_peak_dbfs, -150.f);
-  RTC_DCHECK_LT(vad_data.speech_peak_dbfs, 50.f);
-  RTC_DCHECK_GE(vad_data.speech_probability, 0.f);
-  RTC_DCHECK_LE(vad_data.speech_probability, 1.f);
+    const VadLevelAnalyzer::Result& vad_level) {
+  RTC_DCHECK_GT(vad_level.rms_dbfs, -150.f);
+  RTC_DCHECK_LT(vad_level.rms_dbfs, 50.f);
+  RTC_DCHECK_GT(vad_level.peak_dbfs, -150.f);
+  RTC_DCHECK_LT(vad_level.peak_dbfs, 50.f);
+  RTC_DCHECK_GE(vad_level.speech_probability, 0.f);
+  RTC_DCHECK_LE(vad_level.speech_probability, 1.f);
 
-  if (vad_data.speech_probability < kVadConfidenceThreshold) {
+  if (vad_level.speech_probability < kVadConfidenceThreshold) {
     DebugDumpEstimate();
     return;
   }
@@ -76,22 +76,22 @@ void AdaptiveModeLevelEstimator::UpdateEstimation(
       AudioProcessing::Config::GainController2::LevelEstimator;
   switch (level_estimator_) {
     case LevelEstimatorType::kRms:
-      speech_level_dbfs = vad_data.speech_rms_dbfs;
+      speech_level_dbfs = vad_level.rms_dbfs;
       break;
     case LevelEstimatorType::kPeak:
-      speech_level_dbfs = vad_data.speech_peak_dbfs;
+      speech_level_dbfs = vad_level.peak_dbfs;
       break;
   }
 
   // Update speech level estimation.
   estimate_numerator_ = estimate_numerator_ * leak_factor +
-                        speech_level_dbfs * vad_data.speech_probability;
+                        speech_level_dbfs * vad_level.speech_probability;
   estimate_denominator_ =
-      estimate_denominator_ * leak_factor + vad_data.speech_probability;
+      estimate_denominator_ * leak_factor + vad_level.speech_probability;
   last_estimate_with_offset_dbfs_ = estimate_numerator_ / estimate_denominator_;
 
   if (use_saturation_protector_) {
-    saturation_protector_.UpdateMargin(vad_data.speech_peak_dbfs,
+    saturation_protector_.UpdateMargin(vad_level.peak_dbfs,
                                        last_estimate_with_offset_dbfs_);
     DebugDumpEstimate();
   }

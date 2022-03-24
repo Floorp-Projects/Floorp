@@ -23,11 +23,13 @@ namespace {
 // Constants used in place of estimated noise levels.
 constexpr float kNoNoiseDbfs = -90.f;
 constexpr float kWithNoiseDbfs = -20.f;
-constexpr VadWithLevel::LevelAndProbability kVadSpeech(1.f, -20.f, 0.f);
+static_assert(std::is_trivially_destructible<VadLevelAnalyzer::Result>::value,
+              "");
+constexpr VadLevelAnalyzer::Result kVadSpeech{1.f, -20.f, 0.f};
 
 // Runs gain applier and returns the applied gain in linear scale.
 float RunOnConstantLevel(int num_iterations,
-                         VadWithLevel::LevelAndProbability vad_data,
+                         VadLevelAnalyzer::Result vad_level,
                          float input_level_dbfs,
                          AdaptiveDigitalGainApplier* gain_applier) {
   float gain_linear = 0.f;
@@ -37,7 +39,7 @@ float RunOnConstantLevel(int num_iterations,
     SignalWithLevels signal_with_levels(fake_audio.float_frame_view());
     signal_with_levels.input_level_dbfs = input_level_dbfs;
     signal_with_levels.input_noise_level_dbfs = kNoNoiseDbfs;
-    signal_with_levels.vad_result = vad_data;
+    signal_with_levels.vad_result = vad_level;
     signal_with_levels.limiter_audio_level_dbfs = -2.f;
     signal_with_levels.estimate_is_confident = true;
     gain_applier->Process(signal_with_levels);
@@ -61,9 +63,6 @@ SignalWithLevels TestSignalWithLevel(AudioFrameView<float> float_frame) {
 }  // namespace
 
 TEST(AutomaticGainController2AdaptiveGainApplier, GainApplierShouldNotCrash) {
-  static_assert(
-      std::is_trivially_destructible<VadWithLevel::LevelAndProbability>::value,
-      "");
   ApmDataDumper apm_data_dumper(0);
   AdaptiveDigitalGainApplier gain_applier(&apm_data_dumper);
 

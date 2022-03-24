@@ -33,7 +33,7 @@ class AdaptiveAgc {
 
  private:
   AdaptiveModeLevelEstimator speech_level_estimator_;
-  VadWithLevel vad_;
+  VadLevelAnalyzer vad_;
   AdaptiveDigitalGainApplier gain_applier_;
   ApmDataDumper* const apm_data_dumper_;
   NoiseLevelEstimator noise_level_estimator_;
