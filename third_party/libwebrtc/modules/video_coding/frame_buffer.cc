@@ -134,9 +134,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
   if (packet.sizeBytes > 0)
     CopyCodecSpecific(&packet.video_header);
 
-  int retVal = _sessionInfo.InsertPacket(
-      packet, encoded_image_buffer_ ? encoded_image_buffer_->data() : nullptr,
-      frame_data);
+  int retVal = _sessionInfo.InsertPacket(packet, data(), frame_data);
   if (retVal == -1) {
     return kSizeError;
   } else if (retVal == -2) {

@@ -90,9 +90,7 @@ CodecSpecificInfo FakeVp8Encoder::PopulateCodecSpecific(
   return codec_specific;
 }
 
-CodecSpecificInfo FakeVp8Encoder::EncodeHook(
-    EncodedImage& encoded_image,
-    rtc::scoped_refptr<EncodedImageBuffer> buffer) {
+CodecSpecificInfo FakeVp8Encoder::EncodeHook(EncodedImage& encoded_image) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   uint8_t stream_idx = encoded_image.SpatialIndex().value_or(0);
   frame_buffer_controller_->NextFrameConfig(stream_idx,
@@ -103,7 +101,7 @@ CodecSpecificInfo FakeVp8Encoder::EncodeHook(
 
   // Write width and height to the payload the same way as the real encoder
   // does.
-  WriteFakeVp8(buffer->data(), encoded_image._encodedWidth,
+  WriteFakeVp8(encoded_image.data(), encoded_image._encodedWidth,
                encoded_image._encodedHeight,
                encoded_image._frameType == VideoFrameType::kVideoFrameKey);
   return codec_specific;

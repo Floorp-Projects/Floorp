@@ -238,6 +238,7 @@ TEST(SingleProcessEncodedImageDataInjector,
   EncodedImage concatenated;
   concatenated.SetEncodedData(EncodedImageBuffer::Create(
       concatenated_buffer.data(), concatenated_length));
+  memcpy(concatenated.data(), concatenated_buffer.data(), concatenated_length);
   concatenated.SetSpatialIndex(2);
   concatenated.SetSpatialLayerFrameSize(0, intermediate1.size());
   concatenated.SetSpatialLayerFrameSize(1, intermediate2.size());
@@ -292,7 +293,8 @@ TEST(SingleProcessEncodedImageDataInjector, InjectOnceExtractTwice) {
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
 EncodedImage DeepCopyEncodedImage(const EncodedImage& source) {
   EncodedImage copy = source;
-  copy.SetEncodedData(EncodedImageBuffer::Create(source.data(), source.size()));
+  copy.SetEncodedData(EncodedImageBuffer::Create(source.size()));
+  memcpy(copy.data(), source.data(), source.size());
   return copy;
 }
 
