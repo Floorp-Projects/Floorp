@@ -6,6 +6,9 @@
 # different enough from the main Linux build jobs that their presence in
 # linux.yml would make using job-defaults there significantly less useful.
 ---
+job-defaults:
+    worker-type: b-linux-gcp
+
 linux64-base-toolchains/opt:
     description: "Linux64 base toolchains Opt"
     index:
@@ -15,7 +18,6 @@ linux64-base-toolchains/opt:
         platform: linux64/opt
         symbol: Bb
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -54,7 +56,6 @@ linux64-base-toolchains/debug:
         symbol: Bb
     optimization:
         skip-unless-expanded: null
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -94,7 +95,6 @@ linux64-base-toolchains-clang/opt:
         platform: linux64/opt
         symbol: Bbc
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -131,7 +131,6 @@ linux64-base-toolchains-clang/debug:
         symbol: Bbc
     optimization:
         skip-unless-expanded: null
-    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
