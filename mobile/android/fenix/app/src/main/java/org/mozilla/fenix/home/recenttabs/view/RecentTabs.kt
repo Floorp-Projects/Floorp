@@ -36,7 +36,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,13 +43,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -60,13 +56,14 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
-import mozilla.components.concept.base.images.ImageLoadRequest
-import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
+import org.mozilla.fenix.compose.PrimaryText
+import org.mozilla.fenix.compose.SecondaryText
+import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -134,7 +131,6 @@ fun RecentTabs(
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
 @OptIn(ExperimentalFoundationApi::class)
-@Suppress("LongParameterList")
 @Composable
 private fun RecentTabItem(
     tab: RecentTab.Tab,
@@ -172,7 +168,12 @@ private fun RecentTabItem(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                RecentTabTitle(title = tab.state.content.title.ifEmpty { tab.state.content.url })
+                PrimaryText(
+                    text = tab.state.content.title.ifEmpty { tab.state.content.url },
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
 
                 Row {
                     RecentTabIcon(
@@ -183,7 +184,12 @@ private fun RecentTabItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    RecentTabSubtitle(subtitle = tab.state.content.url)
+                    SecondaryText(
+                        text = tab.state.content.url,
+                        fontSize = 12.sp,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                    )
                 }
             }
 
@@ -205,7 +211,6 @@ private fun RecentTabItem(
  * @param count Count of how many tabs belongs to the group.
  * @param onSearchGroupClick Invoked when the user clicks on a group.
  */
-@Suppress("LongParameterList")
 @Composable
 private fun RecentSearchGroupItem(
     searchTerm: String,
@@ -239,7 +244,12 @@ private fun RecentSearchGroupItem(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                RecentTabTitle(title = stringResource(R.string.recent_tabs_search_term, searchTerm))
+                PrimaryText(
+                    text = stringResource(R.string.recent_tabs_search_term, searchTerm),
+                    fontSize = 14.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                )
 
                 Row {
                     Icon(
@@ -254,7 +264,12 @@ private fun RecentSearchGroupItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    RecentTabSubtitle(subtitle = stringResource(R.string.recent_tabs_search_term_count_2, count))
+                    SecondaryText(
+                        text = stringResource(R.string.recent_tabs_search_term_count_2, count),
+                        fontSize = 12.sp,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                    )
                 }
             }
         }
@@ -289,8 +304,9 @@ private fun RecentSyncedTabItem(
                 if (tab == null) {
                     RecentTabImagePlaceholder()
                 } else {
-                    RecentTabImage(
-                        tab = tab,
+                    ThumbnailCard(
+                        url = tab.url,
+                        key = tab.url.hashCode().toString(),
                         modifier = Modifier
                             .size(108.dp, 80.dp)
                             .clip(RoundedCornerShape(8.dp))
@@ -306,7 +322,12 @@ private fun RecentSyncedTabItem(
                     if (tab == null) {
                         RecentTabTitlePlaceholder()
                     } else {
-                        RecentTabTitle(title = tab.title)
+                        PrimaryText(
+                            text = tab.title,
+                            fontSize = 14.sp,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 2,
+                        )
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -331,7 +352,12 @@ private fun RecentSyncedTabItem(
                         if (tab == null) {
                             TextLinePlaceHolder()
                         } else {
-                            RecentTabSubtitle(subtitle = tab.deviceDisplayName)
+                            SecondaryText(
+                                text = tab.deviceDisplayName,
+                                fontSize = 12.sp,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1,
+                            )
                         }
                     }
                 }
@@ -377,23 +403,14 @@ private fun RecentSyncedTabItem(
  * @param alignment [Alignment] used to draw the image content.
  */
 @Composable
-@Suppress("LongParameterList")
-private fun RecentTabImage(
-    tab: RecentTab,
+fun RecentTabImage(
+    tab: RecentTab.Tab,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
     alignment: Alignment = Alignment.TopCenter
 ) {
-    val (previewImageUrl, loaderUrl, key) = when (tab) {
-        is RecentTab.Tab -> Triple(
-            tab.state.content.previewImageUrl,
-            tab.state.content.url,
-            tab.state.id
-        )
-        is RecentTab.SyncedTab -> Triple(tab.previewImageUrl, tab.url, tab.url)
-        else -> return
-    }
-    val thumbnail = (tab as? RecentTab.Tab)?.state?.content?.thumbnail
+    val previewImageUrl = tab.state.content.previewImageUrl
+    val thumbnail = tab.state.content.thumbnail
 
     when {
         !previewImageUrl.isNullOrEmpty() -> {
@@ -413,43 +430,11 @@ private fun RecentTabImage(
                 alignment = alignment
             )
         }
-        else -> {
-            Card(
-                modifier = modifier,
-                backgroundColor = colorResource(id = R.color.photonGrey20)
-            ) {
-                components.core.icons.Loader(loaderUrl) {
-                    Placeholder {
-                        Box(
-                            modifier = Modifier.background(color = FirefoxTheme.colors.layer3)
-                        )
-                    }
-
-                    WithIcon { icon ->
-                        Box(
-                            modifier = Modifier.size(36.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = icon.painter,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                    }
-                }
-
-                ThumbnailImage(
-                    key = key,
-                    modifier = modifier,
-                    contentScale = contentScale,
-                    alignment = alignment
-                )
-            }
-        }
+        else -> ThumbnailCard(
+            url = tab.state.content.url,
+            key = tab.state.id,
+            modifier = modifier
+        )
     }
 }
 
@@ -568,22 +553,6 @@ private fun RecentTabIcon(
 }
 
 /**
- * A recent tab title.
- *
- * @param title The title of the tab.
- */
-@Composable
-private fun RecentTabTitle(title: String) {
-    Text(
-        text = title,
-        color = FirefoxTheme.colors.textPrimary,
-        fontSize = 14.sp,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 2
-    )
-}
-
-/**
  * A placeholder for a tab title.
  */
 @Composable
@@ -594,54 +563,6 @@ private fun RecentTabTitlePlaceholder() {
         Spacer(modifier = Modifier.height(8.dp))
 
         TextLinePlaceHolder()
-    }
-}
-
-/**
- * A recent tab subtitle.
- *
- * @param subtitle The loaded URL of the tab.
- */
-@Composable
-private fun RecentTabSubtitle(subtitle: String) {
-    Text(
-        text = subtitle.getRepresentativeSnippet(),
-        color = when (isSystemInDarkTheme()) {
-            true -> FirefoxTheme.colors.textPrimary
-            false -> FirefoxTheme.colors.textSecondary
-        },
-        fontSize = 12.sp,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 1
-    )
-}
-
-@Composable
-private fun ThumbnailImage(
-    key: String,
-    modifier: Modifier,
-    contentScale: ContentScale,
-    alignment: Alignment
-) {
-    val rememberBitmap = remember(key) { mutableStateOf<ImageBitmap?>(null) }
-    val size = LocalDensity.current.run { 108.dp.toPx().toInt() }
-    val request = ImageLoadRequest(key, size)
-    val storage = components.core.thumbnailStorage
-    val bitmap = rememberBitmap.value
-
-    LaunchedEffect(key) {
-        rememberBitmap.value = storage.loadThumbnail(request).await()?.asImageBitmap()
-    }
-
-    if (bitmap != null) {
-        val painter = BitmapPainter(bitmap)
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = contentScale,
-            alignment = alignment
-        )
     }
 }
 
