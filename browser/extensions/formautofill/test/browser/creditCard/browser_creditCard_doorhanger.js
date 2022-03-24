@@ -26,9 +26,9 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         !SpecialPowers.Services.prefs.prefHasUserValue(SYNC_USERNAME_PREF),
         "Sync account should not exist by default"
       );
+      await promiseShown;
       let cb = getDoorhangerCheckbox();
       ok(cb.hidden, "Sync checkbox should be hidden");
-      await promiseShown;
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
