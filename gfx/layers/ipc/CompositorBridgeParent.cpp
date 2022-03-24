@@ -1133,7 +1133,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
       }
       oldApzUpdater = sIndirectLayerTrees[child].mParent->mApzUpdater;
     }
-    NotifyChildCreated(child);
     if (mWrBridge) {
       childWrBridge = sIndirectLayerTrees[child].mWrBridge;
     }
@@ -1152,6 +1151,13 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     TimeStamp now = TimeStamp::Now();
     NotifyPipelineRendered(childWrBridge->PipelineId(), newEpoch, VsyncId(),
                            now, now, now);
+  }
+
+  {
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    // Update sIndirectLayerTrees[child].mParent after
+    // WebRenderBridgeParent::UpdateWebRender().
+    NotifyChildCreated(child);
   }
 
   if (oldApzUpdater) {
