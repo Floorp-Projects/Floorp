@@ -1007,6 +1007,8 @@ enum class ResumeMode : uint8_t {
 
   // Outer frame for an inlined getter/setter at a Get*/Set* bytecode op.
   InlinedAccessor,
+
+  Last = InlinedAccessor
 };
 
 inline const char* ResumeModeToString(ResumeMode mode) {
