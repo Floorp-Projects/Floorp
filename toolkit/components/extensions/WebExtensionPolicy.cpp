@@ -634,6 +634,7 @@ MozDocumentMatcher::MozDocumentMatcher(GlobalObject& aGlobal,
     : mHasActiveTabPermission(aInit.mHasActiveTabPermission),
       mRestricted(aRestricted),
       mAllFrames(aInit.mAllFrames),
+      mCheckPermissions(aInit.mCheckPermissions),
       mFrameID(aInit.mFrameID),
       mMatchAboutBlank(aInit.mMatchAboutBlank) {
   MatchPatternOptions options;
@@ -690,6 +691,11 @@ WebExtensionContentScript::WebExtensionContentScript(
   mCssPaths.Assign(aInit.mCssPaths);
   mJsPaths.Assign(aInit.mJsPaths);
   mExtension = &aExtension;
+
+  // Origin permissions are optional in mv3, so always check them at runtime.
+  if (mExtension->ManifestVersion() >= 3) {
+    mCheckPermissions = true;
+  }
 }
 
 bool MozDocumentMatcher::Matches(const DocInfo& aDoc) const {
@@ -738,7 +744,7 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc) const {
     return true;
   }
 
-  if (mRestricted && mExtension->IsRestrictedDoc(aDoc)) {
+  if (mRestricted && mExtension && mExtension->IsRestrictedDoc(aDoc)) {
     return false;
   }
 
@@ -752,6 +758,8 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc) const {
 }
 
 bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL) const {
+  MOZ_ASSERT(!mRestricted && !mCheckPermissions || mExtension);
+
   if (!mMatches->Matches(aURL)) {
     return false;
   }
@@ -769,6 +777,11 @@ bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL) const {
   }
 
   if (mRestricted && mExtension->IsRestrictedURI(aURL)) {
+    return false;
+  }
+
+  if (mCheckPermissions &&
+      !mExtension->CanAccessURI(aURL, false, false, true)) {
     return false;
   }
 
