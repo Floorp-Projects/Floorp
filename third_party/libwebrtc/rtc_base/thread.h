@@ -534,7 +534,7 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
  private:
   class QueuedTaskHandler final : public MessageHandler {
    public:
-    QueuedTaskHandler() : MessageHandler(false) {}
+    QueuedTaskHandler() {}
     void OnMessage(Message* msg) override;
   };
 

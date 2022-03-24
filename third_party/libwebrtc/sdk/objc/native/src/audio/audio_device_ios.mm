@@ -101,8 +101,7 @@ static void LogDeviceInfo() {
 #endif  // !defined(NDEBUG)
 
 AudioDeviceIOS::AudioDeviceIOS()
-    : MessageHandler(false),
-      audio_device_buffer_(nullptr),
+    : audio_device_buffer_(nullptr),
       audio_unit_(nullptr),
       recording_(0),
       playing_(0),

@@ -74,7 +74,7 @@ const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
 
 class MessageHandlerWithTask final : public MessageHandler {
  public:
-  MessageHandlerWithTask() : MessageHandler(false) {}
+  MessageHandlerWithTask() {}
 
   void OnMessage(Message* msg) override {
     static_cast<rtc_thread_internal::MessageLikeTask*>(msg->pdata)->Run();
@@ -961,7 +961,7 @@ void Thread::InvokeInternal(const Location& posted_from,
   class FunctorMessageHandler : public MessageHandler {
    public:
     explicit FunctorMessageHandler(rtc::FunctionView<void()> functor)
-        : MessageHandler(false), functor_(functor) {}
+        : functor_(functor) {}
     void OnMessage(Message* msg) override { functor_(); }
 
    private:

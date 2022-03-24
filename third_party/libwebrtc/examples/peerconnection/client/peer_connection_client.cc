@@ -43,11 +43,7 @@ rtc::AsyncSocket* CreateClientSocket(int family) {
 }  // namespace
 
 PeerConnectionClient::PeerConnectionClient()
-    : MessageHandler(false),
-      callback_(NULL),
-      resolver_(NULL),
-      state_(NOT_CONNECTED),
-      my_id_(-1) {}
+    : callback_(NULL), resolver_(NULL), state_(NOT_CONNECTED), my_id_(-1) {}
 
 PeerConnectionClient::~PeerConnectionClient() {
   rtc::Thread::Current()->Clear(this);
