@@ -2757,6 +2757,16 @@ WebSocketImpl::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 }
 
 NS_IMETHODIMP
+WebSocketImpl::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebSocketImpl::UnregisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 WebSocketImpl::IsOnCurrentThread(bool* aResult) {
   *aResult = IsTargetThread();
   return NS_OK;

@@ -58,10 +58,9 @@
       // spaces)
       testName("btn_labelledby_mixed_block", "text more text");
 
-      // Gets the name from text nodes contained by html:td (every text node
-      // value in the name should be devided by spaces).
-      // XXX: this case is rather a feature than strong wanted behaviour.
-      testName("btn_labelledby_mixed_table", "text space text");
+      // Gets the name from text nodes contained by html:td. The text nodes
+      // should not be divided by spaces.
+      testName("btn_labelledby_mixed_table", "textTEXTtext");
 
       // Gets the name from image accessible.
       testName("btn_labelledby_mixed_img", "text image");
@@ -251,6 +250,17 @@
       // Name from subtree of grouping labelled by an ancestor.
       testName("grouping_labelledby_ancestor", "label");
 
+      // Name from subtree of a container containing text nodes and inline
+      // elements. There should be no spaces because everyhing is inline.
+      testName("container_text_inline", "abc");
+      // Name from subtree of a container containing text nodes and block
+      // elements. There should be a space on both sides of the block.
+      testName("container_text_block", "a b c");
+      // Name from subtree of a container containing text nodes and empty
+      // block elements. There should be space on either side of the blocks, but
+      // not a double space.
+      testName("container_text_emptyblock", "a b");
+
       SimpleTest.finish();
     }
 
@@ -387,7 +397,7 @@
 
   <!-- the name from subtree, mixed content, table structure -->
   <table><tr>
-    <td id="labelledby_mixed_table">text<span>space</span>text</td>
+    <td id="labelledby_mixed_table">text<span>TEXT</span>text</td>
   </tr></table>
   <button id="btn_labelledby_mixed_table"
           aria-labelledby="labelledby_mixed_table">5</button>
@@ -711,5 +721,12 @@
       This content should not be included in the grouping's label.
     </div>
   </div>
+
+  <!-- Text nodes and inline elements. -->
+  <div id="container_text_inline" role="option">a<strong>b</strong>c</div>
+  <!-- Text nodes and block elements. -->
+  <div id="container_text_block" role="option">a<p>b</p>c</div>
+  <!-- Text nodes and empty block elements. -->
+  <div id="container_text_emptyblock" role="option">a<p></p><p></p>b</div>
 </body>
 </html>

@@ -2,8 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that we adult sites are correctly filtered from snapshot selections
- * when requested.
+ * Test that we correctly handle urls with fragments in snapshot selection
  */
 
 const TEST_URL1 = "https://example.com/";

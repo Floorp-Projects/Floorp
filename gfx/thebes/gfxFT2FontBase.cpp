@@ -52,7 +52,8 @@ FT_Face gfxFT2FontBase::LockFTFace()
   return mFTFace->GetFace();
 }
 
-void gfxFT2FontBase::UnlockFTFace() CAPABILITY_RELEASE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
+void gfxFT2FontBase::UnlockFTFace()
+    CAPABILITY_RELEASE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
   mFTFace->Unlock();
 }
 

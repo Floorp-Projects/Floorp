@@ -119,6 +119,16 @@ WorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+WorkerEventTarget::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WorkerEventTarget::UnregisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP_(bool)
 WorkerEventTarget::IsOnCurrentThreadInfallible() {
   MutexAutoLock lock(mMutex);

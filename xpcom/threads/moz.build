@@ -31,9 +31,9 @@ XPCOM_MANIFESTS += [
 EXPORTS += [
     "MainThreadUtils.h",
     "nsICancelableRunnable.h",
-    "nsIDelayedRunnableObserver.h",
     "nsIDiscardableRunnable.h",
     "nsIIdleRunnable.h",
+    "nsITargetShutdownTask.h",
     "nsMemoryPressure.h",
     "nsProcess.h",
     "nsProxyRelease.h",

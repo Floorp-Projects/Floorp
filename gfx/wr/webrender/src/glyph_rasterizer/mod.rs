@@ -549,6 +549,7 @@ struct MappedFontKey {
 }
 
 struct FontKeyMapLocked {
+    namespace: IdNamespace,
     next_id: u32,
     template_map: FastHashMap<FontTemplate, Arc<MappedFontKey>>,
     key_map: FastHashMap<FontKey, Arc<MappedFontKey>>,
@@ -561,15 +562,15 @@ struct FontKeyMapLocked {
 /// final shared key. The shared key will stay alive so long as there are
 /// any strong references to the mapping entry. Care must be taken when
 /// clearing namespaces of shared keys as this may trigger shared font keys
-/// to expire which require individual processing.
+/// to expire which require individual processing. Shared font keys will be
+/// created within the provided unique namespace.
 #[derive(Clone)]
 pub struct FontKeyMap(Arc<RwLock<FontKeyMapLocked>>);
 
 impl FontKeyMap {
-    const SHARED_NAMESPACE: IdNamespace = IdNamespace(0);
-
-    pub fn new() -> Self {
+    pub fn new(namespace: IdNamespace) -> Self {
         FontKeyMap(Arc::new(RwLock::new(FontKeyMapLocked {
+            namespace,
             next_id: 1,
             template_map: FastHashMap::default(),
             key_map: FastHashMap::default(),
@@ -600,7 +601,7 @@ impl FontKeyMap {
             locked.key_map.insert(*font_key, mapped);
             return None;
         }
-        let shared_key = FontKey::new(Self::SHARED_NAMESPACE, locked.next_id);
+        let shared_key = FontKey::new(locked.namespace, locked.next_id);
         locked.next_id += 1;
         let mapped = Arc::new(MappedFontKey {
             font_key: shared_key,
@@ -717,6 +718,7 @@ impl FontTemplateMap {
 }
 
 struct FontInstanceKeyMapLocked {
+    namespace: IdNamespace,
     next_id: u32,
     instances: FastHashSet<Arc<BaseFontInstance>>,
     key_map: FastHashMap<FontInstanceKey, Weak<BaseFontInstance>>,
@@ -729,15 +731,15 @@ struct FontInstanceKeyMapLocked {
 /// key to assign to that instance. When the weak count of the mapping is zero,
 /// the entry is allowed to expire. Again, care must be taken when clearing
 /// a namespace within the key map as it may cause shared key expirations that
-/// require individual processing.
+/// require individual processing. Shared instance keys will be created within
+/// the provided unique namespace.
 #[derive(Clone)]
 pub struct FontInstanceKeyMap(Arc<RwLock<FontInstanceKeyMapLocked>>);
 
 impl FontInstanceKeyMap {
-    const SHARED_NAMESPACE: IdNamespace = IdNamespace(0);
-
-    pub fn new() -> Self {
+    pub fn new(namespace: IdNamespace) -> Self {
         FontInstanceKeyMap(Arc::new(RwLock::new(FontInstanceKeyMapLocked {
+            namespace,
             next_id: 1,
             instances: FastHashSet::default(),
             key_map: FastHashMap::default(),
@@ -769,7 +771,7 @@ impl FontInstanceKeyMap {
             return None;
         }
         let unmapped_key = instance.instance_key;
-        instance.instance_key = FontInstanceKey::new(Self::SHARED_NAMESPACE, locked.next_id);
+        instance.instance_key = FontInstanceKey::new(locked.namespace, locked.next_id);
         locked.next_id += 1;
         let shared_instance = Arc::new(instance);
         locked.instances.insert(shared_instance.clone());
@@ -911,12 +913,12 @@ pub struct SharedFontResources {
 }
 
 impl SharedFontResources {
-    pub fn new() -> Self {
+    pub fn new(namespace: IdNamespace) -> Self {
         SharedFontResources {
             templates: FontTemplateMap::new(),
             instances: FontInstanceMap::new(),
-            font_keys: FontKeyMap::new(),
-            instance_keys: FontInstanceKeyMap::new(),
+            font_keys: FontKeyMap::new(namespace),
+            instance_keys: FontInstanceKeyMap::new(namespace),
         }
     }
 }

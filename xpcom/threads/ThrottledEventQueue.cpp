@@ -362,6 +362,14 @@ class ThrottledEventQueue::Inner final : public nsISupports {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  nsresult RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+    return mBaseTarget->RegisterShutdownTask(aTask);
+  }
+
+  nsresult UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+    return mBaseTarget->UnregisterShutdownTask(aTask);
+  }
+
   bool IsOnCurrentThread() { return mBaseTarget->IsOnCurrentThread(); }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -423,6 +431,16 @@ NS_IMETHODIMP
 ThrottledEventQueue::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                      uint32_t aFlags) {
   return mInner->DelayedDispatch(std::move(aEvent), aFlags);
+}
+
+NS_IMETHODIMP
+ThrottledEventQueue::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return mInner->RegisterShutdownTask(aTask);
+}
+
+NS_IMETHODIMP
+ThrottledEventQueue::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return mInner->UnregisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP

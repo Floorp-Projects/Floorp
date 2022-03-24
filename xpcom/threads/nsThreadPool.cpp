@@ -369,6 +369,16 @@ nsThreadPool::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsThreadPool::RegisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsThreadPool::UnregisterShutdownTask(nsITargetShutdownTask*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP_(bool)
 nsThreadPool::IsOnCurrentThreadInfallible() {
   return gCurrentThreadPool.get() == this;

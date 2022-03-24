@@ -9,16 +9,18 @@
 
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
-#include "nsIDelayedRunnableObserver.h"
 #include "nsIRunnable.h"
+#include "nsITargetShutdownTask.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 
-class DelayedRunnable : public Runnable, public nsITimerCallback {
+class DelayedRunnable : public Runnable,
+                        public nsITimerCallback,
+                        public nsITargetShutdownTask {
  public:
-  DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
+  DelayedRunnable(already_AddRefed<nsISerialEventTarget> aTarget,
                   already_AddRefed<nsIRunnable> aRunnable, uint32_t aDelay);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -28,21 +30,22 @@ class DelayedRunnable : public Runnable, public nsITimerCallback {
   nsresult Init();
 
   /**
-   * Cancels the underlying timer. Called when the target is going away, so the
-   * runnable can be released safely on the target thread.
+   * Called when the target is going away so the runnable can be released safely
+   * on the target thread.
    */
-  void CancelTimer();
+  void TargetShutdown() override;
 
  private:
   ~DelayedRunnable() = default;
   nsresult DoRun();
 
-  const nsCOMPtr<nsIEventTarget> mTarget;
-  const nsCOMPtr<nsIDelayedRunnableObserver> mObserver;
+  const nsCOMPtr<nsISerialEventTarget> mTarget;
+  const TimeStamp mDelayedFrom;
+  const uint32_t mDelay;
+
+  mozilla::Mutex mMutex{"DelayedRunnable"};
   nsCOMPtr<nsIRunnable> mWrappedRunnable;
   nsCOMPtr<nsITimer> mTimer;
-  const TimeStamp mDelayedFrom;
-  uint32_t mDelay;
 };
 
 }  // namespace mozilla

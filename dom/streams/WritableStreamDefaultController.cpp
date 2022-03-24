@@ -91,7 +91,7 @@ already_AddRefed<Promise> WritableStreamDefaultController::AbortSteps(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1. Let result be the result of performing this.[[abortAlgorithm]],
   // passing reason.
-  RefPtr<UnderlyingSinkAlgorithms> algorithms = mAlgorithms;
+  RefPtr<UnderlyingSinkAlgorithmsBase> algorithms = mAlgorithms;
   Optional<JS::Handle<JS::Value>> optionalReason(aCx, aReason);
   RefPtr<Promise> abortPromise =
       algorithms->AbortCallback(aCx, optionalReason, aRv);
@@ -126,7 +126,7 @@ WritableStreamDefaultControllerAdvanceQueueIfNeeded(
 void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
-    UnderlyingSinkAlgorithms* aAlgorithms, double aHighWaterMark,
+    UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
   // Step 1. Assert: stream implements WritableStream.
   // Step 2. Assert: stream.[[controller]] is undefined.
@@ -260,7 +260,8 @@ MOZ_CAN_RUN_SCRIPT static void WritableStreamDefaultControllerProcessClose(
 
   // Step 5. Let sinkClosePromise be the result of performing
   // controller.[[closeAlgorithm]].
-  RefPtr<UnderlyingSinkAlgorithms> algorithms = aController->GetAlgorithms();
+  RefPtr<UnderlyingSinkAlgorithmsBase> algorithms =
+      aController->GetAlgorithms();
   RefPtr<Promise> sinkClosePromise = algorithms->CloseCallback(aCx, aRv);
   if (aRv.Failed()) {
     return;
@@ -303,7 +304,8 @@ MOZ_CAN_RUN_SCRIPT static void WritableStreamDefaultControllerProcessWrite(
 
   // Step 3. Let sinkWritePromise be the result of performing
   // controller.[[writeAlgorithm]], passing in chunk.
-  RefPtr<UnderlyingSinkAlgorithms> algorithms = aController->GetAlgorithms();
+  RefPtr<UnderlyingSinkAlgorithmsBase> algorithms =
+      aController->GetAlgorithms();
   RefPtr<Promise> sinkWritePromise =
       algorithms->WriteCallback(aCx, aChunk, *aController, aRv);
   if (aRv.Failed()) {
