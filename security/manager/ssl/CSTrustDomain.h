@@ -50,6 +50,10 @@ class CSTrustDomain final : public mozilla::pkix::TrustDomain {
       mozilla::pkix::Input data, mozilla::pkix::DigestAlgorithm digestAlgorithm,
       mozilla::pkix::Input signature,
       mozilla::pkix::Input subjectPublicKeyInfo) override;
+  virtual Result VerifyRSAPSSSignedData(
+      mozilla::pkix::Input data, mozilla::pkix::DigestAlgorithm digestAlgorithm,
+      mozilla::pkix::Input signature,
+      mozilla::pkix::Input subjectPublicKeyInfo) override;
   virtual Result CheckECDSACurveIsAcceptable(
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
       mozilla::pkix::NamedCurve curve) override;
