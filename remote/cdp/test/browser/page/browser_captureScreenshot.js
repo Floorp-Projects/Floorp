@@ -501,7 +501,7 @@ async function loadURLWithElement(options = {}) {
 
 async function getDevicePixelRatio() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    return content.devicePixelRatio;
+    return content.browsingContext.overrideDPPX || content.devicePixelRatio;
   });
 }
 

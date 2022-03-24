@@ -114,8 +114,8 @@ async function renderPromo({
       window.PrivateBrowsingRecordClick("promo_link");
     });
   } else if (promoButton?.action?.type === "SHOW_SPOTLIGHT") {
-    linkEl.setAttribute("href", "#");
-    linkEl.addEventListener("click", async () => {
+    linkEl.addEventListener("click", async event => {
+      event.preventDefault();
       window.PrivateBrowsingRecordClick("promo_link");
       await RPMSendQuery("SpecialMessageActionDispatch", promoButton.action);
     });

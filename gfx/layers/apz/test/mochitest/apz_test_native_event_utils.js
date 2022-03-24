@@ -316,21 +316,14 @@ async function coordinatesRelativeToScreen(aParams) {
   // in such cases we simply use mozInnerScreen{X,Y} to convert the given value
   // to the screen coords.
   if (target instanceof Window && window.parent == window) {
-    // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
-    // The device scale applies to them, but the resolution only zooms the content.
-    // In addition, if we're inside RDM, RDM overrides the device scale;
-    // the overridden scale only applies to the content inside the RDM
-    // document, not to mozInnerScreen{X,Y}.
-    const utils = SpecialPowers.getDOMWindowUtils(window);
     const resolution = await getResolution();
     const deviceScale = window.devicePixelRatio;
-    const deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
     return {
       x:
-        window.mozInnerScreenX * deviceScaleNoOverride +
+        window.mozInnerScreenX * deviceScale +
         (atCenter ? 0 : offsetX) * resolution * deviceScale,
       y:
-        window.mozInnerScreenY * deviceScaleNoOverride +
+        window.mozInnerScreenY * deviceScale +
         (atCenter ? 0 : offsetY) * resolution * deviceScale,
     };
   }

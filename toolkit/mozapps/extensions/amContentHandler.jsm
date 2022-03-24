@@ -40,10 +40,29 @@ amContentHandler.prototype = {
 
     let uri = aRequest.URI;
 
+    // This check will allow a link to an xpi clicked by the user to trigger the
+    // addon install flow, but prevents window.open or window.location from triggering
+    // an addon install even when called from inside a event listener triggered by
+    // user input.
+    if (
+      !aRequest.loadInfo.hasValidUserGestureActivation &&
+      Services.prefs.getBoolPref("xpinstall.userActivation.required", true)
+    ) {
+      const error = Components.Exception(
+        `${uri.spec} install cancelled because of missing user gesture activation`,
+        Cr.NS_ERROR_WONT_HANDLE_CONTENT
+      );
+      // Report the error in the BrowserConsole, the error thrown from here doesn't
+      // seem to be visible anywhere.
+      Cu.reportError(error);
+      throw error;
+    }
+
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
     let { loadInfo } = aRequest;
     const { triggeringPrincipal } = loadInfo;
+
     let browsingContext = loadInfo.targetBrowsingContext;
 
     let sourceHost;

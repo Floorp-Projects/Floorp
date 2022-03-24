@@ -23,17 +23,17 @@ add_task(async function() {
   invokeInTab("main");
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "simple1.js");
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple1.js").id, 4);
 
   info("Step into another file.");
   await stepOver(dbg);
   await stepIn(dbg);
   await waitForSelectedSource(dbg, "simple2.js");
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple2.js").id, 3);
 
   info("Step out to the initial file.");
   await stepOut(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "simple1.js").id, 6);
   await resume(dbg);
 
   info("Make sure that the editor scrolls to the paused location.");
@@ -45,7 +45,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "long.js");
 
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "long.js").id, 66);
   ok(
     isVisibleInEditor(dbg, findElement(dbg, "breakpoint")),
     "Breakpoint is visible"

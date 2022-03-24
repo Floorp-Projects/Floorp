@@ -24,7 +24,7 @@ add_task(async function() {
   await togglePauseOnExceptions(dbg, true, true);
   uncaughtException();
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 2);
 
   const whyPaused = await waitFor(
     () => dbg.win.document.querySelector(".why-paused")?.innerText
@@ -37,18 +37,18 @@ add_task(async function() {
   await togglePauseOnExceptions(dbg, true, true);
   uncaughtException();
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 2);
   await resume(dbg);
 
   info("3. Test pausing on a caught Error");
   caughtException();
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 7);
 
   info("3.b Test pausing in the catch statement");
   await resume(dbg);
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 9);
   await resume(dbg);
 
   info("4. Test skipping a caught error");
@@ -57,7 +57,7 @@ add_task(async function() {
 
   info("4.b Test pausing in the catch statement");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 9);
   await resume(dbg);
 
   await togglePauseOnExceptions(dbg, true, true);

@@ -13,6 +13,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 #include "nsIGfxInfo.h"
 #include "nsPromiseFlatString.h"
@@ -45,17 +46,6 @@ const nsCString TranslateMimeType(const nsACString& aMimeType) {
   return nsCString(aMimeType);
 }
 
-static bool GetFeatureStatus(int32_t aFeature) {
-  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-  int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  nsCString discardFailureId;
-  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(
-                      aFeature, discardFailureId, &status))) {
-    return false;
-  }
-  return status == nsIGfxInfo::FEATURE_STATUS_OK;
-};
-
 AndroidDecoderModule::AndroidDecoderModule(CDMProxy* aProxy) {
   mProxy = static_cast<MediaDrmCDMProxy*>(aProxy);
 }
@@ -85,9 +75,9 @@ bool AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType) {
   }
 
   if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8) &&
-       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE)) ||
+       !gfx::gfxVars::UseVP8HwDecode()) ||
       (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9) &&
-       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
+       !gfx::gfxVars::UseVP9HwDecode())) {
     return false;
   }
 

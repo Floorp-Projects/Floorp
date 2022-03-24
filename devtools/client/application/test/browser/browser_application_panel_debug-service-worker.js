@@ -47,11 +47,11 @@ add_task(async function() {
     content.wrappedJSObject.fetchFromWorker();
   });
   await waitForPaused(debuggerContext);
-  assertPausedLocation(debuggerContext);
+  const workerScript = findSource(debuggerContext, "debug-sw.js");
+  assertPausedAtSourceAndLine(debuggerContext, workerScript.id, 11);
   await resume(debuggerContext);
 
   // remove breakpoint
-  const workerScript = findSource(debuggerContext, "debug-sw.js");
   await removeBreakpoint(debuggerContext, workerScript.id, 11);
 
   await unregisterAllWorkers(commands.client, doc);

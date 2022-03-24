@@ -218,7 +218,14 @@ var tests = [
       seeked = true;
     });
     element.addEventListener('ended', function() {
-      is(element.played.length, 2, "After ended, played.length should be 2");
+      // For very short media file, timing is unreliable, it can be that the
+      // file has finished playing, before the seek, and so there is only one
+      // range in `played`.
+      if (seeked) {
+        is(element.played.length, 2, element.token + "After ended, played.length should be 2");
+      } else {
+        is(element.played.length, 1, element.token + "After ended, a short media file played.length should be 1 if it has ended before the seek");
+      }
       let src_bck = element.src;
       element.src = "bogus.duh";
       is(element.played.length, 0, "After subsequent invalid load, played.length should be 0");

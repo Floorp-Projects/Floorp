@@ -397,7 +397,9 @@ class Page extends ContentProcessDomain {
   }
 
   _devicePixelRatio() {
-    return this.content.devicePixelRatio;
+    return (
+      this.content.browsingContext.overrideDPPX || this.content.devicePixelRatio
+    );
   }
 
   _getFrameDetails({ context, id }) {

@@ -16,31 +16,54 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-debugger-statements.html");
 
-  await reload(dbg);
+  await reload(dbg, "doc-debugger-statements.html");
   await waitForPaused(dbg);
-  await waitForLoadedSource(dbg, "doc-debugger-statements.html");
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    11
+  );
 
   info("resume");
   await clickResume(dbg);
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    16
+  );
 
   info("step over");
   await clickStepOver(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    17
+  );
 
   info("step into");
   await clickStepIn(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    22
+  );
 
   info("step over");
   await clickStepOver(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    24
+  );
 
   info("step out");
   await clickStepOut(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    18
+  );
 });
 
 function clickButton(dbg, button) {

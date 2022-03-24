@@ -38,6 +38,8 @@ class nsProfiler final : public nsIProfiler {
  private:
   ~nsProfiler();
 
+  typedef mozilla::MozPromise<FallibleTArray<uint8_t>, nsresult, true>
+      GatheringPromiseAndroid;
   typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
   typedef mozilla::MozPromise<mozilla::SymbolTable, nsresult, true>
       SymbolTablePromise;
@@ -52,6 +54,9 @@ class nsProfiler final : public nsIProfiler {
 
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
+
+  RefPtr<nsProfiler::GatheringPromiseAndroid>
+  GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) override;
 
   struct ExitProfile {
     nsCString mJSON;

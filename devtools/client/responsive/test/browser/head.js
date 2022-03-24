@@ -296,7 +296,9 @@ var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
 
 function getViewportDevicePixelRatio(ui) {
   return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-    return content.devicePixelRatio;
+    // Note that devicePixelRatio doesn't return the override to privileged
+    // code, see bug 1759962.
+    return content.browsingContext.overrideDPPX || content.devicePixelRatio;
   });
 }
 
@@ -954,7 +956,10 @@ async function waitForDevicePixelRatio(
     ui.getViewportBrowser(),
     [{ expected }],
     function(args) {
-      const initial = content.devicePixelRatio;
+      const getDpr = function() {
+        return content.browsingContext.overrideDPPX || content.devicePixelRatio;
+      };
+      const initial = getDpr();
       info(
         `Listening for pixel ratio change ` +
           `(current: ${initial}, expected: ${args.expected})`
@@ -963,13 +968,13 @@ async function waitForDevicePixelRatio(
         const mql = content.matchMedia(`(resolution: ${args.expected}dppx)`);
         if (mql.matches) {
           info(`Ratio already changed to ${args.expected}dppx`);
-          resolve(content.devicePixelRatio);
+          resolve(getDpr());
           return;
         }
         mql.addListener(function listener() {
           info(`Ratio changed to ${args.expected}dppx`);
           mql.removeListener(listener);
-          resolve(content.devicePixelRatio);
+          resolve(getDpr());
         });
       });
     }

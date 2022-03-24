@@ -344,6 +344,9 @@ interface nsITelemetry : nsISupports
    *
    * This is true most of the time.
    *
+   * This will always return true in the case of a non-content child process.
+   * Only values returned on the parent process are valid.
+   *
    * This does not indicate whether Telemetry will send any data. That is
    * governed by user preference and other mechanisms.
    *
@@ -369,6 +372,9 @@ interface nsITelemetry : nsISupports
    * A flag indicating whether Telemetry can submit official results (for base or extended
    * data). This is true on official, non-debug builds with built in support for Mozilla
    * Telemetry reporting.
+   *
+   * This will always return true in the case of a non-content child process.
+   * Only values returned on the parent process are valid.
    */
   readonly attribute boolean isOfficialTelemetry;
 
