@@ -636,7 +636,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 requireContext().settings().shouldShowVoiceSearch
 
         if (isVisible) {
-            toolbarView.view.addEditAction(
+            toolbarView.view.addEditActionEnd(
                 BrowserToolbar.Button(
                     AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                     requireContext().getString(R.string.voice_search_content_description),

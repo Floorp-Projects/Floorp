@@ -790,7 +790,6 @@ abstract class BaseBrowserFragment :
 
         webchannelIntegration.set(
             feature = FxaWebChannelFeature(
-                requireContext(),
                 customTabSessionId,
                 requireComponents.core.engine,
                 requireComponents.core.store,

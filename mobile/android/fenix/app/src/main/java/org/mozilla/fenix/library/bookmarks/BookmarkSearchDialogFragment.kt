@@ -283,7 +283,7 @@ class BookmarkSearchDialogFragment : AppCompatDialogFragment(), UserInteractionH
 
         if (voiceSearchButtonAlreadyAdded || !shouldShowVoiceSearch) return
 
-        toolbarView.view.addEditAction(
+        toolbarView.view.addEditActionEnd(
             BrowserToolbar.Button(
                 imageDrawable = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 contentDescription = requireContext().getString(R.string.voice_search_content_description),
