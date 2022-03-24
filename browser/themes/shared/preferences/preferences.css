@@ -305,6 +305,10 @@ checkbox {
   font-size: 90%;
 }
 
+#colors {
+  margin-inline-start: 5px;
+}
+
 #FontsDialog menulist:empty {
   /* When there's no menupopup, while the font builder is running,
    * the height of the menulist would otherwise shrink. This throws
