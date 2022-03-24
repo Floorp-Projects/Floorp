@@ -1,5 +1,4 @@
 import time
-import multiprocessing
 import threading
 
 from . import mpcontext
