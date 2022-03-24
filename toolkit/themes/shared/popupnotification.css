@@ -51,6 +51,14 @@ popupnotification {
   display: none;
 }
 
+@media (-moz-platform: windows) {
+  /* Swap the primary and secondary action, because Windows
+   * platform conventions put the primary action on the left. */
+  .panel-footer > .popup-notification-primary-button:not([default]) {
+    order: -1;
+  }
+}
+
 .popup-notification-secondary-button:not([dropmarkerhidden="true"]) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
@@ -85,6 +93,14 @@ popupnotification {
   display: -moz-box;
   padding: 0;
   margin: 0;
+}
+
+@media (-moz-platform: windows) {
+  /* Override default icon size which is too small for this dropdown */
+  .popup-notification-dropmarker > .button-box > .button-menu-dropmarker {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker::part(icon) {
