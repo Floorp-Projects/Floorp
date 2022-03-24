@@ -283,38 +283,38 @@ async function testWorkerNavigator() {
   is(
     result.appVersion,
     expectedResults.appVersion,
-    `Checking ${testDesc} worker navigator.appVersion.`
+    `Checking ${testDesc} navigator.appVersion.`
   );
   is(
     result.platform,
     expectedResults.platform,
-    `Checking ${testDesc} worker navigator.platform.`
+    `Checking ${testDesc} navigator.platform.`
   );
   is(
     result.userAgent,
     expectedResults.userAgentNavigator,
-    `Checking ${testDesc} worker navigator.userAgent.`
+    `Checking ${testDesc} navigator.userAgent.`
   );
   is(
     result.hardwareConcurrency,
     expectedResults.hardwareConcurrency,
-    `Checking ${testDesc} worker navigator.hardwareConcurrency.`
+    `Checking ${testDesc} navigator.hardwareConcurrency.`
   );
 
   is(
     result.appCodeName,
     CONST_APPCODENAME,
-    "worker Navigator.appCodeName reports correct constant value."
+    "Navigator.appCodeName reports correct constant value."
   );
   is(
     result.appName,
     CONST_APPNAME,
-    "worker Navigator.appName reports correct constant value."
+    "Navigator.appName reports correct constant value."
   );
   is(
     result.product,
     CONST_PRODUCT,
-    "worker Navigator.product reports correct constant value."
+    "Navigator.product reports correct constant value."
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -357,47 +357,6 @@ add_task(async function setupDefaultUserAgent() {
   await testUserAgentHeader();
 
   await testWorkerNavigator();
-});
-
-add_task(async function setupRFPExemptions() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
-      ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
-    ],
-  });
-
-  let spoofedGeckoTrail = SPOOFED_UA_GECKO_TRAIL[AppConstants.platform];
-
-  let spoofedUserAgentNavigator = `Mozilla/5.0 (${
-    SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
-
-  let spoofedUserAgentHeader = `Mozilla/5.0 (${
-    SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
-
-  expectedResults = {
-    testDesc: "spoofed",
-    appVersion: SPOOFED_APPVERSION[AppConstants.platform],
-    hardwareConcurrency: navigator.hardwareConcurrency,
-    mimeTypesLength: 2,
-    oscpu: SPOOFED_OSCPU[AppConstants.platform],
-    platform: SPOOFED_PLATFORM[AppConstants.platform],
-    pluginsLength: 5,
-    userAgentNavigator: spoofedUserAgentNavigator,
-    userAgentHeader: spoofedUserAgentHeader,
-  };
-
-  await testNavigator();
-
-  await testUserAgentHeader();
-
-  await testWorkerNavigator();
-
-  // Pop exempted domains
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function setupResistFingerprinting() {
