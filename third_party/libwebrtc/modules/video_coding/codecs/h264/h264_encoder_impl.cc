@@ -110,7 +110,8 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
     }
   }
   // TODO(nisse): Use a cache or buffer pool to avoid allocation?
-  encoded_image->SetEncodedData(EncodedImageBuffer::Create(required_capacity));
+  auto buffer = EncodedImageBuffer::Create(required_capacity);
+  encoded_image->SetEncodedData(buffer);
 
   // Iterate layers and NAL units, note each NAL unit as a fragment and copy
   // the data to |encoded_image->_buffer|.
@@ -132,8 +133,7 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
       layer_len += layerInfo.pNalLengthInByte[nal];
     }
     // Copy the entire layer's data (including start codes).
-    memcpy(encoded_image->data() + encoded_image->size(), layerInfo.pBsBuf,
-           layer_len);
+    memcpy(buffer->data() + encoded_image->size(), layerInfo.pBsBuf, layer_len);
     encoded_image->set_size(encoded_image->size() + layer_len);
   }
 }

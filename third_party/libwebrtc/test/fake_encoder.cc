@@ -128,14 +128,15 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
       continue;
     }
 
-    EncodedImage encoded;
-    encoded.SetEncodedData(
-        EncodedImageBuffer::Create(frame_info.layers[i].size));
-
+    auto buffer = EncodedImageBuffer::Create(frame_info.layers[i].size);
     // Fill the buffer with arbitrary data. Write someting to make Asan happy.
-    memset(encoded.data(), 9, frame_info.layers[i].size);
+    memset(buffer->data(), 9, frame_info.layers[i].size);
     // Write a counter to the image to make each frame unique.
-    WriteCounter(encoded.data() + frame_info.layers[i].size - 4, counter);
+    WriteCounter(buffer->data() + frame_info.layers[i].size - 4, counter);
+
+    EncodedImage encoded;
+    encoded.SetEncodedData(buffer);
+
     encoded.SetTimestamp(input_image.timestamp());
     encoded._frameType = frame_info.keyframe ? VideoFrameType::kVideoFrameKey
                                              : VideoFrameType::kVideoFrameDelta;
@@ -144,7 +145,7 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
     if (qp)
       encoded.qp_ = *qp;
     encoded.SetSpatialIndex(i);
-    CodecSpecificInfo codec_specific = EncodeHook(encoded);
+    CodecSpecificInfo codec_specific = EncodeHook(encoded, buffer);
 
     if (callback->OnEncodedImage(encoded, &codec_specific).error !=
         EncodedImageCallback::Result::OK) {
@@ -154,7 +155,9 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
   return 0;
 }
 
-CodecSpecificInfo FakeEncoder::EncodeHook(EncodedImage& encoded_image) {
+CodecSpecificInfo FakeEncoder::EncodeHook(
+    EncodedImage& encoded_image,
+    rtc::scoped_refptr<EncodedImageBuffer> buffer) {
   CodecSpecificInfo codec_specific;
   codec_specific.codecType = kVideoCodecGeneric;
   return codec_specific;
@@ -284,7 +287,9 @@ int FakeEncoder::GetConfiguredInputFramerate() const {
 FakeH264Encoder::FakeH264Encoder(Clock* clock)
     : FakeEncoder(clock), idr_counter_(0) {}
 
-CodecSpecificInfo FakeH264Encoder::EncodeHook(EncodedImage& encoded_image) {
+CodecSpecificInfo FakeH264Encoder::EncodeHook(
+    EncodedImage& encoded_image,
+    rtc::scoped_refptr<EncodedImageBuffer> buffer) {
   static constexpr std::array<uint8_t, 3> kStartCode = {0, 0, 1};
   const size_t kSpsSize = 8;
   const size_t kPpsSize = 11;
@@ -296,7 +301,7 @@ CodecSpecificInfo FakeH264Encoder::EncodeHook(EncodedImage& encoded_image) {
     ++idr_counter_;
   }
   for (size_t i = 0; i < encoded_image.size(); ++i) {
-    encoded_image.data()[i] = static_cast<uint8_t>(i);
+    buffer->data()[i] = static_cast<uint8_t>(i);
   }
 
   if (current_idr_counter % kIdrFrequency == 0 &&
@@ -304,7 +309,7 @@ CodecSpecificInfo FakeH264Encoder::EncodeHook(EncodedImage& encoded_image) {
     const size_t kSpsNalHeader = 0x67;
     const size_t kPpsNalHeader = 0x68;
     const size_t kIdrNalHeader = 0x65;
-    uint8_t* data = encoded_image.data();
+    uint8_t* data = buffer->data();
     memcpy(data, kStartCode.data(), kStartCode.size());
     data += kStartCode.size();
     data[0] = kSpsNalHeader;
@@ -319,9 +324,9 @@ CodecSpecificInfo FakeH264Encoder::EncodeHook(EncodedImage& encoded_image) {
     data += kStartCode.size();
     data[0] = kIdrNalHeader;
   } else {
-    memcpy(encoded_image.data(), kStartCode.data(), kStartCode.size());
+    memcpy(buffer->data(), kStartCode.data(), kStartCode.size());
     const size_t kNalHeader = 0x41;
-    encoded_image.data()[kStartCode.size()] = kNalHeader;
+    buffer->data()[kStartCode.size()] = kNalHeader;
   }
 
   CodecSpecificInfo codec_specific;
