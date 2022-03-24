@@ -145,22 +145,11 @@ class BaseChannel : public ChannelInterface,
     return remote_streams_;
   }
 
-  sigslot::signal2<BaseChannel*, bool> SignalDtlsSrtpSetupFailure;
-  void SignalDtlsSrtpSetupFailure_n(bool rtcp);
-  void SignalDtlsSrtpSetupFailure_s(bool rtcp);
-
   // Used for latency measurements.
-  sigslot::signal1<ChannelInterface*>& SignalFirstPacketReceived() override {
-    return SignalFirstPacketReceived_;
-  }
+  sigslot::signal1<ChannelInterface*>& SignalFirstPacketReceived() override;
 
   // Forward SignalSentPacket to worker thread.
-  sigslot::signal1<const rtc::SentPacket&> SignalSentPacket;
-
-  // Emitted whenever rtcp-mux is fully negotiated and the rtcp-transport can
-  // be destroyed.
-  // Fired on the network thread.
-  sigslot::signal1<const std::string&> SignalRtcpMuxFullyActive;
+  sigslot::signal1<const rtc::SentPacket&>& SignalSentPacket();
 
   // From RtpTransport - public for testing only
   void OnTransportReadyToSend(bool ready);
@@ -299,7 +288,10 @@ class BaseChannel : public ChannelInterface,
   rtc::Thread* const network_thread_;
   rtc::Thread* const signaling_thread_;
   rtc::AsyncInvoker invoker_;
-  sigslot::signal1<ChannelInterface*> SignalFirstPacketReceived_;
+  sigslot::signal1<ChannelInterface*> SignalFirstPacketReceived_
+      RTC_GUARDED_BY(signaling_thread_);
+  sigslot::signal1<const rtc::SentPacket&> SignalSentPacket_
+      RTC_GUARDED_BY(worker_thread_);
 
   const std::string content_name_;
 
