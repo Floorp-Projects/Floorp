@@ -356,7 +356,7 @@ static nsAutoCString OriginString(nsIPrincipal* aPrincipal) {
 
 /**
  * Given an about:reader URI, extract the "url" query parameter, and use it to
- * construct a principal which should be sed for process selection.
+ * construct a principal which should be used for process selection.
  */
 static already_AddRefed<BasePrincipal> GetAboutReaderURLPrincipal(
     nsIURI* aURI, const OriginAttributes& aAttrs) {
@@ -546,6 +546,16 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
       resultOrPrecursor = readerURIPrincipal;
     }
     behavior = IsolationBehavior::WebContent;
+    // If loading an about:reader page in a BrowsingContext which shares a
+    // BrowsingContextGroup with other toplevel documents, replace the
+    // BrowsingContext to destroy any references.
+    //
+    // With SHIP we can apply this to all about:reader loads, but otherwise
+    // do it at least where there are opener/group relationships.
+    if (mozilla::SessionHistoryInParent() ||
+        aTopBC->Group()->Toplevels().Length() > 1) {
+      options.mReplaceBrowsingContext = true;
+    }
   }
 
   // If we're running in a test which is requesting that system-triggered
