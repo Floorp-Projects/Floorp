@@ -6,7 +6,7 @@ types-atomicwrites==1.4.3
 types-python-dateutil==2.8.9
 types-PyYAML==6.0.4
 types-requests==2.27.12
-types-setuptools==57.4.10
+types-setuptools==57.4.11
 types-six==1.16.12
 types-ujson==4.2.1
 typing-extensions==4.1.1
