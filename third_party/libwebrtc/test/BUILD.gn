@@ -641,7 +641,7 @@ if (false) {
       deps += [ ":fileutils_mac_objc" ]
     }
     if (is_win) {
-      deps += [ "../rtc_base" ]
+      deps += [ "../rtc_base:win32" ]
     }
   }
 
@@ -670,7 +670,7 @@ if (false) {
       deps += [ ":fileutils_mac_objc" ]
     }
     if (is_win) {
-      deps += [ "../rtc_base" ]
+      deps += [ "../rtc_base:win32" ]
     }
   }
 

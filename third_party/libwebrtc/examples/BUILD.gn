@@ -689,7 +689,10 @@ if (is_linux || is_chromeos || is_win) {
         "peerconnection/client/main_wnd.h",
       ]
       configs += [ "//build/config/win:windowed" ]
-      deps += [ "../media:rtc_media_base" ]
+      deps += [
+        "../media:rtc_media_base",
+        "../rtc_base:win32",
+      ]
     }
     if (is_linux || is_chromeos) {
       sources += [

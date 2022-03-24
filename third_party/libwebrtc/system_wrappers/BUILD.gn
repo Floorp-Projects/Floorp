@@ -71,7 +71,7 @@ rtc_library("system_wrappers") {
 
     # Windows needs ../rtc_base due to include of
     # webrtc/rtc_base/win32.h in source/clock.cc.
-    deps += [ "../rtc_base" ]
+    deps += [ "../rtc_base:win32" ]
   }
 
   deps += [
