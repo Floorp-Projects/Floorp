@@ -920,7 +920,6 @@ class PeerConnection : public PeerConnectionInternal,
   // WebRTCSessionDescriptionFactory. Should happen before setLocalDescription.
   void OnCertificateReady(
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate);
-  void OnDtlsSrtpSetupFailure(cricket::BaseChannel*, bool rtcp);
 
   // Non-const versions of local_description()/remote_description(), for use
   // internally.

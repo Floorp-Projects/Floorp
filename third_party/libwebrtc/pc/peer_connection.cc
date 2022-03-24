@@ -100,10 +100,6 @@ const char kSdpWithoutIceUfragPwd[] =
     "Called with SDP without ice-ufrag and ice-pwd.";
 const char kSessionError[] = "Session error code: ";
 const char kSessionErrorDesc[] = "Session error description: ";
-const char kDtlsSrtpSetupFailureRtp[] =
-    "Couldn't set up DTLS-SRTP on RTP channel.";
-const char kDtlsSrtpSetupFailureRtcp[] =
-    "Couldn't set up DTLS-SRTP on RTCP channel.";
 
 namespace {
 
@@ -6349,11 +6345,6 @@ void PeerConnection::OnCertificateReady(
   transport_controller_->SetLocalCertificate(certificate);
 }
 
-void PeerConnection::OnDtlsSrtpSetupFailure(cricket::BaseChannel*, bool rtcp) {
-  SetSessionError(SessionError::kTransport,
-                  rtcp ? kDtlsSrtpSetupFailureRtcp : kDtlsSrtpSetupFailureRtp);
-}
-
 void PeerConnection::OnTransportControllerConnectionState(
     cricket::IceConnectionState state) {
   switch (state) {
@@ -6680,10 +6671,8 @@ cricket::VoiceChannel* PeerConnection::CreateVoiceChannel(
   if (!voice_channel) {
     return nullptr;
   }
-  voice_channel->SignalDtlsSrtpSetupFailure.connect(
-      this, &PeerConnection::OnDtlsSrtpSetupFailure);
-  voice_channel->SignalSentPacket.connect(this,
-                                          &PeerConnection::OnSentPacket_w);
+  voice_channel->SignalSentPacket().connect(this,
+                                            &PeerConnection::OnSentPacket_w);
   voice_channel->SetRtpTransport(rtp_transport);
 
   return voice_channel;
@@ -6704,10 +6693,8 @@ cricket::VideoChannel* PeerConnection::CreateVideoChannel(
   if (!video_channel) {
     return nullptr;
   }
-  video_channel->SignalDtlsSrtpSetupFailure.connect(
-      this, &PeerConnection::OnDtlsSrtpSetupFailure);
-  video_channel->SignalSentPacket.connect(this,
-                                          &PeerConnection::OnSentPacket_w);
+  video_channel->SignalSentPacket().connect(this,
+                                            &PeerConnection::OnSentPacket_w);
   video_channel->SetRtpTransport(rtp_transport);
 
   return video_channel;
@@ -6737,10 +6724,7 @@ bool PeerConnection::CreateDataChannel(const std::string& mid) {
       if (!data_channel_controller_.rtp_data_channel()) {
         return false;
       }
-      data_channel_controller_.rtp_data_channel()
-          ->SignalDtlsSrtpSetupFailure.connect(
-              this, &PeerConnection::OnDtlsSrtpSetupFailure);
-      data_channel_controller_.rtp_data_channel()->SignalSentPacket.connect(
+      data_channel_controller_.rtp_data_channel()->SignalSentPacket().connect(
           this, &PeerConnection::OnSentPacket_w);
       data_channel_controller_.rtp_data_channel()->SetRtpTransport(
           rtp_transport);
