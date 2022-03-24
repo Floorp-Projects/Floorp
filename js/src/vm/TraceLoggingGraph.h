@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 
+#include "js/TypeDecls.h"
 #include "vm/MutexIDs.h"
 #include "vm/TraceLoggingTypes.h"
 
