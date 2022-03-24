@@ -266,11 +266,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
                                bool decodability_flag,
                                bool buffering_allowed) override;
 
-  void BitrateSent(uint32_t* total_rate,
-                   uint32_t* video_rate,
-                   uint32_t* fec_rate,
-                   uint32_t* nackRate) const override;
-
   RtpSendRates GetSendRates() const override;
 
   void OnReceivedNack(
