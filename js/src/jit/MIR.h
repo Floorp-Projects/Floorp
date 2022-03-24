@@ -8444,13 +8444,6 @@ class MResumePoint final : public MNode
                            public InlineForwardListNode<MResumePoint>
 #endif
 {
- public:
-  enum Mode {
-    ResumeAt,     // Resume until before the current instruction
-    ResumeAfter,  // Resume after the current instruction
-    Outer         // State before inlining.
-  };
-
  private:
   friend class MBasicBlock;
   friend void AssertBasicGraphCoherency(MIRGraph& graph, bool force);
@@ -8464,9 +8457,9 @@ class MResumePoint final : public MNode
 
   jsbytecode* pc_;
   MInstruction* instruction_;
-  Mode mode_;
+  ResumeMode mode_;
 
-  MResumePoint(MBasicBlock* block, jsbytecode* pc, Mode mode);
+  MResumePoint(MBasicBlock* block, jsbytecode* pc, ResumeMode mode);
   void inherit(MBasicBlock* state);
 
   // Calling isDefinition or isResumePoint on MResumePoint is unnecessary.
@@ -8490,7 +8483,7 @@ class MResumePoint final : public MNode
 
  public:
   static MResumePoint* New(TempAllocator& alloc, MBasicBlock* block,
-                           jsbytecode* pc, Mode mode);
+                           jsbytecode* pc, ResumeMode mode);
 
   MBasicBlock* block() const { return resumePointBlock(); }
 
@@ -8535,7 +8528,7 @@ class MResumePoint final : public MNode
     MOZ_ASSERT(instruction_);
     instruction_ = nullptr;
   }
-  Mode mode() const { return mode_; }
+  ResumeMode mode() const { return mode_; }
 
   void releaseUses() {
     for (size_t i = 0, e = numOperands(); i < e; i++) {
