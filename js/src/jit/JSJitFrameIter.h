@@ -477,14 +477,11 @@ class SnapshotIterator {
   // Exhibits frame properties contained in the snapshot.
   uint32_t pcOffset() const;
   ResumeMode resumeMode() const;
-  [[nodiscard]] inline bool resumeAfter() const {
-    // Inline frames are inlined on calls, which are considered as being
-    // resumed on the Call as baseline will push the pc once we return from
-    // the call.
-    if (moreFrames()) {
-      return false;
-    }
-    return recover_.resumeAfter();
+
+  bool resumeAfter() const {
+    // Calls in outer frames are never considered resume-after.
+    MOZ_ASSERT_IF(moreFrames(), resumeMode() != ResumeMode::ResumeAfter);
+    return resumeMode() == ResumeMode::ResumeAfter;
   }
   inline BailoutKind bailoutKind() const { return snapshot_.bailoutKind(); }
 
