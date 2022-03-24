@@ -692,10 +692,17 @@ void MediaDevices::OnDeviceChange() {
 
   if (nsContentUtils::ShouldResistFingerprinting(
           "Guarding the more expensive RFP check with a simple one")) {
-    nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(GetWrapper());
-    nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
+    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+    auto* wrapper = GetWrapper();
+    if (!window && wrapper) {
+      nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(wrapper);
+      window = do_QueryInterface(global);
+    }
+    if (!window) {
+      return;
+    }
 
-    Document* doc = owner->GetExtantDoc();
+    Document* doc = window->GetExtantDoc();
     if (nsContentUtils::ShouldResistFingerprinting(doc)) {
       return;
     }
