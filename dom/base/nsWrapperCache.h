@@ -9,8 +9,6 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ServoUtils.h"
-#include "mozilla/RustCell.h"
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
@@ -91,7 +89,15 @@ class JS_HAZ_ROOTED nsWrapperCache {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_WRAPPERCACHE_IID)
 
-  nsWrapperCache() = default;
+  nsWrapperCache()
+      : mWrapper(nullptr),
+        mFlags(0)
+#ifdef BOOL_FLAGS_ON_WRAPPER_CACHE
+        ,
+        mBoolFlags(0)
+#endif
+  {
+  }
   ~nsWrapperCache() {
     // Preserved wrappers should never end up getting cleared, but this can
     // happen during shutdown when a leaked wrapper object is finalized, causing
@@ -250,43 +256,33 @@ class JS_HAZ_ROOTED nsWrapperCache {
 
   using FlagsType = uint32_t;
 
-  FlagsType GetFlags() const {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!mozilla::IsInServoTraversal());
-    return mFlags.Get() & ~kWrapperFlagsMask;
-  }
+  FlagsType GetFlags() const { return mFlags & ~kWrapperFlagsMask; }
 
-  // This can be called from stylo threads too, so it needs to be atomic, as
-  // this value may be mutated from multiple threads during servo traversal from
-  // rust.
   bool HasFlag(FlagsType aFlag) const {
     MOZ_ASSERT((aFlag & kWrapperFlagsMask) == 0, "Bad flag mask");
-    return __atomic_load_n(mFlags.AsPtr(), __ATOMIC_RELAXED) & aFlag;
+    return !!(mFlags & aFlag);
   }
 
   // Identical to HasFlag, but more explicit about its handling of multiple
-  // flags. This can be called from stylo threads too.
-  bool HasAnyOfFlags(FlagsType aFlags) const { return HasFlag(aFlags); }
+  // flags.
+  bool HasAnyOfFlags(FlagsType aFlags) const {
+    MOZ_ASSERT((aFlags & kWrapperFlagsMask) == 0, "Bad flag mask");
+    return !!(mFlags & aFlags);
+  }
 
-  // This can also be called from stylo, in the sequential part of the
-  // traversal, though it's probably not worth differentiating them for the
-  // purposes of assertions.
   bool HasAllFlags(FlagsType aFlags) const {
     MOZ_ASSERT((aFlags & kWrapperFlagsMask) == 0, "Bad flag mask");
-    return (__atomic_load_n(mFlags.AsPtr(), __ATOMIC_RELAXED) & aFlags) ==
-           aFlags;
+    return (mFlags & aFlags) == aFlags;
   }
 
   void SetFlags(FlagsType aFlagsToSet) {
-    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT((aFlagsToSet & kWrapperFlagsMask) == 0, "Bad flag mask");
-    mFlags.Set(mFlags.Get() | aFlagsToSet);
+    mFlags |= aFlagsToSet;
   }
 
   void UnsetFlags(FlagsType aFlagsToUnset) {
-    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT((aFlagsToUnset & kWrapperFlagsMask) == 0, "Bad flag mask");
-    mFlags.Set(mFlags.Get() & ~aFlagsToUnset);
+    mFlags &= ~aFlagsToUnset;
   }
 
   void PreserveWrapper(nsISupports* aScriptObjectHolder) {
@@ -339,31 +335,23 @@ class JS_HAZ_ROOTED nsWrapperCache {
  private:
   void SetWrapperJSObject(JSObject* aWrapper);
 
-  FlagsType GetWrapperFlags() const {
-    // These are used from workers and from the main thread (but shouldn't be
-    // used on the main thread during the Servo traversal).
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
-    return mFlags.Get() & kWrapperFlagsMask;
-  }
+  FlagsType GetWrapperFlags() const { return mFlags & kWrapperFlagsMask; }
 
   bool HasWrapperFlag(FlagsType aFlag) const {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlag & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
-    return !!(mFlags.Get() & aFlag);
+    return !!(mFlags & aFlag);
   }
 
   void SetWrapperFlags(FlagsType aFlagsToSet) {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlagsToSet & ~kWrapperFlagsMask) == 0,
                "Bad wrapper flag bits");
-    mFlags.Set(mFlags.Get() | aFlagsToSet);
+    mFlags |= aFlagsToSet;
   }
 
   void UnsetWrapperFlags(FlagsType aFlagsToUnset) {
-    MOZ_ASSERT(!NS_IsMainThread() || !mozilla::IsInServoTraversal());
     MOZ_ASSERT((aFlagsToUnset & ~kWrapperFlagsMask) == 0,
                "Bad wrapper flag bits");
-    mFlags.Set(mFlags.Get() & ~aFlagsToUnset);
+    mFlags &= ~aFlagsToUnset;
   }
 
   void HoldJSObjects(void* aScriptObjectHolder, nsScriptObjectTracer* aTracer,
@@ -391,22 +379,12 @@ class JS_HAZ_ROOTED nsWrapperCache {
 
   enum { kWrapperFlagsMask = WRAPPER_BIT_PRESERVED };
 
-  JSObject* mWrapper = nullptr;
-
-  // Rust code needs to read and write some flags atomically, but we don't want
-  // to make the wrapper flags atomic whole-sale because main-thread code would
-  // become more expensive (loads wouldn't change, but flag setting /
-  // unsetting could become slower enough to be noticeable). Making this an
-  // Atomic whole-sale needs more measuring.
-  //
-  // In order to not mess with aliasing rules the type should not be frozen, so
-  // we use a RustCell, which contains an UnsafeCell internally. See also the
-  // handling of ServoData (though that's a bit different).
-  mozilla::RustCell<FlagsType> mFlags{0};
+  JSObject* mWrapper;
+  FlagsType mFlags;
 
  protected:
 #ifdef BOOL_FLAGS_ON_WRAPPER_CACHE
-  uint32_t mBoolFlags = 0;
+  uint32_t mBoolFlags;
 #endif
 };
 
