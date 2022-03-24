@@ -234,6 +234,19 @@ add_task(async function test_mailto() {
   ]);
 });
 
+add_task(async function test_tel() {
+  await test_contextmenu("#test-tel", [
+    "context-copyphone",
+    true,
+    "---",
+    null,
+    "context-searchselect",
+    true,
+    "context-searchselect-private",
+    true,
+  ]);
+});
+
 add_task(async function test_image() {
   for (let selector of ["#test-image", "#test-svg-image"]) {
     await test_contextmenu(
