@@ -111,17 +111,11 @@ so adding
 to your ``.mozconfig`` is already sufficient for producing a fuzzing build.
 However, for improved crash handling capabilities and to detect additional errors,
 it is strongly recommended to combine libFuzzer with :ref:`AddressSanitizer <Address Sanitizer>`
-by adding
-
-::
-
-  ac_add_options --enable-address-sanitizer
-
 at least for optimized builds and bugs requiring ASan to reproduce at all
 (e.g. you are working on a bug where ASan reports a memory safety violation
 of some sort).
 
-Once your build is complete, you **must** additionally run
+Once your build is complete, if you want to run gtests, you **must** additionally run
 
 ::
 
