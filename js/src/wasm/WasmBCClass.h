@@ -1248,7 +1248,7 @@ struct BaseCompiler final {
 
   ////////////////////////////////////////////////////////////
   //
-  // Object support.
+  // Barriers support.
 
   // This emits a GC pre-write barrier.  The pre-barrier is needed when we
   // replace a member field with a new value, and the previous field value
@@ -1263,15 +1263,31 @@ struct BaseCompiler final {
   // update.  This function preserves that register.
   void emitPreBarrier(RegPtr valueAddr);
 
-  // This frees the register `valueAddr`.
-  [[nodiscard]] bool emitPostBarrierCall(RegPtr valueAddr);
+  // This emits a GC post-write barrier. The post-barrier is needed when we
+  // replace a member field with a new value, the new value is in the nursery,
+  // and the containing object is a tenured object. The field must then be
+  // added to the store buffer so that the nursery can be correctly collected.
+  // The field might belong to an object or be a stack slot or a register or a
+  // heap allocated value.
+  //
+  // `object` is a pointer to the object that contains the field. It is used, if
+  // present, to skip adding a store buffer entry when the containing object is
+  // in the nursery. This register is preserved by this function.
+  // `valueAddr` is the address of the location that we are writing to. This
+  // register is consumed by this function.
+  // `value` is the value to be store in the field. This register is preserved
+  // by this function.
+  [[nodiscard]] bool emitPostBarrier(const Maybe<RegRef>& object,
+                                     RegPtr valueAddr, RegRef value);
 
-  // Emits a store to a JS object pointer at the address valueAddr, which is
-  // inside the GC cell `object`. Preserves `object` and `value`.
+  // Emits a store to a JS object pointer at the address `valueAddr`, which is
+  // inside the GC cell `object`.
+  //
+  // Preserves `object` and `value`. Consumes `valueAddr`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
                                         RegPtr valueAddr, RegRef value);
 
-  // Emits a store of nullptr to a JS object pointer at the address valueAddr,
+  // Emits a store of nullptr to a JS object pointer at the address valueAddr.
   // Preserves `valueAddr`.
   void emitBarrieredClear(RegPtr valueAddr);
 
