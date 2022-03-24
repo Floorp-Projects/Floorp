@@ -315,7 +315,7 @@ var AddonTestUtils = {
       // something fails; see bug 1761255
       this.info(`Force a GC`);
       Cu.forceGC();
-      
+
       this.cleanupTempXPIs();
 
       let ignoreEntries = new Set();
