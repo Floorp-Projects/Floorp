@@ -26,9 +26,8 @@ skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.p
 skip-if(Android) skip-if(winWidget&&swgl) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(OSX,0-16,0-1718) fuzzy-if(OSX&&swgl,0-20,0-2423) fuzzy-if(appleSilicon,36-49,187329-187407) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
 skip-if(Android) skip-if(winWidget&&swgl) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(OSX,2-36,184281-187407) fuzzy-if(winWidget,0-1,0-7) fuzzy-if(appleSilicon,36-49,187329-187407) fuzzy-if(useDrawSnapshot,0-1,0-10) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.h264.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
 skip-if(Android) skip-if(winWidget&&swgl) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(OSX,0-16,0-1718) fuzzy-if(OSX&&swgl,0-20,0-2423) fuzzy-if(appleSilicon,36-49,187329-187407)  == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.av1.webm
-# Windows ASan release_or_beta annotations in next two lines can be removed once bug 1748540 got fixed.
-skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) fuzzy-if(winWidget&&AddressSanitizer&&swgl&&release_or_beta,38-38,181038-181038) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.webm ../reftest_img.html?src=color_quads/720p.png
-skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) fuzzy-if(winWidget&&AddressSanitizer&&swgl&&release_or_beta,38-38,181038-181038) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.mp4 ../reftest_img.html?src=color_quads/720p.png
+skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.webm ../reftest_img.html?src=color_quads/720p.png
+skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p.vp9.mp4 ../reftest_img.html?src=color_quads/720p.png
 
 # -
 # yuv420p10
