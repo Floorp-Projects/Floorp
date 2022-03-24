@@ -522,6 +522,8 @@ bool gfxPlatformFontList::InitFontList() {
   // unless InitFontListForPlatform() fails and we reset it below.
   mFontlistInitCount++;
 
+  InitializeCodepointsWithNoFonts();
+
   // Try to initialize the cross-process shared font list if enabled by prefs,
   // but not if we're running in Safe Mode.
   if (StaticPrefs::gfx_e10s_font_list_shared_AtStartup() &&
