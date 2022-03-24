@@ -49,7 +49,9 @@ class FakeVp8Encoder : public FakeEncoder {
                                           int stream_idx,
                                           uint32_t timestamp);
 
-  CodecSpecificInfo EncodeHook(EncodedImage& encoded_image) override;
+  CodecSpecificInfo EncodeHook(
+      EncodedImage& encoded_image,
+      rtc::scoped_refptr<EncodedImageBuffer> buffer) override;
 
   SequenceChecker sequence_checker_;
 
