@@ -130,8 +130,7 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
     const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
     UniqueRandomIdGenerator* ssrc_generator)
-    : MessageHandler(false),
-      signaling_thread_(signaling_thread),
+    : signaling_thread_(signaling_thread),
       session_desc_factory_(channel_manager,
                             &transport_desc_factory_,
                             ssrc_generator),

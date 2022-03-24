@@ -50,8 +50,7 @@ class RemoteAudioSource::AudioDataProxy : public AudioSinkInterface {
 };
 
 RemoteAudioSource::RemoteAudioSource(rtc::Thread* worker_thread)
-    : MessageHandler(false),
-      main_thread_(rtc::Thread::Current()),
+    : main_thread_(rtc::Thread::Current()),
       worker_thread_(worker_thread),
       state_(MediaSourceInterface::kLive) {
   RTC_DCHECK(main_thread_);
