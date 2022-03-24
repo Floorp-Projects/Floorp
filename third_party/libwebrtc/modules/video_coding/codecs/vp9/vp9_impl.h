@@ -101,6 +101,8 @@ class VP9EncoderImpl : public VP9Encoder {
 
   size_t SteadyStateSize(int sid, int tid);
 
+  void MaybeRewrapRawWithFormat(const vpx_img_fmt fmt);
+
   EncodedImage encoded_image_;
   CodecSpecificInfo codec_specific_;
   EncodedImageCallback* encoded_complete_callback_;
