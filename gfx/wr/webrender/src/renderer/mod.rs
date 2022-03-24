@@ -1212,9 +1212,7 @@ impl Renderer {
         let sampler = options.sampler;
         let namespace_alloc_by_client = options.namespace_alloc_by_client;
 
-        // Ensure shared font keys exist within their own unique namespace so
-        // that they don't accidentally collide across Renderer instances.
-        let fonts = SharedFontResources::new(RenderBackend::next_namespace_id());
+        let fonts = SharedFontResources::new();
 
         let blob_image_handler = options.blob_image_handler.take();
         let scene_builder_hooks = options.scene_builder_hooks;
