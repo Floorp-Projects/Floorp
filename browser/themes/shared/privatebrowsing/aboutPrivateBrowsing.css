@@ -374,6 +374,7 @@ p {
   color: var(--in-content-primary-button-text-color);
   border-radius: 4px;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .promo-cta .button:hover {

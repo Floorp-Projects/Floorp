@@ -23,10 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
       return;
     }
 
-    // Bug 1703215: Using SpecialPowers causes about:mozilla to be loaded in the wrong
-    // process, hence we have to flip the pref and don't enforce IPC based Principal Vetting.
     await SpecialPowers.pushPrefEnv({
-      set: [["dom.security.enforceIPCBasedPrincipalVetting", false]],
+      set: [
+        // Bug 1703215: Using SpecialPowers causes about:mozilla to be loaded in the wrong
+        // process, hence we have to flip the pref and don't enforce IPC based Principal Vetting.
+        ["dom.security.enforceIPCBasedPrincipalVetting", false],
+        // Relax the user input requirements while running this test.
+        ["xpinstall.userActivation.required", false],
+      ],
     });
 
     var iwin = $("ifr").contentWindow;

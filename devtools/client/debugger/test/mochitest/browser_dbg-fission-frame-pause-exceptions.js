@@ -17,8 +17,11 @@ add_task(async function() {
   await reload(dbg);
   await waitForPaused(dbg);
 
-  assertPausedLocation(dbg);
-  assertDebugLine(dbg, 17);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc_dbg-fission-frame-pause-exceptions.html").id,
+    17
+  );
 
   await resume(dbg);
 
@@ -28,14 +31,20 @@ add_task(async function() {
   await reload(dbg);
   await waitForPaused(dbg);
 
-  assertPausedLocation(dbg);
-  assertDebugLine(dbg, 13);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc_dbg-fission-frame-pause-exceptions.html").id,
+    13
+  );
 
   await resume(dbg);
   await waitForPaused(dbg);
 
-  assertPausedLocation(dbg);
-  assertDebugLine(dbg, 17);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc_dbg-fission-frame-pause-exceptions.html").id,
+    17
+  );
 
   await resume(dbg);
 });

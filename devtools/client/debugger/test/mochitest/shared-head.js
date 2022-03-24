@@ -241,85 +241,7 @@ function getVisibleSelectedFrameColumn(dbg) {
 }
 
 /**
- * Assert that the debugger pause location is correctly rendered.
- *
- * @memberof mochitest/asserts
- * @param {Object} dbg
- * @static
- */
-function assertPausedLocation(dbg) {
-  ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
-
-  // Check the pause location
-  const pauseLine = getVisibleSelectedFrameLine(dbg);
-  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
-  assertDebugLine(dbg, pauseLine, pauseColumn);
-
-  ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
-}
-
-function assertDebugLine(dbg, line, column) {
-  // Check the debug line
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const source = dbg.selectors.getSelectedSource();
-  const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
-  if (source && !sourceTextContent) {
-    const url = source.url;
-    ok(
-      false,
-      `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
-    );
-    return;
-  }
-
-  // Scroll the line into view to make sure the content
-  // on the line is rendered and in the dom.
-  getCM(dbg).scrollIntoView({ line, ch: 0 });
-
-  if (!lineInfo.wrapClass) {
-    const pauseLine = getVisibleSelectedFrameLine(dbg);
-    ok(false, `Expected pause line on line ${line}, it is on ${pauseLine}`);
-    return;
-  }
-
-  ok(
-    lineInfo?.wrapClass.includes("new-debug-line"),
-    `Line ${line} is not highlighted as paused`
-  );
-
-  const debugLine =
-    findElement(dbg, "debugLine") || findElement(dbg, "debugErrorLine");
-
-  is(
-    findAllElements(dbg, "debugLine").length +
-      findAllElements(dbg, "debugErrorLine").length,
-    1,
-    "There is only one line"
-  );
-
-  ok(isVisibleInEditor(dbg, debugLine), "debug line is visible");
-
-  const markedSpans = lineInfo.handle.markedSpans;
-  if (markedSpans && markedSpans.length > 0) {
-    const classMatch =
-      markedSpans.filter(
-        span =>
-          span.marker.className &&
-          span.marker.className.includes("debug-expression")
-      ).length > 0;
-
-    if (column) {
-      const frame = dbg.selectors.getVisibleSelectedFrame();
-      is(frame.location.column, column, `Paused at column ${column}`);
-    }
-
-    ok(classMatch, "expression is highlighted as paused");
-  }
-  info(`Paused on line ${line}`);
-}
-
-/**
- * Assert that a given line is breaklable or not.
+ * Assert that a given line is breakable or not.
  * Verify that CodeMirror gutter is grayed out via the empty line classname if not breakable.
  */
 function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
@@ -376,9 +298,72 @@ function assertHighlightLocation(dbg, source, line) {
 }
 
 /**
+ * Helper function for assertPausedAtSourceAndLine.
+ *
+ * Assert that CodeMirror reports to be paused at the given line/column.
+ */
+function _assertDebugLine(dbg, line, column) {
+  // Check the debug line
+  const lineInfo = getCM(dbg).lineInfo(line - 1);
+  const source = dbg.selectors.getSelectedSource();
+  const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
+  if (source && !sourceTextContent) {
+    const url = source.url;
+    ok(
+      false,
+      `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
+    );
+    return;
+  }
+
+  // Scroll the line into view to make sure the content
+  // on the line is rendered and in the dom.
+  getCM(dbg).scrollIntoView({ line, ch: 0 });
+
+  if (!lineInfo.wrapClass) {
+    const pauseLine = getVisibleSelectedFrameLine(dbg);
+    ok(false, `Expected pause line on line ${line}, it is on ${pauseLine}`);
+    return;
+  }
+
+  ok(
+    lineInfo?.wrapClass.includes("new-debug-line"),
+    `Line ${line} is not highlighted as paused`
+  );
+
+  const debugLine =
+    findElement(dbg, "debugLine") || findElement(dbg, "debugErrorLine");
+
+  is(
+    findAllElements(dbg, "debugLine").length +
+      findAllElements(dbg, "debugErrorLine").length,
+    1,
+    "There is only one line"
+  );
+
+  ok(isVisibleInEditor(dbg, debugLine), "debug line is visible");
+
+  const markedSpans = lineInfo.handle.markedSpans;
+  if (markedSpans && markedSpans.length > 0) {
+    const hasExpectedDebugLine = markedSpans.some(
+      span =>
+        span.marker.className?.includes("debug-expression") &&
+        // When a precise column is expected, ensure that we have at least
+        // one "debug line" for the column we expect.
+        // (See the React Component: DebugLine.setDebugLine)
+        (!column || span.from == column)
+    );
+    ok(
+      hasExpectedDebugLine,
+      "Got the expected DebugLine. i.e. got the right marker in codemirror visualizing the breakpoint"
+    );
+  }
+  info(`Paused on line ${line}`);
+}
+
+/**
  * Make sure the debugger is paused at a certain source ID and line.
  *
- * @memberof mochitest/asserts
  * @param {Object} dbg
  * @param {String} expectedSourceId
  * @param {Number} expectedLine
@@ -394,7 +379,26 @@ function assertPausedAtSourceAndLine(
   assertPaused(dbg);
 
   // Check that the paused location is correctly rendered.
-  assertPausedLocation(dbg);
+  ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
+
+  // Check the pause location
+  const pauseLine = getVisibleSelectedFrameLine(dbg);
+  is(
+    pauseLine,
+    expectedLine,
+    "Redux state for currently selected frame's line is correct"
+  );
+  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
+  if (expectedColumn) {
+    is(
+      pauseColumn,
+      expectedColumn,
+      "Redux state for currently selected frame's column is correct"
+    );
+  }
+  _assertDebugLine(dbg, pauseLine, pauseColumn);
+
+  ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
@@ -404,14 +408,16 @@ function assertPausedAtSourceAndLine(
     ? frames[0].generatedLocation
     : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
-  ok(
-    line == expectedLine,
+  is(
+    line,
+    expectedLine,
     `Frame paused at line ${line}, but expected line ${expectedLine}`
   );
 
   if (expectedColumn) {
-    ok(
-      column == expectedColumn,
+    is(
+      column,
+      expectedColumn,
       `Frame paused at column ${column}, but expected column ${expectedColumn}`
     );
   }
@@ -1007,7 +1013,7 @@ async function invokeWithBreakpoint(
     return;
   }
 
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, filename).id, line, column);
 
   await removeBreakpoint(dbg, source.id, line, column);
 
@@ -1208,10 +1214,10 @@ const keyMappings = {
   pauseKey: { code: "VK_F8" },
   resumeKey: { code: "VK_F8" },
   stepOverKey: { code: "VK_F10" },
-  stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux } },
+  stepInKey: { code: "VK_F11" },
   stepOutKey: {
     code: "VK_F11",
-    modifiers: { ctrlKey: isLinux, shiftKey: true },
+    modifiers: { shiftKey: true },
   },
 };
 

@@ -28,7 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835044
   <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-let utils = window.windowUtils;
 let panel = document.getElementById('thepanel');
 let rect;
 
@@ -41,7 +40,6 @@ function startTest() {
     type: "mousemove",
     screenX: window.mozInnerScreenX,
     screenY: window.mozInnerScreenY,
-    scale: "screenPixelsPerCSSPixelNoOverride",
     elementOnWidget: window.documentElement,
   });
 

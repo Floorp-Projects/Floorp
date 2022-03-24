@@ -179,6 +179,8 @@ struct hb_bit_page_t
   typedef unsigned long long elt_t;
   static constexpr unsigned PAGE_BITS = 512;
   static_assert ((PAGE_BITS & ((PAGE_BITS) - 1)) == 0, "");
+  static constexpr unsigned PAGE_BITS_LOG_2 = 9;
+  static_assert (1 << PAGE_BITS_LOG_2 == PAGE_BITS, "");
 
   static unsigned int elt_get_min (const elt_t &elt) { return hb_ctz (elt); }
   static unsigned int elt_get_max (const elt_t &elt) { return hb_bit_storage (elt) - 1; }
@@ -186,6 +188,9 @@ struct hb_bit_page_t
   typedef hb_vector_size_t<elt_t, PAGE_BITS / 8> vector_t;
 
   static constexpr unsigned ELT_BITS = sizeof (elt_t) * 8;
+  static constexpr unsigned ELT_BITS_LOG_2 = 6;
+  static_assert (1 << ELT_BITS_LOG_2 == ELT_BITS, "");
+
   static constexpr unsigned ELT_MASK = ELT_BITS - 1;
   static constexpr unsigned BITS = sizeof (vector_t) * 8;
   static constexpr unsigned MASK = BITS - 1;

@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [3.4.0],
+        [4.1.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -194,6 +194,10 @@ AC_ARG_WITH(cairo,
 have_cairo=false
 if test "x$with_cairo" = "xyes" -o "x$with_cairo" = "xauto"; then
 	PKG_CHECK_MODULES(CAIRO, cairo >= 1.8.0, have_cairo=true, :)
+	save_libs=$LIBS
+	LIBS="$LIBS $CAIRO_LIBS"
+	AC_CHECK_FUNCS(cairo_user_font_face_set_render_color_glyph_func)
+	LIBS=$save_libs
 fi
 if test "x$with_cairo" = "xyes" -a "x$have_cairo" != "xtrue"; then
 	AC_MSG_ERROR([cairo support requested but not found])

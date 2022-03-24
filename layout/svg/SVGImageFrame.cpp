@@ -497,7 +497,16 @@ bool SVGImageFrame::CreateWebRenderCommands(
                                                       appUnitsPerCSSPixel);
   appRect += toReferenceFrame;
   auto destRect = LayoutDeviceRect::FromAppUnits(appRect, appUnitsPerDevPx);
+  auto clipRect = destRect;
+
   if (StyleDisplay()->IsScrollableOverflow()) {
+    // Apply potential non-trivial clip
+    auto cssClip = SVGUtils::GetClipRectForFrame(this, 0, 0, width, height);
+    auto appClip =
+        nsLayoutUtils::RoundGfxRectToAppRect(cssClip, appUnitsPerCSSPixel);
+    appClip += toReferenceFrame;
+    clipRect = LayoutDeviceRect::FromAppUnits(appClip, appUnitsPerDevPx);
+
     // Apply preserveAspectRatio
     if (mImageContainer->GetType() == imgIContainer::TYPE_RASTER) {
       int32_t nativeWidth, nativeHeight;
@@ -507,6 +516,8 @@ bool SVGImageFrame::CreateWebRenderCommands(
         // Image has no size; nothing to draw
         return true;
       }
+
+      mImageContainer->GetResolution().ApplyTo(nativeWidth, nativeHeight);
 
       auto preserveAspectRatio = imgElem->mPreserveAspectRatio.GetAnimValue();
       uint16_t align = preserveAspectRatio.GetAlign();
@@ -609,7 +620,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
 
   Maybe<ImageIntRegion> region;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
-      mImageContainer, this, destRect, destRect, aSc, flags, svgContext,
+      mImageContainer, this, destRect, clipRect, aSc, flags, svgContext,
       region);
 
   RefPtr<image::WebRenderImageProvider> provider;
@@ -642,7 +653,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
     if (provider) {
       aManager->CommandBuilder().PushImageProvider(aItem, provider, drawResult,
                                                    aBuilder, aResources,
-                                                   destRect, destRect);
+                                                   destRect, clipRect);
     }
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);

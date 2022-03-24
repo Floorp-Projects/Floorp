@@ -231,7 +231,7 @@ def remove(path):
 
         _call_with_windows_retry(os.chmod, (path, mode))
 
-    if not os.path.exists(path):
+    if not os.path.lexists(path):
         return
 
     """

@@ -20,7 +20,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "bogus-map.js", 4);
   invokeInTab("runCode");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "bogus-map.js").id, 4);
 
   // Make sure that only the single generated source exists. The
   // sourcemap failed to download.
