@@ -15,6 +15,7 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
+import java.util.concurrent.ScheduledExecutorService;
 import org.webrtc.JniCommon;
 import org.webrtc.Logging;
 
@@ -31,6 +32,7 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
 
   public static class Builder {
     private final Context context;
+    private ScheduledExecutorService scheduler;
     private final AudioManager audioManager;
     private int inputSampleRate;
     private int outputSampleRate;
@@ -51,6 +53,11 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
       this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
       this.inputSampleRate = WebRtcAudioManager.getSampleRate(audioManager);
       this.outputSampleRate = WebRtcAudioManager.getSampleRate(audioManager);
+    }
+
+    public Builder setScheduler(ScheduledExecutorService scheduler) {
+      this.scheduler = scheduler;
+      return this;
     }
 
     /**
@@ -208,9 +215,13 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
         }
         Logging.d(TAG, "HW AEC will not be used.");
       }
-      final WebRtcAudioRecord audioInput = new WebRtcAudioRecord(context, audioManager, audioSource,
-          audioFormat, audioRecordErrorCallback, audioRecordStateCallback, samplesReadyCallback,
-          useHardwareAcousticEchoCanceler, useHardwareNoiseSuppressor);
+      ScheduledExecutorService executor = this.scheduler;
+      if (executor == null) {
+        executor = WebRtcAudioRecord.newDefaultScheduler();
+      }
+      final WebRtcAudioRecord audioInput = new WebRtcAudioRecord(context, executor, audioManager,
+          audioSource, audioFormat, audioRecordErrorCallback, audioRecordStateCallback,
+          samplesReadyCallback, useHardwareAcousticEchoCanceler, useHardwareNoiseSuppressor);
       final WebRtcAudioTrack audioOutput = new WebRtcAudioTrack(
           context, audioManager, audioTrackErrorCallback, audioTrackStateCallback);
       return new JavaAudioDeviceModule(context, audioManager, audioInput, audioOutput,
