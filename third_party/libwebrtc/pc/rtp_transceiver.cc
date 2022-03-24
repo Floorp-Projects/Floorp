@@ -346,7 +346,7 @@ void RtpTransceiver::StopSendingAndReceiving() {
 
   // 5. Stop receiving media with receiver.
   for (const auto& receiver : receivers_)
-    receiver->internal()->Stop();
+    receiver->internal()->StopAndEndTrack();
 
   stopping_ = true;
   direction_ = webrtc::RtpTransceiverDirection::kInactive;
