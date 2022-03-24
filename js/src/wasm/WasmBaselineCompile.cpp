@@ -2110,19 +2110,19 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
 Address BaseCompiler::addressOfTableField(const TableDesc& table,
                                           uint32_t fieldOffset, RegPtr tls) {
   uint32_t tableToTlsOffset =
-      offsetof(TlsData, globalArea) + table.globalDataOffset + fieldOffset;
+      wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
   return Address(tls, tableToTlsOffset);
 }
 
 void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr tls,
                                    RegI32 length) {
-  masm.load32(addressOfTableField(table, offsetof(TableTls, length), tls),
+  masm.load32(addressOfTableField(table, offsetof(TableInstanceData, length), tls),
               length);
 }
 
 void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr tls,
                                      RegPtr elements) {
-  masm.loadPtr(addressOfTableField(table, offsetof(TableTls, elements), tls),
+  masm.loadPtr(addressOfTableField(table, offsetof(TableInstanceData, elements), tls),
                elements);
 }
 
@@ -5906,7 +5906,7 @@ void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
   Label ok;
   masm.wasmBoundsCheck32(
       Assembler::Condition::Below, index,
-      addressOfTableField(table, offsetof(TableTls, length), tls), &ok);
+      addressOfTableField(table, offsetof(TableInstanceData, length), tls), &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
   masm.bind(&ok);
 }
