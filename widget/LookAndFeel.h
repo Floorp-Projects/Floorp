@@ -324,6 +324,15 @@ class LookAndFeel {
     /** GTK menu radius */
     GtkMenuRadius,
 
+    /**
+     * Corresponding to dynamic-range.
+     * https://drafts.csswg.org/mediaqueries-5/#dynamic-range
+     * 0: Standard
+     * 1: High
+     */
+    DynamicRange,
+    VideoDynamicRange,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
