@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/UnderlyingSinkCallbackHelpers.h"
-#include "xpcpublic.h"
 
 using namespace mozilla::dom;
 
