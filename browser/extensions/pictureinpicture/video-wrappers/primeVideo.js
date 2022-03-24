@@ -47,6 +47,10 @@ class PictureInPictureVideoWrapper {
       });
     }
   }
+
+  shouldHideToggle(video) {
+    return !!video.classList.contains("tst-video-overlay-player-html5");
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
