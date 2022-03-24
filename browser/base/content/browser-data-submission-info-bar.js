@@ -43,25 +43,11 @@ var gDataNotificationInfoBar = {
       return;
     }
 
-    let brandBundle = document.getElementById("bundle_brand");
-    let appName = brandBundle.getString("brandShortName");
-    let vendorName = brandBundle.getString("vendorShortName");
-
-    let message = gNavigatorBundle.getFormattedString(
-      "dataReportingNotification.message",
-      [appName, vendorName]
-    );
-
     this._actionTaken = false;
 
     let buttons = [
       {
-        label: gNavigatorBundle.getString(
-          "dataReportingNotification.button.label"
-        ),
-        accessKey: gNavigatorBundle.getString(
-          "dataReportingNotification.button.accessKey"
-        ),
+        "l10n-id": "data-reporting-notification-button",
         popup: null,
         callback: () => {
           this._actionTaken = true;
@@ -74,7 +60,9 @@ var gDataNotificationInfoBar = {
     gNotificationBox.appendNotification(
       this._DATA_REPORTING_NOTIFICATION,
       {
-        label: message,
+        label: {
+          "l10n-id": "data-reporting-notification-message",
+        },
         priority: gNotificationBox.PRIORITY_INFO_HIGH,
         eventCallback: event => {
           if (event == "removed") {
