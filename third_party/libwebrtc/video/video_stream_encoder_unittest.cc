@@ -996,7 +996,9 @@ class VideoStreamEncoderTest : public ::testing::Test {
       return result;
     }
 
-    CodecSpecificInfo EncodeHook(EncodedImage& encoded_image) override {
+    CodecSpecificInfo EncodeHook(
+        EncodedImage& encoded_image,
+        rtc::scoped_refptr<EncodedImageBuffer> buffer) override {
       CodecSpecificInfo codec_specific;
       {
         MutexLock lock(&mutex_);

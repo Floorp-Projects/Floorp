@@ -81,20 +81,13 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
     // Only store the base layer.
     if (encoded_image.SpatialIndex().value_or(0) == 0) {
       if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
-        // TODO(nisse): Why not size() ?
-        encoded_key_frame_.SetEncodedData(
-            EncodedImageBuffer::Create(encoded_image.size()));
-        encoded_key_frame_.set_size(encoded_image.size());
+        encoded_key_frame_.SetEncodedData(EncodedImageBuffer::Create(
+            encoded_image.data(), encoded_image.size()));
         encoded_key_frame_._frameType = VideoFrameType::kVideoFrameKey;
         encoded_key_frame_._completeFrame = encoded_image._completeFrame;
-        memcpy(encoded_key_frame_.data(), encoded_image.data(),
-               encoded_image.size());
       } else {
-        encoded_frame_.SetEncodedData(
-            EncodedImageBuffer::Create(encoded_image.size()));
-        encoded_frame_.set_size(encoded_image.size());
-        memcpy(encoded_frame_.data(), encoded_image.data(),
-               encoded_image.size());
+        encoded_frame_.SetEncodedData(EncodedImageBuffer::Create(
+            encoded_image.data(), encoded_image.size()));
       }
     }
     if (is_vp8) {
@@ -873,13 +866,10 @@ void SimulcastTestFixtureImpl::TestDecodeWidthHeightSet() {
             EXPECT_EQ(encoded_image._frameType, VideoFrameType::kVideoFrameKey);
 
             size_t index = encoded_image.SpatialIndex().value_or(0);
-            encoded_frame[index].SetEncodedData(
-                EncodedImageBuffer::Create(encoded_image.size()));
-            encoded_frame[index].set_size(encoded_image.size());
+            encoded_frame[index].SetEncodedData(EncodedImageBuffer::Create(
+                encoded_image.data(), encoded_image.size()));
             encoded_frame[index]._frameType = encoded_image._frameType;
             encoded_frame[index]._completeFrame = encoded_image._completeFrame;
-            memcpy(encoded_frame[index].data(), encoded_image.data(),
-                   encoded_image.size());
             return EncodedImageCallback::Result(
                 EncodedImageCallback::Result::OK, 0);
           }));

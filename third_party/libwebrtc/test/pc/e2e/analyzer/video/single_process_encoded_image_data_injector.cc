@@ -45,22 +45,23 @@ EncodedImage SingleProcessEncodedImageDataInjector::InjectData(
     ev.infos[info.sub_id] = info;
   }
 
+  auto buffer = EncodedImageBuffer::Create(source.data(), source.size());
+  buffer->data()[insertion_pos] = id & 0x00ff;
+  buffer->data()[insertion_pos + 1] = (id & 0xff00) >> 8;
+  buffer->data()[insertion_pos + 2] = info.sub_id;
+
   EncodedImage out = source;
-  out.data()[insertion_pos] = id & 0x00ff;
-  out.data()[insertion_pos + 1] = (id & 0xff00) >> 8;
-  out.data()[insertion_pos + 2] = info.sub_id;
+  out.SetEncodedData(buffer);
   return out;
 }
 
 EncodedImageExtractionResult SingleProcessEncodedImageDataInjector::ExtractData(
     const EncodedImage& source,
     int coding_entity_id) {
+  size_t size = source.size();
+  auto buffer = EncodedImageBuffer::Create(source.data(), source.size());
   EncodedImage out = source;
-
-  // Both |source| and |out| image will share the same buffer for payload or
-  // out will have a copy for it, so we can operate on the |out| buffer only.
-  uint8_t* buffer = out.data();
-  size_t size = out.size();
+  out.SetEncodedData(buffer);
 
   std::vector<size_t> frame_sizes;
   std::vector<size_t> frame_sl_index;
@@ -84,9 +85,10 @@ EncodedImageExtractionResult SingleProcessEncodedImageDataInjector::ExtractData(
     size_t insertion_pos =
         prev_frames_size + frame_size - ExtractionInfo::kUsedBufferSize;
     // Extract frame id from first 2 bytes starting from insertion pos.
-    uint16_t next_id = buffer[insertion_pos] + (buffer[insertion_pos + 1] << 8);
+    uint16_t next_id = buffer->data()[insertion_pos] +
+                       (buffer->data()[insertion_pos + 1] << 8);
     // Extract frame sub id from second 3 byte starting from insertion pos.
-    uint8_t sub_id = buffer[insertion_pos + 2];
+    uint8_t sub_id = buffer->data()[insertion_pos + 2];
     RTC_CHECK(!id || *id == next_id)
         << "Different frames encoded into single encoded image: " << *id
         << " vs " << next_id;
@@ -135,15 +137,17 @@ EncodedImageExtractionResult SingleProcessEncodedImageDataInjector::ExtractData(
     if (info.discard) {
       // If this encoded image is marked to be discarded - erase it's payload
       // from the buffer.
-      memmove(&buffer[pos], &buffer[pos + frame_size], size - pos - frame_size);
+      memmove(&buffer->data()[pos], &buffer->data()[pos + frame_size],
+              size - pos - frame_size);
       RTC_CHECK_LT(frame_index, frame_sl_index.size())
           << "codec doesn't support discard option or the image, that was "
              "supposed to be discarded, is lost";
       out.SetSpatialLayerFrameSize(frame_sl_index[frame_index], 0);
       size -= frame_size;
     } else {
-      memcpy(&buffer[pos + frame_size - ExtractionInfo::kUsedBufferSize],
-             info.origin_data, ExtractionInfo::kUsedBufferSize);
+      memcpy(
+          &buffer->data()[pos + frame_size - ExtractionInfo::kUsedBufferSize],
+          info.origin_data, ExtractionInfo::kUsedBufferSize);
       pos += frame_size;
     }
   }
