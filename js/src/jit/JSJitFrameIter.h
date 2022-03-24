@@ -476,6 +476,7 @@ class SnapshotIterator {
  public:
   // Exhibits frame properties contained in the snapshot.
   uint32_t pcOffset() const;
+  ResumeMode resumeMode() const;
   [[nodiscard]] inline bool resumeAfter() const {
     // Inline frames are inlined on calls, which are considered as being
     // resumed on the Call as baseline will push the pc once we return from
