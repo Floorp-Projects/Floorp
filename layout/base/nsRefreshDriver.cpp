@@ -603,7 +603,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       }
 
       if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
-          mVsyncRefreshDriverTimer) {
+          ShouldGiveNonVsyncTasksMoreTime() && mVsyncRefreshDriverTimer) {
         nsPresContext* pctx =
             mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
         if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
