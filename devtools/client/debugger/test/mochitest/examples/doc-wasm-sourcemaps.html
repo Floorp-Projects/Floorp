@@ -6,32 +6,17 @@
   <head>
     <meta charset="utf-8"/>
     <title>Wasm+sourcemaps</title>
-    <script src="wasm-sourcemaps/utils.js"></script>
     <script>
+      // Immediately load the WASM file
+      const wasmInstancePromise = WebAssembly.instantiateStreaming(fetch("wasm-sourcemaps/fib.wasm"));
 
-    function test() {
-      const result = wasmInstance.exports.fib(5);
-      console.log(result);
-    }
-
-    var wasmInstance = null;
-    function loadWasm(wasmUrl, sourceMapUrl) {
-      return fetch(wasmUrl).then(res => res.arrayBuffer()).then(buffer => {
-        if (!sourceMapUrl) return buffer;
-        return updateSourceMappingURLSection(buffer, sourceMapUrl);
-      }).then(buffer => WebAssembly.instantiate(buffer)).then(({instance}) => {
-        wasmInstance = instance;
-      });
-    }
-
-    loadWasm('wasm-sourcemaps/fib.wasm',
-              new URL('wasm-sourcemaps/fib.wasm.map', document.location).href).then(() => {
-      debugger;
-
-      test();
-    });
-  </script>
-  </head>
+      async function runWasm() {
+        const { instance } = await wasmInstancePromise;
+        const result = instance .exports.fib(5);
+        return result;
+      }
+    </script>
+    </head>
 
   <body>
   </body>
