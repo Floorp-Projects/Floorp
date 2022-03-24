@@ -157,7 +157,7 @@ class CreditCard {
    */
   set number(value) {
     if (value) {
-      let normalizedNumber = CreditCard.normalizeCardNumber(value);
+      let normalizedNumber = value.replace(/[-\s]/g, "");
       // Based on the information on wiki[1], the shortest valid length should be
       // 12 digits (Maestro).
       // [1] https://en.wikipedia.org/wiki/Payment_card_number
@@ -220,22 +220,9 @@ class CreditCard {
   }
 
   /**
-   * Normalizes a credit card number.
-   * @param {string} number
-   * @return {string | null}
-   * @memberof CreditCard
-   */
-  static normalizeCardNumber(number) {
-    if (!number) {
-      return null;
-    }
-    return number.replace(/[\-\s]/g, "");
-  }
-
-  /**
    * Attempts to match the number against known network identifiers.
    *
-   * @param {string} ccNumber Credit card number with no spaces or special characters in it.
+   * @param {string} ccNumber
    *
    * @returns {string|null}
    */

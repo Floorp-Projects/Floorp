@@ -556,23 +556,3 @@ add_task(async function test_getNetworkFromName() {
     );
   }
 });
-
-add_task(async function test_normalizeCardNumber() {
-  let testCases = [
-    ["5495770093313616", "5495770093313616"],
-    ["5495 7700 9331 3616", "5495770093313616"],
-    [" 549 57700 93313 616 ", "5495770093313616"],
-    ["5495-7700-9331-3616", "5495770093313616"],
-    ["", null],
-    [undefined, null],
-    [null, null],
-  ];
-  for (let [input, expected] of testCases) {
-    let actual = CreditCard.normalizeCardNumber(input);
-    Assert.equal(
-      actual,
-      expected,
-      `Expected ${input} to normalize to ${expected}`
-    );
-  }
-});
