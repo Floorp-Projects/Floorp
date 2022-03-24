@@ -762,6 +762,10 @@ WorkerPrivate* PromiseWorkerProxy::GetWorkerPrivate() const {
   return mWorkerRef->Private();
 }
 
+bool PromiseWorkerProxy::OnWritingThread() const {
+  return IsCurrentThreadRunningWorker();
+}
+
 Promise* PromiseWorkerProxy::WorkerPromise() const {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mWorkerPromise);
