@@ -8,13 +8,12 @@
 
 #include "mozilla/Sprintf.h"
 
-#include "jit/JitCode.h"
-#include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
-#include "vm/JSScript.h"
+#include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
-#include "vtune/jitprofiling.h"
+#include "vm/Realm.h"
+#include "vm/Shape.h"
 
 namespace js::vtune {
 

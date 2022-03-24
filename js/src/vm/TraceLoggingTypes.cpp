@@ -8,6 +8,8 @@
 
 #include "vm/StringType.h"
 
+class JSLinearString;
+
 uint32_t TLStringToTextId(JSLinearString* str) {
 #define NAME(textId) \
   if (js::StringEqualsLiteral(str, #textId)) return TraceLogger_##textId;
