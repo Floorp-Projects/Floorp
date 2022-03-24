@@ -1008,7 +1008,6 @@ if (is_ios || is_mac) {
         "objc/Framework/Classes/Common/scoped_cftyperef.h",
         "objc/Framework/Classes/PeerConnection/RTCConfiguration+Native.h",
         "objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory+Native.h",
-        "objc/Framework/Classes/PeerConnection/RTCVideoCodec+Private.h",
         "objc/Framework/Classes/Video/RTCDefaultShader.h",
         "objc/Framework/Classes/Video/RTCNV12TextureCache.h",
         "objc/Framework/Classes/VideoToolbox/nalu_rewriter.h",
