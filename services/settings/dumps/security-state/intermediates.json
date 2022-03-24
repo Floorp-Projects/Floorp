@@ -1,6 +1,222 @@
 {
   "data": [
     {
+      "schema": 1648111717634,
+      "derHash": "+RIKcdUGl7mZKnNXoKmg3cS/w1mPy08BZClkgk088nY=",
+      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q1,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "55b021920e8c5ede7d6276ecd04c19991d898f6e51bf0b3fa08bf1ba9c248d76",
+        "size": 1158,
+        "filename": "1LpfjVSH8hoztBgfd_gZFjiC7v6eaAkVkgVTeL6pRpE=.pem",
+        "location": "security-state-staging/intermediates/09ea17e8-1bcd-4681-ae0a-939f779f73f5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1LpfjVSH8hoztBgfd/gZFjiC7v6eaAkVkgVTeL6pRpE=",
+      "crlite_enrolled": false,
+      "id": "d3ec162b-c1f0-4f2e-9614-fb27671a17d5",
+      "last_modified": 1648112256044
+    },
+    {
+      "schema": 1648111716671,
+      "derHash": "QwsXKm9xRrFqdbzFv6HWDGHe6qKrrGG0OU5KaykcSMw=",
+      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q3,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "40b0a9828f0b77973e246b7191d21a16f9d6c06c204f416a697608d3d700bba6",
+        "size": 1158,
+        "filename": "optwe1ocGkg7DXck7jODG5z_v8Zt72fvYBoDzURXOiY=.pem",
+        "location": "security-state-staging/intermediates/b3076cf4-85f5-4d34-9510-ccbf6447dd9b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "optwe1ocGkg7DXck7jODG5z/v8Zt72fvYBoDzURXOiY=",
+      "crlite_enrolled": false,
+      "id": "8997acb0-7a65-451b-a771-31209f4b4920",
+      "last_modified": 1648112256036
+    },
+    {
+      "schema": 1648111715739,
+      "derHash": "p9z9PQk3fDm6On9jDgUuxZPpcm0dpXIp5ZnRWtbcyns=",
+      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q1,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fc8007f8fd12fae7c462817756a3e12831260d0dde7d99df37fcee4450ed101a",
+        "size": 2304,
+        "filename": "c6w0LUIRbkLD8fbDDHL4ho_7XkZ8zf-WWqAOlcGpo0M=.pem",
+        "location": "security-state-staging/intermediates/26ee5bc1-166e-4810-a513-c2d03f359dcd.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "c6w0LUIRbkLD8fbDDHL4ho/7XkZ8zf+WWqAOlcGpo0M=",
+      "crlite_enrolled": false,
+      "id": "828f577c-a1ed-4ffa-823c-6216c3661d68",
+      "last_modified": 1648112256027
+    },
+    {
+      "schema": 1648111714755,
+      "derHash": "tR2FoI+ssG+X/fWFY3SQAwM+533Vg5hiBEmRl8qOcHc=",
+      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q4,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b70bccb91e1382127d552db2218d3a4b5e694b6e46ae394de9c13a65ed772ebb",
+        "size": 2304,
+        "filename": "tZABsMMctDxN2dVCN6e8jDISb-XBcMxhQzt38VfbuDA=.pem",
+        "location": "security-state-staging/intermediates/198954ce-3ffd-4df5-a2d7-24ae0c2dbb7a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "tZABsMMctDxN2dVCN6e8jDISb+XBcMxhQzt38VfbuDA=",
+      "crlite_enrolled": false,
+      "id": "d0055faf-7e7a-4a03-84ca-236e7e150355",
+      "last_modified": 1648112256018
+    },
+    {
+      "schema": 1648111713814,
+      "derHash": "9MXzlWN5STgw3nRW4KVdb7wbjqCLdWSI/wBbbDlKacc=",
+      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q2,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "12544f05eaffecc66cfb2fd647c6958cb03982233cd8545c013c9e090e9f5dd2",
+        "size": 1158,
+        "filename": "EBZTs8K9zMMECCBtTU0HgF-x0sx96tVwP0f33u8CVo0=.pem",
+        "location": "security-state-staging/intermediates/88ba5f96-66e2-4cd3-bc6e-d3081fefa6ae.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "EBZTs8K9zMMECCBtTU0HgF+x0sx96tVwP0f33u8CVo0=",
+      "crlite_enrolled": false,
+      "id": "7a907fba-b773-47d5-8980-b6cd09c503c8",
+      "last_modified": 1648112256010
+    },
+    {
+      "schema": 1648111712861,
+      "derHash": "LaUid2Ytwcd54kOfr1j4X4fbpz4PFvGw6zEKSRnPw7o=",
+      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q4,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a12414bc2af80f20737582694f4b964c09b82a8a591161834841e526e2b81b1a",
+        "size": 1158,
+        "filename": "DfmbgsrIxe8_N5Um3tZ6V_47ptPmpy9zNMbCxXcTx4A=.pem",
+        "location": "security-state-staging/intermediates/4cd1861b-a0c2-4b30-b872-3a0486efe22e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "DfmbgsrIxe8/N5Um3tZ6V/47ptPmpy9zNMbCxXcTx4A=",
+      "crlite_enrolled": false,
+      "id": "128d47d0-7ee8-4a5b-a937-07239a7df9b7",
+      "last_modified": 1648112256001
+    },
+    {
+      "schema": 1648111711870,
+      "derHash": "pAyR5GbWLNsytxOeh0jw61qBf2u4qfmZp6m/QwbW1dU=",
+      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q2,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "89bfa9e3815fb5f762d3f1a7dda4de7cab2aba8f41b814e8507ab9ca1852bed0",
+        "size": 2304,
+        "filename": "3ZySFXFHb5Plo7dM_NSw8nKNUlgm3wVrp1r970Tmy9I=.pem",
+        "location": "security-state-staging/intermediates/1120dfd8-15c7-44a1-86a4-3c4e97f1ab63.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "3ZySFXFHb5Plo7dM/NSw8nKNUlgm3wVrp1r970Tmy9I=",
+      "crlite_enrolled": false,
+      "id": "672ee5db-ce74-426e-90b7-b7dc55c91fc6",
+      "last_modified": 1648112255993
+    },
+    {
+      "schema": 1648111710874,
+      "derHash": "KchA0GKshi200gko0q79g7NaRr1FM5lf8u/T4+6M/9k=",
+      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q3,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "76651c35cbddf6690564ab5eca531b747c955d30a7cfaa53c117394757cb101a",
+        "size": 2304,
+        "filename": "RQ8YAl2HjeVi53YGXKYDqOxAqWE8GxAl626WJwuAffU=.pem",
+        "location": "security-state-staging/intermediates/5748ec6c-c33e-4b62-9fc6-b745dc8e5611.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "RQ8YAl2HjeVi53YGXKYDqOxAqWE8GxAl626WJwuAffU=",
+      "crlite_enrolled": false,
+      "id": "eb1340fa-a150-40a9-af2e-a3bdd28002a1",
+      "last_modified": 1648112255984
+    },
+    {
+      "schema": 1648025322112,
+      "derHash": "qXyhN1uRlT5TalVHawrERMcIapUeSQo6PRNjChn0DNQ=",
+      "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
+      "subjectDN": "MFcxCzAJBgNVBAYTAlRXMRcwFQYDVQQKEw5UQUlXQU4tQ0EgSW5jLjEQMA4GA1UECxMHVXNlciBDQTEdMBsGA1UEAxMUVFdDQSBJbmZvU2VjIFVzZXIgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6aaaa07d5c201417999a0e22e73d6ede06b3ae7309353301a6d321d172316983",
+        "size": 1703,
+        "filename": "bqhl3DAHcc4Kg-bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=.pem",
+        "location": "security-state-staging/intermediates/dbc7f86a-a8bd-4852-9d23-1d43fa46ee74.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bqhl3DAHcc4Kg+bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=",
+      "crlite_enrolled": false,
+      "id": "ffdd983c-ad21-42e0-bd71-4c89196fb73c",
+      "last_modified": 1648025848804
+    },
+    {
+      "schema": 1648025321155,
+      "derHash": "B0hA46Z9zSYAtrAE4Rh6yAvf6JbK9JPflMw9mjymiBQ=",
+      "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
+      "subjectDN": "MFcxCzAJBgNVBAYTAlRXMRcwFQYDVQQKEw5UQUlXQU4tQ0EgSW5jLjEQMA4GA1UECxMHVXNlciBDQTEdMBsGA1UEAxMUVFdDQSBJbmZvU2VjIFVzZXIgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "45844bd66bf712d05a01885a5ed8fe191938dc90ceb1c6bb05a732c72ec77002",
+        "size": 1703,
+        "filename": "ffKwXiiyZfl8ltFLZ9k5urWtoCKNBNklL8cqiHHZUUQ=.pem",
+        "location": "security-state-staging/intermediates/54742694-a874-4df8-9c81-e88d2f2221f4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ffKwXiiyZfl8ltFLZ9k5urWtoCKNBNklL8cqiHHZUUQ=",
+      "crlite_enrolled": false,
+      "id": "73d165e8-c4b1-4300-a6eb-607ee522dabe",
+      "last_modified": 1648025848795
+    },
+    {
+      "schema": 1648025320193,
+      "derHash": "mxby9oDXxL1qZ/YJNA2mQWq/nkPxMmsBuYgZInHQtfI=",
+      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "acd717a163c1e31ec674bb2953f2f16be424838b5d36e703984df5d77c80d023",
+        "size": 2032,
+        "filename": "8hqbhsMMFPaPA8t81pxqFer9-neHBcQvO7-TAKjWkb0=.pem",
+        "location": "security-state-staging/intermediates/b5f4faa4-0521-4c2b-939b-4bef5f921421.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8hqbhsMMFPaPA8t81pxqFer9+neHBcQvO7+TAKjWkb0=",
+      "crlite_enrolled": false,
+      "id": "163c4d13-0624-40c4-83d7-7b9bbea0f129",
+      "last_modified": 1648025848786
+    },
+    {
+      "schema": 1648025319180,
+      "derHash": "SWlaXw9+9u32mBk9me1Iuq3iDqRXQDwRzq1JLEWGZdo=",
+      "subject": "CN=TWCA Global EVSSL Certification Authority,OU=Global EVSSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MHMxCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExHDAaBgNVBAsTE0dsb2JhbCBFVlNTTCBTdWItQ0ExMjAwBgNVBAMTKVRXQ0EgR2xvYmFsIEVWU1NMIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4f777697d0c427439f9282b53a652b4a868074c5e1ae55a6dfe51dc32d19b817",
+        "size": 1955,
+        "filename": "3sXbPfqhHfn3hza4ob3X6iuMjfN9qdgOhBAC5GOp-TY=.pem",
+        "location": "security-state-staging/intermediates/1b6005ce-3d05-4336-b84f-46f273145539.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "3sXbPfqhHfn3hza4ob3X6iuMjfN9qdgOhBAC5GOp+TY=",
+      "crlite_enrolled": false,
+      "id": "c44d3056-f6b6-415c-8f13-43d0b71fb7b5",
+      "last_modified": 1648025848777
+    },
+    {
       "schema": 1647788245578,
       "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
       "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
@@ -7559,24 +7775,6 @@
       "crlite_enrolled": true,
       "id": "3ae9678b-4310-42e4-8c4b-a2bd36359c71",
       "last_modified": 1643540241702
-    },
-    {
-      "schema": 1643539739872,
-      "derHash": "XLnp3jKxh+QLoU/fIA/aYse0+/iNZPd84C3W6+a8wbA=",
-      "subject": "CN=Hongkong Post e-Cert CA 1 - 15,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MHYxCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEnMCUGA1UEAxMeSG9uZ2tvbmcgUG9zdCBlLUNlcnQgQ0EgMSAtIDE1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b1dec54f97f654e9b417aea0e0d23a22852001ddaf0a4b9b7a4c8d05cb468de6",
-        "size": 1743,
-        "filename": "nJWwmV0E5pEw1Pt8yzqltuQOo94m9iy9I53BzzbPaqE=.pem",
-        "location": "security-state-staging/intermediates/75266247-0a7b-4385-ae5c-7bde1cbc59fe.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "nJWwmV0E5pEw1Pt8yzqltuQOo94m9iy9I53BzzbPaqE=",
-      "crlite_enrolled": true,
-      "id": "143884ed-af2d-4415-8a20-84ab1314e2dc",
-      "last_modified": 1643540241691
     },
     {
       "schema": 1643539725512,
@@ -18181,24 +18379,6 @@
       "last_modified": 1576536532463
     },
     {
-      "schema": 1576536111049,
-      "derHash": "F2rr8pcr1vRxee3j3mOEixVDtFrilUvqRRhbFSU3ucQ=",
-      "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tvbmcgUG9zdCBSb290IENBIDM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b4ba7c31c249eb874c39b6a3e78147e6623a6ccbab1429cce2313067069229b7",
-        "size": 2020,
-        "filename": "JUHlO6WzsHrL5wl6xKA-BAwRz3ptSmfLIT1Vi1AWegY=.pem",
-        "location": "security-state-staging/intermediates/15934ce0-b66f-41d1-9cc3-4f83f0c22828.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "JUHlO6WzsHrL5wl6xKA+BAwRz3ptSmfLIT1Vi1AWegY=",
-      "crlite_enrolled": false,
-      "id": "78e6c5d3-d8b9-4d7e-b67b-b08391bf0d23",
-      "last_modified": 1576536532457
-    },
-    {
       "schema": 1576536110684,
       "derHash": "BuXewxyR19M0NSAdLiIRbCBxk6h04KQmUyovaVMMhrU=",
       "subject": "CN=SwissSign Server Silver CA 2008 - G2,O=SwissSign AG,C=CH",
@@ -19189,24 +19369,6 @@
       "last_modified": 1562108544257
     },
     {
-      "schema": 1562108539744,
-      "derHash": "qXyhN1uRlT5TalVHawrERMcIapUeSQo6PRNjChn0DNQ=",
-      "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
-      "subjectDN": "MFcxCzAJBgNVBAYTAlRXMRcwFQYDVQQKEw5UQUlXQU4tQ0EgSW5jLjEQMA4GA1UECxMHVXNlciBDQTEdMBsGA1UEAxMUVFdDQSBJbmZvU2VjIFVzZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6aaaa07d5c201417999a0e22e73d6ede06b3ae7309353301a6d321d172316983",
-        "size": 1703,
-        "filename": "bqhl3DAHcc4Kg-bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=.pem",
-        "location": "security-state-staging/intermediates/a7eca8e3-d4e8-42fd-97a7-7b7589b511a1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bqhl3DAHcc4Kg+bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=",
-      "crlite_enrolled": false,
-      "id": "53671fd7-9e3a-4f0c-a8fb-99fc788cacba",
-      "last_modified": 1562108540486
-    },
-    {
       "schema": 1562108522832,
       "derHash": "ztQGeH82ZG2JfkaLe4tdyuEDDDp1rxybEFUUuV7G6nA=",
       "subject": "CN=GENIOUS ECC Extended Validation Secure Server CA,OU=Controlled by Sectigo exclusively for Genious Communications,O=Genious Communications,L=Marrakech,ST=Marrakech,C=MA",
@@ -19385,24 +19547,6 @@
       "crlite_enrolled": false,
       "id": "2bf88053-7706-4881-a7fb-ac030ad0b530",
       "last_modified": 1562108486759
-    },
-    {
-      "schema": 1562108479933,
-      "derHash": "wY1Tv5hk3Qm8vKz9Zy4lZtTIH2iJ42313UJcBCEdB2M=",
-      "subject": "CN=Hongkong Post e-Cert EV SSL CA 3 - 17,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MH0xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEuMCwGA1UEAxMlSG9uZ2tvbmcgUG9zdCBlLUNlcnQgRVYgU1NMIENBIDMgLSAxNw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e4408c6b03e1deb0777ad20ea8b3466779565bcb2d92a17de6ac350bdaa5de18",
-        "size": 2097,
-        "filename": "shxxZc44F1hF3pjKzr0Oaoq-CwRFBKIr0_noGHUYkjA=.pem",
-        "location": "security-state-staging/intermediates/5092f509-515e-460e-b9cb-d9cdaff53b24.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "shxxZc44F1hF3pjKzr0Oaoq+CwRFBKIr0/noGHUYkjA=",
-      "crlite_enrolled": true,
-      "id": "8a76611a-1aeb-45ed-90ff-d235f7264a64",
-      "last_modified": 1562108480674
     },
     {
       "schema": 1562108477627,
@@ -20521,24 +20665,6 @@
       "last_modified": 1562025550741
     },
     {
-      "schema": 1562025546244,
-      "derHash": "FEIqG9WpHtunOXuGmJIjabavaYT/h6z2E52qkZ55WhQ=",
-      "subject": "CN=Hongkong Post e-Cert CA 1 - 14,O=Hongkong Post,C=HK",
-      "subjectDN": "ME4xCzAJBgNVBAYTAkhLMRYwFAYDVQQKEw1Ib25na29uZyBQb3N0MScwJQYDVQQDEx5Ib25na29uZyBQb3N0IGUtQ2VydCBDQSAxIC0gMTQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5a4d38e1effb5367e3fd8c4536f7e3be9e065be0cb93778e4484d32658a3c99c",
-        "size": 1626,
-        "filename": "vSKE_tMDVyGX2f0WYoCAXCvfnFi2nosboVhJtpmvc10=.pem",
-        "location": "security-state-staging/intermediates/44f50bf9-a77b-4072-997d-ecb9e4196036.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "vSKE/tMDVyGX2f0WYoCAXCvfnFi2nosboVhJtpmvc10=",
-      "crlite_enrolled": false,
-      "id": "05017875-8b94-4416-a852-fb1978415050",
-      "last_modified": 1562025546971
-    },
-    {
       "schema": 1562025532067,
       "derHash": "9ujsmwB3XMNnEDaToAFW/6WrhE5kB7HShTsIQfRRlG8=",
       "subject": "CN=TrustOcean SSL CA - RSA - 2018,OU=RSA Domain Validation Secure Server - 2018,O=TrustOcean Ltd.,L=Denver,ST=CO,C=US",
@@ -21439,24 +21565,6 @@
       "last_modified": 1562025266548
     },
     {
-      "schema": 1562025264327,
-      "derHash": "aezbwxR/WB39y1Itne+yYLJnhK1JVcdOalJSLMxMRAg=",
-      "subject": "CN=Hongkong Post e-Cert SSL CA 3 - 17,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MHoxCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDErMCkGA1UEAxMiSG9uZ2tvbmcgUG9zdCBlLUNlcnQgU1NMIENBIDMgLSAxNw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d819d0da20d45c8f93a0efb0d37fd86e274107134845bf5480d9b3697bb0711d",
-        "size": 2093,
-        "filename": "SUe0dPoWC5QKoJyXReRB3haevgxOd9ZVd5sn7N65_DY=.pem",
-        "location": "security-state-staging/intermediates/b1839acb-c26b-4d29-aa46-65f25e6250c5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "SUe0dPoWC5QKoJyXReRB3haevgxOd9ZVd5sn7N65/DY=",
-      "crlite_enrolled": true,
-      "id": "4d1c3055-4469-4d11-a7a0-e646d9c6bd59",
-      "last_modified": 1562025265062
-    },
-    {
       "schema": 1562025251569,
       "derHash": "CP1BixGIU0hP0bBm8ZIqgPVx2P/3Jo1Ziwht8YtYCtg=",
       "subject": "CN=Atos TrustedRoot Server-CA 2019,O=Atos,C=DE",
@@ -21599,24 +21707,6 @@
       "crlite_enrolled": true,
       "id": "ac25e523-d7a1-4700-87a8-f528654cc35b",
       "last_modified": 1562025203402
-    },
-    {
-      "schema": 1562025198927,
-      "derHash": "SWlaXw9+9u32mBk9me1Iuq3iDqRXQDwRzq1JLEWGZdo=",
-      "subject": "CN=TWCA Global EVSSL Certification Authority,OU=Global EVSSL Sub-CA,O=TAIWAN-CA,C=TW",
-      "subjectDN": "MHMxCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExHDAaBgNVBAsTE0dsb2JhbCBFVlNTTCBTdWItQ0ExMjAwBgNVBAMTKVRXQ0EgR2xvYmFsIEVWU1NMIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4f777697d0c427439f9282b53a652b4a868074c5e1ae55a6dfe51dc32d19b817",
-        "size": 1955,
-        "filename": "3sXbPfqhHfn3hza4ob3X6iuMjfN9qdgOhBAC5GOp-TY=.pem",
-        "location": "security-state-staging/intermediates/d4e10b9c-0b97-413b-97b1-5b93a2c878a0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "3sXbPfqhHfn3hza4ob3X6iuMjfN9qdgOhBAC5GOp+TY=",
-      "crlite_enrolled": true,
-      "id": "b7f1ffd4-4c9e-4762-a0b9-1a840835047b",
-      "last_modified": 1562025199670
     },
     {
       "schema": 1562025193661,
@@ -22049,24 +22139,6 @@
       "crlite_enrolled": false,
       "id": "2a3b5d82-65bb-4191-8f82-c390f1255cee",
       "last_modified": 1562025065952
-    },
-    {
-      "schema": 1562025059950,
-      "derHash": "mxby9oDXxL1qZ/YJNA2mQWq/nkPxMmsBuYgZInHQtfI=",
-      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
-      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "acd717a163c1e31ec674bb2953f2f16be424838b5d36e703984df5d77c80d023",
-        "size": 2032,
-        "filename": "8hqbhsMMFPaPA8t81pxqFer9-neHBcQvO7-TAKjWkb0=.pem",
-        "location": "security-state-staging/intermediates/264eee83-19f9-4406-ab9f-ae5fc55e9a70.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8hqbhsMMFPaPA8t81pxqFer9+neHBcQvO7+TAKjWkb0=",
-      "crlite_enrolled": true,
-      "id": "2535f8ba-07ba-4b54-85a8-742db433036d",
-      "last_modified": 1562025060710
     },
     {
       "schema": 1562025041146,
@@ -23743,24 +23815,6 @@
       "last_modified": 1559867437775
     },
     {
-      "schema": 1559867432168,
-      "derHash": "EYj4MclJpi6c1PYONvclRPCvkk3gf52pkuJuRMmW7uA=",
-      "subject": "CN=DigiCert High Assurance EV CA-2,OU=www.digicert.com,O=DigiCert Inc,C=US",
-      "subjectDN": "MGkxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKDAmBgNVBAMTH0RpZ2lDZXJ0IEhpZ2ggQXNzdXJhbmNlIEVWIENBLTI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b145b565a9904eaa02b6a72abb75193f832000fd38aeafaa780db87365ff2c14",
-        "size": 2259,
-        "filename": "xIR53dzZj47wArExuiNyNGwPlWUfxINMgw3ePpMqhtM=.pem",
-        "location": "security-state-staging/intermediates/3743430c-e300-4654-9602-bfdefe2354b7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "xIR53dzZj47wArExuiNyNGwPlWUfxINMgw3ePpMqhtM=",
-      "crlite_enrolled": false,
-      "id": "78f96e89-32b4-40fe-af94-7cb1e85e9957",
-      "last_modified": 1559867432960
-    },
-    {
       "schema": 1559867302256,
       "derHash": "BPehwRJgflk5KP7HhsxgIb1uvZUAHxxpO4xLOE6xn2o=",
       "subject": "CN=TrustSign BR Certification Authority (DV) 2,O=TrustSign Certificadora Dig. & Soluções Segurança da Inf. Ltda.,L=São José dos Campos,ST=São Paulo,C=BR",
@@ -23777,24 +23831,6 @@
       "crlite_enrolled": true,
       "id": "2e0e37b3-09ed-4d09-9512-e4f61413080c",
       "last_modified": 1559867303051
-    },
-    {
-      "schema": 1559867193847,
-      "derHash": "B0hA46Z9zSYAtrAE4Rh6yAvf6JbK9JPflMw9mjymiBQ=",
-      "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
-      "subjectDN": "MFcxCzAJBgNVBAYTAlRXMRcwFQYDVQQKEw5UQUlXQU4tQ0EgSW5jLjEQMA4GA1UECxMHVXNlciBDQTEdMBsGA1UEAxMUVFdDQSBJbmZvU2VjIFVzZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "45844bd66bf712d05a01885a5ed8fe191938dc90ceb1c6bb05a732c72ec77002",
-        "size": 1703,
-        "filename": "ffKwXiiyZfl8ltFLZ9k5urWtoCKNBNklL8cqiHHZUUQ=.pem",
-        "location": "security-state-staging/intermediates/c5276bf0-c900-4b43-8dd3-e46484423040.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ffKwXiiyZfl8ltFLZ9k5urWtoCKNBNklL8cqiHHZUUQ=",
-      "crlite_enrolled": false,
-      "id": "c4144e37-5fca-4438-94df-2524de197266",
-      "last_modified": 1559867194628
     },
     {
       "schema": 1559867189046,
