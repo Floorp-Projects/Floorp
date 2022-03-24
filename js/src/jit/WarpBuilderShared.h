@@ -8,6 +8,7 @@
 #define jit_WarpBuilderShared_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include "jit/MIRGraph.h"
 #include "js/Value.h"
@@ -54,6 +55,7 @@ class MOZ_STACK_CLASS CallInfo {
 
  private:
   ArgFormat argFormat_ = ArgFormat::Standard;
+  mozilla::Maybe<ResumeMode> inliningMode_;
 
  public:
   CallInfo(TempAllocator& alloc, bool constructing, bool ignoresReturnValue,
@@ -233,6 +235,17 @@ class MOZ_STACK_CLASS CallInfo {
 
   bool isInlined() const { return inlined_; }
   void markAsInlined() { inlined_ = true; }
+
+  ResumeMode inliningResumeMode() const {
+    MOZ_ASSERT(isInlined());
+    return *inliningMode_;
+  }
+
+  void setInliningResumeMode(ResumeMode mode) {
+    MOZ_ASSERT(isInlined());
+    MOZ_ASSERT(inliningMode_.isNothing());
+    inliningMode_.emplace(mode);
+  }
 
   MDefinition* callee() const {
     MOZ_ASSERT(callee_);
