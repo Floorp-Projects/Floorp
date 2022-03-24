@@ -5,12 +5,12 @@ import os
 import re
 import signal
 import subprocess
+import sys
 import threading
 import time
 
+from buildconfig import topsrcdir, topobjdir
 import mozunit
-import pytest
-from mozbuild.base import MozbuildObject
 from mozprocess import ProcessHandler
 
 here = os.path.dirname(__file__)
@@ -79,35 +79,24 @@ class OutputHandler(object):
         self.port_event.set()
 
 
-@pytest.fixture(scope="module")
-def install_mozproxy():
-    build = MozbuildObject.from_environment(cwd=here)
-    build.virtualenv_manager.activate()
-
-    mozbase = os.path.join(build.topsrcdir, "testing", "mozbase")
-    mozproxy_deps = ["mozinfo", "mozlog", "mozproxy"]
-    for i in mozproxy_deps:
-        _install_package(build.virtualenv_manager, os.path.join(mozbase, i))
-    return build
-
-
-def test_help(install_mozproxy):
-    p = ProcessHandler(["mozproxy", "--help"])
+def test_help():
+    p = ProcessHandler([sys.executable, "-m", "mozproxy", "--help"])
     p.run()
     assert p.wait() == 0
 
 
-def test_run_record_no_files(install_mozproxy):
-    build = install_mozproxy
+def test_run_record_no_files():
     output_handler = OutputHandler()
     p = ProcessHandler(
         [
+            sys.executable,
+            "-m",
             "mozproxy",
             "--local",
             "--mode=record",
             "--binary=firefox",
-            "--topsrcdir=" + build.topsrcdir,
-            "--objdir=" + build.topobjdir,
+            "--topsrcdir=" + topsrcdir,
+            "--objdir=" + topobjdir,
         ],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
@@ -127,17 +116,18 @@ def test_run_record_no_files(install_mozproxy):
     assert output_handler.port is None
 
 
-def test_run_record_multiple_files(install_mozproxy):
-    build = install_mozproxy
+def test_run_record_multiple_files():
     output_handler = OutputHandler()
     p = ProcessHandler(
         [
+            sys.executable,
+            "-m",
             "mozproxy",
             "--local",
             "--mode=record",
             "--binary=firefox",
-            "--topsrcdir=" + build.topsrcdir,
-            "--objdir=" + build.topobjdir,
+            "--topsrcdir=" + topsrcdir,
+            "--objdir=" + topobjdir,
             os.path.join(here, "files", "new_record.zip"),
             os.path.join(here, "files", "new_record2.zip"),
         ],
@@ -158,17 +148,18 @@ def test_run_record_multiple_files(install_mozproxy):
     assert output_handler.port is None
 
 
-def test_run_record(install_mozproxy):
-    build = install_mozproxy
+def test_run_record():
     output_handler = OutputHandler()
     p = ProcessHandler(
         [
+            sys.executable,
+            "-m",
             "mozproxy",
             "--local",
             "--mode=record",
             "--binary=firefox",
-            "--topsrcdir=" + build.topsrcdir,
-            "--objdir=" + build.topobjdir,
+            "--topsrcdir=" + topsrcdir,
+            "--objdir=" + topobjdir,
             os.path.join(here, "files", "record.zip"),
         ],
         processOutputLine=output_handler,
@@ -190,16 +181,17 @@ def test_run_record(install_mozproxy):
         os.remove(os.path.join(here, "files", "record.zip"))
 
 
-def test_run_playback(install_mozproxy):
-    build = install_mozproxy
+def test_run_playback():
     output_handler = OutputHandler()
     p = ProcessHandler(
         [
+            sys.executable,
+            "-m",
             "mozproxy",
             "--local",
             "--binary=firefox",
-            "--topsrcdir=" + build.topsrcdir,
-            "--objdir=" + build.topobjdir,
+            "--topsrcdir=" + topsrcdir,
+            "--objdir=" + topobjdir,
             os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip"),
         ],
         processOutputLine=output_handler,
@@ -218,10 +210,12 @@ def test_run_playback(install_mozproxy):
     assert output_handler.port is not None
 
 
-def test_failure(install_mozproxy):
+def test_failure():
     output_handler = OutputHandler()
     p = ProcessHandler(
         [
+            sys.executable,
+            "-m",
             "mozproxy",
             "--local",
             # Exclude some options here to trigger a command-line error.

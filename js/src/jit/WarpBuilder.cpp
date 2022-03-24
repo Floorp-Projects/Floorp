@@ -1871,10 +1871,6 @@ bool WarpBuilder::build_CallIter(BytecodeLocation loc) {
   return buildCallOp(loc);
 }
 
-bool WarpBuilder::build_FunCall(BytecodeLocation loc) {
-  return buildCallOp(loc);
-}
-
 bool WarpBuilder::build_New(BytecodeLocation loc) { return buildCallOp(loc); }
 
 bool WarpBuilder::build_SuperCall(BytecodeLocation loc) {
@@ -3391,7 +3387,7 @@ bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
     return false;
   }
   MResumePoint* outerResumePoint =
-      MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
+      MResumePoint::New(alloc(), current, pc, callInfo.inliningResumeMode());
   if (!outerResumePoint) {
     return false;
   }

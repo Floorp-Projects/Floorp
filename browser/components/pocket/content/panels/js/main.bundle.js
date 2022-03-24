@@ -55,27 +55,62 @@ function Header(props) {
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-function ArticleList(props) {
-  return /*#__PURE__*/react.createElement("ul", {
-    className: "stp_article_list"
-  }, props.articles?.map(article => /*#__PURE__*/react.createElement("li", {
-    className: "stp_article_list_item"
-  }, /*#__PURE__*/react.createElement("a", {
+function ArticleUrl(props) {
+  // We turn off the link if we're either a saved article, or if the url doesn't exist.
+  if (props.savedArticle || !props.url) {
+    return /*#__PURE__*/react.createElement("div", {
+      className: "stp_article_list_saved_article"
+    }, props.children);
+  }
+
+  return /*#__PURE__*/react.createElement("a", {
     className: "stp_article_list_link",
-    href: article.url
-  }, article.thumbnail ? /*#__PURE__*/react.createElement("img", {
+    href: props.url
+  }, props.children);
+}
+
+function Article(props) {
+  function encodeThumbnail(rawSource) {
+    return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
+  }
+
+  const {
+    article
+  } = props;
+  const url = article.url || article.resolved_url; // Using array notation because there is a key titled `1` (`images` is an object)
+
+  const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
+  const alt = article.alt || "thumbnail image";
+  const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
+
+  const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
+  return /*#__PURE__*/react.createElement("li", {
+    className: "stp_article_list_item"
+  }, /*#__PURE__*/react.createElement(ArticleUrl, {
+    url: url,
+    savedArticle: props.savedArticle
+  }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail ? /*#__PURE__*/react.createElement("img", {
     className: "stp_article_list_thumb",
-    src: article.thumbnail,
-    alt: article.alt
+    src: thumbnail,
+    alt: alt
   }) : /*#__PURE__*/react.createElement("div", {
     className: "stp_article_list_thumb_placeholder"
   }), /*#__PURE__*/react.createElement("div", {
     className: "stp_article_list_meta"
   }, /*#__PURE__*/react.createElement("header", {
     className: "stp_article_list_header"
-  }, article.title), /*#__PURE__*/react.createElement("p", {
+  }, title), /*#__PURE__*/react.createElement("p", {
     className: "stp_article_list_publisher"
-  }, article.publisher))))));
+  }, publisher)))));
+}
+
+function ArticleList(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_article_list"
+  }, props.articles?.map(article => /*#__PURE__*/react.createElement(Article, {
+    article: article,
+    savedArticle: props.savedArticle
+  })));
 }
 
 /* harmony default export */ const ArticleList_ArticleList = (ArticleList);
@@ -107,6 +142,7 @@ function PopularTopics(props) {
 function Button(props) {
   return /*#__PURE__*/react.createElement("a", {
     href: props.url,
+    onClick: props.onClick,
     className: `stp_button${props?.style && ` stp_button_${props.style}`}`
   }, props.children);
 }
@@ -177,10 +213,6 @@ var pktPanelMessaging = {
 
 
 
-function encodeThumbnail(rawSource) {
-  return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
-}
-
 function Home(props) {
   const {
     locale,
@@ -220,14 +252,7 @@ function Home(props) {
         }
 
         setArticlesState({
-          articles: data.map(item => ({
-            url: item.resolved_url,
-            // Using array notation because there is a key titled `1` (`images` is an object)
-            thumbnail: encodeThumbnail(item?.top_image_url || item?.images?.["1"]?.src),
-            alt: "thumbnail image",
-            title: item.resolved_title,
-            publisher: item.domain_metadata?.name
-          })),
+          articles: data,
           status: "success"
         });
       });
@@ -580,28 +605,152 @@ var SignupOverlay = function (options) {
 
 
 
+
+
 function Saved(props) {
   const {
-    similarRecs,
-    savedStory
-  } = props;
+    locale
+  } = props; // savedStatus can be success, loading, or error.
+
+  const [{
+    savedStatus,
+    savedErrorId,
+    itemId
+  }, setSavedStatusState] = (0,react.useState)({
+    savedStatus: "loading"
+  }); // removedStatus can be removed, removing, or error.
+
+  const [{
+    removedStatus,
+    removedErrorMessage
+  }, setRemovedStatusState] = (0,react.useState)({});
+  const [savedStory, setSavedStoryState] = (0,react.useState)();
+  const [similarRecs, setSimilarRecsState] = (0,react.useState)();
+
+  function removeItem(event) {
+    event.preventDefault();
+    setRemovedStatusState({
+      removedStatus: "removing"
+    });
+    messages.sendMessage("PKT_deleteItem", {
+      itemId
+    }, function (resp) {
+      const {
+        data
+      } = resp;
+
+      if (data.status == "success") {
+        setRemovedStatusState({
+          removedStatus: "removed"
+        });
+      } else if (data.status == "error") {
+        let errorMessage = ""; // The server returns English error messages, so in the case of
+        // non English, we do our best with a generic translated error.
+
+        if (data.error.message && locale?.startsWith("en")) {
+          errorMessage = data.error.message;
+        }
+
+        setRemovedStatusState({
+          removedStatus: "error",
+          removedErrorMessage: errorMessage
+        });
+      }
+    });
+  }
+
+  (0,react.useEffect)(() => {
+    // Wait confirmation of save before flipping to final saved state
+    messages.addMessageListener("PKT_saveLink", function (resp) {
+      const {
+        data
+      } = resp;
+
+      if (data.status == "error") {
+        // Use localizedKey or fallback to a generic catch all error.
+        setSavedStatusState({
+          savedStatus: "error",
+          savedErrorId: data?.error?.localizedKey || "pocket-panel-saved-error-generic"
+        });
+        return;
+      } // Success, so no localized error id needed.
+
+
+      setSavedStatusState({
+        savedStatus: "success",
+        itemId: data.item.item_id,
+        savedErrorId: ""
+      });
+    });
+    messages.addMessageListener("PKT_renderSavedStory", function (resp) {
+      setSavedStoryState(resp?.data?.item_preview);
+    });
+    messages.addMessageListener("PKT_renderItemRecs", function (resp) {
+      const {
+        data
+      } = resp;
+      setSimilarRecsState(data?.recommendations?.map(rec => rec.item));
+    }); // tell back end we're ready
+
+    messages.sendMessage("PKT_show_saved");
+  }, []);
+
+  if (savedStatus === "error") {
+    return /*#__PURE__*/react.createElement("div", {
+      className: "stp_panel_container"
+    }, /*#__PURE__*/react.createElement("div", {
+      className: "stp_panel stp_panel_error"
+    }, /*#__PURE__*/react.createElement("div", {
+      className: "stp_panel_error_icon"
+    }), /*#__PURE__*/react.createElement("h3", {
+      className: "header_large",
+      "data-l10n-id": "pocket-panel-saved-error-not-saved"
+    }), /*#__PURE__*/react.createElement("p", {
+      "data-l10n-id": savedErrorId
+    })));
+  }
+
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
-    className: "stp_panel stp_panel_home"
-  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+    className: "stp_panel stp_panel_saved"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "primary"
+  }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-my-list"
-  }))), /*#__PURE__*/react.createElement("hr", null), savedStory && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-saved-page-saved"
-  }), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
-    articles: [savedStory]
-  }), /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-button-add-tags"
-  }), /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-saved-remove-page"
-  })), /*#__PURE__*/react.createElement("hr", null), similarRecs?.length && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+  }))), /*#__PURE__*/react.createElement("hr", null), !removedStatus && savedStatus === "success" && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+    className: "header_large header_flex"
+  }, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-saved-page-saved-b"
+  }), /*#__PURE__*/react.createElement(Button_Button, {
+    style: "text",
+    url: "google.com",
+    onClick: removeItem
+  }, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-button-remove"
+  }))), savedStory && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+    articles: [savedStory],
+    savedArticle: true
+  }), /*#__PURE__*/react.createElement("h3", {
+    className: "header_small",
+    "data-l10n-id": "pocket-panel-cta-add-tags"
+  }), similarRecs?.length && locale?.startsWith("en") && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium"
+  }, "Similar Stories"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
     articles: similarRecs
-  })));
+  }))), savedStatus === "loading" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-saved-saving-tags"
+  }), removedStatus === "removing" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_large header_center",
+    "data-l10n-id": "pocket-panel-saved-processing-remove"
+  }), removedStatus === "removed" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_large header_center",
+    "data-l10n-id": "pocket-panel-saved-removed"
+  }), removedStatus === "error" && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-saved-error-remove"
+  }), removedErrorMessage && /*#__PURE__*/react.createElement("p", null, removedErrorMessage))));
 }
 
 /* harmony default export */ const Saved_Saved = (Saved);
@@ -1129,10 +1278,14 @@ SavedOverlay.prototype = {
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (layoutRefresh) {
-      // Create actual content
+      // For now, we need to do a little work on the body element
+      // to support both old and new versions.
+      document.querySelector(`.pkt_ext_containersaved`)?.classList.add(`stp_saved_body`);
+      document.querySelector(`.pkt_ext_containersaved`)?.classList.remove(`pkt_ext_containersaved`); // Create actual content
+
       react_dom.render( /*#__PURE__*/react.createElement(Saved_Saved, {
         pockethost: pockethost,
-        savedStory: {}
+        locale: locale
       }), document.querySelector(`body`));
     } else {
       // set host
@@ -1183,11 +1336,10 @@ SavedOverlay.prototype = {
           data
         } = resp;
         myself.renderItemRecs(data);
-      });
-    } // tell back end we're ready
+      }); // tell back end we're ready
 
-
-    messages.sendMessage("PKT_show_saved");
+      messages.sendMessage("PKT_show_saved");
+    }
   }
 
 };

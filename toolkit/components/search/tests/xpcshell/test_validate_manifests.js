@@ -8,9 +8,6 @@ Cu.importGlobalProperties(["fetch"]);
 const { ExtensionData } = ChromeUtils.import(
   "resource://gre/modules/Extension.jsm"
 );
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
 
 const SEARCH_EXTENSIONS_PATH = "resource://search-extensions";
 

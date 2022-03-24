@@ -1578,24 +1578,22 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native table.fill function";
     case SymbolicAddress::ElemDrop:
       return "call to native elem.drop function";
-    case SymbolicAddress::TableGet:
+    case SymbolicAddress::TableGetFunc:
       return "call to native table.get function";
     case SymbolicAddress::TableGrow:
       return "call to native table.grow function";
     case SymbolicAddress::TableInit:
       return "call to native table.init function";
-    case SymbolicAddress::TableSet:
+    case SymbolicAddress::TableSetFunc:
       return "call to native table.set function";
-    case SymbolicAddress::TableSize:
-      return "call to native table.size function";
     case SymbolicAddress::RefFunc:
       return "call to native ref.func function";
     case SymbolicAddress::PreBarrierFiltering:
       return "call to native filtering GC prebarrier (in wasm)";
     case SymbolicAddress::PostBarrier:
-      return "call to native GC postbarrier (in wasm)";
+    case SymbolicAddress::PostBarrierPrecise:
     case SymbolicAddress::PostBarrierFiltering:
-      return "call to native filtering GC postbarrier (in wasm)";
+      return "call to native GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:
       return "call to native struct.new (in wasm)";
 #if defined(ENABLE_WASM_EXCEPTIONS)

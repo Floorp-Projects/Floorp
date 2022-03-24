@@ -380,6 +380,12 @@ const SNAPSHOT_SCHEMA = {
         safeMode: {
           type: "boolean",
         },
+        memorySizeBytes: {
+          type: "number",
+        },
+        diskAvailableBytes: {
+          type: "number",
+        },
       },
     },
     crashes: {

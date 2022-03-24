@@ -1,12 +1,15 @@
-% This Source Code Form is subject to the terms of the Mozilla Public
-% License, v. 2.0. If a copy of the MPL was not distributed with this
-% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* ===== global.css =====================================================
   == Styles that apply everywhere.
   ======================================================================= */
 
-%include ../../shared/global.inc.css
+@import url("chrome://global/skin/global-shared.css");
+
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
   background-color: -moz-Dialog;
@@ -172,10 +175,6 @@ xul|separator.groove[orient="vertical"] {
 html|input {
   margin: 2px 4px;
 }
-
-/* Notification popups */
-
-%include ../../shared/notification-popup.inc.css
 
 /* Content select */
 

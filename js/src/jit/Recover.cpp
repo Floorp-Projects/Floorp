@@ -10,6 +10,7 @@
 
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
+#include "jit/Bailouts.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"
@@ -68,36 +69,9 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
 #ifdef DEBUG
   // Ensure that all snapshot which are encoded can safely be used for
   // bailouts.
-  if (GetJitContext()->cx) {
-    uint32_t stackDepth;
-    bool reachablePC;
-    jsbytecode* bailPC = pc();
-
-    if (mode() == MResumePoint::ResumeAfter) {
-      bailPC = GetNextPc(pc());
-    }
-
-    if (!ReconstructStackDepth(GetJitContext()->cx, script, bailPC, &stackDepth,
-                               &reachablePC)) {
+  if (JSContext* cx = GetJitContext()->cx) {
+    if (!AssertBailoutStackDepth(cx, script, pc(), mode(), exprStack)) {
       return false;
-    }
-
-    if (reachablePC) {
-      JSOp bailOp = JSOp(*bailPC);
-      if (bailOp == JSOp::FunCall) {
-        // For fun.call(this, ...); the reconstructStackDepth will
-        // include the this. When inlining that is not included.  So the
-        // exprStackSlots will be one less.
-        MOZ_ASSERT(stackDepth - exprStack <= 1);
-      } else {
-        // With accessors, we have different stack depths depending on
-        // whether or not we inlined the accessor, as the inlined stack
-        // contains a callee function that should never have been there
-        // and we might just be capturing an uneventful property site,
-        // in which case there won't have been any violence.
-        MOZ_ASSERT_IF(!IsIonInlinableGetterOrSetterOp(bailOp),
-                      exprStack == stackDepth);
-      }
     }
   }
 #endif
@@ -119,19 +93,26 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
           "Starting frame; implicit %u, formals %u, fixed %zu, exprs %u",
           implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
-  uint32_t pcoff = script->pcToOffset(pc());
-  JitSpew(JitSpew_IonSnapshots, "Writing pc offset %u, nslots %u", pcoff,
-          nallocs);
-  writer.writeUnsigned(pcoff);
+  uint32_t pcOff = script->pcToOffset(pc());
+  JitSpew(JitSpew_IonSnapshots, "Writing pc offset %u, mode %s, nslots %u",
+          pcOff, ResumeModeToString(mode()), nallocs);
+
+  uint32_t pcOffAndMode =
+      (pcOff << RResumePoint::PCOffsetShift) | uint32_t(mode());
+  MOZ_RELEASE_ASSERT((pcOffAndMode >> RResumePoint::PCOffsetShift) == pcOff,
+                     "pcOff doesn't fit in pcOffAndMode");
+  writer.writeUnsigned(pcOffAndMode);
+
   writer.writeUnsigned(nallocs);
   return true;
 }
 
 RResumePoint::RResumePoint(CompactBufferReader& reader) {
-  pcOffset_ = reader.readUnsigned();
+  pcOffsetAndMode_ = reader.readUnsigned();
   numOperands_ = reader.readUnsigned();
-  JitSpew(JitSpew_IonSnapshots, "Read RResumePoint (pc offset %u, nslots %u)",
-          pcOffset_, numOperands_);
+  JitSpew(JitSpew_IonSnapshots,
+          "Read RResumePoint (pc offset %u, mode %s, nslots %u)", pcOffset(),
+          ResumeModeToString(mode()), numOperands_);
 }
 
 bool RResumePoint::recover(JSContext* cx, SnapshotIterator& iter) const {

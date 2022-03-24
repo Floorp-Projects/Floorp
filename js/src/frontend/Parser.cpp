@@ -10730,13 +10730,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
 
   JSOp op = JSOp::Call;
   bool maybeAsyncArrow = false;
-  if (auto prop = handler_.maybeDottedProperty(lhs)) {
-    // Use the JSOp::FunCall optimizations given the right syntax.
-    if (prop == TaggedParserAtomIndex::WellKnown::call()) {
-      op = JSOp::FunCall;
-    }
-  } else if (tt == TokenKind::LeftParen &&
-             optionalKind == OptionalKind::NonOptional) {
+  if (tt == TokenKind::LeftParen && optionalKind == OptionalKind::NonOptional) {
     if (handler_.isAsyncKeyword(lhs)) {
       // |async (| can be the start of an async arrow
       // function, so we need to defer reporting possible

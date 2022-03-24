@@ -8,6 +8,7 @@ function Button(props) {
   return (
     <a
       href={props.url}
+      onClick={props.onClick}
       className={`stp_button${props?.style && ` stp_button_${props.style}`}`}
     >
       {props.children}

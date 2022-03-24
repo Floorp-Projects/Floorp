@@ -29,7 +29,8 @@ class PypiOptionalSpecifier(PypiSpecifier):
 
 
 class MachEnvRequirements:
-    """Requirements associated with a "virtualenv_packages.txt" definition
+    """Requirements associated with a "site dependency manifest", as
+    defined in "python/sites/".
 
     Represents the dependencies of a site. The source files consist
     of colon-delimited fields. The first field

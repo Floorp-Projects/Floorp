@@ -12,11 +12,6 @@ const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 let extension;
 let oldRemoveEngineFunc;
 
-async function getEngineNames() {
-  let engines = await Services.search.getEngines();
-  return engines.map(engine => engine._name);
-}
-
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines("simple-engines");
   await promiseStartupManager();

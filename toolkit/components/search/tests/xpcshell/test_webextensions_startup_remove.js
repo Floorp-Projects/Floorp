@@ -3,12 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 const ENGINE_ID = "enginetest@example.com";
 let xpi;
 let profile = do_get_profile().clone();

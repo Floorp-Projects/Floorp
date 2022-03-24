@@ -4,29 +4,66 @@
 
 import React from "react";
 
+function ArticleUrl(props) {
+  // We turn off the link if we're either a saved article, or if the url doesn't exist.
+  if (props.savedArticle || !props.url) {
+    return (
+      <div className="stp_article_list_saved_article">{props.children}</div>
+    );
+  }
+  return (
+    <a className="stp_article_list_link" href={props.url}>
+      {props.children}
+    </a>
+  );
+}
+
+function Article(props) {
+  function encodeThumbnail(rawSource) {
+    return rawSource
+      ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
+          rawSource
+        )}`
+      : null;
+  }
+
+  const { article } = props;
+  const url = article.url || article.resolved_url;
+  // Using array notation because there is a key titled `1` (`images` is an object)
+  const thumbnail =
+    article.thumbnail ||
+    encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
+  const alt = article.alt || "thumbnail image";
+  const title = article.title || article.resolved_title;
+  // Sometimes domain_metadata is not there, depending on the source.
+  const publisher =
+    article.publisher ||
+    article.domain_metadata?.name ||
+    article.resolved_domain;
+  return (
+    <li className="stp_article_list_item">
+      <ArticleUrl url={url} savedArticle={props.savedArticle}>
+        <>
+          {thumbnail ? (
+            <img className="stp_article_list_thumb" src={thumbnail} alt={alt} />
+          ) : (
+            <div className="stp_article_list_thumb_placeholder" />
+          )}
+          <div className="stp_article_list_meta">
+            <header className="stp_article_list_header">{title}</header>
+            <p className="stp_article_list_publisher">{publisher}</p>
+          </div>
+        </>
+      </ArticleUrl>
+    </li>
+  );
+}
+
 function ArticleList(props) {
   return (
     <ul className="stp_article_list">
       {props.articles?.map(article => (
-        <li className="stp_article_list_item">
-          <a className="stp_article_list_link" href={article.url}>
-            {article.thumbnail ? (
-              <img
-                className="stp_article_list_thumb"
-                src={article.thumbnail}
-                alt={article.alt}
-              />
-            ) : (
-              <div className="stp_article_list_thumb_placeholder" />
-            )}
-            <div className="stp_article_list_meta">
-              <header className="stp_article_list_header">
-                {article.title}
-              </header>
-              <p className="stp_article_list_publisher">{article.publisher}</p>
-            </div>
-          </a>
-        </li>
+        <Article article={article} savedArticle={props.savedArticle} />
       ))}
     </ul>
   );

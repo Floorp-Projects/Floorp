@@ -56,7 +56,6 @@ exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
 exports.isAscii = isAscii;
-exports.isSameOrigin = isSameOrigin;
 exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
 exports.setVerbosityLevel = setVerbosityLevel;
@@ -444,23 +443,6 @@ function assert(cond, msg) {
   if (!cond) {
     unreachable(msg);
   }
-}
-
-function isSameOrigin(baseUrl, otherUrl) {
-  let base;
-
-  try {
-    base = new URL(baseUrl);
-
-    if (!base.origin || base.origin === "null") {
-      return false;
-    }
-  } catch (e) {
-    return false;
-  }
-
-  const other = new URL(otherUrl, base);
-  return base.origin === other.origin;
 }
 
 function _isValidProtocol(url) {
@@ -1060,7 +1042,7 @@ exports.isNodeJS = isNodeJS;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.build = exports.RenderTask = exports.PDFWorker = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFDocumentLoadingTask = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.DefaultStandardFontDataFactory = exports.DefaultCanvasFactory = exports.DefaultCMapReaderFactory = void 0;
+exports.build = exports.RenderTask = exports.PDFWorkerUtil = exports.PDFWorker = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFDocumentLoadingTask = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.DefaultStandardFontDataFactory = exports.DefaultCanvasFactory = exports.DefaultCMapReaderFactory = void 0;
 exports.getDocument = getDocument;
 exports.setPDFNetworkStreamFactory = setPDFNetworkStreamFactory;
 exports.version = void 0;
@@ -1183,7 +1165,6 @@ function getDocument(src) {
     params[key] = value;
   }
 
-  params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
   params.CMapReaderFactory = params.CMapReaderFactory || DefaultCMapReaderFactory;
   params.StandardFontDataFactory = params.StandardFontDataFactory || DefaultStandardFontDataFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
@@ -1191,12 +1172,24 @@ function getDocument(src) {
   params.pdfBug = params.pdfBug === true;
   params.enableXfa = params.enableXfa === true;
 
+  if (!Number.isInteger(params.rangeChunkSize) || params.rangeChunkSize < 1) {
+    params.rangeChunkSize = DEFAULT_RANGE_CHUNK_SIZE;
+  }
+
   if (typeof params.docBaseUrl !== "string" || (0, _display_utils.isDataScheme)(params.docBaseUrl)) {
     params.docBaseUrl = null;
   }
 
-  if (!Number.isInteger(params.maxImageSize)) {
+  if (!Number.isInteger(params.maxImageSize) || params.maxImageSize < -1) {
     params.maxImageSize = -1;
+  }
+
+  if (typeof params.cMapUrl !== "string") {
+    params.cMapUrl = null;
+  }
+
+  if (typeof params.standardFontDataUrl !== "string") {
+    params.standardFontDataUrl = null;
   }
 
   if (typeof params.useWorkerFetch !== "boolean") {
@@ -1215,7 +1208,7 @@ function getDocument(src) {
     params.useSystemFonts = !params.disableFontFace;
   }
 
-  if (typeof params.ownerDocument === "undefined") {
+  if (typeof params.ownerDocument !== "object" || params.ownerDocument === null) {
     params.ownerDocument = globalThis.document;
   }
 
@@ -1304,7 +1297,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.14.13',
+    apiVersion: '2.14.102',
     source: {
       data: source.data,
       url: source.url,
@@ -1333,17 +1326,13 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 }
 
 class PDFDocumentLoadingTask {
-  static get idCounters() {
-    return (0, _util.shadow)(this, "idCounters", {
-      doc: 0
-    });
-  }
+  static #docId = 0;
 
   constructor() {
     this._capability = (0, _util.createPromiseCapability)();
     this._transport = null;
     this._worker = null;
-    this.docId = `d${PDFDocumentLoadingTask.idCounters.doc++}`;
+    this.docId = `d${PDFDocumentLoadingTask.#docId++}`;
     this.destroyed = false;
     this.onPassword = null;
     this.onProgress = null;
@@ -2145,19 +2134,18 @@ const PDFWorkerUtil = {
   fallbackWorkerSrc: null,
   fakeWorkerId: 0
 };
+exports.PDFWorkerUtil = PDFWorkerUtil;
 ;
 
 class PDFWorker {
-  static get _workerPorts() {
-    return (0, _util.shadow)(this, "_workerPorts", new WeakMap());
-  }
+  static #workerPorts = new WeakMap();
 
   constructor({
     name = null,
     port = null,
     verbosity = (0, _util.getVerbosityLevel)()
   } = {}) {
-    if (port && PDFWorker._workerPorts.has(port)) {
+    if (port && PDFWorker.#workerPorts.has(port)) {
       throw new Error("Cannot use more than one PDFWorker per port.");
     }
 
@@ -2170,7 +2158,7 @@ class PDFWorker {
     this._messageHandler = null;
 
     if (port) {
-      PDFWorker._workerPorts.set(port, this);
+      PDFWorker.#workerPorts.set(port, this);
 
       this._initializeFromPort(port);
 
@@ -2269,15 +2257,8 @@ class PDFWorker {
         });
 
         const sendTest = () => {
-          const testObj = new Uint8Array([255]);
-
-          try {
-            messageHandler.send("test", testObj, [testObj.buffer]);
-          } catch (ex) {
-            (0, _util.warn)("Cannot use postMessage transfers.");
-            testObj[0] = 0;
-            messageHandler.send("test", testObj);
-          }
+          const testObj = new Uint8Array();
+          messageHandler.send("test", testObj, [testObj.buffer]);
         };
 
         sendTest();
@@ -2330,8 +2311,7 @@ class PDFWorker {
       this._webWorker = null;
     }
 
-    PDFWorker._workerPorts.delete(this._port);
-
+    PDFWorker.#workerPorts.delete(this._port);
     this._port = null;
 
     if (this._messageHandler) {
@@ -2346,8 +2326,8 @@ class PDFWorker {
       throw new Error("PDFWorker.fromPort - invalid method signature.");
     }
 
-    if (this._workerPorts.has(params.port)) {
-      return this._workerPorts.get(params.port);
+    if (this.#workerPorts.has(params.port)) {
+      return this.#workerPorts.get(params.port);
     }
 
     return new PDFWorker(params);
@@ -3138,9 +3118,7 @@ class RenderTask {
 exports.RenderTask = RenderTask;
 
 class InternalRenderTask {
-  static get canvasInUse() {
-    return (0, _util.shadow)(this, "canvasInUse", new WeakSet());
-  }
+  static #canvasInUse = new WeakSet();
 
   constructor({
     callback,
@@ -3191,11 +3169,11 @@ class InternalRenderTask {
     }
 
     if (this._canvas) {
-      if (InternalRenderTask.canvasInUse.has(this._canvas)) {
+      if (InternalRenderTask.#canvasInUse.has(this._canvas)) {
         throw new Error("Cannot use the same canvas during multiple render() operations. " + "Use different canvas or ensure previous operations were " + "cancelled or completed.");
       }
 
-      InternalRenderTask.canvasInUse.add(this._canvas);
+      InternalRenderTask.#canvasInUse.add(this._canvas);
     }
 
     if (this._pdfBug && globalThis.StepperManager?.enabled) {
@@ -3235,7 +3213,7 @@ class InternalRenderTask {
     }
 
     if (this._canvas) {
-      InternalRenderTask.canvasInUse.delete(this._canvas);
+      InternalRenderTask.#canvasInUse.delete(this._canvas);
     }
 
     this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, "canvas"));
@@ -3299,7 +3277,7 @@ class InternalRenderTask {
         this.gfx.endDrawing();
 
         if (this._canvas) {
-          InternalRenderTask.canvasInUse.delete(this._canvas);
+          InternalRenderTask.#canvasInUse.delete(this._canvas);
         }
 
         this.callback();
@@ -3309,9 +3287,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.14.13';
+const version = '2.14.102';
 exports.version = version;
-const build = '234aa9a50';
+const build = 'db4f3adc5';
 exports.build = build;
 
 /***/ }),
@@ -9209,7 +9187,7 @@ class LinkAnnotationElement extends AnnotationElement {
     const link = document.createElement("a");
 
     if (data.url) {
-      linkService.addLinkAttributes?.(link, data.url, data.newWindow);
+      linkService.addLinkAttributes(link, data.url, data.newWindow);
     } else if (data.action) {
       this._bindNamedAction(link, data.action);
     } else if (data.dest) {
@@ -11102,8 +11080,6 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XfaLayer = void 0;
 
-var _util = __w_pdfjs_require__(1);
-
 var _xfa_text = __w_pdfjs_require__(17);
 
 class XfaLayer {
@@ -11225,7 +11201,7 @@ class XfaLayer {
     }
 
     if (isHTMLAnchorElement) {
-      linkService.addLinkAttributes?.(html, attributes.href, attributes.newWindow);
+      linkService.addLinkAttributes(html, attributes.href, attributes.newWindow);
     }
 
     if (storage && attributes.dataId) {
@@ -12403,8 +12379,8 @@ var _svg = __w_pdfjs_require__(22);
 
 var _xfa_layer = __w_pdfjs_require__(20);
 
-const pdfjsVersion = '2.14.13';
-const pdfjsBuild = '234aa9a50';
+const pdfjsVersion = '2.14.102';
+const pdfjsBuild = 'db4f3adc5';
 ;
 })();
 

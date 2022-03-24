@@ -321,8 +321,6 @@ void Gecko_SetListStyleImageImageValue(
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // Dirtiness tracking.
-void Gecko_SetNodeFlags(const nsINode* node, uint32_t flags);
-void Gecko_UnsetNodeFlags(const nsINode* node, uint32_t flags);
 void Gecko_NoteDirtyElement(const mozilla::dom::Element*);
 void Gecko_NoteDirtySubtreeForInvalidation(const mozilla::dom::Element*);
 void Gecko_NoteAnimationOnlyDirtyElement(const mozilla::dom::Element*);
@@ -592,6 +590,11 @@ mozilla::StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const mozilla::dom::Document*);
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const mozilla::dom::Document*, bool aUseContent);
+
+mozilla::StyleDynamicRange Gecko_MediaFeatures_DynamicRange(
+    const mozilla::dom::Document*);
+mozilla::StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
+    const mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
     const mozilla::dom::Document*);

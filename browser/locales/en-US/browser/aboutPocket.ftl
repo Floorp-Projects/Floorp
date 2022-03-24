@@ -15,9 +15,12 @@ pocket-panel-saved-error-tag-length = Tags are limited to 25 characters
 pocket-panel-saved-error-only-links = Only links can be saved
 pocket-panel-saved-error-not-saved = Page Not Saved
 pocket-panel-saved-error-no-internet = You must be connected to the Internet in order to save to { -pocket-brand-name }. Please connect to the Internet and try again.
+pocket-panel-saved-error-remove = There was an error while trying to remove this page.
 pocket-panel-saved-page-removed = Page Removed
 pocket-panel-saved-page-saved = Saved to { -pocket-brand-name }
+pocket-panel-saved-page-saved-b = Saved to { -pocket-brand-name }!
 pocket-panel-saved-processing-remove = Removing Page…
+pocket-panel-saved-removed = Page Removed from My List
 pocket-panel-saved-processing-tags = Adding tags…
 pocket-panel-saved-remove-page = Remove Page
 pocket-panel-saved-save-tags = Save
@@ -25,6 +28,9 @@ pocket-panel-saved-saving-tags = Saving…
 pocket-panel-saved-suggested-tags = Suggested Tags
 pocket-panel-saved-tags-saved = Tags Added
 pocket-panel-signup-view-list = View List
+
+# This is displayed above a field where the user can add tags
+pocket-panel-signup-add-tags = Add Tags:
 
 ## about:pocket-signup panel
 
@@ -65,5 +71,5 @@ pocket-panel-header-sign-in = Sign In
 ## Pocket panel buttons
 
 pocket-panel-button-show-all = Show All
-pocket-panel-button-add-tags = Add Tags
 pocket-panel-button-activate = Activate { -pocket-brand-name } in { -brand-product-name }
+pocket-panel-button-remove = Remove

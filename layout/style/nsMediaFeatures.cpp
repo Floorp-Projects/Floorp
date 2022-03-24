@@ -157,7 +157,7 @@ uint32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
 
   if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
-      dx->GetDepth(depth);
+      depth = dx->GetDepth();
     }
   }
 
@@ -289,6 +289,34 @@ StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     return StylePrefersContrast::More;
   }
   return StylePrefersContrast::NoPreference;
+}
+
+StyleDynamicRange Gecko_MediaFeatures_DynamicRange(const Document* aDocument) {
+  // Bug 1759772: Once HDR color is available, update each platform
+  // LookAndFeel implementation to return StyleDynamicRange::High when
+  // appropriate.
+  return StyleDynamicRange::Standard;
+}
+
+StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
+    const Document* aDocument) {
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return StyleDynamicRange::Standard;
+  }
+  // video-dynamic-range: high has 3 requirements:
+  // 1) high peak brightness
+  // 2) high contrast ratio
+  // 3) color depth > 24
+  // We check the color depth requirement before asking the LookAndFeel
+  // if it is HDR capable.
+  if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
+    if (dx->GetDepth() > 24 &&
+        LookAndFeel::GetInt(LookAndFeel::IntID::VideoDynamicRange)) {
+      return StyleDynamicRange::High;
+    }
+  }
+
+  return StyleDynamicRange::Standard;
 }
 
 static PointerCapabilities GetPointerCapabilities(const Document* aDocument,

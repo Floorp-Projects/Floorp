@@ -135,8 +135,7 @@ class InlinableSetterData : public InlinableOpData {
 mozilla::Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
                                                     BytecodeLocation loc);
 
-mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub,
-                                                        BytecodeLocation loc);
+mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub);
 mozilla::Maybe<InlinableGetterData> FindInlinableGetterData(
     ICCacheIRStub* stub);
 mozilla::Maybe<InlinableSetterData> FindInlinableSetterData(

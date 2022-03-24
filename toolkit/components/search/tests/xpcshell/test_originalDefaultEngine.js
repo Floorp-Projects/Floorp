@@ -13,13 +13,6 @@ add_task(async function setup() {
   await SearchTestUtils.useTestEngines("test-extensions");
 });
 
-function promiseDefaultNotification() {
-  return SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.DEFAULT,
-    SearchUtils.TOPIC_ENGINE_MODIFIED
-  );
-}
-
 add_task(async function test_originalDefaultEngine() {
   await Promise.all([Services.search.init(), promiseAfterSettings()]);
   Assert.equal(
