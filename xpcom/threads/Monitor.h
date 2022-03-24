@@ -32,8 +32,8 @@ class CAPABILITY Monitor {
   [[nodiscard]] bool TryLock() TRY_ACQUIRE(true) { return mMutex.TryLock(); }
   void Unlock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
 
-  void Wait() { mCondVar.Wait(); }
-  CVStatus Wait(TimeDuration aDuration) { return mCondVar.Wait(aDuration); }
+  void Wait() REQUIRES(this) { mCondVar.Wait(); }
+  CVStatus Wait(TimeDuration aDuration) REQUIRES(this) { return mCondVar.Wait(aDuration); }
 
   void Notify() { mCondVar.Notify(); }
   void NotifyAll() { mCondVar.NotifyAll(); }
@@ -126,8 +126,17 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS BaseMonitorAutoLock {
   }
 
   ~BaseMonitorAutoLock() CAPABILITY_RELEASE() { mMonitor->Unlock(); }
-  void Wait() { mMonitor->Wait(); }
-  CVStatus Wait(TimeDuration aDuration) { return mMonitor->Wait(aDuration); }
+  // It's very hard to mess up MonitorAutoLock lock(mMonitor); ... lock.Wait().
+  // The only way you can fail to hold the lock when you call lock.Wait() is to
+  // use MonitorAutoUnlock.   For now we'll ignore that case.
+  void Wait() {
+    mMonitor->AssertCurrentThreadOwns();
+    mMonitor->Wait();
+  }
+  CVStatus Wait(TimeDuration aDuration) {
+    mMonitor->AssertCurrentThreadOwns();
+    return mMonitor->Wait(aDuration);
+  }
 
   void Notify() { mMonitor->Notify(); }
   void NotifyAll() { mMonitor->NotifyAll(); }
@@ -243,9 +252,13 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
     }
   }
 
-  void Wait() { mMonitor->Wait(); }
+  // See BaseMonitorAutoLock::Wait
+  void Wait() {
+    mMonitor->AssertCurrentThreadOwns(); // someone could have called Unlock()
+    mMonitor->Wait();
+  }
   CVStatus Wait(TimeDuration aDuration) {
-    MOZ_ASSERT(mLocked);
+    mMonitor->AssertCurrentThreadOwns();
     return mMonitor->Wait(aDuration);
   }
 
