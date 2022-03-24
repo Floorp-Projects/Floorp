@@ -594,7 +594,22 @@ class CommandSiteManager:
         and call .activate() to make the virtualenv active.
         """
 
+        active_site = MozSiteMetadata.from_runtime()
+        site_is_already_active = active_site.site_name == self._site_name
+        if (
+            active_site.site_name not in ("mach", "common")
+            and not site_is_already_active
+        ):
+            raise Exception(
+                f'Activating from one command site ("{active_site.site_name}") to '
+                f'another ("{self._site_name}") is not allowed, because they may '
+                "be incompatible."
+            )
+
         self.ensure()
+
+        if site_is_already_active:
+            return
 
         with self._metadata.update_current_site(self._virtualenv.python_path):
             activate_virtualenv(self._virtualenv)
