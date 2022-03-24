@@ -17,6 +17,7 @@
 #include "api/array_view.h"
 #include "common_audio/include/audio_util.h"
 #include "common_audio/resampler/include/push_resampler.h"
+#include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/agc2/rnn_vad/common.h"
 #include "modules/audio_processing/agc2/rnn_vad/features_extraction.h"
 #include "modules/audio_processing/agc2/rnn_vad/rnn.h"
@@ -61,12 +62,32 @@ class Vad : public VoiceActivityDetector {
   rnn_vad::RnnBasedVad rnn_vad_;
 };
 
+// Returns an updated version of `p_old` by using instant decay and the given
+// `attack` on a new VAD probability value `p_new`.
+float SmoothedVadProbability(float p_old, float p_new, float attack) {
+  RTC_DCHECK_GT(attack, 0.f);
+  RTC_DCHECK_LE(attack, 1.f);
+  if (p_new < p_old || attack == 1.f) {
+    // Instant decay (or no smoothing).
+    return p_new;
+  } else {
+    // Attack phase.
+    return attack * p_new + (1.f - attack) * p_old;
+  }
+}
+
 }  // namespace
 
-VadLevelAnalyzer::VadLevelAnalyzer() : vad_(std::make_unique<Vad>()) {}
+VadLevelAnalyzer::VadLevelAnalyzer()
+    : VadLevelAnalyzer(kDefaultSmoothedVadProbabilityAttack,
+                       std::make_unique<Vad>()) {}
 
-VadLevelAnalyzer::VadLevelAnalyzer(std::unique_ptr<VoiceActivityDetector> vad)
-    : vad_(std::move(vad)) {
+VadLevelAnalyzer::VadLevelAnalyzer(float vad_probability_attack)
+    : VadLevelAnalyzer(vad_probability_attack, std::make_unique<Vad>()) {}
+
+VadLevelAnalyzer::VadLevelAnalyzer(float vad_probability_attack,
+                                   std::unique_ptr<VoiceActivityDetector> vad)
+    : vad_(std::move(vad)), vad_probability_attack_(vad_probability_attack) {
   RTC_DCHECK(vad_);
 }
 
@@ -74,13 +95,18 @@ VadLevelAnalyzer::~VadLevelAnalyzer() = default;
 
 VadLevelAnalyzer::Result VadLevelAnalyzer::AnalyzeFrame(
     AudioFrameView<const float> frame) {
+  // Compute levels.
   float peak = 0.f;
   float rms = 0.f;
   for (const auto& x : frame.channel(0)) {
     peak = std::max(std::fabs(x), peak);
     rms += x * x;
   }
-  return {vad_->ComputeProbability(frame),
+  // Compute smoothed speech probability.
+  vad_probability_ = SmoothedVadProbability(
+      /*p_old=*/vad_probability_, /*p_new=*/vad_->ComputeProbability(frame),
+      vad_probability_attack_);
+  return {vad_probability_,
           FloatS16ToDbfs(std::sqrt(rms / frame.samples_per_channel())),
           FloatS16ToDbfs(peak)};
 }

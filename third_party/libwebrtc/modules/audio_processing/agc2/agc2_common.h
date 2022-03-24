@@ -49,6 +49,9 @@ constexpr float kFullBufferLeakFactor = 1.f - 1.f / kFullBufferSizeMs;
 
 constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
 
+// Robust VAD probability and speech decisions.
+constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
+
 // Saturation Protector settings.
 float GetInitialSaturationMarginDb();
 float GetExtraSaturationMarginOffsetDb();

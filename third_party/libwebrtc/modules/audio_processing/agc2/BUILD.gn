@@ -95,6 +95,7 @@ rtc_library("common") {
     "../../../rtc_base:rtc_base_approved",
     "../../../system_wrappers:field_trial",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("fixed_digital") {
@@ -168,6 +169,7 @@ rtc_library("rnn_vad_with_level") {
     "vad_with_level.h",
   ]
   deps = [
+    ":common",
     "..:audio_frame_view",
     "../../../api:array_view",
     "../../../common_audio",
@@ -266,9 +268,12 @@ if (rtc_include_tests) {
     testonly = true
     sources = [ "vad_with_level_unittest.cc" ]
     deps = [
+      ":common",
       ":rnn_vad_with_level",
       "..:audio_frame_view",
       "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:safe_compare",
+      "../../../test:test_support",
     ]
   }
 
