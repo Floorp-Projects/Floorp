@@ -140,4 +140,24 @@ class MultitaskingTest {
             verifyTabsCounterNotShown()
         }
     }
+
+    @SmokeTest
+    @Test
+    fun verifyTabsTrayListTest() {
+        val tab1Url = webServer.url("tab1.html").toString()
+        val tab1Title = webServer.hostName + "/tab1.html"
+        val tab2Title = webServer.hostName + "/tab2.html"
+
+        searchScreen {
+        }.loadPage(tab1Url) {
+            verifyPageContent("Tab 1")
+            longPressLink("Tab 2")
+            openLinkInNewTab()
+        }.openTabsTray {
+        }.selectTab(tab2Title) {
+        }.openTabsTray {
+            verifyCloseTabButton(tab1Title)
+            verifyCloseTabButton(tab2Title)
+        }
+    }
 }

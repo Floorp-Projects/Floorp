@@ -33,6 +33,8 @@ class TabsTrayRobot {
         }
     }
 
+    fun verifyCloseTabButton(tabTitle: String) = closeTabButton(tabTitle)
+
     class Transition {
         fun selectTab(tabTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             onView(withText(tabTitle)).perform(click())
@@ -42,11 +44,12 @@ class TabsTrayRobot {
         }
 
         fun closeTab(tabTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            onView(allOf(withId(R.id.close_button), hasSibling(withText(tabTitle))))
-                .perform(click())
+            closeTabButton(tabTitle).perform(click())
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
     }
 }
+
+private fun closeTabButton(tabTitle: String) = onView(allOf(withId(R.id.close_button), hasSibling(withText(tabTitle))))
