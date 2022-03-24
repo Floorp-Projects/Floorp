@@ -178,7 +178,9 @@ const DomainGroupBuilder = new (class DomainGroupBuilder {
 
     for (let group of groups) {
       this.#currentGroups.set(group.builderMetadata.domain, group);
-      group.urls = new Set(await SnapshotGroups.getUrls({ id: group.id }));
+      group.urls = new Set(
+        await SnapshotGroups.getUrls({ id: group.id, hidden: true })
+      );
     }
   }
 

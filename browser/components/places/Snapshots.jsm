@@ -482,9 +482,12 @@ const Snapshots = new (class Snapshots {
    *   Restrict the snapshots to those with a particular type of page data available.
    * @param {number} [options.group]
    *   Restrict the snapshots to those within a particular group.
-   * @param {boolean} [sortDescending]
+   * @param {boolean} [options.includeHiddenInGroup]
+   *   Only applies when querying a particular group. Pass true to include
+   *   snapshots that are hidden in the group.
+   * @param {boolean} [options.sortDescending]
    *   Whether or not to sortDescending. Defaults to true.
-   * @param {string} [sortBy]
+   * @param {string} [options.sortBy]
    *   A string to choose what to sort the snapshots by, e.g. "last_interaction_at"
    *   By default results are sorted by last_interaction_at.
    * @returns {Snapshot[]}
@@ -495,6 +498,7 @@ const Snapshots = new (class Snapshots {
     includeTombstones = false,
     type = undefined,
     group = undefined,
+    includeHiddenInGroup = false,
     sortDescending = true,
     sortBy = "last_interaction_at",
   } = {}) {
@@ -517,9 +521,12 @@ const Snapshots = new (class Snapshots {
 
     if (group) {
       clauses.push("group_id = :group");
+      if (!includeHiddenInGroup) {
+        clauses.push("g.hidden = 0");
+      }
       bindings.group = group;
       joins.push(
-        "LEFT JOIN moz_places_metadata_groups_to_snapshots USING(place_id)"
+        "LEFT JOIN moz_places_metadata_groups_to_snapshots g USING(place_id)"
       );
     }
 

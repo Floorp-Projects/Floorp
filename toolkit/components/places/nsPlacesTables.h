@@ -341,11 +341,14 @@
       "  builder_data TEXT "                                               \
       ")")
 
+// Note: if adding/removing columns here, consider updating
+// SnapshotGroups.updateUrls as well.
 #define CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS                        \
   nsLiteralCString(                                                           \
       "CREATE TABLE IF NOT EXISTS moz_places_metadata_groups_to_snapshots ( " \
       "  group_id INTEGER NOT NULL, "                                         \
       "  place_id INTEGER NOT NULL, "                                         \
+      "  hidden INTEGER DEFAULT 0 NOT NULL, "                                 \
       "  PRIMARY KEY (group_id, place_id), "                                  \
       "  FOREIGN KEY (group_id) REFERENCES "                                  \
       "    moz_places_metadata_snapshots_groups(id) ON DELETE CASCADE, "      \

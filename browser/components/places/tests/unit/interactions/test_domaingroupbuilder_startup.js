@@ -32,7 +32,7 @@ add_task(async function setup() {
   for (let url of TEST_URLS) {
     await Snapshots.add({ url });
   }
-  await SnapshotGroups.add(
+  let groupId = await SnapshotGroups.add(
     {
       title: "example",
       builder: "domain",
@@ -42,6 +42,8 @@ add_task(async function setup() {
     },
     TEST_URLS
   );
+
+  await SnapshotGroups.setUrlHidden(groupId, TEST_URLS[2], true);
 });
 
 add_task(async function test_update_correctly_updates_group() {
@@ -63,7 +65,7 @@ add_task(async function test_update_correctly_updates_group() {
     builderMetadata: { domain: "example.com" },
   });
 
-  let urls = await SnapshotGroups.getUrls({ id: groups[0].id });
+  let urls = await SnapshotGroups.getUrls({ id: groups[0].id, hidden: true });
   Assert.deepEqual(
     urls.sort(),
     [...TEST_URLS, TEST_URLS_EXTRA].sort(),
