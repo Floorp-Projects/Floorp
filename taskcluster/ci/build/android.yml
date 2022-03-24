@@ -115,7 +115,7 @@ android-x86/opt:
         platform: android-5-0-x86/opt
         symbol: B
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -140,7 +140,7 @@ android-x86-lite/opt:
         platform: android-4-1-x86/opt
         symbol: Bl
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -252,7 +252,7 @@ android-arm/opt:
         platform: android-5-0-armv7/opt
         symbol: B
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -278,7 +278,7 @@ android-arm-lite/opt:
         platform: android-4-1-armv7/opt
         symbol: Bl
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -365,7 +365,7 @@ android-aarch64/opt:
         platform: android-5-0-aarch64/opt
         symbol: B
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -391,7 +391,7 @@ android-aarch64-lite/opt:
         platform: android-5-0-aarch64/opt
         symbol: Bl
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -530,7 +530,7 @@ android-x86_64/opt:
         platform: android-5-0-x86_64/opt
         symbol: B
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -556,7 +556,7 @@ android-x86_64-lite/opt:
         platform: android-5-0-x86_64/opt
         symbol: Bl
     run-on-projects: ['integration']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
