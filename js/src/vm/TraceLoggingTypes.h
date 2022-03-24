@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "js/AllocPolicy.h"
 #include "js/Utility.h"
 
 class JSLinearString;
