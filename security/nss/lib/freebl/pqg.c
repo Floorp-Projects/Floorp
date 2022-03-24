@@ -1432,7 +1432,7 @@ step_5:
     ** "will give an acceptable probability of error."
     */
     /*CHECK_SEC_OK( prm_RabinTest(&Q, &passed) );*/
-    err = mpp_pprime(&Q, prime_testcount_q(L, N));
+    err = mpp_pprime_secure(&Q, prime_testcount_q(L, N));
     passed = (err == MP_YES) ? SECSuccess : SECFailure;
     /* ******************************************************************
     ** Step 9. (Step 5 in 186-1) "If q is not prime, goto step 5 (1 in 186-1)."
@@ -1485,7 +1485,7 @@ step_5:
     ** "Perform a robust primality test on p."
     */
         /*CHECK_SEC_OK( prm_RabinTest(&P, &passed) );*/
-        err = mpp_pprime(&P, prime_testcount_p(L, N));
+        err = mpp_pprime_secure(&P, prime_testcount_p(L, N));
         passed = (err == MP_YES) ? SECSuccess : SECFailure;
         /* ******************************************************************
     ** Step 11.8. "If p is determined to be primed return VALID
@@ -1713,9 +1713,9 @@ PQG_VerifyParams(const PQGParams *params,
     CHECK_MPI_OK(mp_mod(&P, &Q, &r));
     CHECKPARAM(mp_cmp_d(&r, 1) == 0);
     /* 5.  Q is prime */
-    CHECKPARAM(mpp_pprime(&Q, prime_testcount_q(L, N)) == MP_YES);
+    CHECKPARAM(mpp_pprime_secure(&Q, prime_testcount_q(L, N)) == MP_YES);
     /* 6.  P is prime */
-    CHECKPARAM(mpp_pprime(&P, prime_testcount_p(L, N)) == MP_YES);
+    CHECKPARAM(mpp_pprime_secure(&P, prime_testcount_p(L, N)) == MP_YES);
     /* Steps 7-12 are done only if the optional PQGVerify is supplied. */
     /* continue processing P */
     /* 7.  counter < 4*L */

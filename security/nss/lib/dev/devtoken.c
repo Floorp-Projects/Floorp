@@ -32,13 +32,6 @@ nssToken_Destroy(
             PK11_FreeSlot(tok->pk11slot);
             PZ_DestroyLock(tok->base.lock);
             nssTokenObjectCache_Destroy(tok->cache);
-
-            /* We're going away, let the nssSlot know in case it's held
-             * alive by someone else. Usually we should hold the last ref. */
-            nssSlot_EnterMonitor(tok->slot);
-            tok->slot->token = NULL;
-            nssSlot_ExitMonitor(tok->slot);
-
             (void)nssSlot_Destroy(tok->slot);
             return nssArena_Destroy(tok->base.arena);
         }

@@ -31,6 +31,8 @@
 // The Google C++ Testing and Mocking Framework (Google Test)
 
 #include "gtest/gtest-test-part.h"
+
+#include "gtest/internal/gtest-port.h"
 #include "src/gtest-internal-inl.h"
 
 namespace testing {
@@ -46,7 +48,9 @@ std::string TestPartResult::ExtractSummary(const char* message) {
 
 // Prints a TestPartResult object.
 std::ostream& operator<<(std::ostream& os, const TestPartResult& result) {
-  return os << result.file_name() << ":" << result.line_number() << ": "
+  return os << internal::FormatFileLocation(result.file_name(),
+                                            result.line_number())
+            << " "
             << (result.type() == TestPartResult::kSuccess
                     ? "Success"
                     : result.type() == TestPartResult::kSkip
@@ -82,8 +86,8 @@ namespace internal {
 
 HasNewFatalFailureHelper::HasNewFatalFailureHelper()
     : has_new_fatal_failure_(false),
-      original_reporter_(
-          GetUnitTestImpl()->GetTestPartResultReporterForCurrentThread()) {
+      original_reporter_(GetUnitTestImpl()->
+                         GetTestPartResultReporterForCurrentThread()) {
   GetUnitTestImpl()->SetTestPartResultReporterForCurrentThread(this);
 }
 
@@ -94,7 +98,8 @@ HasNewFatalFailureHelper::~HasNewFatalFailureHelper() {
 
 void HasNewFatalFailureHelper::ReportTestPartResult(
     const TestPartResult& result) {
-  if (result.fatally_failed()) has_new_fatal_failure_ = true;
+  if (result.fatally_failed())
+    has_new_fatal_failure_ = true;
   original_reporter_->ReportTestPartResult(result);
 }
 

@@ -1259,6 +1259,20 @@ NSS_GetClientAuthData(void *arg,
                       struct CERTCertificateStr **pRetCert,
                       struct SECKEYPrivateKeyStr **pRetKey);
 
+/* This function can be called by the appliation's custom GetClientAuthHook
+ * to filter out any certs in the cert list that doesn't match the negotiated
+ * requirements of the current SSL connection.
+ */
+SSL_IMPORT SECStatus
+SSL_FilterClientCertListBySocket(PRFileDesc *socket, CERTCertList *certlist);
+
+/* This function can be called by the application's custom GetClientAuthHook
+ * to determine if a single certificate matches the negotiated requirements of
+ * the current SSL connection.
+ */
+SSL_IMPORT PRBool
+SSL_CertIsUsable(PRFileDesc *socket, CERTCertificate *cert);
+
 /*
 ** Configure DTLS-SRTP (RFC 5764) cipher suite preferences.
 ** Input is a list of ciphers in descending preference order and a length

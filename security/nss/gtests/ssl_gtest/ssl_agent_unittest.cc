@@ -229,9 +229,6 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
                        TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll));
-INSTANTIATE_TEST_SUITE_P(ClientTests, TlsAgentTestClient,
-                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                            TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_SUITE_P(ClientTests13, TlsAgentTestClient13,
                          ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                             TlsConnectTestBase::kTlsV13));

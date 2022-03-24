@@ -46,10 +46,12 @@ RUN apt-get update \
     g++-9 \ 
     gcc-9-multilib \
     g++-9-multilib \ 
-    gcc-10 \ 
+    gcc-10 \
     g++-10 \ 
-    gcc-10-multilib \ 
-    g++-10-multilib \ 
+    gcc-10-multilib \
+    g++-10-multilib \
+    gcc-11-multilib \
+    g++-11-multilib \
  && rm -rf /var/lib/apt/lists/* \
  && apt-get autoremove -y && apt-get clean -y
 

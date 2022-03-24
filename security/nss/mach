@@ -176,7 +176,8 @@ class covAction(argparse.Action):
         env = {
             "GTESTFILTER": "*", # Prevent parallel test runs.
             "ASAN_OPTIONS": "coverage=1:coverage_dir=" + outdir,
-            "NSS_DEFAULT_DB_TYPE": "dbm"
+            "NSS_DEFAULT_DB_TYPE": "sql",
+            "NSS_DISABLE_UNLOAD": "1"
         }
 
         run_tests("ssl_gtests", env=env, silent=True)

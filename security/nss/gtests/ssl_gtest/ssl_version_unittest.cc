@@ -329,11 +329,22 @@ TEST_F(TlsConnectStreamTls13, Tls14ClientHelloWithSupportedVersions) {
   ASSERT_LT(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_2), version);
 }
 
-// Offer 1.3 but with ClientHello.legacy_version == SSL 3.0. This
+// Offer 1.3 but with Server/ClientHello.legacy_version == SSL 3.0. This
 // causes a protocol version alert.  See RFC 8446 Appendix D.5.
 TEST_F(TlsConnectStreamTls13, Ssl30ClientHelloWithSupportedVersions) {
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_, SSL_LIBRARY_VERSION_3_0);
   ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
+}
+
+TEST_F(TlsConnectStreamTls13, Ssl30ServerHelloWithSupportedVersions) {
+  MakeTlsFilter<TlsServerHelloVersionSetter>(server_, SSL_LIBRARY_VERSION_3_0);
+  StartConnect();
+  client_->ExpectSendAlert(kTlsAlertProtocolVersion);
+  /* Since the handshake is not finished the client will send an unencrypted
+   * alert. The server is expected to close the connection with a unexpected
+   * message alert. */
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  Handshake();
 }
 
 // Verify the client sends only DTLS versions in supported_versions
