@@ -263,7 +263,7 @@ LoadDLLs() {
   typedef HRESULT(STDMETHODCALLTYPE* FunctionName##Ptr_t)(__VA_ARGS__)
 
 HRESULT
-MFStartup() {
+MediaFoundationInitializer::MFStartup() {
   if (IsWin7AndPre2000Compatible()) {
     /*
      * Specific exclude the usage of WMF on Win 7 with compatibility mode
@@ -292,7 +292,7 @@ MFStartup() {
 }
 
 HRESULT
-MFShutdown() {
+MediaFoundationInitializer::MFShutdown() {
   ENSURE_FUNCTION_PTR(MFShutdown, Mfplat.dll)
   HRESULT hr = E_FAIL;
   mozilla::mscom::EnsureMTA([&]() -> void { hr = (MFShutdownPtr)(); });
