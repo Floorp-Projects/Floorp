@@ -71,6 +71,17 @@ TEST(RoboCaller, PointerTest) {
   EXPECT_EQ(index, 2);
 }
 
+TEST(RoboCaller, CallByValue) {
+  RoboCaller<int> c;
+  int x = 17;
+
+  c.AddReceiver([&x](int n) { x += n; });
+  int y = 89;
+  c.Send(y);
+
+  EXPECT_EQ(x, 106);
+}
+
 void PlusOne(int& a) {
   a++;
 }
