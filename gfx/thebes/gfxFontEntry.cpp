@@ -339,7 +339,7 @@ void gfxFontEntry::RenderSVGGlyph(gfxContext* aContext, uint32_t aGlyphId,
   mSVGGlyphs->RenderGlyph(aContext, aGlyphId, aContextPaint);
 }
 
-bool gfxFontEntry::TryGetSVGData(gfxFont* aFont) {
+bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
   if (!gfxPlatform::GetPlatform()->OpenTypeSVGEnabled()) {
     return false;
   }
@@ -377,7 +377,7 @@ void gfxFontEntry::NotifyFontDestroyed(gfxFont* aFont) {
 
 void gfxFontEntry::NotifyGlyphsChanged() {
   for (uint32_t i = 0, count = mFontsUsingSVGGlyphs.Length(); i < count; ++i) {
-    gfxFont* font = mFontsUsingSVGGlyphs[i];
+    const gfxFont* font = mFontsUsingSVGGlyphs[i];
     font->NotifyGlyphsChanged();
   }
 }
