@@ -34,11 +34,7 @@ gczeal(0);
 assertEqPreciseStacks(
     endProfiling(),
     [
-        // Expected output for (simulator+via-Ion).
-        ['', '!>', '0,!>', '<,0,!>', 'filtering GC postbarrier,0,!>',
-         '<,0,!>', '0,!>', '!>', ''],
-
-        // Expected output for (simulator+baseline).
+        // Expected output for (simulator+via-Ion/baseline).
         ['', '!>', '0,!>', '<,0,!>', 'GC postbarrier,0,!>',
          '<,0,!>', '0,!>', '!>', ''],
 
@@ -55,8 +51,8 @@ gczeal(0);
 assertEqPreciseStacks(
     endProfiling(),
     [
-        // Expected output for (simulator+via-Ion).
-        ['', '!>', '0,!>', '', '0,!>', '<,0,!>', 'filtering GC postbarrier,0,!>',
+        // Expected output for (simulator+via-Ion/baseline).
+        ['', '!>', '0,!>', '', '0,!>', '<,0,!>', 'GC postbarrier,0,!>',
          '<,0,!>', '0,!>', '!>', ''],
 
         // Expected output for other configurations.
