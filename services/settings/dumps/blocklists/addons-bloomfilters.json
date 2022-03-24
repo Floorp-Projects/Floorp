@@ -3,6 +3,48 @@
     {
       "stash": {
         "blocked": [
+          "sp@FindingFormsPro:2.0.0",
+          "sp@SpeedCheckerPlus:3.0.0",
+          "sp@FindingFormsPro:1.0.7",
+          "sp@FindingFormsPro:1.0.3",
+          "sp@FindingFormsPro:1.0.6",
+          "sp@QuickEmailAccess:2.0.1",
+          "sp@FindingFormsPro:2.0.1",
+          "sp@FindingFormsPro:1.0.5",
+          "sp@SpeedCheckerPlus:1.0.1",
+          "sp@FindingFormsPro:1.0.0",
+          "sp@QuickEmailAccess:2.0.0",
+          "sp@QuickEmailAccess:3.0.0",
+          "sp@FindingFormsPro:1.0.2",
+          "sp@QuickEmailAccess:1.0.0",
+          "sp@SpeedCheckerPlus:1.0.0",
+          "sp@FindingFormsPro:1.0.4",
+          "sp@FindingFormsPro:3.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1647974297042,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1648060508100,
+      "id": "91ab65c0-df4a-4cb0-a9a8-d8dd072733ba",
+      "last_modified": 1648060697453
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{5071465d-c5af-4d4a-acc9-219299efc0f1}:1.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1647867559284,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1647974107196,
+      "id": "be326ebf-52dc-424c-80ce-6d0101bb368f",
+      "last_modified": 1647974296987
+    },
+    {
+      "stash": {
+        "blocked": [
           "ols@f-secure.com:2.218.7700",
           "ols@f-secure.com:2.210.7353",
           "ols@f-secure.com:2.236.8012",
