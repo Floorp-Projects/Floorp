@@ -11,7 +11,8 @@
 
 class nsAppStartupNotifier final {
  public:
-  static nsresult NotifyObservers(const char* aTopic);
+  static nsresult NotifyObservers(const char* aCategory,
+                                  nsISupports* aSubject = nullptr);
 };
 
 #endif /* nsAppStartupNotifier_h___ */
