@@ -228,11 +228,12 @@ const SymbolicAddressSignature SASigTableFill = {
     _FailOnNegI32,
     5,
     {_PTR, _I32, _RoN, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigTableGet = {SymbolicAddress::TableGet,
-                                                _RoN,
-                                                _FailOnInvalidRef,
-                                                3,
-                                                {_PTR, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigTableGetFunc = {
+    SymbolicAddress::TableGetFunc,
+    _RoN,
+    _FailOnInvalidRef,
+    3,
+    {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
     SymbolicAddress::TableGrow,
     _I32,
@@ -245,13 +246,12 @@ const SymbolicAddressSignature SASigTableInit = {
     _FailOnNegI32,
     6,
     {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigTableSet = {SymbolicAddress::TableSet,
-                                                _VOID,
-                                                _FailOnNegI32,
-                                                4,
-                                                {_PTR, _I32, _RoN, _I32, _END}};
-const SymbolicAddressSignature SASigTableSize = {
-    SymbolicAddress::TableSize, _I32, _Infallible, 2, {_PTR, _I32, _END}};
+const SymbolicAddressSignature SASigTableSetFunc = {
+    SymbolicAddress::TableSetFunc,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigRefFunc = {
     SymbolicAddress::RefFunc, _RoN, _FailOnInvalidRef, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigPreBarrierFiltering = {
@@ -1221,22 +1221,18 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralInt32Int32Int32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigTableInit));
       return FuncCast(Instance::tableInit, *abiType);
-    case SymbolicAddress::TableGet:
+    case SymbolicAddress::TableGetFunc:
       *abiType = Args_General_GeneralInt32Int32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigTableGet));
-      return FuncCast(Instance::tableGet, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableGetFunc));
+      return FuncCast(Instance::tableGetFunc, *abiType);
     case SymbolicAddress::TableGrow:
       *abiType = Args_Int32_GeneralGeneralInt32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigTableGrow));
       return FuncCast(Instance::tableGrow, *abiType);
-    case SymbolicAddress::TableSet:
+    case SymbolicAddress::TableSetFunc:
       *abiType = Args_Int32_GeneralInt32GeneralInt32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigTableSet));
-      return FuncCast(Instance::tableSet, *abiType);
-    case SymbolicAddress::TableSize:
-      *abiType = Args_Int32_GeneralInt32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigTableSize));
-      return FuncCast(Instance::tableSize, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableSetFunc));
+      return FuncCast(Instance::tableSetFunc, *abiType);
     case SymbolicAddress::RefFunc:
       *abiType = Args_General_GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigRefFunc));
@@ -1438,11 +1434,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::TableCopy:
     case SymbolicAddress::ElemDrop:
     case SymbolicAddress::TableFill:
-    case SymbolicAddress::TableGet:
+    case SymbolicAddress::TableGetFunc:
     case SymbolicAddress::TableGrow:
     case SymbolicAddress::TableInit:
-    case SymbolicAddress::TableSet:
-    case SymbolicAddress::TableSize:
+    case SymbolicAddress::TableSetFunc:
     case SymbolicAddress::RefFunc:
     case SymbolicAddress::PreBarrierFiltering:
     case SymbolicAddress::PostBarrier:
