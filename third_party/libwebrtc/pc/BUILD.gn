@@ -206,6 +206,8 @@ rtc_library("peerconnection") {
     "rtp_transceiver.h",
     "sctp_data_channel.cc",
     "sctp_data_channel.h",
+    "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
+    "sdp_offer_answer.h",  # dependent on peerconnection.h
     "sdp_serializer.cc",
     "sdp_serializer.h",
     "sdp_utils.cc",
