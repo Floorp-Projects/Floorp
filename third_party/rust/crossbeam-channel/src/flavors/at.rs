@@ -35,7 +35,7 @@ impl Channel {
     /// Creates a channel that delivers a message after a certain duration of time.
     #[inline]
     pub(crate) fn new_timeout(dur: Duration) -> Self {
-        Self::new_deadline(Instant::now() + dur)
+        Self::new_deadline(utils::convert_timeout_to_deadline(dur))
     }
 
     /// Attempts to receive a message without blocking.
@@ -142,7 +142,6 @@ impl Channel {
     }
 
     /// Returns the capacity of the channel.
-    #[allow(clippy::unnecessary_wraps)] // This is intentional.
     #[inline]
     pub(crate) fn capacity(&self) -> Option<usize> {
         Some(1)
