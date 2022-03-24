@@ -540,7 +540,7 @@ impl ResourceCache {
         let workers = Arc::new(ThreadPoolBuilder::new().build().unwrap());
         let glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
         let cached_glyphs = GlyphCache::new();
-        let fonts = SharedFontResources::new();
+        let fonts = SharedFontResources::new(IdNamespace(0));
         let picture_textures = PictureTextures::new(
             crate::picture::TILE_SIZE_DEFAULT,
             TextureFilter::Nearest,
