@@ -1097,3 +1097,91 @@ add_task(async function test_update_generic_creditCard_logo() {
   );
   await removeAllRecords();
 });
+
+add_task(async function test_submit_spaces_in_cc_number_logo() {
+  const amexCard = {
+    "cc-number": "37 4542 158116 607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = promiseNotificationShown();
+      await SpecialPowers.spawn(browser, [amexCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput(card["cc-number"]);
+
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+
+      is(
+        creditCardLogoWithoutExtension,
+        "chrome://formautofill/content/third-party/cc-logo-amex",
+        "CC logo should be amex"
+      );
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+  await removeAllRecords();
+});
+
+add_task(async function test_update_spaces_in_cc_number_logo() {
+  const amexCard = {
+    "cc-number": "374 54215 8116607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+
+  await saveCreditCard(amexCard);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = promiseNotificationShown();
+      await SpecialPowers.spawn(browser, [amexCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+
+        name.focus();
+        name.setUserInput("Mark Smith");
+        form.querySelector("#cc-number").setUserInput(card["cc-number"]);
+        form.querySelector("#cc-exp-month").setUserInput("4");
+        form
+          .querySelector("#cc-exp-year")
+          .setUserInput(new Date().getFullYear());
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit").click();
+      });
+
+      await promiseShown;
+
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+      is(
+        creditCardLogoWithoutExtension,
+        `chrome://formautofill/content/third-party/cc-logo-amex`,
+        `CC Logo should be amex`
+      );
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+  await removeAllRecords();
+});
