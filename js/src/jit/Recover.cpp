@@ -10,6 +10,7 @@
 
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
+#include "jit/Bailouts.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"
@@ -68,35 +69,9 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
 #ifdef DEBUG
   // Ensure that all snapshot which are encoded can safely be used for
   // bailouts.
-  if (GetJitContext()->cx) {
-    uint32_t stackDepth;
-    bool reachablePC;
-    jsbytecode* bailPC = pc();
-
-    if (mode() == ResumeMode::ResumeAfter) {
-      bailPC = GetNextPc(pc());
-    }
-
-    if (!ReconstructStackDepth(GetJitContext()->cx, script, bailPC, &stackDepth,
-                               &reachablePC)) {
+  if (JSContext* cx = GetJitContext()->cx) {
+    if (!AssertBailoutStackDepth(cx, script, pc(), mode(), exprStack)) {
       return false;
-    }
-
-    if (reachablePC) {
-      if (mode() == ResumeMode::InlinedFunCall) {
-        // For fun.call(this, ...); the reconstructStackDepth will
-        // include the this. When inlining that is not included.  So the
-        // exprStackSlots will be one less.
-        MOZ_ASSERT(stackDepth - exprStack <= 1);
-      } else {
-        // With accessors, we have different stack depths depending on
-        // whether or not we inlined the accessor, as the inlined stack
-        // contains a callee function that should never have been there
-        // and we might just be capturing an uneventful property site,
-        // in which case there won't have been any violence.
-        MOZ_ASSERT_IF(mode() != ResumeMode::InlinedAccessor,
-                      exprStack == stackDepth);
-      }
     }
   }
 #endif
