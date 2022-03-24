@@ -14,13 +14,17 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.EngineAction
@@ -54,8 +58,17 @@ import org.mozilla.fenix.utils.allowUndo
 class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private lateinit var historyStore: HistoryFragmentStore
     private lateinit var historyInteractor: HistoryInteractor
-    private lateinit var viewModel: HistoryViewModel
     private lateinit var historyProvider: DefaultPagedHistoryProvider
+
+    private var userHasHistory = MutableLiveData(true)
+    private var history: Flow<PagingData<History>> = Pager(
+        PagingConfig(PAGE_SIZE),
+        null
+    ) {
+        HistoryDataSource(
+            historyProvider = historyProvider
+        )
+    }.flow
 
     private var undoScope: CoroutineScope? = null
     private var pendingHistoryDeletionJob: (suspend () -> Unit)? = null
@@ -100,7 +113,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         _historyView = HistoryView(
             binding.historyLayout,
             historyInteractor,
-            onZeroItemsLoaded = { viewModel.userHasHistory.value = false }
+            onZeroItemsLoaded = { userHasHistory.value = false }
         )
 
         return view
@@ -153,18 +166,14 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             historyView.update(it)
         }
 
-        // Data may have been updated in below groups.
-        // When returning to this fragment we need to ensure we display the latest data.
-        viewModel = HistoryViewModel(historyProvider).also { model ->
-            model.userHasHistory.observe(
-                viewLifecycleOwner,
-                historyView::updateEmptyState
-            )
+        userHasHistory.observe(
+            viewLifecycleOwner,
+            historyView::updateEmptyState
+        )
 
-            model.viewModelScope.launch {
-                model.history.collect {
-                    historyView.historyAdapter.submitData(it)
-                }
+        lifecycleScope.launch {
+            history.collect {
+                historyView.historyAdapter.submitData(it)
             }
         }
     }
@@ -416,5 +425,9 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         val accountManager = requireComponents.backgroundServices.accountManager
         accountManager.syncNow(SyncReason.User)
         historyView.historyAdapter.refresh()
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 25
     }
 }
