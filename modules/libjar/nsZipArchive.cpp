@@ -64,6 +64,18 @@
 
 using namespace mozilla;
 
+static LazyLogModule gZipLog("nsZipArchive");
+
+#ifdef LOG
+#  undef LOG
+#endif
+#ifdef LOG_ENABLED
+#  undef LOG_ENABLED
+#endif
+
+#define LOG(args) MOZ_LOG(gZipLog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(gZipLog, mozilla::LogLevel::Debug)
+
 static const uint32_t kMaxNameLength = PATH_MAX; /* Maximum name length */
 // For synthetic zip entries. Date/time corresponds to 1980-01-01 00:00.
 static const uint16_t kSyntheticTime = 0;
@@ -107,8 +119,8 @@ class ZipArchiveLogger {
       file = PR_ImportFile((PROsfd)handle);
       if (!file) return;
 #else
-      rv = logFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_APPEND,
-                                     0644, &file);
+      rv = logFile->OpenNSPRFileDesc(
+          PR_WRONLY | PR_CREATE_FILE | PR_APPEND | PR_SYNC, 0644, &file);
       if (NS_FAILED(rv)) return;
 #endif
       mFd = file;
@@ -177,6 +189,7 @@ nsresult nsZipHandle::Init(nsIFile* file, nsZipHandle** ret, PRFileDesc** aFd) {
 #if defined(XP_WIN)
   flags |= nsIFile::OS_READAHEAD;
 #endif
+  LOG(("ZipHandle::Init %s", file->HumanReadablePath().get()));
   nsresult rv = file->OpenNSPRFileDesc(flags, 0000, &fd.rwget());
   if (NS_FAILED(rv)) return rv;
 
@@ -228,6 +241,7 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const char* entry,
   RefPtr<nsZipHandle> handle = new nsZipHandle();
   if (!handle) return NS_ERROR_OUT_OF_MEMORY;
 
+  LOG(("ZipHandle::Init entry %s", entry));
   handle->mBuf = MakeUnique<nsZipItemPtr<uint8_t>>(zip, entry);
   if (!handle->mBuf) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -398,6 +412,7 @@ nsresult nsZipArchive::Test(const char* aEntryName) {
 nsZipItem* nsZipArchive::GetItem(const char* aEntryName) {
   MutexAutoLock lock(mLock);
 
+  LOG(("ZipHandle::GetItem[%p] %s", this, aEntryName));
   if (aEntryName) {
     uint32_t len = strlen(aEntryName);
     //-- If the request is for a directory, make sure that synthetic entries
@@ -435,6 +450,7 @@ nsZipItem* nsZipArchive::GetItem(const char* aEntryName) {
 nsresult nsZipArchive::ExtractFile(nsZipItem* item, nsIFile* outFile,
                                    PRFileDesc* aFd) {
   MutexAutoLock lock(mLock);
+  LOG(("ZipHandle::ExtractFile[%p]", this));
   if (!item) return NS_ERROR_ILLEGAL_VALUE;
   if (!mFd) return NS_ERROR_FAILURE;
 
@@ -484,6 +500,7 @@ nsresult nsZipArchive::FindInit(const char* aPattern, nsZipFind** aFind) {
 
   MutexAutoLock lock(mLock);
 
+  LOG(("ZipHandle::FindInit[%p]", this));
   // null out param in case an error happens
   *aFind = nullptr;
 
@@ -559,10 +576,12 @@ nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
       // Need also to return the name length, as it is NOT zero-terminatdd...
       *aResult = mItem->Name();
       *aNameLen = mItem->nameLength;
+      LOG(("ZipHandle::FindNext[%p] %s", this, *aResult));
       return NS_OK;
     }
   }
   MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
+  LOG(("ZipHandle::FindNext[%p] not found %s", this, mPattern));
   return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
 }
 
@@ -591,6 +610,7 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
   const uint8_t* endp = startp + mFd->mLen;
   MMAP_FAULT_HANDLER_BEGIN_HANDLE(mFd)
   uint32_t centralOffset = 4;
+  LOG(("ZipHandle::BuildFileList[%p]", this));
   // Only perform readahead in the parent process. Children processes
   // don't need readahead when the file has already been readahead by
   // the parent process, and readahead only really happens for omni.ja,
@@ -659,6 +679,10 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
     item->isSynthetic = false;
 
     // Add item to file table
+#ifdef DEBUG
+    nsDependentCSubstring name(item->Name(), namelen);
+    LOG(("   %s", PromiseFlatCString(name).get()));
+#endif
     uint32_t hash = HashName(item->Name(), namelen);
     item->next = mFiles[hash];
     mFiles[hash] = item;
@@ -869,6 +893,7 @@ NS_IMPL_ADDREF(nsZipArchive)
 NS_IMPL_RELEASE(nsZipArchive)
 
 nsZipArchive::~nsZipArchive() {
+  LOG(("Closing nsZipArchive[%p]", this));
   if (mUseZipLog) {
     zipLog.Release();
   }
