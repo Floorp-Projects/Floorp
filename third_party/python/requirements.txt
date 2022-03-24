@@ -143,10 +143,12 @@ idna==2.10 \
     #   idna-ssl
     #   requests
     #   yarl
-importlib-metadata==3.10.1 \
-    --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
-    --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
-    # via jsonschema
+importlib-metadata==1.7.0 \
+    --hash=sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83 \
+    --hash=sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   jsonschema
 iso8601==0.1.14 \
     --hash=sha256:8aafd56fa0290496c5edbb13c311f78fa3a241f0853540da09d9363eae3ebd79 \
     --hash=sha256:e7e1122f064d626e17d47cd5106bed2c620cb38fe464999e0ddae2b6d2de6004
@@ -251,9 +253,9 @@ multidict==5.1.0 \
     # via
     #   aiohttp
     #   yarl
-packaging==21.0 \
-    --hash=sha256:7dc96269f53a4ccec5c0670940a4281106dd0bb343f47b7471f779df49c2fbe7 \
-    --hash=sha256:c86254f9220d55e31cc94d69bade760f0847da8000def4dfe1c6b872fd14ff14
+packaging==20.9 \
+    --hash=sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5 \
+    --hash=sha256:67714da7f7bc052e064859c05c595155bd1ee9f69f76557e21f051443c20947a
     # via -r requirements-mach-vendor-python.in
 pathspec==0.9.0 \
     --hash=sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a \
@@ -412,7 +414,6 @@ typing-extensions==3.10.0.0 \
     --hash=sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84
     # via
     #   aiohttp
-    #   importlib-metadata
     #   yarl
 urllib3==1.26.0 \
     --hash=sha256:4849f132941d68144df0a3785ccc4fe423430ba5db0108d045c8cadbc90f517a \
