@@ -48,6 +48,7 @@
 #include "rtc_base/system/arch.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/cpu_features_wrapper.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/audio_decoder_proxy_factory.h"
 #include "test/gtest.h"
@@ -937,35 +938,59 @@ class AcmReceiverBitExactnessOldApi : public ::testing::Test {
 #if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)) && \
     defined(WEBRTC_CODEC_ILBC)
 TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
-  Run(8000, PlatformChecksum("6c204b289486b0695b08a9e94fab1948",
-                             "ff5ffee2ee92f8fe61d9f2010b8a68a3",
-                             "53494a96f3db4a5b07d723e0cbac0ad7",
-                             "4598140b5e4f7ee66c5adad609e65a3e",
-                             "516c2859126ea4913f30d51af4a4f3dc"));
+  std::string others_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "6edbfe69b965a8687b8744ed1b8eb5a7"
+                             : "6c204b289486b0695b08a9e94fab1948";
+  std::string win64_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "405a50f0bcb8827e20aa944299fc59f6"
+                             : "ff5ffee2ee92f8fe61d9f2010b8a68a3";
+  Run(8000,
+      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
+                       "53494a96f3db4a5b07d723e0cbac0ad7",
+                       "4598140b5e4f7ee66c5adad609e65a3e",
+                       "516c2859126ea4913f30d51af4a4f3dc"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
-  Run(16000, PlatformChecksum("226dbdbce2354399c6df05371042cda3",
-                              "9c80bf5ec496c41ce8112e1523bf8c83",
-                              "11a6f170fdaffa81a2948af121f370af",
-                              "f2aad418af974a3b1694d5ae5cc2c3c7",
-                              "6133301a18be95c416984182816d859f"));
+  std::string others_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "295f031e051f1770b4ab4107dba768b5"
+                             : "226dbdbce2354399c6df05371042cda3";
+  std::string win64_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "58fd62a5c49ee513f9fa6fe7dbf62c97"
+                             : "9c80bf5ec496c41ce8112e1523bf8c83";
+  Run(16000,
+      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
+                       "11a6f170fdaffa81a2948af121f370af",
+                       "f2aad418af974a3b1694d5ae5cc2c3c7",
+                       "6133301a18be95c416984182816d859f"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
-  Run(32000, PlatformChecksum("f94665cc0e904d5d5cf0394e30ee4edd",
-                              "697934bcf0849f80d76ce20854161220",
-                              "3609aa5288c1d512e8e652ceabecb495",
-                              "100869c8dcde51346c2073e52a272d98",
-                              "55363bc9cdda6464a58044919157827b"));
+  std::string others_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "2895e5ab3146eaa78fa6843ed60e7e37"
+                             : "f94665cc0e904d5d5cf0394e30ee4edd";
+  std::string win64_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "04ce6a1dac5ffdd8438d804623d0132f"
+                             : "697934bcf0849f80d76ce20854161220";
+  Run(32000,
+      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
+                       "3609aa5288c1d512e8e652ceabecb495",
+                       "100869c8dcde51346c2073e52a272d98",
+                       "55363bc9cdda6464a58044919157827b"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
-  Run(48000, PlatformChecksum("2955d0b83602541fd92d9b820ebce68d",
-                              "f4a8386a6a49439ced60ed9a7c7f75fd",
-                              "d8169dfeba708b5212bdc365e08aee9d",
-                              "bd44bf97e7899186532f91235cef444d",
-                              "47594deaab5d9166cfbf577203b2563e"));
+  std::string others_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "640bca210e1b8dd229224d2a0c79ff1f"
+                             : "2955d0b83602541fd92d9b820ebce68d";
+  std::string win64_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
+                             : "f4a8386a6a49439ced60ed9a7c7f75fd";
+  Run(48000,
+      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
+                       "d8169dfeba708b5212bdc365e08aee9d",
+                       "bd44bf97e7899186532f91235cef444d",
+                       "47594deaab5d9166cfbf577203b2563e"));
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
@@ -1043,9 +1068,14 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
 
   rtc::scoped_refptr<rtc::RefCountedObject<ADFactory>> factory(
       new rtc::RefCountedObject<ADFactory>);
+  std::string others_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "640bca210e1b8dd229224d2a0c79ff1f"
+                             : "2955d0b83602541fd92d9b820ebce68d";
+  std::string win64_checksum_reference =
+      GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
+                             : "f4a8386a6a49439ced60ed9a7c7f75fd";
   Run(48000,
-      PlatformChecksum("2955d0b83602541fd92d9b820ebce68d",
-                       "f4a8386a6a49439ced60ed9a7c7f75fd",
+      PlatformChecksum(others_checksum_reference, win64_checksum_reference,
                        "d8169dfeba708b5212bdc365e08aee9d",
                        "bd44bf97e7899186532f91235cef444d",
                        "47594deaab5d9166cfbf577203b2563e"),
