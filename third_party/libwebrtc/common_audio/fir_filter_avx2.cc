@@ -34,7 +34,7 @@ FIRFilterAVX2::FIRFilterAVX2(const float* unaligned_coefficients,
           AlignedMalloc(sizeof(float) * (max_input_length + state_length_),
                         32))) {
   // Add zeros at the end of the coefficients.
-  RTC_DCHECK_GE(coefficients_length_, unaligned_coefficients_length);
+  RTC_DCHECK_GT(coefficients_length_, unaligned_coefficients_length);
   size_t padding = coefficients_length_ - unaligned_coefficients_length;
   memset(coefficients_.get(), 0, padding * sizeof(coefficients_[0]));
   // The coefficients are reversed to compensate for the order in which the
