@@ -466,6 +466,11 @@ nsresult mozSpellChecker::SetCurrentDictionary(const nsCString& aDictionary) {
 RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaries(
     const nsTArray<nsCString>& aDictionaries) {
   if (XRE_IsContentProcess()) {
+    if (!mEngine) {
+      mCurrentDictionaries.Clear();
+      return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+    }
+
     // mCurrentDictionaries will be set by RemoteSpellCheckEngineChild
     return mEngine->SetCurrentDictionaries(aDictionaries);
   }
@@ -518,6 +523,11 @@ RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
   }
 
   if (XRE_IsContentProcess()) {
+    if (!mEngine) {
+      mCurrentDictionaries.Clear();
+      return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+    }
+
     // mCurrentDictionaries will be set by RemoteSpellCheckEngineChild
     return mEngine->SetCurrentDictionaryFromList(aList);
   }
