@@ -998,9 +998,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return 0;
 }
 
-/* static */ void* Instance::tableGet(Instance* instance, uint32_t index,
-                                      uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
+/* static */ void* Instance::tableGetFunc(Instance* instance, uint32_t index,
+                                          uint32_t tableIndex) {
+  MOZ_ASSERT(SASigTableGetFunc.failureMode == FailureMode::FailOnInvalidRef);
 
   JSContext* cx = instance->cx();
   const Table& table = *instance->tables()[tableIndex];
@@ -1009,19 +1009,13 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  switch (table.repr()) {
-    case TableRepr::Ref:
-      return table.getAnyRef(index).forCompiledCode();
-    case TableRepr::Func: {
-      MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      RootedFunction fun(cx);
-      if (!table.getFuncRef(cx, index, &fun)) {
-        return AnyRef::invalid().forCompiledCode();
-      }
-      return FuncRef::fromJSFunction(fun).forCompiledCode();
-    }
+  MOZ_RELEASE_ASSERT(table.repr() == TableRepr::Func);
+  MOZ_RELEASE_ASSERT(!table.isAsmJS());
+  RootedFunction fun(cx);
+  if (!table.getFuncRef(cx, index, &fun)) {
+    return AnyRef::invalid().forCompiledCode();
   }
-  MOZ_CRASH("Should not happen");
+  return FuncRef::fromJSFunction(fun).forCompiledCode();
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
@@ -1050,9 +1044,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return oldSize;
 }
 
-/* static */ int32_t Instance::tableSet(Instance* instance, uint32_t index,
-                                        void* value, uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableSet.failureMode == FailureMode::FailOnNegI32);
+/* static */ int32_t Instance::tableSetFunc(Instance* instance, uint32_t index,
+                                            void* value, uint32_t tableIndex) {
+  MOZ_ASSERT(SASigTableSetFunc.failureMode == FailureMode::FailOnNegI32);
 
   JSContext* cx = instance->cx();
   Table& table = *instance->tables()[tableIndex];
@@ -1062,24 +1056,10 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  switch (table.repr()) {
-    case TableRepr::Ref:
-      table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
-      break;
-    case TableRepr::Func:
-      MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx);
-      break;
-  }
-
+  MOZ_RELEASE_ASSERT(table.repr() == TableRepr::Func);
+  MOZ_RELEASE_ASSERT(!table.isAsmJS());
+  table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx);
   return 0;
-}
-
-/* static */ uint32_t Instance::tableSize(Instance* instance,
-                                          uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableSize.failureMode == FailureMode::Infallible);
-  Table& table = *instance->tables()[tableIndex];
-  return table.length();
 }
 
 /* static */ void* Instance::refFunc(Instance* instance, uint32_t funcIndex) {
@@ -1427,7 +1407,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     const TableDesc& td = metadata().tables[i];
     TableInstanceData& table = tableInstanceData(td);
     table.length = tables_[i]->length();
-    table.functionBase = tables_[i]->functionBase();
+    table.elements = tables_[i]->tlsElements();
   }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -2343,7 +2323,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
     if (tables_[i] == theTable) {
       TableInstanceData& table = tableInstanceData(metadata().tables[i]);
       table.length = tables_[i]->length();
-      table.functionBase = tables_[i]->functionBase();
+      table.elements = tables_[i]->tlsElements();
     }
   }
 }
