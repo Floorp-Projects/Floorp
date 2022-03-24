@@ -2,14 +2,12 @@
 set -ex
 
 SCRIPT_DIR=$(cd $(dirname "$0") && pwd -P)
-WPT_ROOT=$SCRIPT_DIR/..
-cd $WPT_ROOT
 
 main() {
-    cd $WPT_ROOT/css
+    cd $SCRIPT_DIR
 
     if [ -z $VENV ]; then
-        VENV=tools/_virtualenv
+        VENV=_virtualenv
     fi
 
     # Create the virtualenv
@@ -48,7 +46,7 @@ main() {
     $VENV/bin/pip install -r requirements.txt
 
     # Run the build script
-    $VENV/bin/python tools/build.py "$@"
+    $VENV/bin/python build.py "$@"
 }
 
 main "$@"
