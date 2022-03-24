@@ -80,7 +80,6 @@ use selectors::matching::{ElementSelectorFlags, MatchingContext};
 use selectors::sink::Push;
 use selectors::{Element, OpaqueElement};
 use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::cell::RefCell;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -272,28 +271,8 @@ impl<'ln> GeckoNode<'ln> {
     }
 
     #[inline]
-    fn flags_atomic(&self) -> &AtomicU32 {
-        use std::cell::Cell;
-        let flags: &Cell<u32> = &(self.0)._base._base_1.mFlags;
-
-        #[allow(dead_code)]
-        fn static_assert() {
-            let _: [u8; std::mem::size_of::<Cell<u32>>()] = [0u8; std::mem::size_of::<AtomicU32>()];
-            let _: [u8; std::mem::align_of::<Cell<u32>>()] = [0u8; std::mem::align_of::<AtomicU32>()];
-        }
-
-        // Rust doesn't provide standalone atomic functions like GCC/clang do
-        // (via the atomic intrinsics) or via std::atomic_ref, but it guarantees
-        // that the memory representation of u32 and AtomicU32 matches:
-        // https://doc.rust-lang.org/std/sync/atomic/struct.AtomicU32.html
-        unsafe {
-            std::mem::transmute::<&Cell<u32>, &AtomicU32>(flags)
-        }
-    }
-
-    #[inline]
     fn flags(&self) -> u32 {
-        self.flags_atomic().load(Ordering::Relaxed)
+        (self.0)._base._base_1.mFlags
     }
 
     #[inline]
@@ -674,14 +653,18 @@ impl<'le> GeckoElement<'le> {
         self.as_node().flags()
     }
 
+    // FIXME: We can implement this without OOL calls, but we can't easily given
+    // GeckoNode is a raw reference.
+    //
+    // We can use a Cell<T>, but that's a bit of a pain.
     #[inline]
     fn set_flags(&self, flags: u32) {
-        self.as_node().flags_atomic().fetch_or(flags, Ordering::Relaxed);
+        unsafe { Gecko_SetNodeFlags(self.as_node().0, flags) }
     }
 
     #[inline]
     unsafe fn unset_flags(&self, flags: u32) {
-        self.as_node().flags_atomic().fetch_and(!flags, Ordering::Relaxed);
+        Gecko_UnsetNodeFlags(self.as_node().0, flags)
     }
 
     /// Returns true if this element has descendants for lazy frame construction.

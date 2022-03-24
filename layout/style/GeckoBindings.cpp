@@ -261,6 +261,15 @@ bool Gecko_IsRootElement(const Element* aElement) {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
 }
 
+// Dirtiness tracking.
+void Gecko_SetNodeFlags(const nsINode* aNode, uint32_t aFlags) {
+  const_cast<nsINode*>(aNode)->SetFlags(aFlags);
+}
+
+void Gecko_UnsetNodeFlags(const nsINode* aNode, uint32_t aFlags) {
+  const_cast<nsINode*>(aNode)->UnsetFlags(aFlags);
+}
+
 void Gecko_NoteDirtyElement(const Element* aElement) {
   MOZ_ASSERT(NS_IsMainThread());
   const_cast<Element*>(aElement)->NoteDirtyForServo();
