@@ -3349,15 +3349,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->EnterSVGEffectsContents(this, &hoistedScrollInfoItemsStorage);
   }
 
-  bool useStickyPosition = false;
-  if (disp->mPosition == StylePositionProperty::Sticky) {
-    StickyScrollContainer* stickyScrollContainer =
-        StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (stickyScrollContainer &&
-        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
-      useStickyPosition = true;
-    }
-  }
+  bool useStickyPosition = disp->mPosition == StylePositionProperty::Sticky;
 
   bool useFixedPosition =
       disp->mPosition == StylePositionProperty::Fixed &&
@@ -3837,11 +3829,25 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // descendants).
     const ActiveScrolledRoot* stickyASR = ActiveScrolledRoot::PickAncestor(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
-    resultList.AppendNewToTop<nsDisplayStickyPosition>(
+
+    auto* stickyItem = MakeDisplayItem<nsDisplayStickyPosition>(
         aBuilder, this, &resultList, stickyASR,
         aBuilder->CurrentActiveScrolledRoot(),
         clipState.IsClippedToDisplayPort());
-    ct.TrackContainer(resultList.GetTop());
+
+    bool shouldFlatten = true;
+
+    StickyScrollContainer* stickyScrollContainer =
+        StickyScrollContainer::GetStickyScrollContainerForFrame(this);
+    if (stickyScrollContainer &&
+        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
+      shouldFlatten = false;
+    }
+
+    stickyItem->SetShouldFlatten(shouldFlatten);
+
+    resultList.AppendToTop(stickyItem);
+    ct.TrackContainer(stickyItem);
 
     // If the sticky element is inside a filter, annotate the scroll frame that
     // scrolls the filter as having out-of-flow content inside a filter (this
