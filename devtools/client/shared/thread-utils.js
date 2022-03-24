@@ -43,6 +43,7 @@ exports.getThreadOptions = async function() {
     ),
     // This option is always true. See Bug 1654590 for removal.
     observeAsmJS: true,
+    observeWasm: true,
     breakpoints: sanitizeBreakpoints(await asyncStore.pendingBreakpoints),
     // XXX: `event-listener-breakpoints` is a copy of the event-listeners state
     // of the debugger panel. The `active` property is therefore linked to
