@@ -792,12 +792,26 @@ if (is_android) {
 
 if (is_win) {
   rtc_source_set("win32") {
-    # TODO(bugs.webrtc.org/9987): This build target will soon contain
-    #                             the following files:
-    # sources = [
-    #   "win32.cc",
-    #   "win32.h",
-    # ]
+    sources = [
+      "win32.cc",
+      "win32.h",
+      "win32_window.cc",
+      "win32_window.h",
+    ]
+
+    deps = [
+      ":checks",
+      ":macromagic",
+      ":rtc_base_approved",
+    ]
+
+    libs = [
+      "crypt32.lib",
+      "iphlpapi.lib",
+      "secur32.lib",
+    ]
+
+    defines = [ "_CRT_NONSTDC_NO_DEPRECATE" ]
   }
 }
 
@@ -1012,20 +1026,7 @@ rtc_library("rtc_base") {
   }
 
   if (is_win) {
-    sources += [
-      "win32.cc",
-      "win32.h",
-      "win32_window.cc",
-      "win32_window.h",
-    ]
-
-    libs += [
-      "crypt32.lib",
-      "iphlpapi.lib",
-      "secur32.lib",
-    ]
-
-    defines += [ "_CRT_NONSTDC_NO_DEPRECATE" ]
+    deps += [ ":win32" ]
   }
 
   if (is_posix || is_fuchsia) {
@@ -1416,22 +1417,6 @@ if (rtc_include_tests) {
       "thread_unittest.cc",
       "unique_id_generator_unittest.cc",
     ]
-    if (is_win) {
-      sources += [
-        "win32_unittest.cc",
-        "win32_window_unittest.cc",
-      ]
-    }
-    if (is_posix || is_fuchsia) {
-      sources += [
-        "openssl_adapter_unittest.cc",
-        "openssl_session_cache_unittest.cc",
-        "openssl_utility_unittest.cc",
-        "ssl_adapter_unittest.cc",
-        "ssl_identity_unittest.cc",
-        "ssl_stream_adapter_unittest.cc",
-      ]
-    }
     deps = [
       ":checks",
       ":gunit_helpers",
@@ -1452,6 +1437,23 @@ if (rtc_include_tests) {
       "task_utils:to_queued_task",
       "third_party/sigslot",
     ]
+    if (is_win) {
+      sources += [
+        "win32_unittest.cc",
+        "win32_window_unittest.cc",
+      ]
+      deps += [ ":win32" ]
+    }
+    if (is_posix || is_fuchsia) {
+      sources += [
+        "openssl_adapter_unittest.cc",
+        "openssl_session_cache_unittest.cc",
+        "openssl_utility_unittest.cc",
+        "ssl_adapter_unittest.cc",
+        "ssl_identity_unittest.cc",
+        "ssl_stream_adapter_unittest.cc",
+      ]
+    }
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/memory",

@@ -76,6 +76,9 @@ if (rtc_include_tests) {
         "window_finder_unittest.cc",
       ]
       public_configs = [ ":x11_config" ]
+      if (is_win) {
+        deps += [ "../../rtc_base:win32" ]
+      }
     }
   }
 
@@ -398,6 +401,21 @@ rtc_library("desktop_capture_generic") {
     ]
   }
 
+  deps = [
+    ":primitives",
+    "../../api:function_view",
+    "../../api:refcountedbase",
+    "../../api:scoped_refptr",
+    "../../rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
+    "../../rtc_base:checks",
+    "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/synchronization:rw_lock_wrapper",
+    "../../rtc_base/system:arch",
+    "../../rtc_base/system:rtc_export",
+    "../../system_wrappers",
+    "../../system_wrappers:metrics",
+  ]
+
   if (is_win) {
     sources += [
       "cropping_window_capturer_win.cc",
@@ -458,22 +476,9 @@ rtc_library("desktop_capture_generic") {
       "d3d11.lib",
       "dxgi.lib",
     ]
+    deps += [ "../../rtc_base:win32" ]
   }
 
-  deps = [
-    ":primitives",
-    "../../api:function_view",
-    "../../api:refcountedbase",
-    "../../api:scoped_refptr",
-    "../../rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
-    "../../rtc_base:checks",
-    "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:rw_lock_wrapper",
-    "../../rtc_base/system:arch",
-    "../../rtc_base/system:rtc_export",
-    "../../system_wrappers",
-    "../../system_wrappers:metrics",
-  ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
