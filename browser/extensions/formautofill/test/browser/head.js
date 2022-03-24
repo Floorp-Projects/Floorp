@@ -5,11 +5,11 @@
             FORM_URL, CREDITCARD_FORM_URL, CREDITCARD_FORM_IFRAME_URL
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF,
             AUTOFILL_ADDRESSES_AVAILABLE_PREF,
-            ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF, 
+            ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF,
             ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, runAndWaitForAutocompletePopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
+            sleep, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
@@ -21,6 +21,10 @@ const { OSKeyStore } = ChromeUtils.import(
 );
 const { OSKeyStoreTestUtils } = ChromeUtils.import(
   "resource://testing-common/OSKeyStoreTestUtils.jsm"
+);
+
+const { FormAutofillParent } = ChromeUtils.import(
+  "resource://autofill/FormAutofillParent.jsm"
 );
 
 const MANAGE_ADDRESSES_DIALOG_URL =
@@ -202,13 +206,83 @@ async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Use this function when you want to update the value of elements in
+ * a form and then submit the form. This function makes sure the form
+ * is "identified" (`identifyAutofillFields` is called) before submitting
+ * the form.
+ * This is guaranteed by first focusing on an element in the form to trigger
+ * the 'FormAutofill:FieldsIdentified' message.
+ *
+ * Note. This function assumes the elements to be updated are inside a form
+ *       whose id is "form".
+ *
+ * @param {string} focusSelector
+ *        A selector used to query the element to be focused
+ * @param {Object} target
+ *        The target in which to run the task.
+ * @param {Array<any>} args
+ *        Args passed to SpecialPowers.spawn
+ * @param {Function} task
+ *        The task where we update elements of the form.
+ * @param {boolean} submit
+ *        Set to true to submit the form after the task is done, false otherwise.
+ */
+async function focusUpdateSubmitForm(
+  focusSelector,
+  target,
+  args,
+  task,
+  submit = true
+) {
+  let fieldsIdentifiedPromiseResolver;
+  let fieldsIdentifiedObserver = {
+    fieldsIdentified() {
+      FormAutofillParent.removeMessageObserver(fieldsIdentifiedObserver);
+      fieldsIdentifiedPromiseResolver();
+    },
+  };
+
+  let fieldsIdentifiedPromise = new Promise(resolve => {
+    fieldsIdentifiedPromiseResolver = resolve;
+    FormAutofillParent.addMessageObserver(fieldsIdentifiedObserver);
+  });
+
+  let alreadyFocused = await SpecialPowers.spawn(
+    target,
+    [focusSelector],
+    function(selector) {
+      let form = content.document.getElementById("form");
+      let element = form.querySelector(selector);
+      if (element == content.document.activeElement) {
+        return true;
+      }
+      element.focus();
+      return false;
+    }
+  );
+
+  await SpecialPowers.spawn(target, args, task);
+
+  if (alreadyFocused) {
+    // If the element is already focused, assume the FieldsIdentified message
+    // was sent before.
+    fieldsIdentifiedPromiseResolver();
+  }
+
+  await fieldsIdentifiedPromise;
+
+  if (submit) {
+    await SpecialPowers.spawn(target, [], async function() {
+      let form = content.document.getElementById("form");
+      form.querySelector("input[type=submit]").click();
+    });
+  }
+}
+
 async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
   info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
-
-  const { FormAutofillParent } = ChromeUtils.import(
-    "resource://autofill/FormAutofillParent.jsm"
-  );
 
   // If the input is previously focused, no more notifications will be
   // sent as the notification goes along with focus event.
