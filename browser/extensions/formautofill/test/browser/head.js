@@ -262,27 +262,22 @@ async function waitForAutofill(target, selector, value) {
  * This is guaranteed by first focusing on an element in the form to trigger
  * the 'FormAutofill:FieldsIdentified' message.
  *
- * Note. This function assumes the elements to be updated are inside a form
- *       whose id is "form".
- *
- * @param {string} focusSelector
- *        A selector used to query the element to be focused
  * @param {Object} target
  *        The target in which to run the task.
- * @param {Array<any>} args
- *        Args passed to SpecialPowers.spawn
- * @param {Function} task
- *        The task where we update elements of the form.
+ * @param {Object} args
+ * @param {string} args.focusSelector
+ *        A selector used to query the element to be focused
+ * @param {string} args.formId
+ *        The id of the form to be updated. This function uses "form" if
+ *        this argument is not present
+ * @param {Object} args.newValues
+ *        Elements to be updated. Key is the element selector, value is the
+ *        new value of the element.
+ *
  * @param {boolean} submit
  *        Set to true to submit the form after the task is done, false otherwise.
  */
-async function focusUpdateSubmitForm(
-  focusSelector,
-  target,
-  args,
-  task,
-  submit = true
-) {
+async function focusUpdateSubmitForm(target, args, submit = true) {
   let fieldsIdentifiedPromiseResolver;
   let fieldsIdentifiedObserver = {
     fieldsIdentified() {
@@ -296,21 +291,29 @@ async function focusUpdateSubmitForm(
     FormAutofillParent.addMessageObserver(fieldsIdentifiedObserver);
   });
 
-  let alreadyFocused = await SpecialPowers.spawn(
-    target,
-    [focusSelector],
-    function(selector) {
-      let form = content.document.getElementById("form");
-      let element = form.querySelector(selector);
-      if (element == content.document.activeElement) {
-        return true;
-      }
-      element.focus();
-      return false;
-    }
-  );
+  let alreadyFocused = await SpecialPowers.spawn(target, [args], obj => {
+    let focused = false;
 
-  await SpecialPowers.spawn(target, args, task);
+    let formId = obj.formId ?? "form";
+    let form = content.document.getElementById(formId);
+    let element = form.querySelector(obj.focusSelector);
+    if (element != content.document.activeElement) {
+      element.focus();
+    } else {
+      focused = true;
+    }
+
+    for (const [selector, value] of Object.entries(obj.newValues)) {
+      element = form.querySelector(selector);
+      if (element instanceof content.HTMLInputElement) {
+        element.setUserInput(value);
+      } else {
+        element.value = value;
+      }
+    }
+
+    return focused;
+  });
 
   if (alreadyFocused) {
     // If the element is already focused, assume the FieldsIdentified message
@@ -321,8 +324,9 @@ async function focusUpdateSubmitForm(
   await fieldsIdentifiedPromise;
 
   if (submit) {
-    await SpecialPowers.spawn(target, [], async function() {
-      let form = content.document.getElementById("form");
+    await SpecialPowers.spawn(target, [args], obj => {
+      let formId = obj.formId ?? "form";
+      let form = content.document.getElementById(formId);
       form.querySelector("input[type=submit]").click();
     });
   }

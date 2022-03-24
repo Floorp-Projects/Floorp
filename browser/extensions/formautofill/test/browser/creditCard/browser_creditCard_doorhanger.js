@@ -12,13 +12,12 @@ add_task(async function test_submit_creditCard_cancel_saving() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 1");
-
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("5038146897157463");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": "5038146897157463",
+        },
       });
 
       ok(
@@ -54,15 +53,15 @@ add_task(async function test_submit_creditCard_saved() {
     async function(browser) {
       let promiseShown = promiseNotificationShown();
 
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 1");
-
-        form.querySelector("#cc-number").setUserInput("5038146897157463");
-        form.querySelector("#cc-exp-month").setUserInput("12");
-        form.querySelector("#cc-exp-year").setUserInput("2017");
-        form.querySelector("#cc-type").value = "mastercard";
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": "5038146897157463",
+          "#cc-exp-month": "12",
+          "#cc-exp-year": "2017",
+          "#cc-type": "mastercard",
+        },
       });
 
       await promiseShown;
@@ -218,18 +217,16 @@ add_task(async function test_iframe_unload_save_card() {
       let promiseShown = promiseNotificationShown();
       let iframeBC = browser.browsingContext.children[0];
       await focusUpdateSubmitForm(
-        "#cc-name",
         iframeBC,
-        [],
-        async function() {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          name.setUserInput("User 1");
-
-          form.querySelector("#cc-number").setUserInput("4556194630960970");
-          form.querySelector("#cc-exp-month").setUserInput("10");
-          form.querySelector("#cc-exp-year").setUserInput("2024");
-          form.querySelector("#cc-type").value = "visa";
+        {
+          focusSelector: "#cc-name",
+          newValues: {
+            "#cc-name": "User 1",
+            "#cc-number": "4556194630960970",
+            "#cc-exp-month": "10",
+            "#cc-exp-year": "2024",
+            "#cc-type": "visa",
+          },
         },
         false
       );
@@ -272,16 +269,14 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("Mark Smith");
-
-        form.querySelector("#cc-number").setUserInput("4111111111111111");
-        form.querySelector("#cc-exp-month").setUserInput("4");
-        form
-          .querySelector("#cc-exp-year")
-          .setUserInput(new Date().getFullYear());
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "Mark Smith",
+          "#cc-number": "4111111111111111",
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date().getFullYear(),
+        },
       });
 
       await promiseShown;
@@ -314,16 +309,15 @@ add_task(async function test_submit_duplicate_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("John Doe");
-        form.querySelector("#cc-number").setUserInput("4111111111111111");
-        form.querySelector("#cc-exp-month").setUserInput("4");
-        form
-          .querySelector("#cc-exp-year")
-          .setUserInput(new Date().getFullYear());
-        form.querySelector("#cc-type").value = "visa";
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "John Doe",
+          "#cc-number": "4111111111111111",
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date().getFullYear(),
+          "#cc-type": "visa",
+        },
       });
 
       await sleep(1000);
@@ -357,20 +351,18 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("John Doe");
-        form.querySelector("#cc-number").setUserInput("4111111111111111");
-        form.querySelector("#cc-exp-month").setUserInput("4");
-        // Set unnormalized year
-        form.querySelector("#cc-exp-year").setUserInput(
-          new Date()
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "John Doe",
+          "#cc-number": "4111111111111111",
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date()
             .getFullYear()
             .toString()
-            .substr(2, 2)
-        );
-        form.querySelector("#cc-type").value = "visa";
+            .substr(2, 2),
+          "#cc-type": "visa",
+        },
       });
 
       await sleep(1000);
@@ -396,13 +388,12 @@ add_task(async function test_submit_creditCard_never_save() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 0");
-
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("6387060366272981");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 0",
+          "#cc-number": "6387060366272981",
+        },
       });
 
       await promiseShown;
@@ -439,13 +430,12 @@ add_task(async function test_submit_creditCard_with_sync_account() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 2");
-
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("6387060366272981");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 2",
+          "#cc-number": "6387060366272981",
+        },
       });
 
       await promiseShown;
@@ -527,13 +517,12 @@ add_task(async function test_submit_creditCard_with_synced_already() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 2");
-
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("6387060366272981");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 2",
+          "#cc-number": "6387060366272981",
+        },
       });
 
       await promiseShown;
@@ -557,14 +546,16 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 3");
-        form.querySelector("#cc-number").setUserInput("5103059495477870");
-        form.querySelector("#cc-exp-month").setUserInput("1");
-        form.querySelector("#cc-exp-year").setUserInput("2000");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 3",
+          "#cc-number": "5103059495477870",
+          "#cc-exp-month": "1",
+          "#cc-exp-year": "2000",
+        },
       });
+
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
     }
@@ -614,11 +605,13 @@ add_task(async function test_update_autofill_form_name() {
       await osKeyStoreLoginShown;
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 1");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+        },
       });
+
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
     }
@@ -671,11 +664,13 @@ add_task(async function test_update_autofill_form_exp_date() {
       await osKeyStoreLoginShown;
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let year = form.querySelector("#cc-exp-year");
-        year.setUserInput("2019");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-exp-year": "2019",
+        },
       });
+
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
     }
@@ -727,10 +722,11 @@ add_task(async function test_create_new_autofill_form() {
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 1");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+        },
       });
 
       await promiseShown;
@@ -789,11 +785,12 @@ add_task(async function test_update_duplicate_autofill_form() {
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await waitForAutofill(browser, "#cc-number", "6387060366272981");
 
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        // Change number to the second credit card number
-        let form = content.document.getElementById("form");
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("5038146897157463");
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          // Change number to the second credit card number
+          "#cc-number": "5038146897157463",
+        },
       });
 
       await sleep(1000);
@@ -820,15 +817,15 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm("#cc-name", browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-        name.setUserInput("User 1");
-
-        form.querySelector("#cc-number").setUserInput("5038146897157463");
-        form.querySelector("#cc-exp-month").setUserInput("12");
-        form.querySelector("#cc-exp-year").setUserInput("2017");
-        form.querySelector("#cc-type").value = "gringotts";
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": "5038146897157463",
+          "#cc-exp-month": "12",
+          "#cc-exp-year": "2017",
+          "#cc-type": "gringotts",
+        },
       });
 
       await promiseShown;
@@ -867,19 +864,13 @@ add_task(async function test_submit_third_party_creditCard_logo() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm(
-        "#cc-name",
-        browser,
-        [amexCard],
-        async function(card) {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          name.setUserInput("User 1");
-
-          let number = form.querySelector("#cc-number");
-          number.setUserInput(card["cc-number"]);
-        }
-      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": amexCard["cc-number"],
+        },
+      });
 
       await promiseShown;
       let doorhanger = getNotification();
@@ -914,21 +905,15 @@ add_task(async function test_update_third_party_creditCard_logo() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm(
-        "#cc-name",
-        browser,
-        [amexCard],
-        async function(card) {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          name.setUserInput("Mark Smith");
-          form.querySelector("#cc-number").setUserInput(card["cc-number"]);
-          form.querySelector("#cc-exp-month").setUserInput("4");
-          form
-            .querySelector("#cc-exp-year")
-            .setUserInput(new Date().getFullYear());
-        }
-      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "Mark Smith",
+          "#cc-number": amexCard["cc-number"],
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date().getFullYear(),
+        },
+      });
 
       await promiseShown;
 
@@ -956,19 +941,13 @@ add_task(async function test_submit_generic_creditCard_logo() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm(
-        "#cc-name",
-        browser,
-        [genericCard],
-        async function(card) {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          name.setUserInput("User 1");
-
-          let number = form.querySelector("#cc-number");
-          number.setUserInput(card["cc-number"]);
-        }
-      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": genericCard["cc-number"],
+        },
+      });
 
       await promiseShown;
       let doorhanger = getNotification();
@@ -1002,21 +981,15 @@ add_task(async function test_update_generic_creditCard_logo() {
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       let promiseShown = promiseNotificationShown();
-      await focusUpdateSubmitForm(
-        "#cc-name",
-        browser,
-        [genericCard],
-        async function(card) {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          name.setUserInput("Mark Smith");
-          form.querySelector("#cc-number").setUserInput(card["cc-number"]);
-          form.querySelector("#cc-exp-month").setUserInput("4");
-          form
-            .querySelector("#cc-exp-year")
-            .setUserInput(new Date().getFullYear());
-        }
-      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "Mark Smith",
+          "#cc-number": genericCard["cc-number"],
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date().getFullYear(),
+        },
+      });
 
       await promiseShown;
 
