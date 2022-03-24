@@ -28,8 +28,8 @@ use crate::traversal_flags::TraversalFlags;
 use app_units::Au;
 use euclid::default::Size2D;
 use euclid::Scale;
+#[cfg(feature = "servo")]
 use fxhash::FxHashMap;
-use selectors::matching::ElementSelectorFlags;
 use selectors::NthIndexCache;
 #[cfg(feature = "gecko")]
 use servo_arc::Arc;
@@ -42,7 +42,6 @@ use style_traits::DevicePixel;
 #[cfg(feature = "servo")]
 use style_traits::SpeculativePainter;
 use time;
-use uluru::{Entry, LRUCache};
 
 pub use selectors::matching::QuirksMode;
 
@@ -518,65 +517,6 @@ impl<E: TElement> SequentialTask<E> {
     }
 }
 
-type CacheItem<E> = (SendElement<E>, ElementSelectorFlags);
-
-/// Map from Elements to ElementSelectorFlags. Used to defer applying selector
-/// flags until after the traversal.
-pub struct SelectorFlagsMap<E: TElement> {
-    /// The hashmap storing the flags to apply.
-    map: FxHashMap<SendElement<E>, ElementSelectorFlags>,
-    /// An LRU cache to avoid hashmap lookups, which can be slow if the map
-    /// gets big.
-    cache: LRUCache<[Entry<CacheItem<E>>; 4 + 1]>,
-}
-
-#[cfg(debug_assertions)]
-impl<E: TElement> Drop for SelectorFlagsMap<E> {
-    fn drop(&mut self) {
-        debug_assert!(self.map.is_empty());
-    }
-}
-
-impl<E: TElement> SelectorFlagsMap<E> {
-    /// Creates a new empty SelectorFlagsMap.
-    pub fn new() -> Self {
-        SelectorFlagsMap {
-            map: FxHashMap::default(),
-            cache: LRUCache::default(),
-        }
-    }
-
-    /// Inserts some flags into the map for a given element.
-    pub fn insert_flags(&mut self, element: E, flags: ElementSelectorFlags) {
-        let el = unsafe { SendElement::new(element) };
-        // Check the cache. If the flags have already been noted, we're done.
-        if let Some(item) = self.cache.find(|x| x.0 == el) {
-            if !item.1.contains(flags) {
-                item.1.insert(flags);
-                self.map.get_mut(&el).unwrap().insert(flags);
-            }
-            return;
-        }
-
-        let f = self.map.entry(el).or_insert(ElementSelectorFlags::empty());
-        *f |= flags;
-
-        self.cache
-            .insert((unsafe { SendElement::new(element) }, *f))
-    }
-
-    /// Applies the flags. Must be called on the main thread.
-    fn apply_flags(&mut self) {
-        debug_assert_eq!(thread_state::get(), ThreadState::LAYOUT);
-        self.cache.clear();
-        for (el, flags) in self.map.drain() {
-            unsafe {
-                el.set_selector_flags(flags);
-            }
-        }
-    }
-}
-
 /// A list of SequentialTasks that get executed on Drop.
 pub struct SequentialTaskList<E>(Vec<SequentialTask<E>>)
 where
@@ -698,11 +638,6 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     /// filter, to ensure they're dropped before we execute the tasks, which
     /// could create another ThreadLocalStyleContext for style computation.
     pub tasks: SequentialTaskList<E>,
-    /// ElementSelectorFlags that need to be applied after the traversal is
-    /// complete. This map is used in cases where the matching algorithm needs
-    /// to set flags on elements it doesn't have exclusive access to (i.e. other
-    /// than the current element).
-    pub selector_flags: SelectorFlagsMap<E>,
     /// Statistics about the traversal.
     pub statistics: PerThreadTraversalStatistics,
     /// The struct used to compute and cache font metrics from style
@@ -724,7 +659,6 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             rule_cache: RuleCache::new(),
             bloom_filter: StyleBloom::new(),
             tasks: SequentialTaskList(Vec::new()),
-            selector_flags: SelectorFlagsMap::new(),
             statistics: PerThreadTraversalStatistics::default(),
             font_metrics_provider: E::FontMetricsProvider::create_from(shared),
             stack_limit_checker: StackLimitChecker::new(
@@ -742,7 +676,6 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             rule_cache: RuleCache::new(),
             bloom_filter: StyleBloom::new(),
             tasks: SequentialTaskList(Vec::new()),
-            selector_flags: SelectorFlagsMap::new(),
             statistics: PerThreadTraversalStatistics::default(),
             font_metrics_provider: E::FontMetricsProvider::create_from(shared),
             stack_limit_checker: StackLimitChecker::new(
@@ -750,15 +683,6 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             ),
             nth_index_cache: NthIndexCache::default(),
         }
-    }
-}
-
-impl<E: TElement> Drop for ThreadLocalStyleContext<E> {
-    fn drop(&mut self) {
-        debug_assert_eq!(thread_state::get(), ThreadState::LAYOUT);
-
-        // Apply any slow selector flags that need to be set on parents.
-        self.selector_flags.apply_flags();
     }
 }
 
