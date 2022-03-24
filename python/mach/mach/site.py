@@ -275,7 +275,7 @@ class MachSiteManager:
             virtualenv_root: The path to the the associated Mach virtualenv,
                 if any
             requirements: The requirements associated with the Mach site, parsed from
-                the file at build/mach_virtualenv_packages.txt
+                the file at python/sites/mach.txt
             original_python: The external Python site that was used to invoke Mach.
                 If Mach invocations are nested, then "original_python" refers to
                 Python site that was used to start Mach first.
@@ -490,7 +490,7 @@ class CommandSiteManager:
             site_packages_source: Where this site will import its pip-installed
                 dependencies from
             requirements: The requirements associated with this site, parsed from
-                the file at build/<site_name>_virtualenv_packages.txt
+                the file at python/sites/<site_name>.txt
         """
         self._topsrcdir = topsrcdir
         self._mach_virtualenv_root = mach_virtualenv_root
@@ -992,14 +992,12 @@ class ExternalPythonSite:
 
 
 @functools.lru_cache(maxsize=None)
-def resolve_requirements(topsrcdir, virtualenv_name):
-    manifest_path = os.path.join(
-        topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
-    )
+def resolve_requirements(topsrcdir, site_name):
+    manifest_path = os.path.join(topsrcdir, "python", "sites", f"{site_name}.txt")
     if not os.path.exists(manifest_path):
         raise Exception(
-            f'The current command is using the "{virtualenv_name}" '
-            "virtualenv. However, that virtualenv is missing its associated "
+            f'The current command is using the "{site_name}" '
+            "site. However, that site is missing its associated "
             f'requirements definition file at "{manifest_path}".'
         )
 
@@ -1011,14 +1009,14 @@ def resolve_requirements(topsrcdir, virtualenv_name):
         return MachEnvRequirements.from_requirements_definition(
             topsrcdir,
             is_thunderbird,
-            virtualenv_name not in PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS,
+            site_name not in PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS,
             manifest_path,
         )
     except UnexpectedFlexibleRequirementException as e:
         raise Exception(
-            f'The "{virtualenv_name}" virtualenv does not have all pypi packages pinned '
+            f'The "{site_name}" site does not have all pypi packages pinned '
             f'in the format "package==version" (found "{e.raw_requirement}").\n'
-            f"Only the {PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS} virtualenvs are "
+            f"Only the {PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS} sites are "
             "allowed to have unpinned packages."
         )
 

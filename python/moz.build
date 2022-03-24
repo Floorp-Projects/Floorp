@@ -44,6 +44,9 @@ with Files("mach_commands.py"):
 with Files("mozperftest/**"):
     BUG_COMPONENT = ("Testing", "mozperftest")
 
+with Files("sites/**"):
+    BUG_COMPONENT = ("Firefox Build System", "Mach Core")
+
 
 SPHINX_PYTHON_PACKAGE_DIRS += [
     "mach",

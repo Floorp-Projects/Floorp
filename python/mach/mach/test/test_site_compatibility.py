@@ -13,23 +13,21 @@ from mach.requirements import MachEnvRequirements
 
 
 def _resolve_command_site_names():
-    virtualenv_names = []
-    for child in (Path(topsrcdir) / "build").iterdir():
-        if not child.name.endswith("_virtualenv_packages.txt"):
+    site_names = []
+    for child in (Path(topsrcdir) / "python" / "sites").iterdir():
+        if not child.is_file():
             continue
 
-        if child.name == "mach_virtualenv_packages.txt":
+        if child.name == "mach.txt":
             continue
 
-        virtualenv_names.append(child.name[: -len("_virtualenv_packages.txt")])
-    return virtualenv_names
+        site_names.append(child.stem)
+    return site_names
 
 
-def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_build_env):
+def _requirement_definition_to_pip_format(site_name, cache, is_mach_or_build_env):
     """Convert from parsed requirements object to pip-consumable format"""
-    requirements_path = (
-        Path(topsrcdir) / "build" / f"{virtualenv_name}_virtualenv_packages.txt"
-    )
+    requirements_path = Path(topsrcdir) / "python" / "sites" / f"{site_name}.txt"
     requirements = MachEnvRequirements.from_requirements_definition(
         topsrcdir, False, not is_mach_or_build_env, requirements_path
     )

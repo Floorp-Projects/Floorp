@@ -2,7 +2,7 @@
 
 [include]
 # List of dependencies for the command
-path:build/docs_virtualenv_packages.txt
+path:python/sites/docs.txt
 
 # Code for generating docs.
 glob:docs/**
