@@ -130,10 +130,12 @@ if (rtc_include_tests) {
     if (rtc_desktop_capture_supported) {
       sources += [
         "screen_capturer_helper_unittest.cc",
-        "screen_capturer_mac_unittest.cc",
         "screen_capturer_unittest.cc",
         "window_capturer_unittest.cc",
       ]
+      if (is_mac) {
+        sources += [ "screen_capturer_mac_unittest.cc" ]
+      }
       deps += [ ":desktop_capture_mock" ]
       public_configs = [ ":x11_config" ]
     }
