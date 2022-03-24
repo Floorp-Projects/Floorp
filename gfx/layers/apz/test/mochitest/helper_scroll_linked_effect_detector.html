@@ -75,6 +75,48 @@ async function test() {
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "No scroll-linked effect found");
+
+  // Setup a non-effective scroll-linked effect callback.
+  scrollEventPromise = new Promise(resolve => {
+    window.addEventListener("scroll", () => {
+      target.style.top = getComputedStyle(target).top;
+      eventTimeStamp = document.timeline.currentTime;
+      resolve();
+    }, { once: true });
+  });
+  await promiseScrollAndEvent();
+  is(eventTimeStamp, document.timeline.currentTime,
+     `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
+  ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
+     "No scroll-linked effect found");
+
+  // Setup a callback to remove the style.
+  scrollEventPromise = new Promise(resolve => {
+    window.addEventListener("scroll", () => {
+      target.style.top = "";
+      eventTimeStamp = document.timeline.currentTime;
+      resolve();
+    }, { once: true });
+  });
+  await promiseScrollAndEvent();
+  is(eventTimeStamp, document.timeline.currentTime,
+     `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
+  ok(SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
+     "Scroll-linked effect found");
+
+  // Setup a no-op callback.
+  scrollEventPromise = new Promise(resolve => {
+    window.addEventListener("scroll", () => {
+      target.style.top = "";
+      eventTimeStamp = document.timeline.currentTime;
+      resolve();
+    }, { once: true });
+  });
+  await promiseScrollAndEvent();
+  is(eventTimeStamp, document.timeline.currentTime,
+     `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
+  ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
+     "No scroll-linked effect found this time");
 }
 
 waitUntilApzStable()
