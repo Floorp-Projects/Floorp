@@ -36,8 +36,10 @@ class VadLevelAnalyzer {
 
   // Ctor. Uses the default VAD.
   VadLevelAnalyzer();
+  explicit VadLevelAnalyzer(float vad_probability_attack);
   // Ctor. Uses a custom `vad`.
-  explicit VadLevelAnalyzer(std::unique_ptr<VoiceActivityDetector> vad);
+  VadLevelAnalyzer(float vad_probability_attack,
+                   std::unique_ptr<VoiceActivityDetector> vad);
   VadLevelAnalyzer(const VadLevelAnalyzer&) = delete;
   VadLevelAnalyzer& operator=(const VadLevelAnalyzer&) = delete;
   ~VadLevelAnalyzer();
@@ -47,6 +49,8 @@ class VadLevelAnalyzer {
 
  private:
   std::unique_ptr<VoiceActivityDetector> vad_;
+  const float vad_probability_attack_;
+  float vad_probability_ = 0.f;
 };
 
 }  // namespace webrtc
