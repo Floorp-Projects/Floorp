@@ -37,13 +37,14 @@ const TOPIC_IDLE_DAILY = "idle-daily";
 const TOPIC_TESTING_MODE = "testing-mode";
 const TOPIC_TEST_INTERVAL_CHANGED = "test-interval-changed";
 
-// We calculate an optimal database size, based on hardware specs.
-// This percentage of memory size is used to protect against calculating a too
-// large database size on systems with small memory.
-const DATABASE_TO_MEMORY_PERC = 4;
-// This percentage of disk size is used to protect against calculating a too
-// large database size on disks with tiny quota or available space.
-const DATABASE_TO_DISK_PERC = 2;
+// This value determines which systems we consider to have limited memory.
+// This is used to protect against large database sizes on those systems.
+const DATABASE_MEMORY_CONSTRAINED_THRESHOLD = 2147483648; // 2 GiB
+
+// This value determines which systems we consider to have limited disk space.
+// This is used to protect against large database sizes on those systems.
+const DATABASE_DISK_CONSTRAINED_THRESHOLD = 5368709120; // 5 GiB
+
 // Maximum size of the optimal database.  High-end hardware has plenty of
 // memory and disk space, but performances don't grow linearly.
 const DATABASE_MAX_SIZE = 78643200; // 75 MiB
@@ -688,11 +689,17 @@ nsPlacesExpiration.prototype = {
       diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;
     }
 
-    let optimalDatabaseSize = Math.min(
-      (memSizeBytes * DATABASE_TO_MEMORY_PERC) / 100,
-      (diskAvailableBytes * DATABASE_TO_DISK_PERC) / 100,
-      DATABASE_MAX_SIZE
-    );
+    const isMemoryConstrained =
+      memSizeBytes < DATABASE_MEMORY_CONSTRAINED_THRESHOLD;
+    const isDiskConstrained =
+      diskAvailableBytes < DATABASE_DISK_CONSTRAINED_THRESHOLD;
+
+    let optimalDatabaseSize = DATABASE_MAX_SIZE;
+    if (isMemoryConstrained || isDiskConstrained) {
+      // This size is used to protect against a large database size
+      // on disks with limited space or on systems with small memory
+      optimalDatabaseSize /= 2;
+    }
 
     // Calculate avg size of a URI in the database.
     let db;
