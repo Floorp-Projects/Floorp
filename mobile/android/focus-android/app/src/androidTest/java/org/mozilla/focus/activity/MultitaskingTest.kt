@@ -105,7 +105,7 @@ class MultitaskingTest {
         }.clickOpenInFocusButton() {
             verifyNumberOfTabsOpened(4)
         }.openTabsTray {
-            verifyTabsOrderAndCorespondingCloseButton(tab1Title, tab3Title, tab2Title, customTabTitle)
+            verifyTabsOrder(tab1Title, tab3Title, tab2Title, customTabTitle)
         }.selectTab(tab1Title) {
             verifyPageContent("Tab 1")
         }.clearBrowsingData {
@@ -132,10 +132,10 @@ class MultitaskingTest {
             openLinkInNewTab()
             verifyNumberOfTabsOpened(3)
         }.openTabsTray {
-            verifyTabsOrderAndCorespondingCloseButton(tab1Title, tab3Title, tab2Title)
+            verifyTabsOrder(tab1Title, tab3Title, tab2Title)
         }.closeTab(tab1Title) {
         }.openTabsTray {
-            verifyTabsOrderAndCorespondingCloseButton(tab3Title, tab2Title)
+            verifyTabsOrder(tab3Title, tab2Title)
         }.closeTab(tab3Title) {
             verifyTabsCounterNotShown()
         }
