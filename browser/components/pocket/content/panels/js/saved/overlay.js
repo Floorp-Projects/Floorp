@@ -667,9 +667,17 @@ SavedOverlay.prototype = {
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (layoutRefresh) {
+      // For now, we need to do a little work on the body element
+      // to support both old and new versions.
+      document
+        .querySelector(`.pkt_ext_containersaved`)
+        ?.classList.add(`stp_saved_body`);
+      document
+        .querySelector(`.pkt_ext_containersaved`)
+        ?.classList.remove(`pkt_ext_containersaved`);
       // Create actual content
       ReactDOM.render(
-        <Saved pockethost={pockethost} savedStory={{}} />,
+        <Saved pockethost={pockethost} locale={locale} />,
         document.querySelector(`body`)
       );
     } else {
@@ -748,10 +756,10 @@ SavedOverlay.prototype = {
         const { data } = resp;
         myself.renderItemRecs(data);
       });
-    }
 
-    // tell back end we're ready
-    pktPanelMessaging.sendMessage("PKT_show_saved");
+      // tell back end we're ready
+      pktPanelMessaging.sendMessage("PKT_show_saved");
+    }
   },
 };
 
