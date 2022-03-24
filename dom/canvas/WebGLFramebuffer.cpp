@@ -1657,9 +1657,9 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
                              LOCAL_GL_COLOR_BUFFER_BIT, filter);
       }
 
-      const auto& blitHelper = *gl->BlitHelper();
       gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fbC->mFB);
-      blitHelper.DrawBlitTextureToFramebuffer(fbB->ColorTex(), sizeBC, sizeBC);
+      gl->BlitHelper()->DrawBlitTextureToFramebuffer(fbB->ColorTex(), sizeBC,
+                                                     sizeBC);
     }
 
     {
@@ -1684,13 +1684,6 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
   // glBlitFramebuffer ignores glColorMask!
 
   if (!webgl->mBoundDrawFramebuffer && webgl->mNeedsFakeNoAlpha) {
-    if (!webgl->mScissorTestEnabled) {
-      gl->fEnable(LOCAL_GL_SCISSOR_TEST);
-    }
-    if (webgl->mRasterizerDiscardEnabled) {
-      gl->fDisable(LOCAL_GL_RASTERIZER_DISCARD);
-    }
-
     const auto dstRectMin = MinExtents(dstP0, dstP1);
     const auto dstRectMax = MaxExtents(dstP0, dstP1);
     const auto dstRectSize = dstRectMax - dstRectMin;
@@ -1698,19 +1691,13 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
                                                dstRectSize.x, dstRectSize.y};
     dstRect.Apply(*gl);
 
+    const auto forClear = webgl::ScopedPrepForResourceClear{*webgl};
+
     gl->fClearColor(0, 0, 0, 1);
-    webgl->DoColorMask(1 << 3);
+    webgl->DoColorMask(Some(0), 0b1000);  // Only alpha.
     gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
-    if (!webgl->mScissorTestEnabled) {
-      gl->fDisable(LOCAL_GL_SCISSOR_TEST);
-    }
-    if (webgl->mRasterizerDiscardEnabled) {
-      gl->fEnable(LOCAL_GL_RASTERIZER_DISCARD);
-    }
     webgl->mScissorRect.Apply(*gl);
-    gl->fClearColor(webgl->mColorClearValue[0], webgl->mColorClearValue[1],
-                    webgl->mColorClearValue[2], webgl->mColorClearValue[3]);
   }
 }
 
