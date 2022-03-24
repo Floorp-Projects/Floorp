@@ -19,11 +19,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/openssl_identity.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/stream.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace rtc {
 
@@ -54,6 +56,12 @@ namespace rtc {
 class SSLCertChain;
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// If |allow| has a value, its value determines if legacy TLS protocols are
+// allowed, overriding the default configuration.
+// If |allow| has no value, any previous override is removed and the default
+// configuration is restored.
+RTC_EXPORT void SetAllowLegacyTLSProtocols(const absl::optional<bool>& allow);
 
 class OpenSSLStreamAdapter final : public SSLStreamAdapter {
  public:
