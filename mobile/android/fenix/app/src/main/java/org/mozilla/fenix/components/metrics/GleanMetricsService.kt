@@ -17,7 +17,6 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.HomeMenu
@@ -115,16 +114,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
             { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
-        )
-
-        is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
-            { CustomTab.menu.record(it) }
-        )
-        is Event.CustomTabsActionTapped -> EventWrapper<NoExtraKeys>(
-            { CustomTab.actionButton.record(it) }
-        )
-        is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
-            { CustomTab.closed.record(it) }
         )
         is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPlay.record(it) }
