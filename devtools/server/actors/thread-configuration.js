@@ -34,6 +34,7 @@ const SUPPORTED_OPTIONS = {
   // Enable debugging asm & wasm.
   // See https://searchfox.org/mozilla-central/source/js/src/doc/Debugger/Debugger.md#16-26
   observeAsmJS: true,
+  observeWasm: true,
   // Should pause all the workers untill thread has attached.
   pauseWorkersUntilAttach: true,
 };

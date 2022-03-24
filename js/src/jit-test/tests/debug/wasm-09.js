@@ -1,14 +1,14 @@
 // |jit-test| test-also=--wasm-compiler=optimizing; skip-if: !wasmDebuggingEnabled()
-// Tests debugEnabled state of wasm when allowUnobservedAsmJS == true.
+// Tests debugEnabled state of wasm when allowUnobservedWasm == true.
 
 load(libdir + "asserts.js");
 
 // Checking that there are no offsets are present in a wasm instance script for
 // which debug mode was not enabled.
-function getWasmScriptWithoutAllowUnobservedAsmJS(wast) {
+function getWasmScriptWithoutAllowUnobservedWasm(wast) {
     var sandbox = newGlobal({newCompartment: true});
     var dbg = new Debugger();
-    dbg.allowUnobservedAsmJS = true;
+    dbg.allowUnobservedWasm = true;
     dbg.addDebuggee(sandbox);
     sandbox.eval(`
         var wasm = wasmTextToBinary('${wast}');
@@ -19,7 +19,7 @@ function getWasmScriptWithoutAllowUnobservedAsmJS(wast) {
     return wasmScript;
 }
 
-var wasmScript1 = getWasmScriptWithoutAllowUnobservedAsmJS('(module (func (nop)))');
+var wasmScript1 = getWasmScriptWithoutAllowUnobservedWasm('(module (func (nop)))');
 var wasmLines1 = wasmScript1.source.text.split('\n');
 assertEq(wasmScript1.startLine, 1);
 assertEq(wasmScript1.lineCount, 0);
@@ -27,6 +27,6 @@ assertEq(wasmLines1.every((l, n) => wasmScript1.getLineOffsets(n + 1).length == 
 
 // Checking that we must not resolve any location for any offset in a wasm
 // instance which debug mode was not enabled.
-var wasmScript2 = getWasmScriptWithoutAllowUnobservedAsmJS('(module (func (nop)))');
+var wasmScript2 = getWasmScriptWithoutAllowUnobservedWasm('(module (func (nop)))');
 for (var i = wasmTextToBinary('(module (func (nop)))').length - 1; i >= 0; i--)
     assertThrowsInstanceOf(() => wasmScript2.getOffsetLocation(i), Error);
