@@ -15,6 +15,7 @@
 
 #include "vm/BuiltinObjectKind.h"
 #include "vm/CheckIsObjectKind.h"  // CheckIsObjectKind
+#include "vm/Iteration.h"
 #include "vm/Stack.h"
 
 namespace js {

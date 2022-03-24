@@ -9,16 +9,12 @@
 
 #ifdef MOZ_VTUNE
 
-#  include "jstypes.h"
+#  include "vtune/jitprofiling.h"
 
-class JS_PUBLIC_API JSScript;
+#  include "jit/JitCode.h"
+#  include "vm/JSScript.h"
 
 namespace js {
-
-namespace jit {
-class JitCode;
-}
-
 namespace vtune {
 
 bool Initialize();

@@ -8,6 +8,8 @@
 
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include <algorithm>
 
