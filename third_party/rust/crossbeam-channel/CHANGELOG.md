@@ -1,6 +1,14 @@
+# Version 0.5.4
+
+- Workaround a bug in upstream related to TLS access on AArch64 Linux. (#802)
+
+# Version 0.5.3
+
+- Fix panic on very large timeout. (#798)
+
 # Version 0.5.2
 
-- Fix stacked borrows violations. (#763, #764)
+- Fix stacked borrows violations when `-Zmiri-tag-raw-pointers` is enabled. (#763, #764)
 
 # Version 0.5.1
 
@@ -21,6 +29,8 @@
 - Fix UB and breaking change introduced in 0.4.3
 
 # Version 0.4.3
+
+**Note**: This release has been yanked. See [CVE-2020-15254](https://github.com/crossbeam-rs/crossbeam/security/advisories/GHSA-v5m7-53cv-f3hx) for details.
 
 - Change license to "MIT OR Apache-2.0".
 
