@@ -49,8 +49,6 @@ using VideoCodecConfig =
 namespace {
 
 constexpr int kTestDurationSec = 45;
-constexpr char kVp8TrustedRateControllerFieldTrial[] =
-    "WebRTC-LibvpxVp8TrustedRateController/Enabled/";
 
 EmulatedNetworkNode* CreateEmulatedNodeWithConfig(
     NetworkEmulationManager* emulation,
@@ -282,40 +280,6 @@ TEST(PCGenericDescriptorTest,
   BuiltInNetworkBehaviorConfig config;
   auto fixture = CreateTestFixture(
       "pc_foreman_cif_30kbps_net_delay_0_0_plr_0_generic_descriptor",
-      *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(), config),
-      [](PeerConfigurer* alice) {
-        VideoConfig video(352, 288, 10);
-        video.stream_label = "alice-video";
-        auto frame_generator = CreateFromYuvFileFrameGenerator(
-            video, ClipNameToClipPath("foreman_cif"));
-        alice->AddVideoConfig(std::move(video), std::move(frame_generator));
-
-        BitrateSettings bitrate_settings;
-        bitrate_settings.min_bitrate_bps = 30000;
-        bitrate_settings.start_bitrate_bps = 30000;
-        bitrate_settings.max_bitrate_bps = 30000;
-        alice->SetBitrateSettings(bitrate_settings);
-      },
-      [](PeerConfigurer* bob) {});
-  RunParams run_params(TimeDelta::Seconds(kTestDurationSec));
-  run_params.video_codecs = {VideoCodecConfig(cricket::kVp8CodecName)};
-  run_params.use_flex_fec = false;
-  run_params.use_ulp_fec = false;
-  fixture->Run(std::move(run_params));
-}
-
-// TODO(webrtc:9722): Remove when experiment is cleaned up.
-TEST(PCGenericDescriptorTest,
-     Pc_Foreman_Cif_30kbps_Net_Delay_0_0_Plr_0_Trusted_Rate_Ctrl) {
-  test::ScopedFieldTrials override_field_trials(
-      AppendFieldTrials(kVp8TrustedRateControllerFieldTrial));
-  std::unique_ptr<NetworkEmulationManager> network_emulation_manager =
-      CreateNetworkEmulationManager();
-  BuiltInNetworkBehaviorConfig config;
-  auto fixture = CreateTestFixture(
-      "pc_foreman_cif_30kbps_net_delay_0_0_plr_0_trusted_rate_ctrl_generic_"
-      "descriptor",
       *network_emulation_manager->time_controller(),
       CreateTwoNetworkLinks(network_emulation_manager.get(), config),
       [](PeerConfigurer* alice) {
@@ -944,37 +908,6 @@ TEST(PCFullStackTest, Pc_Conference_Motion_Hd_2000kbps_100ms_32pkts_Queue) {
   fixture->Run(std::move(run_params));
 }
 
-// TODO(webrtc:9722): Remove when experiment is cleaned up.
-TEST(PCFullStackTest,
-     Pc_Conference_Motion_Hd_1tl_Moderate_Limits_Trusted_Rate_Ctrl) {
-  test::ScopedFieldTrials override_field_trials(
-      AppendFieldTrials(kVp8TrustedRateControllerFieldTrial));
-  std::unique_ptr<NetworkEmulationManager> network_emulation_manager =
-      CreateNetworkEmulationManager();
-  BuiltInNetworkBehaviorConfig config;
-  config.queue_length_packets = 50;
-  config.loss_percent = 3;
-  config.queue_delay_ms = 100;
-  config.link_capacity_kbps = 2000;
-  auto fixture = CreateTestFixture(
-      "pc_conference_motion_hd_1tl_moderate_limits_trusted_rate_ctrl",
-      *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(), config),
-      [](PeerConfigurer* alice) {
-        VideoConfig video(1280, 720, 50);
-        video.stream_label = "alice-video";
-        auto frame_generator = CreateFromYuvFileFrameGenerator(
-            video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
-        alice->AddVideoConfig(std::move(video), std::move(frame_generator));
-      },
-      [](PeerConfigurer* bob) {});
-  RunParams run_params(TimeDelta::Seconds(kTestDurationSec));
-  run_params.video_codecs = {VideoCodecConfig(cricket::kVp8CodecName)};
-  run_params.use_flex_fec = false;
-  run_params.use_ulp_fec = false;
-  fixture->Run(std::move(run_params));
-}
-
 /*
 // TODO(bugs.webrtc.org/10639) requires simulcast/SVC support in PC framework
 TEST(PCGenericDescriptorTest, ConferenceMotionHd2TLModerateLimits) {
@@ -1573,8 +1506,7 @@ TEST(PCFullStackTest, VP9KSVC_3SL_Medium_Network_Restricted) {
 // TODO(webrtc:9722): Remove when experiment is cleaned up.
 TEST(PCFullStackTest, VP9KSVC_3SL_Medium_Network_Restricted_Trusted_Rate) {
   webrtc::test::ScopedFieldTrials override_trials(
-      AppendFieldTrials("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"
-                        "WebRTC-LibvpxVp9TrustedRateController/Enabled/"));
+      AppendFieldTrials("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"));
   auto fixture = CreateVideoQualityTestFixture();
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;
