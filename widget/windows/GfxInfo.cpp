@@ -1555,6 +1555,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                 nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
                                 DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 4578,
                                 "FEATURE_FAILURE_BUG_1432610");
+    /**
+     * Disable VP8 HW decoding on Windows 8.1 on Intel Haswel for some devices.
+     * See bug 1760464 comment 6.
+     */
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows8_1, DeviceFamily::Bug1760464,
+        nsIGfxInfo::FEATURE_VP8_HW_DECODE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
+        "FEATURE_FAILURE_BUG_1760464");
 
     /* Disable D2D on Win7 on Intel HD Graphics on driver <= 8.15.10.2302
      * See bug 806786
@@ -1848,8 +1857,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::NvidiaWebRenderBlocked,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
-        "EARLY_NVIDIA");
+        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "EARLY_NVIDIA");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST

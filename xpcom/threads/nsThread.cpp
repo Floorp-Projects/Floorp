@@ -182,7 +182,6 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsIEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISerialEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDelayedRunnableObserver, mEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDirectTaskDispatcher)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIThread)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
@@ -229,9 +228,6 @@ class nsThreadShutdownEvent : public Runnable {
     // Creates a cycle between `mThread` and the shutdown context which will be
     // broken when the thread exits.
     mThread->mShutdownContext = mShutdownContext;
-    if (mThread->mEventTarget) {
-      mThread->mEventTarget->NotifyShutdown();
-    }
     MessageLoop::current()->Quit();
     return NS_OK;
   }
@@ -387,6 +383,8 @@ void nsThread::ThreadFunc(void* aArg) {
 
     // Now, process incoming events...
     loop.Run();
+
+    self->mEvents->RunShutdownTasks();
 
     BackgroundChild::CloseForCurrentThread();
 
@@ -678,6 +676,22 @@ nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
 
   return mEventTarget->DelayedDispatch(std::move(aEvent), aDelayMs);
+}
+
+NS_IMETHODIMP
+nsThread::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MOZ_ASSERT(mEventTarget);
+  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
+
+  return mEventTarget->RegisterShutdownTask(aTask);
+}
+
+NS_IMETHODIMP
+nsThread::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MOZ_ASSERT(mEventTarget);
+  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
+
+  return mEventTarget->UnregisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP
@@ -1390,18 +1404,6 @@ NS_IMETHODIMP nsThread::HaveDirectTasks(bool* aValue) {
 nsIEventTarget* nsThread::EventTarget() { return this; }
 
 nsISerialEventTarget* nsThread::SerialEventTarget() { return this; }
-
-void nsThread::OnDelayedRunnableCreated(mozilla::DelayedRunnable* aRunnable) {
-  mEventTarget->OnDelayedRunnableCreated(aRunnable);
-}
-
-void nsThread::OnDelayedRunnableScheduled(mozilla::DelayedRunnable* aRunnable) {
-  mEventTarget->OnDelayedRunnableScheduled(aRunnable);
-}
-
-void nsThread::OnDelayedRunnableRan(mozilla::DelayedRunnable* aRunnable) {
-  mEventTarget->OnDelayedRunnableRan(aRunnable);
-}
 
 nsLocalExecutionRecord nsThread::EnterLocalExecution() {
   MOZ_RELEASE_ASSERT(!mIsInLocalExecutionMode);

@@ -501,6 +501,7 @@ MessageChannel::~MessageChannel() {
   MOZ_RELEASE_ASSERT(mPendingResponses.empty());
   MOZ_RELEASE_ASSERT(!mChannelErrorTask);
   MOZ_RELEASE_ASSERT(mPending.isEmpty());
+  MOZ_RELEASE_ASSERT(!mShutdownTask);
 }
 
 #ifdef DEBUG
@@ -590,6 +591,12 @@ void MessageChannel::Clear() {
   // through this channel after it's Clear()'ed can cause this process to
   // crash.
 
+  if (mShutdownTask) {
+    mShutdownTask->Clear();
+    mWorkerThread->UnregisterShutdownTask(mShutdownTask);
+  }
+  mShutdownTask = nullptr;
+
   if (NS_IsMainThread() && gParentProcessBlocker == this) {
     gParentProcessBlocker = nullptr;
   }
@@ -621,15 +628,34 @@ void MessageChannel::Clear() {
 
 bool MessageChannel::Open(ScopedPort aPort, Side aSide,
                           nsISerialEventTarget* aEventTarget) {
+  nsCOMPtr<nsISerialEventTarget> eventTarget =
+      aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
+  MOZ_RELEASE_ASSERT(eventTarget,
+                     "Must open MessageChannel on a nsISerialEventTarget");
+  MOZ_RELEASE_ASSERT(eventTarget->IsOnCurrentThread(),
+                     "Must open MessageChannel from worker thread");
+
+  auto shutdownTask = MakeRefPtr<WorkerTargetShutdownTask>(eventTarget, this);
+  nsresult rv = eventTarget->RegisterShutdownTask(shutdownTask);
+  MOZ_ASSERT(rv != NS_ERROR_NOT_IMPLEMENTED,
+             "target for MessageChannel must support shutdown tasks");
+  if (rv == NS_ERROR_UNEXPECTED) {
+    // If shutdown tasks have already started running, dispatch our shutdown
+    // task manually.
+    NS_WARNING("Opening MessageChannel on EventTarget in shutdown");
+    rv = eventTarget->Dispatch(shutdownTask->AsRunnable());
+  }
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                     "error registering ShutdownTask for MessageChannel");
+
   {
     MonitorAutoLock lock(*mMonitor);
     MOZ_RELEASE_ASSERT(!mLink, "Open() called > once");
     MOZ_RELEASE_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
     MOZ_ASSERT(mSide == UnknownSide);
 
-    mWorkerThread = aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
-    MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
-
+    mWorkerThread = eventTarget;
+    mShutdownTask = shutdownTask;
     mLink = MakeUnique<PortLink>(this, std::move(aPort));
     mSide = aSide;
   }
@@ -2298,6 +2324,26 @@ void MessageChannel::SetIsCrossProcess(bool aIsCrossProcess) {
   } else {
     ChannelCountReporter::Decrement(mName);
   }
+}
+
+NS_IMPL_ISUPPORTS(MessageChannel::WorkerTargetShutdownTask,
+                  nsITargetShutdownTask)
+
+MessageChannel::WorkerTargetShutdownTask::WorkerTargetShutdownTask(
+    nsISerialEventTarget* aTarget, MessageChannel* aChannel)
+    : mTarget(aTarget), mChannel(aChannel) {}
+
+void MessageChannel::WorkerTargetShutdownTask::TargetShutdown() {
+  MOZ_RELEASE_ASSERT(mTarget->IsOnCurrentThread());
+  IPC_LOG("Closing channel due to event target shutdown");
+  if (MessageChannel* channel = std::exchange(mChannel, nullptr)) {
+    channel->Close();
+  }
+}
+
+void MessageChannel::WorkerTargetShutdownTask::Clear() {
+  MOZ_RELEASE_ASSERT(mTarget->IsOnCurrentThread());
+  mChannel = nullptr;
 }
 
 }  // namespace ipc

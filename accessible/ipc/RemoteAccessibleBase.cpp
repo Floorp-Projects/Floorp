@@ -423,6 +423,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
             // be scaled relative to its parent doc.
             res = remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
                 nsGkAtoms::resolution);
+            MOZ_ASSERT(res, "No cached document resolution found.");
             bounds.ScaleRoundOut(res.valueOr(1.0f));
           }
 

@@ -50,6 +50,11 @@ add_task(async function test_create_options() {
             // 'selected' is marked as unsupported in schema, so we've removed it.
             // For more details, see bug 1337509
             selected: undefined,
+            mutedInfo: {
+              muted: false,
+              extensionId: undefined,
+              reason: undefined,
+            },
           };
 
           let tests = [
@@ -132,6 +137,26 @@ add_task(async function test_create_options() {
                 )}`,
               },
             },
+            {
+              create: { muted: true },
+              result: {
+                mutedInfo: {
+                  muted: true,
+                  extensionId: browser.runtime.id,
+                  reason: "extension",
+                },
+              },
+            },
+            {
+              create: { muted: false },
+              result: {
+                mutedInfo: {
+                  muted: false,
+                  extensionId: undefined,
+                  reason: undefined,
+                },
+              },
+            },
           ];
 
           async function nextTest() {
@@ -182,11 +207,21 @@ add_task(async function test_create_options() {
                 continue;
               }
 
-              browser.test.assertEq(
-                expected[key],
-                tab[key],
-                `Expected value for tab.${key}`
-              );
+              if (key === "mutedInfo") {
+                for (let key of Object.keys(expected.mutedInfo)) {
+                  browser.test.assertEq(
+                    expected.mutedInfo[key],
+                    tab.mutedInfo[key],
+                    `Expected value for tab.mutedInfo.${key}`
+                  );
+                }
+              } else {
+                browser.test.assertEq(
+                  expected[key],
+                  tab[key],
+                  `Expected value for tab.${key}`
+                );
+              }
             }
 
             let updated = await updatedPromise;

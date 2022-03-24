@@ -609,6 +609,20 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1739489",
+    platform: "desktop",
+    domain: "draft.js",
+    bug: "1739489",
+    contentScripts: {
+      matches: ["*://draftjs.org/*", "*://www.facebook.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1739489-draftjs-beforeinput.js",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;

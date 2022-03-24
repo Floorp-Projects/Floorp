@@ -5654,6 +5654,17 @@ WorkerPrivate::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>,
 }
 
 NS_IMETHODIMP
+WorkerPrivate::EventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WorkerPrivate::EventTarget::UnregisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 WorkerPrivate::EventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   // May be called on any thread!
 

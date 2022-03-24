@@ -25,6 +25,7 @@
 
 #include "MessageLink.h"  // for HasResultCodes
 #include "mozilla/ipc/ScopedPort.h"
+#include "nsITargetShutdownTask.h"
 
 class MessageLoop;
 
@@ -545,6 +546,24 @@ class MessageChannel : HasResultCodes {
   void RunMessage(ActorLifecycleProxy* aProxy, MessageTask& aTask)
       REQUIRES(*mMonitor);
 
+  class WorkerTargetShutdownTask final : public nsITargetShutdownTask {
+   public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    WorkerTargetShutdownTask(nsISerialEventTarget* aTarget,
+                             MessageChannel* aChannel);
+
+    void TargetShutdown() override;
+    void Clear();
+
+   private:
+    ~WorkerTargetShutdownTask() = default;
+
+    const nsCOMPtr<nsISerialEventTarget> mTarget;
+    // Cleared by MessageChannel before it is destroyed.
+    MessageChannel* MOZ_NON_OWNING_REF mChannel;
+  };
+
   typedef LinkedList<RefPtr<MessageTask>> MessageQueue;
   typedef std::map<size_t, UniquePtr<UntypedCallbackHolder>> CallbackMap;
   typedef IPC::Message::msgid_t msgid_t;
@@ -575,6 +594,9 @@ class MessageChannel : HasResultCodes {
   // changed, and we can only call Open() once.  We shouldn't be accessing
   // from multiple threads before Open().
   nsCOMPtr<nsISerialEventTarget> mWorkerThread;
+
+  // Shutdown task to close the channel before mWorkerThread goes away.
+  RefPtr<WorkerTargetShutdownTask> mShutdownTask GUARDED_BY(*mMonitor);
 
   // Timeout periods are broken up in two to prevent system suspension from
   // triggering an abort. This method (called by WaitForEvent with a 'did
