@@ -522,11 +522,7 @@ void CodeGeneratorShared::encode(LRecoverInfo* recover) {
           "Encoding LRecoverInfo %p (frameCount %u, instructions %u)",
           (void*)recover, recover->mir()->frameCount(), numInstructions);
 
-  ResumeMode mode = recover->mir()->mode();
-  MOZ_ASSERT(mode == ResumeMode::ResumeAt || mode == ResumeMode::ResumeAfter);
-  bool resumeAfter = (mode == ResumeMode::ResumeAfter);
-
-  RecoverOffset offset = recovers_.startRecover(numInstructions, resumeAfter);
+  RecoverOffset offset = recovers_.startRecover(numInstructions);
 
   for (MNode* insn : *recover) {
     recovers_.writeInstruction(insn);
