@@ -326,6 +326,43 @@ add_task(async function test_add_and_query_no_url() {
   });
 });
 
+add_task(async function test_get_urls() {
+  await delete_all_groups();
+
+  let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
+  await addInteractionsAndSnapshots(urls);
+
+  let newGroup = { title: "Test Group", builder: "domain" };
+  await SnapshotGroups.add(newGroup, urls);
+
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  let snapshots = await SnapshotGroups.getUrls({ id: groups[0].id });
+  Assert.deepEqual(
+    snapshots,
+    [TEST_URL3, TEST_URL2, TEST_URL1],
+    "Should return 3 urls"
+  );
+});
+
+add_task(async function test_get_urls() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, true);
+
+  let snapshots = await SnapshotGroups.getUrls({ id: groups[0].id });
+  Assert.deepEqual(snapshots, [TEST_URL3, TEST_URL1], "Should return 2 urls");
+
+  snapshots = await SnapshotGroups.getUrls({ id: groups[0].id, hidden: true });
+  Assert.deepEqual(
+    snapshots,
+    [TEST_URL3, TEST_URL2, TEST_URL1],
+    "Should return all urls"
+  );
+});
+
 add_task(async function test_get_snapshots() {
   await delete_all_groups();
 
@@ -397,6 +434,44 @@ add_task(async function test_get_snapshots_sortBy() {
     id: groups[0].id,
     sortBy: "last_interaction_at",
   });
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL3 },
+    { url: TEST_URL2 },
+    { url: TEST_URL1 },
+  ]);
+});
+
+add_task(async function test_get_snapshots_hidden() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, true);
+
+  let snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortBy: "last_interaction_at",
+  });
+  await assertSnapshotList(snapshots, [{ url: TEST_URL3 }, { url: TEST_URL1 }]);
+
+  snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    hidden: true,
+    sortBy: "last_interaction_at",
+  });
+
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL3 },
+    { url: TEST_URL2 },
+    { url: TEST_URL1 },
+  ]);
+
+  await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, false);
+
+  snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortBy: "last_interaction_at",
+  });
+
   await assertSnapshotList(snapshots, [
     { url: TEST_URL3 },
     { url: TEST_URL2 },
@@ -590,5 +665,45 @@ add_task(async function test_hidden_groups() {
       hidden: true,
       snapshotCount: 0,
     },
+  ]);
+});
+
+add_task(async function test_snapshots_remain_hidden_after_updateUrls() {
+  await delete_all_groups();
+
+  await SnapshotGroups.add(
+    {
+      title: "Test Group 1",
+      builder: "domain",
+    },
+    [TEST_URL1, TEST_URL2, TEST_URL3]
+  );
+
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL2, true);
+
+  let snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortBy: "last_interaction_at",
+  });
+  await assertSnapshotList(snapshots, [{ url: TEST_URL3 }, { url: TEST_URL1 }]);
+
+  await SnapshotGroups.updateUrls(groups[0].id, [
+    TEST_URL1,
+    TEST_URL2,
+    TEST_URL3,
+    TEST_URL4,
+  ]);
+
+  snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortBy: "last_interaction_at",
+  });
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL3 },
+    { url: TEST_URL1 },
+    { url: TEST_URL4 },
   ]);
 });
