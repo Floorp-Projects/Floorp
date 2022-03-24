@@ -126,8 +126,14 @@ absl::optional<ChannelId> VoipCore::CreateChannel(
           transport, local_ssrc.value(), task_queue_factory_.get(),
           process_thread_.get(), audio_mixer_.get(), decoder_factory_);
 
+  // Check if we need to start the process thread.
+  bool start_process_thread = false;
+
   {
     MutexLock lock(&lock_);
+
+    // Start process thread if the channel is the first one.
+    start_process_thread = channels_.empty();
 
     channel = static_cast<ChannelId>(next_channel_id_);
     channels_[*channel] = audio_channel;
@@ -140,12 +146,20 @@ absl::optional<ChannelId> VoipCore::CreateChannel(
   // Set ChannelId in audio channel for logging/debugging purpose.
   audio_channel->SetId(*channel);
 
+  if (start_process_thread) {
+    process_thread_->Start();
+  }
+
   return channel;
 }
 
 void VoipCore::ReleaseChannel(ChannelId channel) {
   // Destroy channel outside of the lock.
   rtc::scoped_refptr<AudioChannel> audio_channel;
+
+  // Check if process thread is no longer needed.
+  bool stop_process_thread = false;
+
   {
     MutexLock lock(&lock_);
 
@@ -154,9 +168,19 @@ void VoipCore::ReleaseChannel(ChannelId channel) {
       audio_channel = std::move(iter->second);
       channels_.erase(iter);
     }
+
+    // Check if this is the last channel we have.
+    stop_process_thread = channels_.empty();
   }
+
   if (!audio_channel) {
     RTC_LOG(LS_WARNING) << "Channel " << channel << " not found";
+  }
+
+  if (stop_process_thread) {
+    // Release audio channel first to have it DeRegisterModule first.
+    audio_channel = nullptr;
+    process_thread_->Stop();
   }
 }
 
