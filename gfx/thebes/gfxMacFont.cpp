@@ -518,8 +518,7 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   return advance.width * 0x10000;
 }
 
-bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                bool aTight) const {
+bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
   CGRect bb;
   if (!::CGFontGetGlyphBBoxes(mCGFont, &aGID, 1, &bb)) {
     return false;
@@ -582,27 +581,21 @@ void gfxMacFont::InitMetricsFromPlatform() {
 
 already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  if (ScaledFont* scaledFont = mAzureScaledFont) {
-    return do_AddRef(scaledFont);
+  if (!mAzureScaledFont) {
+    gfxFontEntry* fe = GetFontEntry();
+    bool hasColorGlyphs = fe->HasColorBitmapTable() || fe->TryGetColorGlyphs();
+    mAzureScaledFont = Factory::CreateScaledFontForMacFont(
+        GetCGFontRef(), GetUnscaledFont(), GetAdjustedSize(),
+        ToDeviceColor(mFontSmoothingBackgroundColor),
+        !mStyle.useGrayscaleAntialiasing, ApplySyntheticBold(), hasColorGlyphs);
+    if (!mAzureScaledFont) {
+      return nullptr;
+    }
+    InitializeScaledFont();
   }
 
-  gfxFontEntry* fe = GetFontEntry();
-  bool hasColorGlyphs = fe->HasColorBitmapTable() || fe->TryGetColorGlyphs();
-  RefPtr<ScaledFont> newScaledFont = Factory::CreateScaledFontForMacFont(
-      GetCGFontRef(), GetUnscaledFont(), GetAdjustedSize(),
-      ToDeviceColor(mFontSmoothingBackgroundColor),
-      !mStyle.useGrayscaleAntialiasing, ApplySyntheticBold(), hasColorGlyphs);
-  if (!newScaledFont) {
-    return nullptr;
-  }
-
-  InitializeScaledFont(newScaledFont);
-
-  if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
-    Unused << newScaledFont.forget();
-  }
-  ScaledFont* scaledFont = mAzureScaledFont;
-  return do_AddRef(scaledFont);
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  return scaledFont.forget();
 }
 
 bool gfxMacFont::ShouldRoundXOffset(cairo_t* aCairo) const {

@@ -1272,23 +1272,14 @@ gfxFontconfigFont::~gfxFontconfigFont() = default;
 
 already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  if (ScaledFont* scaledFont = mAzureScaledFont) {
-    return do_AddRef(scaledFont);
+  if (!mAzureScaledFont) {
+    mAzureScaledFont = Factory::CreateScaledFontForFontconfigFont(
+        GetUnscaledFont(), GetAdjustedSize(), mFTFace, GetPattern());
+    InitializeScaledFont();
   }
 
-  RefPtr<ScaledFont> newScaledFont = Factory::CreateScaledFontForFontconfigFont(
-      GetUnscaledFont(), GetAdjustedSize(), mFTFace, GetPattern());
-  if (!newScaledFont) {
-    return nullptr;
-  }
-
-  InitializeScaledFont(newScaledFont);
-
-  if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
-    Unused << newScaledFont.forget();
-  }
-  ScaledFont* scaledFont = mAzureScaledFont;
-  return do_AddRef(scaledFont);
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  return scaledFont.forget();
 }
 
 bool gfxFontconfigFont::ShouldHintMetrics() const {
