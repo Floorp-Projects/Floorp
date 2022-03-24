@@ -21,6 +21,7 @@
 #include <openssl/ssl.h>
 #endif
 
+#include <atomic>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -265,6 +266,21 @@ static long stream_ctrl(BIO* b, int cmd, long num, void* ptr) {
 // OpenSSLStreamAdapter
 /////////////////////////////////////////////////////////////////////////////
 
+static std::atomic<bool> g_use_legacy_tls_protocols_override(false);
+static std::atomic<bool> g_allow_legacy_tls_protocols(false);
+
+void SetAllowLegacyTLSProtocols(const absl::optional<bool>& allow) {
+  g_use_legacy_tls_protocols_override.store(allow.has_value());
+  if (allow.has_value())
+    g_allow_legacy_tls_protocols.store(allow.value());
+}
+
+bool ShouldAllowLegacyTLSProtocols() {
+  return g_use_legacy_tls_protocols_override.load()
+             ? g_allow_legacy_tls_protocols.load()
+             : !webrtc::field_trial::IsDisabled("WebRTC-LegacyTlsProtocols");
+}
+
 OpenSSLStreamAdapter::OpenSSLStreamAdapter(
     std::unique_ptr<StreamInterface> stream)
     : SSLStreamAdapter(std::move(stream)),
@@ -278,8 +294,7 @@ OpenSSLStreamAdapter::OpenSSLStreamAdapter(
       ssl_max_version_(SSL_PROTOCOL_TLS_12),
       // Default is to support legacy TLS protocols.
       // This will be changed to default non-support in M82 or M83.
-      support_legacy_tls_protocols_flag_(
-          !webrtc::field_trial::IsDisabled("WebRTC-LegacyTlsProtocols")) {}
+      support_legacy_tls_protocols_flag_(ShouldAllowLegacyTLSProtocols()) {}
 
 OpenSSLStreamAdapter::~OpenSSLStreamAdapter() {
   Cleanup(0);

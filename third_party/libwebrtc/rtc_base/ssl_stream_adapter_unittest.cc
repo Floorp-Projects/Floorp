@@ -21,6 +21,7 @@
 #include "rtc_base/memory/fifo_buffer.h"
 #include "rtc_base/memory_stream.h"
 #include "rtc_base/message_digest.h"
+#include "rtc_base/openssl_stream_adapter.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
@@ -1627,6 +1628,47 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslVersionLegacyDisabledClient10Server10) {
   ConfigureClient("WebRTC-LegacyTlsProtocols/Disabled/");
   ConfigureServer("WebRTC-LegacyTlsProtocols/Disabled/");
+  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
+  TestHandshake(false);
+}
+
+// Both client and server have legacy TLS versions enabled and support DTLS 1.0.
+// This should work.
+TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
+       TestGetSslVersionLegacyOverrideEnabledClient10Server10) {
+  rtc::SetAllowLegacyTLSProtocols(true);
+  ConfigureClient("");
+  ConfigureServer("");
+  // Remove override.
+  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
+  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
+  TestHandshake();
+}
+
+// Client has legacy TLS disabled and server has legacy TLS enabled via
+// override. Handshake for DTLS 1.0 should fail.
+TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
+       TestGetSslVersionLegacyOverrideDisabledClient10EnabledServer10) {
+  rtc::SetAllowLegacyTLSProtocols(false);
+  ConfigureClient("");
+  rtc::SetAllowLegacyTLSProtocols(true);
+  ConfigureServer("");
+  // Remove override.
+  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
+  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
+  TestHandshake(false);
+}
+
+// Client has legacy TLS enabled and server has legacy TLS disabled via
+// override. Handshake for DTLS 1.0 should fail.
+TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
+       TestGetSslVersionLegacyOverrideEnabledClient10DisabledServer10) {
+  rtc::SetAllowLegacyTLSProtocols(true);
+  ConfigureClient("");
+  rtc::SetAllowLegacyTLSProtocols(false);
+  ConfigureServer("");
+  // Remove override.
+  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
   TestHandshake(false);
 }
