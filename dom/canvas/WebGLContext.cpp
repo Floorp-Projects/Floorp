@@ -744,7 +744,7 @@ ScopedPrepForResourceClear::ScopedPrepForResourceClear(
 
   // "The clear operation always uses the front stencil write mask
   //  when clearing the stencil buffer."
-  webgl.DoColorMask(0x0f);
+  webgl.DoColorMask(Some(0), 0b1111);
   gl->fDepthMask(true);
   gl->fStencilMaskSeparate(LOCAL_GL_FRONT, 0xffffffff);
 
@@ -763,7 +763,7 @@ ScopedPrepForResourceClear::~ScopedPrepForResourceClear() {
     gl->fEnable(LOCAL_GL_RASTERIZER_DISCARD);
   }
 
-  // DoColorMask() is lazy.
+  webgl.DoColorMask(Some(0), webgl.mColorWriteMask0);
   gl->fDepthMask(webgl.mDepthWriteMask);
   gl->fStencilMaskSeparate(LOCAL_GL_FRONT, webgl.mStencilWriteMaskFront);
 
@@ -794,7 +794,7 @@ void WebGLContext::OnEndOfFrame() {
 void WebGLContext::BlitBackbufferToCurDriverFB(
     WebGLFramebuffer* const srcAsWebglFb,
     const gl::MozFramebuffer* const srcAsMozFb, bool srcIsBGRA) const {
-  DoColorMask(0x0f);
+  // BlitFramebuffer ignores ColorMask().
 
   if (mScissorTestEnabled) {
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
@@ -847,6 +847,8 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
     } else {
       colorTex = mozFb->ColorTex();
     }
+    
+    // DrawBlit handles ColorMask itself.
     gl->BlitHelper()->DrawBlitTextureToFramebuffer(
         colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
   }();
@@ -1322,15 +1324,15 @@ bool WebGLContext::BindDefaultFBForRead() {
   return true;
 }
 
-void WebGLContext::DoColorMask(const uint8_t bitmask) const {
-  if (mDriverColorMask0 != bitmask) {
-    mDriverColorMask0 = bitmask;
-    const auto bs = std::bitset<4>(bitmask);
-    if (gl->IsSupported(gl::GLFeature::draw_buffers_indexed)) {
-      gl->fColorMaski(0, bs[0], bs[1], bs[2], bs[3]);
-    } else {
-      gl->fColorMask(bs[0], bs[1], bs[2], bs[3]);
-    }
+void WebGLContext::DoColorMask(Maybe<GLuint> i, const uint8_t bitmask) const {
+  if (!IsExtensionEnabled(WebGLExtensionID::OES_draw_buffers_indexed)) {
+    i = Nothing();
+  }
+  const auto bs = std::bitset<4>(bitmask);
+  if (i) {
+    gl->fColorMaski(*i, bs[0], bs[1], bs[2], bs[3]);
+  } else {
+    gl->fColorMask(bs[0], bs[1], bs[2], bs[3]);
   }
 }
 
@@ -1360,7 +1362,7 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
   }
 
   const auto& gl = mWebGL.gl;
-  mWebGL.DoColorMask(driverColorMask0);
+  mWebGL.DoColorMask(Some(0), driverColorMask0);
   if (mWebGL.mDriverDepthTest != driverDepthTest) {
     // "When disabled, the depth comparison and subsequent possible updates to
     // the
