@@ -74,7 +74,7 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
           static const Array<nsCString, 2> kSuffixes = {""_ns, "/device"_ns};
           nsPrintfCString prefix("/sys/dev/char/%u:%u", major(sb.st_rdev),
                                  minor(sb.st_rdev));
-          for (const auto suffix : kSuffixes) {
+          for (const auto& suffix : kSuffixes) {
             nsCString sysPath(prefix + suffix);
 
             // libudev will expand the symlink but not do full
