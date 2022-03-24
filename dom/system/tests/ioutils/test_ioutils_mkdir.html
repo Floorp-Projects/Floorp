@@ -103,8 +103,7 @@
       if (Services.appinfo.OS === "WINNT") {
         // We don't actually know the root drive, but we can find the root drive
         // of the profile directory.
-        const profileDir = await PathUtils.getProfileDir();
-        let current = profileDir;
+        let current = PathUtils.profileDir;
         let parent = PathUtils.parent(current);
         while (parent !== null) {
           current = parent;

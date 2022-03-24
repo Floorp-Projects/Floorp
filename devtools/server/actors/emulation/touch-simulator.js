@@ -294,10 +294,9 @@ class TouchSimulator {
    *        A key appearing in the TOUCH_STATES associative array.
    */
   synthesizeNativeTouch(win, screenX, screenY, type) {
-    // Native events work in device pixels, so calculate device coordinates from
-    // the screen coordinates.
+    // Native events work in device pixels.
     const utils = win.windowUtils;
-    const deviceScale = utils.screenPixelsPerCSSPixelNoOverride;
+    const deviceScale = win.devicePixelRatio;
     const pt = { x: screenX * deviceScale, y: screenY * deviceScale };
 
     utils.sendNativeTouchPoint(0, TOUCH_STATES[type], pt.x, pt.y, 1, 90, null);

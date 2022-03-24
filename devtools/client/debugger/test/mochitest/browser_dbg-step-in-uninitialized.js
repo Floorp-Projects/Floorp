@@ -15,8 +15,11 @@ add_task(async function test() {
   await stepOver(dbg);
   await stepIn(dbg);
 
-  assertDebugLine(dbg, 8);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-step-in-uninitialized.html").id,
+    8
+  );
 
   // We step past the 'let x' at the start of the function because it is not
   // a breakpoint position.
@@ -25,7 +28,11 @@ add_task(async function test() {
 
   await stepOver(dbg);
 
-  assertDebugLine(dbg, 9);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-step-in-uninitialized.html").id,
+    9
+  );
 
   ok(findNodeValue(dbg, "y") == "3", "y initialized");
 });

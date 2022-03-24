@@ -215,6 +215,8 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:logins", "about:logins?*", "about:loginsimportreport"],
+    allFrames: true,
+    remoteTypes: ["privilegedabout"],
   },
 
   AboutNewTab: {
@@ -2023,45 +2025,6 @@ BrowserGlue.prototype = {
     });
   },
 
-  // Set up a listener to enable/disable the translation extension
-  // based on its preference.
-  _monitorTranslationsPref() {
-    const PREF = "extensions.translations.disabled";
-    const ID = "firefox-translations@mozilla.org";
-    const oldID = "firefox-infobar-ui-bergamot-browser-extension@browser.mt";
-
-    // First, try to uninstall the old extension, if exists.
-    (async () => {
-      let addon = await AddonManager.getAddonByID(oldID);
-      if (addon) {
-        addon.uninstall().catch(Cu.reportError);
-      }
-    })();
-
-    const _checkTranslationsPref = async () => {
-      let addon = await AddonManager.getAddonByID(ID);
-      let disabled = Services.prefs.getBoolPref(PREF, false);
-      if (!addon && disabled) {
-        // not installed, bail out early.
-        return;
-      }
-      if (!disabled) {
-        // first time install of addon and install on firefox update
-        addon =
-          (await AddonManager.maybeInstallBuiltinAddon(
-            ID,
-            "0.4.3",
-            "resource://builtin-addons/translations/"
-          )) || addon;
-        await addon.enable();
-      } else if (addon) {
-        await addon.disable();
-      }
-    };
-    Services.prefs.addObserver(PREF, _checkTranslationsPref);
-    _checkTranslationsPref();
-  },
-
   async _setupSearchDetection() {
     // There is no pref for this add-on because it shouldn't be disabled.
     const ID = "addons-search-detection@mozilla.com";
@@ -2332,9 +2295,6 @@ BrowserGlue.prototype = {
     this._monitorIonStudies();
     this._setupSearchDetection();
 
-    if (AppConstants.NIGHTLY_BUILD) {
-      this._monitorTranslationsPref();
-    }
     this._monitorGPCPref();
     this._monitorPrivacySegmentationPref();
   },

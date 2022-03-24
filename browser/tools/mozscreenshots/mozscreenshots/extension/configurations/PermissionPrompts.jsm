@@ -160,15 +160,12 @@ async function clickOn(selector, beforeContentFn) {
   }
 
   await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
-    const { E10SUtils } = ChromeUtils.import(
-      "resource://gre/modules/E10SUtils.jsm"
+    const { EventUtils } = ChromeUtils.import(
+      "resource://specialpowers/SpecialPowersEventUtils.jsm"
     );
-    content.document.notifyUserGestureActivation();
-    E10SUtils.wrapHandlingUserInput(content, true, function() {
-      let element = content.document.querySelector(arg);
-      element.click();
-    });
-    content.document.clearUserGestureActivation();
+
+    let element = content.document.querySelector(arg);
+    return EventUtils.synthesizeClick(element);
   });
 
   // Wait for the popup to actually be shown before making the screenshot

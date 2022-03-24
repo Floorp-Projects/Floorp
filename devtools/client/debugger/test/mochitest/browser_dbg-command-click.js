@@ -32,7 +32,7 @@ add_task(async function() {
   clickDOMElement(dbg, funcB);
   await waitForDispatch(dbg.store, "RESUME");
   await waitForPaused(dbg);
-  assertDebugLine(dbg, 3, 2);
+  assertPausedAtSourceAndLine(dbg, source.id, 3, 2);
   const nocalls = dbg.win.document.querySelectorAll(
     ".highlight-function-calls"
   );

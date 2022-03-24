@@ -34,11 +34,11 @@ add_task(async function() {
     "Breakpoint has correct line"
   );
 
-  assertBpInGutter(dbg, 4);
+  await assertBreakpoint(dbg, 4);
   invokeInTab("logMessage");
 
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(dbg, mainSrc.id, 4, 2);
 
   // Tests the existence of the sourcemap link in the original source.
   ok(findElement(dbg, "sourceMapLink"), "Sourcemap link in original source");
@@ -49,13 +49,3 @@ add_task(async function() {
     "No Sourcemap link exists in generated source"
   );
 });
-
-function assertBpInGutter(dbg, lineNumber) {
-  const el = findElement(dbg, "breakpoint");
-  const bpLineNumber = +el.querySelector(".CodeMirror-linenumber").innerText;
-  is(
-    bpLineNumber,
-    lineNumber,
-    "Breakpoint is on the correct line in the gutter"
-  );
-}

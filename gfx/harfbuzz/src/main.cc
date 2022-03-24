@@ -42,7 +42,7 @@
 #define hb_blob_create_from_file_or_fail(x)  hb_blob_get_empty ()
 #endif
 
-#if !defined(HB_NO_COLOR) && !defined(HB_NO_DRAW) && defined(HB_EXPERIMENTAL_API)
+#if !defined(HB_NO_COLOR) && !defined(HB_NO_DRAW)
 static void
 svg_dump (hb_face_t *face, unsigned face_index)
 {
@@ -129,48 +129,60 @@ png_dump (hb_face_t *face, unsigned face_index)
   hb_font_destroy (font);
 }
 
-struct user_data_t
+struct draw_data_t
 {
   FILE *f;
   hb_position_t ascender;
 };
 
 static void
-move_to (hb_position_t to_x, hb_position_t to_y, user_data_t &user_data)
+move_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
+	 hb_draw_state_t *st,
+	 float to_x, float to_y,
+	 void *)
 {
-  fprintf (user_data.f, "M%d,%d", to_x, user_data.ascender - to_y);
+  fprintf (draw_data->f, "M%g,%g", to_x, draw_data->ascender - to_y);
 }
 
 static void
-line_to (hb_position_t to_x, hb_position_t to_y, user_data_t &user_data)
+line_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
+	 hb_draw_state_t *st,
+	 float to_x, float to_y,
+	 void *)
 {
-  fprintf (user_data.f, "L%d,%d", to_x, user_data.ascender - to_y);
+  fprintf (draw_data->f, "L%g,%g", to_x, draw_data->ascender - to_y);
 }
 
 static void
-quadratic_to (hb_position_t control_x, hb_position_t control_y,
-	      hb_position_t to_x, hb_position_t to_y,
-	      user_data_t &user_data)
+quadratic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
+	      hb_draw_state_t *st,
+	      float control_x, float control_y,
+	      float to_x, float to_y,
+	      void *)
 {
-  fprintf (user_data.f, "Q%d,%d %d,%d", control_x, user_data.ascender - control_y,
-					to_x, user_data.ascender - to_y);
+  fprintf (draw_data->f, "Q%g,%g %g,%g", control_x, draw_data->ascender - control_y,
+					to_x, draw_data->ascender - to_y);
 }
 
 static void
-cubic_to (hb_position_t control1_x, hb_position_t control1_y,
-	  hb_position_t control2_x, hb_position_t control2_y,
-	  hb_position_t to_x, hb_position_t to_y,
-	  user_data_t &user_data)
+cubic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
+	  hb_draw_state_t *st,
+	  float control1_x, float control1_y,
+	  float control2_x, float control2_y,
+	  float to_x, float to_y,
+	  void *)
 {
-  fprintf (user_data.f, "C%d,%d %d,%d %d,%d", control1_x, user_data.ascender - control1_y,
-					       control2_x, user_data.ascender - control2_y,
-					       to_x, user_data.ascender - to_y);
+  fprintf (draw_data->f, "C%g,%g %g,%g %g,%g", control1_x, draw_data->ascender - control1_y,
+					       control2_x, draw_data->ascender - control2_y,
+					       to_x, draw_data->ascender - to_y);
 }
 
 static void
-close_path (user_data_t &user_data)
+close_path (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
+	    hb_draw_state_t *st,
+	    void *)
 {
-  fprintf (user_data.f, "Z");
+  fprintf (draw_data->f, "Z");
 }
 
 static void
@@ -218,9 +230,9 @@ layered_glyph_dump (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index
 		    " viewBox=\"%d %d %d %d\">\n",
 		    extents.x_bearing, 0,
 		    extents.x_bearing + extents.width, -extents.height);
-	user_data_t user_data;
-	user_data.ascender = extents.y_bearing;
-	user_data.f = f;
+	draw_data_t draw_data;
+	draw_data.ascender = extents.y_bearing;
+	draw_data.f = f;
 
 	for (unsigned layer = 0; layer < num_layers; ++layer)
 	{
@@ -232,8 +244,7 @@ layered_glyph_dump (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index
 	  if (hb_color_get_alpha (color) != 255)
 	    fprintf (f, "fill-opacity=\"%.3f\"", (double) hb_color_get_alpha (color) / 255.);
 	  fprintf (f, "d=\"");
-	  if (!hb_font_draw_glyph (font, layers[layer].glyph, funcs, &user_data))
-	    printf ("Failed to decompose layer %d while %d\n", layers[layer].glyph, gid);
+	  hb_font_get_glyph_shape (font, layers[layer].glyph, funcs, &draw_data);
 	  fprintf (f, "\"/>\n");
 	}
 
@@ -269,11 +280,10 @@ dump_glyphs (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index)
 		" viewBox=\"%d %d %d %d\"><path d=\"",
 		extents.x_bearing, 0,
 		extents.x_bearing + extents.width, font_extents.ascender - font_extents.descender);
-    user_data_t user_data;
-    user_data.ascender = font_extents.ascender;
-    user_data.f = f;
-    if (!hb_font_draw_glyph (font, gid, funcs, &user_data))
-      printf ("Failed to decompose gid: %d\n", gid);
+    draw_data_t draw_data;
+    draw_data.ascender = font_extents.ascender;
+    draw_data.f = f;
+    hb_font_get_glyph_shape (font, gid, funcs, &draw_data);
     fprintf (f, "\"/></svg>");
     fclose (f);
   }
@@ -300,11 +310,11 @@ dump_glyphs (hb_blob_t *blob, const char *font_name)
   fclose (font_name_file);
 
   hb_draw_funcs_t *funcs = hb_draw_funcs_create ();
-  hb_draw_funcs_set_move_to_func (funcs, (hb_draw_move_to_func_t) move_to);
-  hb_draw_funcs_set_line_to_func (funcs, (hb_draw_line_to_func_t) line_to);
-  hb_draw_funcs_set_quadratic_to_func (funcs, (hb_draw_quadratic_to_func_t) quadratic_to);
-  hb_draw_funcs_set_cubic_to_func (funcs, (hb_draw_cubic_to_func_t) cubic_to);
-  hb_draw_funcs_set_close_path_func (funcs, (hb_draw_close_path_func_t) close_path);
+  hb_draw_funcs_set_move_to_func (funcs, (hb_draw_move_to_func_t) move_to, nullptr, nullptr);
+  hb_draw_funcs_set_line_to_func (funcs, (hb_draw_line_to_func_t) line_to, nullptr, nullptr);
+  hb_draw_funcs_set_quadratic_to_func (funcs, (hb_draw_quadratic_to_func_t) quadratic_to, nullptr, nullptr);
+  hb_draw_funcs_set_cubic_to_func (funcs, (hb_draw_cubic_to_func_t) cubic_to, nullptr, nullptr);
+  hb_draw_funcs_set_close_path_func (funcs, (hb_draw_close_path_func_t) close_path, nullptr, nullptr);
 
   unsigned num_faces = hb_face_count (blob);
   for (unsigned face_index = 0; face_index < num_faces; ++face_index)
@@ -512,7 +522,7 @@ main (int argc, char **argv)
 #ifndef MAIN_CC_NO_PRIVATE_API
   print_layout_info_using_private_api (blob);
 #endif
-#if !defined(HB_NO_COLOR) && !defined(HB_NO_DRAW) && defined(HB_EXPERIMENTAL_API)
+#if !defined(HB_NO_COLOR) && !defined(HB_NO_DRAW)
   dump_glyphs (blob, argv[1]);
 #endif
   hb_blob_destroy (blob);

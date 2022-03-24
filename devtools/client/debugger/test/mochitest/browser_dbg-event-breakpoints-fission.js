@@ -30,7 +30,11 @@ add_task(async function() {
   const waitForReload = reloadBrowser();
 
   await waitForPaused(dbg);
-  assertPauseLocation(dbg, 17, "doc-event-breakpoints-fission.html");
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-event-breakpoints-fission.html").id,
+    17
+  );
   await resume(dbg);
 
   await waitForReload;
@@ -49,24 +53,21 @@ add_task(async function() {
 async function invokeAndAssertBreakpoints(dbg) {
   invokeInTabRemoteFrame("clickHandler");
   await waitForPaused(dbg);
-  assertPauseLocation(dbg, 12);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "event-breakpoints.js").id,
+    12
+  );
   await resume(dbg);
 
   invokeInTabRemoteFrame("xhrHandler");
   await waitForPaused(dbg);
-  assertPauseLocation(dbg, 20);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "event-breakpoints.js").id,
+    20
+  );
   await resume(dbg);
-}
-
-function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
-  const { location } = dbg.selectors.getVisibleSelectedFrame();
-  const selectedSource = dbg.selectors.getSelectedSource();
-
-  is(location.sourceId, selectedSource.id, `Correct selected sourceId`);
-  ok(selectedSource.url.includes(url), "Correct url");
-  is(location.line, line, "Correct paused line");
-
-  assertPausedLocation(dbg);
 }
 
 async function invokeInTabRemoteFrame(fnc, ...args) {

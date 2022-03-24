@@ -203,7 +203,7 @@ struct hb_bit_set_t
   bool set_sorted_array (bool v, const T *array, unsigned int count, unsigned int stride=sizeof(T))
   {
     if (unlikely (!successful)) return true; /* https://github.com/harfbuzz/harfbuzz/issues/657 */
-    if (!count) return true;
+    if (unlikely (!count)) return true;
     dirty ();
     hb_codepoint_t g = *array;
     hb_codepoint_t last_g = g;
@@ -222,7 +222,7 @@ struct hb_bit_set_t
         if (v || page) /* The v check is to optimize out the page check if v is true. */
 	  page->add (g);
 
-	array = (const T *) ((const char *) array + stride);
+	array = &StructAtOffsetUnaligned<T> (array, stride);
 	count--;
       }
       while (count && (g = *array, g < end));
@@ -809,8 +809,8 @@ struct hb_bit_set_t
   }
   page_t &page_at (unsigned int i) { return pages[page_map[i].index]; }
   const page_t &page_at (unsigned int i) const { return pages[page_map[i].index]; }
-  unsigned int get_major (hb_codepoint_t g) const { return g / page_t::PAGE_BITS; }
-  hb_codepoint_t major_start (unsigned int major) const { return major * page_t::PAGE_BITS; }
+  unsigned int get_major (hb_codepoint_t g) const { return g >> page_t::PAGE_BITS_LOG_2; }
+  hb_codepoint_t major_start (unsigned int major) const { return major << page_t::PAGE_BITS_LOG_2; }
 };
 
 

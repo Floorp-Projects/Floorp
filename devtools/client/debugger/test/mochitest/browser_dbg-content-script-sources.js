@@ -38,8 +38,11 @@ add_task(async function() {
       findElementWithSelector(dbg, ".sources-list .focused"),
       "Source is focused"
     );
-    assertPausedLocation(dbg);
-    assertDebugLine(dbg, 2);
+    assertPausedAtSourceAndLine(
+      dbg,
+      findSource(dbg, "content_script.js").id,
+      2
+    );
     await resume(dbg);
   }
 

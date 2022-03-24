@@ -39,7 +39,7 @@ for j in range(7, 9):
 		headers[j - 1].append(line)
 headers.append (["UnicodeData.txt does not have a header."])
 
-data = [{} for _ in files]
+unicode_data = [{} for _ in files]
 values = [{} for _ in files]
 for i, f in enumerate (files):
 	for line in f:
@@ -73,38 +73,16 @@ for i, f in enumerate (files):
 
 		i0 = i if i < 7 else i - 7
 		for u in range (start, end + 1):
-			data[i0][u] = t
+			unicode_data[i0][u] = t
 		values[i0][t] = values[i0].get (t, 0) + end - start + 1
 
 defaults = ('Other', 'Not_Applicable', 'jt_X', '', 'Cn', 'No_Block', 'Unknown')
-
-# TODO Characters that are not in Unicode Indic files, but used in USE
-data[0][0x1B61] = defaults[0]
-data[0][0x1B63] = defaults[0]
-data[0][0x1B64] = defaults[0]
-data[0][0x1B65] = defaults[0]
-data[0][0x1B66] = defaults[0]
-data[0][0x1B67] = defaults[0]
-data[0][0x1B69] = defaults[0]
-data[0][0x1B6A] = defaults[0]
-data[0][0x2060] = defaults[0]
-# TODO https://github.com/harfbuzz/harfbuzz/pull/1685
-data[0][0x1B5B] = 'Consonant_Placeholder'
-data[0][0x1B5C] = 'Consonant_Placeholder'
-data[0][0x1B5F] = 'Consonant_Placeholder'
-data[0][0x1B62] = 'Consonant_Placeholder'
-data[0][0x1B68] = 'Consonant_Placeholder'
-# TODO https://github.com/harfbuzz/harfbuzz/issues/1035
-data[0][0x11C44] = 'Consonant_Placeholder'
-data[0][0x11C45] = 'Consonant_Placeholder'
-# TODO https://github.com/harfbuzz/harfbuzz/pull/1399
-data[0][0x111C8] = 'Consonant_Placeholder'
 
 # Merge data into one dict:
 for i,v in enumerate (defaults):
 	values[i][v] = values[i].get (v, 0) + 1
 combined = {}
-for i,d in enumerate (data):
+for i,d in enumerate (unicode_data):
 	for u,v in d.items ():
 		if not u in combined:
 			if i >= 4:
@@ -112,8 +90,6 @@ for i,d in enumerate (data):
 			combined[u] = list (defaults)
 		combined[u][i] = v
 combined = {k: v for k, v in combined.items() if v[6] not in DISABLED_SCRIPTS}
-data = combined
-del combined
 
 
 property_names = [
@@ -226,8 +202,8 @@ def is_BASE_OTHER(U, UISC, UDI, UGC, AJT):
 	if UISC == Consonant_Placeholder: return True
 	return U in [0x2015, 0x2022, 0x25FB, 0x25FC, 0x25FD, 0x25FE]
 def is_CGJ(U, UISC, UDI, UGC, AJT):
-	# Also includes VARIATION_SELECTOR, WJ, and ZWJ
-	return U == 0x200D or UDI and UGC in [Mc, Me, Mn]
+	# Also includes VARIATION_SELECTOR and ZWJ
+	return UISC == Joiner or UDI and UGC in [Mc, Me, Mn]
 def is_CONS_FINAL(U, UISC, UDI, UGC, AJT):
 	return ((UISC == Consonant_Final and UGC != Lo) or
 		UISC == Consonant_Succeeding_Repha)
@@ -245,13 +221,7 @@ def is_CONS_SUB(U, UISC, UDI, UGC, AJT):
 def is_CONS_WITH_STACKER(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_With_Stacker
 def is_HALANT(U, UISC, UDI, UGC, AJT):
-	return (UISC in [Virama, Invisible_Stacker]
-		and not is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT)
-		and not is_SAKOT(U, UISC, UDI, UGC, AJT))
-def is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT):
-	# Split off of HALANT
-	# https://github.com/harfbuzz/harfbuzz/issues/1379
-	return U == 0x1134D
+	return UISC == Virama
 def is_HALANT_NUM(U, UISC, UDI, UGC, AJT):
 	return UISC == Number_Joiner
 def is_HIEROGLYPH(U, UISC, UDI, UGC, AJT):
@@ -262,15 +232,21 @@ def is_HIEROGLYPH_SEGMENT_BEGIN(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Segment_Begin
 def is_HIEROGLYPH_SEGMENT_END(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Segment_End
+def is_INVISIBLE_STACKER(U, UISC, UDI, UGC, AJT):
+	# Split off of HALANT
+	return (UISC == Invisible_Stacker
+		and not is_SAKOT(U, UISC, UDI, UGC, AJT)
+	)
 def is_ZWNJ(U, UISC, UDI, UGC, AJT):
 	return UISC == Non_Joiner
 def is_OTHER(U, UISC, UDI, UGC, AJT):
-	# Also includes BASE_IND, Rsv, and SYM
-	return ((UGC in [Cn, Po] or UISC in [Consonant_Dead, Joiner, Modifying_Letter, Other])
+	# Also includes BASE_IND and SYM
+	return ((UGC == Po or UISC in [Consonant_Dead, Joiner, Modifying_Letter, Other])
 		and not is_BASE(U, UISC, UDI, UGC, AJT)
 		and not is_BASE_OTHER(U, UISC, UDI, UGC, AJT)
 		and not is_CGJ(U, UISC, UDI, UGC, AJT)
 		and not is_SYM_MOD(U, UISC, UDI, UGC, AJT)
+		and not is_Word_Joiner(U, UISC, UDI, UGC, AJT)
 	)
 def is_REPHA(U, UISC, UDI, UGC, AJT):
 	return UISC in [Consonant_Preceding_Repha, Consonant_Prefixed]
@@ -280,13 +256,17 @@ def is_SAKOT(U, UISC, UDI, UGC, AJT):
 def is_SYM_MOD(U, UISC, UDI, UGC, AJT):
 	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
 def is_VOWEL(U, UISC, UDI, UGC, AJT):
-	# https://github.com/harfbuzz/harfbuzz/issues/376
 	return (UISC == Pure_Killer or
-		(UGC != Lo and UISC in [Vowel, Vowel_Dependent] and U not in [0xAA29]))
+		UGC != Lo and UISC in [Vowel, Vowel_Dependent])
 def is_VOWEL_MOD(U, UISC, UDI, UGC, AJT):
-	# https://github.com/harfbuzz/harfbuzz/issues/376
 	return (UISC in [Tone_Mark, Cantillation_Mark, Register_Shifter, Visarga] or
-		(UGC != Lo and (UISC == Bindu or U in [0xAA29])))
+		UGC != Lo and UISC == Bindu)
+def is_Word_Joiner(U, UISC, UDI, UGC, AJT):
+	# Also includes Rsv
+	return (UDI and U not in [0x115F, 0x1160, 0x3164, 0xFFA0, 0x1BCA0, 0x1BCA1, 0x1BCA2, 0x1BCA3]
+		and UISC == Other
+		and not is_CGJ(U, UISC, UDI, UGC, AJT)
+	) or UGC == Cn
 
 use_mapping = {
 	'B':	is_BASE,
@@ -300,8 +280,8 @@ use_mapping = {
 	'SUB':	is_CONS_SUB,
 	'CS':	is_CONS_WITH_STACKER,
 	'H':	is_HALANT,
-	'HVM':	is_HALANT_OR_VOWEL_MODIFIER,
 	'HN':	is_HALANT_NUM,
+	'IS':	is_INVISIBLE_STACKER,
 	'G':	is_HIEROGLYPH,
 	'J':	is_HIEROGLYPH_JOINER,
 	'SB':	is_HIEROGLYPH_SEGMENT_BEGIN,
@@ -313,6 +293,7 @@ use_mapping = {
 	'SM':	is_SYM_MOD,
 	'V':	is_VOWEL,
 	'VM':	is_VOWEL_MOD,
+	'WJ':	is_Word_Joiner,
 }
 
 use_positions = {
@@ -348,7 +329,7 @@ use_positions = {
 		'Blw': [Bottom],
 	},
 	'H': None,
-	'HVM': None,
+	'IS': None,
 	'B': None,
 	'FM': {
 		'Abv': [Top],
@@ -379,9 +360,6 @@ def map_to_use(data):
 		# TODO: U+1CED should only be allowed after some of
 		# the nasalization marks, maybe only for U+1CE9..U+1CF1.
 		if U == 0x1CED: UISC = Tone_Mark
-
-		# TODO: https://github.com/microsoft/font-tools/issues/1
-		if U == 0xA982: UISC = Consonant_Succeeding_Repha
 
 		values = [k for k,v in items if v(U, UISC, UDI, UGC, AJT)]
 		assert len(values) == 1, "%s %s %s %s %s %s" % (hex(U), UISC, UDI, UGC, AJT, values)
@@ -416,8 +394,7 @@ def map_to_use(data):
 		out[U] = (USE, UBlock)
 	return out
 
-defaults = ('O', 'No_Block')
-data = map_to_use(data)
+use_data = map_to_use(combined)
 
 print ("/* == Start of generated table == */")
 print ("/*")
@@ -443,7 +420,7 @@ print ()
 total = 0
 used = 0
 last_block = None
-def print_block (block, start, end, data):
+def print_block (block, start, end, use_data):
 	global total, used, last_block
 	if block and block != last_block:
 		print ()
@@ -458,17 +435,23 @@ def print_block (block, start, end, data):
 		if u % 16 == 0:
 			print ()
 			print ("  /* %04X */" % u, end='')
-		if u in data:
+		if u in use_data:
 			num += 1
-		d = data.get (u, defaults)
-		print ("%6s," % d[0], end='')
+		d = use_data.get (u)
+		if d is not None:
+			d = d[0]
+		elif u in unicode_data[4]:
+			d = 'O'
+		else:
+			d = 'WJ'
+		print ("%6s," % d, end='')
 
 	total += end - start + 1
 	used += num
 	if block:
 		last_block = block
 
-uu = sorted (data.keys ())
+uu = sorted (use_data.keys ())
 
 last = -100000
 num = 0
@@ -491,19 +474,19 @@ print ("static const uint8_t use_table[] = {")
 for u in uu:
 	if u <= last:
 		continue
-	if data[u][0] == 'O':
+	if use_data[u][0] == 'O':
 		continue
-	block = data[u][1]
+	block = use_data[u][1]
 
 	start = u//8*8
 	end = start+1
-	while end in uu and block == data[end][1]:
+	while end in uu and block == use_data[end][1]:
 		end += 1
 	end = (end-1)//8*8 + 7
 
 	if start != last + 1:
 		if start - last <= 1+16*3:
-			print_block (None, last+1, start-1, data)
+			print_block (None, last+1, start-1, use_data)
 		else:
 			if last >= 0:
 				ends.append (last + 1)
@@ -513,7 +496,7 @@ for u in uu:
 			print ("#define use_offset_0x%04xu %d" % (start, offset))
 			starts.append (start)
 
-	print_block (block, start, end, data)
+	print_block (block, start, end, use_data)
 	last = end
 ends.append (last + 1)
 offset += ends[-1] - starts[-1]
@@ -524,8 +507,9 @@ page_bits = 12
 print ("}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy))
 print ()
 print ("static inline uint8_t")
-print ("hb_use_get_category (hb_codepoint_t u)")
+print ("hb_use_get_category (hb_glyph_info_t info)")
 print ("{")
+print ("  hb_codepoint_t u = info.codepoint;")
 print ("  switch (u >> %d)" % page_bits)
 print ("  {")
 pages = set([u>>page_bits for u in starts+ends])
@@ -540,7 +524,9 @@ for p in sorted(pages):
 print ("    default:")
 print ("      break;")
 print ("  }")
-print ("  return USE(O);")
+print ("  if (_hb_glyph_info_get_general_category (&info) == HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED)")
+print ("    return WJ;")
+print ("  return O;")
 print ("}")
 print ()
 for k in sorted(use_mapping.keys()):

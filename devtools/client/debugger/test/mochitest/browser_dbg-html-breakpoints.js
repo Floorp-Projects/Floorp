@@ -27,18 +27,30 @@ add_task(async function() {
 
   invokeInTab("test1");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-html-breakpoints.html").id,
+    8
+  );
   await resume(dbg);
 
   await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 14);
   invokeInTab("test3");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-html-breakpoints.html").id,
+    14
+  );
   await resume(dbg);
 
   await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 20);
   invokeInTab("test4");
   await waitForPaused(dbg);
-  assertPausedLocation(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-html-breakpoints.html").id,
+    20
+  );
   await resume(dbg);
 });

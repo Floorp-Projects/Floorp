@@ -158,7 +158,7 @@ for (const mvcontent of META_VIEWPORT_CONTENTS) {
               //       a message listener in the chrome.
               function synthesizeNativeMouseClick(win, screenX, screenY) {
                 const utils = win.windowUtils;
-                const scale = utils.screenPixelsPerCSSPixelNoOverride;
+                const scale = win.devicePixelRatio;
 
                 return new Promise(resolve => {
                   utils.sendNativeMouseEvent(

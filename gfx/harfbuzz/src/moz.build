@@ -86,6 +86,7 @@ UNIFIED_SOURCES += [
     'hb-subset-cff-common.cc',
     'hb-subset-cff1.cc',
     'hb-subset-cff2.cc',
+    'hb-subset-repacker.cc',
     'hb-unicode.cc',
 ]
 

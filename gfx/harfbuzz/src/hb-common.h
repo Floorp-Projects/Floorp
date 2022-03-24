@@ -130,6 +130,16 @@ typedef union _hb_var_int_t {
   int8_t i8[4];
 } hb_var_int_t;
 
+typedef union _hb_var_num_t {
+  float f;
+  uint32_t u32;
+  int32_t i32;
+  uint16_t u16[2];
+  int16_t i16[2];
+  uint8_t u8[4];
+  int8_t i8[4];
+} hb_var_num_t;
+
 
 /* hb_tag_t */
 

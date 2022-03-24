@@ -57,7 +57,8 @@ add_task(async function() {
 
   info("Wait for the debugger to pause");
   await waitForPaused(debuggerContext);
-  assertPausedLocation(debuggerContext);
+  const script = findSource(debuggerContext, SCRIPT_FILE);
+  assertPausedAtSourceAndLine(debuggerContext, script.id, 10);
 
   info("Resume");
   await resume(debuggerContext);
@@ -66,7 +67,6 @@ add_task(async function() {
   await onContentTaskDone;
 
   info("Remove breakpoint");
-  const script = findSource(debuggerContext, SCRIPT_FILE);
   await removeBreakpoint(debuggerContext, script.id, 10);
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);

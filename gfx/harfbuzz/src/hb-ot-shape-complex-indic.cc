@@ -198,11 +198,10 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
   }
 
   map->add_gsub_pause (final_reordering_indic);
+  map->add_gsub_pause (_hb_clear_syllables);
 
   for (; i < INDIC_NUM_FEATURES; i++)
     map->add_feature (indic_features[i]);
-
-  map->add_gsub_pause (_hb_clear_syllables);
 }
 
 static void

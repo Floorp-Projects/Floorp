@@ -181,6 +181,26 @@ class MozfileRemoveTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(symlink_path))
         self.assertTrue(os.path.exists(file_path))
 
+    @unittest.skipIf(mozinfo.isWin, "Symlinks are not supported on Windows")
+    def test_remove_broken_symlink(self):
+        """Test removing a folder with an contained symlink"""
+        file_path = os.path.join(self.tempdir, "readonly.txt")
+        working_link = os.path.join(self.tempdir, "link_to_readonly.txt")
+        broken_link = os.path.join(self.tempdir, "broken_link")
+        os.symlink(file_path, working_link)
+        os.symlink(os.path.join(self.tempdir, "broken.txt"), broken_link)
+
+        self.assertTrue(os.path.exists(file_path))
+        self.assertTrue(os.path.islink(working_link))
+        self.assertTrue(os.path.islink(broken_link))
+
+        mozfile.remove(working_link)
+        self.assertFalse(os.path.lexists(working_link))
+        self.assertTrue(os.path.exists(file_path))
+
+        mozfile.remove(broken_link)
+        self.assertFalse(os.path.lexists(broken_link))
+
     @unittest.skipIf(
         mozinfo.isWin or not os.geteuid(),
         "Symlinks are not supported on Windows and cannot run test as root",

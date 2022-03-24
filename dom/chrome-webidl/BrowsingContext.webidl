@@ -142,6 +142,14 @@ interface BrowsingContext {
   // only be set from the parent process.
   //
   // A value of 0.0 causes us to use the global default scaling factor.
+  //
+  // NOTE that this override only affects a few minor things (the value exposed
+  // to devicePixelRatio and some media queries in content, and responsive
+  // image selection). Most notably, it does _not_ affect rendering.
+  //
+  // It is intended for RDM, and is probably not what you want in other cases.
+  // If you want to change the actual device pixel ratio that rendering code
+  // uses, you probably want to change the fullZoom.
   [SetterThrows] attribute float overrideDPPX;
 
   [SetterThrows] attribute boolean suspendMediaWhenInactive;
