@@ -9,7 +9,7 @@
             ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
-            sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
+            sleep, runAndWaitForAutocompletePopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
@@ -288,9 +288,23 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
   });
 }
 
-async function expectPopupOpen(browser) {
-  info("expectPopupOpen");
-  await BrowserTestUtils.waitForPopupEvent(browser.autoCompletePopup, "shown");
+/**
+ * Run the task and wait until the autocomplete popup is opened.
+ *
+ * @param {Object} browser A xul:browser.
+ * @param {Function} taskFn Task that will trigger the autocomplete popup
+ */
+async function runAndWaitForAutocompletePopupOpen(browser, taskFn) {
+  info("runAndWaitForAutocompletePopupOpen");
+  let popupShown = BrowserTestUtils.waitForPopupEvent(
+    browser.autoCompletePopup,
+    "shown"
+  );
+
+  // Run the task will open the autocomplete popup
+  await taskFn();
+
+  await popupShown;
   await BrowserTestUtils.waitForMutationCondition(
     browser.autoCompletePopup.richlistbox,
     { childList: true, subtree: true, attributes: true },
@@ -353,12 +367,15 @@ async function openPopupOn(browser, selector) {
     "FormAutoComplete:PopupOpened"
   );
   await SimpleTest.promiseFocus(browser);
-  await focusAndWaitForFieldsIdentified(browser, selector);
-  if (!selector.includes("cc-")) {
-    info(`openPopupOn: before VK_DOWN on ${selector}`);
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-  }
-  await expectPopupOpen(browser);
+
+  await runAndWaitForAutocompletePopupOpen(browser, async () => {
+    await focusAndWaitForFieldsIdentified(browser, selector);
+    if (!selector.includes("cc-")) {
+      info(`openPopupOn: before VK_DOWN on ${selector}`);
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+    }
+  });
+
   await childNotifiedPromise;
 }
 
@@ -369,12 +386,15 @@ async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
   );
 
   await SimpleTest.promiseFocus(browser);
-  await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
-  if (!selector.includes("cc-")) {
-    info(`openPopupForSubframe: before VK_DOWN on ${selector}`);
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
-  }
-  await expectPopupOpen(browser);
+
+  await runAndWaitForAutocompletePopupOpen(browser, async () => {
+    await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
+    if (!selector.includes("cc-")) {
+      info(`openPopupForSubframe: before VK_DOWN on ${selector}`);
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
+    }
+  });
+
   await childNotifiedPromise;
 }
 
