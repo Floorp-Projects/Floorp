@@ -1104,6 +1104,11 @@ void VideoQualityTest::CreateCapturers() {
           static_cast<int>(params_.video[video_idx].width),
           static_cast<int>(params_.video[video_idx].height),
           test::FrameGeneratorInterface::OutputType::kI010, absl::nullopt);
+    } else if (params_.video[video_idx].clip_path == "GeneratorNV12") {
+      frame_generator = test::CreateSquareFrameGenerator(
+          static_cast<int>(params_.video[video_idx].width),
+          static_cast<int>(params_.video[video_idx].height),
+          test::FrameGeneratorInterface::OutputType::kNV12, absl::nullopt);
     } else if (params_.video[video_idx].clip_path.empty()) {
       video_sources_[video_idx] = test::CreateVideoCapturer(
           params_.video[video_idx].width, params_.video[video_idx].height,
