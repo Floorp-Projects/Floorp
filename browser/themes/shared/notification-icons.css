@@ -52,12 +52,10 @@
   list-style-image: url(chrome://global/skin/icons/info.svg);
 }
 
-.popup-notification-icon[popupid="storage-access"],
 .storage-access-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
 }
 
-.popup-notification-icon[popupid="persistent-storage"],
 .persistent-storage-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
 }
@@ -66,7 +64,6 @@
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage-blocked.svg);
 }
 
-.popup-notification-icon[popupid="web-notifications"],
 .desktop-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
@@ -81,10 +78,6 @@
 
 .geo-icon.blocked-permission-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/geo-blocked.svg);
-}
-
-.popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
 }
 
 .open-protocol-handler-icon {
@@ -103,15 +96,7 @@
   list-style-image: url(chrome://browser/skin/notification-icons/xr-blocked.svg);
 }
 
-.popup-notification-icon[popupid="xr"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
-}
-
 .autoplay-media-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
-}
-
-.popup-notification-icon[popupid="autoplay-media"] {
   list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
 }
 
@@ -137,12 +122,10 @@
   padding: 20px;
 }
 
-.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .indexedDB-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
 }
 
-.popup-notification-icon[popupid="password"],
 #password-notification-icon {
   list-style-image: url(chrome://browser/skin/login.svg);
 }
@@ -197,14 +180,11 @@
 }
 
 .midi-icon,
-.midi-sysex-icon,
-.popup-notification-icon[popupid="midi"],
-.popup-notification-icon[popupid="midi-sysex"] {
+.midi-sysex-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
 }
 
 #canvas-notification-icon,
-.popup-notification-icon[popupid="canvas-permissions-prompt"],
 .canvas-icon {
   list-style-image: url(chrome://browser/skin/canvas.svg);
 }
@@ -294,7 +274,6 @@
 
 /* EME */
 
-.popup-notification-icon[popupid="drmContentPlaying"],
 .drm-icon {
   list-style-image: url("chrome://browser/skin/drm-icon.svg");
 }
@@ -317,37 +296,8 @@
   list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
-.install-icon.blocked-permission-icon,
-.popup-notification-icon[popupid="xpinstall-disabled"],
-.popup-notification-icon[popupid="addon-install-blocked"],
-.popup-notification-icon[popupid="addon-install-origin-blocked"] {
+.install-icon.blocked-permission-icon {
   list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
-}
-
-.popup-notification-icon[popupid="addon-progress"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-downloading.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-failed"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-error.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
-}
-
-#addon-install-confirmation-notification[warning] .popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-warning.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-complete"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-installed.svg);
-}
-
-/* OFFLINE APPS */
-
-.popup-notification-icon[popupid="offline-app-usage"] {
-  list-style-image: url(chrome://global/skin/icons/help.svg);
 }
 
 /* PLUGINS */
@@ -435,21 +385,4 @@
   .translation-icon.in-use {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
-}
-
-/* UPDATE */
-.popup-notification-icon[popupid="update-available"],
-.popup-notification-icon[popupid="update-downloading"],
-.popup-notification-icon[popupid="update-manual"],
-.popup-notification-icon[popupid="update-other-instance"],
-.popup-notification-icon[popupid="update-restart"] {
-  background: url(chrome://browser/skin/update-badge.svg) no-repeat center;
-  -moz-context-properties: fill;
-  fill: var(--panel-banner-item-update-supported-bgcolor);
-}
-
-.popup-notification-icon[popupid="update-unsupported"] {
-  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
-  -moz-context-properties: fill;
-  fill: var(--warning-icon-bgcolor);
 }
