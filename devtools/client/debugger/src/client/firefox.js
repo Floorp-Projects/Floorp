@@ -43,13 +43,21 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
     }
     await targetCommand.startListening();
   }
-  // `pauseWorkersUntilAttach` is one option set when the debugger panel is opened rather that from the toolbox.
-  // The reason is to support early breakpoints in workers, which will force the workers to pause
-  // and later on (when TargetMixin.attachThread is called) resume worker execution, after passing the breakpoints.
-  // We only observe workers when the debugger panel is opened (see the few lines before and listenForWorkers = true).
-  // So if we were passing `pauseWorkersUntilAttach=true` from the toolbox code, workers would freeze as we would not watch
-  // for their targets and not resume them.
-  const options = { pauseWorkersUntilAttach: true };
+
+  const options = {
+    // `pauseWorkersUntilAttach` is one option set when the debugger panel is opened rather that from the toolbox.
+    // The reason is to support early breakpoints in workers, which will force the workers to pause
+    // and later on (when TargetMixin.attachThread is called) resume worker execution, after passing the breakpoints.
+    // We only observe workers when the debugger panel is opened (see the few lines before and listenForWorkers = true).
+    // So if we were passing `pauseWorkersUntilAttach=true` from the toolbox code, workers would freeze as we would not watch
+    // for their targets and not resume them.
+    pauseWorkersUntilAttach: true,
+
+    // Bug 1719615 - Immediately turn on WASM debugging when the debugger opens.
+    // We avoid enabling that as soon as DevTools open as WASM generates different kind of machine code
+    // with debugging instruction which significantly increase the memory usage.
+    observeWasm: true,
+  };
   await commands.threadConfigurationCommand.updateConfiguration(options);
 
   // We should probably only pass descriptor informations from here
