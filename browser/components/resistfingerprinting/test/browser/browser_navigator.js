@@ -283,38 +283,38 @@ async function testWorkerNavigator() {
   is(
     result.appVersion,
     expectedResults.appVersion,
-    `Checking ${testDesc} navigator.appVersion.`
+    `Checking ${testDesc} worker navigator.appVersion.`
   );
   is(
     result.platform,
     expectedResults.platform,
-    `Checking ${testDesc} navigator.platform.`
+    `Checking ${testDesc} worker navigator.platform.`
   );
   is(
     result.userAgent,
     expectedResults.userAgentNavigator,
-    `Checking ${testDesc} navigator.userAgent.`
+    `Checking ${testDesc} worker navigator.userAgent.`
   );
   is(
     result.hardwareConcurrency,
     expectedResults.hardwareConcurrency,
-    `Checking ${testDesc} navigator.hardwareConcurrency.`
+    `Checking ${testDesc} worker navigator.hardwareConcurrency.`
   );
 
   is(
     result.appCodeName,
     CONST_APPCODENAME,
-    "Navigator.appCodeName reports correct constant value."
+    "worker Navigator.appCodeName reports correct constant value."
   );
   is(
     result.appName,
     CONST_APPNAME,
-    "Navigator.appName reports correct constant value."
+    "worker Navigator.appName reports correct constant value."
   );
   is(
     result.product,
     CONST_PRODUCT,
-    "Navigator.product reports correct constant value."
+    "worker Navigator.product reports correct constant value."
   );
 
   BrowserTestUtils.removeTab(tab);
