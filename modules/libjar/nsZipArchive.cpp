@@ -5,9 +5,6 @@
 
 /*
  * This module implements a simple archive extractor for the PKZIP format.
- *
- * The underlying nsZipArchive is NOT thread-safe. Do not pass references
- * or pointers to it across thread boundaries.
  */
 
 #define READTYPE int32_t
@@ -337,65 +334,20 @@ nsZipHandle::~nsZipHandle() {
 //---------------------------------------------
 //  nsZipArchive::OpenArchive
 //---------------------------------------------
-nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
-  mFd = aZipHandle;
-
-  //-- get table of contents for archive
-  nsresult rv = BuildFileList(aFd);
-  if (NS_SUCCEEDED(rv)) {
-    if (aZipHandle->mFile && XRE_IsParentProcess()) {
-      static char* env = PR_GetEnv("MOZ_JAR_LOG_FILE");
-      if (env) {
-        mUseZipLog = true;
-
-        zipLog.Init(env);
-        // We only log accesses in jar/zip archives within the NS_GRE_DIR
-        // and/or the APK on Android. For the former, we log the archive path
-        // relative to NS_GRE_DIR, and for the latter, the nested-archive
-        // path within the APK. This makes the path match the path of the
-        // archives relative to the packaged dist/$APP_NAME directory in a
-        // build.
-        if (aZipHandle->mFile.IsZip()) {
-          // Nested archive, likely omni.ja in APK.
-          aZipHandle->mFile.GetPath(mURI);
-        } else if (nsDirectoryService::gService) {
-          // We can reach here through the initialization of Omnijar from
-          // XRE_InitCommandLine, which happens before the directory service
-          // is initialized. When that happens, it means the opened archive is
-          // the APK, and we don't care to log that one, so we just skip
-          // when the directory service is not initialized.
-          nsCOMPtr<nsIFile> dir = aZipHandle->mFile.GetBaseFile();
-          nsCOMPtr<nsIFile> gre_dir;
-          nsAutoCString path;
-          if (NS_SUCCEEDED(nsDirectoryService::gService->Get(
-                  NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(gre_dir)))) {
-            nsAutoCString leaf;
-            nsCOMPtr<nsIFile> parent;
-            while (NS_SUCCEEDED(dir->GetNativeLeafName(leaf)) &&
-                   NS_SUCCEEDED(dir->GetParent(getter_AddRefs(parent)))) {
-              if (!parent) {
-                break;
-              }
-              dir = parent;
-              if (path.Length()) {
-                path.Insert('/', 0);
-              }
-              path.Insert(leaf, 0);
-              bool equals;
-              if (NS_SUCCEEDED(dir->Equals(gre_dir, &equals)) && equals) {
-                mURI.Assign(path);
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
+/* static */
+already_AddRefed<nsZipArchive> nsZipArchive::OpenArchive(
+    nsZipHandle* aZipHandle, PRFileDesc* aFd) {
+  nsresult rv;
+  RefPtr<nsZipArchive> self(new nsZipArchive(aZipHandle, aFd, rv));
+  LOG(("ZipHandle::OpenArchive[%p]", self.get()));
+  if (NS_FAILED(rv)) {
+    self = nullptr;
   }
-  return rv;
+  return self.forget();
 }
 
-nsresult nsZipArchive::OpenArchive(nsIFile* aFile) {
+/* static */
+already_AddRefed<nsZipArchive> nsZipArchive::OpenArchive(nsIFile* aFile) {
   RefPtr<nsZipHandle> handle;
 #if defined(XP_WIN)
   mozilla::AutoFDClose fd;
@@ -403,7 +355,7 @@ nsresult nsZipArchive::OpenArchive(nsIFile* aFile) {
 #else
   nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle));
 #endif
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return nullptr;
 
 #if defined(XP_WIN)
   return OpenArchive(handle, fd.get());
@@ -437,28 +389,6 @@ nsresult nsZipArchive::Test(const char* aEntryName) {
     }
   }
 
-  return NS_OK;
-}
-
-//---------------------------------------------
-//  nsZipArchive::CloseArchive
-//---------------------------------------------
-nsresult nsZipArchive::CloseArchive() {
-  MutexAutoLock lock(mLock);
-  if (mFd) {
-    mArena.Clear();
-    mFd = nullptr;
-  }
-
-  // CAUTION:
-  // We don't need to delete each of the nsZipItem as the memory for
-  // the zip item and the filename it holds are both allocated from the Arena.
-  // Hence, destroying the Arena is like destroying all the memory
-  // for all the nsZipItem in one shot. But if the ~nsZipItem is doing
-  // anything more than cleaning up memory, we should start calling it.
-  // Let us also cleanup the mFiles table for re-use on the next 'open' call
-  memset(mFiles, 0, sizeof(mFiles));
-  mBuiltSynthetics = false;
   return NS_OK;
 }
 
@@ -504,6 +434,7 @@ nsZipItem* nsZipArchive::GetItem(const char* aEntryName) {
 //---------------------------------------------
 nsresult nsZipArchive::ExtractFile(nsZipItem* item, nsIFile* outFile,
                                    PRFileDesc* aFd) {
+  MutexAutoLock lock(mLock);
   if (!item) return NS_ERROR_ILLEGAL_VALUE;
   if (!mFd) return NS_ERROR_FAILURE;
 
@@ -651,7 +582,8 @@ nsZipItem* nsZipArchive::CreateZipItem() {
 //  nsZipArchive::BuildFileList
 //---------------------------------------------
 nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
-  MutexAutoLock lock(mLock);
+  // We're only called from the constructor, but need to call
+  // CreateZipItem(), which touches locked data, and modify mFiles.
 
   // Get archive size using end pos
   const uint8_t* buf;
@@ -738,18 +670,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  // Make the comment available for consumers.
-  if ((endp >= buf) && (endp - buf >= ZIPEND_SIZE)) {
-    ZipEnd* zipend = (ZipEnd*)buf;
-
-    buf += ZIPEND_SIZE;
-    uint16_t commentlen = xtoint(zipend->commentfield_len);
-    if (endp - buf >= commentlen) {
-      mCommentPtr = (const char*)buf;
-      mCommentLen = commentlen;
-    }
-  }
-
   MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
   return NS_OK;
 }
@@ -821,10 +741,10 @@ nsresult nsZipArchive::BuildSynthetics() {
   return NS_OK;
 }
 
-nsZipHandle* nsZipArchive::GetFD() {
-  if (!mFd) return nullptr;
-  return mFd.get();
-}
+//---------------------------------------------
+// nsZipArchive::GetFD
+//---------------------------------------------
+nsZipHandle* nsZipArchive::GetFD() const { return mFd.get(); }
 
 //---------------------------------------------
 // nsZipArchive::GetDataOffset
@@ -875,14 +795,6 @@ const uint8_t* nsZipArchive::GetData(nsZipItem* aItem) {
   return mFd->mFileData + offset;
 }
 
-// nsZipArchive::GetComment
-bool nsZipArchive::GetComment(nsACString& aComment) {
-  MMAP_FAULT_HANDLER_BEGIN_BUFFER(mCommentPtr, mCommentLen)
-  aComment.Assign(mCommentPtr, mCommentLen);
-  MMAP_FAULT_HANDLER_CATCH(false)
-  return true;
-}
-
 //---------------------------------------------
 // nsZipArchive::SizeOfMapping
 //---------------------------------------------
@@ -892,22 +804,71 @@ int64_t nsZipArchive::SizeOfMapping() { return mFd ? mFd->SizeOfMapping() : 0; }
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
-nsZipArchive::nsZipArchive()
-    : mRefCnt(0),
-      mCommentPtr(nullptr),
-      mCommentLen(0),
-      mBuiltSynthetics(false),
-      mUseZipLog(false) {
+nsZipArchive::nsZipArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd,
+                           nsresult& aRv)
+    : mRefCnt(0), mFd(aZipHandle), mUseZipLog(false), mBuiltSynthetics(false) {
   // initialize the table to nullptr
   memset(mFiles, 0, sizeof(mFiles));
+
+  //-- get table of contents for archive
+  aRv = BuildFileList(aFd);
+  if (NS_FAILED(aRv)) {
+    return;  // whomever created us must destroy us in this case
+  }
+  if (aZipHandle->mFile && XRE_IsParentProcess()) {
+    static char* env = PR_GetEnv("MOZ_JAR_LOG_FILE");
+    if (env) {
+      mUseZipLog = true;
+
+      zipLog.Init(env);
+      // We only log accesses in jar/zip archives within the NS_GRE_DIR
+      // and/or the APK on Android. For the former, we log the archive path
+      // relative to NS_GRE_DIR, and for the latter, the nested-archive
+      // path within the APK. This makes the path match the path of the
+      // archives relative to the packaged dist/$APP_NAME directory in a
+      // build.
+      if (aZipHandle->mFile.IsZip()) {
+        // Nested archive, likely omni.ja in APK.
+        aZipHandle->mFile.GetPath(mURI);
+      } else if (nsDirectoryService::gService) {
+        // We can reach here through the initialization of Omnijar from
+        // XRE_InitCommandLine, which happens before the directory service
+        // is initialized. When that happens, it means the opened archive is
+        // the APK, and we don't care to log that one, so we just skip
+        // when the directory service is not initialized.
+        nsCOMPtr<nsIFile> dir = aZipHandle->mFile.GetBaseFile();
+        nsCOMPtr<nsIFile> gre_dir;
+        nsAutoCString path;
+        if (NS_SUCCEEDED(nsDirectoryService::gService->Get(
+                NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(gre_dir)))) {
+          nsAutoCString leaf;
+          nsCOMPtr<nsIFile> parent;
+          while (NS_SUCCEEDED(dir->GetNativeLeafName(leaf)) &&
+                 NS_SUCCEEDED(dir->GetParent(getter_AddRefs(parent)))) {
+            if (!parent) {
+              break;
+            }
+            dir = parent;
+            if (path.Length()) {
+              path.Insert('/', 0);
+            }
+            path.Insert(leaf, 0);
+            bool equals;
+            if (NS_SUCCEEDED(dir->Equals(gre_dir, &equals)) && equals) {
+              mURI.Assign(path);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 NS_IMPL_ADDREF(nsZipArchive)
 NS_IMPL_RELEASE(nsZipArchive)
 
 nsZipArchive::~nsZipArchive() {
-  CloseArchive();
-
   if (mUseZipLog) {
     zipLog.Release();
   }

@@ -16,7 +16,7 @@ interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
 
-[scriptable, uuid(fad6f72f-13d8-4e26-9173-53007a4afe71)]
+[scriptable, builtinclass, uuid(fad6f72f-13d8-4e26-9173-53007a4afe71)]
 interface nsIZipEntry : nsISupports
 {
     /**
@@ -24,23 +24,23 @@ interface nsIZipEntry : nsISupports
      * their meanings are defined in the zip file specification at
      * http://www.pkware.com/business_and_developers/developer/appnote/
      */
-    readonly attribute unsigned short   compression;
+    [infallible] readonly attribute unsigned short   compression;
     /**
      * The compressed size of the data in the item.
      */
-    readonly attribute unsigned long    size;
+    [infallible] readonly attribute unsigned long    size;
     /**
      * The uncompressed size of the data in the item.
      */
-    readonly attribute unsigned long    realSize;
+    [infallible] readonly attribute unsigned long    realSize;
     /**
      * The CRC-32 hash of the file in the entry.
      */
-    readonly attribute unsigned long    CRC32;
+    [infallible] readonly attribute unsigned long    CRC32;
     /**
      * True if the name of the entry ends with '/' and false otherwise.
      */
-    readonly attribute boolean          isDirectory;
+    [infallible] readonly attribute boolean          isDirectory;
     /**
      * The time at which this item was last modified.
      */
@@ -55,11 +55,11 @@ interface nsIZipEntry : nsISupports
      * this attribute will be false for the nsIZipEntry for that directory.
      * It is impossible for a file to be synthetic.
      */
-    readonly attribute boolean          isSynthetic;
+    [infallible] readonly attribute boolean          isSynthetic;
     /**
      * The UNIX style file permissions of this item.
      */
-    readonly attribute unsigned long    permissions;
+    [infallible] readonly attribute unsigned long    permissions;
 };
 
 [scriptable, uuid(9ba4ef54-e0a0-4f65-9d23-128482448885)]

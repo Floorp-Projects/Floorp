@@ -310,6 +310,12 @@ var AddonTestUtils = {
     }
 
     testScope.registerCleanupFunction(() => {
+      // Force a GC to ensure that anything holding a ref to temp file releases it.
+      // XXX This shouldn't be needed here, since cleanupTempXPIs() does a GC if
+      // something fails; see bug 1761255
+      this.info(`Force a GC`);
+      Cu.forceGC();
+      
       this.cleanupTempXPIs();
 
       let ignoreEntries = new Set();
