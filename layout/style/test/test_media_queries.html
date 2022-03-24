@@ -793,6 +793,12 @@ function run() {
   should_not_apply_unbalanced("(resolution (),all");
   should_not_apply_unbalanced("(resolution:(),all");
 
+  for (let rangeFeature of ["dynamic-range", "video-dynamic-range"]) {
+    should_apply("(" + rangeFeature + ": standard)");
+    query_should_be_parseable("(" + rangeFeature + ": high)");
+    query_should_not_be_parseable("(" + rangeFeature + ": low)");
+  }
+
   handle_posted_items();
 }
 
