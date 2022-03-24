@@ -60,7 +60,7 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
                         nsIPrincipal* aSubjectPrincipal,
                         mozilla::ErrorResult& aRv) override;
 
-  static void MutationClosureFunction(void* aData, nsCSSPropertyID);
+  static void MutationClosureFunction(void* aData);
 
   void GetPropertyChangeClosure(
       mozilla::DeclarationBlockMutationClosure* aClosure,
