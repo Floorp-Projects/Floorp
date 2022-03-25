@@ -60,10 +60,6 @@ const toolkitVariableMap = [
         }
         // Remove the alpha channel
         const { r, g, b } = rgbaChannels;
-        element.setAttribute(
-          "lwthemetextcolor",
-          _isColorDark(r, g, b) ? "dark" : "bright"
-        );
         return `rgba(${r}, ${g}, ${b})`;
       },
     },
@@ -323,7 +319,6 @@ LightweightThemeConsumer.prototype = {
     } else {
       _determineToolbarAndContentTheme(this._doc, null);
       root.removeAttribute("lwtheme");
-      root.removeAttribute("lwthemetextcolor");
     }
     if (theme.id == DEFAULT_THEME_ID && useDarkTheme) {
       root.setAttribute("lwt-default-theme-in-dark-mode", "true");
@@ -543,6 +538,15 @@ function _determineToolbarAndContentTheme(
  *   The `_processedColors` object from the object created for our theme.
  */
 function _setDarkModeAttributes(doc, root, colors) {
+  {
+    let textColor = _cssColorToRGBA(doc, colors.textcolor);
+    if (textColor && !_isColorDark(textColor.r, textColor.g, textColor.b)) {
+      root.setAttribute("lwtheme-brighttext", "true");
+    } else {
+      root.removeAttribute("lwtheme-brighttext");
+    }
+  }
+
   if (
     _determineIfColorPairIsDark(
       doc,

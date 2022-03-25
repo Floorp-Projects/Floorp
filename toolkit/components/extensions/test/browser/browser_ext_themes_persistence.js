@@ -31,8 +31,8 @@ add_task(async function test_multiple_windows() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "bright",
+    docEl.getAttribute("lwtheme-brighttext"),
+    "true",
     "LWT text color attribute should be set"
   );
   Assert.ok(
@@ -50,8 +50,8 @@ add_task(async function test_multiple_windows() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "bright",
+    docEl.getAttribute("lwtheme-brighttext"),
+    "true",
     "LWT text color attribute should be set"
   );
   Assert.ok(

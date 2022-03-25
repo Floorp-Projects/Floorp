@@ -3366,8 +3366,6 @@ void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
 // For some attribute changes we must restyle the whole subtree:
 //
 // * <td> is affected by the cellpadding on its ancestor table
-// * lwtheme and lwthemetextcolor on root element of XUL document
-//   affects all descendants due to :-moz-lwtheme* pseudo-classes
 // * lang="" and xml:lang="" can affect all descendants due to :lang()
 // * exportparts can affect all descendant parts. We could certainly integrate
 //   it better in the invalidation machinery if it was necessary.
@@ -3375,10 +3373,6 @@ static inline bool AttributeChangeRequiresSubtreeRestyle(
     const Element& aElement, nsAtom* aAttr) {
   if (aAttr == nsGkAtoms::cellpadding) {
     return aElement.IsHTMLElement(nsGkAtoms::table);
-  }
-  if (aAttr == nsGkAtoms::lwtheme || aAttr == nsGkAtoms::lwthemetextcolor) {
-    Document* doc = aElement.OwnerDoc();
-    return doc->IsInChromeDocShell() && &aElement == doc->GetRootElement();
   }
   // TODO(emilio, bug 1598094): Maybe finer-grained invalidation for exportparts
   // attribute changes?
