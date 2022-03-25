@@ -184,20 +184,11 @@ class ScriptLoadRequest
 
   virtual void SetReady();
 
-  enum class State : uint8_t {
-    Fetching,        // Request either source or bytecode
-    FetchingSource,  // Explicitly request source stream
-    Compiling,
-    LoadingImports,
-    Ready
-  };
+  enum class State : uint8_t { Fetching, Compiling, LoadingImports, Ready };
 
   bool IsReadyToRun() const { return mState == State::Ready; }
-  bool IsLoading() const {
-    return mState == State::Fetching || mState == State::FetchingSource;
-  }
 
-  bool IsLoadingSource() const { return mState == State::FetchingSource; }
+  bool IsLoading() const { return mState == State::Fetching; }
 
   bool InCompilingStage() const { return mState == State::Compiling; }
 
@@ -297,6 +288,7 @@ class ScriptLoadRequest
 
   bool mIsCanceled;    // True if we have been explicitly canceled.
   State mState;        // Are we still waiting for a load to complete?
+  bool mFetchSourceOnly;  // Request source, not cached bytecode.
   DataType mDataType;  // Does this contain Source or Bytecode?
   RefPtr<ScriptFetchOptions> mFetchOptions;
   const SRIMetadata mIntegrity;
