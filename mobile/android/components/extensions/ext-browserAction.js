@@ -80,6 +80,10 @@ class BrowserAction extends BrowserActionBase {
 }
 
 this.browserAction = class extends ExtensionAPIPersistent {
+  static for(extension) {
+    return GeckoViewWebExtension.browserActions.get(extension);
+  }
+
   async onManifestEntry(entryName) {
     const { extension } = this;
     this.action = new BrowserAction(extension, this);
