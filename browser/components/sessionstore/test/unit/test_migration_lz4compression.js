@@ -1,14 +1,15 @@
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { SessionWorker } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionWorker.jsm"
+const { SessionWriter } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionWriter.jsm"
 );
 
-var Paths;
-var SessionFile;
+// Make sure that we have a profile before initializing SessionFile.
+const profd = do_get_profile();
+const { SessionFile } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionFile.jsm"
+);
+const Paths = SessionFile.Paths;
 
 // We need a XULAppInfo to initialize SessionFile
 const { updateAppInfo } = ChromeUtils.import(
@@ -37,39 +38,24 @@ function promise_check_exist(path, shouldExist) {
 function promise_check_contents(path, expect) {
   return (async function() {
     info("Checking whether " + path + " has the right contents");
-    let actual = await IOUtils.readUTF8(path, {
+    let actual = await IOUtils.readJSON(path, {
       decompress: true,
     });
     Assert.deepEqual(
-      JSON.parse(actual),
+      actual,
       expect,
       `File ${path} contains the expected data.`
     );
   })();
 }
 
-function generateFileContents(id) {
-  let url = `http://example.com/test_backup_once#${id}_${Math.random()}`;
-  return { windows: [{ tabs: [{ entries: [{ url }], index: 1 }] }] };
-}
-
 // Check whether the migration from .js to .jslz4 is correct.
 add_task(async function test_migration() {
-  // Make sure that we have a profile before initializing SessionFile.
-  let profd = do_get_profile();
-  SessionFile = ChromeUtils.import(
-    "resource:///modules/sessionstore/SessionFile.jsm"
-  ).SessionFile;
-  Paths = SessionFile.Paths;
-
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
 
   // Read the content of the session store file.
-  let sessionStoreUncompressed = await IOUtils.readUTF8(
-    Paths.clean.replace("jsonlz4", "js")
-  );
-  let parsed = JSON.parse(sessionStoreUncompressed);
+  let parsed = await IOUtils.readJSON(Paths.clean.replace("jsonlz4", "js"));
 
   // Read the session file with .js extension.
   let result = await SessionFile.read();
@@ -99,17 +85,16 @@ add_task(async function test_migration() {
 
 add_task(async function test_startup_with_compressed_clean() {
   let state = { windows: [] };
-  let stateString = JSON.stringify(state);
 
   // Mare sure we have an empty profile dir.
   await SessionFile.wipe();
 
   // Populate session files to profile dir.
-  await IOUtils.writeUTF8(Paths.clean, stateString, {
+  await IOUtils.writeJSON(Paths.clean, state, {
     compress: true,
   });
   await IOUtils.makeDirectory(Paths.backups);
-  await IOUtils.writeUTF8(Paths.cleanBackup, stateString, {
+  await IOUtils.writeJSON(Paths.cleanBackup, state, {
     compress: true,
   });
 
@@ -155,7 +140,7 @@ add_task(async function test_empty_profile_dir() {
 
   // Create a state to store.
   let state = { windows: [] };
-  await SessionWorker.post("write", [state, { isFinalWrite: true }]);
+  await SessionWriter.write(state, { isFinalWrite: true });
 
   // Check session files are created, but not deprecated ones.
   await promise_check_exist(Paths.clean, true);
