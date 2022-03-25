@@ -7325,13 +7325,6 @@
   mirror: always
   rust: true
 
-# Whether the `:-moz-locale-dir()` pseudo-class is exposed to content.
-- name: layout.css.moz-locale-dir.content.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Whether the `-moz-control-character-visibility` property is exposed to
 # content.
 #
