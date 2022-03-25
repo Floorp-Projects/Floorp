@@ -120,6 +120,7 @@ class TRRDNSListener {
         expectEarlyFail: args[5] ?? "",
         flags: args[6] ?? 0,
         type: args[7] ?? Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
+        port: args[8] ?? -1,
       };
     }
     this.expectedAnswer = this.options.expectedAnswer ?? undefined;
@@ -130,6 +131,7 @@ class TRRDNSListener {
     });
     this.type = this.options.type ?? Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT;
     let trrServer = this.options.trrServer || "";
+    let port = this.options.port || -1;
 
     // This may be called in a child process that doesn't have Services available.
     // eslint-disable-next-line mozilla/use-services
@@ -145,7 +147,9 @@ class TRRDNSListener {
     }
 
     this.additionalInfo =
-      trrServer == "" ? null : gDNS.newAdditionalInfo(trrServer, -1);
+      trrServer == "" && port == -1
+        ? null
+        : gDNS.newAdditionalInfo(trrServer, port);
     try {
       this.request = gDNS.asyncResolve(
         this.name,

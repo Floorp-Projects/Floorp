@@ -1051,7 +1051,8 @@ nsresult nsDNSService::AsyncResolveInternal(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = res->ResolveHost(req->mHost, DNSAdditionalInfo::URL(aInfo), type,
+  rv = res->ResolveHost(req->mHost, DNSAdditionalInfo::URL(aInfo),
+                        DNSAdditionalInfo::Port(aInfo), type,
                         req->mOriginAttributes, flags, af, req);
   req.forget(result);
   return rv;
@@ -1257,7 +1258,7 @@ nsresult nsDNSService::ResolveInternal(
     flags |= RESOLVE_DISABLE_TRR;
   }
 
-  rv = res->ResolveHost(hostname, ""_ns, RESOLVE_TYPE_DEFAULT,
+  rv = res->ResolveHost(hostname, ""_ns, -1, RESOLVE_TYPE_DEFAULT,
                         aOriginAttributes, flags, af, syncReq);
   if (NS_SUCCEEDED(rv)) {
     // wait for result
