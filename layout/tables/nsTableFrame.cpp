@@ -4789,8 +4789,6 @@ void BCCornerInfo::Update(mozilla::LogicalSide aSide, BCCellBorder aBorder) {
 struct BCCorners {
   BCCorners(int32_t aNumCorners, int32_t aStartIndex);
 
-  ~BCCorners() { delete[] corners; }
-
   BCCornerInfo& operator[](int32_t i) const {
     NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
     return corners[clamped(i, startIndex, endIndex) - startIndex];
@@ -4798,20 +4796,18 @@ struct BCCorners {
 
   int32_t startIndex;
   int32_t endIndex;
-  BCCornerInfo* corners;
+  UniquePtr<BCCornerInfo[]> corners;
 };
 
 BCCorners::BCCorners(int32_t aNumCorners, int32_t aStartIndex) {
   NS_ASSERTION((aNumCorners > 0) && (aStartIndex >= 0), "program error");
   startIndex = aStartIndex;
   endIndex = aStartIndex + aNumCorners - 1;
-  corners = new BCCornerInfo[aNumCorners];
+  corners = MakeUnique<BCCornerInfo[]>(aNumCorners);
 }
 
 struct BCCellBorders {
   BCCellBorders(int32_t aNumBorders, int32_t aStartIndex);
-
-  ~BCCellBorders() { delete[] borders; }
 
   BCCellBorder& operator[](int32_t i) const {
     NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
@@ -4820,14 +4816,14 @@ struct BCCellBorders {
 
   int32_t startIndex;
   int32_t endIndex;
-  BCCellBorder* borders;
+  UniquePtr<BCCellBorder[]> borders;
 };
 
 BCCellBorders::BCCellBorders(int32_t aNumBorders, int32_t aStartIndex) {
   NS_ASSERTION((aNumBorders > 0) && (aStartIndex >= 0), "program error");
   startIndex = aStartIndex;
   endIndex = aStartIndex + aNumBorders - 1;
-  borders = new BCCellBorder[aNumBorders];
+  borders = MakeUnique<BCCellBorder[]>(aNumBorders);
 }
 
 // this function sets the new border properties and returns true if the border
