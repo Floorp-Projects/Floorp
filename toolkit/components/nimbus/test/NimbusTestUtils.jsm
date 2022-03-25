@@ -111,7 +111,7 @@ const ExperimentTestUtils = {
       await fetchSchema(
         "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
-    ).NimbusExperiment;
+    ).NimbusEnrollment;
 
     // We still have single feature experiment recipes for backwards
     // compatibility testing but we don't do schema validation
@@ -133,7 +133,7 @@ const ExperimentTestUtils = {
       await fetchSchema(
         "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
-    ).NimbusExperiment;
+    ).NimbusEnrollment;
 
     return this._validator(
       schema,
@@ -320,6 +320,7 @@ const ExperimentFakes = {
       experimentType: "NimbusTestUtils",
       userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
+      lastSeen: new Date().toJSON(),
       featureIds: props?.branch?.features?.map(f => f.featureId) || [
         "test-feature",
       ],
@@ -347,6 +348,7 @@ const ExperimentFakes = {
       experimentType: "rollout",
       userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
+      lastSeen: new Date().toJSON(),
       featureIds: (props?.branch?.features || props?.features)?.map(
         f => f.featureId
       ) || ["test-feature"],
@@ -357,6 +359,10 @@ const ExperimentFakes = {
     return {
       // This field is required for populating remote settings
       id: NormandyUtils.generateUuid(),
+      schemaVersion: "1.7.0",
+      appName: "firefox_desktop",
+      appId: "firefox-desktop",
+      channel: "nightly",
       slug,
       isEnrollmentPaused: false,
       probeSets: [],

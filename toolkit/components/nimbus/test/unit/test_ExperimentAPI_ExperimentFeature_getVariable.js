@@ -91,6 +91,7 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
   const prefName = TEST_VARIABLES.items.fallbackPref;
   const rollout = ExperimentFakes.rollout(`${FEATURE_ID}-rollout`, {
     branch: {
+      slug: "slug",
       features: [
         {
           featureId: FEATURE_ID,
@@ -165,6 +166,7 @@ add_task(async function test_ExperimentFeature_getVariable_partial_values() {
   const instance = createInstanceWithVariables(TEST_VARIABLES);
   const rollout = ExperimentFakes.rollout(`${FEATURE_ID}-rollout`, {
     branch: {
+      slug: "slug",
       features: [
         {
           featureId: FEATURE_ID,
