@@ -180,17 +180,25 @@ class ScriptLoadRequest
 
   virtual void Cancel();
 
-  bool IsCanceled() const { return mIsCanceled; }
-
   virtual void SetReady();
 
-  enum class State : uint8_t { Fetching, Compiling, LoadingImports, Ready };
+  enum class State : uint8_t {
+    Fetching,
+    Compiling,
+    LoadingImports,
+    Ready,
+    Canceled
+  };
 
-  bool IsReadyToRun() const { return mState == State::Ready; }
+  bool IsReadyToRun() const {
+    return mState == State::Ready || mState == State::Canceled;
+  }
 
   bool IsLoading() const { return mState == State::Fetching; }
 
   bool InCompilingStage() const { return mState == State::Compiling; }
+
+  bool IsCanceled() const { return mState == State::Canceled; }
 
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode };
@@ -286,10 +294,9 @@ class ScriptLoadRequest
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.
 
-  bool mIsCanceled;    // True if we have been explicitly canceled.
-  State mState;        // Are we still waiting for a load to complete?
+  State mState;           // Are we still waiting for a load to complete?
   bool mFetchSourceOnly;  // Request source, not cached bytecode.
-  DataType mDataType;  // Does this contain Source or Bytecode?
+  DataType mDataType;     // Does this contain Source or Bytecode?
   RefPtr<ScriptFetchOptions> mFetchOptions;
   const SRIMetadata mIntegrity;
   const nsCOMPtr<nsIURI> mReferrer;
