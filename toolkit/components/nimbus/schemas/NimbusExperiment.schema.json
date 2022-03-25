@@ -5,17 +5,29 @@
     "NimbusExperiment": {
       "type": "object",
       "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "description": "Version of the NimbusExperiment schema this experiment refers to"
+        },
         "slug": {
           "type": "string",
           "description": "Unique identifier for the experiment"
         },
         "id": {
           "type": "string",
-          "description": "Unique identifier for the experiment. This is a duplicate of slug, but is a required field\nfor all Remote Settings records."
+          "description": "Unique identifier for the experiment. This is a duplicate of slug, but is a required field for all Remote Settings records."
         },
-        "application": {
+        "appName": {
           "type": "string",
-          "description": "A specific product such as Firefox Desktop or Fenix that supports Nimbus experiments"
+          "description": "A slug identifying the targeted product for this experiment. It should be a lowercase_with_underscores name that is short and unambiguous and it should match the app_name found in https://probeinfo.telemetry.mozilla.org/glean/repositories. Examples are \"fenix\" or \"firefox_desktop\"."
+        },
+        "appId": {
+          "type": "string",
+          "description": "The platform identifier for the targeted app. The app's identifier exactly as it appears in the relevant app store listing (for relevant platforms) or in the app's Glean initialization call (for other platforms). Examples are \"org.mozilla.firefox_beta\" or \"firefox-desktop\"."
+        },
+        "channel": {
+          "type": "string",
+          "description": "A specific channel of an application such as \"nightly\", \"beta\", or \"release\""
         },
         "userFacingName": {
           "type": "string",
@@ -27,7 +39,7 @@
         },
         "isEnrollmentPaused": {
           "type": "boolean",
-          "description": "Should we enroll new users into the experiment?"
+          "description": "When this property is set to true, the the SDK should not enroll new users into the experiment that have not already been enrolled."
         },
         "bucketConfig": {
           "type": "object",
@@ -41,16 +53,16 @@
               "description": "Additional inputs to the hashing function"
             },
             "start": {
-              "type": "number",
+              "type": "integer",
               "description": "Index of start of the range of buckets"
             },
             "count": {
-              "type": "number",
+              "type": "integer",
               "description": "Number of buckets to check"
             },
             "total": {
-              "type": "number",
-              "description": "Total number of buckets",
+              "type": "integer",
+              "description": "Total number of buckets. You can assume this will always be 10000.",
               "default": 10000
             }
           },
@@ -61,116 +73,267 @@
             "count",
             "total"
           ],
-          "additionalProperties": false,
           "description": "Bucketing configuration"
         },
-        "probeSets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "A list of probe set slugs relevant to the experiment analysis"
-        },
-        "branches": {
+        "outcomes": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
               "slug": {
                 "type": "string",
-                "description": "Identifier for the branch"
+                "description": "Identifier for the outcome"
               },
-              "ratio": {
-                "type": "number",
-                "description": "Relative ratio of population for the branch (e.g. if branch A=1 and branch B=3,\nbranch A would get 25% of the population)",
-                "default": 1
-              },
-              "features": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "featureId": {
-                      "type": "string",
-                      "description": "The identifier for the feature flag"
-                    },
-                    "value": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "additionalProperties": {}
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ],
-                      "description": "Optional extra params for the feature (this should be validated against a schema)"
-                    }
-                  },
-                  "required": ["featureId", "value"],
-                  "additionalProperties": false
-                }
+              "priority": {
+                "type": "string",
+                "description": "e.g. \"primary\" or \"secondary\""
               }
             },
-            "required": ["slug", "ratio"],
-            "additionalProperties": false
+            "required": [
+              "slug",
+              "priority"
+            ]
           },
-          "description": "Branch configuration for the experiment"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "JEXL expression used to filter experiments based on locale, geo, etc."
-        },
-        "startDate": {
-          "type": ["string", "null"],
-          "description": "Actual publish date of the experiment\nNote that this value is expected to be null in Remote Settings.",
-          "format": "date-time"
-        },
-        "endDate": {
-          "type": ["string", "null"],
-          "description": "Actual end date of the experiment.\nNote that this value is expected to be null in Remote Settings.",
-          "format": "date-time"
-        },
-        "proposedDuration": {
-          "type": "number",
-          "description": "Duration of the experiment from the start date in days.\nNote that this value is expected to be null in Remote Settings.\nin Remote Settings."
-        },
-        "proposedEnrollment": {
-          "type": "number",
-          "description": "Duration of enrollment from the start date in days"
-        },
-        "referenceBranch": {
-          "type": ["string", "null"],
-          "description": "The slug of the reference branch"
-        },
-        "filter_expression": {
-          "type": "string",
-          "description": "This is NOT used by Nimbus, but has special functionality in Remote Settings.\nSee https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
+          "description": "A list of outcomes relevant to the experiment analysis."
         },
         "featureIds": {
           "type": "array",
-          "items": [{ "type": "string" }],
-          "description": "Array of strings corresponding to the branch features in the enrollment."
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of featureIds the experiment contains configurations for."
+        },
+        "branches": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "description": "Identifier for the branch"
+                  },
+                  "ratio": {
+                    "type": "integer",
+                    "description": "Relative ratio of population for the branch (e.g. if branch A=1 and branch B=3, branch A would get 25% of the population)",
+                    "default": 1
+                  },
+                  "feature": {
+                    "type": "object",
+                    "properties": {
+                      "featureId": {
+                        "type": "string",
+                        "description": "The identifier for the feature flag"
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "description": "This can be used to turn the whole feature on/off"
+                      },
+                      "value": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "description": "Optional extra params for the feature (this should be validated against a schema)"
+                      }
+                    },
+                    "required": [
+                      "featureId",
+                      "value"
+                    ],
+                    "description": "A single feature configuration"
+                  }
+                },
+                "required": [
+                  "slug",
+                  "ratio",
+                  "feature"
+                ]
+              }
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "description": "Identifier for the branch"
+                  },
+                  "ratio": {
+                    "type": "integer",
+                    "description": "Relative ratio of population for the branch (e.g. if branch A=1 and branch B=3, branch A would get 25% of the population)",
+                    "default": 1
+                  },
+                  "feature": {
+                    "type": "object",
+                    "properties": {
+                      "featureId": {
+                        "type": "string",
+                        "const": "unused-feature-id-for-legacy-support"
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "const": false
+                      },
+                      "value": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": [
+                      "featureId",
+                      "enabled",
+                      "value"
+                    ],
+                    "description": "The feature key must be provided with valid values to prevent crashes if the DTO is encountered by Desktop clients earlier than version 95."
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "featureId": {
+                          "type": "string",
+                          "description": "The identifier for the feature flag"
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "This can be used to turn the whole feature on/off"
+                        },
+                        "value": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Optional extra params for the feature (this should be validated against a schema)"
+                        }
+                      },
+                      "required": [
+                        "featureId",
+                        "value"
+                      ]
+                    },
+                    "description": "An array of feature configurations"
+                  }
+                },
+                "required": [
+                  "slug",
+                  "ratio",
+                  "feature",
+                  "features"
+                ]
+              }
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "description": "Identifier for the branch"
+                  },
+                  "ratio": {
+                    "type": "integer",
+                    "description": "Relative ratio of population for the branch (e.g. if branch A=1 and branch B=3, branch A would get 25% of the population)",
+                    "default": 1
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "featureId": {
+                          "type": "string",
+                          "description": "The identifier for the feature flag"
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "This can be used to turn the whole feature on/off"
+                        },
+                        "value": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Optional extra params for the feature (this should be validated against a schema)"
+                        }
+                      },
+                      "required": [
+                        "featureId",
+                        "value"
+                      ]
+                    },
+                    "description": "An array of feature configurations"
+                  }
+                },
+                "required": [
+                  "slug",
+                  "ratio",
+                  "features"
+                ]
+              }
+            }
+          ],
+          "description": "Branch configuration for the experiment"
+        },
+        "targeting": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "JEXL expression used to filter experiments based on locale, geo, etc."
+        },
+        "startDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Actual publish date of the experiment Note that this value is expected to be null in Remote Settings.",
+          "format": "date"
+        },
+        "endDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Actual end date of the experiment. Note that this value is expected to be null in Remote Settings.",
+          "format": "date"
+        },
+        "proposedDuration": {
+          "type": "integer",
+          "description": "Duration of the experiment from the start date in days. Note that this property is only used during the analysis phase (not by the SDK)"
+        },
+        "proposedEnrollment": {
+          "type": "integer",
+          "description": "This represents the number of days that we expect to enroll new users. Note that this property is only used during the analysis phase (not by the SDK)"
+        },
+        "referenceBranch": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The slug of the reference branch (that is, which branch we consider \"control\")"
+        },
+        "filter_expression": {
+          "type": "string",
+          "description": "This is NOT used by Nimbus, but has special functionality in Remote Settings. See https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
         }
       },
       "required": [
+        "schemaVersion",
         "slug",
         "id",
-        "application",
+        "appName",
+        "appId",
+        "channel",
         "userFacingName",
         "userFacingDescription",
         "isEnrollmentPaused",
         "bucketConfig",
-        "probeSets",
         "branches",
         "startDate",
         "endDate",
         "proposedEnrollment",
-        "referenceBranch",
-        "featureIds"
+        "referenceBranch"
       ],
-      "additionalProperties": true,
-      "description": "The experiment definition accessible to:\n1. The Nimbus SDK via Remote Settings\n2. Jetstream via the Experimenter API"
+      "description": "The experiment definition accessible to: 1. The Nimbus SDK via Remote Settings 2. Jetstream via the Experimenter API"
     }
   }
 }

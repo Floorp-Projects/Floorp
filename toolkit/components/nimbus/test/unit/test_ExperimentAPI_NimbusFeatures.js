@@ -7,20 +7,16 @@ const {
 
 Cu.importGlobalProperties(["fetch"]);
 
-XPCOMUtils.defineLazyGetter(this, "fetchSchema", async () => {
-  const response = await fetch(
-    "resource://testing-common/NimbusEnrollment.schema.json"
-  );
-  const schema = await response.json();
-  if (!schema) {
-    throw new Error("Failed to load ExperimentFeatureRemote schema");
-  }
-  return schema.definitions.NimbusExperiment;
+XPCOMUtils.defineLazyGetter(this, "fetchSchema", () => {
+  return fetch("resource://nimbus/schemas/NimbusEnrollment.schema.json", {
+    credentials: "omit",
+  }).then(rsp => rsp.json());
 });
 
 const NON_MATCHING_ROLLOUT = Object.freeze(
   ExperimentFakes.rollout("non-matching-rollout", {
     branch: {
+      slug: "slug",
       features: [
         {
           featureId: "aboutwelcome",
@@ -33,6 +29,7 @@ const NON_MATCHING_ROLLOUT = Object.freeze(
 const MATCHING_ROLLOUT = Object.freeze(
   ExperimentFakes.rollout("matching-rollout", {
     branch: {
+      slug: "slug",
       features: [
         {
           featureId: "aboutwelcome",
@@ -152,6 +149,7 @@ add_task(async function test_features_over_feature() {
   const rollout_features_and_feature = Object.freeze(
     ExperimentFakes.rollout("matching-rollout", {
       branch: {
+        slug: "slug",
         feature: {
           featureId: "aboutwelcome",
           value: { enabled: false },
@@ -168,6 +166,7 @@ add_task(async function test_features_over_feature() {
   const rollout_just_feature = Object.freeze(
     ExperimentFakes.rollout("matching-rollout", {
       branch: {
+        slug: "slug",
         feature: {
           featureId: "aboutwelcome",
           value: { enabled: false },

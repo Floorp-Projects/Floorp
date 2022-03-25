@@ -603,10 +603,9 @@ EditorSpellCheck::SetCurrentDictionaries(
     mEditor->GetFlags(&flags);
     if (!(flags & nsIEditor::eEditorMailMask)) {
       if (!aDictionaries.IsEmpty() &&
-          (mPreferredLang.IsEmpty() ||
-           (aDictionaries.Length() == 1 &&
-            !mPreferredLang.Equals(aDictionaries[0],
-                                   nsCaseInsensitiveCStringComparator)))) {
+          (mPreferredLang.IsEmpty() || aDictionaries.Length() > 1 ||
+           !mPreferredLang.Equals(aDictionaries[0],
+                                  nsCaseInsensitiveCStringComparator))) {
         // When user sets dictionary manually, we store this value associated
         // with editor url, if it doesn't match the document language exactly.
         // For example on "en" sites, we need to store "en-GB", otherwise

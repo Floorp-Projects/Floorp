@@ -367,12 +367,12 @@ void FileBlockCache::PerformBlockIOs() {
         MoveBlockInFile(change->mSourceBlockIndex, blockIndex);
       }
     }
-    mChangeIndexList.pop_front();
+    mChangeIndexList.pop_front();  // MonitorAutoUnlock above
     // If a new change has not been made to the block while we dropped
     // mDataMutex, clear reference to the old change. Otherwise, the old
     // reference has been cleared already.
-    if (mBlockChanges[blockIndex] == change) {
-      mBlockChanges[blockIndex] = nullptr;
+    if (mBlockChanges[blockIndex] == change) {  // MonitorAutoUnlock above
+      mBlockChanges[blockIndex] = nullptr;      // MonitorAutoUnlock above
     }
   }
 
@@ -389,6 +389,7 @@ nsresult FileBlockCache::Read(int64_t aOffset, uint8_t* aData, int32_t aLength,
 
   mIsReading = true;
   auto exitRead = MakeScopeExit([&] {
+    mDataMutex.AssertCurrentThreadOwns();
     mIsReading = false;
     if (!mChangeIndexList.empty()) {
       // mReading has stopped or prevented pending writes, resume them.

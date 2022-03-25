@@ -426,6 +426,7 @@ class ExperimentStore extends SharedDataMap {
         `Tried to add an experiment but it didn't have a .slug property.`
       );
     }
+
     this.set(enrollment.slug, enrollment);
     this._updateSyncStore(enrollment);
     this._emitUpdates(enrollment);

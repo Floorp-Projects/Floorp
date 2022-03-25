@@ -14,12 +14,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  Validator: "resource://gre/modules/JsonSchema.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -59,6 +62,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   NIMBUS_DEBUG_PREF,
   false
 );
+
+const SCHEMAS = {
+  get NimbusExperiment() {
+    return fetch("resource://nimbus/schemas/NimbusExperiment.schema.json", {
+      credentials: "omit",
+    })
+      .then(rsp => rsp.json())
+      .then(json => json.definitions.NimbusExperiment);
+  },
+};
 
 class _RemoteSettingsExperimentLoader {
   constructor() {
@@ -198,11 +211,37 @@ class _RemoteSettingsExperimentLoader {
       Cu.reportError(e);
     }
 
+    const recipeValidator = new Validator(await SCHEMAS.NimbusExperiment);
+
     let matches = 0;
     let recipeMismatches = [];
+    let invalidRecipes = [];
+    let invalidBranches = [];
+    let validatorCache = {};
+
     if (recipes && !loadingError) {
       for (const r of recipes) {
+        let validation = recipeValidator.validate(r);
+        if (!validation.valid) {
+          Cu.reportError(
+            `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
+              validation.errors,
+              undefined,
+              2
+            )}`
+          );
+          invalidRecipes.push(r.slug);
+          continue;
+        }
+
         let type = r.isRollout ? "rollout" : "experiment";
+
+        if (!(await this._validateBranches(r, validatorCache))) {
+          invalidBranches.push(r.slug);
+          log.debug(`${r.id} did not validate`);
+          continue;
+        }
+
         if (await this.checkTargeting(r)) {
           matches++;
           log.debug(`[${type}] ${r.id} matched`);
@@ -214,7 +253,11 @@ class _RemoteSettingsExperimentLoader {
       }
 
       log.debug(`${matches} recipes matched. Finalizing ExperimentManager.`);
-      this.manager.onFinalize("rs-loader", { recipeMismatches });
+      this.manager.onFinalize("rs-loader", {
+        recipeMismatches,
+        invalidRecipes,
+        invalidBranches,
+      });
     }
 
     if (trigger !== "timer") {
@@ -292,6 +335,71 @@ class _RemoteSettingsExperimentLoader {
       this.intervalInSeconds
     );
     log.debug("Registered update timer");
+  }
+
+  /**
+   * Validate the branches of an experiment using schemas
+   *
+   * @param recipe The recipe object.
+   * @param validatorCache A cache of JSON Schema validators keyed by feature
+   *                       ID.
+   *
+   * @returns Whether or not the branches pass validation.
+   */
+  async _validateBranches({ id, branches }, validatorCache = {}) {
+    for (const [branchIdx, branch] of branches.entries()) {
+      const features = branch.features ?? [branch.feature];
+      for (const feature of features) {
+        const { featureId, value } = feature;
+        if (!NimbusFeatures[featureId]) {
+          Cu.reportError(
+            `Experiment ${id} has unknown featureId: ${featureId}`
+          );
+          return false;
+        }
+
+        let validator;
+        if (validatorCache[featureId]) {
+          validator = validatorCache[featureId];
+        } else if (NimbusFeatures[featureId].manifest.schema) {
+          const uri = NimbusFeatures[featureId].manifest.schema;
+          try {
+            const schema = await fetch(uri, { credentials: "omit" }).then(rsp =>
+              rsp.json()
+            );
+            validator = validatorCache[featureId] = new Validator(schema);
+          } catch (e) {
+            throw new Error(
+              `Could not fetch schema for feature ${featureId} at "${uri}": ${e}`
+            );
+          }
+        } else {
+          // TODO: Convert NimbusFeatures[featureId].manifest.variables into a
+          //       schema OR add schemas for all.
+          continue;
+        }
+
+        if (feature.enabled ?? true) {
+          const result = validator.validate(value);
+          if (!result.valid) {
+            Cu.reportError(
+              `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
+                result.errors,
+                undefined,
+                2
+              )}`
+            );
+            return false;
+          }
+        } else {
+          log.debug(
+            `Experiment ${id} branch ${branchIdx} feature ${featureId} disabled; skipping validation`
+          );
+        }
+      }
+    }
+
+    return true;
   }
 }
 

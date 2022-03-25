@@ -307,31 +307,54 @@ nssUTF8_Length(const NSSUTF8 *s, PRStatus *statusOpt)
 #endif /* NSSDEBUG */
 
     /*
-     * From RFC 2044:
+     * From RFC 3629:
      *
-     * UCS-4 range (hex.)           UTF-8 octet sequence (binary)
-     * 0000 0000-0000 007F   0xxxxxxx
-     * 0000 0080-0000 07FF   110xxxxx 10xxxxxx
-     * 0000 0800-0000 FFFF   1110xxxx 10xxxxxx 10xxxxxx
-     * 0001 0000-001F FFFF   11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-     * 0020 0000-03FF FFFF   111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-     * 0400 0000-7FFF FFFF   1111110x 10xxxxxx ... 10xxxxxx
+     * UTF8-octets = *( UTF8-char )
+     * UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
+     * UTF8-1      = %x00-7F
+     * UTF8-2      = %xC2-DF UTF8-tail
+     * UTF8-3      = %xE0 %xA0-BF UTF8-tail / %xE1-EC 2( UTF8-tail ) /
+     *               %xED %x80-9F UTF8-tail / %xEE-EF 2( UTF8-tail )
+     * UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
+     *               %xF4 %x80-8F 2( UTF8-tail )
+     * UTF8-tail   = %x80-BF
      */
 
     while (0 != *c) {
         PRUint32 incr;
-        if ((*c & 0x80) == 0) {
+        if (*c < 0x80) {
             incr = 1;
-        } else if ((*c & 0xE0) == 0xC0) {
+        } else if (*c < 0xC2) {
+            nss_SetError(NSS_ERROR_INVALID_STRING);
+            goto loser;
+        } else if (*c < 0xE0) {
             incr = 2;
-        } else if ((*c & 0xF0) == 0xE0) {
+        } else if (*c == 0xE0) {
+            if (c[1] < 0xA0) {
+                nss_SetError(NSS_ERROR_INVALID_STRING);
+                goto loser;
+            }
             incr = 3;
-        } else if ((*c & 0xF8) == 0xF0) {
+        } else if (*c < 0xF0) {
+            if (*c == 0xED && c[1] > 0x9F) {
+                nss_SetError(NSS_ERROR_INVALID_STRING);
+                goto loser;
+            }
+            incr = 3;
+        } else if (*c == 0xF0) {
+            if (c[1] < 0x90) {
+                nss_SetError(NSS_ERROR_INVALID_STRING);
+                goto loser;
+            }
             incr = 4;
-        } else if ((*c & 0xFC) == 0xF8) {
-            incr = 5;
-        } else if ((*c & 0xFE) == 0xFC) {
-            incr = 6;
+        } else if (*c < 0xF4) {
+            incr = 4;
+        } else if (*c == 0xF4) {
+            if (c[1] > 0x8F) {
+                nss_SetError(NSS_ERROR_INVALID_STRING);
+                goto loser;
+            }
+            incr = 4;
         } else {
             nss_SetError(NSS_ERROR_INVALID_STRING);
             goto loser;
@@ -345,17 +368,17 @@ nssUTF8_Length(const NSSUTF8 *s, PRStatus *statusOpt)
             nss_SetError(NSS_ERROR_VALUE_TOO_LARGE);
             goto loser;
         }
+#endif /* PEDANTIC */
 
         {
-            PRUint8 *d;
+            const PRUint8 *d;
             for (d = &c[1]; d < &c[incr]; d++) {
-                if ((*d & 0xC0) != 0xF0) {
+                if ((*d & 0xC0) != 0x80) {
                     nss_SetError(NSS_ERROR_INVALID_STRING);
                     goto loser;
                 }
             }
         }
-#endif /* PEDANTIC */
 
         c += incr;
     }

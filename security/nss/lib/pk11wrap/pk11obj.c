@@ -1717,7 +1717,10 @@ PK11_GetObjectHandle(PK11ObjectType objType, void *objSpec,
             slot = ((PK11SymKey *)objSpec)->slot;
             handle = ((PK11SymKey *)objSpec)->objectID;
             break;
-        case PK11_TypeCert: /* don't handle cert case for now */
+        case PK11_TypeCert:
+            handle = PK11_FindObjectForCert((CERTCertificate *)objSpec, NULL,
+                                            &slot);
+            break;
         default:
             PORT_SetError(SEC_ERROR_UNKNOWN_OBJECT_TYPE);
             break;

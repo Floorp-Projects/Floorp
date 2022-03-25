@@ -83,29 +83,6 @@ ReadTagAndGetValue(Reader& input, /*out*/ uint8_t& tag, /*out*/ Input& value)
   return input.Skip(length, value);
 }
 
-static Result
-OptionalNull(Reader& input)
-{
-  if (input.Peek(NULLTag)) {
-    return Null(input);
-  }
-  return Success;
-}
-
-namespace {
-
-Result
-AlgorithmIdentifierValue(Reader& input, /*out*/ Reader& algorithmOIDValue)
-{
-  Result rv = ExpectTagAndGetValue(input, der::OIDTag, algorithmOIDValue);
-  if (rv != Success) {
-    return rv;
-  }
-  return OptionalNull(input);
-}
-
-} // namespace
-
 Result
 SignatureAlgorithmIdentifierValue(Reader& input,
                                  /*out*/ PublicKeyAlgorithm& publicKeyAlgorithm,
@@ -116,13 +93,39 @@ SignatureAlgorithmIdentifierValue(Reader& input,
   //
   // RFC 4055 Section 5 and RFC 3279 Section 2.2.1 both say that parameters for
   // RSA must be encoded as NULL; we relax that requirement by allowing the
-  // NULL to be omitted, to match all the other signature algorithms we support
-  // and for compatibility.
+  // NULL to be omitted.
+  //
+  // RFC 8017 Appendix A.2.3 specifies the format of the parameters for
+  // RSA-PSS. The CA/Browser Forum Baseline Requirements (as of 1.8.1)
+  // specify three specific parameters that may be used with RSA-PSS:
+  //  * SHA-256, MGF-1 with SHA-256, and a salt length of 32 bytes
+  //  * SHA-384, MGF-1 with SHA-384, and a salt length of 48 bytes
+  //  * SHA-512, MGF-1 with SHA-512, and a salt length of 64 bytes
+  // as well as the corresponding specific encodings that must be used
+  // for the entire AlgorithmIdentifier:
+  //  * 304106092a864886f70d01010a3034a00f300d0609608648016503040201
+  //    0500a11c301a06092a864886f70d010108300d0609608648016503040201
+  //    0500a203020120
+  //  * 304106092a864886f70d01010a3034a00f300d0609608648016503040202
+  //    0500a11c301a06092a864886f70d010108300d0609608648016503040202
+  //    0500a203020130
+  //  * 304106092a864886f70d01010a3034a00f300d0609608648016503040203
+  //    0500a11c301a06092a864886f70d010108300d0609608648016503040203
+  //    0500a203020140
+  // Note that these encodings include the outer SEQUENCE and length bytes;
+  // in this implementation, the caller has already validated those bytes.
+  // Currently these are the only sets of parameters mozilla::pkix supports.
   Reader algorithmID;
-  Result rv = AlgorithmIdentifierValue(input, algorithmID);
+  Result rv = ExpectTagAndGetValue(input, der::OIDTag, algorithmID);
   if (rv != Success) {
     return rv;
   }
+  Input algorithmParamsInput;
+  rv = input.SkipToEnd(algorithmParamsInput);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader algorithmParams(algorithmParamsInput);
 
   // RFC 5758 Section 3.2 (ecdsa-with-SHA224 is intentionally excluded)
   // python DottedOIDToCode.py ecdsa-with-SHA256 1.2.840.10045.4.3.2
@@ -173,6 +176,41 @@ SignatureAlgorithmIdentifierValue(Reader& input,
     0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x01
   };
 
+  // RFC 8017 Appendix A.2.3
+  // python DottedOIDToCode.py id-RSA-PSS 1.2.840.113549.1.1.10
+  static const uint8_t id_RSA_PSS[] = {
+    0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0a
+  };
+
+  // CA/B Forum BR 1.8.1 Section 7.1.3.2.1
+  // Params for RSA-PSS with SHA-256, MGF-1 with SHA-256, and a salt length
+  // of 32 bytes:
+  static const uint8_t rsaPSSWithSHA256MGF1WithSHA256Salt32[] = {
+    0x30, 0x34, 0xa0, 0x0f, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
+    0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0xa1, 0x1c, 0x30, 0x1a, 0x06,
+    0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x08, 0x30, 0x0d,
+    0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05,
+    0x00, 0xa2, 0x03, 0x02, 0x01, 0x20
+  };
+  // Params for RSA-PSS with SHA-384, MGF-1 with SHA-384, and a salt length
+  // of 48 bytes:
+  static const uint8_t rsaPSSWithSHA384MGF1WithSHA384Salt48[] = {
+    0x30, 0x34, 0xa0, 0x0f, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
+    0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0xa1, 0x1c, 0x30, 0x1a, 0x06,
+    0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x08, 0x30, 0x0d,
+    0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05,
+    0x00, 0xa2, 0x03, 0x02, 0x01, 0x30
+  };
+  // Params for RSA-PSS with SHA-512, MGF-1 with SHA-512, and a salt length
+  // of 64 bytes:
+  static const uint8_t rsaPSSWithSHA512MGF1WithSHA512Salt64[] = {
+    0x30, 0x34, 0xa0, 0x0f, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
+    0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0xa1, 0x1c, 0x30, 0x1a, 0x06,
+    0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x08, 0x30, 0x0d,
+    0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,
+    0x00, 0xa2, 0x03, 0x02, 0x01, 0x40
+  };
+
   // Matching is attempted based on a rough estimate of the commonality of the
   // algorithm, to minimize the number of MatchRest calls.
   if (algorithmID.MatchRest(sha256WithRSAEncryption)) {
@@ -200,11 +238,35 @@ SignatureAlgorithmIdentifierValue(Reader& input,
     publicKeyAlgorithm = PublicKeyAlgorithm::RSA_PKCS1;
     digestAlgorithm = DigestAlgorithm::sha512;
   } else if (algorithmID.MatchRest(sha1WithRSASignature)) {
-    // XXX(bug 1042479): recognize this old OID for compatibility.
+    // This old OID is recognized for compatibility (see bug 1042479).
     publicKeyAlgorithm = PublicKeyAlgorithm::RSA_PKCS1;
     digestAlgorithm = DigestAlgorithm::sha1;
+  } else if (algorithmID.MatchRest(id_RSA_PSS)) {
+    publicKeyAlgorithm = PublicKeyAlgorithm::RSA_PSS;
+    if (algorithmParams.MatchRest(rsaPSSWithSHA256MGF1WithSHA256Salt32)) {
+      digestAlgorithm = DigestAlgorithm::sha256;
+    } else if (algorithmParams.MatchRest(rsaPSSWithSHA384MGF1WithSHA384Salt48)) {
+      digestAlgorithm = DigestAlgorithm::sha384;
+    } else if (algorithmParams.MatchRest(rsaPSSWithSHA512MGF1WithSHA512Salt64)) {
+      digestAlgorithm = DigestAlgorithm::sha512;
+    } else {
+      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+    }
   } else {
     return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+  }
+
+  // Ensure that for non-RSA-PSS algorithms, the params are NULL or omitted.
+  if (publicKeyAlgorithm != PublicKeyAlgorithm::RSA_PSS) {
+    if (algorithmParams.Peek(NULLTag)) {
+      rv = Null(algorithmParams);
+      if (rv != Success) {
+        return rv;
+      }
+    }
+    if (!algorithmParams.AtEnd()) {
+      return Result::ERROR_BAD_DER;
+    }
   }
 
   return Success;
@@ -213,11 +275,24 @@ SignatureAlgorithmIdentifierValue(Reader& input,
 Result
 DigestAlgorithmIdentifier(Reader& input, /*out*/ DigestAlgorithm& algorithm)
 {
+  // AlgorithmIdentifier  ::=  SEQUENCE  {
+  //      algorithm               OBJECT IDENTIFIER,
+  //      parameters              ANY DEFINED BY algorithm OPTIONAL  }
   return der::Nested(input, SEQUENCE, [&algorithm](Reader& r) -> Result {
     Reader algorithmID;
-    Result rv = AlgorithmIdentifierValue(r, algorithmID);
+    Result rv = ExpectTagAndGetValue(r, der::OIDTag, algorithmID);
     if (rv != Success) {
       return rv;
+    }
+    // The parameters are expected to be NULL or omitted.
+    if (r.Peek(NULLTag)) {
+      rv = Null(r);
+      if (rv != Success) {
+        return rv;
+      }
+    }
+    if (!r.AtEnd()) {
+      return Result::ERROR_BAD_DER;
     }
 
     // RFC 4055 Section 2.1

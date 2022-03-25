@@ -19,6 +19,7 @@ add_task(
 
       await gThreadFront.reconfigure({
         observeAsmJS: true,
+        observeWasm: true,
       });
 
       test_source();

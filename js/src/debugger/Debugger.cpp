@@ -520,6 +520,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
       debuggees(cx->zone()),
       uncaughtExceptionHook(nullptr),
       allowUnobservedAsmJS(false),
+      allowUnobservedWasm(false),
       collectCoverageInfo(false),
       observedGCs(cx->zone()),
       allocationsLog(cx),
@@ -785,6 +786,12 @@ bool DebugAPI::debuggerObservesCoverage(GlobalObject* global) {
 bool DebugAPI::debuggerObservesAsmJS(GlobalObject* global) {
   return DebuggerExists(global,
                         [=](Debugger* dbg) { return dbg->observesAsmJS(); });
+}
+
+/* static */
+bool DebugAPI::debuggerObservesWasm(GlobalObject* global) {
+  return DebuggerExists(global,
+                        [=](Debugger* dbg) { return dbg->observesWasm(); });
 }
 
 /* static */
@@ -3410,6 +3417,13 @@ Debugger::IsObserving Debugger::observesAsmJS() const {
   return NotObserving;
 }
 
+Debugger::IsObserving Debugger::observesWasm() const {
+  if (!allowUnobservedWasm) {
+    return Observing;
+  }
+  return NotObserving;
+}
+
 Debugger::IsObserving Debugger::observesCoverage() const {
   if (collectCoverageInfo) {
     return Observing;
@@ -3516,6 +3530,20 @@ void Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing) {
     }
 
     realm->updateDebuggerObservesAsmJS();
+  }
+}
+
+void Debugger::updateObservesWasmOnDebuggees(IsObserving observing) {
+  for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty();
+       r.popFront()) {
+    GlobalObject* global = r.front();
+    Realm* realm = global->realm();
+
+    if (realm->debuggerObservesWasm() == observing) {
+      continue;
+    }
+
+    realm->updateDebuggerObservesWasm();
   }
 }
 
@@ -4085,6 +4113,8 @@ struct MOZ_STACK_CLASS Debugger::CallData {
   bool setUncaughtExceptionHook();
   bool getAllowUnobservedAsmJS();
   bool setAllowUnobservedAsmJS();
+  bool getAllowUnobservedWasm();
+  bool setAllowUnobservedWasm();
   bool getCollectCoverageInfo();
   bool setCollectCoverageInfo();
   bool getMemory();
@@ -4320,6 +4350,28 @@ bool Debugger::CallData::setAllowUnobservedAsmJS() {
     GlobalObject* global = r.front();
     Realm* realm = global->realm();
     realm->updateDebuggerObservesAsmJS();
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Debugger::CallData::getAllowUnobservedWasm() {
+  args.rval().setBoolean(dbg->allowUnobservedWasm);
+  return true;
+}
+
+bool Debugger::CallData::setAllowUnobservedWasm() {
+  if (!args.requireAtLeast(cx, "Debugger.set allowUnobservedWasm", 1)) {
+    return false;
+  }
+  dbg->allowUnobservedWasm = ToBoolean(args[0]);
+
+  for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty();
+       r.popFront()) {
+    GlobalObject* global = r.front();
+    Realm* realm = global->realm();
+    realm->updateDebuggerObservesWasm();
   }
 
   args.rval().setUndefined();
@@ -4776,6 +4828,7 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   AutoRestoreRealmDebugMode debugModeGuard(debuggeeRealm);
   debuggeeRealm->setIsDebuggee();
   debuggeeRealm->updateDebuggerObservesAsmJS();
+  debuggeeRealm->updateDebuggerObservesWasm();
   debuggeeRealm->updateDebuggerObservesCoverage();
   if (observesAllExecution() &&
       !ensureExecutionObservabilityOfRealm(cx, debuggeeRealm)) {
@@ -4895,6 +4948,7 @@ void Debugger::removeDebuggeeGlobal(JS::GCContext* gcx, GlobalObject* global,
   } else {
     global->realm()->updateDebuggerObservesAllExecution();
     global->realm()->updateDebuggerObservesAsmJS();
+    global->realm()->updateDebuggerObservesWasm();
     global->realm()->updateDebuggerObservesCoverage();
   }
 }
@@ -6248,6 +6302,8 @@ const JSPropertySpec Debugger::properties[] = {
                   setUncaughtExceptionHook),
     JS_DEBUG_PSGS("allowUnobservedAsmJS", getAllowUnobservedAsmJS,
                   setAllowUnobservedAsmJS),
+    JS_DEBUG_PSGS("allowUnobservedWasm", getAllowUnobservedWasm,
+                  setAllowUnobservedWasm),
     JS_DEBUG_PSGS("collectCoverageInfo", getCollectCoverageInfo,
                   setCollectCoverageInfo),
     JS_DEBUG_PSG("memory", getMemory),

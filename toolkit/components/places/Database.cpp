@@ -1253,6 +1253,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 99 uses schema version 64
 
+      if (currentSchemaVersion < 65) {
+        rv = MigrateV65Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 100 uses schema version 65
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2455,6 +2462,22 @@ nsresult Database::MigrateV64Up() {
   if (NS_FAILED(rv)) {
     rv = mMainConn->ExecuteSimpleSQL(
         "ALTER TABLE moz_places_metadata_snapshots_groups "
+        "ADD COLUMN hidden INTEGER DEFAULT 0 NOT NULL "_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+nsresult Database::MigrateV65Up() {
+  // Add hidden column to snapshot groups to snapshots table if necessary.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT hidden FROM moz_places_metadata_groups_to_snapshots"_ns,
+      getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places_metadata_groups_to_snapshots "
         "ADD COLUMN hidden INTEGER DEFAULT 0 NOT NULL "_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }

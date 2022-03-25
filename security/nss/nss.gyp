@@ -206,6 +206,7 @@
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
             'cmd/mpitests/mpitests.gyp:mpi_tests',
+            'gtests/base_gtest/base_gtest.gyp:base_gtest',
             'gtests/certhigh_gtest/certhigh_gtest.gyp:certhigh_gtest',
             'gtests/cryptohi_gtest/cryptohi_gtest.gyp:cryptohi_gtest',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',

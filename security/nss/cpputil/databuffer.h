@@ -33,7 +33,8 @@ class DataBuffer {
     return *this;
   }
   DataBuffer& operator=(DataBuffer&& other) {
-    if (this == &other) {
+    if (this != &other) {
+      delete[] data_;
       data_ = other.data_;
       len_ = other.len_;
       other.data_ = nullptr;

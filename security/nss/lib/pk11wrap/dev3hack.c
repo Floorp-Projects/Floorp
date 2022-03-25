@@ -179,7 +179,6 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     if (!rvToken->slot) {
         goto loser;
     }
-    rvToken->slot->token = rvToken;
     if (rvToken->defaultSession)
         rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
@@ -225,24 +224,6 @@ nssToken_Refresh(NSSToken *token)
                                      nss3slot->sessionLock,
                                      nss3slot->defRWSession);
     return token->defaultSession ? PR_SUCCESS : PR_FAILURE;
-}
-
-NSS_IMPLEMENT PRStatus
-nssSlot_Refresh(NSSSlot *slot)
-{
-    PK11SlotInfo *nss3slot = slot->pk11slot;
-    PRBool doit = PR_FALSE;
-    if (slot->token && slot->token->base.name[0] == 0) {
-        doit = PR_TRUE;
-    }
-    if (PK11_InitToken(nss3slot, PR_FALSE) != SECSuccess) {
-        return PR_FAILURE;
-    }
-    if (doit) {
-        nssTrustDomain_UpdateCachedTokenCerts(slot->token->trustDomain,
-                                              slot->token);
-    }
-    return nssToken_Refresh(slot->token);
 }
 
 NSS_IMPLEMENT PRStatus

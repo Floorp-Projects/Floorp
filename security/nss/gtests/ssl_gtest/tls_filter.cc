@@ -1207,6 +1207,14 @@ PacketFilter::Action TlsClientHelloVersionSetter::FilterHandshake(
   return CHANGE;
 }
 
+PacketFilter::Action TlsServerHelloVersionSetter::FilterHandshake(
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  *output = input;
+  output->Write(0, version_, 2);
+  return CHANGE;
+}
+
 PacketFilter::Action SelectedCipherSuiteReplacer::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {

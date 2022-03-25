@@ -639,7 +639,7 @@ function findSource(
   const source = sources.find(s => {
     // Sources don't have a file name attribute, we need to compute it here:
     const sourceFileName = s.url
-      ? s.url.substring(s.url.lastIndexOf("/") + 1)
+      ? decodeURI(s.url.substring(s.url.lastIndexOf("/") + 1))
       : "";
     // The input argument may either be only the filename, or the complete URL
     // This helps match sources whose URL doesn't contain a filename, like data: URLs

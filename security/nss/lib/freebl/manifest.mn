@@ -150,6 +150,7 @@ CSRCS = \
 	shvfy.c \
 	tlsprfalg.c \
 	jpake.c \
+	secmpi.c \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \

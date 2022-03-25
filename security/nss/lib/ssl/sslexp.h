@@ -517,6 +517,19 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
     SSL_EXPERIMENTAL_API("SSL_EnableTls13GreaseEch", \
                          (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
 
+/*
+ * Client:
+ * When sending a GREASE ECH extension in a ClientHello, pad it as though the
+ * hypothetical ECHConfig had |maximum_name_length| equal to |size|. |size| may
+ * vary between 1 and 255 and defaults to 100.
+ *
+ * Server:
+ * Has no effect.
+ */
+#define SSL_SetTls13GreaseEchSize(fd, size)           \
+    SSL_EXPERIMENTAL_API("SSL_SetTls13GreaseEchSize", \
+                         (PRFileDesc * _fd, PRUint8 _size), (fd, size))
+
 /* If |enabled|, a server receiving a Client Hello containing an encrypted_client_hello
  * of type inner will respond with the ECH
  * acceptance signal. This signals the client to continue with the inner
