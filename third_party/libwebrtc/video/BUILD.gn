@@ -241,7 +241,6 @@ rtc_library("video_stream_encoder_impl") {
     "../rtc_base:checks",
     "../rtc_base:criticalsection",
     "../rtc_base:logging",
-    "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_event",
     "../rtc_base:rtc_numerics",

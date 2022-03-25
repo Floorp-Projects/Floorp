@@ -25,10 +25,7 @@ rtc_library("config") {
     "include/config.cc",
     "include/config.h",
   ]
-  deps = [
-    "../../rtc_base:macromagic",
-    "../../rtc_base/system:rtc_export",
-  ]
+  deps = [ "../../rtc_base/system:rtc_export" ]
 }
 
 rtc_library("api") {
@@ -47,7 +44,6 @@ rtc_library("api") {
     "../../api/audio:audio_frame_api",
     "../../api/audio:echo_control",
     "../../rtc_base:deprecation",
-    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:file_wrapper",

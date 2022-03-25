@@ -29,7 +29,6 @@ rtc_library("agc") {
     "../../../rtc_base:checks",
     "../../../rtc_base:gtest_prod",
     "../../../rtc_base:logging",
-    "../../../rtc_base:macromagic",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
     "../../../system_wrappers:field_trial",
@@ -51,7 +50,6 @@ rtc_library("level_estimation") {
   ]
   deps = [
     "../../../rtc_base:checks",
-    "../../../rtc_base:macromagic",
     "../vad",
   ]
 }

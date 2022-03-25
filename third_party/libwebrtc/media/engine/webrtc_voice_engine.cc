@@ -33,7 +33,6 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
@@ -802,6 +801,10 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     stream_ = call_->CreateAudioSendStream(config_);
   }
 
+  WebRtcAudioSendStream() = delete;
+  WebRtcAudioSendStream(const WebRtcAudioSendStream&) = delete;
+  WebRtcAudioSendStream& operator=(const WebRtcAudioSendStream&) = delete;
+
   ~WebRtcAudioSendStream() override {
     RTC_DCHECK(worker_thread_checker_.IsCurrent());
     ClearSource();
@@ -1143,8 +1146,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
   // TODO(webrtc:11717): Remove this once audio_network_adaptor in AudioOptions
   // has been removed.
   absl::optional<std::string> audio_network_adaptor_config_from_options_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(WebRtcAudioSendStream);
 };
 
 class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
@@ -1192,6 +1193,10 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     config_.frame_transformer = std::move(frame_transformer);
     RecreateAudioReceiveStream();
   }
+
+  WebRtcAudioReceiveStream() = delete;
+  WebRtcAudioReceiveStream(const WebRtcAudioReceiveStream&) = delete;
+  WebRtcAudioReceiveStream& operator=(const WebRtcAudioReceiveStream&) = delete;
 
   ~WebRtcAudioReceiveStream() {
     RTC_DCHECK(worker_thread_checker_.IsCurrent());
@@ -1356,8 +1361,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
   bool playout_ = false;
   float output_volume_ = 1.0;
   std::unique_ptr<webrtc::AudioSinkInterface> raw_audio_sink_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(WebRtcAudioReceiveStream);
 };
 
 WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
