@@ -90,39 +90,42 @@ class FileMediaResource : public BaseMediaResource {
   // without acquiring mLock. The caller must obtain the lock before
   // calling. The implmentation of Read, Seek and ReadAt obtains the
   // lock before calling these Unsafe variants to read or seek.
-  nsresult UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
-  nsresult UnsafeSeek(int32_t aWhence, int64_t aOffset);
+  nsresult UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
+      REQUIRES(mLock);
+  nsresult UnsafeSeek(int32_t aWhence, int64_t aOffset) REQUIRES(mLock);
 
  private:
   // Ensures mSize is initialized, if it can be.
   // mLock must be held when this is called, and mInput must be non-null.
-  void EnsureSizeInitialized();
+  void EnsureSizeInitialized() REQUIRES(mLock);
   already_AddRefed<MediaByteBuffer> UnsafeMediaReadAt(int64_t aOffset,
-                                                      uint32_t aCount);
+                                                      uint32_t aCount)
+      REQUIRES(mLock);
 
   // The file size, or -1 if not known. Immutable after Open().
   // Can be used from any thread.
-  int64_t mSize;
+  // XXX FIX?  is this under mLock?   comments are contradictory
+  int64_t mSize GUARDED_BY(mLock);
 
   // This lock handles synchronisation between calls to Close() and
   // the Read, Seek, etc calls. Close must not be called while a
   // Read or Seek is in progress since it resets various internal
   // values to null.
   // This lock protects mSeekable, mInput, mSize, and mSizeInitialized.
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
 
   // Seekable stream interface to file. This can be used from any
   // thread.
-  nsCOMPtr<nsISeekableStream> mSeekable;
+  nsCOMPtr<nsISeekableStream> mSeekable GUARDED_BY(mLock);
 
   // Input stream for the media data. This can be used from any
   // thread.
-  nsCOMPtr<nsIInputStream> mInput;
+  nsCOMPtr<nsIInputStream> mInput GUARDED_BY(mLock);
 
   // Whether we've attempted to initialize mSize. Note that mSize can be -1
   // when mSizeInitialized is true if we tried and failed to get the size
   // of the file.
-  bool mSizeInitialized;
+  bool mSizeInitialized GUARDED_BY(mLock);
   // Set to true if NotifyDataEnded callback has been processed (which only
   // occurs if resource size is known)
   bool mNotifyDataEndedProcessed = false;

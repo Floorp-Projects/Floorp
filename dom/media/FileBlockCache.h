@@ -140,7 +140,7 @@ class FileBlockCache : public MediaBlockCacheBase {
   // Mutex which controls access to mFD and mFDCurrentPos. Don't hold
   // mDataMutex while holding mFileMutex! mFileMutex must be owned
   // while accessing any of the following data fields or methods.
-  Mutex mFileMutex MOZ_UNANNOTATED;
+  Mutex mFileMutex;
   // Moves a block already committed to file.
   nsresult MoveBlockInFile(int32_t aSourceBlockIndex, int32_t aDestBlockIndex);
   // Seeks file pointer.
@@ -151,15 +151,15 @@ class FileBlockCache : public MediaBlockCacheBase {
   nsresult WriteBlockToFile(int32_t aBlockIndex, const uint8_t* aBlockData);
   // File descriptor we're writing to. This is created externally, but
   // shutdown by us.
-  PRFileDesc* mFD;
+  PRFileDesc* mFD PT_GUARDED_BY(mFileMutex);
   // The current file offset in the file.
-  int64_t mFDCurrentPos;
+  int64_t mFDCurrentPos GUARDED_BY(mFileMutex);
 
   // Mutex which controls access to all data in this class, except mFD
   // and mFDCurrentPos. Don't hold mDataMutex while holding mFileMutex!
   // mDataMutex must be owned while accessing any of the following data
   // fields or methods.
-  Mutex mDataMutex MOZ_UNANNOTATED;
+  Mutex mDataMutex;
   // Ensures we either are running the event to preform IO, or an event
   // has been dispatched to preform the IO.
   // mDataMutex must be owned while calling this.
@@ -170,22 +170,22 @@ class FileBlockCache : public MediaBlockCacheBase {
   // mBlockChanges[offset/BLOCK_SIZE] != nullptr, then either there's a block
   // cached in memory waiting to be written, or this block is the target of a
   // block move.
-  nsTArray<RefPtr<BlockChange> > mBlockChanges;
+  nsTArray<RefPtr<BlockChange> > mBlockChanges GUARDED_BY(mDataMutex);
   // Event target upon which block writes and block moves are performed. This is
   // created upon open, and dropped on close.
-  nsCOMPtr<nsISerialEventTarget> mBackgroundET;
+  nsCOMPtr<nsISerialEventTarget> mBackgroundET GUARDED_BY(mDataMutex);
   // Queue of pending block indexes that need to be written or moved.
-  std::deque<int32_t> mChangeIndexList;
+  std::deque<int32_t> mChangeIndexList GUARDED_BY(mDataMutex);
   // True if we've dispatched an event to commit all pending block changes
   // to file on mBackgroundET.
-  bool mIsWriteScheduled;
+  bool mIsWriteScheduled GUARDED_BY(mDataMutex);
   // True when a read is happening. Pending writes may be postponed, to give
   // higher priority to reads (which may be blocking the caller).
-  bool mIsReading;
+  bool mIsReading GUARDED_BY(mDataMutex);
   // True if we've got a temporary file descriptor. Note: we don't use mFD
   // directly as that's synchronized via mFileMutex and we need to make
   // decisions about whether we can write while holding mDataMutex.
-  bool mInitialized = false;
+  bool mInitialized GUARDED_BY(mDataMutex) = false;
 };
 
 }  // End namespace mozilla.
