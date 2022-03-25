@@ -75,7 +75,7 @@ class PageAction extends PageActionBase {
   }
 }
 
-this.pageAction = class extends ExtensionAPI {
+this.pageAction = class extends ExtensionAPIPersistent {
   async onManifestEntry(entryName) {
     const { extension } = this;
     const action = new PageAction(extension, this);
@@ -98,9 +98,33 @@ this.pageAction = class extends ExtensionAPI {
     GeckoViewWebExtension.pageActions.delete(extension);
   }
 
+  PERSISTENT_EVENTS = {
+    onClicked({ fire }) {
+      const { extension } = this;
+      const { tabManager } = extension;
+
+      const listener = async (_event, tab) => {
+        if (fire.wakeup) {
+          await fire.wakeup();
+        }
+        // TODO: we should double-check if the tab is already being closed by the time
+        // the background script got started and we converted the primed listener.
+        fire.async(tabManager.convert(tab));
+      };
+
+      this.on("click", listener);
+      return {
+        unregister: () => {
+          this.off("click", listener);
+        },
+        convert(newFire, _extContext) {
+          fire = newFire;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
-    const { extension } = context;
-    const { tabManager } = extension;
     const { action } = this;
 
     return {
@@ -109,16 +133,9 @@ this.pageAction = class extends ExtensionAPI {
 
         onClicked: new EventManager({
           context,
-          name: "pageAction.onClicked",
-          register: fire => {
-            const listener = (event, tab) => {
-              fire.async(tabManager.convert(tab));
-            };
-            this.on("click", listener);
-            return () => {
-              this.off("click", listener);
-            };
-          },
+          module: "pageAction",
+          event: "onClicked",
+          extensionApi: this,
         }).api(),
 
         openPopup() {

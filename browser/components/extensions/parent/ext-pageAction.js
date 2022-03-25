@@ -62,7 +62,7 @@ class PageAction extends PageActionBase {
   }
 }
 
-this.pageAction = class extends ExtensionAPI {
+this.pageAction = class extends ExtensionAPIPersistent {
   static for(extension) {
     return pageActionMap.get(extension);
   }
@@ -340,9 +340,36 @@ this.pageAction = class extends ExtensionAPI {
     }
   }
 
+  PERSISTENT_EVENTS = {
+    onClicked({ context, fire }) {
+      const { extension } = this;
+      const { tabManager } = extension;
+
+      let listener = async (_event, tab, clickInfo) => {
+        if (fire.wakeup) {
+          await fire.wakeup();
+        }
+        // TODO: we should double-check if the tab is already being closed by the time
+        // the background script got started and we converted the primed listener.
+        context?.withPendingBrowser(tab.linkedBrowser, () =>
+          fire.sync(tabManager.convert(tab), clickInfo)
+        );
+      };
+
+      this.on("click", listener);
+      return {
+        unregister: () => {
+          this.off("click", listener);
+        },
+        convert(newFire, extContext) {
+          fire = newFire;
+          context = extContext;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
-    const { extension } = context;
-    const { tabManager } = extension;
     const { action } = this;
 
     return {
@@ -351,20 +378,10 @@ this.pageAction = class extends ExtensionAPI {
 
         onClicked: new EventManager({
           context,
-          name: "pageAction.onClicked",
+          module: "pageAction",
+          event: "onClicked",
           inputHandling: true,
-          register: fire => {
-            let listener = (evt, tab, clickInfo) => {
-              context.withPendingBrowser(tab.linkedBrowser, () =>
-                fire.sync(tabManager.convert(tab), clickInfo)
-              );
-            };
-
-            this.on("click", listener);
-            return () => {
-              this.off("click", listener);
-            };
-          },
+          extensionApi: this,
         }).api(),
 
         openPopup: () => {
