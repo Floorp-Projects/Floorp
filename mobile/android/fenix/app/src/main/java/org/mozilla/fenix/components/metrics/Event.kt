@@ -334,6 +334,7 @@ sealed class Event {
             context.getString(R.string.pref_key_recent_bookmarks) to "recently_saved",
             context.getString(R.string.pref_key_history_metadata_feature) to "recently_visited",
             context.getString(R.string.pref_key_pocket_homescreen_recommendations) to "pocket",
+            context.getString(R.string.pref_key_enable_contile) to "contile",
         )
 
         override val extras: Map<Events.preferenceToggledKeys, String>

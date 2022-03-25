@@ -1551,6 +1551,21 @@ customize_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: 105
+  contile:
+    type: boolean
+    description: |
+      An indication of whether Contile is enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24467
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/24468
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
   preference_toggled:
     type: event
     description: |
@@ -1562,7 +1577,7 @@ customize_home:
           toggled.
 
           We currently track: most_visited_sites, jump_back_in,
-          recently_visited, recently_saved, and pocket.
+          recently_visited, recently_saved, pocket, and contile.
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
