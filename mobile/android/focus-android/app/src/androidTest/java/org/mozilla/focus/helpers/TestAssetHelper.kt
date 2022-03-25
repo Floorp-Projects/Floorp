@@ -28,6 +28,22 @@ object TestAssetHelper {
         return TestAsset(url, content, title)
     }
 
+    fun getPlainPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("plain_test.html").toString()
+        val content = "focus test page"
+        val title = "Plain text page"
+
+        return TestAsset(url, content, title)
+    }
+
+    fun getHTMLControlsPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("htmlControls.html").toString()
+        val content = ""
+        val title = "Html_Control_Form"
+
+        return TestAsset(url, content, title)
+    }
+
     fun getEnhancedTrackingProtectionAsset(server: MockWebServer, pageTitle: String): TestAsset {
         val url = server.url("etpPages/$pageTitle.html").toString()
         val content = ""
@@ -35,9 +51,23 @@ object TestAssetHelper {
         return TestAsset(url, content, pageTitle)
     }
 
+    fun getPermissionsPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("permissionsPage.html").toString()
+        val content = "Location Menu"
+        val title = ""
+
+        return TestAsset(url, content, title)
+    }
+
     fun getImageTestAsset(server: MockWebServer): TestAsset {
         val url = server.url("image_test.html").toString()
 
         return TestAsset(url, "", "")
+    }
+
+    fun getMediaTestAsset(server: MockWebServer, pageTitle: String): TestAsset {
+        val url = server.url("$pageTitle.html").toString()
+
+        return TestAsset(url, "", pageTitle)
     }
 }

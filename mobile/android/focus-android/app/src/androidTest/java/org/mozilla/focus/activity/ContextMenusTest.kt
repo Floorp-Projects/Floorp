@@ -20,8 +20,8 @@ import org.mozilla.focus.helpers.StringsHelper
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getImageTestAsset
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.focus.helpers.TestHelper.getTargetContext
 import org.mozilla.focus.helpers.TestHelper.permAllowBtn
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -30,7 +30,6 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 class ContextMenusTest {
     private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-    private var fileName: String = ""
 
     @get: Rule
     var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
@@ -53,7 +52,6 @@ class ContextMenusTest {
     fun tearDown() {
         webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
-        deleteFileUsingDisplayName(appContext.applicationContext, fileName)
     }
 
     @SmokeTest
@@ -140,7 +138,7 @@ class ContextMenusTest {
     @Test
     fun saveImageTest() {
         val imagesTestPage = getImageTestAsset(webServer)
-        fileName = "rabbit.jpg"
+        val fileName = "rabbit.jpg"
 
         searchScreen {
         }.loadPage(imagesTestPage.url) {
@@ -154,6 +152,10 @@ class ContextMenusTest {
             openDownloadedFile()
             assertNativeAppOpens(StringsHelper.GOOGLE_PHOTOS)
         }
+        deleteFileUsingDisplayName(
+            getTargetContext.applicationContext,
+            fileName
+        )
     }
 
     @Test

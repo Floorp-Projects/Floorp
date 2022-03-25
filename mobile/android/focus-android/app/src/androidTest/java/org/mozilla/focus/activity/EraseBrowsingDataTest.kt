@@ -8,7 +8,6 @@ import android.content.Intent
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert
@@ -23,15 +22,15 @@ import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.pressHomeKey
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.restartApp
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.io.IOException
 
 // These tests verify interaction with the browsing notification and erasing browsing data
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -48,23 +47,9 @@ class EraseBrowsingDataTest {
 
     @Before
     fun setUp() {
-        webServer = MockWebServer()
-        try {
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
@@ -72,22 +57,18 @@ class EraseBrowsingDataTest {
 
     @After
     fun tearDown() {
-        try {
-            webServer.close()
-            webServer.shutdown()
-        } catch (e: IOException) {
-            throw AssertionError("Could not stop web server", e)
-        }
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
     fun trashButtonTest() {
-        // Open a webpage
+        val testPage = getGenericTabAsset(webServer, 1)
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) {
-            verifyPageContent("focus test page")
+        }.loadPage(testPage.url) {
+            verifyPageContent(testPage.content)
             // Press erase button, and check for message and return to the main page
         }.clearBrowsingData {
             verifySnackBarText(getStringResource(R.string.feedback_erase2))
@@ -98,13 +79,15 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun notificationEraseAndOpenButtonTest() {
+        val testPage = getGenericTabAsset(webServer, 1)
+
         notificationTray {
             mDevice.openNotification()
             clearNotifications()
         }
-        // Open a webpage
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) { }
+        }.loadPage(testPage.url) { }
         // Send app to background
         pressHomeKey()
         // Pull down system bar and select Erase and Open
@@ -121,8 +104,10 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun deleteHistoryOnRestartTest() {
+        val testPage = getGenericTabAsset(webServer, 1)
+
         searchScreen {
-        }.loadPage(webServer.url("").toString()) {}
+        }.loadPage(testPage.url) {}
         restartApp(mActivityTestRule)
         homeScreen {
             verifyEmptySearchBar()
@@ -133,6 +118,7 @@ class EraseBrowsingDataTest {
     @SmokeTest
     @Test
     fun systemBarHomeViewTest() {
+        val testPage = getGenericTabAsset(webServer, 1)
         val LAUNCH_TIMEOUT = 5000
         val launcherPackage = mDevice.launcherPackageName
 
@@ -142,7 +128,7 @@ class EraseBrowsingDataTest {
         }
 
         searchScreen {
-        }.loadPage(webServer.url("").toString()) { }
+        }.loadPage(testPage.url) { }
 
         // Switch out of Focus, pull down system bar and select delete browsing history
         pressHomeKey()

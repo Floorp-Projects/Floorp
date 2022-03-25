@@ -13,8 +13,9 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
-import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -34,9 +35,10 @@ class SettingsAdvancedTest {
 
     @Before
     fun setup() {
-        webServer = MockWebServer()
-        webServer.enqueue(createMockResponseFromAsset("tab3.html"))
-        webServer.enqueue(createMockResponseFromAsset("tab3.html"))
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
@@ -50,7 +52,7 @@ class SettingsAdvancedTest {
     @SmokeTest
     @Test
     fun openLinksInAppsTest() {
-        val tab3Url = webServer.url("tab3.html").toString()
+        val tab3Url = getGenericTabAsset(webServer, 3).url
         val youtubeLink = "https://www.youtube.com/c/MozillaChannel/videos"
 
         homeScreen {

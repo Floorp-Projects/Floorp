@@ -55,15 +55,15 @@ object TestHelper {
     const val waitingTimeShort = DateUtils.SECOND_IN_MILLIS * 5
 
     @JvmStatic
-    val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    val getTargetContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @JvmStatic
-    val packageName: String = appContext.packageName
+    val packageName: String = getTargetContext.packageName
 
     @JvmStatic
-    val appName: String = appContext.getString(R.string.app_name)
+    val appName: String = getTargetContext.getString(R.string.app_name)
 
-    fun getStringResource(id: Int) = appContext.resources.getString(id, appName)
+    fun getStringResource(id: Int) = getTargetContext.resources.getString(id, appName)
 
     fun verifySnackBarText(text: String) {
         val snackbarText = mDevice.findObject(UiSelector().textContains(text))

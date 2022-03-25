@@ -4,7 +4,6 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -14,11 +13,11 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.StringsHelper.GOOGLE_CHROME
+import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.io.IOException
 
 // This test verifies the "Open in..." option from the main menu
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -33,15 +32,9 @@ class OpenInExternalBrowserDialogueTest {
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        webServer = MockWebServer()
-        try {
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
         }
     }
 
@@ -55,7 +48,7 @@ class OpenInExternalBrowserDialogueTest {
     @SmokeTest
     @Test
     fun openPageInExternalAppTest() {
-        val pageUrl = webServer.url("").toString()
+        val pageUrl = getPlainPageAsset(webServer).url
 
         searchScreen {
         }.loadPage(pageUrl) {

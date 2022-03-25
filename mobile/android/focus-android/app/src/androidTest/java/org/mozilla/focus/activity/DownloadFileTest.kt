@@ -4,8 +4,6 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import androidx.test.platform.app.InstrumentationRegistry
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -18,12 +16,14 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.StringsHelper.GOOGLE_PHOTOS
+import org.mozilla.focus.helpers.TestAssetHelper.getImageTestAsset
 import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.focus.helpers.TestHelper.getTargetContext
 import org.mozilla.focus.helpers.TestHelper.mDevice
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -45,51 +45,27 @@ class DownloadFileTest {
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        webServer = MockWebServer()
-        try {
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("image_test.html"))
-                    .addHeader(
-                        "Set-Cookie",
-                        "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"
-                    )
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("download.jpg"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("download.jpg"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("download.jpg"))
-            )
-            webServer.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
         }
     }
 
     @After
     fun tearDown() {
         try {
-            webServer.close()
             webServer.shutdown()
         } catch (e: IOException) {
             throw AssertionError("Could not stop web server", e)
         }
-        val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
-        deleteFileUsingDisplayName(context, "download.jpg")
+        deleteFileUsingDisplayName(getTargetContext.applicationContext, "download.jpg")
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
     fun downloadNotificationTest() {
-        val downloadPageUrl = webServer.url("").toString()
+        val downloadPageUrl = getImageTestAsset(webServer).url
         val downloadFileName = "download.jpg"
 
         notificationTray {
@@ -120,7 +96,7 @@ class DownloadFileTest {
     @SmokeTest
     @Test
     fun cancelDownloadTest() {
-        val downloadPageUrl = webServer.url("").toString()
+        val downloadPageUrl = getImageTestAsset(webServer).url
 
         searchScreen {
         }.loadPage(downloadPageUrl) { }
@@ -139,7 +115,7 @@ class DownloadFileTest {
     @SmokeTest
     @Test
     fun openDownloadFileTest() {
-        val downloadPageUrl = webServer.url("").toString()
+        val downloadPageUrl = getImageTestAsset(webServer).url
         val downloadFileName = "download.jpg"
 
         // Load website with service worker

@@ -17,7 +17,8 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.waitUntilSnackBarGone
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -38,8 +39,10 @@ class FirstRunTest {
 
     @Before
     fun startWebServer() {
-        webServer = MockWebServer()
-        webServer.start()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
     }
@@ -150,8 +153,7 @@ class FirstRunTest {
     @SmokeTest
     @Test
     fun firstTipIsAlwaysDisplayedTest() {
-        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
-        val pageUrl = webServer.url("tab1.html").toString()
+        val pageUrl = getGenericTabAsset(webServer, 1).url
 
         homeScreen {
             skipFirstRun()

@@ -15,7 +15,9 @@ import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
@@ -29,9 +31,10 @@ class ShortcutsTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
-        webServer = MockWebServer()
-        webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
-        webServer.start()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
     }
 
     @After
@@ -48,8 +51,8 @@ class ShortcutsTest {
     @Test
     fun renameShortcutTest() {
         val webPage = object {
-            val url = webServer.url("plain_test.html").toString()
-            val title = "Plain text page"
+            val url = getPlainPageAsset(webServer).url
+            val title = getPlainPageAsset(webServer).title
             val newTitle = "TestShortcut"
         }
 
@@ -72,10 +75,7 @@ class ShortcutsTest {
     @SmokeTest
     @Test
     fun searchBarShowsPageShortcutsTest() {
-        val webPage = object {
-            val url = webServer.url("plain_test.html").toString()
-            val title = "Plain text page"
-        }
+        val webPage = TestAssetHelper.getPlainPageAsset(webServer)
 
         searchScreen {
         }.loadPage(webPage.url) {

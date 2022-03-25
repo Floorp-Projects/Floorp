@@ -25,8 +25,8 @@ import org.hamcrest.Matchers
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.EspressoHelper.hasCousin
-import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.getStringResource
+import org.mozilla.focus.helpers.TestHelper.getTargetContext
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -255,7 +255,7 @@ class SettingsPrivacyMenuRobot {
     }
 
     fun removeException() {
-        openActionBarOverflowOrOptionsMenu(appContext)
+        openActionBarOverflowOrOptionsMenu(getTargetContext)
         onView(withText("Remove"))
             .perform(click())
         onView(withId(R.id.checkbox))

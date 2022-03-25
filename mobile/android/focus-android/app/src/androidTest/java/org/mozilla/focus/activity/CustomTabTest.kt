@@ -23,8 +23,10 @@ import org.mozilla.focus.activity.robots.customTab
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
 import org.mozilla.focus.helpers.TestHelper.createCustomTabIntent
-import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -35,7 +37,6 @@ class CustomTabTest {
     private lateinit var webServer: MockWebServer
     private val MENU_ITEM_LABEL = "TestItem4223"
     private val ACTION_BUTTON_DESCRIPTION = "TestButton"
-    private val TEST_PAGE_HEADER_TEXT = "focus test page"
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
@@ -47,10 +48,10 @@ class CustomTabTest {
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        webServer = MockWebServer()
-        webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
-        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
-        webServer.start()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
     }
 
     @After
@@ -67,13 +68,16 @@ class CustomTabTest {
     @SmokeTest
     @Test
     fun testCustomTabUI() {
-        val customTabPage = webServer.url("plain_test.html").toString()
-        val customTabActivity = launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage))
+        val customTabPage = getPlainPageAsset(webServer)
+        val customTabActivity =
+            launchActivity<IntentReceiverActivity>(
+                createCustomTabIntent(customTabPage.url, MENU_ITEM_LABEL, ACTION_BUTTON_DESCRIPTION)
+            )
 
         browserScreen {
             progressBar.waitUntilGone(waitingTime)
-            verifyPageContent(TEST_PAGE_HEADER_TEXT)
-            verifyPageURL(customTabPage)
+            verifyPageContent(customTabPage.content)
+            verifyPageURL(customTabPage.url)
         }
 
         customTab {
@@ -93,8 +97,8 @@ class CustomTabTest {
     @Test
     @Ignore("Crashing, see: https://github.com/mozilla-mobile/focus-android/issues/5283")
     fun openCustomTabInFocusTest() {
-        val browserPage = webServer.url("plain_test.html").toString()
-        val customTabPage = webServer.url("tab1.html").toString()
+        val browserPage = getPlainPageAsset(webServer)
+        val customTabPage = getGenericTabAsset(webServer, 1)
 
         launchActivity<IntentReceiverActivity>()
         homeScreen {
@@ -102,22 +106,19 @@ class CustomTabTest {
         }
 
         searchScreen {
-        }.loadPage(browserPage) {
-            verifyPageURL(browserPage)
+        }.loadPage(browserPage.url) {
+            verifyPageURL(browserPage.url)
         }
 
-        launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage))
+        launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage.url))
         customTab {
             progressBar.waitUntilGone(waitingTime)
-            verifyPageURL(customTabPage)
+            verifyPageURL(customTabPage.url)
             openCustomTabMenu()
-        }.clickOpenInFocusButton() {
-        }
-
-        browserScreen {
-            verifyPageURL(customTabPage)
+        }.clickOpenInFocusButton {
+            verifyPageURL(customTabPage.url)
             mDevice.pressBack()
-            verifyPageURL(browserPage)
+            verifyPageURL(browserPage.url)
         }
     }
 }

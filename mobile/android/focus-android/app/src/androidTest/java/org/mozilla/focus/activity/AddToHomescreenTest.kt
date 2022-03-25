@@ -4,7 +4,6 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -14,11 +13,11 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.io.IOException
 
 /**
  * Tests to verify the functionality of Add to homescreen from the main menu
@@ -37,15 +36,9 @@ class AddToHomescreenTest {
 
     @Before
     fun setup() {
-        webServer = MockWebServer()
-        try {
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
@@ -53,21 +46,16 @@ class AddToHomescreenTest {
 
     @After
     fun tearDown() {
-        try {
-            webServer.shutdown()
-        } catch (e: IOException) {
-            throw AssertionError("Could not stop web server", e)
-        }
+        webServer.shutdown()
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
     @Test
     fun addPageToHomeScreenTest() {
-        val pageUrl = webServer.url("").toString()
+        val pageUrl = getGenericTabAsset(webServer, 1).url
         val pageTitle = "test1"
 
-        // Open website, and click 'Add to homescreen'
         searchScreen {
         }.loadPage(pageUrl) {
             progressBar.waitUntilGone(waitingTime)
@@ -83,9 +71,8 @@ class AddToHomescreenTest {
     @SmokeTest
     @Test
     fun noNameShortcutTest() {
-        val pageUrl = webServer.url("").toString()
+        val pageUrl = getGenericTabAsset(webServer, 1).url
 
-        // Open website, and click 'Add to homescreen'
         searchScreen {
         }.loadPage(pageUrl) {
         }.openMainMenu {

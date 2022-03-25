@@ -13,7 +13,8 @@ import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getMediaTestAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -28,8 +29,10 @@ class MediaPlaybackTest {
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
         featureSettingsHelper.setNumberOfTabsOpened(4)
-        webServer = MockWebServer()
-        webServer.start()
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
+        }
     }
 
     @After
@@ -41,9 +44,7 @@ class MediaPlaybackTest {
     @SmokeTest
     @Test
     fun testVideoPlayback() {
-        webServer.enqueue(createMockResponseFromAsset("videoPage.html"))
-        webServer.enqueue(createMockResponseFromAsset("resources/videoSample.webm"))
-        val videoPageUrl = webServer.url("videoPage.html").toString()
+        val videoPageUrl = getMediaTestAsset(webServer, "videoPage").url
 
         searchScreen {
         }.loadPage(videoPageUrl) {
@@ -61,9 +62,7 @@ class MediaPlaybackTest {
     @SmokeTest
     @Test
     fun testAudioPlayback() {
-        webServer.enqueue(createMockResponseFromAsset("audioPage.html"))
-        webServer.enqueue(createMockResponseFromAsset("resources/audioSample.mp3"))
-        val audioPageUrl = webServer.url("audioPage.html").toString()
+        val audioPageUrl = getMediaTestAsset(webServer, "audioPage").url
 
         searchScreen {
         }.loadPage(audioPageUrl) {
@@ -81,9 +80,7 @@ class MediaPlaybackTest {
     @SmokeTest
     @Test
     fun testMediaContentNotification() {
-        webServer.enqueue(createMockResponseFromAsset("audioPage.html"))
-        webServer.enqueue(createMockResponseFromAsset("resources/audioSample.mp3"))
-        val audioPageUrl = webServer.url("audioPage.html").toString()
+        val audioPageUrl = getMediaTestAsset(webServer, "audioPage").url
         val notificationMessage = "A site is playing media"
 
         searchScreen {
