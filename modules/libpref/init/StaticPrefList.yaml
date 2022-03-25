@@ -10907,6 +10907,12 @@
   value: 300   # 5 minutes (in seconds)
   mirror: always
 
+# Whether to use port prefixed QNAME for HTTPS RR
+- name: network.dns.port_prefixed_qname_https_rr
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.cache.frecency_array_check_enabled
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
