@@ -300,7 +300,8 @@ td.cell-value > form > input[type="number"] {
     border-color: currentColor;
   }
 
-  input[type="text"] {
+  input[type="text"],
+  input[type="number"] {
     color: -moz-FieldText;
   }
 }
