@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
@@ -20,12 +19,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
-import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * View holder for the recent bookmarks header and "Show all" button.
  *
- * @paramcomposeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param interactor [RecentBookmarksInteractor] which will have delegated to all user interactions.
  */
 class RecentBookmarksHeaderViewHolder(
@@ -53,8 +51,8 @@ class RecentBookmarksHeaderViewHolder(
             Spacer(modifier = Modifier.height(40.dp))
 
             HomeSectionHeader(
-                text = stringResource(R.string.recent_bookmarks_title),
-                description = stringResource(id = R.string.recently_saved_show_all_content_description_2),
+                headerText = stringResource(R.string.recent_bookmarks_title),
+                description = stringResource(R.string.recently_saved_show_all_content_description_2),
                 onShowAllClick = {
                     dismissSearchDialogIfDisplayed()
                     interactor.onShowAllBookmarksClicked()
@@ -69,4 +67,3 @@ class RecentBookmarksHeaderViewHolder(
         val LAYOUT_ID = View.generateViewId()
     }
 }
-

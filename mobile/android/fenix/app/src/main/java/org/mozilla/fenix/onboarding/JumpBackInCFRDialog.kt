@@ -42,7 +42,7 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
         for (index in 0..count) {
             val viewHolder = recyclerView.findViewHolderForAdapterPosition(index)
             if (viewHolder is RecentTabsHeaderViewHolder) {
-                return viewHolder.containerView
+                return viewHolder.composeView
             }
         }
         return null
