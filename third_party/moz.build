@@ -25,6 +25,9 @@ with Files('jpeg-xl/**'):
 with Files('js/d3/**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
+with Files('js/cfworker/**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
+
 with Files('rust/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
