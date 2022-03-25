@@ -1,0 +1,12 @@
+# verify that the raster spatial node selected when a surface is too large
+# is correct propagated to the picture render task
+---
+root:
+  items:
+    - type: stacking-context
+      filters: [identity]
+      transform: scale(0.5,1,1)
+      items:
+        - type: rect
+          bounds: [0, 0, 1024, 128]
+          color: red

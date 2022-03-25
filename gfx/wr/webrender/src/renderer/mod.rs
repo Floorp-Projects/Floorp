@@ -1180,6 +1180,7 @@ impl Renderer {
             background_color: Some(options.clear_color),
             compositor_kind,
             tile_size_override: None,
+            max_surface_override: None,
             max_depth_ids: device.max_depth_ids(),
             max_target_size: max_internal_texture_size,
             force_invalidation: false,
@@ -1659,7 +1660,8 @@ impl Renderer {
     fn handle_debug_command(&mut self, command: DebugCommand) {
         match command {
             DebugCommand::EnableDualSourceBlending(_) |
-            DebugCommand::SetPictureTileSize(_) => {
+            DebugCommand::SetPictureTileSize(_) |
+            DebugCommand::SetMaximumSurfaceSize(_) => {
                 panic!("Should be handled by render backend");
             }
             DebugCommand::SaveCapture(..) |
