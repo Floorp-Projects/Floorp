@@ -795,6 +795,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupSetDirectPosition();
   bool WaylandPopupFitsToplevelWindow();
   const WaylandPopupMoveToRectParams WaylandPopupGetPositionFromLayout();
+  void WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
   nsAutoCString GetFrameTag() const;
@@ -805,7 +806,7 @@ class nsWindow final : public nsBaseWidget {
   void LogPopupHierarchy();
 #endif
 
-  // mPopupPosition is the original popup position from layout, set by
+  // mPopupPosition is the original popup position/size from layout, set by
   // nsWindow::Move() or nsWindow::Resize().
   // Popup position is relative to main (toplevel) window.
   GdkPoint mPopupPosition{};
