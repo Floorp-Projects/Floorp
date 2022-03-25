@@ -13,7 +13,7 @@
 #include "nsIDNSRecord.h"
 #include "nsHostResolver.h"
 #include "mozilla/Unused.h"
-#include "DNSResolverInfo.h"
+#include "DNSAdditionalInfo.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla::ipc;
@@ -38,7 +38,7 @@ static void SendLookupCompletedHelper(DNSRequestActor* aActor,
 
 void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
                                        const nsACString& trrServer,
-                                       uint16_t type,
+                                       int32_t port, uint16_t type,
                                        const OriginAttributes& originAttributes,
                                        uint32_t flags) {
   nsresult rv;
@@ -47,12 +47,12 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
-    RefPtr<DNSResolverInfo> res;
-    if (!trrServer.IsEmpty()) {
-      res = new DNSResolverInfo(trrServer);
+    RefPtr<DNSAdditionalInfo> info;
+    if (!trrServer.IsEmpty() || port != -1) {
+      info = new DNSAdditionalInfo(trrServer, port);
     }
     rv = dns->AsyncResolveNative(
-        hostname, static_cast<nsIDNSService::ResolveType>(type), flags, res,
+        hostname, static_cast<nsIDNSService::ResolveType>(type), flags, info,
         this, main, originAttributes, getter_AddRefs(unused));
   }
 
@@ -62,18 +62,18 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
 }
 
 void DNSRequestHandler::OnRecvCancelDNSRequest(
-    const nsCString& hostName, const nsCString& aTrrServer,
+    const nsCString& hostName, const nsCString& aTrrServer, const int32_t& port,
     const uint16_t& type, const OriginAttributes& originAttributes,
     const uint32_t& flags, const nsresult& reason) {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    RefPtr<DNSResolverInfo> res;
-    if (!aTrrServer.IsEmpty()) {
-      res = new DNSResolverInfo(aTrrServer);
+    RefPtr<DNSAdditionalInfo> info;
+    if (!aTrrServer.IsEmpty() || port != -1) {
+      info = new DNSAdditionalInfo(aTrrServer, port);
     }
     rv = dns->CancelAsyncResolveNative(
-        hostName, static_cast<nsIDNSService::ResolveType>(type), flags, res,
+        hostName, static_cast<nsIDNSService::ResolveType>(type), flags, info,
         this, reason, originAttributes);
   }
 }
@@ -157,10 +157,10 @@ DNSRequestParent::DNSRequestParent(DNSRequestBase* aRequest)
 }
 
 mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
-    const nsCString& hostName, const nsCString& trrServer, const uint16_t& type,
-    const OriginAttributes& originAttributes, const uint32_t& flags,
-    const nsresult& reason) {
-  mDNSRequest->OnRecvCancelDNSRequest(hostName, trrServer, type,
+    const nsCString& hostName, const nsCString& trrServer, const int32_t& port,
+    const uint16_t& type, const OriginAttributes& originAttributes,
+    const uint32_t& flags, const nsresult& reason) {
+  mDNSRequest->OnRecvCancelDNSRequest(hostName, trrServer, port, type,
                                       originAttributes, flags, reason);
   return IPC_OK();
 }

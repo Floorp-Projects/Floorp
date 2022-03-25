@@ -418,7 +418,7 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
 
 nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
                                      const nsACString& aTrrServer,
-                                     uint16_t type,
+                                     int32_t aPort, uint16_t type,
                                      const OriginAttributes& aOriginAttributes,
                                      uint16_t flags, uint16_t af,
                                      nsResolveHostCallback* aCallback) {
@@ -468,6 +468,13 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     // any pending callbacks, then add to pending callbacks queue,
     // and return.  otherwise, add ourselves as first pending
     // callback, and proceed to do the lookup.
+
+    if (StaticPrefs::network_dns_port_prefixed_qname_https_rr() &&
+        type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC && aPort != -1 &&
+        aPort != 443) {
+      host = nsPrintfCString("_%d._https.%s", aPort, host.get());
+      LOG(("  Using port prefixed host name [%s]", host.get()));
+    }
 
     bool excludedFromTRR = false;
     if (TRRService::Get() && TRRService::Get()->IsExcludedFromTRR(host)) {

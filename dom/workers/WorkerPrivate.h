@@ -256,6 +256,8 @@ class WorkerPrivate final
   MOZ_CAN_RUN_SCRIPT
   void DoRunLoop(JSContext* aCx);
 
+  void UnrootGlobalScopes();
+
   bool InterruptCallback(JSContext* aCx);
 
   bool IsOnCurrentThread();

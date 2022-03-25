@@ -161,9 +161,7 @@ ComputedStyle* nsTableFrame::GetParentComputedStyle(
 
 nsTableFrame::nsTableFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                            ClassID aID)
-    : nsContainerFrame(aStyle, aPresContext, aID),
-      mCellMap(nullptr),
-      mTableLayoutStrategy(nullptr) {
+    : nsContainerFrame(aStyle, aPresContext, aID) {
   memset(&mBits, 0, sizeof(mBits));
 }
 
@@ -189,11 +187,11 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (!aPrevInFlow) {
     // If we're the first-in-flow, we manage the cell map & layout strategy that
     // get used by our continuation chain:
-    mCellMap = new nsTableCellMap(*this, borderCollapse);
+    mCellMap = MakeUnique<nsTableCellMap>(*this, borderCollapse);
     if (IsAutoLayout()) {
-      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+      mTableLayoutStrategy = MakeUnique<BasicTableLayoutStrategy>(this);
     } else {
-      mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
+      mTableLayoutStrategy = MakeUnique<FixedTableLayoutStrategy>(this);
     }
   } else {
     // Set my isize, because all frames in a table flow are the same isize and
@@ -203,10 +201,12 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-nsTableFrame::~nsTableFrame() {
-  delete mCellMap;
-  delete mTableLayoutStrategy;
-}
+// Define here (Rather than in the header), even if it's trival, to avoid
+// UniquePtr members causing compile errors when their destructors are
+// implicitly inserted into this destructor. Destruction requires
+// the full definition of types that these UniquePtrs are managing, and
+// the header only has forward declarations of them.
+nsTableFrame::~nsTableFrame() = default;
 
 void nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                PostDestroyData& aPostDestroyData) {
@@ -648,7 +648,7 @@ void nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
  * Only the first-in-flow has a legit cell map.
  */
 nsTableCellMap* nsTableFrame::GetCellMap() const {
-  return static_cast<nsTableFrame*>(FirstInFlow())->mCellMap;
+  return static_cast<nsTableFrame*>(FirstInFlow())->mCellMap.get();
 }
 
 nsTableColGroupFrame* nsTableFrame::CreateSyntheticColGroupFrame() {
@@ -2122,16 +2122,10 @@ void nsTableFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   bool isAuto = IsAutoLayout();
   if (isAuto != (LayoutStrategy()->GetType() == nsITableLayoutStrategy::Auto)) {
-    nsITableLayoutStrategy* temp;
     if (isAuto)
-      temp = new BasicTableLayoutStrategy(this);
+      mTableLayoutStrategy = MakeUnique<BasicTableLayoutStrategy>(this);
     else
-      temp = new FixedTableLayoutStrategy(this);
-
-    if (temp) {
-      delete mTableLayoutStrategy;
-      mTableLayoutStrategy = temp;
-    }
+      mTableLayoutStrategy = MakeUnique<FixedTableLayoutStrategy>(this);
   }
 }
 
@@ -4795,8 +4789,6 @@ void BCCornerInfo::Update(mozilla::LogicalSide aSide, BCCellBorder aBorder) {
 struct BCCorners {
   BCCorners(int32_t aNumCorners, int32_t aStartIndex);
 
-  ~BCCorners() { delete[] corners; }
-
   BCCornerInfo& operator[](int32_t i) const {
     NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
     return corners[clamped(i, startIndex, endIndex) - startIndex];
@@ -4804,20 +4796,18 @@ struct BCCorners {
 
   int32_t startIndex;
   int32_t endIndex;
-  BCCornerInfo* corners;
+  UniquePtr<BCCornerInfo[]> corners;
 };
 
 BCCorners::BCCorners(int32_t aNumCorners, int32_t aStartIndex) {
   NS_ASSERTION((aNumCorners > 0) && (aStartIndex >= 0), "program error");
   startIndex = aStartIndex;
   endIndex = aStartIndex + aNumCorners - 1;
-  corners = new BCCornerInfo[aNumCorners];
+  corners = MakeUnique<BCCornerInfo[]>(aNumCorners);
 }
 
 struct BCCellBorders {
   BCCellBorders(int32_t aNumBorders, int32_t aStartIndex);
-
-  ~BCCellBorders() { delete[] borders; }
 
   BCCellBorder& operator[](int32_t i) const {
     NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
@@ -4826,14 +4816,14 @@ struct BCCellBorders {
 
   int32_t startIndex;
   int32_t endIndex;
-  BCCellBorder* borders;
+  UniquePtr<BCCellBorder[]> borders;
 };
 
 BCCellBorders::BCCellBorders(int32_t aNumBorders, int32_t aStartIndex) {
   NS_ASSERTION((aNumBorders > 0) && (aStartIndex >= 0), "program error");
   startIndex = aStartIndex;
   endIndex = aStartIndex + aNumBorders - 1;
-  borders = new BCCellBorder[aNumBorders];
+  borders = MakeUnique<BCCellBorder[]>(aNumBorders);
 }
 
 // this function sets the new border properties and returns true if the border

@@ -31,9 +31,9 @@ add_task(async function test_support_theme_frame() {
   );
 
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "dark",
-    "LWT text color attribute should be set"
+    docEl.getAttribute("lwtheme-brighttext"),
+    null,
+    "LWT text color attribute should not be set"
   );
 
   let toolbox = document.querySelector("#navigator-toolbox");
@@ -77,7 +77,7 @@ add_task(async function test_support_theme_frame() {
   );
 
   Assert.ok(
-    !docEl.hasAttribute("lwthemetextcolor"),
+    !docEl.hasAttribute("lwtheme-brighttext"),
     "LWT text color attribute should not be set"
   );
 });

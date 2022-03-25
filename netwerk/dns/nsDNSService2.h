@@ -84,15 +84,15 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
 
   nsresult AsyncResolveInternal(
       const nsACString& aHostname, uint16_t type, uint32_t flags,
-      nsIDNSResolverInfo* aResolver, nsIDNSListener* aListener,
+      nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener,
       nsIEventTarget* target_,
       const mozilla::OriginAttributes& aOriginAttributes,
       nsICancelable** result);
 
   nsresult CancelAsyncResolveInternal(
       const nsACString& aHostname, uint16_t aType, uint32_t aFlags,
-      nsIDNSResolverInfo* aResolver, nsIDNSListener* aListener,
-      nsresult aReason, const mozilla::OriginAttributes& aOriginAttributes);
+      nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener, nsresult aReason,
+      const mozilla::OriginAttributes& aOriginAttributes);
 
   nsresult ResolveInternal(const nsACString& aHostname, uint32_t flags,
                            const mozilla::OriginAttributes& aOriginAttributes,

@@ -1076,10 +1076,8 @@ function runTests() {
     test_balanced_unparseable(":dir(ltr other)");
     test_balanced_unparseable(":dir");
 
-    // Test chrome-only -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
+    // Test chrome-only -moz-lwtheme
     test_balanced_unparseable(":-moz-lwtheme");
-    test_balanced_unparseable(":-moz-lwtheme-brighttext");
-    test_balanced_unparseable(":-moz-lwtheme-darktext");
 
     test_balanced_unparseable(":-moz-tree-row(selected)");
     test_balanced_unparseable("::-moz-tree-row(selected)");

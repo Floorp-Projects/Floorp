@@ -26,7 +26,7 @@ both:
 
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
-  async CancelDNSRequest(nsCString hostName, nsCString trrServer,
+  async CancelDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                          uint16_t type, OriginAttributes originAttributes,
                          uint32_t flags, nsresult reason);
   async __delete__();

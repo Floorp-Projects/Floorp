@@ -37,9 +37,8 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
     !docEl.hasAttribute("lwtheme-image"),
     "LWT image attribute should not be set on deprecated headerURL alias"
   );
-  Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "dark",
+  Assert.ok(
+    !docEl.getAttribute("lwtheme-brighttext"),
     "LWT text color attribute should not be set on deprecated textcolor alias"
   );
 

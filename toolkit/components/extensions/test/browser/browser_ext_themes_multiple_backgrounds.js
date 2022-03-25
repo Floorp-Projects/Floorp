@@ -34,8 +34,8 @@ add_task(async function test_support_backgrounds_position() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "bright",
+    docEl.getAttribute("lwtheme-brighttext"),
+    "true",
     "LWT text color attribute should be set"
   );
 
@@ -134,8 +134,8 @@ add_task(async function test_support_backgrounds_repeat() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "bright",
+    docEl.getAttribute("lwtheme-brighttext"),
+    "true",
     "LWT text color attribute should be set"
   );
 
@@ -233,8 +233,8 @@ add_task(async function test_additional_images_check() {
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
-    docEl.getAttribute("lwthemetextcolor"),
-    "bright",
+    docEl.getAttribute("lwtheme-brighttext"),
+    "true",
     "LWT text color attribute should be set"
   );
 
