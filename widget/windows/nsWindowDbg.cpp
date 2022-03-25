@@ -14,6 +14,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 extern mozilla::LazyLogModule gWindowsLog;
+static mozilla::LazyLogModule gWindowsEventLog("WindowsEvent");
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 MSGFEventMsgInfo gMSGFEvents[] = {
@@ -23,19 +24,24 @@ MSGFEventMsgInfo gMSGFEvents[] = {
 #endif
 
 static long gEventCounter = 0;
-static long gLastEventMsg = 0;
+static UINT gLastEventMsg = 0;
 
-void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves) {
-  int inx = 0;
-  while (gAllEvents[inx].mId != msg && gAllEvents[inx].mStr != nullptr) {
-    inx++;
-  }
-  if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
+// Size of WPARAM, LPARAM, and LRESULT depends on 32 or 64 bit build,
+// we use 64 bit types here to ensure it works in either case.
+void PrintEvent(UINT msg, uint64_t wParam, uint64_t lParam, uint64_t retValue,
+                bool result, bool aShowAllEvents, bool aShowMouseMoves) {
+  const auto eventMsgInfo = gAllEvents.find(msg);
+  const char* msgText =
+      eventMsgInfo != gAllEvents.end() ? eventMsgInfo->second.mStr : nullptr;
+
+  if (aShowAllEvents || (gLastEventMsg != msg)) {
     if (aShowMouseMoves ||
-        (!aShowMouseMoves && msg != 0x0020 && msg != 0x0200 && msg != 0x0084)) {
-      MOZ_LOG(gWindowsLog, LogLevel::Info,
-              ("%6d - 0x%04X %s\n", gEventCounter++, msg,
-               gAllEvents[inx].mStr ? gAllEvents[inx].mStr : "Unknown"));
+        (msg != WM_SETCURSOR && msg != WM_MOUSEMOVE && msg != WM_NCHITTEST)) {
+      MOZ_LOG(
+          gWindowsEventLog, LogLevel::Info,
+          ("%6d - 0x%04X (0x%08llX 0x%08llX) %s: 0x%08llX (%s)\n",
+           gEventCounter++, msg, wParam, lParam, msgText ? msgText : "Unknown",
+           retValue, result ? "true" : "false"));
       gLastEventMsg = msg;
     }
   }
