@@ -111,7 +111,7 @@ class VideoFrameSurfaceVAAPI final : public VideoFrameSurface {
 
   const RefPtr<DMABufSurface> mSurface;
   const FFmpegLibWrapper* mLib;
-  AVBufferRef* mAVHWFramesContext;
+  AVBufferRef* mAVHWDeviceContext;
   AVBufferRef* mHWAVBuffer;
 };
 
