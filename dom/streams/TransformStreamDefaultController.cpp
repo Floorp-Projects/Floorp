@@ -9,6 +9,8 @@
 #include "TransformerCallbackHelpers.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/TransformStream.h"
 #include "mozilla/dom/TransformStreamDefaultControllerBinding.h"
 #include "nsWrapperCache.h"
@@ -16,13 +18,17 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStreamDefaultController, mGlobal,
-                                      mTransformerAlgorithms)
+                                      mStream, mTransformerAlgorithms)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransformStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransformStreamDefaultController)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStreamDefaultController)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+void TransformStreamDefaultController::SetStream(TransformStream* aStream) {
+  mStream = aStream;
+}
 
 void TransformStreamDefaultController::SetAlgorithms(
     TransformerAlgorithms* aTransformerAlgorithms) {
@@ -44,15 +50,16 @@ JSObject* TransformStreamDefaultController::WrapObject(
   return TransformStreamDefaultController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://streams.spec.whatwg.org/#ts-default-controller-desired-size
 Nullable<double> TransformStreamDefaultController::GetDesiredSize() const {
   // Step 1. Let readableController be
   // this.[[stream]].[[readable]].[[controller]].
-  // TODO
+  RefPtr<ReadableStreamDefaultController> readableController =
+      mStream->Readable()->Controller()->AsDefault();
 
   // Step 2. Return !
   // ReadableStreamDefaultControllerGetDesiredSize(readableController).
-  // TODO
-  return 0;
+  return ReadableStreamDefaultControllerGetDesiredSize(readableController);
 }
 
 void TransformStreamDefaultController::Enqueue(JSContext* aCx,
@@ -81,7 +88,7 @@ void SetUpTransformStreamDefaultController(
   MOZ_ASSERT(!aStream.Controller());
 
   // Step 3. Set controller.[[stream]] to stream.
-  // TODO
+  aController.SetStream(&aStream);
 
   // Step 4. Set stream.[[controller]] to controller.
   aStream.SetController(&aController);
