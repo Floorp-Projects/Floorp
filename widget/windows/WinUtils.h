@@ -11,6 +11,7 @@
 #include <shobjidl.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
+#include <unordered_map>
 
 // Undo the windows.h damage
 #undef GetMessage
