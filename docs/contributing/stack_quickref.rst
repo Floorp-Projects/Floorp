@@ -136,8 +136,16 @@ mozilla-central before landing the changes.
 Reorganizing the stack in Phabricator
 -------------------------------------
 
-`moz-phab reorg [start_rev] [end_rev]` allows you to reorganize the stack in Phabricator.
+.. code-block:: shell
+
+    $ moz-phab reorg [start_rev] [end_rev]
+
+allows you to reorganize the stack in Phabricator.
 
 If you've changed the local stack by adding, removing or moving the commits around, you need to change the parent/child relation of the revisions in Phabricator.
 
-`moz-phab reorg` command will compare the stack, display what will be changed and ask for permission before taking any action.
+.. code-block:: shell
+
+    $ moz-phab reorg
+
+command will compare the stack, display what will be changed and ask for permission before taking any action.
