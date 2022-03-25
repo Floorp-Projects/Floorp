@@ -7,26 +7,18 @@ const { newURI } = Services.io;
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
-async function test_url_matching({
-  manifestVersion = 2,
-  allowedOrigins = [],
-  checkPermissions,
-  expectMatches,
-}) {
-  let policy = new WebExtensionPolicy({
-    id: "foo@bar.baz",
-    mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",
-    baseURL: "file:///foo",
+let policy = new WebExtensionPolicy({
+  id: "foo@bar.baz",
+  mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",
+  baseURL: "file:///foo",
 
-    manifestVersion,
-    allowedOrigins: new MatchPatternSet(allowedOrigins),
-    localizeCallback() {},
-  });
+  allowedOrigins: new MatchPatternSet([]),
+  localizeCallback() {},
+});
 
+add_task(async function test_WebExtensinonContentScript_url_matching() {
   let contentScript = new WebExtensionContentScript(policy, {
-    checkPermissions,
-
-    matches: new MatchPatternSet(["http://*.foo.com/bar", "*://bar.com/baz/*"]),
+    matches: new MatchPatternSet(["http://foo.com/bar", "*://bar.com/baz/*"]),
 
     excludeMatches: new MatchPatternSet(["*://bar.com/baz/quux"]),
 
@@ -37,16 +29,14 @@ async function test_url_matching({
     excludeGlobs: ["*glorg*"].map(glob => new MatchGlob(glob)),
   });
 
-  equal(
-    expectMatches,
-    contentScript.matchesURI(newURI("http://www.foo.com/bar")),
-    `Simple matches include should ${expectMatches ? "" : "not "} match.`
+  ok(
+    contentScript.matchesURI(newURI("http://foo.com/bar")),
+    "Simple matches include should match"
   );
 
-  equal(
-    expectMatches,
+  ok(
     contentScript.matchesURI(newURI("https://bar.com/baz/xflergx")),
-    `Simple matches include should ${expectMatches ? "" : "not "} match.`
+    "Simple matches include should match"
   );
 
   ok(
@@ -63,112 +53,28 @@ async function test_url_matching({
     !contentScript.matchesURI(newURI("https://bar.com/baz/xflergxglorgx")),
     "Excluded match glob should not match"
   );
+});
+
+async function loadURL(url) {
+  let requests = new Map();
+
+  function requestObserver(request) {
+    request.QueryInterface(Ci.nsIChannel);
+    if (request.isDocument) {
+      requests.set(request.name, request);
+    }
+  }
+
+  Services.obs.addObserver(requestObserver, "http-on-examine-response");
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  Services.obs.removeObserver(requestObserver, "http-on-examine-response");
+
+  return { contentPage, requests };
 }
 
-add_task(function test_WebExtensionContentScript_urls_mv2() {
-  return test_url_matching({ manifestVersion: 2, expectMatches: true });
-});
-
-add_task(function test_WebExtensionContentScript_urls_mv2_checkPermissions() {
-  return test_url_matching({
-    manifestVersion: 2,
-    checkPermissions: true,
-    expectMatches: false,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_urls_mv2_with_permissions() {
-  return test_url_matching({
-    manifestVersion: 2,
-    checkPermissions: true,
-    allowedOrigins: ["<all_urls>"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_urls_mv3() {
-  // checkPermissions ignored here because it's forced for MV3.
-  return test_url_matching({
-    manifestVersion: 3,
-    checkPermissions: false,
-    expectMatches: false,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_mv3_all_urls() {
-  return test_url_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["<all_urls>"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_mv3_wildcards() {
-  return test_url_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["*://*.foo.com/*", "*://*.bar.com/*"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_mv3_specific() {
-  return test_url_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["http://www.foo.com/*", "https://bar.com/*"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_restricted() {
-  let tests = [
-    {
-      manifestVersion: 2,
-      permissions: [],
-      expect: false,
-    },
-    {
-      manifestVersion: 2,
-      permissions: ["mozillaAddons"],
-      expect: true,
-    },
-    {
-      manifestVersion: 3,
-      permissions: [],
-      expect: false,
-    },
-    {
-      manifestVersion: 3,
-      permissions: ["mozillaAddons"],
-      expect: true,
-    },
-  ];
-
-  for (let { manifestVersion, permissions, expect } of tests) {
-    let policy = new WebExtensionPolicy({
-      id: "foo@bar.baz",
-      mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",
-      baseURL: "file:///foo",
-
-      manifestVersion,
-      permissions,
-      allowedOrigins: new MatchPatternSet(["<all_urls>"]),
-      localizeCallback() {},
-    });
-    let contentScript = new WebExtensionContentScript(policy, {
-      checkPermissions: true,
-      matches: new MatchPatternSet(["<all_urls>"]),
-    });
-
-    // AMO is on the extensions.webextensions.restrictedDomains list.
-    equal(
-      expect,
-      contentScript.matchesURI(newURI("https://addons.mozilla.org/foo")),
-      `Expect extension with [${permissions}] to ${expect ? "" : "not"} match`
-    );
-  }
-});
-
-async function test_frame_matching(meta) {
+add_task(async function test_WebExtensinonContentScript_frame_matching() {
   if (AppConstants.platform == "linux") {
     // The windowless browser currently does not load correctly on Linux on
     // infra.
@@ -183,7 +89,7 @@ async function test_frame_matching(meta) {
     aboutBlank: "about:blank",
   };
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(urls.topLevel);
+  let { contentPage, requests } = await loadURL(urls.topLevel);
 
   let tests = [
     {
@@ -243,9 +149,7 @@ async function test_frame_matching(meta) {
   ];
 
   // matchesWindowGlobal tests against content frames
-  await contentPage.spawn({ tests, urls, meta }, args => {
-    let { manifestVersion = 2, allowedOrigins = [], expectMatches } = args.meta;
-
+  await contentPage.spawn({ tests, urls }, args => {
     this.windows = new Map();
     this.windows.set(this.content.location.href, this.content);
     for (let c of Array.from(this.content.frames)) {
@@ -256,8 +160,7 @@ async function test_frame_matching(meta) {
       mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",
       baseURL: "file:///foo",
 
-      manifestVersion,
-      allowedOrigins: new MatchPatternSet(allowedOrigins),
+      allowedOrigins: new MatchPatternSet([]),
       localizeCallback() {},
     });
 
@@ -272,50 +175,35 @@ async function test_frame_matching(meta) {
         let wgc = this.windows.get(url).windowGlobalChild;
         Assert.equal(
           test.script.matchesWindowGlobal(wgc),
-          test[frame] && expectMatches,
+          test[frame],
           `Script ${i} ${should} match the ${frame} frame`
         );
       }
     }
   });
 
+  // Parent tests against loadInfo
+  tests = tests.map(t => {
+    t.contentScript.matches = new MatchPatternSet(t.matches);
+    t.script = new WebExtensionContentScript(policy, t.contentScript);
+    return t;
+  });
+
+  for (let [i, test] of tests.entries()) {
+    for (let [frame, url] of Object.entries(urls)) {
+      let should = test[frame] ? "should" : "should not";
+
+      if (url.startsWith("http")) {
+        let request = requests.get(url);
+
+        equal(
+          test.script.matchesLoadInfo(request.URI, request.loadInfo),
+          test[frame],
+          `Script ${i} ${should} match the request LoadInfo for ${frame} frame`
+        );
+      }
+    }
+  }
+
   await contentPage.close();
-}
-
-add_task(function test_WebExtensionContentScript_frames_mv2() {
-  return test_frame_matching({
-    manifestVersion: 2,
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_frames_mv3() {
-  return test_frame_matching({
-    manifestVersion: 3,
-    expectMatches: false,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_frames_mv3_all_urls() {
-  return test_frame_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["<all_urls>"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_frames_mv3_wildcards() {
-  return test_frame_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["*://*.example.com/*"],
-    expectMatches: true,
-  });
-});
-
-add_task(function test_WebExtensionContentScript_frames_mv3_specific() {
-  return test_frame_matching({
-    manifestVersion: 3,
-    allowedOrigins: ["http://example.com/*"],
-    expectMatches: true,
-  });
 });
