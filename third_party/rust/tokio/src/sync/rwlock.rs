@@ -1,17 +1,33 @@
-use crate::sync::batch_semaphore::Semaphore;
+use crate::sync::batch_semaphore::{Semaphore, TryAcquireError};
+use crate::sync::mutex::TryLockError;
+#[cfg(all(tokio_unstable, feature = "tracing"))]
+use crate::util::trace;
 use std::cell::UnsafeCell;
-use std::fmt;
 use std::marker;
-use std::mem;
-use std::ops;
+use std::marker::PhantomData;
+use std::mem::ManuallyDrop;
+use std::sync::Arc;
+
+pub(crate) mod owned_read_guard;
+pub(crate) mod owned_write_guard;
+pub(crate) mod owned_write_guard_mapped;
+pub(crate) mod read_guard;
+pub(crate) mod write_guard;
+pub(crate) mod write_guard_mapped;
+pub(crate) use owned_read_guard::OwnedRwLockReadGuard;
+pub(crate) use owned_write_guard::OwnedRwLockWriteGuard;
+pub(crate) use owned_write_guard_mapped::OwnedRwLockMappedWriteGuard;
+pub(crate) use read_guard::RwLockReadGuard;
+pub(crate) use write_guard::RwLockWriteGuard;
+pub(crate) use write_guard_mapped::RwLockMappedWriteGuard;
 
 #[cfg(not(loom))]
-const MAX_READS: usize = 32;
+const MAX_READS: u32 = std::u32::MAX >> 3;
 
 #[cfg(loom)]
-const MAX_READS: usize = 10;
+const MAX_READS: u32 = 10;
 
-/// An asynchronous reader-writer lock
+/// An asynchronous reader-writer lock.
 ///
 /// This type of lock allows a number of readers or at most one writer at any
 /// point in time. The write portion of this lock typically allows modification
@@ -72,302 +88,17 @@ const MAX_READS: usize = 10;
 /// [_write-preferring_]: https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock#Priority_policies
 #[derive(Debug)]
 pub struct RwLock<T: ?Sized> {
+    #[cfg(all(tokio_unstable, feature = "tracing"))]
+    resource_span: tracing::Span,
+
+    // maximum number of concurrent readers
+    mr: u32,
+
     //semaphore to coordinate read and write access to T
     s: Semaphore,
 
     //inner data T
     c: UnsafeCell<T>,
-}
-
-/// RAII structure used to release the shared read access of a lock when
-/// dropped.
-///
-/// This structure is created by the [`read`] method on
-/// [`RwLock`].
-///
-/// [`read`]: method@RwLock::read
-/// [`RwLock`]: struct@RwLock
-pub struct RwLockReadGuard<'a, T: ?Sized> {
-    s: &'a Semaphore,
-    data: *const T,
-    marker: marker::PhantomData<&'a T>,
-}
-
-impl<'a, T> RwLockReadGuard<'a, T> {
-    /// Make a new `RwLockReadGuard` for a component of the locked data.
-    ///
-    /// This operation cannot fail as the `RwLockReadGuard` passed in already
-    /// locked the data.
-    ///
-    /// This is an associated function that needs to be
-    /// used as `RwLockReadGuard::map(...)`. A method would interfere with
-    /// methods of the same name on the contents of the locked data.
-    ///
-    /// This is an asynchronous version of [`RwLockReadGuard::map`] from the
-    /// [`parking_lot` crate].
-    ///
-    /// [`RwLockReadGuard::map`]: https://docs.rs/lock_api/latest/lock_api/struct.RwLockReadGuard.html#method.map
-    /// [`parking_lot` crate]: https://crates.io/crates/parking_lot
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use tokio::sync::{RwLock, RwLockReadGuard};
-    ///
-    /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    /// struct Foo(u32);
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// let lock = RwLock::new(Foo(1));
-    ///
-    /// let guard = lock.read().await;
-    /// let guard = RwLockReadGuard::map(guard, |f| &f.0);
-    ///
-    /// assert_eq!(1, *guard);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn map<F, U: ?Sized>(this: Self, f: F) -> RwLockReadGuard<'a, U>
-    where
-        F: FnOnce(&T) -> &U,
-    {
-        let data = f(&*this) as *const U;
-        let s = this.s;
-        // NB: Forget to avoid drop impl from being called.
-        mem::forget(this);
-        RwLockReadGuard {
-            s,
-            data,
-            marker: marker::PhantomData,
-        }
-    }
-
-    /// Attempts to make a new [`RwLockReadGuard`] for a component of the
-    /// locked data. The original guard is returned if the closure returns
-    /// `None`.
-    ///
-    /// This operation cannot fail as the `RwLockReadGuard` passed in already
-    /// locked the data.
-    ///
-    /// This is an associated function that needs to be used as
-    /// `RwLockReadGuard::try_map(..)`. A method would interfere with methods of the
-    /// same name on the contents of the locked data.
-    ///
-    /// This is an asynchronous version of [`RwLockReadGuard::try_map`] from the
-    /// [`parking_lot` crate].
-    ///
-    /// [`RwLockReadGuard::try_map`]: https://docs.rs/lock_api/latest/lock_api/struct.RwLockReadGuard.html#method.try_map
-    /// [`parking_lot` crate]: https://crates.io/crates/parking_lot
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use tokio::sync::{RwLock, RwLockReadGuard};
-    ///
-    /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    /// struct Foo(u32);
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// let lock = RwLock::new(Foo(1));
-    ///
-    /// let guard = lock.read().await;
-    /// let guard = RwLockReadGuard::try_map(guard, |f| Some(&f.0)).expect("should not fail");
-    ///
-    /// assert_eq!(1, *guard);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn try_map<F, U: ?Sized>(this: Self, f: F) -> Result<RwLockReadGuard<'a, U>, Self>
-    where
-        F: FnOnce(&T) -> Option<&U>,
-    {
-        let data = match f(&*this) {
-            Some(data) => data as *const U,
-            None => return Err(this),
-        };
-        let s = this.s;
-        // NB: Forget to avoid drop impl from being called.
-        mem::forget(this);
-        Ok(RwLockReadGuard {
-            s,
-            data,
-            marker: marker::PhantomData,
-        })
-    }
-}
-
-impl<'a, T: ?Sized> fmt::Debug for RwLockReadGuard<'a, T>
-where
-    T: fmt::Debug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&**self, f)
-    }
-}
-
-impl<'a, T: ?Sized> fmt::Display for RwLockReadGuard<'a, T>
-where
-    T: fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&**self, f)
-    }
-}
-
-impl<'a, T: ?Sized> Drop for RwLockReadGuard<'a, T> {
-    fn drop(&mut self) {
-        self.s.release(1);
-    }
-}
-
-/// RAII structure used to release the exclusive write access of a lock when
-/// dropped.
-///
-/// This structure is created by the [`write`] and method
-/// on [`RwLock`].
-///
-/// [`write`]: method@RwLock::write
-/// [`RwLock`]: struct@RwLock
-pub struct RwLockWriteGuard<'a, T: ?Sized> {
-    s: &'a Semaphore,
-    data: *mut T,
-    marker: marker::PhantomData<&'a mut T>,
-}
-
-impl<'a, T: ?Sized> RwLockWriteGuard<'a, T> {
-    /// Make a new `RwLockWriteGuard` for a component of the locked data.
-    ///
-    /// This operation cannot fail as the `RwLockWriteGuard` passed in already
-    /// locked the data.
-    ///
-    /// This is an associated function that needs to be used as
-    /// `RwLockWriteGuard::map(..)`. A method would interfere with methods of
-    /// the same name on the contents of the locked data.
-    ///
-    /// This is an asynchronous version of [`RwLockWriteGuard::map`] from the
-    /// [`parking_lot` crate].
-    ///
-    /// [`RwLockWriteGuard::map`]: https://docs.rs/lock_api/latest/lock_api/struct.RwLockWriteGuard.html#method.map
-    /// [`parking_lot` crate]: https://crates.io/crates/parking_lot
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use tokio::sync::{RwLock, RwLockWriteGuard};
-    ///
-    /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    /// struct Foo(u32);
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// let lock = RwLock::new(Foo(1));
-    ///
-    /// {
-    ///     let mut mapped = RwLockWriteGuard::map(lock.write().await, |f| &mut f.0);
-    ///     *mapped = 2;
-    /// }
-    ///
-    /// assert_eq!(Foo(2), *lock.read().await);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn map<F, U: ?Sized>(mut this: Self, f: F) -> RwLockWriteGuard<'a, U>
-    where
-        F: FnOnce(&mut T) -> &mut U,
-    {
-        let data = f(&mut *this) as *mut U;
-        let s = this.s;
-        // NB: Forget to avoid drop impl from being called.
-        mem::forget(this);
-        RwLockWriteGuard {
-            s,
-            data,
-            marker: marker::PhantomData,
-        }
-    }
-
-    /// Attempts to make  a new [`RwLockWriteGuard`] for a component of
-    /// the locked data. The original guard is returned if the closure returns
-    /// `None`.
-    ///
-    /// This operation cannot fail as the `RwLockWriteGuard` passed in already
-    /// locked the data.
-    ///
-    /// This is an associated function that needs to be
-    /// used as `RwLockWriteGuard::try_map(...)`. A method would interfere with
-    /// methods of the same name on the contents of the locked data.
-    ///
-    /// This is an asynchronous version of [`RwLockWriteGuard::try_map`] from
-    /// the [`parking_lot` crate].
-    ///
-    /// [`RwLockWriteGuard::try_map`]: https://docs.rs/lock_api/latest/lock_api/struct.RwLockWriteGuard.html#method.try_map
-    /// [`parking_lot` crate]: https://crates.io/crates/parking_lot
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use tokio::sync::{RwLock, RwLockWriteGuard};
-    ///
-    /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    /// struct Foo(u32);
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// let lock = RwLock::new(Foo(1));
-    ///
-    /// {
-    ///     let guard = lock.write().await;
-    ///     let mut guard = RwLockWriteGuard::try_map(guard, |f| Some(&mut f.0)).expect("should not fail");
-    ///     *guard = 2;
-    /// }
-    ///
-    /// assert_eq!(Foo(2), *lock.read().await);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn try_map<F, U: ?Sized>(mut this: Self, f: F) -> Result<RwLockWriteGuard<'a, U>, Self>
-    where
-        F: FnOnce(&mut T) -> Option<&mut U>,
-    {
-        let data = match f(&mut *this) {
-            Some(data) => data as *mut U,
-            None => return Err(this),
-        };
-        let s = this.s;
-        // NB: Forget to avoid drop impl from being called.
-        mem::forget(this);
-        Ok(RwLockWriteGuard {
-            s,
-            data,
-            marker: marker::PhantomData,
-        })
-    }
-}
-
-impl<'a, T: ?Sized> fmt::Debug for RwLockWriteGuard<'a, T>
-where
-    T: fmt::Debug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&**self, f)
-    }
-}
-
-impl<'a, T: ?Sized> fmt::Display for RwLockWriteGuard<'a, T>
-where
-    T: fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&**self, f)
-    }
-}
-
-impl<'a, T: ?Sized> Drop for RwLockWriteGuard<'a, T> {
-    fn drop(&mut self) {
-        self.s.release(MAX_READS);
-    }
 }
 
 #[test]
@@ -387,13 +118,31 @@ fn bounds() {
     check_sync::<RwLockReadGuard<'_, u32>>();
     check_unpin::<RwLockReadGuard<'_, u32>>();
 
+    check_send::<OwnedRwLockReadGuard<u32, i32>>();
+    check_sync::<OwnedRwLockReadGuard<u32, i32>>();
+    check_unpin::<OwnedRwLockReadGuard<u32, i32>>();
+
     check_send::<RwLockWriteGuard<'_, u32>>();
     check_sync::<RwLockWriteGuard<'_, u32>>();
     check_unpin::<RwLockWriteGuard<'_, u32>>();
 
-    let rwlock = RwLock::new(0);
+    check_send::<RwLockMappedWriteGuard<'_, u32>>();
+    check_sync::<RwLockMappedWriteGuard<'_, u32>>();
+    check_unpin::<RwLockMappedWriteGuard<'_, u32>>();
+
+    check_send::<OwnedRwLockWriteGuard<u32>>();
+    check_sync::<OwnedRwLockWriteGuard<u32>>();
+    check_unpin::<OwnedRwLockWriteGuard<u32>>();
+
+    check_send::<OwnedRwLockMappedWriteGuard<u32, i32>>();
+    check_sync::<OwnedRwLockMappedWriteGuard<u32, i32>>();
+    check_unpin::<OwnedRwLockMappedWriteGuard<u32, i32>>();
+
+    let rwlock = Arc::new(RwLock::new(0));
     check_send_sync_val(rwlock.read());
+    check_send_sync_val(Arc::clone(&rwlock).read_owned());
     check_send_sync_val(rwlock.write());
+    check_send_sync_val(Arc::clone(&rwlock).write_owned());
 }
 
 // As long as T: Send + Sync, it's fine to send and share RwLock<T> between threads.
@@ -406,12 +155,42 @@ unsafe impl<T> Sync for RwLock<T> where T: ?Sized + Send + Sync {}
 // `T` is `Send`.
 unsafe impl<T> Send for RwLockReadGuard<'_, T> where T: ?Sized + Sync {}
 unsafe impl<T> Sync for RwLockReadGuard<'_, T> where T: ?Sized + Send + Sync {}
+// T is required to be `Send` because an OwnedRwLockReadGuard can be used to drop the value held in
+// the RwLock, unlike RwLockReadGuard.
+unsafe impl<T, U> Send for OwnedRwLockReadGuard<T, U>
+where
+    T: ?Sized + Send + Sync,
+    U: ?Sized + Sync,
+{
+}
+unsafe impl<T, U> Sync for OwnedRwLockReadGuard<T, U>
+where
+    T: ?Sized + Send + Sync,
+    U: ?Sized + Send + Sync,
+{
+}
 unsafe impl<T> Sync for RwLockWriteGuard<'_, T> where T: ?Sized + Send + Sync {}
+unsafe impl<T> Sync for OwnedRwLockWriteGuard<T> where T: ?Sized + Send + Sync {}
+unsafe impl<T> Sync for RwLockMappedWriteGuard<'_, T> where T: ?Sized + Send + Sync {}
+unsafe impl<T, U> Sync for OwnedRwLockMappedWriteGuard<T, U>
+where
+    T: ?Sized + Send + Sync,
+    U: ?Sized + Send + Sync,
+{
+}
 // Safety: Stores a raw pointer to `T`, so if `T` is `Sync`, the lock guard over
 // `T` is `Send` - but since this is also provides mutable access, we need to
 // make sure that `T` is `Send` since its value can be sent across thread
 // boundaries.
 unsafe impl<T> Send for RwLockWriteGuard<'_, T> where T: ?Sized + Send + Sync {}
+unsafe impl<T> Send for OwnedRwLockWriteGuard<T> where T: ?Sized + Send + Sync {}
+unsafe impl<T> Send for RwLockMappedWriteGuard<'_, T> where T: ?Sized + Send + Sync {}
+unsafe impl<T, U> Send for OwnedRwLockMappedWriteGuard<T, U>
+where
+    T: ?Sized + Send + Sync,
+    U: ?Sized + Send + Sync,
+{
+}
 
 impl<T: ?Sized> RwLock<T> {
     /// Creates a new instance of an `RwLock<T>` which is unlocked.
@@ -423,22 +202,201 @@ impl<T: ?Sized> RwLock<T> {
     ///
     /// let lock = RwLock::new(5);
     /// ```
+    #[track_caller]
     pub fn new(value: T) -> RwLock<T>
     where
         T: Sized,
     {
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = {
+            let location = std::panic::Location::caller();
+            let resource_span = tracing::trace_span!(
+                "runtime.resource",
+                concrete_type = "RwLock",
+                kind = "Sync",
+                loc.file = location.file(),
+                loc.line = location.line(),
+                loc.col = location.column(),
+            );
+
+            resource_span.in_scope(|| {
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    max_readers = MAX_READS,
+                );
+
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    write_locked = false,
+                );
+
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    current_readers = 0,
+                );
+            });
+
+            resource_span
+        };
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let s = resource_span.in_scope(|| Semaphore::new(MAX_READS as usize));
+
+        #[cfg(any(not(tokio_unstable), not(feature = "tracing")))]
+        let s = Semaphore::new(MAX_READS as usize);
+
         RwLock {
+            mr: MAX_READS,
             c: UnsafeCell::new(value),
-            s: Semaphore::new(MAX_READS),
+            s,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
         }
     }
 
-    /// Locks this rwlock with shared read access, causing the current task
+    /// Creates a new instance of an `RwLock<T>` which is unlocked
+    /// and allows a maximum of `max_reads` concurrent readers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::RwLock;
+    ///
+    /// let lock = RwLock::with_max_readers(5, 1024);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `max_reads` is more than `u32::MAX >> 3`.
+    #[track_caller]
+    pub fn with_max_readers(value: T, max_reads: u32) -> RwLock<T>
+    where
+        T: Sized,
+    {
+        assert!(
+            max_reads <= MAX_READS,
+            "a RwLock may not be created with more than {} readers",
+            MAX_READS
+        );
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = {
+            let location = std::panic::Location::caller();
+
+            let resource_span = tracing::trace_span!(
+                "runtime.resource",
+                concrete_type = "RwLock",
+                kind = "Sync",
+                loc.file = location.file(),
+                loc.line = location.line(),
+                loc.col = location.column(),
+            );
+
+            resource_span.in_scope(|| {
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    max_readers = max_reads,
+                );
+
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    write_locked = false,
+                );
+
+                tracing::trace!(
+                    target: "runtime::resource::state_update",
+                    current_readers = 0,
+                );
+            });
+
+            resource_span
+        };
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let s = resource_span.in_scope(|| Semaphore::new(max_reads as usize));
+
+        #[cfg(any(not(tokio_unstable), not(feature = "tracing")))]
+        let s = Semaphore::new(max_reads as usize);
+
+        RwLock {
+            mr: max_reads,
+            c: UnsafeCell::new(value),
+            s,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
+        }
+    }
+
+    /// Creates a new instance of an `RwLock<T>` which is unlocked.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::RwLock;
+    ///
+    /// static LOCK: RwLock<i32> = RwLock::const_new(5);
+    /// ```
+    #[cfg(all(feature = "parking_lot", not(all(loom, test))))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "parking_lot")))]
+    pub const fn const_new(value: T) -> RwLock<T>
+    where
+        T: Sized,
+    {
+        RwLock {
+            mr: MAX_READS,
+            c: UnsafeCell::new(value),
+            s: Semaphore::const_new(MAX_READS as usize),
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: tracing::Span::none(),
+        }
+    }
+
+    /// Creates a new instance of an `RwLock<T>` which is unlocked
+    /// and allows a maximum of `max_reads` concurrent readers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::RwLock;
+    ///
+    /// static LOCK: RwLock<i32> = RwLock::const_with_max_readers(5, 1024);
+    /// ```
+    #[cfg(all(feature = "parking_lot", not(all(loom, test))))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "parking_lot")))]
+    pub const fn const_with_max_readers(value: T, mut max_reads: u32) -> RwLock<T>
+    where
+        T: Sized,
+    {
+        max_reads &= MAX_READS;
+        RwLock {
+            mr: max_reads,
+            c: UnsafeCell::new(value),
+            s: Semaphore::const_new(max_reads as usize),
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: tracing::Span::none(),
+        }
+    }
+
+    /// Locks this `RwLock` with shared read access, causing the current task
     /// to yield until the lock has been acquired.
     ///
-    /// The calling task will yield until there are no more writers which
-    /// hold the lock. There may be other readers currently inside the lock when
-    /// this method returns.
+    /// The calling task will yield until there are no writers which hold the
+    /// lock. There may be other readers inside the lock when the task resumes.
+    ///
+    /// Note that under the priority policy of [`RwLock`], read locks are not
+    /// granted until prior write locks, to prevent starvation. Therefore
+    /// deadlock may occur if a read lock is held by the current task, a write
+    /// lock attempt is made, and then a subsequent read lock attempt is made
+    /// by the current task.
+    ///
+    /// Returns an RAII guard which will drop this read access of the `RwLock`
+    /// when dropped.
+    ///
+    /// # Cancel safety
+    ///
+    /// This method uses a queue to fairly distribute locks in the order they
+    /// were requested. Cancelling a call to `read` makes you lose your place in
+    /// the queue.
     ///
     /// # Examples
     ///
@@ -458,33 +416,329 @@ impl<T: ?Sized> RwLock<T> {
     ///         // While main has an active read lock, we acquire one too.
     ///         let r = c_lock.read().await;
     ///         assert_eq!(*r, 1);
-    ///     }).await.expect("The spawned task has paniced");
+    ///     }).await.expect("The spawned task has panicked");
+    ///
+    ///     // Drop the guard after the spawned task finishes.
+    ///     drop(n);
+    /// }
+    /// ```
+    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let inner = trace::async_op(
+            || self.s.acquire(1),
+            self.resource_span.clone(),
+            "RwLock::read",
+            "poll",
+            false,
+        );
+
+        #[cfg(not(all(tokio_unstable, feature = "tracing")))]
+        let inner = self.s.acquire(1);
+
+        inner.await.unwrap_or_else(|_| {
+            // The semaphore was closed. but, we never explicitly close it, and we have a
+            // handle to it through the Arc, which means that this can never happen.
+            unreachable!()
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            current_readers = 1,
+            current_readers.op = "add",
+            )
+        });
+
+        RwLockReadGuard {
+            s: &self.s,
+            data: self.c.get(),
+            marker: marker::PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: self.resource_span.clone(),
+        }
+    }
+
+    /// Blockingly locks this `RwLock` with shared read access.
+    ///
+    /// This method is intended for use cases where you
+    /// need to use this rwlock in asynchronous code as well as in synchronous code.
+    ///
+    /// Returns an RAII guard which will drop the read access of this `RwLock` when dropped.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if called within an asynchronous execution context.
+    ///
+    ///   - If you find yourself in an asynchronous execution context and needing
+    ///     to call some (synchronous) function which performs one of these
+    ///     `blocking_` operations, then consider wrapping that call inside
+    ///     [`spawn_blocking()`][crate::runtime::Handle::spawn_blocking]
+    ///     (or [`block_in_place()`][crate::task::block_in_place]).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let rwlock = Arc::new(RwLock::new(1));
+    ///     let mut write_lock = rwlock.write().await;
+    ///
+    ///     let blocking_task = tokio::task::spawn_blocking({
+    ///         let rwlock = Arc::clone(&rwlock);
+    ///         move || {
+    ///             // This shall block until the `write_lock` is released.
+    ///             let read_lock = rwlock.blocking_read();
+    ///             assert_eq!(*read_lock, 0);
+    ///         }
+    ///     });
+    ///
+    ///     *write_lock -= 1;
+    ///     drop(write_lock); // release the lock.
+    ///
+    ///     // Await the completion of the blocking task.
+    ///     blocking_task.await.unwrap();
+    ///
+    ///     // Assert uncontended.
+    ///     assert!(rwlock.try_write().is_ok());
+    /// }
+    /// ```
+    #[cfg(feature = "sync")]
+    pub fn blocking_read(&self) -> RwLockReadGuard<'_, T> {
+        crate::future::block_on(self.read())
+    }
+
+    /// Locks this `RwLock` with shared read access, causing the current task
+    /// to yield until the lock has been acquired.
+    ///
+    /// The calling task will yield until there are no writers which hold the
+    /// lock. There may be other readers inside the lock when the task resumes.
+    ///
+    /// This method is identical to [`RwLock::read`], except that the returned
+    /// guard references the `RwLock` with an [`Arc`] rather than by borrowing
+    /// it. Therefore, the `RwLock` must be wrapped in an `Arc` to call this
+    /// method, and the guard will live for the `'static` lifetime, as it keeps
+    /// the `RwLock` alive by holding an `Arc`.
+    ///
+    /// Note that under the priority policy of [`RwLock`], read locks are not
+    /// granted until prior write locks, to prevent starvation. Therefore
+    /// deadlock may occur if a read lock is held by the current task, a write
+    /// lock attempt is made, and then a subsequent read lock attempt is made
+    /// by the current task.
+    ///
+    /// Returns an RAII guard which will drop this read access of the `RwLock`
+    /// when dropped.
+    ///
+    /// # Cancel safety
+    ///
+    /// This method uses a queue to fairly distribute locks in the order they
+    /// were requested. Cancelling a call to `read_owned` makes you lose your
+    /// place in the queue.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let lock = Arc::new(RwLock::new(1));
+    ///     let c_lock = lock.clone();
+    ///
+    ///     let n = lock.read_owned().await;
+    ///     assert_eq!(*n, 1);
+    ///
+    ///     tokio::spawn(async move {
+    ///         // While main has an active read lock, we acquire one too.
+    ///         let r = c_lock.read_owned().await;
+    ///         assert_eq!(*r, 1);
+    ///     }).await.expect("The spawned task has panicked");
     ///
     ///     // Drop the guard after the spawned task finishes.
     ///     drop(n);
     ///}
     /// ```
-    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
-        self.s.acquire(1).await.unwrap_or_else(|_| {
+    pub async fn read_owned(self: Arc<Self>) -> OwnedRwLockReadGuard<T> {
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let inner = trace::async_op(
+            || self.s.acquire(1),
+            self.resource_span.clone(),
+            "RwLock::read_owned",
+            "poll",
+            false,
+        );
+
+        #[cfg(not(all(tokio_unstable, feature = "tracing")))]
+        let inner = self.s.acquire(1);
+
+        inner.await.unwrap_or_else(|_| {
             // The semaphore was closed. but, we never explicitly close it, and we have a
             // handle to it through the Arc, which means that this can never happen.
             unreachable!()
         });
-        RwLockReadGuard {
-            s: &self.s,
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            current_readers = 1,
+            current_readers.op = "add",
+            )
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = self.resource_span.clone();
+
+        OwnedRwLockReadGuard {
             data: self.c.get(),
-            marker: marker::PhantomData,
+            lock: ManuallyDrop::new(self),
+            _p: PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
         }
     }
 
-    /// Locks this rwlock with exclusive write access, causing the current task
-    /// to yield until the lock has been acquired.
+    /// Attempts to acquire this `RwLock` with shared read access.
     ///
-    /// This function will not return while other writers or other readers
-    /// currently have access to the lock.
-    ///
-    /// Returns an RAII guard which will drop the write access of this rwlock
+    /// If the access couldn't be acquired immediately, returns [`TryLockError`].
+    /// Otherwise, an RAII guard is returned which will release read access
     /// when dropped.
+    ///
+    /// [`TryLockError`]: TryLockError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let lock = Arc::new(RwLock::new(1));
+    ///     let c_lock = lock.clone();
+    ///
+    ///     let v = lock.try_read().unwrap();
+    ///     assert_eq!(*v, 1);
+    ///
+    ///     tokio::spawn(async move {
+    ///         // While main has an active read lock, we acquire one too.
+    ///         let n = c_lock.read().await;
+    ///         assert_eq!(*n, 1);
+    ///     }).await.expect("The spawned task has panicked");
+    ///
+    ///     // Drop the guard when spawned task finishes.
+    ///     drop(v);
+    /// }
+    /// ```
+    pub fn try_read(&self) -> Result<RwLockReadGuard<'_, T>, TryLockError> {
+        match self.s.try_acquire(1) {
+            Ok(permit) => permit,
+            Err(TryAcquireError::NoPermits) => return Err(TryLockError(())),
+            Err(TryAcquireError::Closed) => unreachable!(),
+        }
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            current_readers = 1,
+            current_readers.op = "add",
+            )
+        });
+
+        Ok(RwLockReadGuard {
+            s: &self.s,
+            data: self.c.get(),
+            marker: marker::PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: self.resource_span.clone(),
+        })
+    }
+
+    /// Attempts to acquire this `RwLock` with shared read access.
+    ///
+    /// If the access couldn't be acquired immediately, returns [`TryLockError`].
+    /// Otherwise, an RAII guard is returned which will release read access
+    /// when dropped.
+    ///
+    /// This method is identical to [`RwLock::try_read`], except that the
+    /// returned guard references the `RwLock` with an [`Arc`] rather than by
+    /// borrowing it. Therefore, the `RwLock` must be wrapped in an `Arc` to
+    /// call this method, and the guard will live for the `'static` lifetime,
+    /// as it keeps the `RwLock` alive by holding an `Arc`.
+    ///
+    /// [`TryLockError`]: TryLockError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let lock = Arc::new(RwLock::new(1));
+    ///     let c_lock = lock.clone();
+    ///
+    ///     let v = lock.try_read_owned().unwrap();
+    ///     assert_eq!(*v, 1);
+    ///
+    ///     tokio::spawn(async move {
+    ///         // While main has an active read lock, we acquire one too.
+    ///         let n = c_lock.read_owned().await;
+    ///         assert_eq!(*n, 1);
+    ///     }).await.expect("The spawned task has panicked");
+    ///
+    ///     // Drop the guard when spawned task finishes.
+    ///     drop(v);
+    /// }
+    /// ```
+    pub fn try_read_owned(self: Arc<Self>) -> Result<OwnedRwLockReadGuard<T>, TryLockError> {
+        match self.s.try_acquire(1) {
+            Ok(permit) => permit,
+            Err(TryAcquireError::NoPermits) => return Err(TryLockError(())),
+            Err(TryAcquireError::Closed) => unreachable!(),
+        }
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            current_readers = 1,
+            current_readers.op = "add",
+            )
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = self.resource_span.clone();
+
+        Ok(OwnedRwLockReadGuard {
+            data: self.c.get(),
+            lock: ManuallyDrop::new(self),
+            _p: PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
+        })
+    }
+
+    /// Locks this `RwLock` with exclusive write access, causing the current
+    /// task to yield until the lock has been acquired.
+    ///
+    /// The calling task will yield while other writers or readers currently
+    /// have access to the lock.
+    ///
+    /// Returns an RAII guard which will drop the write access of this `RwLock`
+    /// when dropped.
+    ///
+    /// # Cancel safety
+    ///
+    /// This method uses a queue to fairly distribute locks in the order they
+    /// were requested. Cancelling a call to `write` makes you lose your place
+    /// in the queue.
     ///
     /// # Examples
     ///
@@ -500,15 +754,302 @@ impl<T: ?Sized> RwLock<T> {
     ///}
     /// ```
     pub async fn write(&self) -> RwLockWriteGuard<'_, T> {
-        self.s.acquire(MAX_READS as u32).await.unwrap_or_else(|_| {
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let inner = trace::async_op(
+            || self.s.acquire(self.mr),
+            self.resource_span.clone(),
+            "RwLock::write",
+            "poll",
+            false,
+        );
+
+        #[cfg(not(all(tokio_unstable, feature = "tracing")))]
+        let inner = self.s.acquire(self.mr);
+
+        inner.await.unwrap_or_else(|_| {
             // The semaphore was closed. but, we never explicitly close it, and we have a
             // handle to it through the Arc, which means that this can never happen.
             unreachable!()
         });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            write_locked = true,
+            write_locked.op = "override",
+            )
+        });
+
         RwLockWriteGuard {
+            permits_acquired: self.mr,
             s: &self.s,
             data: self.c.get(),
             marker: marker::PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: self.resource_span.clone(),
+        }
+    }
+
+    /// Blockingly locks this `RwLock` with exclusive write access.
+    ///
+    /// This method is intended for use cases where you
+    /// need to use this rwlock in asynchronous code as well as in synchronous code.
+    ///
+    /// Returns an RAII guard which will drop the write access of this `RwLock` when dropped.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if called within an asynchronous execution context.
+    ///
+    ///   - If you find yourself in an asynchronous execution context and needing
+    ///     to call some (synchronous) function which performs one of these
+    ///     `blocking_` operations, then consider wrapping that call inside
+    ///     [`spawn_blocking()`][crate::runtime::Handle::spawn_blocking]
+    ///     (or [`block_in_place()`][crate::task::block_in_place]).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::{sync::RwLock};
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let rwlock =  Arc::new(RwLock::new(1));
+    ///     let read_lock = rwlock.read().await;
+    ///
+    ///     let blocking_task = tokio::task::spawn_blocking({
+    ///         let rwlock = Arc::clone(&rwlock);
+    ///         move || {
+    ///             // This shall block until the `read_lock` is released.
+    ///             let mut write_lock = rwlock.blocking_write();
+    ///             *write_lock = 2;
+    ///         }
+    ///     });
+    ///
+    ///     assert_eq!(*read_lock, 1);
+    ///     // Release the last outstanding read lock.
+    ///     drop(read_lock);
+    ///
+    ///     // Await the completion of the blocking task.
+    ///     blocking_task.await.unwrap();
+    ///
+    ///     // Assert uncontended.
+    ///     let read_lock = rwlock.try_read().unwrap();
+    ///     assert_eq!(*read_lock, 2);
+    /// }
+    /// ```
+    #[cfg(feature = "sync")]
+    pub fn blocking_write(&self) -> RwLockWriteGuard<'_, T> {
+        crate::future::block_on(self.write())
+    }
+
+    /// Locks this `RwLock` with exclusive write access, causing the current
+    /// task to yield until the lock has been acquired.
+    ///
+    /// The calling task will yield while other writers or readers currently
+    /// have access to the lock.
+    ///
+    /// This method is identical to [`RwLock::write`], except that the returned
+    /// guard references the `RwLock` with an [`Arc`] rather than by borrowing
+    /// it. Therefore, the `RwLock` must be wrapped in an `Arc` to call this
+    /// method, and the guard will live for the `'static` lifetime, as it keeps
+    /// the `RwLock` alive by holding an `Arc`.
+    ///
+    /// Returns an RAII guard which will drop the write access of this `RwLock`
+    /// when dropped.
+    ///
+    /// # Cancel safety
+    ///
+    /// This method uses a queue to fairly distribute locks in the order they
+    /// were requested. Cancelling a call to `write_owned` makes you lose your
+    /// place in the queue.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///   let lock = Arc::new(RwLock::new(1));
+    ///
+    ///   let mut n = lock.write_owned().await;
+    ///   *n = 2;
+    ///}
+    /// ```
+    pub async fn write_owned(self: Arc<Self>) -> OwnedRwLockWriteGuard<T> {
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let inner = trace::async_op(
+            || self.s.acquire(self.mr),
+            self.resource_span.clone(),
+            "RwLock::write_owned",
+            "poll",
+            false,
+        );
+
+        #[cfg(not(all(tokio_unstable, feature = "tracing")))]
+        let inner = self.s.acquire(self.mr);
+
+        inner.await.unwrap_or_else(|_| {
+            // The semaphore was closed. but, we never explicitly close it, and we have a
+            // handle to it through the Arc, which means that this can never happen.
+            unreachable!()
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            write_locked = true,
+            write_locked.op = "override",
+            )
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = self.resource_span.clone();
+
+        OwnedRwLockWriteGuard {
+            permits_acquired: self.mr,
+            data: self.c.get(),
+            lock: ManuallyDrop::new(self),
+            _p: PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
+        }
+    }
+
+    /// Attempts to acquire this `RwLock` with exclusive write access.
+    ///
+    /// If the access couldn't be acquired immediately, returns [`TryLockError`].
+    /// Otherwise, an RAII guard is returned which will release write access
+    /// when dropped.
+    ///
+    /// [`TryLockError`]: TryLockError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let rw = RwLock::new(1);
+    ///
+    ///     let v = rw.read().await;
+    ///     assert_eq!(*v, 1);
+    ///
+    ///     assert!(rw.try_write().is_err());
+    /// }
+    /// ```
+    pub fn try_write(&self) -> Result<RwLockWriteGuard<'_, T>, TryLockError> {
+        match self.s.try_acquire(self.mr) {
+            Ok(permit) => permit,
+            Err(TryAcquireError::NoPermits) => return Err(TryLockError(())),
+            Err(TryAcquireError::Closed) => unreachable!(),
+        }
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            write_locked = true,
+            write_locked.op = "override",
+            )
+        });
+
+        Ok(RwLockWriteGuard {
+            permits_acquired: self.mr,
+            s: &self.s,
+            data: self.c.get(),
+            marker: marker::PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span: self.resource_span.clone(),
+        })
+    }
+
+    /// Attempts to acquire this `RwLock` with exclusive write access.
+    ///
+    /// If the access couldn't be acquired immediately, returns [`TryLockError`].
+    /// Otherwise, an RAII guard is returned which will release write access
+    /// when dropped.
+    ///
+    /// This method is identical to [`RwLock::try_write`], except that the
+    /// returned guard references the `RwLock` with an [`Arc`] rather than by
+    /// borrowing it. Therefore, the `RwLock` must be wrapped in an `Arc` to
+    /// call this method, and the guard will live for the `'static` lifetime,
+    /// as it keeps the `RwLock` alive by holding an `Arc`.
+    ///
+    /// [`TryLockError`]: TryLockError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use tokio::sync::RwLock;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let rw = Arc::new(RwLock::new(1));
+    ///
+    ///     let v = Arc::clone(&rw).read_owned().await;
+    ///     assert_eq!(*v, 1);
+    ///
+    ///     assert!(rw.try_write_owned().is_err());
+    /// }
+    /// ```
+    pub fn try_write_owned(self: Arc<Self>) -> Result<OwnedRwLockWriteGuard<T>, TryLockError> {
+        match self.s.try_acquire(self.mr) {
+            Ok(permit) => permit,
+            Err(TryAcquireError::NoPermits) => return Err(TryLockError(())),
+            Err(TryAcquireError::Closed) => unreachable!(),
+        }
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        self.resource_span.in_scope(|| {
+            tracing::trace!(
+            target: "runtime::resource::state_update",
+            write_locked = true,
+            write_locked.op = "override",
+            )
+        });
+
+        #[cfg(all(tokio_unstable, feature = "tracing"))]
+        let resource_span = self.resource_span.clone();
+
+        Ok(OwnedRwLockWriteGuard {
+            permits_acquired: self.mr,
+            data: self.c.get(),
+            lock: ManuallyDrop::new(self),
+            _p: PhantomData,
+            #[cfg(all(tokio_unstable, feature = "tracing"))]
+            resource_span,
+        })
+    }
+
+    /// Returns a mutable reference to the underlying data.
+    ///
+    /// Since this call borrows the `RwLock` mutably, no actual locking needs to
+    /// take place -- the mutable borrow statically guarantees no locks exist.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::RwLock;
+    ///
+    /// fn main() {
+    ///     let mut lock = RwLock::new(1);
+    ///
+    ///     let n = lock.get_mut();
+    ///     *n = 2;
+    /// }
+    /// ```
+    pub fn get_mut(&mut self) -> &mut T {
+        unsafe {
+            // Safety: This is https://github.com/rust-lang/rust/pull/76936
+            &mut *self.c.get()
         }
     }
 
@@ -518,28 +1059,6 @@ impl<T: ?Sized> RwLock<T> {
         T: Sized,
     {
         self.c.into_inner()
-    }
-}
-
-impl<T: ?Sized> ops::Deref for RwLockReadGuard<'_, T> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        unsafe { &*self.data }
-    }
-}
-
-impl<T: ?Sized> ops::Deref for RwLockWriteGuard<'_, T> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        unsafe { &*self.data }
-    }
-}
-
-impl<T: ?Sized> ops::DerefMut for RwLockWriteGuard<'_, T> {
-    fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.data }
     }
 }
 

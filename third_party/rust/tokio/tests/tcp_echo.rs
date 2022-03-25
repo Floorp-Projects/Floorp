@@ -1,8 +1,8 @@
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
 
+use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::prelude::*;
 use tokio::sync::oneshot;
 use tokio_test::assert_ok;
 
@@ -12,7 +12,7 @@ async fn echo_server() {
 
     let (tx, rx) = oneshot::channel();
 
-    let mut srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
+    let srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
     let addr = assert_ok!(srv.local_addr());
 
     let msg = "foo bar baz";

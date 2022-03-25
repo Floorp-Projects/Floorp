@@ -3,7 +3,7 @@ use crate::loom::thread::LocalKey;
 use std::cell::Cell;
 use std::marker;
 
-/// Set a reference as a thread-local
+/// Sets a reference as a thread-local.
 macro_rules! scoped_thread_local {
     ($(#[$attrs:meta])* $vis:vis static $name:ident: $ty:ty) => (
         $(#[$attrs])*
@@ -23,9 +23,7 @@ macro_rules! scoped_thread_local {
 /// Type representing a thread local storage key corresponding to a reference
 /// to the type parameter `T`.
 pub(crate) struct ScopedKey<T> {
-    #[doc(hidden)]
     pub(crate) inner: &'static LocalKey<Cell<*const ()>>,
-    #[doc(hidden)]
     pub(crate) _marker: marker::PhantomData<T>,
 }
 
