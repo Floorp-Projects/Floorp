@@ -38,6 +38,12 @@ Result VerifyRSAPKCS1SignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
                                    Input signature, Input subjectPublicKeyInfo,
                                    void* pkcs11PinArg);
 
+// Verifies the RSA-PSS signature on the given data using the given RSA
+// public key.
+Result VerifyRSAPSSSignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,
+                                 Input signature, Input subjectPublicKeyInfo,
+                                 void* pkcs11PinArg);
+
 // Verifies the ECDSA signature on the given data using the given ECC public
 // key.
 Result VerifyECDSASignedDataNSS(Input data, DigestAlgorithm digestAlgorithm,

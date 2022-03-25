@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1761273
+-->
+<head>
+  <title>Test for Bug 1761273</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1761273">Mozilla Bug 1761273</a>
+<p id="display"></p>
+</div>
+
+<textarea id="editor" lang="en-US">heute ist ein guter Tag - today is a good day</textarea>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Ci = SpecialPowers.Ci;
+
+let {getDictionaryContentPref, onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+/** Test for Bug 1402822 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(start);
+async function start() {
+  /* global actorParent */
+  /* eslint-env mozilla/frame-script */
+  let script = SpecialPowers.loadChromeScript(() => {
+    // eslint-disable-next-line mozilla/use-services
+    let dir = Cc["@mozilla.org/file/directory_service;1"]
+                .getService(Ci.nsIProperties)
+                .get("CurWorkD", Ci.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("spellchecker");
+    dir.append("tests");
+
+    let hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+                     .getService(Ci.mozISpellCheckingEngine);
+
+    // Install de-DE dictionary.
+    let de_DE = dir.clone();
+    de_DE.append("de-DE");
+    hunspell.addDirectory(de_DE);
+
+    addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
+    addMessageListener("de_DE-exists", () => de_DE.exists());
+  });
+  is(await script.sendQuery("de_DE-exists"), true,
+     "true expected (de_DE directory should exist)");
+
+  let textarea = document.getElementById("editor");
+  textarea.focus();
+
+  onSpellCheck(textarea, async () => {
+    let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(true);
+    ok(isc, "Inline spell checker should exist after focus and spell check");
+    let spellchecker = isc.spellChecker;
+
+    // Setting the language to the language of the texteditor should not set the
+    // content preference.
+    await spellchecker.setCurrentDictionaries(["en-US"]);
+    let dictionaryContentPref = await getDictionaryContentPref();
+    is(dictionaryContentPref, "", "Content pref should be empty");
+
+    await spellchecker.setCurrentDictionaries(["en-US", "de-DE"]);
+    dictionaryContentPref = await getDictionaryContentPref();
+    is(dictionaryContentPref, "en-US,de-DE,", "Content pref should be en-US,de-DE,");
+
+    await spellchecker.setCurrentDictionaries(["de-DE"]);
+    dictionaryContentPref = await getDictionaryContentPref();
+    is(dictionaryContentPref, "de-DE,", "Content pref should be de-DE,");
+
+    // Remove the fake de_DE dictionary again.
+    await script.sendQuery("destroy");
+
+    // This will clear the content preferences and reset "spellchecker.dictionary".
+    await spellchecker.setCurrentDictionaries([]);
+    dictionaryContentPref = await getDictionaryContentPref();
+    is(dictionaryContentPref, "", "Content pref should be empty");
+
+    SimpleTest.finish();
+  });
+}
+</script>
+</pre>
+</body>
+</html>

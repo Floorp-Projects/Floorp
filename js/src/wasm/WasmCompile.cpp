@@ -120,7 +120,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
-  bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
+  bool debug = cx->realm() && cx->realm()->debuggerObservesWasm();
 
   bool forceTiering =
       cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;

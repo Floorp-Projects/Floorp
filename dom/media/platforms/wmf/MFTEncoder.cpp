@@ -170,7 +170,7 @@ nsCString MFTEncoder::GetFriendlyName(const GUID& aSubtype) {
 nsTArray<MFTEncoder::Info> MFTEncoder::Enumerate() {
   nsTArray<Info> infos;
 
-  if (FAILED(wmf::MFStartup())) {
+  if (!wmf::MediaFoundationInitializer::HasInitialized()) {
     MFT_ENC_SLOGE("cannot init Media Foundation");
     return infos;
   }
@@ -179,7 +179,6 @@ nsTArray<MFTEncoder::Info> MFTEncoder::Enumerate() {
   PopulateHWEncoderInfo(MFVideoFormat_VP90, infos);
   PopulateHWEncoderInfo(MFVideoFormat_VP80, infos);
 
-  wmf::MFShutdown();
   return infos;
 }
 

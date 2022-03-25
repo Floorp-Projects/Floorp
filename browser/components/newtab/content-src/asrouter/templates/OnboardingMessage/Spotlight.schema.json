@@ -28,6 +28,11 @@
           "type": "string",
           "description": "Background css behind modal content"
         },
+        "logoImageURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "(Deprecated by logo.imageURL)"
+        },
         "logo": {
           "type": "object",
           "properties": {
@@ -44,14 +49,6 @@
               "description": "The logo size."
             }
           },
-          "oneOf": [
-            {
-              "required": ["imageURL"]
-            },
-            {
-              "required": ["imageId"]
-            }
-          ],
           "additionalProperties": false
         },
         "body": {
@@ -210,6 +207,25 @@
         }
       },
       "additionalProperties": false,
+      "if": {
+        "properties": {
+          "logoImageURL": { "type": "null" }
+        }
+      },
+      "then": {
+        "properties": {
+          "logo": {
+            "oneOf": [
+              {
+                "required": ["imageURL"]
+              },
+              {
+                "required": ["imageId"]
+              }
+            ]
+          }
+        }
+      },
       "required": ["template"]
     },
     "frequency": {

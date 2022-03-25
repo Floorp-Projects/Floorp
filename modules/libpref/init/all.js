@@ -4478,9 +4478,6 @@ pref("devtools.jsonview.enabled", true);
 // Default theme ("auto", "dark" or "light").
 pref("devtools.theme", "auto", sticky);
 
-// Display a notification about the new default DevTools theme "auto".
-pref("devtools.theme.show-auto-theme-info", true);
-
 // Completely disable DevTools entry points, as well as all DevTools command
 // line arguments This should be merged with devtools.enabled, see Bug 1440675.
 pref("devtools.policy.disabled", false);

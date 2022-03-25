@@ -57,7 +57,7 @@ android-x86_64-asan-fuzzing/opt:
     treeherder:
         platform: android-5-0-x86_64/asan
         symbol: Bof
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"

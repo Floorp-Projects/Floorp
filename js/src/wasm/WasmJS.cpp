@@ -137,7 +137,7 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
   if (IsFuzzingIon(cx) || IsFuzzingCranelift(cx)) {
     return false;
   }
-  return cx->realm() && cx->realm()->debuggerObservesAsmJS();
+  return cx->realm() && cx->realm()->debuggerObservesWasm();
 }
 
 /*

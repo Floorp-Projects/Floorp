@@ -659,7 +659,7 @@ INCLUDES += -Impi -Iecl -Iverified -Iverified/kremlin/include -Iverified/kremlin
 
 DEFINES += -DMP_API_COMPATIBLE
 
-MPI_USERS = dh.c pqg.c dsa.c rsa.c ec.c
+MPI_USERS = secmpi.c dh.c pqg.c dsa.c rsa.c ec.c
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
 MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))

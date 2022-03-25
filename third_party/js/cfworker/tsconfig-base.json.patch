@@ -1,0 +1,9 @@
+--- tsconfig-base.json
++++ tsconfig-base.json
+@@ -1,5 +1,6 @@
+ {
+   "compilerOptions": {
++    "newLine": "lf",
+     "moduleResolution": "node",
+     "esModuleInterop": true,
+     "strict": true,

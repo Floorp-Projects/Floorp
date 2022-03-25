@@ -1,108 +1,208 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$ref": "#/definitions/NimbusExperiment",
+  "$ref": "#/definitions/NimbusEnrollment",
   "definitions": {
-    "NimbusExperiment": {
+    "NimbusEnrollment": {
       "type": "object",
       "properties": {
         "slug": {
-          "type": "string"
-        },
-        "branch": {
-          "type": "object",
-          "properties": {
-            "features": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "featureId": {
-                    "type": "string",
-                    "description": "The identifier for the feature flag"
-                  },
-                  "isEarlyStartup": {
-                    "type": "boolean",
-                    "description": "Early startup features are stored to prefs."
-                  },
-                  "value": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ],
-                    "description": "Optional extra params for the feature (this should be validated against a schema)"
-                  },
-                  "enabled": {
-                    "type": "boolean",
-                    "description": "(deprecated)"
-                  }
-                },
-                "required": ["featureId", "value"],
-                "additionalProperties": false
-              }
-            }
-          },
-          "required": ["features"]
-        },
-        "active": {
-          "type": "boolean",
-          "description": "Experiment status"
-        },
-        "isRollout": {
-          "type": "boolean",
-          "description": "If this is true, the enrollment is a rollout. If it is missing or false, it is an experiment."
-        },
-        "enrollmentId": {
           "type": "string",
-          "description": "Unique identifier used in telemetry"
-        },
-        "experimentType": {
-          "type": "string"
-        },
-        "isEnrollmentPaused": {
-          "type": "boolean"
-        },
-        "source": {
-          "type": "string",
-          "description": "What triggered the enrollment"
+          "description": "Unique identifier for the experiment"
         },
         "userFacingName": {
-          "type": "string"
+          "type": "string",
+          "description": "Public name of the experiment displayed on \"about:studies\""
         },
         "userFacingDescription": {
-          "type": "string"
-        },
-        "lastSeen": {
           "type": "string",
-          "description": "When was the enrollment made"
-        },
-        "force": {
-          "type": "boolean",
-          "description": "(debug) If the enrollment happened naturally or through devtools"
+          "description": "Short public description of the experiment displayed on on \"about:studies\""
         },
         "featureIds": {
           "type": "array",
-          "items": [{ "type": "string" }],
-          "description": "Array of strings corresponding to the branch features in the enrollment."
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of featureIds the experiment contains configurations for."
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "slug": {
+                  "type": "string",
+                  "description": "Identifier for the branch"
+                },
+                "feature": {
+                  "type": "object",
+                  "properties": {
+                    "featureId": {
+                      "type": "string",
+                      "description": "The identifier for the feature flag"
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "This can be used to turn the whole feature on/off"
+                    },
+                    "value": {
+                      "type": "object",
+                      "additionalProperties": {},
+                      "description": "Optional extra params for the feature (this should be validated against a schema)"
+                    }
+                  },
+                  "required": [
+                    "featureId",
+                    "value"
+                  ],
+                  "description": "A single feature configuration"
+                }
+              },
+              "required": [
+                "slug",
+                "feature"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "slug": {
+                  "type": "string",
+                  "description": "Identifier for the branch"
+                },
+                "feature": {
+                  "type": "object",
+                  "properties": {
+                    "featureId": {
+                      "type": "string",
+                      "const": "unused-feature-id-for-legacy-support"
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "value": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "featureId",
+                    "enabled",
+                    "value"
+                  ],
+                  "description": "The feature key must be provided with valid values to prevent crashes if the DTO is encountered by Desktop clients earlier than version 95."
+                },
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "featureId": {
+                        "type": "string",
+                        "description": "The identifier for the feature flag"
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "description": "This can be used to turn the whole feature on/off"
+                      },
+                      "value": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "description": "Optional extra params for the feature (this should be validated against a schema)"
+                      }
+                    },
+                    "required": [
+                      "featureId",
+                      "value"
+                    ]
+                  },
+                  "description": "An array of feature configurations"
+                }
+              },
+              "required": [
+                "slug",
+                "feature",
+                "features"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "slug": {
+                  "type": "string",
+                  "description": "Identifier for the branch"
+                },
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "featureId": {
+                        "type": "string",
+                        "description": "The identifier for the feature flag"
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "description": "This can be used to turn the whole feature on/off"
+                      },
+                      "value": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "description": "Optional extra params for the feature (this should be validated against a schema)"
+                      }
+                    },
+                    "required": [
+                      "featureId",
+                      "value"
+                    ]
+                  },
+                  "description": "An array of feature configurations"
+                }
+              },
+              "required": [
+                "slug",
+                "features"
+              ]
+            }
+          ],
+          "description": "Branch configuration for the experiment"
+        },
+        "isRollout": {
+          "type": "boolean",
+          "description": "Whether or not this experiment is considered a rollout."
+        },
+        "experimentType": {
+          "type": "string",
+          "description": "What kind of experiment this enrollment corresponds to."
+        },
+        "enrollmentId": {
+          "type": "string",
+          "description": "A unique identifier for the enrollment."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether or not the enrollment is active."
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The last time the experiment was seen."
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Whether or not this was a force enrollment."
         }
       },
       "required": [
         "slug",
-        "branch",
-        "active",
-        "enrollmentId",
-        "experimentType",
-        "source",
         "userFacingName",
         "userFacingDescription",
-        "featureIds"
+        "branch",
+        "enrollmentId",
+        "active",
+        "lastSeen"
       ],
-      "additionalProperties": false,
-      "description": "The experiment definition accessible to:\n1. The Nimbus SDK via Remote Settings\n2. Jetstream via the Experimenter API"
+      "description": "An enrollment in a Nimbus Experiment saved to disk"
     }
   }
 }

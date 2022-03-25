@@ -1,0 +1,4 @@
+2 Added functions:
+
+  'function PRBool SSL_CertIsUsable(PRFileDesc*, CERTCertificate*)'    {SSL_CertIsUsable@@NSS_3.77}
+  'function SECStatus SSL_FilterClientCertListBySocket(PRFileDesc*, CERTCertList*)'    {SSL_FilterClientCertListBySocket@@NSS_3.77}

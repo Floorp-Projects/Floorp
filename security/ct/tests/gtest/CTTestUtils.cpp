@@ -727,6 +727,14 @@ class OCSPExtensionTrustDomain : public TrustDomain {
                                        subjectPublicKeyInfo, nullptr);
   }
 
+  pkix::Result VerifyRSAPSSSignedData(Input data,
+                                      DigestAlgorithm digestAlgorithm,
+                                      Input signature,
+                                      Input subjectPublicKeyInfo) override {
+    return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
+                                     subjectPublicKeyInfo, nullptr);
+  }
+
   pkix::Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA,
                                          KeyPurposeId) override {
     ADD_FAILURE();

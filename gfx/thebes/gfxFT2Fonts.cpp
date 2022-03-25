@@ -166,15 +166,24 @@ gfxFT2Font::~gfxFT2Font() {}
 
 already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  if (!mAzureScaledFont) {
-    mAzureScaledFont = Factory::CreateScaledFontForFreeTypeFont(
-        GetUnscaledFont(), GetAdjustedSize(), mFTFace,
-        GetStyle()->NeedsSyntheticBold(GetFontEntry()));
-    InitializeScaledFont();
+  if (ScaledFont* scaledFont = mAzureScaledFont) {
+    return do_AddRef(scaledFont);
   }
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
+  RefPtr<ScaledFont> newScaledFont = Factory::CreateScaledFontForFreeTypeFont(
+      GetUnscaledFont(), GetAdjustedSize(), mFTFace,
+      GetStyle()->NeedsSyntheticBold(GetFontEntry()));
+  if (!newScaledFont) {
+    return nullptr;
+  }
+
+  InitializeScaledFont(newScaledFont);
+
+  if (mAzureScaledFont.compareExchange(nullptr, newScaledFont.get())) {
+    Unused << newScaledFont.forget();
+  }
+  ScaledFont* scaledFont = mAzureScaledFont;
+  return do_AddRef(scaledFont);
 }
 
 bool gfxFT2Font::ShouldHintMetrics() const {

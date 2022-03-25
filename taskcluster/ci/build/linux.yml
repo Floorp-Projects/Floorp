@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
+job-defaults:
+    worker-type: b-linux-gcp
+
 linux64/opt:
     description: "Linux64 Opt"
     index:
@@ -13,7 +16,6 @@ linux64/opt:
     treeherder:
         platform: linux64/opt
         symbol: B
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -57,7 +59,6 @@ linux64-x11/opt:
         platform: linux64/opt
         symbol: Bx
         tier: 2
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -95,7 +96,6 @@ linux64-plain/opt:
         platform: linux64/opt
         symbol: Bp
         tier: 1
-    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
@@ -136,7 +136,6 @@ linux64-hybrid/plain:
         platform: linux64/plain
         symbol: Bp-hybrid
         tier: 1
-    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
@@ -179,7 +178,6 @@ linux64-gcc/opt:
         symbol: Bgcc
         tier: 2
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -220,7 +218,6 @@ linux64-plain-clang-trunk/opt:
         platform: linux64/opt
         symbol: Bp-clang-trunk
         tier: 2
-    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
@@ -265,7 +262,6 @@ linux64-fuzzing/debug:
     treeherder:
         platform: linux64/debug
         symbol: Bf
-    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
@@ -312,7 +308,6 @@ linux64-fuzzing-noopt/debug:
     treeherder:
         platform: linux64-noopt/debug
         symbol: Bf
-    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
@@ -358,7 +353,6 @@ linux64/debug:
     treeherder:
         platform: linux64/debug
         symbol: B
-    worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
         env:
@@ -464,7 +458,6 @@ linux64-plain/debug:
         platform: linux64/debug
         symbol: Bp
         tier: 1
-    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
@@ -559,7 +552,6 @@ linux/opt:
     treeherder:
         platform: linux32/opt
         symbol: B
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -601,7 +593,6 @@ linux/debug:
     treeherder:
         platform: linux32/debug
         symbol: B
-    worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
         env:
@@ -644,7 +635,6 @@ linux-rusttests/opt:
         platform: linux32/opt
         symbol: BR
         tier: 1
-    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -688,7 +678,6 @@ linux-rusttests/debug:
         platform: linux32/debug
         symbol: BR
         tier: 1
-    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -913,7 +902,6 @@ linux64-asan/opt:
     treeherder:
         platform: linux64/asan
         symbol: Bo
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
@@ -955,7 +943,6 @@ linux64-tsan/opt:
     treeherder:
         platform: linux64/tsan
         symbol: Bo
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt tsan"
@@ -1000,7 +987,6 @@ linux64-tsan-fuzzing/opt:
     treeherder:
         platform: linux64/tsan
         symbol: Bof
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: tsan-fuzzing
@@ -1047,7 +1033,6 @@ linux64-asan-fuzzing/noopt:
     treeherder:
         platform: linux64-noopt/asan
         symbol: Bf
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-noopt
@@ -1094,7 +1079,6 @@ linux64-asan-fuzzing/opt:
     treeherder:
         platform: linux64/asan
         symbol: Bof
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
@@ -1142,7 +1126,6 @@ linux64-asan-fuzzing-ccov/opt:
         platform: linux64/asan
         symbol: Bocf
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
@@ -1184,7 +1167,6 @@ linux64-fuzzing-ccov/opt:
         platform: linux64/opt
         symbol: Bocf
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
@@ -1280,7 +1262,6 @@ linux64-asan/debug:
     treeherder:
         platform: linux64/asan
         symbol: Bd
-    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
@@ -1375,7 +1356,6 @@ linux64-noopt/debug:
         tier: 2
     attributes:
         enable-full-crashsymbols: true
-    worker-type: b-linux
     worker:
         max-run-time: 5400
     run:
@@ -1416,7 +1396,6 @@ linux64-rusttests/opt:
         platform: linux64/opt
         symbol: BR
         tier: 1
-    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -1459,7 +1438,6 @@ linux64-rusttests/debug:
         platform: linux64/debug
         symbol: BR
         tier: 1
-    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -1503,7 +1481,6 @@ linux64-ccov/opt:
         symbol: B
         tier: 2
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
@@ -1550,7 +1527,6 @@ linux64-ccov/debug:
         symbol: B
         tier: 2
     run-on-projects: []
-    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -1591,7 +1567,6 @@ linux64-add-on-devel/opt:
         platform: linux64-add-on-devel/opt
         symbol: B
         tier: 2
-    worker-type: b-linux
     worker:
         max-run-time: 3600
     run:
@@ -1633,7 +1608,6 @@ linux64-aarch64/opt:
         platform: linux64-aarch64/opt
         symbol: B
         tier: 2
-    worker-type: b-linux
     worker:
         max-run-time: 7200
     run:
@@ -1666,89 +1640,3 @@ linux64-aarch64/opt:
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
-
-linux-gcp/opt:
-    description: "Linux32 Opt - built on GCP"
-    index:
-        product: firefox
-        job-name: linux-gcp-opt
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: linux32/opt
-        symbol: B-gcp
-        tier: 2
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: gcp
-    run:
-        using: mozharness
-        actions: [get-secrets, build]
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_32_builds.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        tooltool-downloads: public
-        need-xvfb: true
-    run-on-projects: ['release']
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-rust
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-dump_syms
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
-            - sysroot-i686-linux-gnu
-            - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
-
-
-linux64-gcp/opt:
-    description: "Linux64 Opt - built on GCP"
-    index:
-        product: firefox
-        job-name: linux64-gcp-opt
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: linux64/opt
-        symbol: B-gcp
-        tier: 2
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: gcp
-    run:
-        using: mozharness
-        actions: [get-secrets, build]
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        tooltool-downloads: public
-        need-xvfb: true
-    run-on-projects: ['mozilla-central']
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-rust
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-dump_syms
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
-            - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi

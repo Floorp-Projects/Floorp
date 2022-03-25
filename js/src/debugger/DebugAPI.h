@@ -298,6 +298,9 @@ class DebugAPI {
   // Whether any Debugger is observing asm.js execution in a global.
   static bool debuggerObservesAsmJS(GlobalObject* global);
 
+  // Whether any Debugger is observing WebAssembly execution in a global.
+  static bool debuggerObservesWasm(GlobalObject* global);
+
   /*
    * Return true if the given global is being observed by at least one
    * Debugger that is tracking allocations.

@@ -360,63 +360,39 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     return EditorDOMPointType::After(mPreviousNode);
   }
 
+  SplitNodeResult() = delete;
+
   /**
    * This constructor shouldn't be used by anybody except methods which
    * use this as result when it succeeds.
    *
-   * @param aPreviousNodeOfSplitPoint   Previous node immediately before
-   *                                    split point.
-   * @param aNextNodeOfSplitPoint       Next node immediately after split
-   *                                    point.
-   * @param aDirection                  The split direction which the HTML
-   *                                    editor tried to split a node with.
+   * @param aNewNode    The node which is newly created.
+   * @param aSplitNode  The node which was split.
+   * @param aDirection  The split direction which the HTML editor tried to split
+   *                    a node with.
    */
-  SplitNodeResult(nsIContent* aPreviousNodeOfSplitPoint,
-                  nsIContent* aNextNodeOfSplitPoint,
+  SplitNodeResult(nsIContent& aNewNode, nsIContent& aSplitNode,
                   SplitNodeDirection aDirection)
-      : mPreviousNode(aPreviousNodeOfSplitPoint),
-        mNextNode(aNextNodeOfSplitPoint),
+      : mPreviousNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
+                          ? &aNewNode
+                          : &aSplitNode),
+        mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
+                      ? &aSplitNode
+                      : &aNewNode),
+        mRv(NS_OK),
+        mDirection(aDirection) {}
+  SplitNodeResult(nsCOMPtr<nsIContent>&& aNewNode,
+                  nsCOMPtr<nsIContent>&& aSplitNode,
+                  SplitNodeDirection aDirection)
+      : mPreviousNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
+                          ? std::move(aNewNode)
+                          : std::move(aSplitNode)),
+        mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
+                      ? std::move(aSplitNode)
+                      : std::move(aNewNode)),
         mRv(NS_OK),
         mDirection(aDirection) {
     MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
-  }
-  SplitNodeResult(nsCOMPtr<nsIContent>&& aPreviousNodeOfSplitPoint,
-                  nsIContent* aNextNodeOfSplitPoint,
-                  SplitNodeDirection aDirection)
-      : mPreviousNode(std::move(aPreviousNodeOfSplitPoint)),
-        mNextNode(aNextNodeOfSplitPoint),
-        mRv(NS_OK),
-        mDirection(aDirection) {
-    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
-  }
-  SplitNodeResult(nsIContent* aPreviousNodeOfSplitPoint,
-                  nsCOMPtr<nsIContent>&& aNextNodeOfSplitPoint,
-                  SplitNodeDirection aDirection)
-      : mPreviousNode(aPreviousNodeOfSplitPoint),
-        mNextNode(std::move(aNextNodeOfSplitPoint)),
-        mRv(NS_OK),
-        mDirection(aDirection) {
-    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
-  }
-  SplitNodeResult(nsCOMPtr<nsIContent>&& aPreviousNodeOfSplitPoint,
-                  nsCOMPtr<nsIContent>&& aNextNodeOfSplitPoint,
-                  SplitNodeDirection aDirection)
-      : mPreviousNode(std::move(aPreviousNodeOfSplitPoint)),
-        mNextNode(std::move(aNextNodeOfSplitPoint)),
-        mRv(NS_OK),
-        mDirection(aDirection) {
-    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
-  }
-
-  /**
-   * This constructor should be used when the method didn't split any nodes
-   * but want to return given split point as right point.
-   */
-  explicit SplitNodeResult(const EditorRawDOMPoint& aGivenSplitPoint)
-      : mGivenSplitPoint(aGivenSplitPoint),
-        mRv(NS_OK),
-        mDirection(SplitNodeDirection::LeftNodeIsNewOne) {
-    MOZ_DIAGNOSTIC_ASSERT(mGivenSplitPoint.IsSet());
   }
 
   /**
@@ -428,7 +404,41 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
   }
 
+  SplitNodeResult ToHandledResult() const {
+    SplitNodeResult result(NS_OK, mDirection);
+    result.mPreviousNode = GetPreviousContent();
+    result.mNextNode = GetNextContent();
+    MOZ_DIAGNOSTIC_ASSERT(result.Handled());
+    return result;
+  }
+
+  static inline SplitNodeResult HandledButDidNotSplitDueToEndOfContainer(
+      nsIContent& aNotSplitNode, SplitNodeDirection aDirection) {
+    SplitNodeResult result(NS_OK, aDirection);
+    result.mPreviousNode = &aNotSplitNode;
+    return result;
+  }
+
+  static inline SplitNodeResult HandledButDidNotSplitDueToStartOfContainer(
+      nsIContent& aNotSplitNode, SplitNodeDirection aDirection) {
+    SplitNodeResult result(NS_OK, aDirection);
+    result.mNextNode = &aNotSplitNode;
+    return result;
+  }
+
+  template <typename PT, typename CT>
+  static inline SplitNodeResult NotHandled(
+      const EditorDOMPointBase<PT, CT>& aGivenSplitPoint,
+      SplitNodeDirection aDirection) {
+    SplitNodeResult result(NS_OK, aDirection);
+    result.mGivenSplitPoint = aGivenSplitPoint;
+    return result;
+  }
+
  private:
+  SplitNodeResult(nsresult aRv, SplitNodeDirection aDirection)
+      : mRv(aRv), mDirection(aDirection) {}
+
   // When methods which return this class split some nodes actually, they
   // need to set a set of left node and right node to this class.  However,
   // one or both of them may be moved or removed by mutation observer.
@@ -447,8 +457,6 @@ class MOZ_STACK_CLASS SplitNodeResult final {
 
   nsresult mRv;
   SplitNodeDirection mDirection;
-
-  SplitNodeResult() = delete;
 };
 
 /*****************************************************************************

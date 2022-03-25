@@ -452,7 +452,8 @@ void Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj) {
 void Realm::updateDebuggerObservesFlag(unsigned flag) {
   MOZ_ASSERT(isDebuggee());
   MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
-             flag == DebuggerObservesCoverage || flag == DebuggerObservesAsmJS);
+             flag == DebuggerObservesCoverage ||
+             flag == DebuggerObservesAsmJS || flag == DebuggerObservesWasm);
 
   GlobalObject* global =
       zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
@@ -465,6 +466,8 @@ void Realm::updateDebuggerObservesFlag(unsigned flag) {
     observes = DebugAPI::debuggerObservesCoverage(global);
   } else if (flag == DebuggerObservesAsmJS) {
     observes = DebugAPI::debuggerObservesAsmJS(global);
+  } else if (flag == DebuggerObservesWasm) {
+    observes = DebugAPI::debuggerObservesWasm(global);
   }
 
   if (observes) {

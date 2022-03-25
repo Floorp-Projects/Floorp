@@ -2552,6 +2552,10 @@ CERT_DestroyCertList(CERTCertList *certs)
 {
     PRCList *node;
 
+    if (!certs) {
+        return;
+    }
+
     while (!PR_CLIST_IS_EMPTY(&certs->list)) {
         node = PR_LIST_HEAD(&certs->list);
         CERT_DestroyCertificate(((CERTCertListNode *)node)->cert);
@@ -2864,6 +2868,86 @@ CERT_FilterCertListForUserCerts(CERTCertList *certList)
     }
 
     return (SECSuccess);
+}
+
+/* return true if cert is in the list */
+PRBool
+CERT_IsInList(const CERTCertificate *cert, const CERTCertList *certList)
+{
+    CERTCertListNode *node;
+    for (node = CERT_LIST_HEAD(certList); !CERT_LIST_END(node, certList);
+         node = CERT_LIST_NEXT(node)) {
+        if (node->cert == cert) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
+/* returned certList is the intersection of the certs on certList and the
+ * certs on filterList */
+SECStatus
+CERT_FilterCertListByCertList(CERTCertList *certList,
+                              const CERTCertList *filterList)
+{
+    CERTCertListNode *node, *freenode;
+    CERTCertificate *cert;
+
+    if (!certList) {
+        return SECFailure;
+    }
+
+    if (!filterList || CERT_LIST_EMPTY(certList)) {
+        /* if the filterList is empty, just clear out certList and return */
+        for (node = CERT_LIST_HEAD(certList); !CERT_LIST_END(node, certList);) {
+            freenode = node;
+            node = CERT_LIST_NEXT(node);
+            CERT_RemoveCertListNode(freenode);
+        }
+        return SECSuccess;
+    }
+
+    node = CERT_LIST_HEAD(certList);
+
+    while (!CERT_LIST_END(node, certList)) {
+        cert = node->cert;
+        if (!CERT_IsInList(cert, filterList)) {
+            // no matching cert on filter list, remove it from certlist */
+            freenode = node;
+            node = CERT_LIST_NEXT(node);
+            CERT_RemoveCertListNode(freenode);
+        } else {
+            /* matching cert, keep it around */
+            node = CERT_LIST_NEXT(node);
+        }
+    }
+
+    return (SECSuccess);
+}
+
+SECStatus
+CERT_FilterCertListByNickname(CERTCertList *certList, char *nickname,
+                              void *pwarg)
+{
+    CERTCertList *nameList;
+    SECStatus rv;
+
+    if (!certList) {
+        return SECFailure;
+    }
+
+    /* we could try to match the nickname to the individual cert,
+     * but nickname parsing is quite complicated, so it's best just
+     * to use the existing code and get a list of certs that match the
+     * nickname. We can then compare that list with our input cert list
+     * and return only those certs that are on both. */
+    nameList = PK11_FindCertsFromNickname(nickname, pwarg);
+
+    /* namelist could be NULL, this will force certList to become empty */
+    rv = CERT_FilterCertListByCertList(certList, nameList);
+    /* CERT_DestroyCertList can now accept a NULL pointer */
+    CERT_DestroyCertList(nameList);
+    return rv;
 }
 
 static PZLock *certRefCountLock = NULL;

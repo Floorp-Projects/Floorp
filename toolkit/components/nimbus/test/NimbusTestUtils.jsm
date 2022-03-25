@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   _RemoteSettingsExperimentLoader:
@@ -84,7 +85,7 @@ const ExperimentTestUtils = {
   async validateExperiment(experiment) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusExperiment.schema.json"
+        "resource://nimbus/schemas/NimbusExperiment.schema.json"
       )
     ).NimbusExperiment;
 
@@ -109,9 +110,9 @@ const ExperimentTestUtils = {
   async validateEnrollment(enrollment) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusEnrollment.schema.json"
+        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
-    ).NimbusExperiment;
+    ).NimbusEnrollment;
 
     // We still have single feature experiment recipes for backwards
     // compatibility testing but we don't do schema validation
@@ -131,15 +132,35 @@ const ExperimentTestUtils = {
   async validateRollouts(rollout) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/NimbusEnrollment.schema.json"
+        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
       )
-    ).NimbusExperiment;
+    ).NimbusEnrollment;
 
     return this._validator(
       schema,
       rollout,
       `Rollout configuration ${rollout.slug} is not valid`
     );
+  },
+  /**
+   * Add features for tests.
+   *
+   * These features will only be visible to the JS Nimbus client. The native
+   * Nimbus client will have no access.
+   *
+   * @params features A list of |_NimbusFeature|s.
+   *
+   * @returns A cleanup function to remove the features once the test has completed.
+   */
+  addTestFeatures(...features) {
+    for (const feature of features) {
+      NimbusFeatures[feature.featureId] = feature;
+    }
+    return () => {
+      for (const { featureId } of features) {
+        delete NimbusFeatures[featureId];
+      }
+    };
   },
 };
 
@@ -309,8 +330,8 @@ const ExperimentFakes = {
         slug: "treatment",
         features: [
           {
-            featureId: "test-feature",
-            value: { title: "hello", enabled: true },
+            featureId: "testFeature",
+            value: { testInt: 123, enabled: true },
           },
         ],
         ...props,
@@ -320,8 +341,9 @@ const ExperimentFakes = {
       experimentType: "NimbusTestUtils",
       userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
+      lastSeen: new Date().toJSON(),
       featureIds: props?.branch?.features?.map(f => f.featureId) || [
-        "test-feature",
+        "testFeature",
       ],
       ...props,
     };
@@ -336,8 +358,8 @@ const ExperimentFakes = {
         slug: "treatment",
         features: [
           {
-            featureId: "test-feature",
-            value: { title: "hello", enabled: true },
+            featureId: "testFeature",
+            value: { testInt: 123, enabled: true },
           },
         ],
         ...props,
@@ -347,9 +369,10 @@ const ExperimentFakes = {
       experimentType: "rollout",
       userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
+      lastSeen: new Date().toJSON(),
       featureIds: (props?.branch?.features || props?.features)?.map(
         f => f.featureId
-      ) || ["test-feature"],
+      ) || ["testFeature"],
       ...props,
     };
   },
@@ -357,6 +380,10 @@ const ExperimentFakes = {
     return {
       // This field is required for populating remote settings
       id: NormandyUtils.generateUuid(),
+      schemaVersion: "1.7.0",
+      appName: "firefox_desktop",
+      appId: "firefox-desktop",
+      channel: "nightly",
       slug,
       isEnrollmentPaused: false,
       probeSets: [],
@@ -369,15 +396,20 @@ const ExperimentFakes = {
         {
           slug: "control",
           ratio: 1,
-          features: [{ featureId: "test-feature", value: { enabled: true } }],
+          features: [
+            {
+              featureId: "testFeature",
+              value: { testInt: 123, enabled: true },
+            },
+          ],
         },
         {
           slug: "treatment",
           ratio: 1,
           features: [
             {
-              featureId: "test-feature",
-              value: { title: "hello", enabled: true },
+              featureId: "testFeature",
+              value: { testInt: 123, enabled: true },
             },
           ],
         },
@@ -392,7 +424,7 @@ const ExperimentFakes = {
       userFacingName: "Nimbus recipe",
       userFacingDescription: "NimbusTestUtils recipe",
       featureIds: props?.branches?.[0].features?.map(f => f.featureId) || [
-        "test-feature",
+        "testFeature",
       ],
       ...props,
     };

@@ -747,6 +747,7 @@ typedef struct SSL3HandshakeStateStr {
                                 * used to generate ACKs. */
 
     /* TLS 1.3 ECH state. */
+    PRUint8 greaseEchSize;
     PRBool echAccepted; /* Client/Server: True if we've commited to using CHInner. */
     PRBool echDecided;
     HpkeContext *echHpkeCtx;    /* Client/Server: HPKE context for ECH. */
@@ -1138,6 +1139,10 @@ struct sslSocketStr {
 
     /* An out-of-band PSK. */
     sslPsk *psk;
+
+    /* peer data passed in during getClientAuthData */
+    const SSLSignatureScheme *peerSignatureSchemes;
+    unsigned int peerSignatureSchemeCount;
 };
 
 struct sslSelfEncryptKeysStr {
@@ -1778,6 +1783,8 @@ PRBool ssl3_CipherSuiteAllowedForVersionRange(ssl3CipherSuite cipherSuite,
 
 SECStatus ssl3_SelectServerCert(sslSocket *ss);
 SECStatus ssl_PrivateKeySupportsRsaPss(SECKEYPrivateKey *privKey,
+                                       CERTCertificate *cert,
+                                       void *pwArg,
                                        PRBool *supportsRsaPss);
 SECStatus ssl_PickSignatureScheme(sslSocket *ss,
                                   CERTCertificate *cert,
@@ -1785,7 +1792,14 @@ SECStatus ssl_PickSignatureScheme(sslSocket *ss,
                                   SECKEYPrivateKey *privKey,
                                   const SSLSignatureScheme *peerSchemes,
                                   unsigned int peerSchemeCount,
-                                  PRBool requireSha1);
+                                  PRBool requireSha1,
+                                  SSLSignatureScheme *schemPtr);
+SECStatus ssl_PickClientSignatureScheme(sslSocket *ss,
+                                        CERTCertificate *clientCertificate,
+                                        SECKEYPrivateKey *privKey,
+                                        const SSLSignatureScheme *schemes,
+                                        unsigned int numSchemes,
+                                        SSLSignatureScheme *schemePtr);
 SECOidTag ssl3_HashTypeToOID(SSLHashType hashType);
 SECOidTag ssl3_AuthTypeToOID(SSLAuthType hashType);
 SSLHashType ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme);
@@ -1958,6 +1972,7 @@ SECStatus SSLExp_CreateMask(SSLMaskingContext *ctx, const PRUint8 *sample,
 SECStatus SSLExp_DestroyMaskingContext(SSLMaskingContext *ctx);
 
 SECStatus SSLExp_EnableTls13GreaseEch(PRFileDesc *fd, PRBool enabled);
+SECStatus SSLExp_SetTls13GreaseEchSize(PRFileDesc *fd, PRUint8 size);
 
 SECStatus SSLExp_EnableTls13BackendEch(PRFileDesc *fd, PRBool enabled);
 SECStatus SSLExp_CallExtensionWriterOnEchInner(PRFileDesc *fd, PRBool enabled);

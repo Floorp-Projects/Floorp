@@ -87,6 +87,10 @@ class SignatureParamsTrustDomain final : public TrustDomain {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
+  Result VerifyRSAPSSSignedData(Input, DigestAlgorithm, Input, Input) override {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
   Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA,
                                    KeyPurposeId) override {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;

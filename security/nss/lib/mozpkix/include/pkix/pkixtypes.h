@@ -304,6 +304,16 @@ class TrustDomain {
                                           Input signature,
                                           Input subjectPublicKeyInfo) = 0;
 
+  // Verify the given RSA-PSS signature on the given digest using the
+  // given RSA public key.
+  //
+  // CheckRSAPublicKeyModulusSizeInBits will be called before calling this
+  // function, so it is not necessary to repeat those checks here.
+  virtual Result VerifyRSAPSSSignedData(Input data,
+                                        DigestAlgorithm digestAlgorithm,
+                                        Input signature,
+                                        Input subjectPublicKeyInfo) = 0;
+
   // Check that the given named ECC curve is acceptable for ECDSA signatures.
   //
   // Return Success if the curve is acceptable,

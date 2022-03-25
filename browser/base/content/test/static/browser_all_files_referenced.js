@@ -65,6 +65,12 @@ var gExceptionPaths = [
 
   // Page data schemas are referenced programmatically.
   "chrome://browser/content/pagedata/schemas/",
+
+  // Nimbus schemas are referenced programmatically.
+  "resource://nimbus/schemas/",
+
+  // Activity stream schemas are referenced programmatically.
+  "resource://activity-stream/schemas",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

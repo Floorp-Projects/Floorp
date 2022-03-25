@@ -6,6 +6,7 @@
  * various PCKS #11 modules
  */
 #define FORCE_PR_LOG 1
+#include "base.h"
 #include "seccomon.h"
 #include "pkcs11.h"
 #include "secmod.h"
@@ -16,7 +17,7 @@
 #include "nssilock.h"
 #include "secerr.h"
 #include "prenv.h"
-#include "utilparst.h"
+#include "utilpars.h"
 #include "prio.h"
 #include "prprf.h"
 #include <stdio.h>
@@ -464,10 +465,27 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule)
             return SECFailure;
         }
 
-        /* load the library. If this succeeds, then we have to remember to
+/* load the library. If this succeeds, then we have to remember to
          * unload the library if anything goes wrong from here on out...
          */
+#if defined(_WIN32)
+        if (nssUTF8_Length(mod->dllName, NULL)) {
+            wchar_t *dllNameWide = _NSSUTIL_UTF8ToWide(mod->dllName);
+            if (dllNameWide) {
+                PRLibSpec libSpec;
+                libSpec.type = PR_LibSpec_PathnameU;
+                libSpec.value.pathname_u = dllNameWide;
+                library = PR_LoadLibraryWithFlags(libSpec, 0);
+                PORT_Free(dllNameWide);
+            }
+        }
+        if (library == NULL) {
+            // fallback to system code page
+            library = PR_LoadLibrary(mod->dllName);
+        }
+#else
         library = PR_LoadLibrary(mod->dllName);
+#endif // defined(_WIN32)
         mod->library = (void *)library;
 
         if (library == NULL) {

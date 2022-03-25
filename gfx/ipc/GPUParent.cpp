@@ -651,9 +651,6 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
       [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
 
 #ifndef NS_FREE_PERMANENT_DATA
-#  ifdef XP_WIN
-  wmf::MFShutdown();
-#  endif
   // No point in going through XPCOM shutdown because we don't keep persistent
   // state.
   ProcessChild::QuickExit();
@@ -662,10 +659,6 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Wait until all RemoteDecoderManagerParent have closed.
   mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
       ->Then(GetCurrentSerialEventTarget(), __func__, [this]() {
-#ifdef XP_WIN
-        wmf::MFShutdown();
-#endif
-
         if (mProfilerController) {
           mProfilerController->Shutdown();
           mProfilerController = nullptr;

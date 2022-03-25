@@ -127,8 +127,6 @@ void WebGLContext::ColorMask(const Maybe<GLuint> i, const uint8_t mask) {
   const FuncScope funcScope(*this, "colorMask");
   if (IsContextLost()) return;
 
-  const auto bs = std::bitset<4>(mask);
-
   if (i) {
     MOZ_RELEASE_ASSERT(
         IsExtensionEnabled(WebGLExtensionID::OES_draw_buffers_indexed));
@@ -138,14 +136,11 @@ void WebGLContext::ColorMask(const Maybe<GLuint> i, const uint8_t mask) {
                         "MAX_DRAW_BUFFERS", limit);
       return;
     }
-
-    gl->fColorMaski(*i, bs[0], bs[1], bs[2], bs[3]);
     if (*i == 0) {
       mColorWriteMask0 = mask;
     }
     mColorWriteMaskNonzero[*i] = bool(mask);
   } else {
-    gl->fColorMask(bs[0], bs[1], bs[2], bs[3]);
     mColorWriteMask0 = mask;
     if (mask) {
       mColorWriteMaskNonzero.set();
@@ -153,6 +148,8 @@ void WebGLContext::ColorMask(const Maybe<GLuint> i, const uint8_t mask) {
       mColorWriteMaskNonzero.reset();
     }
   }
+
+  DoColorMask(i, mask);
 }
 
 void WebGLContext::DepthMask(WebGLboolean b) {
