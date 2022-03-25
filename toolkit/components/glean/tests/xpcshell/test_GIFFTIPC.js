@@ -66,6 +66,9 @@ const IRATE_NUMERATOR = 44;
 const IRATE_DENOMINATOR = 14;
 
 add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
+  let oldCanRecordBase = Telemetry.canRecordBase;
+  Telemetry.canRecordBase = true; // Ensure we're able to record things.
+
   Glean.testOnlyIpc.aCounter.add(COUNT);
   Glean.testOnlyIpc.aStringList.add(CHEESY_STRING);
   Glean.testOnlyIpc.aStringList.add(CHEESIER_STRING);
@@ -101,6 +104,7 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
 
   Glean.testOnlyIpc.irate.addToNumerator(IRATE_NUMERATOR);
   Glean.testOnlyIpc.irate.addToDenominator(IRATE_DENOMINATOR);
+  Telemetry.canRecordBase = oldCanRecordBase;
 });
 
 add_task(
@@ -123,7 +127,7 @@ add_task(
         "content" in snapshot &&
         "telemetry.test.mirror_for_rate" in snapshot.content
       );
-    });
+    }, "failed to find content telemetry in parent");
 
     // boolean
     // Doesn't work over IPC
