@@ -2137,8 +2137,9 @@ WorkerThreadPrimaryRunnable::Run() {
       return NS_ERROR_FAILURE;
     }
 
-    // Sentinel if we were able to clear all references to the global scope.
+    // Sentinels if we were able to clear all references to the scopes.
     nsWeakPtr globalScopeSentinel;
+    nsWeakPtr debuggerScopeSentinel;
 
     {
       nsCycleCollector_startup();
@@ -2176,9 +2177,6 @@ WorkerThreadPrimaryRunnable::Run() {
         PROFILER_CLEAR_JS_CONTEXT();
       }
 
-      // At this point we expect the global to be alive, keep weak reference.
-      globalScopeSentinel = do_GetWeakReference(mWorkerPrivate->GlobalScope());
-
       // There may still be runnables on the debugger event queue that hold a
       // strong reference to the debugger global scope. These runnables are not
       // visible to the cycle collector, so we need to make sure to clear the
@@ -2191,6 +2189,15 @@ WorkerThreadPrimaryRunnable::Run() {
       // through the event loop to clean up any C++ objects that need deferred
       // cleanup.
       NS_ProcessPendingEvents(nullptr);
+
+      // At this point we expect the scopes to be alive if they were ever
+      // created successfully, keep weak references.
+      globalScopeSentinel = do_GetWeakReference(mWorkerPrivate->GlobalScope());
+      debuggerScopeSentinel =
+          do_GetWeakReference(mWorkerPrivate->DebuggerGlobalScope());
+      MOZ_ASSERT(!mWorkerPrivate->GlobalScope() || globalScopeSentinel);
+      MOZ_ASSERT(!mWorkerPrivate->DebuggerGlobalScope() ||
+                 debuggerScopeSentinel);
 
       // To our best knowledge nobody should need a reference to our globals
       // now (NS_ProcessPendingEvents is the last expected potential usage)
@@ -2208,13 +2215,21 @@ WorkerThreadPrimaryRunnable::Run() {
       // any remaining C++ objects.
     }
 
-    // Check sentinel if we actually removed all global scope references.
+    // Check sentinels if we actually removed all global scope references.
     nsCOMPtr<DOMEventTargetHelper> globalScopeAlive =
         do_QueryReferent(globalScopeSentinel);
     MOZ_ASSERT(!globalScopeAlive);
-    // Guard us against further usage of global's mWorkerPrivate in non-debug.
+    nsCOMPtr<DOMEventTargetHelper> debuggerScopeAlive =
+        do_QueryReferent(debuggerScopeSentinel);
+    MOZ_ASSERT(!debuggerScopeAlive);
+
+    // Guard us against further usage of scopes' mWorkerPrivate in non-debug.
     if (globalScopeAlive) {
-      static_cast<WorkerGlobalScope*>(globalScopeAlive.get())
+      static_cast<WorkerGlobalScopeBase*>(globalScopeAlive.get())
+          ->NoteWorkerTerminated();
+    }
+    if (debuggerScopeAlive) {
+      static_cast<WorkerGlobalScopeBase*>(debuggerScopeAlive.get())
           ->NoteWorkerTerminated();
     }
   }
