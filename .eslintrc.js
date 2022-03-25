@@ -556,5 +556,15 @@ module.exports = {
         "mozilla/reject-chromeutils-import-params": "warn",
       },
     },
+    {
+      // Rules of Hooks broadly checks for camelCase "use" identifiers, so
+      // enable only for paths actually using React to avoid false positives.
+      extends: ["plugin:react-hooks/recommended"],
+      files: [
+        "browser/components/newtab/**",
+        "browser/components/pocket/**",
+        "devtools/**",
+      ],
+    },
   ],
 };
