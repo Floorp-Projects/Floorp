@@ -212,7 +212,7 @@ impl<'de> Deserialize<'de> for PointerOrigin {
         } else {
             Err(de::Error::custom(format!(
                 "unknown value `{}`, expected `pointer`, `viewport`, or `element-6066-11e4-a52e-4f735466cecf`",
-                value.to_string()
+                value
             )))
         }
     }
