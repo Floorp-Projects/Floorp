@@ -2,8 +2,11 @@ use crate::loom::cell::UnsafeCell;
 use crate::loom::future::AtomicWaker;
 use crate::loom::sync::atomic::AtomicUsize;
 use crate::loom::sync::Arc;
-use crate::sync::mpsc::error::{ClosedError, TryRecvError};
-use crate::sync::mpsc::{error, list};
+use crate::park::thread::CachedParkThread;
+use crate::park::Park;
+use crate::sync::mpsc::error::TryRecvError;
+use crate::sync::mpsc::list;
+use crate::sync::notify::Notify;
 
 use std::fmt;
 use std::process;
@@ -11,98 +14,42 @@ use std::sync::atomic::Ordering::{AcqRel, Relaxed};
 use std::task::Poll::{Pending, Ready};
 use std::task::{Context, Poll};
 
-/// Channel sender
-pub(crate) struct Tx<T, S: Semaphore> {
+/// Channel sender.
+pub(crate) struct Tx<T, S> {
     inner: Arc<Chan<T, S>>,
-    permit: S::Permit,
 }
 
-impl<T, S: Semaphore> fmt::Debug for Tx<T, S>
-where
-    S::Permit: fmt::Debug,
-    S: fmt::Debug,
-{
+impl<T, S: fmt::Debug> fmt::Debug for Tx<T, S> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_struct("Tx")
-            .field("inner", &self.inner)
-            .field("permit", &self.permit)
-            .finish()
+        fmt.debug_struct("Tx").field("inner", &self.inner).finish()
     }
 }
 
-/// Channel receiver
+/// Channel receiver.
 pub(crate) struct Rx<T, S: Semaphore> {
     inner: Arc<Chan<T, S>>,
 }
 
-impl<T, S: Semaphore> fmt::Debug for Rx<T, S>
-where
-    S: fmt::Debug,
-{
+impl<T, S: Semaphore + fmt::Debug> fmt::Debug for Rx<T, S> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("Rx").field("inner", &self.inner).finish()
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
-pub(crate) enum TrySendError {
-    Closed,
-    Full,
-}
-
-impl<T> From<(T, TrySendError)> for error::SendError<T> {
-    fn from(src: (T, TrySendError)) -> error::SendError<T> {
-        match src.1 {
-            TrySendError::Closed => error::SendError(src.0),
-            TrySendError::Full => unreachable!(),
-        }
-    }
-}
-
-impl<T> From<(T, TrySendError)> for error::TrySendError<T> {
-    fn from(src: (T, TrySendError)) -> error::TrySendError<T> {
-        match src.1 {
-            TrySendError::Closed => error::TrySendError::Closed(src.0),
-            TrySendError::Full => error::TrySendError::Full(src.0),
-        }
-    }
-}
-
 pub(crate) trait Semaphore {
-    type Permit;
-
-    fn new_permit() -> Self::Permit;
-
-    /// The permit is dropped without a value being sent. In this case, the
-    /// permit must be returned to the semaphore.
-    ///
-    /// # Return
-    ///
-    /// Returns true if the permit was acquired.
-    fn drop_permit(&self, permit: &mut Self::Permit) -> bool;
-
     fn is_idle(&self) -> bool;
 
     fn add_permit(&self);
 
-    fn poll_acquire(
-        &self,
-        cx: &mut Context<'_>,
-        permit: &mut Self::Permit,
-    ) -> Poll<Result<(), ClosedError>>;
-
-    fn try_acquire(&self, permit: &mut Self::Permit) -> Result<(), TrySendError>;
-
-    /// A value was sent into the channel and the permit held by `tx` is
-    /// dropped. In this case, the permit should not immeditely be returned to
-    /// the semaphore. Instead, the permit is returnred to the semaphore once
-    /// the sent value is read by the rx handle.
-    fn forget(&self, permit: &mut Self::Permit);
-
     fn close(&self);
+
+    fn is_closed(&self) -> bool;
 }
 
 struct Chan<T, S> {
+    /// Notifies all tasks listening for the receiver being dropped.
+    notify_rx_closed: Notify,
+
     /// Handle to the push half of the lock-free list.
     tx: list::Tx<T>,
 
@@ -157,13 +104,11 @@ impl<T> fmt::Debug for RxFields<T> {
 unsafe impl<T: Send, S: Send> Send for Chan<T, S> {}
 unsafe impl<T: Send, S: Sync> Sync for Chan<T, S> {}
 
-pub(crate) fn channel<T, S>(semaphore: S) -> (Tx<T, S>, Rx<T, S>)
-where
-    S: Semaphore,
-{
+pub(crate) fn channel<T, S: Semaphore>(semaphore: S) -> (Tx<T, S>, Rx<T, S>) {
     let (tx, rx) = list::channel();
 
     let chan = Arc::new(Chan {
+        notify_rx_closed: Notify::new(),
         tx,
         semaphore,
         rx_waker: AtomicWaker::new(),
@@ -179,48 +124,50 @@ where
 
 // ===== impl Tx =====
 
-impl<T, S> Tx<T, S>
-where
-    S: Semaphore,
-{
+impl<T, S> Tx<T, S> {
     fn new(chan: Arc<Chan<T, S>>) -> Tx<T, S> {
-        Tx {
-            inner: chan,
-            permit: S::new_permit(),
-        }
+        Tx { inner: chan }
     }
 
-    pub(crate) fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), ClosedError>> {
-        self.inner.semaphore.poll_acquire(cx, &mut self.permit)
-    }
-
-    pub(crate) fn disarm(&mut self) {
-        // TODO: should this error if not acquired?
-        self.inner.semaphore.drop_permit(&mut self.permit);
+    pub(super) fn semaphore(&self) -> &S {
+        &self.inner.semaphore
     }
 
     /// Send a message and notify the receiver.
-    pub(crate) fn try_send(&mut self, value: T) -> Result<(), (T, TrySendError)> {
-        self.inner.try_send(value, &mut self.permit)
+    pub(crate) fn send(&self, value: T) {
+        self.inner.send(value);
+    }
+
+    /// Wake the receive half
+    pub(crate) fn wake_rx(&self) {
+        self.inner.rx_waker.wake();
+    }
+
+    /// Returns `true` if senders belong to the same channel.
+    pub(crate) fn same_channel(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.inner, &other.inner)
     }
 }
 
-impl<T> Tx<T, (crate::sync::semaphore_ll::Semaphore, usize)> {
-    pub(crate) fn is_ready(&self) -> bool {
-        self.permit.is_acquired()
+impl<T, S: Semaphore> Tx<T, S> {
+    pub(crate) fn is_closed(&self) -> bool {
+        self.inner.semaphore.is_closed()
+    }
+
+    pub(crate) async fn closed(&self) {
+        // In order to avoid a race condition, we first request a notification,
+        // **then** check whether the semaphore is closed. If the semaphore is
+        // closed the notification request is dropped.
+        let notified = self.inner.notify_rx_closed.notified();
+
+        if self.inner.semaphore.is_closed() {
+            return;
+        }
+        notified.await;
     }
 }
 
-impl<T> Tx<T, AtomicUsize> {
-    pub(crate) fn send_unbounded(&self, value: T) -> Result<(), (T, TrySendError)> {
-        self.inner.try_send(value, &mut ())
-    }
-}
-
-impl<T, S> Clone for Tx<T, S>
-where
-    S: Semaphore,
-{
+impl<T, S> Clone for Tx<T, S> {
     fn clone(&self) -> Tx<T, S> {
         // Using a Relaxed ordering here is sufficient as the caller holds a
         // strong ref to `self`, preventing a concurrent decrement to zero.
@@ -228,22 +175,12 @@ where
 
         Tx {
             inner: self.inner.clone(),
-            permit: S::new_permit(),
         }
     }
 }
 
-impl<T, S> Drop for Tx<T, S>
-where
-    S: Semaphore,
-{
+impl<T, S> Drop for Tx<T, S> {
     fn drop(&mut self) {
-        let notify = self.inner.semaphore.drop_permit(&mut self.permit);
-
-        if notify && self.inner.semaphore.is_idle() {
-            self.inner.rx_waker.wake();
-        }
-
         if self.inner.tx_count.fetch_sub(1, AcqRel) != 1 {
             return;
         }
@@ -252,16 +189,13 @@ where
         self.inner.tx.close();
 
         // Notify the receiver
-        self.inner.rx_waker.wake();
+        self.wake_rx();
     }
 }
 
 // ===== impl Rx =====
 
-impl<T, S> Rx<T, S>
-where
-    S: Semaphore,
-{
+impl<T, S: Semaphore> Rx<T, S> {
     fn new(chan: Arc<Chan<T, S>>) -> Rx<T, S> {
         Rx { inner: chan }
     }
@@ -278,6 +212,7 @@ where
         });
 
         self.inner.semaphore.close();
+        self.inner.notify_rx_closed.notify_waiters();
     }
 
     /// Receive the next value
@@ -332,27 +267,53 @@ where
         })
     }
 
-    /// Receives the next value without blocking
+    /// Try to receive the next value.
     pub(crate) fn try_recv(&mut self) -> Result<T, TryRecvError> {
-        use super::block::Read::*;
+        use super::list::TryPopResult;
+
         self.inner.rx_fields.with_mut(|rx_fields_ptr| {
             let rx_fields = unsafe { &mut *rx_fields_ptr };
-            match rx_fields.list.pop(&self.inner.tx) {
-                Some(Value(value)) => {
-                    self.inner.semaphore.add_permit();
-                    Ok(value)
-                }
-                Some(Closed) => Err(TryRecvError::Closed),
-                None => Err(TryRecvError::Empty),
+
+            macro_rules! try_recv {
+                () => {
+                    match rx_fields.list.try_pop(&self.inner.tx) {
+                        TryPopResult::Ok(value) => {
+                            self.inner.semaphore.add_permit();
+                            return Ok(value);
+                        }
+                        TryPopResult::Closed => return Err(TryRecvError::Disconnected),
+                        TryPopResult::Empty => return Err(TryRecvError::Empty),
+                        TryPopResult::Busy => {} // fall through
+                    }
+                };
+            }
+
+            try_recv!();
+
+            // If a previous `poll_recv` call has set a waker, we wake it here.
+            // This allows us to put our own CachedParkThread waker in the
+            // AtomicWaker slot instead.
+            //
+            // This is not a spurious wakeup to `poll_recv` since we just got a
+            // Busy from `try_pop`, which only happens if there are messages in
+            // the queue.
+            self.inner.rx_waker.wake();
+
+            // Park the thread until the problematic send has completed.
+            let mut park = CachedParkThread::new();
+            let waker = park.unpark().into_waker();
+            loop {
+                self.inner.rx_waker.register_by_ref(&waker);
+                // It is possible that the problematic send has now completed,
+                // so we have to check for messages again.
+                try_recv!();
+                park.park().expect("park failed");
             }
         })
     }
 }
 
-impl<T, S> Drop for Rx<T, S>
-where
-    S: Semaphore,
-{
+impl<T, S: Semaphore> Drop for Rx<T, S> {
     fn drop(&mut self) {
         use super::block::Read::Value;
 
@@ -370,25 +331,13 @@ where
 
 // ===== impl Chan =====
 
-impl<T, S> Chan<T, S>
-where
-    S: Semaphore,
-{
-    fn try_send(&self, value: T, permit: &mut S::Permit) -> Result<(), (T, TrySendError)> {
-        if let Err(e) = self.semaphore.try_acquire(permit) {
-            return Err((value, e));
-        }
-
+impl<T, S> Chan<T, S> {
+    fn send(&self, value: T) {
         // Push the value
         self.tx.push(value);
 
         // Notify the rx task
         self.rx_waker.wake();
-
-        // Release the permit
-        self.semaphore.forget(permit);
-
-        Ok(())
     }
 }
 
@@ -407,73 +356,23 @@ impl<T, S> Drop for Chan<T, S> {
     }
 }
 
-use crate::sync::semaphore_ll::TryAcquireError;
-
-impl From<TryAcquireError> for TrySendError {
-    fn from(src: TryAcquireError) -> TrySendError {
-        if src.is_closed() {
-            TrySendError::Closed
-        } else if src.is_no_permits() {
-            TrySendError::Full
-        } else {
-            unreachable!();
-        }
-    }
-}
-
 // ===== impl Semaphore for (::Semaphore, capacity) =====
 
-use crate::sync::semaphore_ll::Permit;
-
-impl Semaphore for (crate::sync::semaphore_ll::Semaphore, usize) {
-    type Permit = Permit;
-
-    fn new_permit() -> Permit {
-        Permit::new()
-    }
-
-    fn drop_permit(&self, permit: &mut Permit) -> bool {
-        let ret = permit.is_acquired();
-        permit.release(1, &self.0);
-        ret
-    }
-
+impl Semaphore for (crate::sync::batch_semaphore::Semaphore, usize) {
     fn add_permit(&self) {
-        self.0.add_permits(1)
+        self.0.release(1)
     }
 
     fn is_idle(&self) -> bool {
         self.0.available_permits() == self.1
     }
 
-    fn poll_acquire(
-        &self,
-        cx: &mut Context<'_>,
-        permit: &mut Permit,
-    ) -> Poll<Result<(), ClosedError>> {
-        // Keep track of task budget
-        let coop = ready!(crate::coop::poll_proceed(cx));
-
-        permit
-            .poll_acquire(cx, 1, &self.0)
-            .map_err(|_| ClosedError::new())
-            .map(move |r| {
-                coop.made_progress();
-                r
-            })
-    }
-
-    fn try_acquire(&self, permit: &mut Permit) -> Result<(), TrySendError> {
-        permit.try_acquire(1, &self.0)?;
-        Ok(())
-    }
-
-    fn forget(&self, permit: &mut Self::Permit) {
-        permit.forget(1);
-    }
-
     fn close(&self) {
         self.0.close();
+    }
+
+    fn is_closed(&self) -> bool {
+        self.0.is_closed()
     }
 }
 
@@ -483,14 +382,6 @@ use std::sync::atomic::Ordering::{Acquire, Release};
 use std::usize;
 
 impl Semaphore for AtomicUsize {
-    type Permit = ();
-
-    fn new_permit() {}
-
-    fn drop_permit(&self, _permit: &mut ()) -> bool {
-        false
-    }
-
     fn add_permit(&self) {
         let prev = self.fetch_sub(2, Release);
 
@@ -504,40 +395,11 @@ impl Semaphore for AtomicUsize {
         self.load(Acquire) >> 1 == 0
     }
 
-    fn poll_acquire(
-        &self,
-        _cx: &mut Context<'_>,
-        permit: &mut (),
-    ) -> Poll<Result<(), ClosedError>> {
-        Ready(self.try_acquire(permit).map_err(|_| ClosedError::new()))
-    }
-
-    fn try_acquire(&self, _permit: &mut ()) -> Result<(), TrySendError> {
-        let mut curr = self.load(Acquire);
-
-        loop {
-            if curr & 1 == 1 {
-                return Err(TrySendError::Closed);
-            }
-
-            if curr == usize::MAX ^ 1 {
-                // Overflowed the ref count. There is no safe way to recover, so
-                // abort the process. In practice, this should never happen.
-                process::abort()
-            }
-
-            match self.compare_exchange(curr, curr + 2, AcqRel, Acquire) {
-                Ok(_) => return Ok(()),
-                Err(actual) => {
-                    curr = actual;
-                }
-            }
-        }
-    }
-
-    fn forget(&self, _permit: &mut ()) {}
-
     fn close(&self) {
         self.fetch_or(1, Release);
+    }
+
+    fn is_closed(&self) -> bool {
+        self.load(Acquire) & 1 == 1
     }
 }

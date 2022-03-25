@@ -1,7 +1,7 @@
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
 
-use tokio::io::{split, AsyncRead, AsyncWrite, ReadHalf, WriteHalf};
+use tokio::io::{split, AsyncRead, AsyncWrite, ReadBuf, ReadHalf, WriteHalf};
 
 use std::io;
 use std::pin::Pin;
@@ -13,9 +13,10 @@ impl AsyncRead for RW {
     fn poll_read(
         self: Pin<&mut Self>,
         _cx: &mut Context<'_>,
-        _buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
-        Poll::Ready(Ok(1))
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        buf.put_slice(&[b'z']);
+        Poll::Ready(Ok(()))
     }
 }
 
@@ -49,10 +50,10 @@ fn is_send_and_sync() {
 fn split_stream_id() {
     let (r1, w1) = split(RW);
     let (r2, w2) = split(RW);
-    assert_eq!(r1.is_pair_of(&w1), true);
-    assert_eq!(r1.is_pair_of(&w2), false);
-    assert_eq!(r2.is_pair_of(&w2), true);
-    assert_eq!(r2.is_pair_of(&w1), false);
+    assert!(r1.is_pair_of(&w1));
+    assert!(!r1.is_pair_of(&w2));
+    assert!(r2.is_pair_of(&w2));
+    assert!(!r2.is_pair_of(&w1));
 }
 
 #[test]

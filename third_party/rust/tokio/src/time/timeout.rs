@@ -4,15 +4,18 @@
 //!
 //! [`Timeout`]: struct@Timeout
 
-use crate::time::{delay_until, Delay, Duration, Instant};
+use crate::{
+    coop,
+    time::{error::Elapsed, sleep_until, Duration, Instant, Sleep},
+    util::trace,
+};
 
 use pin_project_lite::pin_project;
-use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
-/// Require a `Future` to complete before the specified duration has elapsed.
+/// Requires a `Future` to complete before the specified duration has elapsed.
 ///
 /// If the future completes before the duration has elapsed, then the completed
 /// value is returned. Otherwise, an error is returned and the future is
@@ -46,15 +49,40 @@ use std::task::{self, Poll};
 /// }
 /// # }
 /// ```
+///
+/// # Panics
+///
+/// This function panics if there is no current timer set.
+///
+/// It can be triggered when [`Builder::enable_time`] or
+/// [`Builder::enable_all`] are not included in the builder.
+///
+/// It can also panic whenever a timer is created outside of a
+/// Tokio runtime. That is why `rt.block_on(sleep(...))` will panic,
+/// since the function is executed outside of the runtime.
+/// Whereas `rt.block_on(async {sleep(...).await})` doesn't panic.
+/// And this is because wrapping the function on an async makes it lazy,
+/// and so gets executed inside the runtime successfully without
+/// panicking.
+///
+/// [`Builder::enable_time`]: crate::runtime::Builder::enable_time
+/// [`Builder::enable_all`]: crate::runtime::Builder::enable_all
+#[track_caller]
 pub fn timeout<T>(duration: Duration, future: T) -> Timeout<T>
 where
     T: Future,
 {
-    let delay = Delay::new_timeout(Instant::now() + duration, duration);
+    let location = trace::caller_location();
+
+    let deadline = Instant::now().checked_add(duration);
+    let delay = match deadline {
+        Some(deadline) => Sleep::new_timeout(deadline, location),
+        None => Sleep::far_future(location),
+    };
     Timeout::new_with_delay(future, delay)
 }
 
-/// Require a `Future` to complete before the specified instant in time.
+/// Requires a `Future` to complete before the specified instant in time.
 ///
 /// If the future completes before the instant is reached, then the completed
 /// value is returned. Otherwise, an error is returned.
@@ -92,7 +120,7 @@ pub fn timeout_at<T>(deadline: Instant, future: T) -> Timeout<T>
 where
     T: Future,
 {
-    let delay = delay_until(deadline);
+    let delay = sleep_until(deadline);
 
     Timeout {
         value: future,
@@ -108,24 +136,12 @@ pin_project! {
         #[pin]
         value: T,
         #[pin]
-        delay: Delay,
-    }
-}
-
-/// Error returned by `Timeout`.
-#[derive(Debug, PartialEq)]
-pub struct Elapsed(());
-
-impl Elapsed {
-    // Used on StreamExt::timeout
-    #[allow(unused)]
-    pub(crate) fn new() -> Self {
-        Elapsed(())
+        delay: Sleep,
     }
 }
 
 impl<T> Timeout<T> {
-    pub(crate) fn new_with_delay(value: T, delay: Delay) -> Timeout<T> {
+    pub(crate) fn new_with_delay(value: T, delay: Sleep) -> Timeout<T> {
         Timeout { value, delay }
     }
 
@@ -154,31 +170,33 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let me = self.project();
 
+        let had_budget_before = coop::has_budget_remaining();
+
         // First, try polling the future
         if let Poll::Ready(v) = me.value.poll(cx) {
             return Poll::Ready(Ok(v));
         }
 
-        // Now check the timer
-        match me.delay.poll(cx) {
-            Poll::Ready(()) => Poll::Ready(Err(Elapsed(()))),
-            Poll::Pending => Poll::Pending,
+        let has_budget_now = coop::has_budget_remaining();
+
+        let delay = me.delay;
+
+        let poll_delay = || -> Poll<Self::Output> {
+            match delay.poll(cx) {
+                Poll::Ready(()) => Poll::Ready(Err(Elapsed::new())),
+                Poll::Pending => Poll::Pending,
+            }
+        };
+
+        if let (true, false) = (had_budget_before, has_budget_now) {
+            // if it is the underlying future that exhausted the budget, we poll
+            // the `delay` with an unconstrained one. This prevents pathological
+            // cases where the underlying future always exhausts the budget and
+            // we never get a chance to evaluate whether the timeout was hit or
+            // not.
+            coop::with_unconstrained(poll_delay)
+        } else {
+            poll_delay()
         }
-    }
-}
-
-// ===== impl Elapsed =====
-
-impl fmt::Display for Elapsed {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "deadline has elapsed".fmt(fmt)
-    }
-}
-
-impl std::error::Error for Elapsed {}
-
-impl From<Elapsed> for std::io::Error {
-    fn from(_err: Elapsed) -> std::io::Error {
-        std::io::ErrorKind::TimedOut.into()
     }
 }

@@ -55,6 +55,35 @@ fn changing_rx_task() {
     });
 }
 
+#[test]
+fn try_recv_close() {
+    // reproduces https://github.com/tokio-rs/tokio/issues/4225
+    loom::model(|| {
+        let (tx, mut rx) = oneshot::channel();
+        thread::spawn(move || {
+            let _ = tx.send(());
+        });
+
+        rx.close();
+        let _ = rx.try_recv();
+    })
+}
+
+#[test]
+fn recv_closed() {
+    // reproduces https://github.com/tokio-rs/tokio/issues/4225
+    loom::model(|| {
+        let (tx, mut rx) = oneshot::channel();
+
+        thread::spawn(move || {
+            let _ = tx.send(1);
+        });
+
+        rx.close();
+        let _ = block_on(rx);
+    });
+}
+
 // TODO: Move this into `oneshot` proper.
 
 use std::future::Future;
@@ -75,8 +104,10 @@ impl Future for OnClose<'_> {
     type Output = bool;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<bool> {
-        let res = self.get_mut().tx.poll_closed(cx);
-        Ready(res.is_ready())
+        let fut = self.get_mut().tx.closed();
+        crate::pin!(fut);
+
+        Ready(fut.poll(cx).is_ready())
     }
 }
 

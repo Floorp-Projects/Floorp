@@ -1,9 +1,11 @@
 #![cfg_attr(any(loom, not(feature = "sync")), allow(dead_code, unreachable_pub))]
 
 use crate::loom::cell::UnsafeCell;
-use crate::loom::sync::atomic::{self, AtomicUsize};
+use crate::loom::hint;
+use crate::loom::sync::atomic::AtomicUsize;
 
 use std::fmt;
+use std::panic::{resume_unwind, AssertUnwindSafe, RefUnwindSafe, UnwindSafe};
 use std::sync::atomic::Ordering::{AcqRel, Acquire, Release};
 use std::task::Waker;
 
@@ -27,9 +29,12 @@ pub(crate) struct AtomicWaker {
     waker: UnsafeCell<Option<Waker>>,
 }
 
+impl RefUnwindSafe for AtomicWaker {}
+impl UnwindSafe for AtomicWaker {}
+
 // `AtomicWaker` is a multi-consumer, single-producer transfer cell. The cell
 // stores a `Waker` value produced by calls to `register` and many threads can
-// race to take the waker by calling `wake.
+// race to take the waker by calling `wake`.
 //
 // If a new `Waker` instance is produced by calling `register` before an existing
 // one is consumed, then the existing one is overwritten.
@@ -84,7 +89,7 @@ pub(crate) struct AtomicWaker {
 // back to `WAITING`. This transition must succeed as, at this point, the state
 // cannot be transitioned by another thread.
 //
-// If the thread is unable to obtain the lock, the `WAKING` bit is still.
+// If the thread is unable to obtain the lock, the `WAKING` bit is still set.
 // This is because it has either been set by the current thread but the previous
 // value included the `REGISTERING` bit **or** a concurrent thread is in the
 // `WAKING` critical section. Either way, no action must be taken.
@@ -123,7 +128,7 @@ pub(crate) struct AtomicWaker {
 //    Thread A still holds the `wake` lock, the call to `register` will result
 //    in the task waking itself and get scheduled again.
 
-/// Idle state
+/// Idle state.
 const WAITING: usize = 0;
 
 /// A new waker value is being registered with the `AtomicWaker` cell.
@@ -141,13 +146,12 @@ impl AtomicWaker {
         }
     }
 
+    /*
     /// Registers the current waker to be notified on calls to `wake`.
-    ///
-    /// This is the same as calling `register_task` with `task::current()`.
-    #[cfg(feature = "io-driver")]
     pub(crate) fn register(&self, waker: Waker) {
         self.do_register(waker);
     }
+    */
 
     /// Registers the provided waker to be notified on calls to `wake`.
     ///
@@ -172,11 +176,35 @@ impl AtomicWaker {
     where
         W: WakerRef,
     {
-        match self.state.compare_and_swap(WAITING, REGISTERING, Acquire) {
+        fn catch_unwind<F: FnOnce() -> R, R>(f: F) -> std::thread::Result<R> {
+            std::panic::catch_unwind(AssertUnwindSafe(f))
+        }
+
+        match self
+            .state
+            .compare_exchange(WAITING, REGISTERING, Acquire, Acquire)
+            .unwrap_or_else(|x| x)
+        {
             WAITING => {
                 unsafe {
-                    // Locked acquired, update the waker cell
-                    self.waker.with_mut(|t| *t = Some(waker.into_waker()));
+                    // If `into_waker` panics (because it's code outside of
+                    // AtomicWaker) we need to prime a guard that is called on
+                    // unwind to restore the waker to a WAITING state. Otherwise
+                    // any future calls to register will incorrectly be stuck
+                    // believing it's being updated by someone else.
+                    let new_waker_or_panic = catch_unwind(move || waker.into_waker());
+
+                    // Set the field to contain the new waker, or if
+                    // `into_waker` panicked, leave the old value.
+                    let mut maybe_panic = None;
+                    let mut old_waker = None;
+                    match new_waker_or_panic {
+                        Ok(new_waker) => {
+                            old_waker = self.waker.with_mut(|t| (*t).take());
+                            self.waker.with_mut(|t| *t = Some(new_waker));
+                        }
+                        Err(panic) => maybe_panic = Some(panic),
+                    }
 
                     // Release the lock. If the state transitioned to include
                     // the `WAKING` bit, this means that a wake has been
@@ -190,26 +218,57 @@ impl AtomicWaker {
                         .compare_exchange(REGISTERING, WAITING, AcqRel, Acquire);
 
                     match res {
-                        Ok(_) => {}
+                        Ok(_) => {
+                            // We don't want to give the caller the panic if it
+                            // was someone else who put in that waker.
+                            let _ = catch_unwind(move || {
+                                drop(old_waker);
+                            });
+                        }
                         Err(actual) => {
                             // This branch can only be reached if a
                             // concurrent thread called `wake`. In this
                             // case, `actual` **must** be `REGISTERING |
-                            // `WAKING`.
+                            // WAKING`.
                             debug_assert_eq!(actual, REGISTERING | WAKING);
 
                             // Take the waker to wake once the atomic operation has
                             // completed.
-                            let waker = self.waker.with_mut(|t| (*t).take()).unwrap();
+                            let mut waker = self.waker.with_mut(|t| (*t).take());
 
                             // Just swap, because no one could change state
                             // while state == `Registering | `Waking`
                             self.state.swap(WAITING, AcqRel);
 
-                            // The atomic swap was complete, now
-                            // wake the waker and return.
-                            waker.wake();
+                            // If `into_waker` panicked, then the waker in the
+                            // waker slot is actually the old waker.
+                            if maybe_panic.is_some() {
+                                old_waker = waker.take();
+                            }
+
+                            // We don't want to give the caller the panic if it
+                            // was someone else who put in that waker.
+                            if let Some(old_waker) = old_waker {
+                                let _ = catch_unwind(move || {
+                                    old_waker.wake();
+                                });
+                            }
+
+                            // The atomic swap was complete, now wake the waker
+                            // and return.
+                            //
+                            // If this panics, we end up in a consumed state and
+                            // return the panic to the caller.
+                            if let Some(waker) = waker {
+                                debug_assert!(maybe_panic.is_none());
+                                waker.wake();
+                            }
                         }
+                    }
+
+                    if let Some(panic) = maybe_panic {
+                        // If `into_waker` panicked, return the panic to the caller.
+                        resume_unwind(panic);
                     }
                 }
             }
@@ -217,10 +276,13 @@ impl AtomicWaker {
                 // Currently in the process of waking the task, i.e.,
                 // `wake` is currently being called on the old waker.
                 // So, we call wake on the new waker.
+                //
+                // If this panics, someone else is responsible for restoring the
+                // state of the waker.
                 waker.wake();
 
                 // This is equivalent to a spin lock, so use a spin hint.
-                atomic::spin_loop_hint();
+                hint::spin_loop();
             }
             state => {
                 // In this case, a concurrent thread is holding the
@@ -240,6 +302,8 @@ impl AtomicWaker {
     /// If `register` has not been called yet, then this does nothing.
     pub(crate) fn wake(&self) {
         if let Some(waker) = self.take_waker() {
+            // If wake panics, we've consumed the waker which is a legitimate
+            // outcome.
             waker.wake();
         }
     }

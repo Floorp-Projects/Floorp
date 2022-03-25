@@ -4,18 +4,21 @@
 //! `Signal` type for receiving notifications of signals.
 
 #![cfg(unix)]
+#![cfg_attr(docsrs, doc(cfg(all(unix, feature = "signal"))))]
 
-use crate::io::{AsyncRead, PollEvented};
 use crate::signal::registry::{globals, EventId, EventInfo, Globals, Init, Storage};
-use crate::sync::mpsc::{channel, Receiver};
+use crate::signal::RxFuture;
+use crate::sync::watch;
 
-use libc::c_int;
-use mio_uds::UnixStream;
+use mio::net::UnixStream;
 use std::io::{self, Error, ErrorKind, Write};
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Once;
 use std::task::{Context, Poll};
+
+pub(crate) mod driver;
+use self::driver::Handle;
 
 pub(crate) type OsStorage = Vec<SignalInfo>;
 
@@ -58,7 +61,7 @@ impl Init for OsExtraData {
 
 /// Represents the specific kind of signal to listen for.
 #[derive(Debug, Clone, Copy)]
-pub struct SignalKind(c_int);
+pub struct SignalKind(libc::c_int);
 
 impl SignalKind {
     /// Allows for listening to any valid OS signal.
@@ -71,8 +74,14 @@ impl SignalKind {
     /// // let signum = libc::OS_SPECIFIC_SIGNAL;
     /// let kind = SignalKind::from_raw(signum);
     /// ```
-    pub fn from_raw(signum: c_int) -> Self {
-        Self(signum)
+    // Use `std::os::raw::c_int` on public API to prevent leaking a non-stable
+    // type alias from libc.
+    // `libc::c_int` and `std::os::raw::c_int` are currently the same type, and are
+    // unlikely to change to other types, but technically libc can change this
+    // in the future minor version.
+    // See https://github.com/tokio-rs/tokio/issues/3767 for more.
+    pub fn from_raw(signum: std::os::raw::c_int) -> Self {
+        Self(signum as libc::c_int)
     }
 
     /// Represents the SIGALRM signal.
@@ -202,10 +211,10 @@ impl Default for SignalInfo {
 /// The purpose of this signal handler is to primarily:
 ///
 /// 1. Flag that our specific signal was received (e.g. store an atomic flag)
-/// 2. Wake up driver tasks by writing a byte to a pipe
+/// 2. Wake up the driver by writing a byte to a pipe
 ///
-/// Those two operations shoudl both be async-signal safe.
-fn action(globals: Pin<&'static Globals>, signal: c_int) {
+/// Those two operations should both be async-signal safe.
+fn action(globals: Pin<&'static Globals>, signal: libc::c_int) {
     globals.record_event(signal as EventId);
 
     // Send a wakeup, ignore any errors (anything reasonably possible is
@@ -219,13 +228,17 @@ fn action(globals: Pin<&'static Globals>, signal: c_int) {
 ///
 /// This will register the signal handler if it hasn't already been registered,
 /// returning any error along the way if that fails.
-fn signal_enable(signal: c_int) -> io::Result<()> {
+fn signal_enable(signal: SignalKind, handle: &Handle) -> io::Result<()> {
+    let signal = signal.0;
     if signal < 0 || signal_hook_registry::FORBIDDEN.contains(&signal) {
         return Err(Error::new(
             ErrorKind::Other,
             format!("Refusing to register signal {}", signal),
         ));
     }
+
+    // Check that we have a signal driver running
+    handle.check_inner()?;
 
     let globals = globals();
     let siginfo = match globals.storage().get(signal as EventId) {
@@ -251,63 +264,6 @@ fn signal_enable(signal: c_int) -> io::Result<()> {
             ErrorKind::Other,
             "Failed to register signal handler",
         ))
-    }
-}
-
-#[derive(Debug)]
-struct Driver {
-    wakeup: PollEvented<UnixStream>,
-}
-
-impl Driver {
-    fn poll(&mut self, cx: &mut Context<'_>) -> Poll<()> {
-        // Drain the data from the pipe and maintain interest in getting more
-        self.drain(cx);
-        // Broadcast any signals which were received
-        globals().broadcast();
-
-        Poll::Pending
-    }
-}
-
-impl Driver {
-    fn new() -> io::Result<Driver> {
-        // NB: We give each driver a "fresh" reciever file descriptor to avoid
-        // the issues described in alexcrichton/tokio-process#42.
-        //
-        // In the past we would reuse the actual receiver file descriptor and
-        // swallow any errors around double registration of the same descriptor.
-        // I'm not sure if the second (failed) registration simply doesn't end up
-        // receiving wake up notifications, or there could be some race condition
-        // when consuming readiness events, but having distinct descriptors for
-        // distinct PollEvented instances appears to mitigate this.
-        //
-        // Unfortunately we cannot just use a single global PollEvented instance
-        // either, since we can't compare Handles or assume they will always
-        // point to the exact same reactor.
-        let stream = globals().receiver.try_clone()?;
-        let wakeup = PollEvented::new(stream)?;
-
-        Ok(Driver { wakeup })
-    }
-
-    /// Drain all data in the global receiver, ensuring we'll get woken up when
-    /// there is a write on the other end.
-    ///
-    /// We do *NOT* use the existence of any read bytes as evidence a signal was
-    /// received since the `pending` flags would have already been set if that
-    /// was the case. See
-    /// [#38](https://github.com/alexcrichton/tokio-signal/issues/38) for more
-    /// info.
-    fn drain(&mut self, cx: &mut Context<'_>) {
-        loop {
-            match Pin::new(&mut self.wakeup).poll_read(cx, &mut [0; 128]) {
-                Poll::Ready(Ok(0)) => panic!("EOF on self-pipe"),
-                Poll::Ready(Ok(_)) => {}
-                Poll::Ready(Err(e)) => panic!("Bad read on self-pipe: {}", e),
-                Poll::Pending => break,
-            }
-        }
     }
 }
 
@@ -376,8 +332,7 @@ impl Driver {
 #[must_use = "streams do nothing unless polled"]
 #[derive(Debug)]
 pub struct Signal {
-    driver: Driver,
-    rx: Receiver<()>,
+    inner: RxFuture,
 }
 
 /// Creates a new stream which will receive notifications when the current
@@ -403,21 +358,21 @@ pub struct Signal {
 /// * If the signal is one of
 ///   [`signal_hook::FORBIDDEN`](fn@signal_hook_registry::register#panics)
 pub fn signal(kind: SignalKind) -> io::Result<Signal> {
-    let signal = kind.0;
+    let rx = signal_with_handle(kind, &Handle::current())?;
 
+    Ok(Signal {
+        inner: RxFuture::new(rx),
+    })
+}
+
+pub(crate) fn signal_with_handle(
+    kind: SignalKind,
+    handle: &Handle,
+) -> io::Result<watch::Receiver<()>> {
     // Turn the signal delivery on once we are ready for it
-    signal_enable(signal)?;
+    signal_enable(kind, handle)?;
 
-    // Ensure there's a driver for our associated event loop processing
-    // signals.
-    let driver = Driver::new()?;
-
-    // One wakeup in a queue is enough, no need for us to buffer up any
-    // more.
-    let (tx, rx) = channel(1);
-    globals().register_listener(signal as EventId, tx);
-
-    Ok(Signal { driver, rx })
+    Ok(globals().register_listener(kind.0 as EventId))
 }
 
 impl Signal {
@@ -445,14 +400,19 @@ impl Signal {
     /// }
     /// ```
     pub async fn recv(&mut self) -> Option<()> {
-        use crate::future::poll_fn;
-        poll_fn(|cx| self.poll_recv(cx)).await
+        self.inner.recv().await
     }
 
     /// Polls to receive the next signal notification event, outside of an
     /// `async` context.
     ///
-    /// `None` is returned if no more events can be received by this stream.
+    /// This method returns:
+    ///
+    ///  * `Poll::Pending` if no signals are available but the channel is not
+    ///    closed.
+    ///  * `Poll::Ready(Some(()))` if a signal is available.
+    ///  * `Poll::Ready(None)` if the channel has been closed and all signals
+    ///    sent before it was closed have been received.
     ///
     /// # Examples
     ///
@@ -478,18 +438,18 @@ impl Signal {
     /// }
     /// ```
     pub fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
-        let _ = self.driver.poll(cx);
-        self.rx.poll_recv(cx)
+        self.inner.poll_recv(cx)
     }
 }
 
-cfg_stream! {
-    impl crate::stream::Stream for Signal {
-        type Item = ();
+// Work around for abstracting streams internally
+pub(crate) trait InternalStream {
+    fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>>;
+}
 
-        fn poll_next(mut self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<()>> {
-            self.poll_recv(cx)
-        }
+impl InternalStream for Signal {
+    fn poll_recv(&mut self, cx: &mut Context<'_>) -> Poll<Option<()>> {
+        self.poll_recv(cx)
     }
 }
 
@@ -503,11 +463,15 @@ mod tests {
 
     #[test]
     fn signal_enable_error_on_invalid_input() {
-        signal_enable(-1).unwrap_err();
+        signal_enable(SignalKind::from_raw(-1), &Handle::default()).unwrap_err();
     }
 
     #[test]
     fn signal_enable_error_on_forbidden_input() {
-        signal_enable(signal_hook_registry::FORBIDDEN[0]).unwrap_err();
+        signal_enable(
+            SignalKind::from_raw(signal_hook_registry::FORBIDDEN[0]),
+            &Handle::default(),
+        )
+        .unwrap_err();
     }
 }
