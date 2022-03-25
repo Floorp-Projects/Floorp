@@ -764,18 +764,20 @@ void WebGLContext::LinkProgram(WebGLProgram& prog) {
 
   prog.LinkProgram();
 
-  if (!prog.IsLinked()) {
-    // If we failed to link, but `prog == mCurrentProgram`, we are *not*
-    // supposed to null out mActiveProgramLinkInfo.
-    return;
-  }
-
   if (&prog == mCurrentProgram) {
-    mActiveProgramLinkInfo = prog.LinkInfo();
-
-    if (gl->WorkAroundDriverBugs() && gl->Vendor() == gl::GLVendor::NVIDIA) {
-      gl->fUseProgram(prog.mGLName);
+    if (!prog.IsLinked()) {
+      // We use to simply early-out here, and preserve the GL behavior that
+      // failed relink doesn't invalidate the current active program link info.
+      // The new behavior was changed for WebGL here:
+      // https://github.com/KhronosGroup/WebGL/pull/3371
+      mActiveProgramLinkInfo = nullptr;
+      gl->fUseProgram(0);  // Shouldn't be needed, but let's be safe.
+      return;
     }
+    mActiveProgramLinkInfo = prog.LinkInfo();
+    gl->fUseProgram(prog.mGLName);  // Uncontionally re-use.
+    // Previously, we needed this re-use on nvidia as a driver workaround,
+    // but we might as well do it unconditionally.
   }
 }
 
