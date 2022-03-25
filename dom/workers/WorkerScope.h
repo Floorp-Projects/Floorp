@@ -85,6 +85,7 @@ class CacheStorage;
 }  // namespace cache
 
 class WorkerGlobalScopeBase : public DOMEventTargetHelper,
+                              public nsSupportsWeakReference,
                               public nsIGlobalObject {
   friend class WorkerPrivate;
 
@@ -200,8 +201,7 @@ class NamedWorkerGlobalScopeMixin {
 
 }  // namespace workerinternals
 
-class WorkerGlobalScope : public WorkerGlobalScopeBase,
-                          public nsSupportsWeakReference {
+class WorkerGlobalScope : public WorkerGlobalScopeBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WorkerGlobalScope,

@@ -2964,10 +2964,6 @@ void WorkerPrivate::UnrootGlobalScopes() {
   RefPtr<WorkerDebuggerGlobalScope> debugScope = data->mDebuggerScope.forget();
   if (debugScope) {
     MOZ_ASSERT(debugScope->mWorkerPrivate == this);
-    // TODO: Remove this in favor of using weak references in
-    // WorkerThreadPrimaryRunnable::Run() but WorkerDebuggerGlobalScope
-    // does not support them yet.
-    debugScope->mWorkerPrivate = nullptr;
   }
   RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
   if (scope) {
