@@ -2,35 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env worker */
-
-/**
- * A worker dedicated to handle I/O for Session Store.
- */
-
 "use strict";
 
-importScripts("resource://gre/modules/workers/require.js");
-
-var PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
-
-var worker = new PromiseWorker.AbstractWorker();
-worker.dispatch = function(method, args = []) {
-  return Agent[method](...args);
-};
-worker.postMessage = function(result, ...transfers) {
-  self.postMessage(result, ...transfers);
-};
-worker.close = function() {
-  self.close();
-};
-
-self.addEventListener("message", msg => worker.handleMessage(msg));
-self.addEventListener("unhandledrejection", function(error) {
-  throw error.reason;
-});
-
-// The various possible states
+var EXPORTED_SYMBOLS = ["SessionWriter"];
 
 /**
  * We just started (we haven't written anything to disk yet) from
@@ -44,12 +18,6 @@ const STATE_CLEAN = "clean";
  * `Paths.clean` is absent or invalid. The backup directory exists.
  */
 const STATE_RECOVERY = "recovery";
-/**
- * We just started from `Paths.recoverBackupy` (we haven't written
- * anything to disk yet). Both `Paths.clean` and `Paths.recovery` are
- * absent or invalid. The backup directory exists.
- */
-const STATE_RECOVERY_BACKUP = "recoveryBackup";
 /**
  * We just started from `Paths.upgradeBackup` (we haven't written
  * anything to disk yet). Both `Paths.clean`, `Paths.recovery` and
@@ -82,15 +50,22 @@ function lockIOWithMutex() {
   });
 }
 
-var Agent = {
+/**
+ * Interface dedicated to handling I/O for Session Store.
+ */
+const SessionWriter = {
   init(origin, useOldExtension, paths, prefs = {}) {
-    return SessionWorkerInternal.init(origin, useOldExtension, paths, prefs);
+    return SessionWriterInternal.init(origin, useOldExtension, paths, prefs);
   },
 
+  /**
+   * Write the contents of the session file.
+   * @param state - May get changed on shutdown.
+   */
   async write(state, options = {}) {
     const unlock = await lockIOWithMutex();
     try {
-      return await SessionWorkerInternal.write(state, options);
+      return await SessionWriterInternal.write(state, options);
     } finally {
       unlock();
     }
@@ -99,25 +74,22 @@ var Agent = {
   async wipe() {
     const unlock = await lockIOWithMutex();
     try {
-      return await SessionWorkerInternal.wipe();
+      return await SessionWriterInternal.wipe();
     } finally {
       unlock();
     }
   },
 };
 
-var SessionWorkerInternal = {
-  // Path to the files used by the SessionWorker
+const SessionWriterInternal = {
+  // Path to the files used by the SessionWriter
   Paths: null,
 
   /**
-   * The current state of the worker, as one of the following strings:
-   * - "permanent", once the first write has been completed;
-   * - "empty", before the first write has been completed,
-   *   if we have started without any sessionstore;
+   * The current state of the session file, as one of the following strings:
+   * - "empty" if we have started without any sessionstore;
    * - one of "clean", "recovery", "recoveryBackup", "cleanBackup",
-   *   "upgradeBackup", before the first write has been completed, if
-   *   we have started by loading the corresponding file.
+   *   "upgradeBackup" if we have started by loading the corresponding file.
    */
   state: null,
 
@@ -132,13 +104,13 @@ var SessionWorkerInternal = {
   maxUpgradeBackups: null,
 
   /**
-   * Initialize (or reinitialize) the worker
+   * Initialize (or reinitialize) the writer.
    *
    * @param {string} origin Which of sessionstore.js or its backups
    *   was used. One of the `STATE_*` constants defined above.
    * @param {boolean} a flag indicate whether we loaded a session file with ext .js
    * @param {object} paths The paths at which to find the various files.
-   * @param {object} prefs The preferences the worker needs to known.
+   * @param {object} prefs The preferences the writer needs to know.
    */
   init(origin, useOldExtension, paths, prefs) {
     if (!(origin in paths || origin == STATE_EMPTY)) {
@@ -374,8 +346,7 @@ var SessionWorkerInternal = {
 
     // Wipe legacy Session Restore files from the profile directory
     try {
-      let profileDir = await PathUtils.getProfileDir();
-      await this._wipeFromDir(profileDir, "sessionstore.bak");
+      await this._wipeFromDir(PathUtils.profileDir, "sessionstore.bak");
     } catch (ex) {
       exn = exn || ex;
     }
