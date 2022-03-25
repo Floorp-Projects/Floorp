@@ -5014,15 +5014,24 @@ bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
   return false;
 }
 
-// The main windows message processing method.
+// The main windows message processing method. Wraps ProcessMessageInternal so
+// we can log aRetValue.
 bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                               LRESULT* aRetValue) {
-#if defined(EVENT_DEBUG_OUTPUT)
-  // First param shows all events, second param indicates whether
-  // to show mouse move events. See nsWindowDbg for details.
-  PrintEvent(msg, SHOW_REPEAT_EVENTS, SHOW_MOUSEMOVE_EVENTS);
-#endif
+  bool result = ProcessMessageInternal(msg, wParam, lParam, aRetValue);
 
+  // SHOW_REPEAT_EVENTS indicates whether to show all (repeating) events,
+  // SHOW_MOUSEMOVE_EVENTS indicates whether to show mouse move events.
+  // See nsWindowDbg for details.
+  PrintEvent(msg, wParam, lParam, *aRetValue, result, SHOW_REPEAT_EVENTS,
+             SHOW_MOUSEMOVE_EVENTS);
+
+  return result;
+}
+
+// The main windows message processing method. Called by ProcessMessage.
+bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
+                                      LRESULT* aRetValue) {
   MSGResult msgResult(aRetValue);
   if (ExternalHandlerProcessMessage(msg, wParam, lParam, msgResult)) {
     return (msgResult.mConsumed || !mWnd);
