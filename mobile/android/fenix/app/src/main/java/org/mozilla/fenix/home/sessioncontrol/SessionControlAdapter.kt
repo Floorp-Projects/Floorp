@@ -256,6 +256,11 @@ class SessionControlAdapter(
                 viewLifecycleOwner,
                 interactor
             )
+            RecentBookmarksHeaderViewHolder.LAYOUT_ID -> return RecentBookmarksHeaderViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
+                interactor
+            )
         }
 
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -296,7 +301,6 @@ class SessionControlAdapter(
             )
             MessageCardViewHolder.LAYOUT_ID -> MessageCardViewHolder(view, interactor)
             RecentTabsHeaderViewHolder.LAYOUT_ID -> RecentTabsHeaderViewHolder(view, interactor)
-            RecentBookmarksHeaderViewHolder.LAYOUT_ID -> RecentBookmarksHeaderViewHolder(view, interactor)
             BottomSpacerViewHolder.LAYOUT_ID -> BottomSpacerViewHolder(view)
             else -> throw IllegalStateException()
         }
@@ -308,6 +312,7 @@ class SessionControlAdapter(
             is RecentlyVisitedViewHolder,
             is RecentVisitsHeaderViewHolder,
             is RecentBookmarksViewHolder,
+            is RecentBookmarksHeaderViewHolder,
             is RecentTabViewHolder,
             is PocketCategoriesViewHolder,
             is PocketRecommendationsHeaderViewHolder,
