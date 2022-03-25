@@ -23,30 +23,15 @@
 namespace mozilla::dom {
 
 class TransformStream;
+class TransformerAlgorithms;
 
 class TransformStreamDefaultController final : public nsISupports,
                                                public nsWrapperCache {
  public:
-  using TransformAlgorithm = already_AddRefed<Promise> (*)(
-      JSContext* aCx, TransformStreamDefaultController& aController,
-      JS::HandleValue aChunk, ErrorResult& aRv);
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStreamDefaultController)
 
-  void SetTransformAlgorithm(TransformAlgorithm aTransformAlgorithm) {
-    mTransformAlgorithm = aTransformAlgorithm;
-  }
-
-  void SetTransformerMembers(TransformerTransformCallback* aTransformCallback,
-                             JS::HandleObject aTransformer) {
-    mTransformCallback = aTransformCallback;
-    mTransformer = aTransformer;
-  }
-  TransformerTransformCallback* GetTransformCallback() const {
-    return mTransformCallback;
-  }
-  JS::Heap<JSObject*>& GetTransformer() { return mTransformer; }
+  void SetAlgorithms(TransformerAlgorithms* aTransformerAlgorithms);
 
   explicit TransformStreamDefaultController(nsIGlobalObject* aGlobal);
 
@@ -68,11 +53,7 @@ class TransformStreamDefaultController final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Internal slots
-  TransformAlgorithm mTransformAlgorithm;
-
-  // Members for [[transformAlgorithm]]
-  RefPtr<TransformerTransformCallback> mTransformCallback;
-  JS::Heap<JSObject*> mTransformer;
+  RefPtr<TransformerAlgorithms> mTransformerAlgorithms;
 };
 
 void SetUpTransformStreamDefaultControllerFromTransformer(
