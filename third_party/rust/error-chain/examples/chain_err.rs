@@ -7,8 +7,8 @@ extern crate error_chain;
 use std::fs::File;
 
 mod errors {
-    use std::io;
     use super::LaunchStage;
+    use std::io;
 
     error_chain! {
         foreign_links {
@@ -54,11 +54,9 @@ fn load_config(rel_path: &str) -> Result<()> {
 /// Launch the service.
 fn launch(rel_path: &str) -> Result<()> {
     load_config(rel_path).map_err(|e| match e {
-                                      e @ Error(ErrorKind::ConfigLoad(_), _) => {
-                                          e.chain_err(|| LaunchStage::ConfigLoad)
-                                      }
-                                      e => e.chain_err(|| "Unknown failure"),
-                                  })
+        e @ Error(ErrorKind::ConfigLoad(_), _) => e.chain_err(|| LaunchStage::ConfigLoad),
+        e => e.chain_err(|| "Unknown failure"),
+    })
 }
 
 fn main() {

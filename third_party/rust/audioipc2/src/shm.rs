@@ -235,6 +235,10 @@ mod unix {
         pub unsafe fn get_mut_slice(&mut self, size: usize) -> Result<&mut [u8]> {
             self.view.get_mut_slice(size)
         }
+
+        pub fn get_size(&self) -> usize {
+            self.view.size
+        }
     }
 }
 
@@ -321,6 +325,10 @@ mod windows {
 
         pub unsafe fn get_mut_slice(&mut self, size: usize) -> Result<&mut [u8]> {
             self.view.get_mut_slice(size)
+        }
+
+        pub fn get_size(&self) -> usize {
+            self.view.size
         }
     }
 }

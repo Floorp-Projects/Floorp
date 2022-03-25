@@ -21,18 +21,10 @@ fn main() {
     println!("      ErrorKind::Msg: {}", size_of_val(&msg));
     println!("        String: {}", size_of::<String>());
     println!("    State: {}", size_of::<error_chain::State>());
-    #[cfg(feature = "backtrace")]
-    {
-        let state = error_chain::State {
-            next_error: None,
-            backtrace: None,
-        };
-        println!("      State.next_error: {}", size_of_val(&state.next_error));
-        println!("      State.backtrace: {}", size_of_val(&state.backtrace));
-    }
-    #[cfg(not(feature = "backtrace"))]
-    {
-        let state = error_chain::State { next_error: None };
-        println!("      State.next_error: {}", size_of_val(&state.next_error));
-    }
+    let state = error_chain::State {
+        next_error: None,
+        backtrace: error_chain::InternalBacktrace::new(),
+    };
+    println!("      State.next_error: {}", size_of_val(&state.next_error));
+    println!("      State.backtrace: {}", size_of_val(&state.backtrace));
 }
