@@ -190,13 +190,13 @@ class ScriptLoadRequest
     Canceled
   };
 
+  bool IsFetching() const { return mState == State::Fetching; }
+
+  bool IsCompiling() const { return mState == State::Compiling; }
+
   bool IsReadyToRun() const {
     return mState == State::Ready || mState == State::Canceled;
   }
-
-  bool IsLoading() const { return mState == State::Fetching; }
-
-  bool InCompilingStage() const { return mState == State::Compiling; }
 
   bool IsCanceled() const { return mState == State::Canceled; }
 
