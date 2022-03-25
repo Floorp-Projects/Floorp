@@ -5,7 +5,8 @@
 #include "nsISupports.idl"
 
 [scriptable, builtinclass, uuid(74db2955-6298-4d82-a3b9-7f9e8ba9e854)]
-interface nsIDNSResolverInfo : nsISupports
+interface nsIDNSAdditionalInfo : nsISupports
 {
-   readonly attribute ACString URL;
+   readonly attribute int32_t port;
+   readonly attribute ACString resolverURL;
 };

@@ -114,7 +114,7 @@ class DNSLookup {
         this.usedDomain,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         Ci.nsIDNSService.RESOLVE_BYPASS_CACHE,
-        gDNSService.newTRRResolverInfo(this.trrServer),
+        gDNSService.newAdditionalInfo(this.trrServer, -1),
         this,
         Services.tm.currentThread,
         {}

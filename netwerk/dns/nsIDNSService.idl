@@ -13,7 +13,7 @@ interface nsICancelable;
 interface nsIEventTarget;
 interface nsIDNSRecord;
 interface nsIDNSListener;
-interface nsIDNSResolverInfo;
+interface nsIDNSAdditionalInfo;
 
 %{C++
 #include "nsTArrayForwardDeclare.h"
@@ -59,9 +59,12 @@ interface nsIDNSService : nsISupports
      *        one of RESOLVE_TYPE_*.
      * @param aFlags
      *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
-     * @param aResolver
-     *        a resolverInfo object that holds information about the resolver
-     *        to be used such as TRR URL. If null we use the default configuration.
+     * @param aInfo
+     *        a AdditionalInfo object that holds information about:
+     *         - the resolver to be used such as TRR URL
+     *         - the port number that could be used to construct a QNAME
+     *           for HTTPS RR
+     *        If null we use the default configuration.
      * @param aListener
      *        the listener to be notified when the result is available.
      * @param aListenerTarget
@@ -81,7 +84,7 @@ interface nsIDNSService : nsISupports
     nsICancelable asyncResolve(in AUTF8String       aHostName,
                                in nsIDNSService_ResolveType aType,
                                in unsigned long     aFlags,
-                               in nsIDNSResolverInfo aResolver,
+                               in nsIDNSAdditionalInfo aInfo,
                                in nsIDNSListener    aListener,
                                in nsIEventTarget    aListenerTarget,
                     [optional] in jsval aOriginAttributes);
@@ -90,16 +93,17 @@ interface nsIDNSService : nsISupports
     nsresult asyncResolveNative(in AUTF8String       aHostName,
                                 in nsIDNSService_ResolveType aType,
                                 in unsigned long     aFlags,
-                                in nsIDNSResolverInfo aResolver,
+                                in nsIDNSAdditionalInfo aInfo,
                                 in nsIDNSListener    aListener,
                                 in nsIEventTarget    aListenerTarget,
                                 in OriginAttributes  aOriginAttributes,
                                 out nsICancelable    aResult);
 
     /**
-     * Returns a new resolverInfo object containing the URL we pass to it.
+     * Returns a new nsIDNSAdditionalInfo object containing the URL we pass to it.
      */
-    nsIDNSResolverInfo newTRRResolverInfo(in AUTF8String aTrrURL);
+    nsIDNSAdditionalInfo newAdditionalInfo(in AUTF8String aTrrURL,
+                                           in int32_t aPort);
 
     /**
      * Attempts to cancel a previously requested async DNS lookup
@@ -110,9 +114,12 @@ interface nsIDNSService : nsISupports
      *        one of RESOLVE_TYPE_*.
      * @param aFlags
      *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
-     * @param aResolver
-     *        a resolverInfo object that holds information about the resolver
-     *        to be used such as TRR URL. If null we use the default configuration.
+     * @param aInfo
+     *        a AdditionalInfo object that holds information about:
+     *         - the resolver to be used such as TRR URL
+     *         - the port number that could be used to construct a QNAME
+     *           for HTTPS RR
+     *        If null we use the default configuration.
      * @param aListener
      *        the original listener which was to be notified about the host lookup
      *        result - used to match request information to requestor.
@@ -126,7 +133,7 @@ interface nsIDNSService : nsISupports
     void cancelAsyncResolve(in AUTF8String       aHostName,
                             in nsIDNSService_ResolveType aType,
                             in unsigned long     aFlags,
-                            in nsIDNSResolverInfo aResolver,
+                            in nsIDNSAdditionalInfo aResolver,
                             in nsIDNSListener    aListener,
                             in nsresult          aReason,
                  [optional] in jsval             aOriginAttributes);
@@ -135,7 +142,7 @@ interface nsIDNSService : nsISupports
     nsresult cancelAsyncResolveNative(in AUTF8String       aHostName,
                                       in nsIDNSService_ResolveType aType,
                                       in unsigned long     aFlags,
-                                      in nsIDNSResolverInfo aResolver,
+                                      in nsIDNSAdditionalInfo aResolver,
                                       in nsIDNSListener    aListener,
                                       in nsresult          aReason,
                                       in OriginAttributes  aOriginAttributes);
