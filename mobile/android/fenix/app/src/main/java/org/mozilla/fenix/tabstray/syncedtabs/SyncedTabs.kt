@@ -53,6 +53,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
+import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
@@ -87,7 +88,7 @@ fun SyncedTabsList(
 
                         stickyHeader {
                             SyncedTabsSectionHeader(
-                                sectionText = syncedTabItem.displayName,
+                                headerText = syncedTabItem.displayName,
                                 expanded = sectionExpanded,
                             ) {
                                 expandedState[index] = !sectionExpanded
@@ -123,7 +124,7 @@ fun SyncedTabsList(
         } else {
             items(syncedTabs) { syncedTabItem ->
                 when (syncedTabItem) {
-                    is SyncedTabsListItem.Device -> SyncedTabsSectionHeader(sectionText = syncedTabItem.displayName)
+                    is SyncedTabsListItem.Device -> SyncedTabsSectionHeader(headerText = syncedTabItem.displayName)
                     is SyncedTabsListItem.Error -> SyncedTabsErrorItem(
                         errorText = syncedTabItem.errorText,
                         errorButton = syncedTabItem.errorButton
@@ -152,13 +153,13 @@ fun SyncedTabsList(
 /**
  * Collapsible header for sections of synced tabs
  *
- * @param sectionText The section title for a group of synced tabs.
+ * @param headerText The section title for a group of synced tabs.
  * @param expanded Indicates whether the section of content is expanded. If null, the Icon will be hidden.
  * @param onClick Optional lambda for handling section header clicks.
  */
 @Composable
 fun SyncedTabsSectionHeader(
-    sectionText: String,
+    headerText: String,
     expanded: Boolean? = null,
     onClick: () -> Unit = {},
 ) {
@@ -166,35 +167,14 @@ fun SyncedTabsSectionHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(FirefoxTheme.colors.layer1)
-            .clickable(onClick = onClick)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PrimaryText(
-                text = sectionText,
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
-                maxLines = 1,
-            )
-
-            expanded?.let {
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Icon(
-                    painter = painterResource(
-                        if (expanded) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
-                    ),
-                    contentDescription = stringResource(
-                        if (expanded) R.string.synced_tabs_collapse_group else R.string.synced_tabs_expand_group,
-                    ),
-                    tint = FirefoxTheme.colors.textPrimary,
-                )
-            }
-        }
+        ExpandableListHeader(
+            headerText = headerText,
+            expanded = expanded,
+            expandActionContentDescription = stringResource(R.string.synced_tabs_expand_group),
+            collapseActionContentDescription = stringResource(R.string.synced_tabs_collapse_group),
+            onClick = onClick,
+        )
 
         Divider(color = FirefoxTheme.colors.borderPrimary)
     }
@@ -345,12 +325,12 @@ fun SyncedTabsNoTabsItem() {
 private fun SyncedTabsListItemsPreview() {
     FirefoxTheme {
         Column(Modifier.background(FirefoxTheme.colors.layer1)) {
-            SyncedTabsSectionHeader(sectionText = "Google Pixel Pro Max +Ultra 5000")
+            SyncedTabsSectionHeader(headerText = "Google Pixel Pro Max +Ultra 5000")
 
             Spacer(modifier = Modifier.height(16.dp))
 
             SyncedTabsSectionHeader(
-                sectionText = "Collapsible Google Pixel Pro Max +Ultra 5000",
+                headerText = "Collapsible Google Pixel Pro Max +Ultra 5000",
                 expanded = true,
             ) { println("Clicked section header") }
 
