@@ -294,7 +294,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   MOZ_ASSERT(req, "StreamLoader's request went away prematurely");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mRequest->IsLoadingSource()) {
+  if (mRequest->mFetchSourceOnly) {
     mRequest->SetTextSource();
     TRACE_FOR_TEST(mRequest->mLoadContext->GetScriptElement(),
                    "scriptloader_load_source");
