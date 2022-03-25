@@ -63,6 +63,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+const SCHEMAS = {
+  get NimbusExperiment() {
+    return fetch("resource://nimbus/schemas/NimbusExperiment.schema.json", {
+      credentials: "omit",
+    })
+      .then(rsp => rsp.json())
+      .then(json => json.definitions.NimbusExperiment);
+  },
+};
+
 class _RemoteSettingsExperimentLoader {
   constructor() {
     // Has the timer been set?
@@ -201,11 +211,26 @@ class _RemoteSettingsExperimentLoader {
       Cu.reportError(e);
     }
 
+    const recipeValidator = new Validator(await SCHEMAS.NimbusExperiment);
+
     let matches = 0;
     let recipeMismatches = [];
     let validatorCache = {};
     if (recipes && !loadingError) {
       for (const r of recipes) {
+        let validation = recipeValidator.validate(r);
+        if (!validation.valid) {
+          Cu.reportError(
+            `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
+              validation.errors,
+              undefined,
+              2
+            )}`
+          );
+          // TODO: Do we want telemetry about invalid recipes?
+          continue;
+        }
+
         let type = r.isRollout ? "rollout" : "experiment";
 
         if (!(await this._validateBranches(r, validatorCache))) {
