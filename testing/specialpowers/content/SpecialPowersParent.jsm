@@ -723,6 +723,15 @@ class SpecialPowersParent extends JSWindowActorParent {
             !AppConstants.ASAN &&
             !AppConstants.TSAN
           ) {
+            if (Services.profiler.IsActive()) {
+              let filename = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment)
+                .get("MOZ_PROFILER_SHUTDOWN");
+              if (filename) {
+                await Services.profiler.dumpProfileToFileAsync(filename);
+                await Services.profiler.StopProfiler();
+              }
+            }
             Cu.exitIfInAutomation();
           } else {
             Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
