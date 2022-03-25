@@ -409,6 +409,9 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetMoveToRectPopupRect() const override {
     return mMoveToRectPopupRect;
   };
+  void MoveToRectPopupRectClear() override {
+    mMoveToRectPopupRect = LayoutDeviceIntRect();
+  };
 #endif
 
   typedef enum {
@@ -790,9 +793,8 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
-  bool WaylandPopupFitsToplevelWindow();
+  bool WaylandPopupFitsParentWindow(const GdkRectangle& aSize);
   const WaylandPopupMoveToRectParams WaylandPopupGetPositionFromLayout();
-  void WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
   nsAutoCString GetFrameTag() const;
@@ -803,13 +805,11 @@ class nsWindow final : public nsBaseWidget {
   void LogPopupHierarchy();
 #endif
 
-  // mPopupPosition is the original popup position/size from layout, set by
+  // mPopupPosition is the original popup position from layout, set by
   // nsWindow::Move() or nsWindow::Resize().
-  // Popup position is relative to main (toplevel) window.
   GdkPoint mPopupPosition{};
 
-  // mRelativePopupPosition is popup position calculated against
-  // recent popup parent window.
+  // mRelativePopupPosition is popup position calculated against parent window.
   GdkPoint mRelativePopupPosition{};
 
   // Toplevel window (first element) of linked list of Wayland popups. It's null
