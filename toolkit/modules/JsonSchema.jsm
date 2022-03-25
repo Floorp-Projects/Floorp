@@ -37,6 +37,12 @@ Cu.exportFunction(
   { defineAs: "moz-url-format" }
 );
 
+// initialBaseURI defaults to github.com/cfworker, which will be confusing.
+Cu.evalInSandbox(
+  `this.initialBaseURI = initialBaseURI = new URL("http://mozilla.org");`,
+  sandbox
+);
+
 /**
  * A JSONSchema validator that performs validation inside a sandbox.
  */
