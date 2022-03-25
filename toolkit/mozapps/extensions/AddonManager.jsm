@@ -91,6 +91,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  TelemetryTimestamps: "resource://gre/modules/TelemetryTimestamps.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -516,7 +517,7 @@ var AddonManagerInternal = {
   externalExtensionLoaders: new Map(),
 
   recordTimestamp(name, value) {
-    this.TelemetryTimestamps.add(name, value);
+    TelemetryTimestamps.add(name, value);
   },
 
   /**
@@ -5035,12 +5036,6 @@ AddonManager.init();
 
 // Setup the AMTelemetry once the AddonManager has been started.
 AddonManager.addManagerListener(AMTelemetry);
-
-// load the timestamps module into AddonManagerInternal
-ChromeUtils.import(
-  "resource://gre/modules/TelemetryTimestamps.jsm",
-  AddonManagerInternal
-);
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);
