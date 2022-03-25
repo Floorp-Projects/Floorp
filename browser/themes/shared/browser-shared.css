@@ -119,21 +119,17 @@
     --focus-outline-color: #0061E0;
   }
 
-  :root:-moz-lwtheme-brighttext {
-    --focus-outline-color: #00DDFF;
+  @media (prefers-color-scheme: dark) {
+    :root:-moz-lwtheme {
+      --focus-outline-color: #00DDFF;
+    }
   }
 }
 
-/* Increase the contrast of urlbar boxes in brighttext LWT.
+/* Increase the contrast of urlbar boxes in dark mode.
    In practice these are bumped-up --button(-hover)-bgcolor rules */
-:root:-moz-lwtheme-brighttext:not([lwt-default-theme-in-dark-mode]) {
-  --urlbar-box-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
-  --urlbar-box-focus-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
-  --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
-}
-/* Linux dark OS */
 @media (prefers-color-scheme: dark) {
-  :root:not(:-moz-lwtheme) {
+  :root {
     --urlbar-box-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
     --urlbar-box-focus-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
     --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);

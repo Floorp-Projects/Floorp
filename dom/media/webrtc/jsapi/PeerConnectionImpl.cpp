@@ -2717,14 +2717,17 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             local.mBytesSent.Construct(audioStats->payload_bytes_sent);
             local.mNackCount.Construct(
                 audioStats->rtcp_packet_type_counts.nack_packets);
-            /*
-             * Potential new stats that are now available upstream.
             local.mHeaderBytesSent.Construct(
                 audioStats->header_and_padding_bytes_sent);
             local.mRetransmittedPacketsSent.Construct(
                 audioStats->retransmitted_packets_sent);
             local.mRetransmittedBytesSent.Construct(
                 audioStats->retransmitted_bytes_sent);
+            /*
+             * Potential new stats that are now available upstream.
+             * Note: when we last tried exposing this we were getting
+             * targetBitrate for audio was ending up as 0. We did not
+             * investigate why.
             local.mTargetBitrate.Construct(audioStats->target_bitrate_bps);
              */
             if (!report->mOutboundRtpStreamStats.AppendElement(std::move(local),
@@ -2805,8 +2808,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             if (streamStats->qp_sum) {
               local.mQpSum.Construct(*streamStats->qp_sum);
             }
-            /*
-             * Potential new stats that are now available upstream.
             local.mHeaderBytesSent.Construct(
                 streamStats->rtp_stats.transmitted.header_bytes +
                 streamStats->rtp_stats.transmitted.padding_bytes);
@@ -2814,6 +2815,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                 streamStats->rtp_stats.retransmitted.packets);
             local.mRetransmittedBytesSent.Construct(
                 streamStats->rtp_stats.retransmitted.payload_bytes);
+            /*
+             * Potential new stats that are now available upstream.
             local.mTargetBitrate.Construct(videoStats->target_media_bitrate_bps);
             local.mTotalEncodedBytesTarget.Construct(
                 videoStats->total_encoded_bytes_target);

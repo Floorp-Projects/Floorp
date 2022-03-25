@@ -999,9 +999,11 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
   HyperTextAccessible* hyperAcc = parent->AsHyperText();
   MOZ_ASSERT(hyperAcc);
   RefPtr<AccAttributes> attributes = new AccAttributes();
-  TextAttrsMgr mgr(hyperAcc, aIncludeDefaults, acc,
-                   acc ? acc->IndexInParent() : -1);
-  mgr.GetAttributes(attributes, nullptr, nullptr);
+  if (hyperAcc) {
+    TextAttrsMgr mgr(hyperAcc, aIncludeDefaults, acc,
+                     acc ? acc->IndexInParent() : -1);
+    mgr.GetAttributes(attributes, nullptr, nullptr);
+  }
   return attributes.forget();
 }
 

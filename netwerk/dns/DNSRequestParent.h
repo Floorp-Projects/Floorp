@@ -32,8 +32,9 @@ class DNSRequestParent : public DNSRequestActor, public PDNSRequestParent {
   // needed if the request is to be canceled.
   mozilla::ipc::IPCResult RecvCancelDNSRequest(
       const nsCString& hostName, const nsCString& trrServer,
-      const uint16_t& type, const OriginAttributes& originAttributes,
-      const uint32_t& flags, const nsresult& reason);
+      const int32_t& port, const uint16_t& type,
+      const OriginAttributes& originAttributes, const uint32_t& flags,
+      const nsresult& reason);
   mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply);
   void ActorDestroy(ActorDestroyReason) override;
 };

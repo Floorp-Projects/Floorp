@@ -85,6 +85,7 @@ class CacheStorage;
 }  // namespace cache
 
 class WorkerGlobalScopeBase : public DOMEventTargetHelper,
+                              public nsSupportsWeakReference,
                               public nsIGlobalObject {
   friend class WorkerPrivate;
 
@@ -154,6 +155,10 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   void NoteTerminating() { StartDying(); }
 
+  // Usually global scope dies earlier than the WorkerPrivate, but if we see
+  // it leak at least we can tell it to not carry away a dead pointer.
+  void NoteWorkerTerminated() { mWorkerPrivate = nullptr; }
+
   ClientSource& MutableClientSourceRef() const { return *mClientSource; }
 
   // WorkerPrivate wants to be able to forbid script when its state machine
@@ -166,10 +171,17 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 
+  void AssertIsOnWorkerThread() const {
+    MOZ_ASSERT(mWorkerThreadUsedOnlyForAssert == PR_GetCurrentThread());
+  }
+
  private:
   RefPtr<Console> mConsole;
   const UniquePtr<ClientSource> mClientSource;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
+#ifdef DEBUG
+  PRThread* mWorkerThreadUsedOnlyForAssert;
+#endif
 };
 
 namespace workerinternals {
@@ -189,8 +201,7 @@ class NamedWorkerGlobalScopeMixin {
 
 }  // namespace workerinternals
 
-class WorkerGlobalScope : public WorkerGlobalScopeBase,
-                          public nsSupportsWeakReference {
+class WorkerGlobalScope : public WorkerGlobalScopeBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WorkerGlobalScope,

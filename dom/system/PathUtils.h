@@ -15,6 +15,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/dom/Promise.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -73,6 +74,8 @@ class PathUtils final {
                                      ErrorResult& aErr);
   static void GetTempDirSync(const GlobalObject&, nsString& aResult,
                              ErrorResult& aErr);
+  static void GetOSTempDirSync(const GlobalObject&, nsString& aResult,
+                               ErrorResult& aErr);
 
   static already_AddRefed<Promise> GetProfileDirAsync(
       const GlobalObject& aGlobal, ErrorResult& aErr);
@@ -80,6 +83,8 @@ class PathUtils final {
       const GlobalObject& aGlobal, ErrorResult& aErr);
   static already_AddRefed<Promise> GetTempDirAsync(const GlobalObject& aGlobal,
                                                    ErrorResult& aErr);
+  static already_AddRefed<Promise> GetOSTempDirAsync(
+      const GlobalObject& aGlobal, ErrorResult& aErr);
 
  private:
   class DirectoryCache;
@@ -110,6 +115,10 @@ class PathUtils::DirectoryCache final {
      * The temporary directory for the process.
      */
     Temp,
+    /**
+     * The OS temporary directory.
+     */
+    OSTemp,
     /**
      * The number of Directory entries.
      */
@@ -222,6 +231,7 @@ class PathUtils::DirectoryCache final {
       NS_APP_USER_PROFILE_50_DIR,
       NS_APP_USER_PROFILE_LOCAL_50_DIR,
       NS_APP_CONTENT_PROCESS_TEMP_DIR,
+      NS_OS_TEMP_DIR,
   };
 };
 

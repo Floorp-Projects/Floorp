@@ -148,26 +148,29 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   static Atomic<HangMonitorChild*, SequentiallyConsistent> sInstance;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   // Main thread-only.
   bool mSentReport;
 
   // These fields must be accessed with mMonitor held.
-  bool mTerminateScript;
-  bool mStartDebugger;
-  bool mFinishedStartingDebugger;
-  bool mPaintWhileInterruptingJS;
-  TabId mPaintWhileInterruptingJSTab;
-  MOZ_INIT_OUTSIDE_CTOR LayersObserverEpoch mPaintWhileInterruptingJSEpoch;
-  bool mCancelContentJS;
-  TabId mCancelContentJSTab;
-  nsIRemoteTab::NavigationType mCancelContentJSNavigationType;
-  int32_t mCancelContentJSNavigationIndex;
-  mozilla::Maybe<nsCString> mCancelContentJSNavigationURI;
-  int32_t mCancelContentJSEpoch;
-  JSContext* mContext;
-  bool mShutdownDone;
+  bool mTerminateScript GUARDED_BY(mMonitor);
+  bool mStartDebugger GUARDED_BY(mMonitor);
+  bool mFinishedStartingDebugger GUARDED_BY(mMonitor);
+  bool mPaintWhileInterruptingJS GUARDED_BY(mMonitor);
+  TabId mPaintWhileInterruptingJSTab GUARDED_BY(mMonitor);
+  MOZ_INIT_OUTSIDE_CTOR LayersObserverEpoch mPaintWhileInterruptingJSEpoch
+      GUARDED_BY(mMonitor);
+  bool mCancelContentJS GUARDED_BY(mMonitor);
+  TabId mCancelContentJSTab GUARDED_BY(mMonitor);
+  nsIRemoteTab::NavigationType mCancelContentJSNavigationType
+      GUARDED_BY(mMonitor);
+  int32_t mCancelContentJSNavigationIndex GUARDED_BY(mMonitor);
+  mozilla::Maybe<nsCString> mCancelContentJSNavigationURI GUARDED_BY(mMonitor);
+  int32_t mCancelContentJSEpoch GUARDED_BY(mMonitor);
+  bool mShutdownDone GUARDED_BY(mMonitor);
+
+  JSContext* mContext;  // const after constructor
 
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
@@ -282,16 +285,20 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
 
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
+
+  // MainThread only
+  RefPtr<HangMonitoredProcess> mProcess;
 
   // Must be accessed with mMonitor held.
-  RefPtr<HangMonitoredProcess> mProcess;
-  bool mShutdownDone;
+  bool mShutdownDone GUARDED_BY(mMonitor);
   // Map from plugin ID to crash dump ID. Protected by
   // mBrowserCrashDumpHashLock.
-  nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
-  Mutex mBrowserCrashDumpHashLock MOZ_UNANNOTATED;
-  mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory;
+  nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds
+      GUARDED_BY(mMonitor);
+  Mutex mBrowserCrashDumpHashLock GUARDED_BY(mMonitor);
+  mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory
+      GUARDED_BY(mMonitor);
 };
 
 }  // namespace
@@ -315,6 +322,7 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
       mPaintWhileInterruptingJSActive(false) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sInstance);
+
   mContext = danger::GetJSContext();
 
   BackgroundHangMonitor::RegisterAnnotator(*this);

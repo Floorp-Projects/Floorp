@@ -21,6 +21,7 @@ const makeExtension = ({ background, manifest }) => {
       permissions:
         manifest.manifest_version === 3 ? ["scripting"] : ["http://*/*/*.html"],
     },
+    temporarilyInstalled: true,
     background,
     files: {
       "script.js": () => {
@@ -132,6 +133,8 @@ add_task(
     let extension = makeExtension({
       manifest: {
         manifest_version: 3,
+        host_permissions: ["<all_urls>"],
+        granted_host_permissions: true,
       },
       async background() {
         const script = {

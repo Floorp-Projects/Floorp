@@ -62,6 +62,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.temp_blocklist_duration_sec");
   prefs.clearUserPref("network.trr.request-timeout");
   prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
+  prefs.clearUserPref("network.dns.port_prefixed_qname_https_rr");
 });
 
 function run_test() {
@@ -83,6 +84,11 @@ function run_test() {
   do_await_remote_message("clearCache").then(() => {
     dns.clearCache(true);
     do_send_remote_message("clearCache-done");
+  });
+
+  do_await_remote_message("set-port-prefixed-pref").then(() => {
+    prefs.setBoolPref("network.dns.port_prefixed_qname_https_rr", true);
+    do_send_remote_message("set-port-prefixed-pref-done");
   });
 
   run_test_in_child("../unit/test_trr_httpssvc.js");

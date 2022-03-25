@@ -54,6 +54,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.clearUserPref("network.dns.port_prefixed_qname_https_rr");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -299,6 +300,7 @@ async function H3ECHTest(echConfig) {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
+  Services.prefs.setBoolPref("network.dns.port_prefixed_qname_https_rr", true);
 
   let observerService = Cc[
     "@mozilla.org/network/http-activity-distributor;1"
@@ -307,11 +309,12 @@ async function H3ECHTest(echConfig) {
   observerService.addObserver(observer);
   observerService.observeConnection = true;
 
+  let portPrefixedName = `_${h3Port}._https.public.example.com`;
   // Only the last record is valid to use.
-  await trrServer.registerDoHAnswers("public.example.com", "HTTPS", {
+  await trrServer.registerDoHAnswers(portPrefixedName, "HTTPS", {
     answers: [
       {
-        name: "public.example.com",
+        name: portPrefixedName,
         ttl: 55,
         type: "HTTPS",
         flush: false,
@@ -346,9 +349,10 @@ async function H3ECHTest(echConfig) {
 
   await new TRRDNSListener("public.example.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+    port: h3Port,
   });
 
-  let chan = makeChan(`https://public.example.com`);
+  let chan = makeChan(`https://public.example.com:${h3Port}`);
   let [req] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.protocolVersion, "h3-29");

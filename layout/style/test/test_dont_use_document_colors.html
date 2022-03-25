@@ -23,6 +23,10 @@
     border-image: none;
   }
 
+  #eleven {
+    background-color: transparent;
+  }
+
   /* XXX also test rgba() */
 
   </style>
@@ -45,23 +49,25 @@
 
 <input id="ten" type="button" value="Hello"><!-- Nothing should match this -->
 
+<button id="eleven">Hello</button>
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody">
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout('nsPresContext internally delays applying prefs using an nsITimer');
 
-var cs1 = getComputedStyle(document.getElementById("one"), "");
-var cs2 = getComputedStyle(document.getElementById("two"), "");
-var cs3 = getComputedStyle(document.getElementById("three"), "");
-var cs4 = getComputedStyle(document.getElementById("four"), "");
-var cs5 = getComputedStyle(document.getElementById("five"), "");
-var cs6 = getComputedStyle(document.getElementById("six"), "");
-var cs7 = getComputedStyle(document.getElementById("seven"), "");
-var cs8 = getComputedStyle(document.getElementById("eight"), "");
-var cs9 = getComputedStyle(document.getElementById("nine"), "");
-var cs10 = getComputedStyle(document.getElementById("ten"), "");
+var cs1 = getComputedStyle(document.getElementById("one"));
+var cs2 = getComputedStyle(document.getElementById("two"));
+var cs3 = getComputedStyle(document.getElementById("three"));
+var cs4 = getComputedStyle(document.getElementById("four"));
+var cs5 = getComputedStyle(document.getElementById("five"));
+var cs6 = getComputedStyle(document.getElementById("six"));
+var cs7 = getComputedStyle(document.getElementById("seven"));
+var cs8 = getComputedStyle(document.getElementById("eight"));
+var cs9 = getComputedStyle(document.getElementById("nine"));
+var cs10 = getComputedStyle(document.getElementById("ten"));
+var cs11 = getComputedStyle(document.getElementById("eleven"));
 
 function pushPrefEnvAndWait(args, cb) {
   SpecialPowers.pushPrefEnv(args).then(cb)
@@ -184,6 +190,7 @@ function part2()
     is(cs4.borderBottomColor, systemColor("ThreeDLightShadow"),
        "border-bottom-color not broken on inputs");
     is(cs8.borderImageSource, cs9.borderImageSource, "border-image-source is blocked");
+    is(toRGBA(cs11.backgroundColor).a, 0, "background-color transparency is preserved on buttons");
 
     SimpleTest.finish();
 }

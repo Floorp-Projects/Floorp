@@ -3245,26 +3245,34 @@ static HCURSOR CursorForImage(const nsIWidget::Cursor& aCursor,
   return cursor;
 }
 
-// Setting the actual cursor
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  static HCURSOR sCustomHCursor = nullptr;
+  static HCURSOR sCurrentHCursor = nullptr;
+  static bool sCurrentHCursorIsCustom = false;
 
   mCursor = aCursor;
 
-  if (!mUpdateCursor && sCurrentCursor == aCursor) {
+  if (sCurrentCursor == aCursor && sCurrentHCursor && !mUpdateCursor) {
+    // Cursors in windows are global, so even if our mUpdateCursor flag is
+    // false we always need to make sure the Windows cursor is up-to-date,
+    // since stuff like native drag and drop / resizers code can mutate it
+    // outside of this method.
+    ::SetCursor(sCurrentHCursor);
     return;
   }
 
   mUpdateCursor = false;
-  if (sCustomHCursor) {
-    ::DestroyIcon(sCustomHCursor);
-    sCustomHCursor = nullptr;
-  }
 
+  if (sCurrentHCursorIsCustom) {
+    ::DestroyIcon(sCurrentHCursor);
+  }
+  sCurrentHCursor = nullptr;
+  sCurrentHCursorIsCustom = false;
   sCurrentCursor = aCursor;
+
   HCURSOR cursor = CursorForImage(aCursor, GetDefaultScale());
+  bool custom = false;
   if (cursor) {
-    sCustomHCursor = cursor;
+    custom = true;
   } else {
     cursor = CursorFor(aCursor.mDefaultCursor);
   }
@@ -3273,6 +3281,8 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
     return;
   }
 
+  sCurrentHCursor = cursor;
+  sCurrentHCursorIsCustom = custom;
   ::SetCursor(cursor);
 }
 
@@ -5014,15 +5024,24 @@ bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
   return false;
 }
 
-// The main windows message processing method.
+// The main windows message processing method. Wraps ProcessMessageInternal so
+// we can log aRetValue.
 bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                               LRESULT* aRetValue) {
-#if defined(EVENT_DEBUG_OUTPUT)
-  // First param shows all events, second param indicates whether
-  // to show mouse move events. See nsWindowDbg for details.
-  PrintEvent(msg, SHOW_REPEAT_EVENTS, SHOW_MOUSEMOVE_EVENTS);
-#endif
+  bool result = ProcessMessageInternal(msg, wParam, lParam, aRetValue);
 
+  // SHOW_REPEAT_EVENTS indicates whether to show all (repeating) events,
+  // SHOW_MOUSEMOVE_EVENTS indicates whether to show mouse move events.
+  // See nsWindowDbg for details.
+  PrintEvent(msg, wParam, lParam, *aRetValue, result, SHOW_REPEAT_EVENTS,
+             SHOW_MOUSEMOVE_EVENTS);
+
+  return result;
+}
+
+// The main windows message processing method. Called by ProcessMessage.
+bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
+                                      LRESULT* aRetValue) {
   MSGResult msgResult(aRetValue);
   if (ExternalHandlerProcessMessage(msg, wParam, lParam, msgResult)) {
     return (msgResult.mConsumed || !mWnd);

@@ -26,10 +26,12 @@ class XMLHttpRequestStringBuffer final {
     return mData.Length();
   }
 
-  uint32_t UnsafeLength() const { return mData.Length(); }
+  uint32_t UnsafeLength() const NO_THREAD_SAFETY_ANALYSIS {
+    return mData.Length();
+  }
 
   mozilla::Result<mozilla::BulkWriteHandle<char16_t>, nsresult> UnsafeBulkWrite(
-      uint32_t aCapacity) {
+      uint32_t aCapacity) NO_THREAD_SAFETY_ANALYSIS {
     return mData.BulkWrite(aCapacity, UnsafeLength(), false);
   }
 
@@ -82,10 +84,10 @@ class XMLHttpRequestStringBuffer final {
 
   nsString& UnsafeData() { return mData; }
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
 
   // The following member variable is protected by mutex.
-  nsString mData;
+  nsString mData GUARDED_BY(mMutex);
 };
 
 // ---------------------------------------------------------------------------

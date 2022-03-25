@@ -86,8 +86,9 @@ parent:
   async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
   async PUDPSocket(nsIPrincipal principal, nsCString filter);
 
-  async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
-                    OriginAttributes originAttributes, uint32_t flags);
+  async PDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
+                    uint16_t type, OriginAttributes originAttributes,
+                    uint32_t flags);
 
   async PDocumentChannel(MaybeDiscardedBrowsingContext browsingContext,
                          DocumentChannelCreationArgs args);
