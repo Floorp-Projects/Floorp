@@ -111,7 +111,7 @@ class BrowserAction extends BrowserActionBase {
   }
 }
 
-this.browserAction = class extends ExtensionAPI {
+this.browserAction = class extends ExtensionAPIPersistent {
   static for(extension) {
     return browserActionMap.get(extension);
   }
@@ -632,9 +632,35 @@ this.browserAction = class extends ExtensionAPI {
     }
   }
 
+  PERSISTENT_EVENTS = {
+    onClicked({ context, fire }) {
+      const { extension } = this;
+      const { tabManager } = extension;
+      async function listener(_event, tab, clickInfo) {
+        if (fire.wakeup) {
+          await fire.wakeup();
+        }
+        // TODO: we should double-check if the tab is already being closed by the time
+        // the background script got started and we converted the primed listener.
+        context?.withPendingBrowser(tab.linkedBrowser, () =>
+          fire.sync(tabManager.convert(tab), clickInfo)
+        );
+      }
+      this.on("click", listener);
+      return {
+        unregister: () => {
+          this.off("click", listener);
+        },
+        convert(newFire, extContext) {
+          fire = newFire;
+          context = extContext;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     let { extension } = context;
-    let { tabManager } = extension;
     let { action } = this;
     let namespace = extension.manifestVersion < 3 ? "browserAction" : "action";
 
@@ -644,19 +670,12 @@ this.browserAction = class extends ExtensionAPI {
 
         onClicked: new EventManager({
           context,
-          name: `${namespace}.onClicked`,
+          // module name is "browserAction" because it the name used in the
+          // ext-browser.json, indipendently from the manifest version.
+          module: "browserAction",
+          event: "onClicked",
           inputHandling: true,
-          register: fire => {
-            let listener = (event, tab, clickInfo) => {
-              context.withPendingBrowser(tab.linkedBrowser, () =>
-                fire.sync(tabManager.convert(tab), clickInfo)
-              );
-            };
-            this.on("click", listener);
-            return () => {
-              this.off("click", listener);
-            };
-          },
+          extensionApi: this,
         }).api(),
 
         openPopup: () => {

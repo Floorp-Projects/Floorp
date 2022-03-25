@@ -2,21 +2,37 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function test_clickData() {
+async function test_clickData({ manifest_version, persistent }) {
+  const action = manifest_version < 3 ? "browser_action" : "action";
+  const background = { scripts: ["background.js"] };
+
+  if (persistent != null) {
+    background.persistent = persistent;
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      manifest_version,
+      [action]: {},
+      background,
     },
 
-    background() {
-      function onClicked(tab, info) {
-        let button = info.button;
-        let modifiers = info.modifiers;
-        browser.test.sendMessage("onClick", { button, modifiers });
-      }
+    files: {
+      "background.js": function backgroundScript() {
+        function onClicked(tab, info) {
+          let button = info.button;
+          let modifiers = info.modifiers;
+          browser.test.sendMessage("onClick", { button, modifiers });
+        }
 
-      browser.browserAction.onClicked.addListener(onClicked);
-      browser.test.sendMessage("ready");
+        const apiNS =
+          browser.runtime.getManifest().manifest_version >= 3
+            ? "action"
+            : "browserAction";
+
+        browser[apiNS].onClicked.addListener(onClicked);
+        browser.test.sendMessage("ready");
+      },
     },
   });
 
@@ -53,6 +69,20 @@ add_task(async function test_clickData() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
+  if (manifest_version >= 3 || persistent === false) {
+    // NOTE: even in MV3 where the API namespace is technically "action",
+    // the event listeners will be persisted into the startup data
+    // with "browserAction" as the module, because that is the name
+    // of the module shared by both MV2 browserAction and MV3 action APIs.
+    assertPersistentListeners(extension, "browserAction", "onClicked", {
+      primed: false,
+    });
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "browserAction", "onClicked", {
+      primed: true,
+    });
+  }
+
   for (let area of [CustomizableUI.AREA_NAVBAR, getCustomizableUIPanelID()]) {
     let widget = getBrowserActionWidget(extension);
     CustomizableUI.addWidgetToArea(widget.id, area);
@@ -82,13 +112,21 @@ add_task(async function test_clickData() {
     }
   }
 
-  await extension.unload();
-});
+  if (manifest_version >= 3 || persistent === false) {
+    // The background event page is expected to have been
+    // spawned again to handle the action onClicked event.
+    await extension.awaitMessage("ready");
+  }
 
-add_task(async function test_clickData_reset() {
+  await extension.unload();
+}
+
+async function test_clickData_reset({ manifest_version }) {
+  const action = manifest_version < 3 ? "browser_action" : "action";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      manifest_version,
+      [action]: {},
       page_action: {},
     },
 
@@ -99,17 +137,27 @@ add_task(async function test_clickData_reset() {
 
       function onPageActionClicked(tab, info) {
         // openPopup requires user interaction, such as a page action click.
+        // NOTE: this triggers the browserAction onClicked event as a side-effect
+        // of triggering the browserAction popup through browserAction.openPopup.
         browser.browserAction.openPopup();
       }
 
-      browser.browserAction.onClicked.addListener(onBrowserActionClicked);
-      browser.pageAction.onClicked.addListener(onPageActionClicked);
+      const { manifest_version } = browser.runtime.getManifest();
+      const apiNS = manifest_version >= 3 ? "action" : "browserAction";
 
-      let [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      await browser.pageAction.show(tab.id);
+      browser[apiNS].onClicked.addListener(onBrowserActionClicked);
+
+      // pageAction should only be available in MV2 extensions.
+      if (manifest_version < 3) {
+        browser.pageAction.onClicked.addListener(onPageActionClicked);
+
+        let [tab] = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        await browser.pageAction.show(tab.id);
+      }
+
       browser.test.sendMessage("ready");
     },
   });
@@ -118,8 +166,8 @@ add_task(async function test_clickData_reset() {
   async function clickBrowserActionWithModifiers() {
     await clickBrowserAction(extension, window, { button: 1, shiftKey: true });
     let info = await extension.awaitMessage("onClick");
-    is(info.button, 1);
-    is(info.modifiers[0], "Shift");
+    is(info.button, 1, "Got expected ClickData button details");
+    is(info.modifiers[0], "Shift", "Got expected ClickData modifiers details");
   }
 
   function assertInfoReset(info) {
@@ -130,10 +178,33 @@ add_task(async function test_clickData_reset() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
+  if (manifest_version >= 3) {
+    // NOTE: even in MV3 where the API namespace is technically "action",
+    // the event listeners will be persisted into the startup data
+    // with "browserAction" as the module, because that is the name
+    // of the module shared by both MV2 browserAction and MV3 action APIs.
+    assertPersistentListeners(extension, "browserAction", "onClicked", {
+      primed: false,
+    });
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "browserAction", "onClicked", {
+      primed: true,
+    });
+  }
+
   await clickBrowserActionWithModifiers();
 
-  await clickPageAction(extension);
-  assertInfoReset(await extension.awaitMessage("onClick"));
+  if (manifest_version >= 3) {
+    // The background event page is expected to have been
+    // spawned again to handle the action onClicked event.
+    await extension.awaitMessage("ready");
+  } else {
+    // pageAction should only be available in MV2 extensions.
+    await clickPageAction(extension);
+    // NOTE: the pageAction event listener then triggers browserAction.onClicked
+    // as a side effect of calling browserAction.openPopup.
+    assertInfoReset(await extension.awaitMessage("onClick"));
+  }
 
   await clickBrowserActionWithModifiers();
 
@@ -146,4 +217,39 @@ add_task(async function test_clickData_reset() {
   assertInfoReset(await extension.awaitMessage("onClick"));
 
   await extension.unload();
+}
+
+add_task(function test_clickData_MV2() {
+  return test_clickData({ manifest_version: 2 });
+});
+
+add_task(async function test_clickData_MV2_eventpage() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+  await test_clickData({
+    manifest_version: 2,
+    persistent: false,
+  });
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_clickData_MV3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+  await test_clickData({ manifest_version: 3 });
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(function test_clickData_reset_MV2() {
+  return test_clickData_reset({ manifest_version: 2 });
+});
+
+add_task(async function test_clickData_reset_MV3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+  await test_clickData_reset({ manifest_version: 3 });
+  await SpecialPowers.popPrefEnv();
 });
