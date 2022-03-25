@@ -177,7 +177,6 @@ fn order_test_7() {
     };
 }
 
-
 #[test]
 fn order_test_8() {
     error_chain! {
@@ -194,19 +193,30 @@ fn order_test_8() {
 
 #[test]
 fn empty() {
-    error_chain!{};
+    error_chain! {};
 }
 
 #[test]
 #[cfg(feature = "backtrace")]
 fn has_backtrace_depending_on_env() {
+    use std::path::PathBuf;
     use std::process::Command;
-    use std::path::Path;
+
+    let cmd_folder = if cfg!(build = "debug") {
+        "debug"
+    } else if cfg!(build = "release") {
+        "release"
+    } else {
+        panic!("Unknown build config");
+    };
 
     let cmd_path = if cfg!(windows) {
-        Path::new("./target/debug/has_backtrace.exe")
+        PathBuf::from(format!(
+            "./target/{}/examples/has_backtrace.exe",
+            cmd_folder
+        ))
     } else {
-        Path::new("./target/debug/has_backtrace")
+        PathBuf::from(format!("./target/{}/examples/has_backtrace", cmd_folder))
     };
     let mut cmd = Command::new(cmd_path);
 
@@ -265,7 +275,7 @@ fn error_chain_err() {
 #[test]
 fn links() {
     mod test {
-        error_chain!{}
+        error_chain! {}
     }
 
     error_chain! {
@@ -292,7 +302,13 @@ mod foreign_link_test {
             "Foreign error description"
         }
 
+        #[cfg(not(has_error_source))]
         fn cause(&self) -> Option<&::std::error::Error> {
+            Some(&self.cause)
+        }
+
+        #[cfg(has_error_source)]
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             Some(&self.cause)
         }
     }
@@ -311,7 +327,13 @@ mod foreign_link_test {
             "Foreign error cause description"
         }
 
+        #[cfg(not(has_error_source))]
         fn cause(&self) -> Option<&::std::error::Error> {
+            None
+        }
+
+        #[cfg(has_error_source)]
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             None
         }
     }
@@ -337,32 +359,66 @@ mod foreign_link_test {
     #[test]
     fn display_underlying_error() {
         let chained_error = try_foreign_error().err().unwrap();
-        assert_eq!(format!("{}", ForeignError { cause: ForeignErrorCause {} }),
-                   format!("{}", chained_error));
+        assert_eq!(
+            format!(
+                "{}",
+                ForeignError {
+                    cause: ForeignErrorCause {}
+                }
+            ),
+            format!("{}", chained_error)
+        );
     }
 
     #[test]
+    #[cfg(not(has_error_source))]
     fn finds_cause() {
         let chained_error = try_foreign_error().err().unwrap();
-        assert_eq!(format!("{}", ForeignErrorCause {}),
-                   format!("{}", ::std::error::Error::cause(&chained_error).unwrap()));
+        assert_eq!(
+            format!("{}", ForeignErrorCause {}),
+            format!("{}", ::std::error::Error::cause(&chained_error).unwrap())
+        );
     }
 
     #[test]
+    #[cfg(has_error_source)]
+    fn finds_source() {
+        let chained_error = try_foreign_error().err().unwrap();
+        assert_eq!(
+            format!("{}", ForeignErrorCause {}),
+            format!("{}", ::std::error::Error::source(&chained_error).unwrap())
+        );
+    }
+
+    #[test]
+    #[allow(unknown_lints, bare_trait_objects)]
     fn iterates() {
         let chained_error = try_foreign_error().err().unwrap();
         let mut error_iter = chained_error.iter();
         assert!(!format!("{:?}", error_iter).is_empty());
-        assert_eq!(format!("{}", ForeignError { cause: ForeignErrorCause {} }),
-                   format!("{}", error_iter.next().unwrap()));
-        assert_eq!(format!("{}", ForeignErrorCause {}),
-                   format!("{}", error_iter.next().unwrap()));
-        assert_eq!(format!("{:?}", None as Option<&::std::error::Error>),
-                   format!("{:?}", error_iter.next()));
+        assert_eq!(
+            format!(
+                "{}",
+                ForeignError {
+                    cause: ForeignErrorCause {}
+                }
+            ),
+            format!("{}", error_iter.next().unwrap())
+        );
+        assert_eq!(
+            format!("{}", ForeignErrorCause {}),
+            format!("{}", error_iter.next().unwrap())
+        );
+        assert_eq!(
+            format!("{:?}", None as Option<&::std::error::Error>),
+            format!("{:?}", error_iter.next())
+        );
     }
 
     fn try_foreign_error() -> Result<()> {
-        Err(ForeignError { cause: ForeignErrorCause {} })?;
+        Err(ForeignError {
+            cause: ForeignErrorCause {},
+        })?;
         Ok(())
     }
 }
@@ -374,7 +430,7 @@ mod attributes_test {
 
     #[cfg(not(test))]
     mod inner {
-        error_chain!{}
+        error_chain! {}
     }
 
     error_chain! {
@@ -422,7 +478,7 @@ fn without_result() {
 #[test]
 fn documentation() {
     mod inner {
-        error_chain!{}
+        error_chain! {}
     }
 
     error_chain! {
@@ -446,13 +502,13 @@ mod multiple_error_same_mod {
             MyError, MyErrorKind, MyResultExt, MyResult;
         }
     }
-    error_chain!{}
+    error_chain! {}
 }
 
 #[doc(test)]
 #[deny(dead_code)]
 mod allow_dead_code {
-    error_chain!{}
+    error_chain! {}
 }
 
 // Make sure links actually work!
@@ -485,8 +541,23 @@ fn error_patterns() {
 
     // Tuples look nice when matching errors
     match Error::from("Test") {
-        Error(ErrorKind::Msg(_), _) => {},
-        _ => {},
+        Error(ErrorKind::Msg(_), _) => {}
+        _ => {}
+    }
+}
+
+#[test]
+fn result_match() {
+    error_chain! {}
+
+    fn ok() -> Result<()> {
+        Ok(())
+    }
+
+    match ok() {
+        Ok(()) => {}
+        Err(Error(ErrorKind::Msg(_), _)) => {}
+        Err(..) => {}
     }
 }
 
@@ -563,7 +634,6 @@ fn types_declarations() {
 /// Calling chain_err over a `Result` containing an error to get a chained error
 /// and constructing a MyError directly, passing it an error should be equivalent.
 fn rewrapping() {
-
     use std::env::VarError::{self, NotPresent, NotUnicode};
 
     error_chain! {
@@ -589,9 +659,10 @@ fn rewrapping() {
         NotUnicode(_) => Err(e).chain_err(|| "env var was borkæ–‡å­—åŒ–ã"),
     });
 
-    assert_eq!(format!("{}", our_error_a.unwrap_err()),
-               format!("{}", our_error_b.unwrap_err()));
-
+    assert_eq!(
+        format!("{}", our_error_a.unwrap_err()),
+        format!("{}", our_error_b.unwrap_err())
+    );
 }
 
 #[test]
@@ -610,7 +681,6 @@ fn comma_in_errors_impl() {
     };
 }
 
-
 #[test]
 fn trailing_comma_in_errors_impl() {
     error_chain! {
@@ -625,4 +695,25 @@ fn trailing_comma_in_errors_impl() {
             }
         }
     };
+}
+
+#[test]
+fn skipping_msg_variant() {
+    error_chain! {
+        skip_msg_variant
+
+        errors {
+            MyMsg(s: String) {
+                description(&s)
+                display("{}", s)
+            }
+        }
+    }
+
+    let x = Error::from_kind(ErrorKind::MyMsg("some string".into()));
+    // This would fail to compile if we generate a `Msg` variant
+    match *x.kind() {
+        ErrorKind::MyMsg(_) => {}
+        ErrorKind::__Nonexhaustive {} => {}
+    }
 }

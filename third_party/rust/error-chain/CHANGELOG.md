@@ -1,4 +1,20 @@
-# Unreleased
+# 0.12.4
+- [executable bits to support build platform linters](https://github.com/rust-lang-nursery/error-chain/pull/289)
+
+# 0.12.2
+- [allow `Error::description` to be used for rust below 1.42](https://github.com/rust-lang-nursery/error-chain/pull/285)
+- [Improvements to has_backtrace_depending_on_env](https://github.com/rust-lang-nursery/error-chain/pull/277)
+- Backtrace support now requires rust 1.32.0
+
+# 0.12.1
+
+- [`std::error::Error::cause` deprecation update](https://github.com/rust-lang-nursery/error-chain/pull/255)
+- [Macro invocations use 2018 style](https://github.com/rust-lang-nursery/error-chain/pull/253)
+
+# 0.12.0
+
+- [Remove `impl Deref<Kind> for Error`](https://github.com/rust-lang-nursery/error-chain/pull/192)
+- [Fix warning](https://github.com/rust-lang-nursery/error-chain/pull/247)
 
 # 0.11.0
 

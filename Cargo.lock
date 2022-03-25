@@ -206,7 +206,7 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
+source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -235,7 +235,7 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
+source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -249,7 +249,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=405b8208a8fb32e13db87c252aba9b371ae47859#405b8208a8fb32e13db87c252aba9b371ae47859"
+source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -265,7 +265,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=85e9839059f4bf8f68130825b8fd02c39a6a51b9#85e9839059f4bf8f68130825b8fd02c39a6a51b9"
 dependencies = [
  "arrayvec 0.7.2",
  "ashmem",
@@ -291,7 +291,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=85e9839059f4bf8f68130825b8fd02c39a6a51b9#85e9839059f4bf8f68130825b8fd02c39a6a51b9"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -302,7 +302,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=f8f611808168b7b1395b2e5dc17e5e6e2b975c6d#f8f611808168b7b1395b2e5dc17e5e6e2b975c6d"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=85e9839059f4bf8f68130825b8fd02c39a6a51b9#85e9839059f4bf8f68130825b8fd02c39a6a51b9"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -1472,9 +1472,12 @@ dependencies = [
 
 [[package]]
 name = "error-chain"
-version = "0.11.0"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
+checksum = "2d2f06b9cac1506ece98fe3231e3cc9c4410ec3d5b1f24ae1c8946f0742cdefc"
+dependencies = [
+ "version_check",
+]
 
 [[package]]
 name = "error-support"

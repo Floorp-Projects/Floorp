@@ -246,13 +246,11 @@ impl ContextOps for ClientContext {
         collection: &DeviceCollectionRef,
     ) -> Result<()> {
         assert_not_in_callback();
-        let v: Vec<ffi::cubeb_device_info> = match send_recv!(self.rpc(),
-                             ContextGetDeviceEnumeration(devtype.bits()) =>
-                             ContextEnumeratedDevices())
-        {
-            Ok(mut v) => v.drain(..).map(|i| i.into()).collect(),
-            Err(e) => return Err(e),
-        };
+        let v: Vec<ffi::cubeb_device_info> = send_recv!(
+            self.rpc(), ContextGetDeviceEnumeration(devtype.bits()) => ContextEnumeratedDevices())?
+        .into_iter()
+        .map(|i| i.into())
+        .collect();
         let mut vs = v.into_boxed_slice();
         let coll = unsafe { &mut *collection.as_ptr() };
         coll.device = vs.as_mut_ptr();
