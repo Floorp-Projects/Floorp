@@ -166,10 +166,17 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 
+  void AssertIsOnWorkerThread() const {
+    MOZ_ASSERT(mWorkerThreadUsedOnlyForAssert == PR_GetCurrentThread());
+  }
+
  private:
   RefPtr<Console> mConsole;
   const UniquePtr<ClientSource> mClientSource;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
+#ifdef DEBUG
+  PRThread* mWorkerThreadUsedOnlyForAssert;
+#endif
 };
 
 namespace workerinternals {
