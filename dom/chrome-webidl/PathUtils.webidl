@@ -120,6 +120,12 @@ partial namespace PathUtils {
    */
   [Throws, BinaryName="TempDirSync"]
   readonly attribute DOMString tempDir;
+
+  /**
+   * The OS temporary directory.
+   */
+  [Throws, BinaryName="OSTempDirSync"]
+  readonly attribute DOMString osTempDir;
 };
 
 [Exposed=Worker]
@@ -141,4 +147,10 @@ partial namespace PathUtils {
    */
   [Throws, BinaryName="GetTempDirAsync"]
   Promise<DOMString> getTempDir();
+
+  /**
+   * The OS temporary directory.
+   */
+  [Throws, BinaryName="GetOSTempDirAsync"]
+  Promise<DOMString> getOSTempDir();
 };
