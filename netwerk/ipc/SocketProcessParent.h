@@ -55,12 +55,12 @@ class SocketProcessParent final
       const Maybe<TabId>& aTabId);
   bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
-      const nsCString& aHost, const nsCString& aTrrServer,
+      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& port,
       const uint16_t& aType, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestParent* actor, const nsCString& aHost,
-      const nsCString& trrServer, const uint16_t& type,
+      const nsCString& trrServer, const int32_t& port, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
 

@@ -144,14 +144,14 @@ class TRRDNSListener {
       );
     }
 
-    this.resolverInfo =
-      trrServer == "" ? null : gDNS.newTRRResolverInfo(trrServer);
+    this.additionalInfo =
+      trrServer == "" ? null : gDNS.newAdditionalInfo(trrServer, -1);
     try {
       this.request = gDNS.asyncResolve(
         this.name,
         this.type,
         this.options.flags || 0,
-        this.resolverInfo,
+        this.additionalInfo,
         this,
         currentThread,
         {} // defaultOriginAttributes

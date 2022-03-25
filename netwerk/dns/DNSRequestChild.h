@@ -29,8 +29,9 @@ class DNSRequestChild final : public DNSRequestActor, public PDNSRequestChild {
 
   mozilla::ipc::IPCResult RecvCancelDNSRequest(
       const nsCString& hostName, const nsCString& trrServer,
-      const uint16_t& type, const OriginAttributes& originAttributes,
-      const uint32_t& flags, const nsresult& reason);
+      const int32_t& port, const uint16_t& type,
+      const OriginAttributes& originAttributes, const uint32_t& flags,
+      const nsresult& reason);
   mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply);
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
