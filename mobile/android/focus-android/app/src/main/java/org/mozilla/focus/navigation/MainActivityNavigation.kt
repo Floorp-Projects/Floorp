@@ -28,8 +28,9 @@ import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.settings.advanced.AdvancedSettingsFragment
 import org.mozilla.focus.settings.advanced.SecretSettingsFragment
-import org.mozilla.focus.settings.permissions.AutoplayFragment
 import org.mozilla.focus.settings.permissions.SitePermissionsFragment
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.privacy.studies.StudiesFragment
 import org.mozilla.focus.state.Screen
@@ -182,7 +183,6 @@ class MainActivityNavigation(
             Screen.Settings.Page.Mozilla -> MozillaSettingsFragment()
             Screen.Settings.Page.PrivacyExceptions -> ExceptionsListFragment()
             Screen.Settings.Page.PrivacyExceptionsRemove -> ExceptionsRemoveFragment()
-            Screen.Settings.Page.Autoplay -> AutoplayFragment()
             Screen.Settings.Page.SitePermissions -> SitePermissionsFragment()
             Screen.Settings.Page.Studies -> StudiesFragment()
             Screen.Settings.Page.SecretSettings -> SecretSettingsFragment()
@@ -206,6 +206,17 @@ class MainActivityNavigation(
 
         fragmentManager.beginTransaction()
             .replace(R.id.container, fragment, tag)
+            .commit()
+    }
+
+    fun sitePermissionOptionsFragment(sitePermission: SitePermission) {
+        val fragmentManager = activity.supportFragmentManager
+        fragmentManager.beginTransaction()
+            .replace(
+                R.id.container,
+                SitePermissionOptionsFragment.addSitePermission(sitePermission = sitePermission),
+                SitePermissionOptionsFragment.FRAGMENT_TAG
+            )
             .commit()
     }
 }

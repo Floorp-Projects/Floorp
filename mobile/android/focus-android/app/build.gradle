@@ -4,6 +4,7 @@ plugins {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
 apply plugin: 'jacoco'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 

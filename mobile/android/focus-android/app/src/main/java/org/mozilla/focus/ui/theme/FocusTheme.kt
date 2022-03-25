@@ -79,6 +79,9 @@ private fun darkColorPalette(): FocusColors = FocusColors(
     onboardingButtonBackground = PhotonColors.Violet50,
     onboardingSemiBoldText = PhotonColors.LightGrey05,
     onboardingNormalText = PhotonColors.LightGrey50,
+    settingsTextColor = PhotonColors.White,
+    settingsTextSummaryColor = PhotonColors.LightGrey50
+
 )
 
 private fun lightColorPalette(): FocusColors = FocusColors(
@@ -94,6 +97,8 @@ private fun lightColorPalette(): FocusColors = FocusColors(
     radioButtonSelected = PhotonColors.Pink70,
     toolbarColor = PhotonColors.Black,
     privacySecuritySettingsToolTip = PhotonColors.White,
+    settingsTextColor = PhotonColors.Black,
+    settingsTextSummaryColor = PhotonColors.DarkGrey05,
     onboardingKeyFeatureImageTint = PhotonColors.DarkGrey90,
     onboardingButtonBackground = PhotonColors.Ink20,
     onboardingSemiBoldText = PhotonColors.DarkGrey90,

@@ -43,7 +43,9 @@ abstract class BaseComposeFragment : Fragment() {
     /**
      * Screen title shown in toolbar.
      */
-    abstract val titleRes: Int
+    open val titleRes: Int? = null
+
+    open val titleText: String? = null
 
     /**
      * Callback for the up navigation button shown in toolbar.
@@ -60,6 +62,10 @@ abstract class BaseComposeFragment : Fragment() {
         View = ComposeView(requireContext()).apply {
         StatusBarUtils.getStatusBarHeight(this) { statusBarHeight ->
             setContent {
+                var title = ""
+                titleRes?.let { title = getString(it) }
+                titleText?.let { title = it }
+
                 FocusTheme {
                     Scaffold {
                         Column {
@@ -67,7 +73,7 @@ abstract class BaseComposeFragment : Fragment() {
                                 TopAppBar(
                                     title = {
                                         Text(
-                                            text = getString(titleRes),
+                                            text = title,
                                             color = focusColors.toolbarColor
                                         )
                                     },

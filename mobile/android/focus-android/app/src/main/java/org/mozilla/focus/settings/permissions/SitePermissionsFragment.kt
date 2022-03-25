@@ -9,8 +9,9 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.requirePreference
 import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.state.Screen
 
 class SitePermissionsFragment : BaseSettingsFragment() {
 
@@ -20,18 +21,32 @@ class SitePermissionsFragment : BaseSettingsFragment() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        addPreferencesFromResource(R.xml.site_permissions)
-        requirePreference<Preference>(R.string.pref_key_autoplay).summary =
-            getString(requireComponents.settings.currentAutoplayOption.textId)
+        setPreferencesFromResource(R.xml.site_permissions, rootKey)
+        bindCategoryPhoneFeatures()
     }
 
-    override fun onPreferenceTreeClick(preference: Preference): Boolean {
-        when (preference.key) {
-            resources.getString(R.string.pref_key_autoplay) ->
-                requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.Autoplay)
-                )
+    private fun bindCategoryPhoneFeatures() {
+        SitePermission.values()
+            // Only AUTOPLAY should appear in the list AUTOPLAY_INAUDIBLE and AUTOPLAY_AUDIBLE
+            // shouldn't be bound
+            .filter { it != SitePermission.AUTOPLAY_INAUDIBLE && it != SitePermission.AUTOPLAY_AUDIBLE }
+            .forEach(::initPhoneFeature)
+    }
+
+    private fun initPhoneFeature(sitePermission: SitePermission) {
+        val storage = SitePermissionOptionsStorage(requireContext())
+        val preferencePhoneFeatures = requirePreference<Preference>(
+            storage.getSitePermissionPreferenceId(sitePermission)
+        )
+        preferencePhoneFeatures.summary = storage.getSitePermissionOptionSelectedLabel(sitePermission)
+
+        preferencePhoneFeatures.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            navigateToSitePermissionOptionsScreen(sitePermission)
+            true
         }
-        return super.onPreferenceTreeClick(preference)
+    }
+
+    private fun navigateToSitePermissionOptionsScreen(sitePermission: SitePermission) {
+        requireComponents.appStore.dispatch(AppAction.OpenSitePermissionOptionsScreen(sitePermission = sitePermission))
     }
 }

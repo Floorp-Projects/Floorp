@@ -6,6 +6,7 @@ package org.mozilla.focus.state
 
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.State
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 import java.util.UUID
 
 /**
@@ -13,7 +14,7 @@ import java.util.UUID
  *
  * @property screen The currently displayed screen.
  * @property topSites The list of [TopSite] to display on the Home screen.
- * @property autoplayRulesChanged A flag which reflects the state of autoplay rules,
+ * @property sitePermissionOptionChange A flag which reflects the state of site permission rules,
  * whether they have been updated or not
  * @property secretSettingsEnabled A flag which reflects the state of debug secret settings
  * @property showEraseTabsCfr A flag which reflects the state erase tabs CFR
@@ -21,7 +22,7 @@ import java.util.UUID
 data class AppState(
     val screen: Screen,
     val topSites: List<TopSite> = emptyList(),
-    val autoplayRulesChanged: Boolean = false,
+    val sitePermissionOptionChange: Boolean = false,
     val secretSettingsEnabled: Boolean = false,
     val showEraseTabsCfr: Boolean = false,
     val showTrackingProtectionCfr: Boolean = false
@@ -73,7 +74,7 @@ sealed class Screen {
      * The application is locked (and requires unlocking).
      */
     object Locked : Screen()
-
+    data class SitePermissionOptionsScreen(val sitePermission: SitePermission) : Screen()
     data class Settings(
         val page: Page = Page.Start
     ) : Screen() {
@@ -91,7 +92,6 @@ sealed class Screen {
             PrivacyExceptions,
             PrivacyExceptionsRemove,
             SitePermissions,
-            Autoplay,
             Studies,
             SecretSettings,
 

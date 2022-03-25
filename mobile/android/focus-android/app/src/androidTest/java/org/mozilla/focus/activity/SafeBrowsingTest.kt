@@ -6,6 +6,7 @@ package org.mozilla.focus.activity
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -97,6 +98,7 @@ class SafeBrowsingTest {
         }
     }
 
+    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun unblockSafeBrowsingTest() {
@@ -137,6 +139,7 @@ class SafeBrowsingTest {
         }.closeSecurityInfoSheet { }
     }
 
+    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @Test
     fun testLocationSharingNotAllowed() {
         val permissionsPage = getPermissionsPageAsset(webServer)

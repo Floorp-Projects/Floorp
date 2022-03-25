@@ -6,6 +6,7 @@ package org.mozilla.focus.state
 
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 
 /**
  * An [Action] to be dispatched on the [AppStore].
@@ -59,6 +60,8 @@ sealed class AppAction : Action {
 
     data class OpenSettings(val page: Screen.Settings.Page) : AppAction()
 
+    data class OpenSitePermissionOptionsScreen(val sitePermission: SitePermission) : AppAction()
+
     data class NavigateUp(val tabId: String?) : AppAction()
 
     /**
@@ -79,7 +82,7 @@ sealed class AppAction : Action {
     /**
      * Site permissions autoplay rules has changed.
      */
-    data class AutoplayChange(val value: Boolean) : AppAction()
+    data class SitePermissionOptionChange(val value: Boolean) : AppAction()
 
     /**
      * State of secret settings has changed.

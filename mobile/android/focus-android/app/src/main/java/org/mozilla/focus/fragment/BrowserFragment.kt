@@ -19,6 +19,8 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
@@ -82,6 +84,7 @@ import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.session.ui.TabsPopup
+import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
 import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
@@ -124,6 +127,7 @@ class BrowserFragment :
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
     private var trackingProtectionPanel: TrackingProtectionPanel? = null
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private var tabsPopup: TabsPopup? = null
 
     /**
@@ -140,6 +144,29 @@ class BrowserFragment :
         get() = requireComponents.store.state.findTabOrCustomTab(tabId)
             // Workaround for tab not existing temporarily.
             ?: createTab("about:blank")
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissionsResult ->
+                val grandResults = ArrayList<Int>()
+                permissionsResult.entries.forEach {
+                    val isGranted = it.value
+                    if (isGranted) {
+                        grandResults.add(PackageManager.PERMISSION_GRANTED)
+                    } else {
+                        grandResults.add(PackageManager.PERMISSION_DENIED)
+                    }
+                }
+                val feature = sitePermissionsFeature.get()
+                feature?.onPermissionsResult(
+                    permissionsResult.keys.toTypedArray(),
+                    grandResults.toIntArray()
+                )
+            }
+    }
 
     @Suppress("LongMethod", "ComplexMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -346,23 +373,26 @@ class BrowserFragment :
             feature = SitePermissionsFeature(
                 context = requireContext(),
                 fragmentManager = parentFragmentManager,
-                onNeedToRequestPermissions = {
-                    // This it will be always empty because we are not asking for user input
+                onNeedToRequestPermissions = { permissions ->
+                    if (SitePermissionOptionsStorage(requireContext()).isSitePermissionNotBlocked(permissions)) {
+                        requestPermissionLauncher.launch(permissions)
+                    }
                 },
                 onShouldShowRequestPermissionRationale = {
                     // Since we don't request permissions this it will not be called
                     false
                 },
-                sitePermissionsRules = requireComponents.settings.getSitePermissionsSettingsRules(),
+                sitePermissionsRules = SitePermissionOptionsStorage(requireContext()).getSitePermissionsSettingsRules(),
                 sessionId = tabId,
-                store = requireComponents.store
+                store = requireComponents.store,
+                shouldShowDoNotAskAgainCheckBox = false
             ),
             owner = this,
             view = rootView
         )
-        if (requireComponents.appStore.state.autoplayRulesChanged) {
+        if (requireComponents.appStore.state.sitePermissionOptionChange) {
             requireComponents.sessionUseCases.reload(tabId)
-            requireComponents.appStore.dispatch(AppAction.AutoplayChange(false))
+            requireComponents.appStore.dispatch(AppAction.SitePermissionOptionChange(false))
         }
     }
 

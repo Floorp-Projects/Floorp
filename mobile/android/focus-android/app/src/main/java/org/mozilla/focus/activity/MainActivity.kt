@@ -244,7 +244,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         val appStore = components.appStore
-        if (appStore.state.screen is Screen.Settings) {
+        if (appStore.state.screen is Screen.Settings || appStore.state.screen is Screen.SitePermissionOptionsScreen) {
             // When on a settings screen we want the same behavior as navigating "up" via the toolbar
             // and therefore dispatch the `NavigateUp` action on the app store.
             val selectedTabId = components.store.state.selectedTabId

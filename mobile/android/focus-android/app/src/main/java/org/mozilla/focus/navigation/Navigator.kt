@@ -7,7 +7,6 @@ package org.mozilla.focus.navigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -50,6 +49,7 @@ class Navigator(
             is Screen.FirstRun -> navigation.firstRun()
             is Screen.Locked -> navigation.lock()
             is Screen.Settings -> navigation.settings(screen.page)
+            is Screen.SitePermissionOptionsScreen -> navigation.sitePermissionOptionsFragment(screen.sitePermission)
         }
     }
 }
