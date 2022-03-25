@@ -9,6 +9,18 @@
 
 const RESTRICT_TOKEN_OPENPAGE = "%";
 
+const { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+
+const { UrlbarProviderOpenTabs } = ChromeUtils.import(
+  "resource:///modules/UrlbarProviderOpenTabs.jsm"
+);
+
 const { UrlbarTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
@@ -29,6 +41,10 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     ss.setBrowserState(stateBackup);
   });
+
+  info("Waiting for the Places DB to be initialized");
+  await PlacesUtils.promiseLargeCacheDBConnection();
+  await UrlbarProviderOpenTabs.promiseDBPopulated;
 });
 
 add_task(async function test_unrestored_tabs_listed() {
@@ -102,6 +118,10 @@ add_task(async function test_unrestored_tabs_listed() {
     gBrowser.tabContainer.addEventListener("SSTabRestored", handleEvent, true);
     ss.setBrowserState(JSON.stringify(state));
   });
+
+  // Ensure any database statements started by UrlbarProviderOpenTabs are
+  // complete before continuing.
+  await PlacesTestUtils.promiseAsyncUpdates();
 
   // Remove the current tab from tabsForEnsure, because switch to tab doesn't
   // suggest it.
