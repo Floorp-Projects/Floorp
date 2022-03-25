@@ -470,7 +470,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   auto visitedSet = aRequest->mVisitedSet;
   MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
 
-  aRequest->mProgress = ModuleLoadRequest::Progress::eFetchingImports;
+  aRequest->mState = ModuleLoadRequest::State::LoadingImports;
 
   nsCOMArray<nsIURI> urls;
   nsresult rv = ResolveRequestedModules(aRequest, &urls);
