@@ -21,7 +21,7 @@ const {
 } = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
 
 describe("test Window", () => {
-  const stub = stubs.get("Window");
+  const stub = stubs.get("Window")._grip;
 
   it("selects Window Rep correctly", () => {
     expect(getRep(stub)).toBe(Window.rep);
@@ -46,8 +46,12 @@ describe("test Window", () => {
       })
     );
 
-    expect(renderedComponent.text()).toEqual("Window about:newtab");
-    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
+    expect(renderedComponent.text()).toEqual(
+      "Window data:text/html;charset=utf-8,stub generation"
+    );
+    expect(renderedComponent.prop("title")).toEqual(
+      "Window data:text/html;charset=utf-8,stub generation"
+    );
   });
 
   it("renders with correct inner HTML structure and content", () => {
@@ -57,7 +61,9 @@ describe("test Window", () => {
       })
     );
 
-    expect(renderedComponent.find(".location").text()).toEqual("about:newtab");
+    expect(renderedComponent.find(".location").text()).toEqual(
+      "data:text/html;charset=utf-8,stub generation"
+    );
   });
 
   it("renders with expected text in TINY mode", () => {
@@ -70,7 +76,9 @@ describe("test Window", () => {
     );
 
     expect(renderedComponent.text()).toEqual("Window");
-    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
+    expect(renderedComponent.prop("title")).toEqual(
+      "Window data:text/html;charset=utf-8,stub generation"
+    );
   });
 
   it("renders with expected text in LONG mode", () => {
@@ -82,8 +90,12 @@ describe("test Window", () => {
       })
     );
 
-    expect(renderedComponent.text()).toEqual("Window about:newtab");
-    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
+    expect(renderedComponent.text()).toEqual(
+      "Window data:text/html;charset=utf-8,stub generation"
+    );
+    expect(renderedComponent.prop("title")).toEqual(
+      "Window data:text/html;charset=utf-8,stub generation"
+    );
   });
 
   it("renders expected text in TINY mode with Custom display class", () => {
@@ -112,6 +124,8 @@ describe("test Window", () => {
       })
     );
 
-    expect(renderedComponent.text()).toEqual("Custom about:newtab");
+    expect(renderedComponent.text()).toEqual(
+      "Custom data:text/html;charset=utf-8,stub generation"
+    );
   });
 });
