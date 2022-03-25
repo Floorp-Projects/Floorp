@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     "ReadableStreamTee.cpp",
     "StreamUtils.cpp",
     "TeeState.cpp",
+    "TransformerCallbackHelpers.cpp",
     "TransformStream.cpp",
     "TransformStreamDefaultController.cpp",
     "UnderlyingSinkCallbackHelpers.cpp",
