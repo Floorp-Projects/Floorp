@@ -40,6 +40,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   delay => Math.min(Math.max(delay, 100), 5 * 60 * 1000)
 );
 
+function notifyBackgroundScriptStatus(addonId, isRunning) {
+  // Notify devtools when the background scripts is started or stopped
+  // (used to show the current status in about:debugging).
+  const subject = { addonId, isRunning };
+  Services.obs.notifyObservers(subject, "extension:background-script-status");
+}
+
 // Responsible for the background_page section of the manifest.
 class BackgroundPage extends HiddenExtensionPage {
   constructor(extension, options) {
@@ -100,20 +107,10 @@ class BackgroundPage extends HiddenExtensionPage {
       await Promise.all(context.listenerPromises);
       context.listenerPromises = null;
 
-      // Notify devtools when the background scripts is started or stopped
-      // (used to show the current status in about:debugging).
-      extensions.emit(
-        `devtools:background-script-status`,
-        extension.id,
-        true /* isRunning */
-      );
+      notifyBackgroundScriptStatus(extension.id, true);
       context.callOnClose({
         close() {
-          extensions.emit(
-            `devtools:background-script-status`,
-            extension.id,
-            false /* isRunning */
-          );
+          notifyBackgroundScriptStatus(extension.id, false);
         },
       });
     }
@@ -211,20 +208,10 @@ class BackgroundWorker {
       await Promise.all(context.listenerPromises);
       context.listenerPromises = null;
 
-      // Notify devtools when the background scripts is started or stopped
-      // (used to show the current status in about:debugging).
-      extensions.emit(
-        `devtools:background-script-status`,
-        extension.id,
-        true /* isRunning */
-      );
+      notifyBackgroundScriptStatus(extension.id, true);
       context.callOnClose({
         close() {
-          extensions.emit(
-            `devtools:background-script-status`,
-            extension.id,
-            false /* isRunning */
-          );
+          notifyBackgroundScriptStatus(extension.id, false);
         },
       });
     }
