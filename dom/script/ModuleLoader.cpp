@@ -353,7 +353,7 @@ nsresult ModuleLoader::RestartModuleLoad(ScriptLoadRequest* aRequest) {
 
 nsresult ModuleLoader::StartModuleLoadImpl(ScriptLoadRequest* aRequest,
                                            RestartRequest aRestart) {
-  MOZ_ASSERT(aRequest->IsLoading());
+  MOZ_ASSERT(aRequest->IsFetching());
   NS_ENSURE_TRUE(GetScriptLoader()->GetDocument(), NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
 
