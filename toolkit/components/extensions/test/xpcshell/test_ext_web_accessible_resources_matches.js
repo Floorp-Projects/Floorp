@@ -78,8 +78,6 @@ add_task(async function test_web_accessible_resources() {
           run_at: "document_idle",
         },
       ],
-      host_permissions: ["http://example.com/*", "http://example.org/*"],
-      granted_host_permissions: true,
 
       web_accessible_resources: [
         {
@@ -88,7 +86,6 @@ add_task(async function test_web_accessible_resources() {
         },
       ],
     },
-    temporarilyInstalled: true,
 
     files: {
       "content_script.js": contentScript,
