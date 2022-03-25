@@ -37,7 +37,6 @@ import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
-import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
@@ -155,18 +154,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.NormalAndPrivateUriOpened -> EventWrapper<NoExtraKeys>(
             { Events.normalAndPrivateUriCount.add(1) }
-        )
-        is Event.SyncAccountOpened -> EventWrapper<NoExtraKeys>(
-            { SyncAccount.opened.record(it) }
-        )
-        is Event.SyncAccountSyncNow -> EventWrapper<NoExtraKeys>(
-            { SyncAccount.syncNow.record(it) }
-        )
-        is Event.SignInToSendTab -> EventWrapper<NoExtraKeys>(
-            { SyncAccount.signInToSendTab.record(it) }
-        )
-        is Event.SendTab -> EventWrapper<NoExtraKeys>(
-            { SyncAccount.sendTab.record(it) }
         )
         is Event.PreferenceToggled -> EventWrapper(
             { Events.preferenceToggled.record(it) },

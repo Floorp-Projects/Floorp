@@ -30,11 +30,11 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
+import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
 
@@ -136,7 +136,7 @@ class DefaultShareController(
     }
 
     override fun handleShareToDevice(device: Device) {
-        context.metrics.track(Event.SendTab)
+        SyncAccount.sendTab.record(NoExtras())
         shareToDevicesWithRetry { sendTabUseCases.sendToDeviceAsync(device.id, shareData.toTabData()) }
     }
 
@@ -145,7 +145,7 @@ class DefaultShareController(
     }
 
     override fun handleSignIn() {
-        context.metrics.track(Event.SignInToSendTab)
+        SyncAccount.signInToSendTab.record(NoExtras())
         val directions =
             ShareFragmentDirections.actionGlobalTurnOnSync(padSnackbar = true)
         navController.nav(R.id.shareFragment, directions)

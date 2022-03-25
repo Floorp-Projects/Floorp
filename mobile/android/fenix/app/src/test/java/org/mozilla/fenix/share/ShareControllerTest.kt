@@ -26,19 +26,21 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -67,6 +69,9 @@ class ShareControllerTest {
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
     private val recentAppStorage = mockk<RecentAppsStorage>(relaxed = true)
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -265,9 +270,12 @@ class ShareControllerTest {
 
         controller.handleShareToDevice(deviceToShareTo)
 
+        assertTrue(SyncAccount.sendTab.testHasValue())
+        assertEquals(1, SyncAccount.sendTab.testGetValue().size)
+        assertNull(SyncAccount.sendTab.testGetValue().single().extra)
+
         // Verify all the needed methods are called.
-        verifyOrder {
-            metrics.track(Event.SendTab)
+        verify {
             sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
             // dismiss() is also to be called, but at the moment cannot test it in a coroutine.
         }
@@ -321,8 +329,11 @@ class ShareControllerTest {
     fun `handleSignIn should navigate to the Sync Fragment and dismiss this one`() {
         controller.handleSignIn()
 
+        assertTrue(SyncAccount.signInToSendTab.testHasValue())
+        assertEquals(1, SyncAccount.signInToSendTab.testGetValue().size)
+        assertNull(SyncAccount.signInToSendTab.testGetValue().single().extra)
+
         verifyOrder {
-            metrics.track(Event.SignInToSendTab)
             navController.nav(
                 R.id.shareFragment,
                 ShareFragmentDirections.actionGlobalTurnOnSync()

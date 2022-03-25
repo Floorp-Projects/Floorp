@@ -34,11 +34,12 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
@@ -81,7 +82,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireComponents.analytics.metrics.track(Event.SyncAccountOpened)
+        SyncAccount.opened.record(NoExtras())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -326,7 +327,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
      */
     private fun syncNow() {
         viewLifecycleOwner.lifecycleScope.launch {
-            requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
+            SyncAccount.syncNow.record(NoExtras())
             // Trigger a sync.
             requireComponents.backgroundServices.accountManager.syncNow(SyncReason.User)
             // Poll for device events & update devices.
