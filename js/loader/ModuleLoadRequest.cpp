@@ -69,7 +69,7 @@ ModuleLoadRequest::ModuleLoadRequest(
 void ModuleLoadRequest::Cancel() {
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
-  mProgress = ScriptLoadRequest::Progress::eReady;
+  mState = ScriptLoadRequest::State::Ready;
   CancelImports();
   mReady.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
 }

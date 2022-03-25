@@ -486,7 +486,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
 
   // Start a new channel from which we explicitly request to stream the source
   // instead of the bytecode.
-  aRequest->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
+  aRequest->mState = ScriptLoadRequest::State::FetchingSource;
   nsresult rv;
   if (aRequest->IsModuleRequest()) {
     rv = mModuleLoader->RestartModuleLoad(aRequest);
@@ -1078,7 +1078,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
                         referrerPolicy);
   request->GetLoadContext()->mIsInline = true;
   request->GetLoadContext()->mLineNo = aElement->GetScriptLineNumber();
-  request->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
+  request->mState = ScriptLoadRequest::State::FetchingSource;
   request->SetTextSource();
   TRACE_FOR_TEST_BOOL(request->GetLoadContext()->GetScriptElement(),
                       "scriptloader_load_source");
@@ -1121,7 +1121,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
 
     return false;
   }
-  request->mProgress = ScriptLoadRequest::Progress::eReady;
+  request->mState = ScriptLoadRequest::State::Ready;
   if (aElement->GetParserCreated() == FROM_PARSER_XSLT &&
       (!ReadyToExecuteParserBlockingScripts() || !mXSLTRequests.isEmpty())) {
     // Need to maintain order for XSLT-inserted scripts
@@ -1331,7 +1331,7 @@ void ScriptLoader::CancelScriptLoadRequests() {
 }
 
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling);
+  MOZ_ASSERT(aRequest->mState == ScriptLoadRequest::State::Compiling);
   MOZ_ASSERT(!aRequest->GetLoadContext()->mWasCompiledOMT);
 
   if (aRequest->IsCanceled()) {
@@ -1614,7 +1614,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   // Once the compilation is finished, an event would be added to the event loop
   // to call ScriptLoader::ProcessOffThreadRequest with the same request.
-  aRequest->mProgress = ScriptLoadRequest::Progress::eCompiling;
+  aRequest->mState = ScriptLoadRequest::State::Compiling;
 
   // Requests that are not tracked elsewhere are added to a list while they are
   // being compiled off-thread, so we can cancel the compilation later if
@@ -3298,7 +3298,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (couldCompile) {
-      MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling,
+      MOZ_ASSERT(aRequest->mState == ScriptLoadRequest::State::Compiling,
                  "Request should be off-thread compiling now.");
       return NS_OK;
     }

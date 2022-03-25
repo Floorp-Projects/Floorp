@@ -184,25 +184,22 @@ class ScriptLoadRequest
 
   virtual void SetReady();
 
-  enum class Progress : uint8_t {
-    eLoading,         // Request either source or bytecode
-    eLoading_Source,  // Explicitly Request source stream
-    eCompiling,
-    eFetchingImports,
-    eReady
+  enum class State : uint8_t {
+    Fetching,        // Request either source or bytecode
+    FetchingSource,  // Explicitly request source stream
+    Compiling,
+    LoadingImports,
+    Ready
   };
 
-  bool IsReadyToRun() const { return mProgress == Progress::eReady; }
+  bool IsReadyToRun() const { return mState == State::Ready; }
   bool IsLoading() const {
-    return mProgress == Progress::eLoading ||
-           mProgress == Progress::eLoading_Source;
+    return mState == State::Fetching || mState == State::FetchingSource;
   }
 
-  bool IsLoadingSource() const {
-    return mProgress == Progress::eLoading_Source;
-  }
+  bool IsLoadingSource() const { return mState == State::FetchingSource; }
 
-  bool InCompilingStage() const { return mProgress == Progress::eCompiling; }
+  bool InCompilingStage() const { return mState == State::Compiling; }
 
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode };
@@ -299,7 +296,7 @@ class ScriptLoadRequest
                            // script.
 
   bool mIsCanceled;    // True if we have been explicitly canceled.
-  Progress mProgress;  // Are we still waiting for a load to complete?
+  State mState;        // Are we still waiting for a load to complete?
   DataType mDataType;  // Does this contain Source or Bytecode?
   RefPtr<ScriptFetchOptions> mFetchOptions;
   const SRIMetadata mIntegrity;
