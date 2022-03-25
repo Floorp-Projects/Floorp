@@ -75,8 +75,12 @@ DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
 #ifdef MOZ_WAYLAND
 #  include "mozilla/WidgetUtilsGtk.h"
 #  define IS_WAYLAND_DISPLAY() mozilla::widget::GdkIsWaylandDisplay()
+extern mozilla::LazyLogModule gWidgetPopupLog;
+#  define LOG_WAYLAND(...) \
+    MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #else
 #  define IS_WAYLAND_DISPLAY() false
+#  define LOG_WAYLAND (...)
 #endif
 
 // NS_NewMenuPopupFrame
@@ -597,12 +601,6 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     shouldPosition = true;
     SetXULBounds(aState, nsRect(0, 0, prefSize.width, prefSize.height), false);
     mPrefSize = prefSize;
-    nsIWidget* widget = GetWidget();
-    if (mPopupState != ePopupShown && widget && IS_WAYLAND_DISPLAY()) {
-      // We changed popup size, clear the one stored on widget level.
-      // This is Wayland only.
-      widget->MoveToRectPopupRectClear();
-    }
   }
 
   bool needCallback = false;
@@ -1565,22 +1563,33 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
   nscoord oldAlignmentOffset = mAlignmentOffset;
 
+  // Shrink the popup down if it's larger than popup size received from Wayland
+  // compositor. We don't know screen size on Wayland so this is the only info
+  // we have there.
+#ifdef MOZ_WAYLAND
   if (IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
       nsRect prefRect = LayoutDeviceIntRect::ToAppUnits(
           widget->GetMoveToRectPopupRect(), presContext->AppUnitsPerDevPixel());
-      if (prefRect.width > 0 && prefRect.height > 0) {
-        // Shrink the popup down if it's larger than size received from Wayland
-        // compositor.
-        if (mRect.width > prefRect.width) {
-          mRect.width = prefRect.width;
-        }
-        if (mRect.height > prefRect.height) {
-          mRect.height = prefRect.height;
-        }
+      if (prefRect.width > 0 && mRect.width > prefRect.width) {
+        LOG_WAYLAND(
+            "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
+            "width from %d to %d",
+            widget, mRect.width / presContext->AppUnitsPerDevPixel(),
+            prefRect.width / presContext->AppUnitsPerDevPixel());
+        mRect.width = prefRect.width;
+      }
+      if (prefRect.height > 0 && mRect.height > prefRect.height) {
+        LOG_WAYLAND(
+            "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
+            "height from %d to %d",
+            widget, mRect.height / presContext->AppUnitsPerDevPixel(),
+            prefRect.height / presContext->AppUnitsPerDevPixel());
+        mRect.height = prefRect.height;
       }
     }
   }
+#endif
 
   // If a panel is being moved or has flip="none", don't constrain or flip it,
   // in order to avoid visual noise when moving windows between screens.
