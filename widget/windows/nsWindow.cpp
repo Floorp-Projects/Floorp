@@ -259,6 +259,7 @@ bool nsWindow::sDropShadowEnabled = true;
 uint32_t nsWindow::sInstanceCount = 0;
 bool nsWindow::sSwitchKeyboardLayout = false;
 BOOL nsWindow::sIsOleInitialized = FALSE;
+HCURSOR nsWindow::sCustomHCursor = nullptr;
 nsIWidget::Cursor nsWindow::sCurrentCursor = {};
 nsWindow* nsWindow::sCurrentWindow = nullptr;
 bool nsWindow::sJustGotDeactivate = false;
@@ -3243,15 +3244,13 @@ static HCURSOR CursorForImage(const nsIWidget::Cursor& aCursor,
 
 // Setting the actual cursor
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  static HCURSOR sCustomHCursor = nullptr;
-
   mCursor = aCursor;
 
-  if (!mUpdateCursor && sCurrentCursor == aCursor) {
+  if (sCurrentCursor == aCursor && sCustomHCursor) {
+    ::SetCursor(sCustomHCursor);
     return;
   }
 
-  mUpdateCursor = false;
   if (sCustomHCursor) {
     ::DestroyIcon(sCustomHCursor);
     sCustomHCursor = nullptr;
