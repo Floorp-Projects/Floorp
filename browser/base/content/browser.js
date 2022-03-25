@@ -632,6 +632,7 @@ async function gLazyFindCommand(cmd, ...args) {
 
 var gPageIcons = {
   "about:home": "chrome://branding/content/icon32.png",
+  "about:myfirefox": "chrome://branding/content/icon32.png",
   "about:newtab": "chrome://branding/content/icon32.png",
   "about:welcome": "chrome://branding/content/icon32.png",
   "about:privatebrowsing": "chrome://browser/skin/privatebrowsing/favicon.svg",
@@ -639,8 +640,9 @@ var gPageIcons = {
 
 var gInitialPages = [
   "about:blank",
-  "about:newtab",
   "about:home",
+  "about:myfirefox",
+  "about:newtab",
   "about:privatebrowsing",
   "about:welcomeback",
   "about:sessionrestore",
