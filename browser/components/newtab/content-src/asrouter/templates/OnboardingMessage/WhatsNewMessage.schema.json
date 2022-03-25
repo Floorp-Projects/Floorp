@@ -67,7 +67,7 @@
     "cta_url": {
       "description": "Target URL for the What's New message.",
       "type": "string",
-      "format": "uri"
+      "format": "moz-url-format"
     },
     "cta_type": {
       "description": "Type of url open action",
