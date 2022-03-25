@@ -2660,7 +2660,6 @@ impl<'ctx> CoreStreamData<'ctx> {
             let params = unsafe {
                 let mut p = *self.output_stream_params.as_ptr();
                 p.channels = output_hw_desc.mChannelsPerFrame;
-                p.rate = output_hw_desc.mSampleRate as _;
                 StreamParams::from(p)
             };
 
@@ -3287,6 +3286,40 @@ impl<'ctx> AudioUnitStream<'ctx> {
 
         self.core_stream_data.close();
 
+        // Use the new default device if this stream was set to follow the output device.
+        if self.core_stream_data.has_output()
+            && self
+                .core_stream_data
+                .output_device
+                .flags
+                .contains(device_flags::DEV_SELECTED_DEFAULT)
+        {
+            self.core_stream_data.output_device = create_device_info(kAudioObjectUnknown, DeviceType::OUTPUT).map_err(|e| {
+                cubeb_log!(
+                    "({:p}) Create output device info failed. This can happen when last media device is unplugged",
+                    self.core_stream_data.stm_ptr
+                );
+                e
+            })?;
+        }
+
+        // Likewise, for the input seid
+        if self.core_stream_data.has_input()
+            && self
+                .core_stream_data
+                .input_device
+                .flags
+                .contains(device_flags::DEV_SELECTED_DEFAULT)
+        {
+            self.core_stream_data.input_device = create_device_info(kAudioObjectUnknown, DeviceType::INPUT).map_err(|e| {
+                cubeb_log!(
+                    "({:p}) Create input device info failed. This can happen when last media device is unplugged",
+                    self.core_stream_data.stm_ptr
+                );
+                e
+            })?;
+        }
+
         self.core_stream_data.setup().map_err(|e| {
             cubeb_log!("({:p}) Setup failed.", self.core_stream_data.stm_ptr);
             e
@@ -3527,7 +3560,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
             if hw_rate == user_rate {
                 Ok(frames)
             } else {
-                Ok(frames * (user_rate / hw_rate))
+                Ok((frames * user_rate) / hw_rate)
             }
         } else {
             Err(Error::error())
