@@ -1,8 +1,10 @@
 import socket
-import subprocess
 import time
-
 from http.client import HTTPConnection
+
+from mozprocess import ProcessHandler
+
+import webdriver
 
 
 def request(server_host, server_port, path="/status", host=None, origin=None):
@@ -57,22 +59,33 @@ def get_host(port_type, hostname, server_port):
 class Geckodriver:
     def __init__(self, configuration, hostname, extra_args):
         self.config = configuration["webdriver"]
+        self.requested_capabilities = configuration["capabilities"]
         self.hostname = hostname
         self.extra_args = extra_args
+
         self.command = None
         self.proc = None
-        self.port = None
+        self.port = get_free_port()
+
+        capabilities = {"alwaysMatch": self.requested_capabilities}
+        self.session = webdriver.Session(
+            self.hostname, self.port, capabilities=capabilities
+        )
 
     def __enter__(self):
-        self.port = get_free_port()
         self.command = (
             [self.config["binary"], "--port", str(self.port)]
             + self.config["args"]
             + self.extra_args
         )
-        self.proc = subprocess.Popen(
-            self.command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+
+        def processOutputLine(line):
+            print(line)
+
+        self.proc = ProcessHandler(
+            self.command, processOutputLine=processOutputLine, universal_newlines=True
         )
+        self.proc.run()
 
         # Wait for the port to become ready
         end_time = time.time() + 10
@@ -90,5 +103,13 @@ class Geckodriver:
         return self
 
     def __exit__(self, *args, **kwargs):
-        self.proc.terminate()
-        print(self.proc.stdout.read())
+        self.delete_session()
+
+        if self.proc:
+            self.proc.kill()
+
+    def new_session(self):
+        self.session.start()
+
+    def delete_session(self):
+        self.session.end()
