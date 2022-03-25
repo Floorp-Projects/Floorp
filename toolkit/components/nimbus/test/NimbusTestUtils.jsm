@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   _RemoteSettingsExperimentLoader:
@@ -140,6 +141,26 @@ const ExperimentTestUtils = {
       rollout,
       `Rollout configuration ${rollout.slug} is not valid`
     );
+  },
+  /**
+   * Add features for tests.
+   *
+   * These features will only be visible to the JS Nimbus client. The native
+   * Nimbus client will have no access.
+   *
+   * @params features A list of |_NimbusFeature|s.
+   *
+   * @returns A cleanup function to remove the features once the test has completed.
+   */
+  addTestFeatures(...features) {
+    for (const feature of features) {
+      NimbusFeatures[feature.featureId] = feature;
+    }
+    return () => {
+      for (const { featureId } of features) {
+        delete NimbusFeatures[featureId];
+      }
+    };
   },
 };
 
@@ -309,8 +330,8 @@ const ExperimentFakes = {
         slug: "treatment",
         features: [
           {
-            featureId: "test-feature",
-            value: { title: "hello", enabled: true },
+            featureId: "testFeature",
+            value: { testInt: 123, enabled: true },
           },
         ],
         ...props,
@@ -322,7 +343,7 @@ const ExperimentFakes = {
       userFacingDescription: "NimbusTestUtils",
       lastSeen: new Date().toJSON(),
       featureIds: props?.branch?.features?.map(f => f.featureId) || [
-        "test-feature",
+        "testFeature",
       ],
       ...props,
     };
@@ -337,8 +358,8 @@ const ExperimentFakes = {
         slug: "treatment",
         features: [
           {
-            featureId: "test-feature",
-            value: { title: "hello", enabled: true },
+            featureId: "testFeature",
+            value: { testInt: 123, enabled: true },
           },
         ],
         ...props,
@@ -351,7 +372,7 @@ const ExperimentFakes = {
       lastSeen: new Date().toJSON(),
       featureIds: (props?.branch?.features || props?.features)?.map(
         f => f.featureId
-      ) || ["test-feature"],
+      ) || ["testFeature"],
       ...props,
     };
   },
@@ -375,15 +396,20 @@ const ExperimentFakes = {
         {
           slug: "control",
           ratio: 1,
-          features: [{ featureId: "test-feature", value: { enabled: true } }],
+          features: [
+            {
+              featureId: "testFeature",
+              value: { testInt: 123, enabled: true },
+            },
+          ],
         },
         {
           slug: "treatment",
           ratio: 1,
           features: [
             {
-              featureId: "test-feature",
-              value: { title: "hello", enabled: true },
+              featureId: "testFeature",
+              value: { testInt: 123, enabled: true },
             },
           ],
         },
@@ -398,7 +424,7 @@ const ExperimentFakes = {
       userFacingName: "Nimbus recipe",
       userFacingDescription: "NimbusTestUtils recipe",
       featureIds: props?.branches?.[0].features?.map(f => f.featureId) || [
-        "test-feature",
+        "testFeature",
       ],
       ...props,
     };
