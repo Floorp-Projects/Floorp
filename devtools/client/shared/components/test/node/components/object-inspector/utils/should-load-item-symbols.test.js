@@ -115,7 +115,7 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
@@ -125,7 +125,7 @@ describe("shouldLoadItemSymbols", () => {
     const windowNode = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     const loadedProperties = new Map([
