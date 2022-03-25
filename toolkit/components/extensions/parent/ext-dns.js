@@ -73,7 +73,7 @@ this.dns = class extends ExtensionAPI {
                 hostname,
                 Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
                 dnsFlags,
-                null, // resolverInfo
+                null, // AdditionalInfo
                 listener,
                 null,
                 {} /* defaultOriginAttributes */

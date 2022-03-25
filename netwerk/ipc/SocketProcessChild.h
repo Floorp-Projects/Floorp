@@ -104,12 +104,12 @@ class SocketProcessChild final
   bool IsShuttingDown() { return mShuttingDown; }
 
   already_AddRefed<PDNSRequestChild> AllocPDNSRequestChild(
-      const nsCString& aHost, const nsCString& aTrrServer,
+      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
       const uint16_t& aType, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestChild* aActor, const nsCString& aHost,
-      const nsCString& aTrrServer, const uint16_t& aType,
+      const nsCString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags) override;
 

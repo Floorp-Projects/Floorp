@@ -472,8 +472,9 @@ SocketProcessChild::AllocPAltSvcTransactionChild(
 }
 
 already_AddRefed<PDNSRequestChild> SocketProcessChild::AllocPDNSRequestChild(
-    const nsCString& aHost, const nsCString& aTrrServer, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
+    const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
+    const uint16_t& aType, const OriginAttributes& aOriginAttributes,
+    const uint32_t& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
   RefPtr<DNSRequestChild> actor = new DNSRequestChild(handler);
   return actor.forget();
@@ -481,12 +482,13 @@ already_AddRefed<PDNSRequestChild> SocketProcessChild::AllocPDNSRequestChild(
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvPDNSRequestConstructor(
     PDNSRequestChild* aActor, const nsCString& aHost,
-    const nsCString& aTrrServer, const uint16_t& aType,
+    const nsCString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
     const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   RefPtr<DNSRequestChild> actor = static_cast<DNSRequestChild*>(aActor);
   RefPtr<DNSRequestHandler> handler =
       actor->GetDNSRequest()->AsDNSRequestHandler();
-  handler->DoAsyncResolve(aHost, aTrrServer, aType, aOriginAttributes, aFlags);
+  handler->DoAsyncResolve(aHost, aTrrServer, aPort, aType, aOriginAttributes,
+                          aFlags);
   return IPC_OK();
 }
 
