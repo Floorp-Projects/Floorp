@@ -154,6 +154,10 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   void NoteTerminating() { StartDying(); }
 
+  // Usually global scope dies earlier than the WorkerPrivate, but if we see
+  // it leak at least we can tell it to not carry away a dead pointer.
+  void NoteWorkerTerminated() { mWorkerPrivate = nullptr; }
+
   ClientSource& MutableClientSourceRef() const { return *mClientSource; }
 
   // WorkerPrivate wants to be able to forbid script when its state machine

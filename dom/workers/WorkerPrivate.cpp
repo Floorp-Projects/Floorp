@@ -2958,6 +2958,23 @@ void WorkerPrivate::RunLoopNeverRan() {
   ScheduleDeletion(WorkerPrivate::WorkerRan);
 }
 
+void WorkerPrivate::UnrootGlobalScopes() {
+  auto data = mWorkerThreadAccessible.Access();
+
+  RefPtr<WorkerDebuggerGlobalScope> debugScope = data->mDebuggerScope.forget();
+  if (debugScope) {
+    MOZ_ASSERT(debugScope->mWorkerPrivate == this);
+    // TODO: Remove this in favor of using weak references in
+    // WorkerThreadPrimaryRunnable::Run() but WorkerDebuggerGlobalScope
+    // does not support them yet.
+    debugScope->mWorkerPrivate = nullptr;
+  }
+  RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
+  if (scope) {
+    MOZ_ASSERT(scope->mWorkerPrivate == this);
+  }
+}
+
 void WorkerPrivate::DoRunLoop(JSContext* aCx) {
   auto data = mWorkerThreadAccessible.Access();
   MOZ_ASSERT(mThread);
@@ -3077,19 +3094,6 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
         // We do not need the timeouts any more, they have been canceled
         // by NotifyInternal(Killing) above if they were active.
         UnlinkTimeouts();
-
-        // Unroot the globals
-        RefPtr<WorkerDebuggerGlobalScope> debugScope =
-            data->mDebuggerScope.forget();
-        RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
-        if (debugScope) {
-          MOZ_ASSERT(debugScope->mWorkerPrivate == this);
-          debugScope->mWorkerPrivate = nullptr;
-        }
-        if (scope) {
-          MOZ_ASSERT(scope->mWorkerPrivate == this);
-          scope->mWorkerPrivate = nullptr;
-        }
 
         return;
       }
