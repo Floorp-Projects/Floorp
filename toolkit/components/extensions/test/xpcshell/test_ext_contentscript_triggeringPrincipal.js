@@ -1344,8 +1344,12 @@ add_task(async function test_extension_contentscript_csp() {
     manifest: {
       ...EXTENSION_DATA.manifest,
       manifest_version: 3,
+      host_permissions: ["http://example.com/*"],
+      granted_host_permissions: true,
     },
+    temporarilyInstalled: true,
   };
+
   let extension = ExtensionTestUtils.loadExtension(data);
   await extension.startup();
 
