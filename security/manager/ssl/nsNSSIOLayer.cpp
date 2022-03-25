@@ -2066,6 +2066,11 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
       Input subjectPublicKeyInfo) override {
     return Success;
   }
+  virtual mozilla::pkix::Result VerifyRSAPSSSignedData(
+      Input data, DigestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
+    return Success;
+  }
   virtual mozilla::pkix::Result CheckECDSACurveIsAcceptable(
       EndEntityOrCA endEntityOrCA, NamedCurve curve) override {
     return Success;

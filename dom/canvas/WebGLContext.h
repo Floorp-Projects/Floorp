@@ -1235,7 +1235,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
       const webgl::FormatUsageInfo** out_format, uint32_t* out_width,
       uint32_t* out_height,
       GLenum incompleteFbError = LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
-  void DoColorMask(uint8_t bitmask) const;
+  void DoColorMask(Maybe<GLuint> i, uint8_t bitmask) const;
   void BlitBackbufferToCurDriverFB(
       WebGLFramebuffer* const srcAsWebglFb = nullptr,
       const gl::MozFramebuffer* const srcAsMozFb = nullptr,

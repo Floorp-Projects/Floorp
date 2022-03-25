@@ -60,6 +60,7 @@
     'shvfy.c',
     'sysrand.c',
     'tlsprfalg.c',
+    'secmpi.c',
   ],
   'conditions': [
     [ 'OS=="linux" or OS=="android"', {

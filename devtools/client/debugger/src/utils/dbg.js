@@ -4,6 +4,7 @@
 
 import { prefs, asyncStore, features } from "./prefs";
 import { getDocument } from "./editor/source-documents";
+import { wasmOffsetToLine } from "./wasm";
 
 function getThreadFront(dbg) {
   return dbg.targetCommand.targetFront.threadFront;
@@ -72,6 +73,11 @@ export function setupHelper(obj) {
     asyncStore,
     features,
     getCM,
+
+    // Expose this to tests as they don't have access to debugger's browser loader require
+    // and so can't load utils/wasm.js
+    wasmOffsetToLine: (sourceId, offset) => wasmOffsetToLine(sourceId, offset),
+
     helpers: {
       findSource: url => findSource(dbg, url),
       findSources: url => findSources(dbg, url),

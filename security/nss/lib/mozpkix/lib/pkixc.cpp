@@ -117,6 +117,13 @@ class CodeSigningTrustDomain final : public TrustDomain {
         subjectPublicKeyInfo, nullptr);
   }
 
+  virtual Result VerifyRSAPSSSignedData(
+      Input data, DigestAlgorithm digestAlgorithm, Input signature,
+      Input subjectPublicKeyInfo) override {
+    return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
+        subjectPublicKeyInfo, nullptr);
+  }
+
   virtual Result CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
                                              NamedCurve curve) override {
     switch (curve) {

@@ -22,7 +22,7 @@ class gfxGDIFont : public gfxFont {
 
   virtual ~gfxGDIFont();
 
-  HFONT GetHFONT() { return mFont; }
+  HFONT GetHFONT() const { return mFont; }
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       const TextRunDrawParams& aRunParams) override;
@@ -35,8 +35,7 @@ class gfxGDIFont : public gfxFont {
                      mozilla::gfx::ShapedTextFlags aOrientation) override;
 
   /* required for MathML to suppress effects of ClearType "padding" */
-  mozilla::UniquePtr<gfxFont> CopyWithAntialiasOption(
-      AntialiasOption anAAOption) override;
+  gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) const override;
 
   // If the font has a cmap table, we handle it purely with harfbuzz;
   // but if not (e.g. .fon fonts), we'll use a GDI callback to get glyphs.
@@ -49,7 +48,8 @@ class gfxGDIFont : public gfxFont {
   // get hinted glyph width in pixels as 16.16 fixed-point value
   int32_t GetGlyphWidth(uint16_t aGID) override;
 
-  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
+  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
+                      bool aTight) const override;
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const;
@@ -59,7 +59,7 @@ class gfxGDIFont : public gfxFont {
   FontType GetType() const override { return FONT_TYPE_GDI; }
 
  protected:
-  const Metrics& GetHorizontalMetrics() override;
+  const Metrics& GetHorizontalMetrics() const override { return *mMetrics; }
 
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                  uint32_t aOffset, uint32_t aLength, Script aScript,

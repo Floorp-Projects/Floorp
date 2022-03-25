@@ -165,22 +165,86 @@ const SnapshotGroups = new (class SnapshotGroups {
    *
    * @param {number} id
    *   The id of the group to modify.
-   * @param {string[]} [urls]
-   *   An array of snapshot urls for the group. If the urls do not have associated snapshots, then they are ignored.
+   * @param {string[]|Set<string>} [urls]
+   *   The snapshot urls for the group. If the urls do not have associated
+   *   snapshots then they are ignored.
    */
   async updateUrls(id, urls) {
     await PlacesUtils.withConnectionWrapper(
       "SnapshotsGroups.jsm:updateUrls",
       async db => {
-        // Some entries need removing, others modifying or adding. The easiest
-        // way to do this is to remove the existing group information first and
-        // then add only what we need.
-        await db.executeCached(
-          `DELETE FROM moz_places_metadata_groups_to_snapshots WHERE group_id = :id`,
-          { id }
-        );
+        let params = { id };
+        let SQLInFragment = [...urls]
+          .map((url, i) => {
+            params[`url${i}`] = url;
+            return `hash(:url${i})`;
+          })
+          .join(",");
 
-        await this.#insertUrls(db, id, urls);
+        await db.executeTransaction(async () => {
+          // Note: queries here may need to be kept up to date with the
+          // moz_places_metadata_groups_to_snapshots definition in nsPlacesTables.h
+
+          // Create a temporary table to store the data.
+          await db.execute(
+            `
+            CREATE TEMP TABLE __groups_to_snapshots__ AS
+            SELECT s.group_id, s.place_id, s.hidden FROM moz_places_metadata_groups_to_snapshots s
+            JOIN moz_places h
+            ON h.id = s.place_id
+            WHERE s.group_id = :id AND h.url_hash IN (${SQLInFragment})
+          `,
+            params
+          );
+
+          // Clear and copy back only what we require.
+          await db.executeCached(
+            `DELETE FROM moz_places_metadata_groups_to_snapshots WHERE group_id = :id`,
+            { id }
+          );
+
+          await db.executeCached(
+            `
+            INSERT INTO moz_places_metadata_groups_to_snapshots(group_id, place_id, hidden)
+            SELECT group_id, place_id, hidden FROM __groups_to_snapshots__
+            `
+          );
+
+          // Finally insert any new urls and clean up.
+          await this.#insertUrls(db, id, urls);
+
+          await db.executeCached(`DROP TABLE __groups_to_snapshots__`);
+        });
+      }
+    );
+
+    this.#prefetchScreenshotForGroup(id).catch(console.error);
+    Services.obs.notifyObservers(null, "places-snapshot-group-updated");
+  }
+
+  /**
+   * Hides a url within a group.
+   *
+   * @param {number} id
+   *   The id of the group to modify.
+   * @param {string} url
+   *   The url to hide.
+   * @param {boolean} hidden
+   *   If the snapshot should be hidden or not
+   */
+  async setUrlHidden(id, url, hidden) {
+    await PlacesUtils.withConnectionWrapper(
+      "SnapshotsGroups.jsm:hideUrl",
+      async db => {
+        await db.executeCached(
+          `
+          UPDATE moz_places_metadata_groups_to_snapshots
+          SET hidden = :hidden
+          WHERE group_id = :id AND place_id = (
+            SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url
+          )`,
+          { id, url, hidden }
+        );
       }
     );
 
@@ -220,6 +284,8 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   Use -1 to specify no limit.
    * @param {boolean} [options.hidden]
    *   Pass true to also return hidden groups.
+   * @param {boolean} [options.countHidden]
+   *   Pass true to include hidden snapshots in the count.
    * @param {string} [options.builder]
    *   Limit searching snapshot groups to results from a particular builder.
    * @param {boolean} [options.skipMinimum]
@@ -233,6 +299,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     limit = 50,
     builder = undefined,
     hidden = false,
+    countHidden = false,
     skipMinimum = false,
   } = {}) {
     let db = await PlacesUtils.promiseDBConnection();
@@ -240,6 +307,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     let params = {};
     let sizeFragment = [];
     let limitFragment = "";
+    let joinFragment = "";
     if (!skipMinimum) {
       sizeFragment.push("HAVING snapshot_count >= :minGroupSize");
       params.minGroupSize = MIN_GROUP_SIZE;
@@ -262,7 +330,11 @@ const SnapshotGroups = new (class SnapshotGroups {
     }
 
     if (!hidden) {
-      whereTerms.push("hidden = 0");
+      whereTerms.push("g.hidden = 0");
+    }
+
+    if (!countHidden) {
+      joinFragment = "AND s.hidden = 0";
     }
 
     let where = whereTerms.length ? `WHERE ${whereTerms.join(" AND ")}` : "";
@@ -278,14 +350,14 @@ const SnapshotGroups = new (class SnapshotGroups {
               SELECT preview_image_url, url
               FROM moz_places_metadata_snapshots sns
               JOIN moz_places_metadata_groups_to_snapshots gs USING(place_id)
-              JOIN moz_places h ON h.id = gs.place_id
+              JOIN moz_places h ON h.id = gs.place_id AND gs.hidden = 0
               WHERE gs.group_id = g.id
               ORDER BY sns.last_interaction_at ASC
               LIMIT 2
               )
             ) AS image_urls
       FROM moz_places_metadata_snapshots_groups g
-      LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
+      LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id ${joinFragment}
       LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
       ${where}
       GROUP BY g.id ${sizeFragment.join(" ")}
@@ -305,19 +377,29 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @param {object} options
    * @param {number} options.id
    *   The id of the snapshot group to get the snapshots for.
+   * @param {boolean} [options.hidden]
+   *   Pass true to return hidden snapshots
+   * @returns {string[]}
+   *   An array of urls.
    */
-  async getUrls({ id }) {
-    let params = { group_id: id };
+  async getUrls({ id, hidden }) {
     let db = await PlacesUtils.promiseDBConnection();
+
+    let whereClause = "";
+    if (!hidden) {
+      whereClause = `AND s.hidden = 0`;
+    }
+
     let urlRows = await db.executeCached(
       `
       SELECT h.url
       FROM moz_places_metadata_groups_to_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       WHERE s.group_id = :group_id
+      ${whereClause}
       ORDER BY h.last_visit_date DESC
     `,
-      params
+      { group_id: id }
     );
 
     return urlRows.map(row => row.getResultByName("url"));
@@ -335,9 +417,11 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   The start index of the snapshots to return.
    * @param {number} [options.count]
    *   The number of snapshots to return.
-   * @param {boolean} [sortDescending]
+   * @param {boolean} [options.hidden]
+   *   Pass true to return hidden snapshots as well.
+   * @param {boolean} [options.sortDescending]
    *   Whether or not to sortDescending. Defaults to true.
-   * @param {string} [sortBy]
+   * @param {string} [options.sortBy]
    *   A string to choose what to sort the snapshots by, e.g. "last_interaction_at"
    *   By default results are sorted by last_interaction_at.
    * @returns {Snapshots[]}
@@ -347,6 +431,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     id,
     startIndex = 0,
     count = 50,
+    hidden = false,
     sortDescending = true,
     sortBy = "last_interaction_at",
   } = {}) {
@@ -358,6 +443,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     let snapshots = await Snapshots.query({
       limit: start + count,
       group: id,
+      includeHiddenInGroup: hidden,
       sortBy,
       sortDescending,
     });
@@ -390,7 +476,7 @@ const SnapshotGroups = new (class SnapshotGroups {
 
     await db.execute(
       `
-      INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
+      INSERT OR IGNORE INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
       SELECT :id, s.place_id
       FROM moz_places h
       JOIN moz_places_metadata_snapshots s

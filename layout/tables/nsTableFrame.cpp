@@ -5978,11 +5978,6 @@ struct BCPaintBorderAction {
 class BCPaintBorderIterator {
  public:
   explicit BCPaintBorderIterator(nsTableFrame* aTable);
-  ~BCPaintBorderIterator() {
-    if (mBlockDirInfo) {
-      delete[] mBlockDirInfo;
-    }
-  }
   void Reset();
 
   /**
@@ -6078,24 +6073,25 @@ class BCPaintBorderIterator {
            mRowIndex != mDamageArea.StartRow();
   }
 
-  nscoord mInitialOffsetI;       // offsetI of the first border with
-                                 // respect to the table
-  nscoord mInitialOffsetB;       // offsetB of the first border with
-                                 // respect to the table
-  nscoord mNextOffsetB;          // offsetB of the next segment
-  BCBlockDirSeg* mBlockDirInfo;  // this array is used differently when
-                                 // inline-dir and block-dir borders are drawn
-                                 // When inline-dir border are drawn we cache
-                                 // the column widths and the width of the
-                                 // block-dir borders that arrive from bStart
-                                 // When we draw block-dir borders we store
-                                 // lengths and width for block-dir borders
-                                 // before they are drawn while we  move over
-                                 // the columns in the damage area
-                                 // It has one more elements than columns are
-                                 // in the table.
-  BCInlineDirSeg mInlineSeg;     // the inline-dir segment while we
-                                 // move over the colums
+  nscoord mInitialOffsetI;  // offsetI of the first border with
+                            // respect to the table
+  nscoord mInitialOffsetB;  // offsetB of the first border with
+                            // respect to the table
+  nscoord mNextOffsetB;     // offsetB of the next segment
+  // this array is used differently when
+  // inline-dir and block-dir borders are drawn
+  // When inline-dir border are drawn we cache
+  // the column widths and the width of the
+  // block-dir borders that arrive from bStart
+  // When we draw block-dir borders we store
+  // lengths and width for block-dir borders
+  // before they are drawn while we  move over
+  // the columns in the damage area
+  // It has one more elements than columns are
+  // in the table.
+  UniquePtr<BCBlockDirSeg[]> mBlockDirInfo;
+  BCInlineDirSeg mInlineSeg;        // the inline-dir segment while we
+                                    // move over the colums
   BCPixelSize mPrevInlineSegBSize;  // the bSize of the previous
                                     // inline-dir border
 
@@ -6135,7 +6131,6 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
       mInitialOffsetI(0),
       mNextOffsetB(0),
       mPrevInlineSegBSize(0) {
-  mBlockDirInfo = nullptr;
   LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
   // y position of first row in damage area
   mInitialOffsetB =
@@ -6250,7 +6245,7 @@ bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
                 1 + endRowIndex - startRowIndex);
 
   Reset();
-  mBlockDirInfo = new BCBlockDirSeg[mDamageArea.ColCount() + 1];
+  mBlockDirInfo = MakeUnique<BCBlockDirSeg[]>(mDamageArea.ColCount() + 1);
   return true;
 }
 
@@ -7304,7 +7299,8 @@ void BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(
  */
 void BCPaintBorderIterator::ResetVerInfo() {
   if (mBlockDirInfo) {
-    memset(mBlockDirInfo, 0, mDamageArea.ColCount() * sizeof(BCBlockDirSeg));
+    memset(mBlockDirInfo.get(), 0,
+           mDamageArea.ColCount() * sizeof(BCBlockDirSeg));
     // XXX reinitialize properly
     for (auto xIndex : IntegerRange(mDamageArea.ColCount())) {
       mBlockDirInfo[xIndex].mColWidth = -1;

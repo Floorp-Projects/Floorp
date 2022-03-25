@@ -387,6 +387,7 @@ class JS::Realm : public JS::shadow::Realm {
     DebuggerObservesAllExecution = 1 << 1,
     DebuggerObservesAsmJS = 1 << 2,
     DebuggerObservesCoverage = 1 << 3,
+    DebuggerObservesWasm = 1 << 4,
   };
   unsigned debugModeBits_ = 0;
   friend class js::AutoRestoreRealmDebugMode;
@@ -657,16 +658,26 @@ class JS::Realm : public JS::shadow::Realm {
 
   // True if this realm's global is a debuggee of some Debugger object
   // whose allowUnobservedAsmJS flag is false.
-  //
-  // Note that since AOT wasm functions cannot bail out, this flag really
-  // means "observe wasm from this point forward". We cannot make
-  // already-compiled wasm code observable to Debugger.
   bool debuggerObservesAsmJS() const {
     static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
     return (debugModeBits_ & Mask) == Mask;
   }
   void updateDebuggerObservesAsmJS() {
     updateDebuggerObservesFlag(DebuggerObservesAsmJS);
+  }
+
+  // True if this realm's global is a debuggee of some Debugger object
+  // whose allowUnobservedWasm flag is false.
+  //
+  // Note that since AOT wasm functions cannot bail out, this flag really
+  // means "observe wasm from this point forward". We cannot make
+  // already-compiled wasm code observable to Debugger.
+  bool debuggerObservesWasm() const {
+    static const unsigned Mask = IsDebuggee | DebuggerObservesWasm;
+    return (debugModeBits_ & Mask) == Mask;
+  }
+  void updateDebuggerObservesWasm() {
+    updateDebuggerObservesFlag(DebuggerObservesWasm);
   }
 
   // True if this realm's global is a debuggee of some Debugger object

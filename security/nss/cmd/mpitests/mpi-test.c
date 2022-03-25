@@ -17,7 +17,9 @@
 #include <limits.h>
 #include <time.h>
 
+#include "blapi.h"
 #include "mpi.h"
+#include "secmpi.h"
 #include "mpprime.h"
 
 #include "test-info.c"
@@ -2045,31 +2047,32 @@ test_pprime(void)
     int err = 0;
     mp_err res;
 
+    RNG_RNGInit();
     mp_init(&p);
     mp_read_radix(&p, mp7, 16);
 
-    if (mpp_pprime(&p, 5) != MP_YES) {
+    if (mpp_pprime_secure(&p, 5) != MP_YES) {
         reason("error: %s failed Rabin-Miller test, but is prime\n", mp7);
         err = 1;
     }
 
     IFOK(mp_set_int(&p, 9));
-    res = mpp_pprime(&p, 50);
+    res = mpp_pprime_secure(&p, 50);
     if (res == MP_YES) {
         reason("error: 9 is composite but passed Rabin-Miller test\n");
         err = 1;
     } else if (res != MP_NO) {
-        reason("test mpp_pprime(9, 50) failed: error %d\n", res);
+        reason("test mpp_pprime_secure(9, 50) failed: error %d\n", res);
         err = 1;
     }
 
     IFOK(mp_set_int(&p, 15));
-    res = mpp_pprime(&p, 50);
+    res = mpp_pprime_secure(&p, 50);
     if (res == MP_YES) {
         reason("error: 15 is composite but passed Rabin-Miller test\n");
         err = 1;
     } else if (res != MP_NO) {
-        reason("test mpp_pprime(15, 50) failed: error %d\n", res);
+        reason("test mpp_pprime_secure(15, 50) failed: error %d\n", res);
         err = 1;
     }
 

@@ -26,6 +26,9 @@ mp_err mpp_divis_d(mp_int *a, mp_digit d);
 mp_err mpp_random(mp_int *a);
 mp_err mpp_random_size(mp_int *a, mp_size prec);
 
+/* Type for a pointer to a user-provided mpp_random implementation */
+typedef mp_err (*mpp_random_fn)(mp_int *);
+
 /* Pseudo-primality testing  */
 mp_err mpp_divis_vector(mp_int *a, const mp_digit *vec, int size, int *which);
 mp_err mpp_divis_primes(mp_int *a, mp_digit *np);
@@ -35,6 +38,10 @@ mp_err mpp_pprime(mp_int *a, int nt);
 mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes,
                  unsigned char *sieve, mp_size nSieve);
 mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong);
+
+/* Pseudo-primality tests using a user-provided mpp_random implementation */
+mp_err mpp_pprime_ext_random(mp_int *a, int nt, mpp_random_fn random);
+mp_err mpp_make_prime_ext_random(mp_int *start, mp_size nBits, mp_size strong, mpp_random_fn random);
 
 SEC_END_PROTOS
 

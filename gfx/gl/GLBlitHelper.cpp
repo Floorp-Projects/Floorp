@@ -336,7 +336,11 @@ class ScopedDrawBlitState final {
     }
 
     mGL.fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorMask);
-    mGL.fColorMask(true, true, true, true);
+    if (mGL.IsSupported(GLFeature::draw_buffers_indexed)) {
+      mGL.fColorMaski(0, true, true, true, true);
+    } else {
+      mGL.fColorMask(true, true, true, true);
+    }
 
     mGL.fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
     MOZ_ASSERT(destSize.width && destSize.height);
@@ -357,7 +361,12 @@ class ScopedDrawBlitState final {
       mGL.SetEnabled(LOCAL_GL_RASTERIZER_DISCARD, rasterizerDiscard.value());
     }
 
-    mGL.fColorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+    if (mGL.IsSupported(GLFeature::draw_buffers_indexed)) {
+      mGL.fColorMaski(0, colorMask[0], colorMask[1], colorMask[2],
+                      colorMask[3]);
+    } else {
+      mGL.fColorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+    }
     mGL.fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
   }
 };

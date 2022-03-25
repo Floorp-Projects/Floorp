@@ -2,10 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["maybeOnSpellCheck", "onSpellCheck"];
+var EXPORTED_SYMBOLS = [
+  "maybeOnSpellCheck",
+  "onSpellCheck",
+  "getDictionaryContentPref",
+];
 
 const SPELL_CHECK_ENDED_TOPIC = "inlineSpellChecker-spellCheck-ended";
 const SPELL_CHECK_STARTED_TOPIC = "inlineSpellChecker-spellCheck-started";
+
+const CP = Cc["@mozilla.org/content-pref/service;1"].getService(
+  Ci.nsIContentPrefService2
+);
 
 /**
  * Waits until spell checking has stopped on the given element.
@@ -104,4 +112,20 @@ function onSpellCheck(editableElement, callback) {
   TestUtils.topicObserved(SPELL_CHECK_ENDED_TOPIC, s => s == editor).then(
     callback
   );
+}
+
+async function getDictionaryContentPref() {
+  let dictionaries = await new Promise(resolve => {
+    let value = "";
+    CP.getByDomainAndName("mochi.test", "spellcheck.lang", null, {
+      handleResult(pref) {
+        value = pref.value;
+      },
+      handleCompletion() {
+        resolve(value);
+      },
+    });
+  });
+
+  return dictionaries;
 }

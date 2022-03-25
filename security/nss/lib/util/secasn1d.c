@@ -2750,7 +2750,6 @@ SEC_ASN1DecoderUpdate(SEC_ASN1DecoderContext *cx,
     sec_asn1d_state *state = NULL;
     unsigned long consumed;
     SEC_ASN1EncodingPart what;
-    sec_asn1d_state *stateEnd = cx->current;
 
     if (cx->status == needBytes)
         cx->status = keepGoing;
@@ -2939,7 +2938,7 @@ SEC_ASN1DecoderUpdate(SEC_ASN1DecoderContext *cx,
     }
 
     if (cx->status == decodeError) {
-        while (state != NULL && stateEnd->parent != state) {
+        while (state != NULL) {
             sec_asn1d_free_child(state, PR_TRUE);
             state = state->parent;
         }

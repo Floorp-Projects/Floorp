@@ -144,7 +144,7 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
 
     this.#group = groups[0];
     this.#group.urls = new Set(
-      await SnapshotGroups.getUrls({ id: this.#group.id })
+      await SnapshotGroups.getUrls({ id: this.#group.id, hidden: true })
     );
   }
 

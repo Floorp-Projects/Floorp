@@ -43,17 +43,18 @@
   noECC     0       -r_-r_-r_-E  -V_tls1.3:tls1.3_-E_-n_none_-w_nss TLS 1.3 Request don't require client auth on post hs (client does not provide auth)
   noECC     1       -r_-r_-r_-r_-E  -V_tls1.3:tls1.3_-E_-n_none_-w_nss TLS 1.3 Require client auth on post hs (client does not provide auth)
   noECC     0       -r_-r_-r_-E_-u  -V_tls1.3:tls1.3_-E_-n_TestUser_-w_nss TLS 1.3 Request don't require client auth on post hs with session ticket (client auth)
+  noECC     0       -r_-r_-J_rsa\\_pkcs1\\_sha256     -V_tls1.2:_-w_nss   TLS 1.2 Require client auth auto select(RSA) (client auth)
 #
 # Use EC cert for client authentication
 #
-   ECC      0       -r           -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec     TLS Request don't require client auth (EC) (bad password)
-   ECC      0       -r           -V_ssl3:tls1.2_-w_nss_-n_TestUser-ec       TLS Request don't require client auth (EC) (client auth)
-   ECC     254      -r_-r        -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec     TLS Require client auth (EC) (bad password)
-   ECC      0       -r_-r        -V_ssl3:tls1.2_-w_nss_-n_TestUser-ec_      TLS Require client auth (EC) (client auth)
-   ECC      0       -r           -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus  SSL3 Request don't require client auth (EC) (bad password)
-   ECC      0       -r           -V_ssl3:ssl3_-n_TestUser-ec_-w_nss    SSL3 Request don't require client auth (EC) (client auth)
-   ECC     254      -r_-r        -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus  SSL3 Require client auth (EC) (bad password)
-   ECC      0       -r_-r        -V_ssl3:ssl3_-n_TestUser-ec_-w_nss    SSL3 Require client auth (EC) (client auth)
+   ECC      0       -r           -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec  TLS Request don't require client auth (EC) (bad password)
+   ECC      0       -r           -V_ssl3:tls1.2_-w_nss_-n_TestUser-ec    TLS Request don't require client auth (EC) (client auth)
+   ECC     254      -r_-r        -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec  TLS Require client auth (EC) (bad password)
+   ECC      0       -r_-r        -V_ssl3:tls1.2_-w_nss_-n_TestUser-ec_   TLS Require client auth (EC) (client auth)
+   ECC      0       -r           -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus    SSL3 Request don't require client auth (EC) (bad password)
+   ECC      0       -r           -V_ssl3:ssl3_-n_TestUser-ec_-w_nss      SSL3 Request don't require client auth (EC) (client auth)
+   ECC     254      -r_-r        -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus    SSL3 Require client auth (EC) (bad password)
+   ECC      0       -r_-r        -V_ssl3:ssl3_-n_TestUser-ec_-w_nss      SSL3 Require client auth (EC) (client auth)
    ECC      0       -r_-r_-r     -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec  TLS Request don't require client auth on 2nd hs (EC) (bad password)
    ECC      0       -r_-r_-r     -V_ssl3:tls1.2_-w_nss_-n_TestUser-ec    TLS Request don't require client auth on 2nd hs (EC) (client auth)
    ECC      1       -r_-r_-r_-r  -V_ssl3:tls1.2_-w_bogus_-n_TestUser-ec  TLS Require client auth on 2nd hs (EC) (bad password)
@@ -62,10 +63,12 @@
    ECC      0       -r_-r_-r     -V_ssl3:tls1.0_-w_nss_-n_TestUser-ec    TLS 1.0 Request don't require client auth on 2nd hs (EC) (client auth)
    ECC      1       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_bogus_-n_TestUser-ec  TLS 1.0 Require client auth on 2nd hs (EC) (bad password)
    ECC      0       -r_-r_-r_-r  -V_ssl3:tls1.0_-w_nss_-n_TestUser-ec_   TLS 1.0 Require client auth on 2nd hs (EC) (client auth)
-   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus SSL3 Request don't require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_nss SSL3 Request don't require client auth on 2nd hs (EC) (client auth)
-   ECC      1       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus SSL3 Require client auth on 2nd hs (EC) (bad password)
-   ECC      0       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_nss SSL3 Require client auth on 2nd hs (EC) (client auth)
+   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus    SSL3 Request don't require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r     -V_ssl3:ssl3_-n_TestUser-ec_-w_nss      SSL3 Request don't require client auth on 2nd hs (EC) (client auth)
+   ECC      1       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_bogus    SSL3 Require client auth on 2nd hs (EC) (bad password)
+   ECC      0       -r_-r_-r_-r  -V_ssl3:ssl3_-n_TestUser-ec_-w_nss      SSL3 Require client auth on 2nd hs (EC) (client auth)
+   ECC      0       -r_-r_-J_ecdsa\\_secp256r1\\_sha256    -V_tls1.2:_-w_nss   TLS 1.2 Require client auth auto select(EC) (client auth)
+   ECC      0       -r_-r_-J_ecdsa\\_secp256r1\\_sha256,ecdsa\\_secp384r1\\_sha384 -V_tls1.3:_-w_nss   TLS 1.3 Require client auth auto select (EC) (client auth)
 #
 # SNI Tests
 #

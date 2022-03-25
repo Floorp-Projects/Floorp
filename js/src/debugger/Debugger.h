@@ -615,6 +615,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
   HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
   bool allowUnobservedAsmJS;
+  bool allowUnobservedWasm;
 
   // Whether to enable code coverage on the Debuggee.
   bool collectCoverageInfo;
@@ -964,6 +965,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   // execution of its debuggees.
   IsObserving observesAsmJS() const;
 
+  // Whether the Debugger instance needs to observe compiled Wasm
+  // execution of its debuggees.
+  IsObserving observesWasm() const;
+
   // Whether the Debugger instance needs to observe coverage of any JavaScript
   // execution.
   IsObserving observesCoverage() const;
@@ -984,6 +989,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   [[nodiscard]] bool updateObservesCoverageOnDebuggees(JSContext* cx,
                                                        IsObserving observing);
   void updateObservesAsmJSOnDebuggees(IsObserving observing);
+  void updateObservesWasmOnDebuggees(IsObserving observing);
 
   JSObject* getHook(Hook hook) const;
   bool hasAnyLiveHooks() const;
