@@ -1714,10 +1714,6 @@ class nsIWidget : public nsISupports {
     NS_WARNING("GetLayoutPopupRect implemented only for wayland");
     return LayoutDeviceIntRect();
   }
-  virtual void MoveToRectPopupRectClear() {
-    NS_WARNING("LayoutPopupRectChanged implemented only for wayland");
-    return;
-  }
 
   /**
    * If this widget uses native pointer lock instead of warp-to-center
