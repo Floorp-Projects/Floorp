@@ -5,8 +5,8 @@
     "exposureDescription": "",
     "variables": {
       "message-location": {
-        "type": "string",
-        "description": "Where is the message to be put."
+        "description": "Where is the message to be put.",
+        "type": "string"
       }
     }
   },
@@ -16,8 +16,8 @@
     "exposureDescription": "",
     "variables": {
       "sections-enabled": {
-        "type": "json",
-        "description": "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default."
+        "description": "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default.",
+        "type": "json"
       }
     }
   },
@@ -54,16 +54,16 @@
     "exposureDescription": "",
     "variables": {
       "settings-icon": {
-        "type": "string",
-        "description": "The drawable displayed in the app menu for Settings"
+        "description": "The drawable displayed in the app menu for Settings",
+        "type": "string"
       },
       "settings-punctuation": {
-        "type": "string",
-        "description": "The emoji displayed in the Settings screen title."
+        "description": "The emoji displayed in the Settings screen title.",
+        "type": "string"
       },
       "settings-title": {
-        "type": "string",
-        "description": "The title of displayed in the Settings screen and app menu."
+        "description": "The title of displayed in the Settings screen and app menu.",
+        "type": "string"
       }
     }
   },
@@ -73,8 +73,8 @@
     "exposureDescription": "",
     "variables": {
       "enabled": {
-        "type": "boolean",
-        "description": "If true, the feature shows up on the homescreen and on the new tab screen."
+        "description": "If true, the feature shows up on the homescreen and on the new tab screen.",
+        "type": "boolean"
       }
     }
   }

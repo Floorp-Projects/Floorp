@@ -5,10 +5,21 @@
 package org.mozilla.fenix.home.recentvisits.view
 
 import android.view.View
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.RecentVisitsHeaderBinding
+import org.mozilla.fenix.compose.ComposeViewHolder
+import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
-import org.mozilla.fenix.utils.view.ViewHolder
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * View holder for the "Recent visits" section header with the "Show all" button.
@@ -17,18 +28,33 @@ import org.mozilla.fenix.utils.view.ViewHolder
  * interactions.
  */
 class RecentVisitsHeaderViewHolder(
-    view: View,
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
     private val interactor: RecentVisitsInteractor
-) : ViewHolder(view) {
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        val binding = RecentVisitsHeaderBinding.bind(view)
-        binding.showAllButton.setOnClickListener {
-            interactor.onHistoryShowAllClicked()
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
+    @Composable
+    override fun Content() {
+        Column {
+            Spacer(modifier = Modifier.height(40.dp))
+
+            HomeSectionHeader(
+                text = stringResource(R.string.history_metadata_header_2),
+                description = stringResource(R.string.past_explorations_show_all_content_description_2),
+                onShowAllClick = interactor::onHistoryShowAllClicked,
+            )
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.recent_visits_header
+        val LAYOUT_ID = View.generateViewId()
     }
 }
