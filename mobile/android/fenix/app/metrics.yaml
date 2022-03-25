@@ -2527,6 +2527,7 @@ error_page:
       A user encountered an error page
     extra_keys:
       error_type:
+        type: string
         description: "The error type of the error page encountered"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1242

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
-import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
@@ -13,7 +12,6 @@ import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
-import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
@@ -393,11 +391,6 @@ sealed class Event {
                 Collections.tabsAddedKeys.tabsOpen to tabsOpenCount.toString(),
                 Collections.tabsAddedKeys.tabsSelected to tabsSelectedCount.toString()
             )
-    }
-
-    data class ErrorPageVisited(val errorType: ErrorType) : Event() {
-        override val extras: Map<ErrorPage.visitedErrorKeys, String>?
-            get() = mapOf(ErrorPage.visitedErrorKeys.errorType to errorType.name)
     }
 
     data class SearchBarTapped(val source: Source) : Event() {

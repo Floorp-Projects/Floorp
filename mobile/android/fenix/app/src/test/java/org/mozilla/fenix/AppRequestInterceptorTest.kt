@@ -15,13 +15,16 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.AppRequestInterceptor.Companion.HIGH_RISK_ERROR_PAGES
 import org.mozilla.fenix.AppRequestInterceptor.Companion.LOW_AND_MEDIUM_RISK_ERROR_PAGES
+import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
@@ -29,6 +32,9 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AppRequestInterceptorTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var interceptor: RequestInterceptor
     private lateinit var navigationController: NavController
@@ -156,7 +162,6 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `onErrorRequest results in correct error page for low risk level error`() {
-        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.UNKNOWN,
             ErrorType.ERROR_NET_INTERRUPT,
@@ -185,12 +190,17 @@ class AppRequestInterceptorTest {
             )
 
             assertEquals(expectedPage, actualPage)
+            // Check if the error metric was recorded
+            assertEquals(true, ErrorPage.visitedError.testHasValue())
+            assertEquals(
+                error.name,
+                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+            )
         }
     }
 
     @Test
     fun `onErrorRequest results in correct error page for medium risk level error`() {
-        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.ERROR_SECURITY_BAD_CERT,
             ErrorType.ERROR_SECURITY_SSL,
@@ -203,12 +213,17 @@ class AppRequestInterceptorTest {
             )
 
             assertEquals(expectedPage, actualPage)
+            // Check if the error metric was recorded
+            assertEquals(true, ErrorPage.visitedError.testHasValue())
+            assertEquals(
+                error.name,
+                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+            )
         }
     }
 
     @Test
     fun `onErrorRequest results in correct error page for high risk level error`() {
-        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
             ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
@@ -222,6 +237,12 @@ class AppRequestInterceptorTest {
             )
 
             assertEquals(expectedPage, actualPage)
+            // Check if the error metric was recorded
+            assertEquals(true, ErrorPage.visitedError.testHasValue())
+            assertEquals(
+                error.name,
+                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+            )
         }
     }
 

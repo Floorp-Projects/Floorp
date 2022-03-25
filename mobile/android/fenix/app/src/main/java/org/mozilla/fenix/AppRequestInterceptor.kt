@@ -12,7 +12,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
 import java.lang.ref.WeakReference
@@ -63,7 +63,7 @@ class AppRequestInterceptor(
         val improvedErrorType = improveErrorType(errorType)
         val riskLevel = getRiskLevel(improvedErrorType)
 
-        context.components.analytics.metrics.track(Event.ErrorPageVisited(improvedErrorType))
+        ErrorPage.visitedError.record(ErrorPage.VisitedErrorExtra(improvedErrorType.name))
 
         val errorPageUri = ErrorPages.createUrlEncodedErrorPage(
             context = context,
