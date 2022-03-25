@@ -667,6 +667,7 @@ class nsWindow final : public nsBaseWidget {
   static TriStateBool sCanQuit;
   static nsWindow* sCurrentWindow;
   static BOOL sIsOleInitialized;
+  static HCURSOR sCustomHCursor;
   static Cursor sCurrentCursor;
   static bool sSwitchKeyboardLayout;
   static bool sJustGotDeactivate;
