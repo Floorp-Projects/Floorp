@@ -278,7 +278,10 @@ var DownloadsPanel = {
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mousemove":
-        if (this.panel.contains(document.activeElement)) {
+        if (
+          !DownloadsView.contextMenuOpen &&
+          this.panel.contains(document.activeElement)
+        ) {
           // Let mouse movement remove focus rings and reset focus in the panel.
           // This behavior is copied from PanelMultiView.
           document.activeElement.blur();
