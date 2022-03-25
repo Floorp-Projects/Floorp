@@ -4415,30 +4415,31 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
 
   nsCOMPtr<nsIContent> newLeftNodeOfMostAncestor;
   EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
-  SplitNodeResult lastSplitNodeResult(atStartOfRightNode);
+  SplitNodeResult lastSplitNodeResult = SplitNodeResult::NotHandled(
+      atStartOfRightNode, SplitNodeDirection::LeftNodeIsNewOne);
 
   while (true) {
     // Need to insert rules code call here to do things like not split a list
     // if you are after the last <li> or before the first, etc.  For now we
     // just have some smarts about unneccessarily splitting text nodes, which
     // should be universal enough to put straight in this EditorBase routine.
-    nsIContent* currentRightNode = atStartOfRightNode.GetContainerAsContent();
-    if (NS_WARN_IF(!currentRightNode)) {
+    nsIContent* splittingContent = atStartOfRightNode.GetContainerAsContent();
+    if (NS_WARN_IF(!splittingContent)) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
     // If we meet an orphan node before meeting aMostAncestorToSplit, we need
     // to stop splitting.  This is a bug of the caller.
-    if (NS_WARN_IF(currentRightNode != &aMostAncestorToSplit &&
+    if (NS_WARN_IF(splittingContent != &aMostAncestorToSplit &&
                    !atStartOfRightNode.GetContainerParentAsContent())) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
     // If the container is not splitable node such as comment node, atomic
     // element, etc, we should keep it as-is, and try to split its parents.
-    if (!HTMLEditUtils::IsSplittableNode(*currentRightNode)) {
-      if (currentRightNode == &aMostAncestorToSplit) {
+    if (!HTMLEditUtils::IsSplittableNode(*splittingContent)) {
+      if (splittingContent == &aMostAncestorToSplit) {
         return lastSplitNodeResult;
       }
-      atStartOfRightNode.Set(currentRightNode);
+      atStartOfRightNode.Set(splittingContent);
       continue;
     }
 
@@ -4454,42 +4455,43 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
         return lastSplitNodeResult;
       }
 
-      MOZ_ASSERT(lastSplitNodeResult.GetOriginalContent() == currentRightNode);
-      if (currentRightNode == &aMostAncestorToSplit) {
+      MOZ_ASSERT(lastSplitNodeResult.GetOriginalContent() == splittingContent);
+      if (splittingContent == &aMostAncestorToSplit) {
         // Actually, we split aMostAncestorToSplit.
         return lastSplitNodeResult;
       }
 
       // Then, try to split its parent before current node.
-      atStartOfRightNode.Set(lastSplitNodeResult.GetNextContent());
+      atStartOfRightNode = lastSplitNodeResult.AtNextContent<EditorDOMPoint>();
     }
     // If the split point is end of the node and it is a text node or we're not
     // allowed to create empty container node, try to split its parent after it.
     else if (!atStartOfRightNode.IsStartOfContainer()) {
-      lastSplitNodeResult = SplitNodeResult(
-          currentRightNode, nullptr, SplitNodeDirection::LeftNodeIsNewOne);
-      if (currentRightNode == &aMostAncestorToSplit) {
+      lastSplitNodeResult =
+          SplitNodeResult::HandledButDidNotSplitDueToEndOfContainer(
+              *splittingContent, SplitNodeDirection::LeftNodeIsNewOne);
+      if (splittingContent == &aMostAncestorToSplit) {
         return lastSplitNodeResult;
       }
 
       // Try to split its parent after current node.
-      atStartOfRightNode.Set(currentRightNode);
-      DebugOnly<bool> advanced = atStartOfRightNode.AdvanceOffset();
-      NS_WARNING_ASSERTION(advanced,
-                           "Failed to advance offset after current node");
+      atStartOfRightNode.SetAfter(splittingContent);
     }
     // If the split point is start of the node and it is a text node or we're
     // not allowed to create empty container node, try to split its parent.
     else {
-      lastSplitNodeResult = SplitNodeResult(
-          nullptr, currentRightNode, SplitNodeDirection::LeftNodeIsNewOne);
-      if (currentRightNode == &aMostAncestorToSplit) {
-        return lastSplitNodeResult;
+      if (splittingContent == &aMostAncestorToSplit) {
+        return SplitNodeResult::HandledButDidNotSplitDueToStartOfContainer(
+            *splittingContent, SplitNodeDirection::LeftNodeIsNewOne);
       }
 
       // Try to split its parent before current node.
-      lastSplitNodeResult = SplitNodeResult(atStartOfRightNode);
-      atStartOfRightNode.Set(currentRightNode);
+      // XXX This is logically wrong.  If we've already split something but
+      //     this is the last splitable content node in the limiter, this
+      //     method will return "not handled".
+      lastSplitNodeResult = SplitNodeResult::NotHandled(
+          atStartOfRightNode, SplitNodeDirection::LeftNodeIsNewOne);
+      atStartOfRightNode.Set(splittingContent);
     }
   }
 
@@ -4714,7 +4716,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
-  return SplitNodeResult(&aNewNode, aStartOfRightNode.ContainerAsContent(),
+  return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAsContent(),
                          SplitNodeDirection::LeftNodeIsNewOne);
 }
 

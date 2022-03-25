@@ -877,7 +877,8 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
   }
 
   // Split any matching style nodes above the point.
-  SplitNodeResult result(aPointToSplit);
+  SplitNodeResult result = SplitNodeResult::NotHandled(
+      aPointToSplit, SplitNodeDirection::LeftNodeIsNewOne);
   MOZ_ASSERT(!result.Handled());
   for (OwningNonNull<nsIContent>& content : arrayOfParents) {
     bool isSetByCSS = false;
@@ -932,9 +933,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
       continue;
     }
     // Mark the final result as handled forcibly.
-    result = SplitNodeResult(splitNodeResult.GetPreviousContent(),
-                             splitNodeResult.GetNextContent(),
-                             SplitNodeDirection::LeftNodeIsNewOne);
+    result = splitNodeResult.ToHandledResult();
     MOZ_ASSERT(result.Handled());
   }
 
