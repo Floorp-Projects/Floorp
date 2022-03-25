@@ -1,0 +1,44 @@
+schema: 1
+
+bugzilla:
+  product: Toolkit
+  component: General
+
+origin:
+  name: "cfworker"
+  description: A JSON schema validator
+  url: https://github.com/cfworker/cfworker/tree/main/packages/json-schema
+  license: MIT
+  release: commit @cfworker/dev@1.13.2 (2022-01-23T22:05:24+00:00).
+  revision: "v1.10.1"
+
+vendoring:
+  url: https://github.com/cfworker/cfworker
+  source-hosting: github
+  tracking: tag
+  skip-vendoring-steps: ["update-moz-build"]
+
+  keep:
+    - build.sh
+    - exports.awk
+    - json-schema.jsm.patch
+    - tsconfig-base.json.patch
+
+  exclude:
+    - "**"
+    - ".*"
+    - ".changeset"
+    - ".github"
+    - ".vscode"
+
+  include:
+    - LICENSE.md
+    - packages/json-schema/src
+    - packages/json-schema/package.json
+    - packages/json-schema/tsconfig.json
+    - tsconfig-base.json
+
+  update-actions:
+    - action: run-script
+      script: 'build.sh'
+      cwd: '{yaml_dir}'
