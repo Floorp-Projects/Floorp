@@ -19,7 +19,7 @@ slab = "0.4"
 tokio = "0.1"
 
 [dependencies.error-chain]
-version = "0.11.0"
+version = "0.12.0"
 default-features = false
 
 [dependencies.audio_thread_priority]

@@ -1,6 +1,95 @@
-/// Prefer to use `error_chain` instead of this macro.
 #[doc(hidden)]
 #[macro_export]
+#[cfg(not(has_error_source))]
+macro_rules! impl_error_chain_cause_or_source {
+    (
+        types {
+            $error_kind_name:ident
+        }
+
+        foreign_links {
+            $( $foreign_link_variant:ident ( $foreign_link_error_path:path )
+               $( #[$meta_foreign_links:meta] )*; )*
+        }
+    ) => {
+        #[allow(unknown_lints, renamed_and_removed_lints)]
+        #[allow(unused_doc_comment, unused_doc_comments)]
+        fn cause(&self) -> Option<&::std::error::Error> {
+            match self.1.next_error {
+                Some(ref c) => Some(&**c),
+                None => {
+                    match self.0 {
+                        $(
+                            $(#[$meta_foreign_links])*
+                            $error_kind_name::$foreign_link_variant(ref foreign_err) => {
+                                foreign_err.cause()
+                            }
+                        ) *
+                        _ => None
+                    }
+                }
+            }
+        }
+    };
+}
+
+#[cfg(has_error_source)]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! impl_error_chain_cause_or_source {
+    (
+        types {
+             $error_kind_name:ident
+        }
+
+        foreign_links {
+            $( $foreign_link_variant:ident ( $foreign_link_error_path:path )
+               $( #[$meta_foreign_links:meta] )*; )*
+        }
+    ) => {
+            #[allow(unknown_lints, renamed_and_removed_lints, bare_trait_objects)]
+            #[allow(unused_doc_comment, unused_doc_comments)]
+            fn source(&self) -> Option<&(std::error::Error + 'static)> {
+                match self.1.next_error {
+                    Some(ref c) => Some(&**c),
+                    None => {
+                        match self.0 {
+                        $(
+                            $(#[$meta_foreign_links])*
+                            $error_kind_name::$foreign_link_variant(ref foreign_err) => {
+                                foreign_err.source()
+                            }
+                        ) *
+                            _ => None
+                        }
+                    }
+                }
+            }
+        };
+}
+
+/// Conditional usage of deprecated Error::description
+#[doc(hidden)]
+#[cfg(has_error_description_deprecated)]
+#[macro_export(local_inner_macros)]
+macro_rules! call_to_deprecated_description {
+    ($e:ident) => {
+        ""
+    };
+}
+
+#[doc(hidden)]
+#[cfg(not(has_error_description_deprecated))]
+#[macro_export(local_inner_macros)]
+macro_rules! call_to_deprecated_description {
+    ($e:ident) => {
+        ::std::error::Error::description($e)
+    };
+}
+
+/// Prefer to use `error_chain` instead of this macro.
+#[doc(hidden)]
+#[macro_export(local_inner_macros)]
 macro_rules! impl_error_chain_processed {
     // Default values for `types`.
     (
@@ -33,12 +122,67 @@ macro_rules! impl_error_chain_processed {
         #[allow(unused)]
         pub type $result_name<T> = ::std::result::Result<T, $error_name>;
     };
-    // Without `Result` wrapper.
+
+    // With `Msg` variant.
+    (
+        types {
+            $error_name:ident, $error_kind_name:ident, $($types:tt)*
+        }
+        links $links:tt
+        foreign_links $foreign_links:tt
+        errors { $($errors:tt)* }
+    ) => {
+        impl_error_chain_processed! {
+            types {
+                $error_name, $error_kind_name, $($types)*
+            }
+            skip_msg_variant
+            links $links
+            foreign_links $foreign_links
+            errors {
+                /// A convenient variant for String.
+                Msg(s: String) {
+                    description(&s)
+                    display("{}", s)
+                }
+
+                $($errors)*
+            }
+        }
+
+        impl<'a> From<&'a str> for $error_kind_name {
+            fn from(s: &'a str) -> Self {
+                $error_kind_name::Msg(s.into())
+            }
+        }
+
+        impl From<String> for $error_kind_name {
+            fn from(s: String) -> Self {
+                $error_kind_name::Msg(s)
+            }
+        }
+
+        impl<'a> From<&'a str> for $error_name {
+            fn from(s: &'a str) -> Self {
+                Self::from_kind(s.into())
+            }
+        }
+
+        impl From<String> for $error_name {
+            fn from(s: String) -> Self {
+                Self::from_kind(s.into())
+            }
+        }
+    };
+
+    // Without `Result` wrapper or `Msg` variant.
     (
         types {
             $error_name:ident, $error_kind_name:ident,
             $result_ext_name:ident;
         }
+
+        skip_msg_variant
 
         links {
             $( $link_variant:ident ( $link_error_path:path, $link_kind_path:path )
@@ -136,6 +280,7 @@ macro_rules! impl_error_chain_processed {
             }
 
             /// Construct a chained error from another boxed error and a kind, and generates a backtrace
+            #[allow(unknown_lints, bare_trait_objects)]
             pub fn with_boxed_chain<K>(error: Box<::std::error::Error + Send>, kind: K)
                 -> $error_name
                 where K: Into<$error_kind_name>
@@ -166,28 +311,27 @@ macro_rules! impl_error_chain_processed {
                 where F: FnOnce() -> EK, EK: Into<$error_kind_name> {
                 $error_name::with_chain(self, Self::from_kind(error().into()))
             }
+
+            /// A short description of the error.
+            /// This method is identical to [`Error::description()`](https://doc.rust-lang.org/nightly/std/error/trait.Error.html#tymethod.description)
+            pub fn description(&self) -> &str {
+                self.0.description()
+            }
         }
 
         impl ::std::error::Error for $error_name {
+            #[cfg(not(has_error_description_deprecated))]
             fn description(&self) -> &str {
-                self.0.description()
+                self.description()
             }
 
-            #[allow(unknown_lints, unused_doc_comment)]
-            fn cause(&self) -> Option<&::std::error::Error> {
-                match self.1.next_error {
-                    Some(ref c) => Some(&**c),
-                    None => {
-                        match self.0 {
-                            $(
-                                $(#[$meta_foreign_links])*
-                                $error_kind_name::$foreign_link_variant(ref foreign_err) => {
-                                    foreign_err.cause()
-                                }
-                            ) *
-                            _ => None
-                        }
-                    }
+            impl_error_chain_cause_or_source!{
+                types {
+                    $error_kind_name
+                }
+                foreign_links {
+                    $( $foreign_link_variant ( $foreign_link_error_path )
+                    $( #[$meta_foreign_links] )*; )*
                 }
             }
         }
@@ -227,27 +371,6 @@ macro_rules! impl_error_chain_processed {
             }
         }
 
-        impl<'a> From<&'a str> for $error_name {
-            fn from(s: &'a str) -> Self {
-                $error_name::from_kind(s.into())
-            }
-        }
-
-        impl From<String> for $error_name {
-            fn from(s: String) -> Self {
-                $error_name::from_kind(s.into())
-            }
-        }
-
-        impl ::std::ops::Deref for $error_name {
-            type Target = $error_kind_name;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-
-
         // The ErrorKind type
         // --------------
 
@@ -255,13 +378,6 @@ macro_rules! impl_error_chain_processed {
             /// The kind of an error.
             #[derive(Debug)]
             pub enum $error_kind_name {
-
-                /// A convenient variant for String.
-                Msg(s: String) {
-                    description(&s)
-                    display("{}", s)
-                }
-
                 $(
                     $(#[$meta_links])*
                     $link_variant(e: $link_kind_path) {
@@ -273,7 +389,7 @@ macro_rules! impl_error_chain_processed {
                 $(
                     $(#[$meta_foreign_links])*
                     $foreign_link_variant(err: $foreign_link_error_path) {
-                        description(::std::error::Error::description(err))
+                        description(call_to_deprecated_description!(err))
                         display("{}", err)
                     }
                 ) *
@@ -290,18 +406,6 @@ macro_rules! impl_error_chain_processed {
                 }
             }
         ) *
-
-        impl<'a> From<&'a str> for $error_kind_name {
-            fn from(s: &'a str) -> Self {
-                $error_kind_name::Msg(s.to_string())
-            }
-        }
-
-        impl From<String> for $error_kind_name {
-            fn from(s: String) -> Self {
-                $error_kind_name::Msg(s)
-            }
-        }
 
         impl From<$error_name> for $error_kind_name {
             fn from(e: $error_name) -> Self {
@@ -349,51 +453,67 @@ macro_rules! impl_error_chain_processed {
 
 /// Internal macro used for reordering of the fields.
 #[doc(hidden)]
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! error_chain_processing {
     (
-        ({}, $b:tt, $c:tt, $d:tt)
+        ({}, $($rest:tt)*)
         types $content:tt
         $( $tail:tt )*
     ) => {
         error_chain_processing! {
-            ($content, $b, $c, $d)
+            ($content, $($rest)*)
             $($tail)*
         }
     };
+
     (
-        ($a:tt, {}, $c:tt, $d:tt)
+        ($a:tt, {}, $($rest:tt)*)
         links $content:tt
         $( $tail:tt )*
     ) => {
         error_chain_processing! {
-            ($a, $content, $c, $d)
+            ($a, $content, $($rest)*)
             $($tail)*
         }
     };
+
     (
-        ($a:tt, $b:tt, {}, $d:tt)
+        ($a:tt, $b:tt, {}, $($rest:tt)*)
         foreign_links $content:tt
         $( $tail:tt )*
     ) => {
         error_chain_processing! {
-            ($a, $b, $content, $d)
+            ($a, $b, $content, $($rest)*)
             $($tail)*
         }
     };
+
     (
-        ($a:tt, $b:tt, $c:tt, {})
+        ($a:tt, $b:tt, $c:tt, {}, $($rest:tt)*)
         errors $content:tt
         $( $tail:tt )*
     ) => {
         error_chain_processing! {
-            ($a, $b, $c, $content)
+            ($a, $b, $c, $content, $($rest)*)
             $($tail)*
         }
     };
-    ( ($a:tt, $b:tt, $c:tt, $d:tt) ) => {
+
+    (
+        ($a:tt, $b:tt, $c:tt, $d:tt, {}, $($rest:tt)*)
+        skip_msg_variant
+        $( $tail:tt )*
+    ) => {
+        error_chain_processing! {
+            ($a, $b, $c, $d, {skip_msg_variant}, $($rest)*)
+            $($tail)*
+        }
+    };
+
+    ( ($a:tt, $b:tt, $c:tt, $d:tt, {$($e:tt)*},) ) => {
         impl_error_chain_processed! {
             types $a
+            $($e)*
             links $b
             foreign_links $c
             errors $d
@@ -402,12 +522,12 @@ macro_rules! error_chain_processing {
 }
 
 /// Macro for generating error types and traits. See crate level documentation for details.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! error_chain {
-    ( $( $block_name:ident { $( $block_content:tt )* } )* ) => {
+    ( $($args:tt)* ) => {
         error_chain_processing! {
-            ({}, {}, {}, {})
-            $($block_name { $( $block_content )* })*
+            ({}, {}, {}, {}, {},)
+            $($args)*
         }
     };
 }
@@ -419,40 +539,26 @@ macro_rules! error_chain {
 /// for more details.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "backtrace")]
 macro_rules! impl_extract_backtrace {
     ($error_name: ident
      $error_kind_name: ident
      $([$link_error_path: path, $(#[$meta_links: meta])*])*) => {
-        #[allow(unknown_lints, unused_doc_comment)]
+        #[allow(unknown_lints, renamed_and_removed_lints, bare_trait_objects)]
+        #[allow(unused_doc_comment, unused_doc_comments)]
         fn extract_backtrace(e: &(::std::error::Error + Send + 'static))
-            -> Option<::std::sync::Arc<$crate::Backtrace>> {
+            -> Option<$crate::InternalBacktrace> {
             if let Some(e) = e.downcast_ref::<$error_name>() {
-                return e.1.backtrace.clone();
+                return Some(e.1.backtrace.clone());
             }
             $(
                 $( #[$meta_links] )*
                 {
                     if let Some(e) = e.downcast_ref::<$link_error_path>() {
-                        return e.1.backtrace.clone();
+                        return Some(e.1.backtrace.clone());
                     }
                 }
             ) *
             None
         }
     }
-}
-
-/// Macro used to manage the `backtrace` feature.
-///
-/// See
-/// https://www.reddit.com/r/rust/comments/57virt/hey_rustaceans_got_an_easy_question_ask_here/da5r4ti/?context=3
-/// for more details.
-#[macro_export]
-#[doc(hidden)]
-#[cfg(not(feature = "backtrace"))]
-macro_rules! impl_extract_backtrace {
-    ($error_name: ident
-     $error_kind_name: ident
-     $([$link_error_path: path, $(#[$meta_links: meta])*])*) => {}
 }
