@@ -30,10 +30,8 @@ const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
         // Used in `file_contains_iframe.html`
         "*://example.org/",
       ],
-      granted_host_permissions: true,
       ...manifestProps,
     },
-    temporarilyInstalled: true,
     ...otherProps,
   });
 };
