@@ -39,7 +39,6 @@ import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncAccount
-import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
@@ -157,39 +156,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.NormalAndPrivateUriOpened -> EventWrapper<NoExtraKeys>(
             { Events.normalAndPrivateUriCount.add(1) }
-        )
-        is Event.SyncAuthOpened -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.opened.record(it) }
-        )
-        is Event.SyncAuthClosed -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.closed.record(it) }
-        )
-        is Event.SyncAuthUseEmail -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.useEmail.record(it) }
-        )
-        is Event.SyncAuthUseEmailProblem -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.useEmailProblem.record(it) }
-        )
-        is Event.SyncAuthSignIn -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.signIn.record(it) }
-        )
-        is Event.SyncAuthSignUp -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.signUp.record(it) }
-        )
-        is Event.SyncAuthPaired -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.paired.record(it) }
-        )
-        is Event.SyncAuthOtherExternal -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.otherExternal.record(it) }
-        )
-        is Event.SyncAuthRecovered -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.recovered.record(it) }
-        )
-        is Event.SyncAuthSignOut -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.signOut.record(it) }
-        )
-        is Event.SyncAuthScanPairing -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.scanPairing.record(it) }
         )
         is Event.SyncAccountOpened -> EventWrapper<NoExtraKeys>(
             { SyncAccount.opened.record(it) }
@@ -777,7 +743,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.DismissedOnboarding -> null
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
-        is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null
     }
 
 /**

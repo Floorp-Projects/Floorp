@@ -14,8 +14,9 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -25,7 +26,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private val signInClickListener = Preference.OnPreferenceClickListener {
         requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
-        requireComponents.analytics.metrics.track(Event.SyncAuthUseEmailProblem)
+        SyncAuth.useEmailProblem.record(NoExtras())
         // TODO The sign-in web content populates session history,
         // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
         // session history stack.

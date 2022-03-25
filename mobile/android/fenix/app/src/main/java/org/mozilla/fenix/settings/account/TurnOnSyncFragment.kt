@@ -20,11 +20,12 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentTurnOnSyncBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -63,7 +64,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     private fun navigateToPairFragment() {
         val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
         requireView().findNavController().navigate(directions)
-        requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
+        SyncAuth.scanPairing.record(NoExtras())
     }
 
     private val createAccountClickListener = View.OnClickListener {
@@ -73,7 +74,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
-        requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
+        SyncAuth.opened.record(NoExtras())
 
         // App can be installed on devices with no camera modules. Like Android TV boxes.
         // Let's skip presenting the option to sign in by scanning a qr code in this case
@@ -86,7 +87,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     override fun onDestroy() {
         super.onDestroy()
-        requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
+        SyncAuth.closed.record(NoExtras())
     }
 
     override fun onResume() {
@@ -168,7 +169,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     private fun navigateToPairWithEmail() {
         requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
-        requireComponents.analytics.metrics.track(Event.SyncAuthUseEmail)
+        SyncAuth.useEmail.record(NoExtras())
         // TODO The sign-in web content populates session history,
         // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
         // session history stack.

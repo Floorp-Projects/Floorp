@@ -32,17 +32,17 @@ import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.R
-import org.mozilla.fenix.perf.StrictModeManager
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.sync.SyncedTabsIntegration
 import org.mozilla.fenix.utils.Settings
@@ -127,7 +127,6 @@ class BackgroundServices(
 
     private val telemetryAccountObserver = TelemetryAccountObserver(
         context.settings(),
-        context.components.analytics.metrics
     )
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
@@ -214,42 +213,39 @@ private class AccountManagerReadyObserver(
 @VisibleForTesting(otherwise = PRIVATE)
 internal class TelemetryAccountObserver(
     private val settings: Settings,
-    private val metricController: MetricController
 ) : AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         settings.signedInFxaAccount = true
         when (authType) {
             // User signed-in into an existing FxA account.
-            AuthType.Signin -> Event.SyncAuthSignIn
+            AuthType.Signin -> SyncAuth.signIn.record(NoExtras())
 
             // User created a new FxA account.
-            AuthType.Signup -> Event.SyncAuthSignUp
+            AuthType.Signup -> SyncAuth.signUp.record(NoExtras())
 
             // User paired to an existing account via QR code scanning.
-            AuthType.Pairing -> Event.SyncAuthPaired
-
-            // User signed-in into an FxA account shared from another locally installed app using the reuse flow.
-            AuthType.MigratedReuse -> Event.SyncAuthFromSharedReuse
-
-            // User signed-in into an FxA account shared from another locally installed app using the copy flow.
-            AuthType.MigratedCopy -> Event.SyncAuthFromSharedCopy
+            AuthType.Pairing -> SyncAuth.paired.record(NoExtras())
 
             // Account Manager recovered a broken FxA auth state, without direct user involvement.
-            AuthType.Recovered -> Event.SyncAuthRecovered
+            AuthType.Recovered -> SyncAuth.recovered.record(NoExtras())
 
             // User signed-in into an FxA account via unknown means.
             // Exact mechanism identified by the 'action' param.
-            is AuthType.OtherExternal -> Event.SyncAuthOtherExternal
+            is AuthType.OtherExternal -> SyncAuth.otherExternal.record(NoExtras())
 
+            // User signed-in into an FxA account shared from another locally installed app using the copy flow.
+            AuthType.MigratedCopy,
+            // User signed-in into an FxA account shared from another locally installed app using the reuse flow.
+            AuthType.MigratedReuse,
             // Account restored from a hydrated state on disk (e.g. during startup).
-            AuthType.Existing -> null
-        }?.let {
-            metricController.track(it)
+            AuthType.Existing -> {
+                // no-op, events not recorded in Glean
+            }
         }
     }
 
     override fun onLoggedOut() {
-        metricController.track(Event.SyncAuthSignOut)
+        SyncAuth.signOut.record(NoExtras())
         settings.signedInFxaAccount = false
     }
 }
