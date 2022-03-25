@@ -162,12 +162,13 @@ class BrowserToolbarIntegration(
                 useCases = customTabsUseCases,
                 menuBuilder = menu.menuBuilder,
                 menuItemIndex = menu.menuBuilder.items.size - 1,
-                closeListener = { fragment.closeCustomTab() },
-                updateToolbarBackground = false
+                closeListener = { fragment.closeCustomTab() }
             )
         }
 
-        if (HardwareUtils.isTablet(context)) {
+        val isCustomTab = store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab()
+
+        if (HardwareUtils.isTablet(context) && isCustomTab == false) {
             navigationButtonsIntegration = NavigationButtonsIntegration(
                 context,
                 store,
@@ -176,7 +177,8 @@ class BrowserToolbarIntegration(
                 customTabId
             )
         }
-        if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == false) {
+
+        if (isCustomTab == false) {
             toolbar.addNavigationAction(eraseAction)
             if (!inTesting) {
                 setUrlBackground()
