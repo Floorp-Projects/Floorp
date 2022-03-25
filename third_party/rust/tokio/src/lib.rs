@@ -1,10 +1,7 @@
-#![doc(html_root_url = "https://docs.rs/tokio/0.2.25")]
 #![allow(
     clippy::cognitive_complexity,
     clippy::large_enum_variant,
-    clippy::needless_doctest_main,
-    clippy::match_like_matches_macro,
-    clippy::stable_sort_primitive
+    clippy::needless_doctest_main
 )]
 #![warn(
     missing_debug_implementations,
@@ -12,21 +9,22 @@
     rust_2018_idioms,
     unreachable_pub
 )]
-#![cfg_attr(docsrs, deny(broken_intra_doc_links))]
+#![deny(unused_must_use)]
 #![doc(test(
     no_crate_inject,
     attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
 ))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, allow(unused_attributes))]
 
-//! A runtime for writing reliable, asynchronous, and slim applications.
+//! A runtime for writing reliable network applications without compromising speed.
 //!
 //! Tokio is an event-driven, non-blocking I/O platform for writing asynchronous
 //! applications with the Rust programming language. At a high level, it
 //! provides a few major components:
 //!
 //! * Tools for [working with asynchronous tasks][tasks], including
-//!   [synchronization primitives and channels][sync] and [timeouts, delays, and
+//!   [synchronization primitives and channels][sync] and [timeouts, sleeps, and
 //!   intervals][time].
 //! * APIs for [performing asynchronous I/O][io], including [TCP and UDP][net] sockets,
 //!   [filesystem][fs] operations, and [process] and [signal] management.
@@ -59,58 +57,8 @@
 //! enabling the `full` feature flag:
 //!
 //! ```toml
-//! tokio = { version = "0.2", features = ["full"] }
+//! tokio = { version = "1", features = ["full"] }
 //! ```
-//!
-//! ## Feature flags
-//!
-//! Tokio uses a set of [feature flags] to reduce the amount of compiled code. It
-//! is possible to just enable certain features over others. By default, Tokio
-//! does not enable any features but allows one to enable a subset for their use
-//! case. Below is a list of the available feature flags. You may also notice
-//! above each function, struct and trait there is listed one or more feature flags
-//! that are required for that item to be used. If you are new to Tokio it is
-//! recommended that you use the `full` feature flag which will enable all public APIs.
-//! Beware though that this will pull in many extra dependencies that you may not
-//! need.
-//!
-//! - `full`: Enables all Tokio public API features listed below.
-//! - `rt-core`: Enables `tokio::spawn` and the basic (single-threaded) scheduler.
-//! - `rt-threaded`: Enables the heavier, multi-threaded, work-stealing scheduler.
-//! - `rt-util`: Enables non-scheduler utilities.
-//! - `io-driver`: Enables the `mio` based IO driver.
-//! - `io-util`: Enables the IO based `Ext` traits.
-//! - `io-std`: Enable `Stdout`, `Stdin` and `Stderr` types.
-//! - `net`: Enables `tokio::net` types such as `TcpStream`, `UnixStream` and `UdpSocket`.
-//! - `tcp`: Enables all `tokio::net::tcp` types.
-//! - `udp`: Enables all `tokio::net::udp` types.
-//! - `uds`: Enables all `tokio::net::unix` types.
-//! - `time`: Enables `tokio::time` types and allows the schedulers to enable
-//! the built in timer.
-//! - `process`: Enables `tokio::process` types.
-//! - `macros`: Enables `#[tokio::main]` and `#[tokio::test]` macros.
-//! - `sync`: Enables all `tokio::sync` types.
-//! - `stream`: Enables optional `Stream` implementations for types within Tokio.
-//! - `signal`: Enables all `tokio::signal` types.
-//! - `fs`: Enables `tokio::fs` types.
-//! - `dns`: Enables async `tokio::net::ToSocketAddrs`.
-//! - `test-util`: Enables testing based infrastructure for the Tokio runtime.
-//! - `blocking`: Enables `block_in_place` and `spawn_blocking`.
-//!
-//! _Note: `AsyncRead` and `AsyncWrite` traits do not require any features and are
-//! always available._
-//!
-//! ### Internal features
-//!
-//! These features do not expose any new API, but influence internal
-//! implementation aspects of Tokio, and can pull in additional
-//! dependencies. They are not included in `full`:
-//!
-//! - `parking_lot`: As a potential optimization, use the _parking_lot_ crate's
-//! synchronization primitives internally. MSRV may increase according to the
-//! _parking_lot_ release in use.
-//!
-//! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //!
 //! ### Authoring applications
 //!
@@ -124,12 +72,12 @@
 //! This example shows the quickest way to get started with Tokio.
 //!
 //! ```toml
-//! tokio = { version = "0.2", features = ["full"] }
+//! tokio = { version = "1", features = ["full"] }
 //! ```
 //!
 //! ### Authoring libraries
 //!
-//! As a library author your goal should be to provide the lighest weight crate
+//! As a library author your goal should be to provide the lightest weight crate
 //! that is based on Tokio. To achieve this you should ensure that you only enable
 //! the features you need. This allows users to pick up your crate without having
 //! to enable unnecessary features.
@@ -140,7 +88,7 @@
 //! needs to `tokio::spawn` and use a `TcpStream`.
 //!
 //! ```toml
-//! tokio = { version = "0.2", features = ["rt-core", "tcp"] }
+//! tokio = { version = "1", features = ["rt", "net"] }
 //! ```
 //!
 //! ## Working With Tasks
@@ -154,7 +102,7 @@
 //! * Functions for [running blocking operations][blocking] in an asynchronous
 //!   task context.
 //!
-//! The [`tokio::task`] module is present only when the "rt-core" feature flag
+//! The [`tokio::task`] module is present only when the "rt" feature flag
 //! is enabled.
 //!
 //! [tasks]: task/index.html#what-are-tasks
@@ -185,25 +133,26 @@
 //!
 //! The [`tokio::time`] module provides utilities for tracking time and
 //! scheduling work. This includes functions for setting [timeouts][timeout] for
-//! tasks, [delaying][delay] work to run in the future, or [repeating an operation at an
+//! tasks, [sleeping][sleep] work to run in the future, or [repeating an operation at an
 //! interval][interval].
 //!
 //! In order to use `tokio::time`, the "time" feature flag must be enabled.
 //!
 //! [`tokio::time`]: crate::time
-//! [delay]: crate::time::delay_for()
+//! [sleep]: crate::time::sleep()
 //! [interval]: crate::time::interval()
 //! [timeout]: crate::time::timeout()
 //!
 //! Finally, Tokio provides a _runtime_ for executing asynchronous tasks. Most
 //! applications can use the [`#[tokio::main]`][main] macro to run their code on the
-//! Tokio runtime. In use-cases where manual control over the runtime is
-//! required, the [`tokio::runtime`] module provides APIs for configuring and
-//! managing runtimes.
+//! Tokio runtime. However, this macro provides only basic configuration options. As
+//! an alternative, the [`tokio::runtime`] module provides more powerful APIs for configuring
+//! and managing runtimes. You should use that module if the `#[tokio::main]` macro doesn't
+//! provide the functionality you need.
 //!
-//! Using the runtime requires the "rt-core" or "rt-threaded" feature flags, to
-//! enable the basic [single-threaded scheduler][rt-core] and the [thread-pool
-//! scheduler][rt-threaded], respectively. See the [`runtime` module
+//! Using the runtime requires the "rt" or "rt-multi-thread" feature flags, to
+//! enable the basic [single-threaded scheduler][rt] and the [thread-pool
+//! scheduler][rt-multi-thread], respectively. See the [`runtime` module
 //! documentation][rt-features] for details. In addition, the "macros" feature
 //! flag enables the `#[tokio::main]` and `#[tokio::test]` attributes.
 //!
@@ -211,8 +160,8 @@
 //! [`tokio::runtime`]: crate::runtime
 //! [`Builder`]: crate::runtime::Builder
 //! [`Runtime`]: crate::runtime::Runtime
-//! [rt-core]: runtime/index.html#basic-scheduler
-//! [rt-threaded]: runtime/index.html#threaded-scheduler
+//! [rt]: runtime/index.html#current-thread-scheduler
+//! [rt-multi-thread]: runtime/index.html#multi-thread-scheduler
 //! [rt-features]: runtime/index.html#runtime-scheduler
 //!
 //! ## CPU-bound tasks and blocking code
@@ -224,16 +173,18 @@
 //! combat this, Tokio provides two kinds of threads: Core threads and blocking
 //! threads. The core threads are where all asynchronous code runs, and Tokio
 //! will by default spawn one for each CPU core. The blocking threads are
-//! spawned on demand, and can be used to run blocking code that would otherwise
-//! block other tasks from running. Since it is not possible for Tokio to swap
-//! out blocking tasks, like it can do with asynchronous code, the upper limit
-//! on the number of blocking threads is very large. These limits can be
-//! configured on the [`Builder`].
+//! spawned on demand, can be used to run blocking code that would otherwise
+//! block other tasks from running and are kept alive when not used for a certain
+//! amount of time which can be configured with [`thread_keep_alive`].
+//! Since it is not possible for Tokio to swap out blocking tasks, like it
+//! can do with asynchronous code, the upper limit on the number of blocking
+//! threads is very large. These limits can be configured on the [`Builder`].
 //!
 //! To spawn a blocking task, you should use the [`spawn_blocking`] function.
 //!
 //! [`Builder`]: crate::runtime::Builder
 //! [`spawn_blocking`]: crate::task::spawn_blocking()
+//! [`thread_keep_alive`]: crate::runtime::Builder::thread_keep_alive()
 //!
 //! ```
 //! #[tokio::main]
@@ -253,9 +204,15 @@
 //! ```
 //!
 //! If your code is CPU-bound and you wish to limit the number of threads used
-//! to run it, you should run it on another thread pool such as [rayon]. You
-//! can use an [`oneshot`] channel to send the result back to Tokio when the
-//! rayon task finishes.
+//! to run it, you should use a separate thread pool dedicated to CPU bound tasks.
+//! For example, you could consider using the [rayon] library for CPU-bound
+//! tasks. It is also possible to create an extra Tokio runtime dedicated to
+//! CPU-bound tasks, but if you do this, you should be careful that the extra
+//! runtime runs _only_ CPU-bound tasks, as IO-bound tasks on that runtime
+//! will behave poorly.
+//!
+//! Hint: If using rayon, you can use a [`oneshot`] channel to send the result back
+//! to Tokio when the rayon task finishes.
 //!
 //! [rayon]: https://docs.rs/rayon
 //! [`oneshot`]: crate::sync::oneshot
@@ -269,8 +226,7 @@
 //! the [`AsyncRead`], [`AsyncWrite`], and [`AsyncBufRead`] traits. In addition,
 //! when the "io-util" feature flag is enabled, it also provides combinators and
 //! functions for working with these traits, forming as an asynchronous
-//! counterpart to [`std::io`]. When the "io-driver" feature flag is enabled, it
-//! also provides utilities for library authors implementing I/O resources.
+//! counterpart to [`std::io`].
 //!
 //! Tokio also includes APIs for performing various kinds of I/O and interacting
 //! with the operating system asynchronously. These include:
@@ -291,7 +247,7 @@
 //! [`std::io`]: std::io
 //! [`tokio::net`]: crate::net
 //! [TCP]: crate::net::tcp
-//! [UDP]: crate::net::udp
+//! [UDP]: crate::net::UdpSocket
 //! [UDS]: crate::net::unix
 //! [`tokio::fs`]: crate::fs
 //! [`std::fs`]: std::fs
@@ -304,11 +260,11 @@
 //!
 //! ```no_run
 //! use tokio::net::TcpListener;
-//! use tokio::prelude::*;
+//! use tokio::io::{AsyncReadExt, AsyncWriteExt};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let mut listener = TcpListener::bind("127.0.0.1:8080").await?;
+//!     let listener = TcpListener::bind("127.0.0.1:8080").await?;
 //!
 //!     loop {
 //!         let (mut socket, _) = listener.accept().await?;
@@ -338,6 +294,73 @@
 //!     }
 //! }
 //! ```
+//!
+//! ## Feature flags
+//!
+//! Tokio uses a set of [feature flags] to reduce the amount of compiled code. It
+//! is possible to just enable certain features over others. By default, Tokio
+//! does not enable any features but allows one to enable a subset for their use
+//! case. Below is a list of the available feature flags. You may also notice
+//! above each function, struct and trait there is listed one or more feature flags
+//! that are required for that item to be used. If you are new to Tokio it is
+//! recommended that you use the `full` feature flag which will enable all public APIs.
+//! Beware though that this will pull in many extra dependencies that you may not
+//! need.
+//!
+//! - `full`: Enables all features listed below except `test-util` and `tracing`.
+//! - `rt`: Enables `tokio::spawn`, the basic (current thread) scheduler,
+//!         and non-scheduler utilities.
+//! - `rt-multi-thread`: Enables the heavier, multi-threaded, work-stealing scheduler.
+//! - `io-util`: Enables the IO based `Ext` traits.
+//! - `io-std`: Enable `Stdout`, `Stdin` and `Stderr` types.
+//! - `net`: Enables `tokio::net` types such as `TcpStream`, `UnixStream` and
+//!          `UdpSocket`, as well as (on Unix-like systems) `AsyncFd` and (on
+//!          FreeBSD) `PollAio`.
+//! - `time`: Enables `tokio::time` types and allows the schedulers to enable
+//!           the built in timer.
+//! - `process`: Enables `tokio::process` types.
+//! - `macros`: Enables `#[tokio::main]` and `#[tokio::test]` macros.
+//! - `sync`: Enables all `tokio::sync` types.
+//! - `signal`: Enables all `tokio::signal` types.
+//! - `fs`: Enables `tokio::fs` types.
+//! - `test-util`: Enables testing based infrastructure for the Tokio runtime.
+//!
+//! _Note: `AsyncRead` and `AsyncWrite` traits do not require any features and are
+//! always available._
+//!
+//! ### Internal features
+//!
+//! These features do not expose any new API, but influence internal
+//! implementation aspects of Tokio, and can pull in additional
+//! dependencies.
+//!
+//! - `parking_lot`: As a potential optimization, use the _parking_lot_ crate's
+//! synchronization primitives internally. MSRV may increase according to the
+//! _parking_lot_ release in use.
+//!
+//! ### Unstable features
+//!
+//! These feature flags enable **unstable** features. The public API may break in 1.x
+//! releases. To enable these features, the `--cfg tokio_unstable` must be passed to
+//! `rustc` when compiling. This is easiest done using the `RUSTFLAGS` env variable:
+//! `RUSTFLAGS="--cfg tokio_unstable"`.
+//!
+//! - `tracing`: Enables tracing events.
+//!
+//! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
+
+// Test that pointer width is compatible. This asserts that e.g. usize is at
+// least 32 bits, which a lot of components in Tokio currently assumes.
+//
+// TODO: improve once we have MSRV access to const eval to make more flexible.
+#[cfg(not(any(
+    target_pointer_width = "32",
+    target_pointer_width = "64",
+    target_pointer_width = "128"
+)))]
+compile_error! {
+    "Tokio requires the platform pointer width to be 32, 64, or 128 bits"
+}
 
 // Includes re-exports used by macros.
 //
@@ -351,8 +374,7 @@ cfg_fs! {
     pub mod fs;
 }
 
-#[doc(hidden)]
-pub mod future;
+mod future;
 
 pub mod io;
 pub mod net;
@@ -360,13 +382,16 @@ pub mod net;
 mod loom;
 mod park;
 
-pub mod prelude;
-
 cfg_process! {
     pub mod process;
 }
 
-pub mod runtime;
+#[cfg(any(feature = "net", feature = "fs", feature = "io-std"))]
+mod blocking;
+
+cfg_rt! {
+    pub mod runtime;
+}
 
 pub(crate) mod coop;
 
@@ -374,8 +399,11 @@ cfg_signal! {
     pub mod signal;
 }
 
-cfg_stream! {
-    pub mod stream;
+cfg_signal_internal! {
+    #[cfg(not(feature = "signal"))]
+    #[allow(dead_code)]
+    #[allow(unreachable_pub)]
+    pub(crate) mod signal;
 }
 
 cfg_sync! {
@@ -385,8 +413,8 @@ cfg_not_sync! {
     mod sync;
 }
 
-cfg_rt_core! {
-    pub mod task;
+pub mod task;
+cfg_rt! {
     pub use task::spawn;
 }
 
@@ -396,6 +424,67 @@ cfg_time! {
 
 mod util;
 
+/// Due to the `Stream` trait's inclusion in `std` landing later than Tokio's 1.0
+/// release, most of the Tokio stream utilities have been moved into the [`tokio-stream`]
+/// crate.
+///
+/// # Why was `Stream` not included in Tokio 1.0?
+///
+/// Originally, we had planned to ship Tokio 1.0 with a stable `Stream` type
+/// but unfortunately the [RFC] had not been merged in time for `Stream` to
+/// reach `std` on a stable compiler in time for the 1.0 release of Tokio. For
+/// this reason, the team has decided to move all `Stream` based utilities to
+/// the [`tokio-stream`] crate. While this is not ideal, once `Stream` has made
+/// it into the standard library and the MSRV period has passed, we will implement
+/// stream for our different types.
+///
+/// While this may seem unfortunate, not all is lost as you can get much of the
+/// `Stream` support with `async/await` and `while let` loops. It is also possible
+/// to create a `impl Stream` from `async fn` using the [`async-stream`] crate.
+///
+/// [`tokio-stream`]: https://docs.rs/tokio-stream
+/// [`async-stream`]: https://docs.rs/async-stream
+/// [RFC]: https://github.com/rust-lang/rfcs/pull/2996
+///
+/// # Example
+///
+/// Convert a [`sync::mpsc::Receiver`] to an `impl Stream`.
+///
+/// ```rust,no_run
+/// use tokio::sync::mpsc;
+///
+/// let (tx, mut rx) = mpsc::channel::<usize>(16);
+///
+/// let stream = async_stream::stream! {
+///     while let Some(item) = rx.recv().await {
+///         yield item;
+///     }
+/// };
+/// ```
+pub mod stream {}
+
+// local re-exports of platform specific things, allowing for decent
+// documentation to be shimmed in on docs.rs
+
+#[cfg(docsrs)]
+pub mod doc;
+
+#[cfg(docsrs)]
+#[allow(unused)]
+pub(crate) use self::doc::os;
+
+#[cfg(not(docsrs))]
+#[allow(unused)]
+pub(crate) use std::os;
+
+#[cfg(docsrs)]
+#[allow(unused)]
+pub(crate) use self::doc::winapi;
+
+#[cfg(all(not(docsrs), windows, feature = "net"))]
+#[allow(unused)]
+pub(crate) use ::winapi;
+
 cfg_macros! {
     /// Implementation detail of the `select!` macro. This macro is **not**
     /// intended to be used as part of the public API and is permitted to
@@ -403,31 +492,42 @@ cfg_macros! {
     #[doc(hidden)]
     pub use tokio_macros::select_priv_declare_output_enum;
 
-    doc_rt_core! {
-        cfg_rt_threaded! {
-            // This is the docs.rs case (with all features) so make sure macros
-            // is included in doc(cfg).
+    /// Implementation detail of the `select!` macro. This macro is **not**
+    /// intended to be used as part of the public API and is permitted to
+    /// change.
+    #[doc(hidden)]
+    pub use tokio_macros::select_priv_clean_pattern;
 
+    cfg_rt! {
+        #[cfg(feature = "rt-multi-thread")]
+        #[cfg(not(test))] // Work around for rust-lang/rust#62127
+        #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
+        #[doc(inline)]
+        pub use tokio_macros::main;
+
+        #[cfg(feature = "rt-multi-thread")]
+        #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
+        #[doc(inline)]
+        pub use tokio_macros::test;
+
+        cfg_not_rt_multi_thread! {
             #[cfg(not(test))] // Work around for rust-lang/rust#62127
-            #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
-            pub use tokio_macros::main_threaded as main;
+            #[doc(inline)]
+            pub use tokio_macros::main_rt as main;
 
-            #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
-            pub use tokio_macros::test_threaded as test;
-        }
-
-        cfg_not_rt_threaded! {
-            #[cfg(not(test))] // Work around for rust-lang/rust#62127
-            pub use tokio_macros::main_basic as main;
-            pub use tokio_macros::test_basic as test;
+            #[doc(inline)]
+            pub use tokio_macros::test_rt as test;
         }
     }
 
-    // Maintains old behavior
-    cfg_not_rt_core! {
+    // Always fail if rt is not enabled.
+    cfg_not_rt! {
         #[cfg(not(test))]
-        pub use tokio_macros::main;
-        pub use tokio_macros::test;
+        #[doc(inline)]
+        pub use tokio_macros::main_fail as main;
+
+        #[doc(inline)]
+        pub use tokio_macros::test_fail as test;
     }
 }
 

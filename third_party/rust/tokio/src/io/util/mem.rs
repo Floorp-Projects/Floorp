@@ -1,6 +1,6 @@
 //! In-process memory IO types.
 
-use crate::io::{AsyncRead, AsyncWrite};
+use crate::io::{AsyncRead, AsyncWrite, ReadBuf};
 use crate::loom::sync::Mutex;
 
 use bytes::{Buf, BytesMut};
@@ -15,6 +15,14 @@ use std::{
 /// A pair of `DuplexStream`s are created together, and they act as a "channel"
 /// that can be used as in-memory IO types. Writing to one of the pairs will
 /// allow that data to be read from the other, and vice versa.
+///
+/// # Closing a `DuplexStream`
+///
+/// If one end of the `DuplexStream` channel is dropped, any pending reads on
+/// the other side will continue to read data until the buffer is drained, then
+/// they will signal EOF by returning 0 bytes. Any writes to the other side,
+/// including pending ones (that are waiting for free space in the buffer) will
+/// return `Err(BrokenPipe)` immediately.
 ///
 /// # Example
 ///
@@ -37,6 +45,7 @@ use std::{
 /// # }
 /// ```
 #[derive(Debug)]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 pub struct DuplexStream {
     read: Arc<Mutex<Pipe>>,
     write: Arc<Mutex<Pipe>>,
@@ -72,6 +81,7 @@ struct Pipe {
 ///
 /// The `max_buf_size` argument is the maximum amount of bytes that can be
 /// written to a side before the write returns `Poll::Pending`.
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 pub fn duplex(max_buf_size: usize) -> (DuplexStream, DuplexStream) {
     let one = Arc::new(Mutex::new(Pipe::new(max_buf_size)));
     let two = Arc::new(Mutex::new(Pipe::new(max_buf_size)));
@@ -98,9 +108,9 @@ impl AsyncRead for DuplexStream {
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<std::io::Result<usize>> {
-        Pin::new(&mut *self.read.lock().unwrap()).poll_read(cx, buf)
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut *self.read.lock()).poll_read(cx, buf)
     }
 }
 
@@ -111,7 +121,7 @@ impl AsyncWrite for DuplexStream {
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<std::io::Result<usize>> {
-        Pin::new(&mut *self.write.lock().unwrap()).poll_write(cx, buf)
+        Pin::new(&mut *self.write.lock()).poll_write(cx, buf)
     }
 
     #[allow(unused_mut)]
@@ -119,7 +129,7 @@ impl AsyncWrite for DuplexStream {
         mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
     ) -> Poll<std::io::Result<()>> {
-        Pin::new(&mut *self.write.lock().unwrap()).poll_flush(cx)
+        Pin::new(&mut *self.write.lock()).poll_flush(cx)
     }
 
     #[allow(unused_mut)]
@@ -127,14 +137,15 @@ impl AsyncWrite for DuplexStream {
         mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
     ) -> Poll<std::io::Result<()>> {
-        Pin::new(&mut *self.write.lock().unwrap()).poll_shutdown(cx)
+        Pin::new(&mut *self.write.lock()).poll_shutdown(cx)
     }
 }
 
 impl Drop for DuplexStream {
     fn drop(&mut self) {
         // notify the other side of the closure
-        self.write.lock().unwrap().close();
+        self.write.lock().close_write();
+        self.read.lock().close_read();
     }
 }
 
@@ -151,23 +162,31 @@ impl Pipe {
         }
     }
 
-    fn close(&mut self) {
+    fn close_write(&mut self) {
         self.is_closed = true;
+        // needs to notify any readers that no more data will come
         if let Some(waker) = self.read_waker.take() {
             waker.wake();
         }
     }
-}
 
-impl AsyncRead for Pipe {
-    fn poll_read(
+    fn close_read(&mut self) {
+        self.is_closed = true;
+        // needs to notify any writers that they have to abort
+        if let Some(waker) = self.write_waker.take() {
+            waker.wake();
+        }
+    }
+
+    fn poll_read_internal(
         mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<std::io::Result<usize>> {
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
         if self.buffer.has_remaining() {
-            let max = self.buffer.remaining().min(buf.len());
-            self.buffer.copy_to_slice(&mut buf[..max]);
+            let max = self.buffer.remaining().min(buf.remaining());
+            buf.put_slice(&self.buffer[..max]);
+            self.buffer.advance(max);
             if max > 0 {
                 // The passed `buf` might have been empty, don't wake up if
                 // no bytes have been moved.
@@ -175,18 +194,16 @@ impl AsyncRead for Pipe {
                     waker.wake();
                 }
             }
-            Poll::Ready(Ok(max))
+            Poll::Ready(Ok(()))
         } else if self.is_closed {
-            Poll::Ready(Ok(0))
+            Poll::Ready(Ok(()))
         } else {
             self.read_waker = Some(cx.waker().clone());
             Poll::Pending
         }
     }
-}
 
-impl AsyncWrite for Pipe {
-    fn poll_write(
+    fn poll_write_internal(
         mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
         buf: &[u8],
@@ -207,6 +224,62 @@ impl AsyncWrite for Pipe {
         }
         Poll::Ready(Ok(len))
     }
+}
+
+impl AsyncRead for Pipe {
+    cfg_coop! {
+        fn poll_read(
+            self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+            buf: &mut ReadBuf<'_>,
+        ) -> Poll<std::io::Result<()>> {
+            let coop = ready!(crate::coop::poll_proceed(cx));
+
+            let ret = self.poll_read_internal(cx, buf);
+            if ret.is_ready() {
+                coop.made_progress();
+            }
+            ret
+        }
+    }
+
+    cfg_not_coop! {
+        fn poll_read(
+            self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+            buf: &mut ReadBuf<'_>,
+        ) -> Poll<std::io::Result<()>> {
+            self.poll_read_internal(cx, buf)
+        }
+    }
+}
+
+impl AsyncWrite for Pipe {
+    cfg_coop! {
+        fn poll_write(
+            self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+            buf: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            let coop = ready!(crate::coop::poll_proceed(cx));
+
+            let ret = self.poll_write_internal(cx, buf);
+            if ret.is_ready() {
+                coop.made_progress();
+            }
+            ret
+        }
+    }
+
+    cfg_not_coop! {
+        fn poll_write(
+            self: Pin<&mut Self>,
+            cx: &mut task::Context<'_>,
+            buf: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            self.poll_write_internal(cx, buf)
+        }
+    }
 
     fn poll_flush(self: Pin<&mut Self>, _: &mut task::Context<'_>) -> Poll<std::io::Result<()>> {
         Poll::Ready(Ok(()))
@@ -216,7 +289,7 @@ impl AsyncWrite for Pipe {
         mut self: Pin<&mut Self>,
         _: &mut task::Context<'_>,
     ) -> Poll<std::io::Result<()>> {
-        self.close();
+        self.close_write();
         Poll::Ready(Ok(()))
     }
 }

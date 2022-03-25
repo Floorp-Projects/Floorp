@@ -1,4 +1,4 @@
-use crate::io::{AsyncBufRead, AsyncRead};
+use crate::io::{AsyncBufRead, AsyncRead, ReadBuf};
 
 use std::fmt;
 use std::io;
@@ -47,22 +47,21 @@ cfg_io_util! {
 }
 
 impl AsyncRead for Empty {
-    unsafe fn prepare_uninitialized_buffer(&self, _buf: &mut [std::mem::MaybeUninit<u8>]) -> bool {
-        false
-    }
     #[inline]
     fn poll_read(
         self: Pin<&mut Self>,
-        _: &mut Context<'_>,
-        _: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
-        Poll::Ready(Ok(0))
+        cx: &mut Context<'_>,
+        _: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        ready!(poll_proceed_and_make_progress(cx));
+        Poll::Ready(Ok(()))
     }
 }
 
 impl AsyncBufRead for Empty {
     #[inline]
-    fn poll_fill_buf(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
+    fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
+        ready!(poll_proceed_and_make_progress(cx));
         Poll::Ready(Ok(&[]))
     }
 
@@ -73,6 +72,20 @@ impl AsyncBufRead for Empty {
 impl fmt::Debug for Empty {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("Empty { .. }")
+    }
+}
+
+cfg_coop! {
+    fn poll_proceed_and_make_progress(cx: &mut Context<'_>) -> Poll<()> {
+        let coop = ready!(crate::coop::poll_proceed(cx));
+        coop.made_progress();
+        Poll::Ready(())
+    }
+}
+
+cfg_not_coop! {
+    fn poll_proceed_and_make_progress(_: &mut Context<'_>) -> Poll<()> {
+        Poll::Ready(())
     }
 }
 

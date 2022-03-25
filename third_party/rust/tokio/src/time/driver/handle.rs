@@ -1,34 +1,89 @@
-use crate::runtime::context;
-use crate::time::driver::Inner;
+use crate::loom::sync::Arc;
+use crate::time::driver::ClockTime;
 use std::fmt;
-use std::sync::{Arc, Weak};
 
 /// Handle to time driver instance.
 #[derive(Clone)]
 pub(crate) struct Handle {
-    inner: Weak<Inner>,
+    time_source: ClockTime,
+    inner: Arc<super::Inner>,
 }
 
 impl Handle {
     /// Creates a new timer `Handle` from a shared `Inner` timer state.
-    pub(crate) fn new(inner: Weak<Inner>) -> Self {
-        Handle { inner }
+    pub(super) fn new(inner: Arc<super::Inner>) -> Self {
+        let time_source = inner.state.lock().time_source.clone();
+        Handle { time_source, inner }
     }
 
-    /// Tries to get a handle to the current timer.
-    ///
-    /// # Panics
-    ///
-    /// This function panics if there is no current timer set.
-    pub(crate) fn current() -> Self {
-        context::time_handle().expect(
-            "there is no timer running, must be called from the context of a Tokio 0.2.x runtime",
-        )
+    /// Returns the time source associated with this handle.
+    pub(super) fn time_source(&self) -> &ClockTime {
+        &self.time_source
     }
 
-    /// Tries to return a strong ref to the inner
-    pub(crate) fn inner(&self) -> Option<Arc<Inner>> {
-        self.inner.upgrade()
+    /// Access the driver's inner structure.
+    pub(super) fn get(&self) -> &super::Inner {
+        &*self.inner
+    }
+
+    /// Checks whether the driver has been shutdown.
+    pub(super) fn is_shutdown(&self) -> bool {
+        self.inner.is_shutdown()
+    }
+}
+
+cfg_rt! {
+    impl Handle {
+        /// Tries to get a handle to the current timer.
+        ///
+        /// # Panics
+        ///
+        /// This function panics if there is no current timer set.
+        ///
+        /// It can be triggered when [`Builder::enable_time`] or
+        /// [`Builder::enable_all`] are not included in the builder.
+        ///
+        /// It can also panic whenever a timer is created outside of a
+        /// Tokio runtime. That is why `rt.block_on(sleep(...))` will panic,
+        /// since the function is executed outside of the runtime.
+        /// Whereas `rt.block_on(async {sleep(...).await})` doesn't panic.
+        /// And this is because wrapping the function on an async makes it lazy,
+        /// and so gets executed inside the runtime successfully without
+        /// panicking.
+        ///
+        /// [`Builder::enable_time`]: crate::runtime::Builder::enable_time
+        /// [`Builder::enable_all`]: crate::runtime::Builder::enable_all
+        pub(crate) fn current() -> Self {
+            crate::runtime::context::time_handle()
+                .expect("A Tokio 1.x context was found, but timers are disabled. Call `enable_time` on the runtime builder to enable timers.")
+        }
+    }
+}
+
+cfg_not_rt! {
+    impl Handle {
+        /// Tries to get a handle to the current timer.
+        ///
+        /// # Panics
+        ///
+        /// This function panics if there is no current timer set.
+        ///
+        /// It can be triggered when [`Builder::enable_time`] or
+        /// [`Builder::enable_all`] are not included in the builder.
+        ///
+        /// It can also panic whenever a timer is created outside of a
+        /// Tokio runtime. That is why `rt.block_on(sleep(...))` will panic,
+        /// since the function is executed outside of the runtime.
+        /// Whereas `rt.block_on(async {sleep(...).await})` doesn't panic.
+        /// And this is because wrapping the function on an async makes it lazy,
+        /// and so gets executed inside the runtime successfully without
+        /// panicking.
+        ///
+        /// [`Builder::enable_time`]: crate::runtime::Builder::enable_time
+        /// [`Builder::enable_all`]: crate::runtime::Builder::enable_all
+        pub(crate) fn current() -> Self {
+            panic!("{}", crate::util::error::CONTEXT_MISSING_ERROR)
+        }
     }
 }
 
