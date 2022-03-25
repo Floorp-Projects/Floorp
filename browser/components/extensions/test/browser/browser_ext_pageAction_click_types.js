@@ -17,27 +17,33 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function test_clickData() {
+async function test_clickData(testAsNonPersistent = false) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       page_action: {},
+      background: {
+        persistent: !testAsNonPersistent,
+        scripts: ["background.js"],
+      },
     },
 
-    async background() {
-      function onClicked(tab, info) {
-        let button = info.button;
-        let modifiers = info.modifiers;
-        browser.test.sendMessage("onClick", { button, modifiers });
-      }
+    files: {
+      "background.js": async function background() {
+        function onClicked(_tab, info) {
+          let button = info.button;
+          let modifiers = info.modifiers;
+          browser.test.sendMessage("onClick", { button, modifiers });
+        }
 
-      browser.pageAction.onClicked.addListener(onClicked);
+        browser.pageAction.onClicked.addListener(onClicked);
 
-      let [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      await browser.pageAction.show(tab.id);
-      browser.test.sendMessage("ready");
+        let [tab] = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        await browser.pageAction.show(tab.id);
+        browser.test.sendMessage("ready");
+      },
     },
   });
 
@@ -96,41 +102,67 @@ add_task(async function test_clickData() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
+  if (testAsNonPersistent) {
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: false,
+    });
+    info("Terminating the background event page");
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: true,
+    });
+  }
+
+  info("Clicking the pageAction");
   await testClickPageAction(clickPageAction, triggerPageActionWithKeyboard);
+
+  if (testAsNonPersistent) {
+    await extension.awaitMessage("ready");
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: false,
+    });
+  }
+
   await testClickPageAction(
     clickPageActionInPanel,
     triggerPageActionWithKeyboardInPanel
   );
 
   await extension.unload();
-});
+}
 
-add_task(async function test_clickData_reset() {
+async function test_clickData_reset(testAsNonPersistent = false) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       browser_action: {},
       page_action: {},
+      background: {
+        persistent: !testAsNonPersistent,
+        scripts: ["background.js"],
+      },
     },
 
-    async background() {
-      function onBrowserActionClicked(tab, info) {
-        // openPopup requires user interaction, such as a browser action click.
-        browser.pageAction.openPopup();
-      }
+    files: {
+      "background.js": async function background() {
+        function onBrowserActionClicked(tab, info) {
+          // openPopup requires user interaction, such as a browser action click.
+          browser.pageAction.openPopup();
+        }
 
-      function onPageActionClicked(tab, info) {
-        browser.test.sendMessage("onClick", info);
-      }
+        function onPageActionClicked(tab, info) {
+          browser.test.sendMessage("onClick", info);
+        }
 
-      browser.browserAction.onClicked.addListener(onBrowserActionClicked);
-      browser.pageAction.onClicked.addListener(onPageActionClicked);
+        browser.browserAction.onClicked.addListener(onBrowserActionClicked);
+        browser.pageAction.onClicked.addListener(onPageActionClicked);
 
-      let [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      await browser.pageAction.show(tab.id);
-      browser.test.sendMessage("ready");
+        let [tab] = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        await browser.pageAction.show(tab.id);
+        browser.test.sendMessage("ready");
+      },
     },
   });
 
@@ -149,7 +181,26 @@ add_task(async function test_clickData_reset() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
+  if (testAsNonPersistent) {
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: false,
+    });
+    info("Terminating the background event page");
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: true,
+    });
+  }
+
+  info("Clicking the pageAction");
   await clickPageActionWithModifiers();
+
+  if (testAsNonPersistent) {
+    await extension.awaitMessage("ready");
+    assertPersistentListeners(extension, "pageAction", "onClicked", {
+      primed: false,
+    });
+  }
 
   await clickBrowserAction(extension);
   assertInfoReset(await extension.awaitMessage("onClick"));
@@ -160,4 +211,28 @@ add_task(async function test_clickData_reset() {
   assertInfoReset(await extension.awaitMessage("onClick"));
 
   await extension.unload();
+}
+
+add_task(function test_clickData_MV2() {
+  return test_clickData(/* testAsNonPersistent */ false);
+});
+
+add_task(async function test_clickData_MV2_eventPage() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+  await test_clickData(/* testAsNonPersistent */ true);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(function test_clickData_reset_MV2() {
+  return test_clickData_reset(/* testAsNonPersistent */ false);
+});
+
+add_task(async function test_clickData_reset_MV2_eventPage() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+  await test_clickData_reset(/* testAsNonPersistent */ true);
+  await SpecialPowers.popPrefEnv();
 });
