@@ -35,13 +35,12 @@ class HistoryView(
 
     val historyAdapter = HistoryAdapter(interactor).apply {
         addLoadStateListener {
-            // first call will always have itemCount == 0, but we want to keep adapterItemCount
+            // First call will always have itemCount == 0, but we want to keep adapterItemCount
             // as null until we can distinguish an empty list from populated, so updateEmptyState()
-            // could work correctly
-            if (itemCount != 0) {
+            // could work correctly.
+            if (itemCount > 0) {
                 adapterItemCount = itemCount
-            }
-            if (it.source.refresh is LoadState.NotLoading &&
+            } else if (it.source.refresh is LoadState.NotLoading &&
                 it.append.endOfPaginationReached &&
                 itemCount < 1
             ) {

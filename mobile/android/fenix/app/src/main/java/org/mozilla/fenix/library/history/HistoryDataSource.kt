@@ -19,7 +19,7 @@ class HistoryDataSource(
     override fun getRefreshKey(state: PagingState<Int, History>): Int? = null
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, History> {
-        // Get the offset of the last loaded page or default to 0 when it is null, on the initial
+        // Get the offset of the last loaded page or default to 0 when it is null on the initial
         // load or a refresh.
         val offset = params.key ?: 0
         val historyItems = historyProvider.getHistory(offset, params.loadSize).run {
@@ -28,7 +28,7 @@ class HistoryDataSource(
         val nextOffset = if (historyItems.isEmpty()) {
             null
         } else {
-            (offset + historyItems.size) + 1
+            historyItems.last().position + 1
         }
         return LoadResult.Page(
             data = historyItems,
