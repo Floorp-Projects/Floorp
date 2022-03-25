@@ -409,9 +409,6 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetMoveToRectPopupRect() const override {
     return mMoveToRectPopupRect;
   };
-  void MoveToRectPopupRectClear() override {
-    mMoveToRectPopupRect = LayoutDeviceIntRect();
-  };
 #endif
 
   typedef enum {
