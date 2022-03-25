@@ -8,6 +8,7 @@
 
 #include "HTTPSRecordResolver.h"
 #include "nsIDNSByTypeRecord.h"
+#include "nsIDNSAdditionalInfo.h"
 #include "nsIDNSService.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsNetCID.h"
@@ -45,9 +46,14 @@ nsresult HTTPSRecordResolver::FetchHTTPSRRInternal(
     flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
   }
 
+  nsCOMPtr<nsIDNSAdditionalInfo> info;
+  if (mConnInfo->OriginPort() != NS_HTTPS_DEFAULT_PORT) {
+    dns->NewAdditionalInfo(""_ns, mConnInfo->OriginPort(),
+                           getter_AddRefs(info));
+  }
   return dns->AsyncResolveNative(
-      mConnInfo->GetOrigin(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags,
-      nullptr, this, aTarget, mConnInfo->GetOriginAttributes(), aDNSRequest);
+      mConnInfo->GetOrigin(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, info,
+      this, aTarget, mConnInfo->GetOriginAttributes(), aDNSRequest);
 }
 
 NS_IMETHODIMP HTTPSRecordResolver::OnLookupComplete(nsICancelable* aRequest,

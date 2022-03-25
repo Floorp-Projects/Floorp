@@ -2,15 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DNSResolverInfo.h"
+#include "DNSAdditionalInfo.h"
 
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(DNSResolverInfo, nsIDNSResolverInfo)
+NS_IMPL_ISUPPORTS(DNSAdditionalInfo, nsIDNSAdditionalInfo)
 
 NS_IMETHODIMP
-DNSResolverInfo::GetURL(nsACString& aURL) {
+DNSAdditionalInfo::GetPort(int32_t* aPort) {
+  *aPort = mPort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DNSAdditionalInfo::GetResolverURL(nsACString& aURL) {
   aURL = mURL;
   return NS_OK;
 }

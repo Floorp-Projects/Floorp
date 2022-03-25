@@ -56,6 +56,9 @@ const statsExpectedByType = {
       "packetsSent",
       "bytesSent",
       "remoteId",
+      "headerBytesSent",
+      "retransmittedPacketsSent",
+      "retransmittedBytesSent",
     ],
     optional: ["nackCount", "qpSum"],
     localVideoOnly: ["framesEncoded", "firCount", "pliCount"],
@@ -565,6 +568,32 @@ function pedanticChecks(report) {
           stat.bytesSent < (stat.kind == "video" ? video1Min : audio1Min),
         `${stat.type}.bytesSent is a sane number for a short ` +
           `${stat.kind} test. value=${stat.bytesSent}`
+      );
+
+      // headerBytesSent
+      ok(
+        stat.headerBytesSent > 0 &&
+          stat.headerBytesSent < (stat.kind == "video" ? video1Min : audio1Min),
+        `${stat.type}.headerBytesSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.headerBytesSent}`
+      );
+
+      // retransmittedPacketsSent
+      ok(
+        stat.retransmittedPacketsSent >= 0 &&
+          stat.retransmittedPacketsSent <
+            (stat.kind == "video" ? video1Min : audio1Min),
+        `${stat.type}.retransmittedPacketsSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.retransmittedPacketsSent}`
+      );
+
+      // retransmittedBytesSent
+      ok(
+        stat.retransmittedBytesSent >= 0 &&
+          stat.retransmittedBytesSent <
+            (stat.kind == "video" ? video1Min : audio1Min),
+        `${stat.type}.retransmittedBytesSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.retransmittedBytesSent}`
       );
 
       //

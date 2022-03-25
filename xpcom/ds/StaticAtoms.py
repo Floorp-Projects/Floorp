@@ -622,7 +622,6 @@ STATIC_ATOMS = [
     Atom("lowsrc", "lowsrc"),
     Atom("ltr", "ltr"),
     Atom("lwtheme", "lwtheme"),
-    Atom("lwthemetextcolor", "lwthemetextcolor"),
     Atom("main", "main"),
     Atom("map", "map"),
     Atom("manifest", "manifest"),

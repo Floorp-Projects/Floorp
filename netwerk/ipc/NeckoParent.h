@@ -114,12 +114,12 @@ class NeckoParent : public PNeckoParent {
       const nsCString& aFilter) override;
   bool DeallocPUDPSocketParent(PUDPSocketParent*);
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
-      const nsCString& aHost, const nsCString& aTrrServer,
+      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
       const uint16_t& aType, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestParent* actor, const nsCString& aHost,
-      const nsCString& trrServer, const uint16_t& type,
+      const nsCString& trrServer, const int32_t& aPort, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
   mozilla::ipc::IPCResult RecvSpeculativeConnect(nsIURI* aURI,

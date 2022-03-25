@@ -216,7 +216,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCOMPtr<nsIHttpChannelInternal> mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
 
-  nsCOMPtr<nsICancelable> mCancelable;
+  nsCOMPtr<nsICancelable> mCancelable GUARDED_BY(mMutex);
   // Mainthread only
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   // Set on Mainthread during AsyncOpen, used on IO thread and Mainthread
@@ -254,9 +254,9 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCOMPtr<nsITimer> mOpenTimer; /* Mainthread only */
   uint32_t mOpenTimeout;         /* milliseconds, MainThread only */
   wsConnectingState mConnecting; /* 0 if not connecting, MainThread only */
-  // Set on MainThread, deleted on either MainThread mainthread, used on
-  // MainThread or IO Thread in DoStopSession
-  nsCOMPtr<nsITimer> mReconnectDelayTimer;
+  // Set on MainThread, deleted on MainThread, used on MainThread or
+  // IO Thread (in DoStopSession). Mutex required to access off-main-thread.
+  nsCOMPtr<nsITimer> mReconnectDelayTimer GUARDED_BY(mMutex);
 
   // Only touched on IOThread (DoStopSession reads it on MainThread if
   // we haven't connected yet (mDataStarted==false), and it's always null
@@ -312,8 +312,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsresult mStopOnClose;
   uint16_t mServerCloseCode;     // only used on IO thread
   nsCString mServerCloseReason;  // only used on IO thread
-  uint16_t mScriptCloseCode;
-  nsCString mScriptCloseReason;
+  uint16_t mScriptCloseCode GUARDED_BY(mMutex);
+  nsCString mScriptCloseReason GUARDED_BY(mMutex);
 
   // These are for the read buffers
   const static uint32_t kIncomingBufferInitialSize = 16 * 1024;
@@ -357,7 +357,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCOMPtr<nsIDashboardEventNotifier>
       mConnectionLogService;  // effectively const
 
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 };
 
 class WebSocketSSLChannel : public WebSocketChannel {

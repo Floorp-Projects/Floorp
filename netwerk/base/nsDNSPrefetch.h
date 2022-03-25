@@ -55,6 +55,7 @@ class nsDNSPrefetch final : public nsIDNSListener {
 
  private:
   nsCString mHostname;
+  int32_t mPort{-1};
   mozilla::OriginAttributes mOriginAttributes;
   bool mStoreTiming;
   nsIRequest::TRRMode mTRRMode;

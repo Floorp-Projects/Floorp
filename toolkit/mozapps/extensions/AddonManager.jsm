@@ -91,6 +91,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  TelemetryTimestamps: "resource://gre/modules/TelemetryTimestamps.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -118,9 +119,6 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
-
-// A list of providers to load by default
-const DEFAULT_PROVIDERS = ["resource://gre/modules/addons/XPIProvider.jsm"];
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 // Configure a logger at the parent 'addons' level to format
@@ -152,6 +150,10 @@ const UNNAMED_PROVIDER = "<unnamed-provider>";
 function providerName(aProvider) {
   return aProvider.name || UNNAMED_PROVIDER;
 }
+
+// A reference to XPIProvider. This should only be used to access properties or
+// methods that are independent of XPIProvider startup.
+var gXPIProvider;
 
 /**
  * Preference listener which listens for a change in the
@@ -515,7 +517,7 @@ var AddonManagerInternal = {
   externalExtensionLoaders: new Map(),
 
   recordTimestamp(name, value) {
-    this.TelemetryTimestamps.add(name, value);
+    TelemetryTimestamps.add(name, value);
   },
 
   /**
@@ -698,36 +700,9 @@ var AddonManagerInternal = {
       Services.obs.addObserver(this, INTL_LOCALES_CHANGED);
 
       // Ensure all default providers have had a chance to register themselves
-      for (let url of DEFAULT_PROVIDERS) {
-        try {
-          let scope = {};
-          ChromeUtils.import(url, scope);
-          // Sanity check - make sure the provider exports a symbol that
-          // has a 'startup' method
-          let syms = Object.keys(scope);
-          if (syms.length < 1 || typeof scope[syms[0]].startup != "function") {
-            logger.warn("Provider " + url + " has no startup()");
-            AddonManagerPrivate.recordException(
-              "AMI",
-              "provider " + url,
-              "no startup()"
-            );
-          }
-          logger.debug(
-            "Loaded provider scope for " +
-              url +
-              ": " +
-              Object.keys(scope).toSource()
-          );
-        } catch (e) {
-          AddonManagerPrivate.recordException(
-            "AMI",
-            "provider " + url + " load failed",
-            e
-          );
-          logger.error('Exception loading default provider "' + url + '"', e);
-        }
-      }
+      ({ XPIProvider: gXPIProvider } = ChromeUtils.import(
+        "resource://gre/modules/addons/XPIProvider.jsm"
+      ));
 
       // Load any providers registered in the category manager
       for (let { entry, value: url } of Services.catMan.enumerateCategory(
@@ -1009,6 +984,7 @@ var AddonManagerInternal = {
         );
       }
     }
+    gXPIProvider = null;
 
     // Shut down AddonRepository after providers (if any).
     try {
@@ -3586,8 +3562,34 @@ var AddonManagerPrivate = {
   AddonScreenshot,
 
   get BOOTSTRAP_REASONS() {
-    return AddonManagerInternal._getProviderByName("XPIProvider")
-      .BOOTSTRAP_REASONS;
+    // BOOTSTRAP_REASONS is a set of constants, and may be accessed before the
+    // provider has fully been started.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1760146#c1
+    return gXPIProvider.BOOTSTRAP_REASONS;
+  },
+
+  setAddonStartupData(addonId, startupData) {
+    if (!gStarted) {
+      throw Components.Exception(
+        "AddonManager is not initialized",
+        Cr.NS_ERROR_NOT_INITIALIZED
+      );
+    }
+
+    // TODO bug 1761079: Ensure that XPIProvider is available before calling it.
+    gXPIProvider.setStartupData(addonId, startupData);
+  },
+
+  unregisterDictionaries(aDicts) {
+    if (!gStarted) {
+      throw Components.Exception(
+        "AddonManager is not initialized",
+        Cr.NS_ERROR_NOT_INITIALIZED
+      );
+    }
+
+    // TODO bug 1761093: Use _getProviderByName instead of gXPIProvider.
+    gXPIProvider.unregisterDictionaries(aDicts);
   },
 
   recordTimestamp(name, value) {
@@ -5034,12 +5036,6 @@ AddonManager.init();
 
 // Setup the AMTelemetry once the AddonManager has been started.
 AddonManager.addManagerListener(AMTelemetry);
-
-// load the timestamps module into AddonManagerInternal
-ChromeUtils.import(
-  "resource://gre/modules/TelemetryTimestamps.jsm",
-  AddonManagerInternal
-);
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);

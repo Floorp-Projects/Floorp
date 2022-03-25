@@ -212,14 +212,12 @@ static void DumpNeuteredMessage(HWND hwnd, UINT uMsg) {
   nsAutoCString log("Received \"nonqueued\" ");
   // classify messages
   if (uMsg < WM_USER) {
-    int idx = 0;
-    while (mozilla::widget::gAllEvents[idx].mId != uMsg &&
-           mozilla::widget::gAllEvents[idx].mStr != nullptr) {
-      idx++;
-    }
-    if (mozilla::widget::gAllEvents[idx].mStr) {
-      log.AppendPrintf("ui message \"%s\"",
-                       mozilla::widget::gAllEvents[idx].mStr);
+    const auto eventMsgInfo = mozilla::widget::gAllEvents.find(uMsg);
+    const char* msgText = eventMsgInfo != mozilla::widget::gAllEvents.end()
+                              ? eventMsgInfo->second.mStr
+                              : nullptr;
+    if (msgText) {
+      log.AppendPrintf("ui message \"%s\"", msgText);
     } else {
       log.AppendPrintf("ui message (0x%X)", uMsg);
     }

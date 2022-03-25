@@ -121,7 +121,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * having the callback implementation return without doing anything).
    */
   nsresult ResolveHost(const nsACString& aHost, const nsACString& trrServer,
-                       uint16_t type,
+                       int32_t aPort, uint16_t type,
                        const mozilla::OriginAttributes& aOriginAttributes,
                        uint16_t flags, uint16_t af,
                        nsResolveHostCallback* callback);

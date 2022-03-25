@@ -15,8 +15,11 @@ const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
     manifest: {
       manifest_version: 3,
       permissions: ["scripting"],
+      host_permissions: ["<all_urls>"],
+      granted_host_permissions: true,
       ...manifestProps,
     },
+    temporarilyInstalled: true,
     ...otherProps,
   });
 };

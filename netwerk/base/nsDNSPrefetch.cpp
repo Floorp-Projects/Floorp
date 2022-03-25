@@ -8,6 +8,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
+#include "nsIDNSAdditionalInfo.h"
 #include "nsIDNSListener.h"
 #include "nsIDNSService.h"
 #include "nsIDNSByTypeRecord.h"
@@ -39,6 +40,7 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
       mTRRMode(aTRRMode),
       mListener(do_GetWeakReference(aListener)) {
   aURI->GetAsciiHost(mHostname);
+  aURI->GetPort(&mPort);
 }
 
 nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
@@ -138,8 +140,12 @@ nsresult nsDNSPrefetch::FetchHTTPSSVC(
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
   nsCOMPtr<nsIDNSListener> listener = new HTTPSRRListener(std::move(aCallback));
+  nsCOMPtr<nsIDNSAdditionalInfo> info;
+  if (mPort != -1) {
+    sDNSService->NewAdditionalInfo(""_ns, mPort, getter_AddRefs(info));
+  }
   return sDNSService->AsyncResolveNative(
-      mHostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, nullptr, listener,
+      mHostname, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, flags, info, listener,
       target, mOriginAttributes, getter_AddRefs(tmpOutstanding));
 }
 

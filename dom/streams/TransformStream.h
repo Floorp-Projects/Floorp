@@ -40,6 +40,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   void SetController(TransformStreamDefaultController* aController) {
     mController = aController;
   }
+  ReadableStream* Readable() { return mReadable; }
+  WritableStream* Writable() { return mWritable; }
 
  protected:
   ~TransformStream();

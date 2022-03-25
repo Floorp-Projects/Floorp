@@ -12,9 +12,6 @@
 
 #include "nsWindowDefs.h"
 
-// Enabled main event loop debug event output
-//#define EVENT_DEBUG_OUTPUT
-
 // Enables debug output for popup rollup hooks
 //#define POPUP_ROLLUP_DEBUG_OUTPUT
 
@@ -29,12 +26,11 @@
 //#define DEBUG_VK
 
 // Main event loop debug output flags
-#if defined(EVENT_DEBUG_OUTPUT)
-#  define SHOW_REPEAT_EVENTS true
-#  define SHOW_MOUSEMOVE_EVENTS false
-#endif  // defined(EVENT_DEBUG_OUTPUT)
+#define SHOW_REPEAT_EVENTS true
+#define SHOW_MOUSEMOVE_EVENTS false
 
-void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves);
+void PrintEvent(UINT msg, uint64_t wParam, uint64_t lParam, uint64_t retValue,
+                bool result, bool aShowAllEvents, bool aShowMouseMoves);
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 typedef struct {

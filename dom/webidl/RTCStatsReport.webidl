@@ -87,6 +87,9 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
+  unsigned long long headerBytesSent;
+  unsigned long long retransmittedPacketsSent;
+  unsigned long long retransmittedBytesSent;
 };
 
 dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {

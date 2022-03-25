@@ -39,6 +39,7 @@ const EXPRESSIONS_BY_FILE = {
     ["NegZeroGrip", `1 / -Infinity`],
   ]),
   "undefined.js": new Map([["Undefined", `undefined`]]),
+  "window.js": new Map([["Window", `window`]]),
   // XXX: File a bug blocking Bug 1671400 for enabling automatic generation for one of
   // the following file.
   // "accessible.js",
@@ -65,7 +66,6 @@ const EXPRESSIONS_BY_FILE = {
   // "stylesheet.js",
   // "symbol.js",
   // "text-node.js",
-  // "window.js",
 };
 
 add_task(async function() {
@@ -164,6 +164,16 @@ function getCleanedPacket(stubFile, key, packet) {
     existingPacket._grip?.contentDomReference?.id
   ) {
     packet._grip.contentDomReference = existingPacket._grip.contentDomReference;
+  }
+
+  // `window`'s properties count can vary from OS to OS, so we clean `ownPropertyLength`.
+  if (
+    existingPacket &&
+    packet._grip?.class === "Window" &&
+    typeof packet._grip.ownPropertyLength ==
+      typeof existingPacket._grip.ownPropertyLength
+  ) {
+    packet._grip.ownPropertyLength = existingPacket._grip.ownPropertyLength;
   }
 
   return packet;

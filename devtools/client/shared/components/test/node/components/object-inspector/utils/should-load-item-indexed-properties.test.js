@@ -156,7 +156,7 @@ describe("shouldLoadItemIndexedProperties", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     expect(shouldLoadItemIndexedProperties(node)).toBeTruthy();
@@ -166,7 +166,7 @@ describe("shouldLoadItemIndexedProperties", () => {
     const windowNode = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     const loadedProperties = new Map([

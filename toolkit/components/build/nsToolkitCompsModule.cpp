@@ -7,15 +7,6 @@
 #include "nsUrlClassifierDBService.h"
 #include "nsISupports.h"
 
-#if defined(XP_WIN)
-#  include "NativeFileWatcherWin.h"
-#else
-#  include "NativeFileWatcherNotSupported.h"
-
-NS_IMPL_ISUPPORTS(mozilla::NativeFileWatcherService,
-                  nsINativeFileWatcherService);
-#endif  // (XP_WIN)
-
 using namespace mozilla;
 
 /////////////////////////////////////////////////////////////////////////////

@@ -39,19 +39,19 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   virtual ~ChildDNSService() = default;
 
   void MOZ_ALWAYS_INLINE GetDNSRecordHashKey(
-      const nsACString& aHost, const nsACString& aTrrServer, uint16_t aType,
-      const OriginAttributes& aOriginAttributes, uint32_t aFlags,
-      uintptr_t aListenerAddr, nsACString& aHashKey);
+      const nsACString& aHost, const nsACString& aTrrServer, int32_t aPort,
+      uint16_t aType, const OriginAttributes& aOriginAttributes,
+      uint32_t aFlags, uintptr_t aListenerAddr, nsACString& aHashKey);
   nsresult AsyncResolveInternal(const nsACString& hostname, uint16_t type,
-                                uint32_t flags, nsIDNSResolverInfo* aResolver,
+                                uint32_t flags, nsIDNSAdditionalInfo* aInfo,
                                 nsIDNSListener* listener,
                                 nsIEventTarget* target_,
                                 const OriginAttributes& aOriginAttributes,
                                 nsICancelable** result);
   nsresult CancelAsyncResolveInternal(
       const nsACString& aHostname, uint16_t aType, uint32_t aFlags,
-      nsIDNSResolverInfo* aResolver, nsIDNSListener* aListener,
-      nsresult aReason, const OriginAttributes& aOriginAttributes);
+      nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener, nsresult aReason,
+      const OriginAttributes& aOriginAttributes);
 
   bool mODoHActivated = false;
 

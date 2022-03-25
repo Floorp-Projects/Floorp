@@ -115,7 +115,7 @@ describe("shouldLoadItemPrototype", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     expect(shouldLoadItemPrototype(node)).toBeTruthy();
@@ -125,7 +125,7 @@ describe("shouldLoadItemPrototype", () => {
     const windowNode = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window"),
+        value: windowStubs.get("Window")._grip,
       },
     });
     const loadedProperties = new Map([

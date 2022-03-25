@@ -13,8 +13,8 @@ const createRootNode = value =>
   createNode({ name: "root", contents: { value } });
 describe("nodeIsWindow", () => {
   it("returns true for Window", () => {
-    expect(nodeIsWindow(createRootNode(gripWindowStubs.get("Window")))).toBe(
-      true
-    );
+    expect(
+      nodeIsWindow(createRootNode(gripWindowStubs.get("Window")._grip))
+    ).toBe(true);
   });
 });
