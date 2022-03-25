@@ -179,7 +179,7 @@ nsIGlobalObject* ScriptLoadContext::GetWebExtGlobal() const {
 }
 
 bool ScriptLoadContext::CompileStarted() const {
-  return mRequest->InCompilingStage() ||
+  return mRequest->IsCompiling() ||
          (mRequest->IsReadyToRun() && mWasCompiledOMT);
 }
 

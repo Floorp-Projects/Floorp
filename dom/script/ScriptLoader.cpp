@@ -255,7 +255,7 @@ ScriptLoader::~ScriptLoader() {
 static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
   using namespace mozilla::Telemetry;
 
-  MOZ_ASSERT(aRequest->IsLoading());
+  MOZ_ASSERT(aRequest->IsFetching());
 
   // Skip this function if we are not running telemetry.
   if (!CanRecordExtended()) {
@@ -509,7 +509,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
 }
 
 nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsLoading());
+  MOZ_ASSERT(aRequest->IsFetching());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
 
@@ -3189,7 +3189,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   if (aRequest->IsCanceled()) {
     return NS_BINDING_ABORTED;
   }
-  MOZ_ASSERT(aRequest->IsLoading());
+  MOZ_ASSERT(aRequest->IsFetching());
   CollectScriptTelemetry(aRequest);
 
   // If we don't have a document, then we need to abort further
