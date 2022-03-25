@@ -105,6 +105,7 @@ pub struct Reftest {
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
     force_subpixel_aa_where_possible: Option<bool>,
+    max_surface_override: Option<usize>,
 }
 
 impl Reftest {
@@ -362,6 +363,7 @@ impl ReftestManifest {
             let mut disable_dual_source_blending = false;
             let mut allow_mipmaps = false;
             let mut force_subpixel_aa_where_possible = None;
+            let mut max_surface_override = None;
 
             let mut parse_command = |token: &str| -> bool {
                 match token {
@@ -418,6 +420,10 @@ impl ReftestManifest {
                     function if function.starts_with("color_targets(") => {
                         let (_, args, _) = parse_function(function);
                         extra_checks.push(ExtraCheck::ColorTargets(args[0].parse().unwrap()));
+                    }
+                    function if function.starts_with("max_surface_size(") => {
+                        let (_, args, _) = parse_function(function);
+                        max_surface_override = Some(args[0].parse().unwrap());
                     }
                     options if options.starts_with("options(") => {
                         let (_, args, _) = parse_function(options);
@@ -541,6 +547,7 @@ impl ReftestManifest {
                 disable_dual_source_blending,
                 allow_mipmaps,
                 force_subpixel_aa_where_possible,
+                max_surface_override,
             });
         }
 
@@ -746,6 +753,13 @@ impl<'a> ReftestHarness<'a> {
                     DebugCommand::EnableDualSourceBlending(false)
                 );
         }
+        if let Some(max_surface_override) = t.max_surface_override {
+            self.wrench
+                .api
+                .send_debug_cmd(
+                    DebugCommand::SetMaximumSurfaceSize(Some(max_surface_override))
+                );
+        }
 
         let window_size = self.window.get_inner_size();
         let reference_image = match t.reference.extension().unwrap().to_str().unwrap() {
@@ -835,6 +849,13 @@ impl<'a> ReftestHarness<'a> {
                 .api
                 .send_debug_cmd(
                     DebugCommand::EnableDualSourceBlending(true)
+                );
+        }
+        if let Some(_) = t.max_surface_override {
+            self.wrench
+                .api
+                .send_debug_cmd(
+                    DebugCommand::SetMaximumSurfaceSize(None)
                 );
         }
 

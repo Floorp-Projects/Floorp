@@ -904,6 +904,8 @@ pub enum DebugCommand {
     SimulateLongSceneBuild(u32),
     /// Set an override tile size to use for picture caches
     SetPictureTileSize(Option<DeviceIntSize>),
+    /// Set an override for max off-screen surface size
+    SetMaximumSurfaceSize(Option<usize>),
 }
 
 /// Message sent by the `RenderApi` to the render backend thread.
