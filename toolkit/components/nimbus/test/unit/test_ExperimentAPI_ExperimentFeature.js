@@ -100,6 +100,7 @@ add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
   const { manager, sandbox } = await setupForExperimentFeature();
   const rollout = ExperimentFakes.rollout("foo-rollout", {
     branch: {
+      slug: "slug",
       features: [
         {
           featureId: "foo",
