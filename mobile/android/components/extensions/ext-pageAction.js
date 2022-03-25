@@ -76,6 +76,10 @@ class PageAction extends PageActionBase {
 }
 
 this.pageAction = class extends ExtensionAPIPersistent {
+  static for(extension) {
+    return GeckoViewWebExtension.pageActions.get(extension);
+  }
+
   async onManifestEntry(entryName) {
     const { extension } = this;
     const action = new PageAction(extension, this);
@@ -145,3 +149,5 @@ this.pageAction = class extends ExtensionAPIPersistent {
     };
   }
 };
+
+global.pageActionFor = this.pageAction.for;
