@@ -21,7 +21,6 @@
 #include "call/audio_receive_stream.h"
 #include "call/syncable.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/clock.h"
 
@@ -61,6 +60,11 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
       const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
       webrtc::RtcEventLog* event_log,
       std::unique_ptr<voe::ChannelReceiveInterface> channel_receive);
+
+  AudioReceiveStream() = delete;
+  AudioReceiveStream(const AudioReceiveStream&) = delete;
+  AudioReceiveStream& operator=(const AudioReceiveStream&) = delete;
+
   ~AudioReceiveStream() override;
 
   // webrtc::AudioReceiveStream implementation.
@@ -113,8 +117,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   bool playing_ RTC_GUARDED_BY(worker_thread_checker_) = false;
 
   std::unique_ptr<RtpStreamReceiverInterface> rtp_stream_receiver_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AudioReceiveStream);
 };
 }  // namespace internal
 }  // namespace webrtc

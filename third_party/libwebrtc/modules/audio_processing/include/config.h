@@ -13,7 +13,6 @@
 
 #include <map>
 
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -106,7 +105,6 @@ class RTC_EXPORT Config {
   typedef std::map<ConfigOptionID, BaseOption*> OptionMap;
   OptionMap options_;
 
-  // RTC_DISALLOW_COPY_AND_ASSIGN
   Config(const Config&);
   void operator=(const Config&);
 };

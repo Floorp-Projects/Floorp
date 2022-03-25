@@ -564,6 +564,11 @@ class EchoCanceller3::RenderWriter {
                          Aec3RenderQueueItemVerifier>* render_transfer_queue,
                size_t num_bands,
                size_t num_channels);
+
+  RenderWriter() = delete;
+  RenderWriter(const RenderWriter&) = delete;
+  RenderWriter& operator=(const RenderWriter&) = delete;
+
   ~RenderWriter();
   void Insert(const AudioBuffer& input);
 
@@ -575,7 +580,6 @@ class EchoCanceller3::RenderWriter {
   std::vector<std::vector<std::vector<float>>> render_queue_input_frame_;
   SwapQueue<std::vector<std::vector<std::vector<float>>>,
             Aec3RenderQueueItemVerifier>* render_transfer_queue_;
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RenderWriter);
 };
 
 EchoCanceller3::RenderWriter::RenderWriter(

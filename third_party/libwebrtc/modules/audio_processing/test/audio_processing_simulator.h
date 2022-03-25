@@ -24,7 +24,6 @@
 #include "modules/audio_processing/test/api_call_statistics.h"
 #include "modules/audio_processing/test/fake_recording_device.h"
 #include "modules/audio_processing/test/test_utils.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/time_utils.h"
 
@@ -153,6 +152,11 @@ class AudioProcessingSimulator {
   AudioProcessingSimulator(const SimulationSettings& settings,
                            rtc::scoped_refptr<AudioProcessing> audio_processing,
                            std::unique_ptr<AudioProcessingBuilder> ap_builder);
+
+  AudioProcessingSimulator() = delete;
+  AudioProcessingSimulator(const AudioProcessingSimulator&) = delete;
+  AudioProcessingSimulator& operator=(const AudioProcessingSimulator&) = delete;
+
   virtual ~AudioProcessingSimulator();
 
   // Processes the data in the input.
@@ -222,8 +226,6 @@ class AudioProcessingSimulator {
   FakeRecordingDevice fake_recording_device_;
 
   TaskQueueForTest worker_queue_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AudioProcessingSimulator);
 };
 
 }  // namespace test
