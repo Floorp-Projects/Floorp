@@ -280,7 +280,7 @@ pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
 
 /// The maximum size per axis of a surface,
 ///  in WorldPixel coordinates.
-const MAX_SURFACE_SIZE: f32 = 4096.0;
+const MAX_SURFACE_SIZE: usize = 4096;
 /// Maximum size of a compositor surface.
 const MAX_COMPOSITOR_SURFACES_SIZE: f32 = 8192.0;
 
@@ -4433,8 +4433,6 @@ impl PicturePrimitive {
     pub fn take_context(
         &mut self,
         pic_index: PictureIndex,
-        surface_spatial_node_index: SpatialNodeIndex,
-        raster_spatial_node_index: SpatialNodeIndex,
         parent_surface_index: Option<SurfaceIndex>,
         parent_subpixel_mode: SubpixelMode,
         frame_state: &mut FrameBuildingState,
@@ -4451,27 +4449,11 @@ impl PicturePrimitive {
 
         profile_scope!("take_context");
 
-        // Extract the raster and surface spatial nodes from the raster
-        // config, if this picture establishes a surface. Otherwise just
-        // pass in the spatial node indices from the parent context.
-        let (raster_spatial_node_index, surface_spatial_node_index, surface_index) = match self.raster_config {
-            Some(ref raster_config) => {
-                let surface = &frame_state.surfaces[raster_config.surface_index.0];
-
-                (
-                    surface.raster_spatial_node_index,
-                    self.spatial_node_index,
-                    raster_config.surface_index,
-                )
-            }
-            None => {
-                (
-                    raster_spatial_node_index,
-                    surface_spatial_node_index,
-                    parent_surface_index.expect("bug: no parent"),
-                )
-            }
+        let surface_index = match self.raster_config {
+            Some(ref raster_config) => raster_config.surface_index,
+            None => parent_surface_index.expect("bug: no parent"),
         };
+        let surface_spatial_node_index = frame_state.surfaces[surface_index.0].surface_spatial_node_index;
 
         let map_pic_to_world = SpaceMapper::new_with_target(
             frame_context.root_spatial_node_index,
@@ -4809,7 +4791,8 @@ impl PicturePrimitive {
                                             tile_cache.current_tile_size.to_f32(),
                                             content_origin,
                                             surface_spatial_node_index,
-                                            raster_spatial_node_index,
+                                            // raster == surface implicitly for picture cache tiles
+                                            surface_spatial_node_index,
                                             device_pixel_scale,
                                             Some(tile_key),
                                             Some(scissor_rect),
@@ -4950,18 +4933,27 @@ impl PicturePrimitive {
                     self.prev_local_rect = local_rect;
                 }
 
+                let max_surface_size = frame_context
+                    .fb_config
+                    .max_surface_override
+                    .unwrap_or(MAX_SURFACE_SIZE) as f32;
+
                 let surface_rects = match get_surface_rects(
                     raster_config.surface_index,
                     &raster_config.composite_mode,
                     parent_surface_index,
                     &mut frame_state.surfaces,
                     frame_context.spatial_tree,
+                    max_surface_size,
                 ) {
                     Some(rects) => rects,
                     None => return None,
                 };
 
-                let device_pixel_scale = frame_state.surfaces[raster_config.surface_index.0].device_pixel_scale;
+                let (raster_spatial_node_index, device_pixel_scale) = {
+                    let surface = &frame_state.surfaces[surface_index.0];
+                    (surface.raster_spatial_node_index, surface.device_pixel_scale)
+                };
                 let cmd_buffer_builder = CommandBufferBuilder::new_simple(
                     surface_rects.clipped_local,
                 );
@@ -5412,7 +5404,7 @@ impl PicturePrimitive {
         let context = PictureContext {
             pic_index,
             apply_local_clip_rect: self.apply_local_clip_rect,
-            raster_spatial_node_index,
+            raster_spatial_node_index: frame_state.surfaces[surface_index.0].raster_spatial_node_index,
             surface_spatial_node_index,
             surface_index,
             dirty_region_count,
@@ -6762,6 +6754,7 @@ fn get_surface_rects(
     parent_surface_index: SurfaceIndex,
     surfaces: &mut [SurfaceInfo],
     spatial_tree: &SpatialTree,
+    max_surface_size: f32,
 ) -> Option<SurfaceAllocInfo> {
     let parent_surface = &surfaces[parent_surface_index.0];
 
@@ -6871,19 +6864,19 @@ fn get_surface_rects(
 
     let task_size_f = clipped.size();
 
-    if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
+    if task_size_f.width > max_surface_size || task_size_f.height > max_surface_size {
         let max_dimension = clipped_local.width().max(clipped_local.height()).ceil();
 
         surface.raster_spatial_node_index = surface.surface_spatial_node_index;
-        surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
+        surface.device_pixel_scale = Scale::new(max_surface_size / max_dimension);
 
         clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round();
         unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
     }
 
     let task_size = clipped.size().to_i32();
-    debug_assert!(task_size.width <= MAX_SURFACE_SIZE as i32);
-    debug_assert!(task_size.height <= MAX_SURFACE_SIZE as i32);
+    debug_assert!(task_size.width <= max_surface_size as i32);
+    debug_assert!(task_size.height <= max_surface_size as i32);
 
     let uv_rect_kind = calculate_uv_rect_kind(
         clipped,
@@ -6990,5 +6983,6 @@ fn test_large_surface_scale_1() {
         SurfaceIndex(0),
         &mut surfaces,
         &spatial_tree,
+        MAX_SURFACE_SIZE as f32,
     );
 }

@@ -968,6 +968,12 @@ impl RenderBackend {
 
                         return RenderBackendStatus::Continue;
                     }
+                    DebugCommand::SetMaximumSurfaceSize(surface_size) => {
+                        self.frame_config.max_surface_override = surface_size;
+                        self.update_frame_builder_config();
+
+                        return RenderBackendStatus::Continue;
+                    }
                     #[cfg(feature = "capture")]
                     DebugCommand::SaveCapture(root, bits) => {
                         let output = self.save_capture(root, bits);

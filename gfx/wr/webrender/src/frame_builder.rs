@@ -72,6 +72,7 @@ pub struct FrameBuilderConfig {
     pub background_color: Option<ColorF>,
     pub compositor_kind: CompositorKind,
     pub tile_size_override: Option<DeviceIntSize>,
+    pub max_surface_override: Option<usize>,
     pub max_depth_ids: i32,
     pub max_target_size: i32,
     pub force_invalidation: bool,
@@ -525,8 +526,6 @@ impl FrameBuilder {
                 .pictures[pic_index.0]
                 .take_context(
                     *pic_index,
-                    root_spatial_node_index,
-                    root_spatial_node_index,
                     None,
                     SubpixelMode::Allow,
                     &mut frame_state,

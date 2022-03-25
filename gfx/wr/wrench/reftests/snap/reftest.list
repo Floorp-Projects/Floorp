@@ -3,3 +3,4 @@ platform(linux,mac) == snap.yaml snap.png
 platform(linux,mac) == preserve-3d.yaml preserve-3d.png
 fuzzy(128,200) == subpixel-raster-root.yaml subpixel-raster-root-ref.yaml
 platform(linux,mac) == fractional-filter.yaml fractional-filter-ref.yaml
+max_surface_size(256) == 1761299.yaml 1761299.yaml
