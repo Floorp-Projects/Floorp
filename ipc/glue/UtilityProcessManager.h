@@ -7,7 +7,9 @@
 #define _include_ipc_glue_UtilityProcessManager_h_
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
+#include "mozilla/EnumeratedArray.h"
 #include "nsIObserver.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -36,34 +38,54 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 
-  // Notify the UtilityProcessManager that a top-level PUtility protocol has
-  // been terminated. This may be called from any thread.
-  void NotifyRemoteActorDestroyed();
+  // Returns the platform pid for this utility sandbox process.
+  Maybe<base::ProcessId> ProcessPid(SandboxingKind aSandbox);
 
-  // Returns the platform pid for the Utility process.
-  Maybe<base::ProcessId> ProcessPid();
+  // Create a MemoryReportingProcess object for this utility process
+  RefPtr<MemoryReportingProcess> GetProcessMemoryReporter(
+      UtilityProcessParent* parent);
 
-  // If a Utility process is present, create a MemoryReportingProcess object.
-  // Otherwise, return null.
-  RefPtr<MemoryReportingProcess> GetProcessMemoryReporter();
+  // Returns access to the PUtility protocol if a Utility process for that
+  // sandbox is present.
+  RefPtr<UtilityProcessParent> GetProcessParent(SandboxingKind aSandbox) {
+    RefPtr<ProcessFields> p = GetProcess(aSandbox);
+    if (!p) {
+      return nullptr;
+    }
+    return p->mProcessParent;
+  }
 
-  // Returns access to the PUtility protocol if a Utility process is present.
-  UtilityProcessParent* GetProcessParent() { return mProcessParent; }
+  // Get a list of all valid utility process parent references
+  nsTArray<RefPtr<UtilityProcessParent>> GetAllProcessesProcessParent() {
+    nsTArray<RefPtr<UtilityProcessParent>> rv;
+    for (auto& p : mProcesses) {
+      if (p && p->mProcessParent) {
+        rv.AppendElement(p->mProcessParent);
+      }
+    }
+    return rv;
+  }
 
-  // Returns whether or not a Utility process was ever launched.
-  bool AttemptedProcess() const { return mNumProcessAttempts > 0; }
+  // Returns the Utility Process for that sandbox
+  UtilityProcessHost* Process(SandboxingKind aSandbox) {
+    RefPtr<ProcessFields> p = GetProcess(aSandbox);
+    if (!p) {
+      return nullptr;
+    }
+    return p->mProcess;
+  }
 
-  // Returns the Utility Process
-  UtilityProcessHost* Process() { return mProcess; }
+  // Shutdown the Utility process for that sandbox.
+  void CleanShutdown(SandboxingKind aSandbox);
 
-  // Shutdown the Utility process.
-  void CleanShutdown();
+  // Shutdown all utility processes
+  void CleanShutdownAllProcesses();
 
  private:
   ~UtilityProcessManager();
 
-  bool IsProcessLaunching();
-  bool IsProcessDestroyed() const;
+  bool IsProcessLaunching(SandboxingKind aSandbox);
+  bool IsProcessDestroyed(SandboxingKind aSandbox);
 
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
@@ -71,7 +93,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   UtilityProcessManager();
 
-  void DestroyProcess();
+  void DestroyProcess(SandboxingKind aSandbox);
 
   bool IsShutdown() const;
 
@@ -89,19 +111,41 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   friend class Observer;
 
   RefPtr<Observer> mObserver;
-  uint32_t mNumProcessAttempts = 0;
-  uint32_t mNumUnexpectedCrashes = 0;
 
-  // Fields that are associated with the current Utility process.
-  UtilityProcessHost* mProcess = nullptr;
-  UtilityProcessParent* mProcessParent = nullptr;
-  // Collects any pref changes that occur during process launch (after
-  // the initial map is passed in command-line arguments) to be sent
-  // when the process can receive IPC messages.
-  nsTArray<dom::Pref> mQueuedPrefs;
-  // Promise will be resolved when the Utility process has been fully started
-  // and VideoBridge configured. Only accessed on the main thread.
-  RefPtr<GenericNonExclusivePromise> mLaunchPromise;
+  class ProcessFields final {
+   public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProcessFields);
+
+    explicit ProcessFields(SandboxingKind aSandbox) : mSandbox(aSandbox){};
+
+    // Promise will be resolved when this Utility process has been fully started
+    // and configured. Only accessed on the main thread.
+    RefPtr<GenericNonExclusivePromise> mLaunchPromise;
+
+    uint32_t mNumProcessAttempts = 0;
+    uint32_t mNumUnexpectedCrashes = 0;
+
+    // Fields that are associated with the current Utility process.
+    UtilityProcessHost* mProcess = nullptr;
+    RefPtr<UtilityProcessParent> mProcessParent = nullptr;
+
+    // Collects any pref changes that occur during process launch (after
+    // the initial map is passed in command-line arguments) to be sent
+    // when the process can receive IPC messages.
+    nsTArray<dom::Pref> mQueuedPrefs;
+
+    SandboxingKind mSandbox = SandboxingKind::COUNT;
+
+   protected:
+    ~ProcessFields() = default;
+  };
+
+  EnumeratedArray<SandboxingKind, SandboxingKind::COUNT, RefPtr<ProcessFields>>
+      mProcesses;
+
+  RefPtr<ProcessFields> GetProcess(SandboxingKind);
+  bool NoMoreProcesses();
+  uint16_t AliveProcesses();
 };
 
 }  // namespace ipc

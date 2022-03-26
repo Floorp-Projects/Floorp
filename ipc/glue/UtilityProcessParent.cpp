@@ -21,22 +21,13 @@
 
 namespace mozilla::ipc {
 
-static std::atomic<UtilityProcessParent*> sUtilityProcessParent;
-
 UtilityProcessParent::UtilityProcessParent(UtilityProcessHost* aHost)
     : mHost(aHost) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mHost);
-  sUtilityProcessParent = this;
 }
 
 UtilityProcessParent::~UtilityProcessParent() = default;
-
-/* static */
-UtilityProcessParent* UtilityProcessParent::GetSingleton() {
-  MOZ_DIAGNOSTIC_ASSERT(sUtilityProcessParent);
-  return sUtilityProcessParent;
-}
 
 bool UtilityProcessParent::SendRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
@@ -48,7 +39,8 @@ bool UtilityProcessParent::SendRequestMemoryReport(
       [&](const uint32_t& aGeneration2) {
         if (RefPtr<UtilityProcessManager> utilitypm =
                 UtilityProcessManager::GetSingleton()) {
-          if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+          for (RefPtr<UtilityProcessParent>& parent :
+               utilitypm->GetAllProcessesProcessParent()) {
             if (parent->mMemoryReportRequest) {
               parent->mMemoryReportRequest->Finish(aGeneration2);
               parent->mMemoryReportRequest = nullptr;
@@ -59,7 +51,8 @@ bool UtilityProcessParent::SendRequestMemoryReport(
       [&](mozilla::ipc::ResponseRejectReason) {
         if (RefPtr<UtilityProcessManager> utilitypm =
                 UtilityProcessManager::GetSingleton()) {
-          if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+          for (RefPtr<UtilityProcessParent>& parent :
+               utilitypm->GetAllProcessesProcessParent()) {
             parent->mMemoryReportRequest = nullptr;
           }
         }
