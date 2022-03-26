@@ -48,7 +48,12 @@ function Article(props) {
     article.resolved_domain;
   return (
     <li className="stp_article_list_item">
-      <ArticleUrl url={url} savedArticle={props.savedArticle} position={props.position} source={props.source} >
+      <ArticleUrl
+        url={url}
+        savedArticle={props.savedArticle}
+        position={props.position}
+        source={props.source}
+      >
         <>
           {thumbnail ? (
             <img className="stp_article_list_thumb" src={thumbnail} alt={alt} />
@@ -69,7 +74,12 @@ function ArticleList(props) {
   return (
     <ul className="stp_article_list">
       {props.articles?.map((article, position) => (
-        <Article article={article} savedArticle={props.savedArticle} position={position} source={props.source}/>
+        <Article
+          article={article}
+          savedArticle={props.savedArticle}
+          position={position}
+          source={props.source}
+        />
       ))}
     </ul>
   );
