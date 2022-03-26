@@ -63,7 +63,8 @@ TEST_F(UtilityProcess, NoProcess) {
       UtilityProcessManager::GetSingleton();
   EXPECT_NE(utilityProc, nullptr);
 
-  Maybe<int32_t> noPid = utilityProc->ProcessPid();
+  Maybe<int32_t> noPid =
+      utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
   ASSERT_TRUE(noPid.isNothing());
 }
 
@@ -83,7 +84,8 @@ TEST_F(UtilityProcess, LaunchProcess) {
           [&]() mutable {
             EXPECT_TRUE(true);
 
-            Maybe<int32_t> utilityPid = utilityProc->ProcessPid();
+            Maybe<int32_t> utilityPid =
+                utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
             EXPECT_TRUE(utilityPid.isSome());
             EXPECT_GE(*utilityPid, 1);
             EXPECT_NE(*utilityPid, thisPid);
@@ -110,13 +112,15 @@ TEST_F(UtilityProcess, DestroyProcess) {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [&]() {
-            Maybe<int32_t> utilityPid = utilityProc->ProcessPid();
+            Maybe<int32_t> utilityPid =
+                utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
             EXPECT_TRUE(utilityPid.isSome());
             EXPECT_GE(*utilityPid, 1);
 
-            utilityProc->CleanShutdown();
+            utilityProc->CleanShutdown(SandboxingKind::GENERIC_UTILITY);
 
-            utilityPid = utilityProc->ProcessPid();
+            utilityPid =
+                utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
             EXPECT_TRUE(utilityPid.isNothing());
 
             EXPECT_TRUE(true);

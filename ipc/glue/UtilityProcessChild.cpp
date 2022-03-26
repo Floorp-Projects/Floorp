@@ -40,10 +40,12 @@ namespace mozilla::ipc {
 
 using namespace layers;
 
+static StaticMutex sUtilityProcessChildMutex;
 static StaticRefPtr<UtilityProcessChild> sUtilityProcessChild;
 
 UtilityProcessChild::UtilityProcessChild() {
   nsDebugImpl::SetMultiprocessMode("Utility");
+  StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   sUtilityProcessChild = this;
 }
 
@@ -51,6 +53,7 @@ UtilityProcessChild::~UtilityProcessChild() = default;
 
 /* static */
 RefPtr<UtilityProcessChild> UtilityProcessChild::GetSingleton() {
+  StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   if (!sUtilityProcessChild) {
     sUtilityProcessChild = new UtilityProcessChild();
   }
@@ -59,6 +62,7 @@ RefPtr<UtilityProcessChild> UtilityProcessChild::GetSingleton() {
 
 /* static */
 RefPtr<UtilityProcessChild> UtilityProcessChild::Get() {
+  StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   return sUtilityProcessChild;
 }
 
@@ -160,7 +164,8 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile,
     const RequestMemoryReportResolver& aResolver) {
-  nsPrintfCString processName("Utility (pid %u)", base::GetCurrentProcId());
+  nsPrintfCString processName("Utility (pid: %u, sandboxingKind: %" PRIu64 ")",
+                              base::GetCurrentProcId(), mSandbox);
 
   mozilla::dom::MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
@@ -222,8 +227,11 @@ void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 #  endif  // defined(XP_WIN)
 
-  if (sUtilityProcessChild) {
-    sUtilityProcessChild = nullptr;
+  {
+    StaticMutexAutoLock lock(sUtilityProcessChildMutex);
+    if (sUtilityProcessChild) {
+      sUtilityProcessChild = nullptr;
+    }
   }
 
   ipc::CrashReporterClient::DestroySingleton();
