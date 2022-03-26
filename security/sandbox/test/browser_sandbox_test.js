@@ -14,11 +14,7 @@ function test() {
   // GPU process might not run depending on the platform, so we need it to be
   // the last one of the list to allow the remainingTests logic below to work
   // as expected.
-  //
-  // For UtilityProcess, allow constructing a string made of the process type
-  // and the sandbox variant we want to test, e.g.,
-  // utility:0 for GENERIC_UTILITY
-  var processTypes = ["tab", "socket", "rdd", "gmplugin", "utility:0", "gpu"];
+  var processTypes = ["tab", "socket", "rdd", "gmplugin", "utility", "gpu"];
 
   // A callback called after each test-result.
   let sandboxTestResult = (subject, topic, data) => {
