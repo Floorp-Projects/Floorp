@@ -7,12 +7,21 @@ import Header from "../Header/Header";
 import Button from "../Button/Button";
 
 function Signup(props) {
-  const { locale } = props;
+  const { locale, pockethost, utmSource, utmCampaign, utmContent } = props;
+  const utmParams = `utm_source=${utmSource}${
+    utmCampaign && utmContent
+      ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}`
+      : ``
+  }`;
   return (
     <div className="stp_panel_container">
       <div className="stp_panel stp_panel_signup">
         <Header>
-          <Button style="secondary">
+          <Button
+            style="secondary"
+            url={`https://${pockethost}/login?${utmParams}`}
+            source="log_in"
+          >
             <span data-l10n-id="pocket-panel-signup-login" />
           </Button>
         </Header>
@@ -54,7 +63,11 @@ function Signup(props) {
         )}
         <hr />
         <span className="stp_button_wide">
-          <Button style="primary">
+          <Button
+            style="primary"
+            url={`https://${pockethost}/ff_signup?${utmParams}`}
+            source="sign_up_1"
+          >
             <span data-l10n-id="pocket-panel-button-activate" />
           </Button>
         </span>

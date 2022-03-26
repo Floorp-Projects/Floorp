@@ -100,7 +100,7 @@ test_runner(async function test_pktUI_showPanel({ sandbox }) {
 
   Assert.deepEqual(testFrame.setAttribute.args[0], [
     "src",
-    `about:pocket-saved?layoutRefresh=true&pockethost=test-site&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
+    `about:pocket-saved?utmSource=firefox_pocket_save_button&layoutRefresh=true&pockethost=test-site&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
   ]);
   Assert.deepEqual(testFrame.style, { width: "10px", height: "10px" });
 });
