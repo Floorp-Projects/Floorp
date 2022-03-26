@@ -1684,6 +1684,7 @@ void DisableMD5() {
 // the given module name. Optionally pass some string parameters to it via
 // 'params'. This argument will be provided to C_Initialize when called on the
 // module.
+// |libraryName| and |dir| are encoded in UTF-8.
 bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
                       const nsCString& dir, /* optional */ const char* params) {
   // If a module exists with the same name, make a best effort attempt to delete
