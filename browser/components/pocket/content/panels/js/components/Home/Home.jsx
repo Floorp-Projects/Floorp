@@ -10,12 +10,26 @@ import Button from "../Button/Button";
 import panelMessaging from "../../messages";
 
 function Home(props) {
-  const { locale, topics, pockethost, hideRecentSaves } = props;
+  const {
+    locale,
+    topics,
+    pockethost,
+    hideRecentSaves,
+    utmSource,
+    utmCampaign,
+    utmContent,
+  } = props;
   const [{ articles, status }, setArticlesState] = useState({
     articles: [],
     // Can be success, loading, or error.
     status: "",
   });
+
+  const utmParams = `utm_source=${utmSource}${
+    utmCampaign && utmContent
+      ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}`
+      : ``
+  }`;
 
   useEffect(() => {
     if (!hideRecentSaves) {
@@ -77,9 +91,16 @@ function Home(props) {
           />
           {articles.length > 3 ? (
             <>
-              <ArticleList articles={articles.slice(0, 3)} />
+              <ArticleList
+                articles={articles.slice(0, 3)}
+                source="home_recent_save"
+              />
               <span className="stp_button_wide">
-                <Button style="secondary">
+                <Button
+                  style="secondary"
+                  url={`https://${pockethost}/a?${utmParams}`}
+                  source="home_view_list"
+                >
                   <span data-l10n-id="pocket-panel-button-show-all" />
                 </Button>
               </span>
@@ -109,7 +130,11 @@ function Home(props) {
     <div className="stp_panel_container">
       <div className="stp_panel stp_panel_home">
         <Header>
-          <Button style="primary">
+          <Button
+            style="primary"
+            url={`https://${pockethost}/a?${utmParams}`}
+            source="home_view_list"
+          >
             <span data-l10n-id="pocket-panel-header-my-list" />
           </Button>
         </Header>
@@ -119,7 +144,12 @@ function Home(props) {
         {pockethost && locale?.startsWith("en") && topics?.length && (
           <>
             <h3 className="header_medium">Explore popular topics:</h3>
-            <PopularTopics topics={topics} pockethost={pockethost} />
+            <PopularTopics
+              topics={topics}
+              pockethost={pockethost}
+              utmParams={utmParams}
+              source="home_popular_topic"
+            />
           </>
         )}
       </div>

@@ -41,7 +41,6 @@ test_runner(async function test_clickHelper({ sandbox, pktPanelMessaging }) {
   Assert.ok(
     pktPanelMessaging.sendMessage.calledWith("PKT_openTabWithUrl", {
       url: "http://example.com",
-      activate: true,
       source: "test-click",
       position: 2,
     }),
