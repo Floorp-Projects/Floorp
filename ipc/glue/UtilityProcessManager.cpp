@@ -144,7 +144,7 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
   RefPtr<UtilityProcessManager> self = this;
   mLaunchPromise = mProcess->LaunchPromise()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self](bool) {
+      [self, aSandbox](bool) {
         if (self->IsShutdown()) {
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
@@ -168,6 +168,10 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
 
         CrashReporter::AnnotateCrashReport(
             CrashReporter::Annotation::UtilityProcessStatus, "Running"_ns);
+
+        CrashReporter::AnnotateCrashReport(
+            CrashReporter::Annotation::UtilityProcessSandboxingKind,
+            (unsigned int)aSandbox);
 
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
