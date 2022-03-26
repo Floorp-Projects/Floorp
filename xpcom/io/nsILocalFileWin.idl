@@ -46,7 +46,6 @@ interface nsILocalFileWin : nsIFile
      * support both short and long path forms.
      */
     [noscript] readonly attribute AString canonicalPath;
-    [noscript] readonly attribute ACString nativeCanonicalPath;
 
     /**
      * Get or set whether this file is marked read-only.
