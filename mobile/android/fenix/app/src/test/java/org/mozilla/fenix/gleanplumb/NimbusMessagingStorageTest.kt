@@ -4,10 +4,13 @@
 
 package org.mozilla.fenix.gleanplumb
 
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -37,11 +40,11 @@ class NimbusMessagingStorageTest {
     private lateinit var gleanPlumb: GleanPlumbInterface
     private lateinit var messagingFeature: FeatureHolder<Messaging>
     private lateinit var messaging: Messaging
+    private val coroutineScope = TestCoroutineScope()
     private var malformedWasReported = false
     private val reportMalformedMessage: (String) -> Unit = {
         malformedWasReported = true
     }
-
     @Before
     fun setup() {
         gleanPlumb = mockk(relaxed = true)
@@ -49,7 +52,7 @@ class NimbusMessagingStorageTest {
         malformedWasReported = false
         messagingFeature = createMessagingFeature()
 
-        every { metadataStorage.getMetadata() } returns listOf(Message.Metadata(id = "message-1"))
+        coEvery { metadataStorage.getMetadata() } returns mapOf("message-1" to Message.Metadata(id = "message-1"))
 
         storage = NimbusMessagingStorage(
             testContext,
@@ -61,7 +64,7 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `WHEN calling getMessages THEN provide a list of available messages`() {
+    fun `WHEN calling getMessages THEN provide a list of available messages`() = runBlockingTest {
         val message = storage.getMessages().first()
 
         assertEquals("message-1", message.id)
@@ -69,150 +72,161 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `WHEN calling getMessages THEN provide a list of sorted messages by priority`() {
-        val messages = mapOf(
-            "low-message" to createMessageData(style = "low-priority"),
-            "high-message" to createMessageData(style = "high-priority"),
-            "medium-message" to createMessageData(style = "medium-priority"),
-        )
-        val styles = mapOf(
-            "high-priority" to createStyle(priority = 100),
-            "medium-priority" to createStyle(priority = 50),
-            "low-priority" to createStyle(priority = 1)
-        )
-        val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
-        val messagingFeature = createMessagingFeature(
-            styles = styles,
-            messages = messages
-        )
+    fun `WHEN calling getMessages THEN provide a list of sorted messages by priority`() =
+        runBlockingTest {
+            val messages = mapOf(
+                "low-message" to createMessageData(style = "low-priority"),
+                "high-message" to createMessageData(style = "high-priority"),
+                "medium-message" to createMessageData(style = "medium-priority"),
+            )
+            val styles = mapOf(
+                "high-priority" to createStyle(priority = 100),
+                "medium-priority" to createStyle(priority = 50),
+                "low-priority" to createStyle(priority = 1)
+            )
+            val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
+            val messagingFeature = createMessagingFeature(
+                styles = styles,
+                messages = messages
+            )
 
-        every { metadataStorage.getMetadata() } returns listOf(Message.Metadata(id = "message-1"))
+            coEvery { metadataStorage.getMetadata() } returns mapOf(
+                "message-1" to Message.Metadata(
+                    id = "message-1"
+                )
+            )
 
-        val storage = NimbusMessagingStorage(
-            testContext,
-            metadataStorage,
-            reportMalformedMessage,
-            gleanPlumb,
-            messagingFeature
-        )
+            val storage = NimbusMessagingStorage(
+                testContext,
+                metadataStorage,
+                reportMalformedMessage,
+                gleanPlumb,
+                messagingFeature
+            )
 
-        val results = storage.getMessages()
+            val results = storage.getMessages()
 
-        assertEquals("high-message", results[0].id)
-        assertEquals("medium-message", results[1].id)
-        assertEquals("low-message", results[2].id)
-    }
-
-    @Test
-    fun `GIVEN pressed message WHEN calling getMessages THEN filter out the pressed message`() {
-        val metadataList = listOf(
-            Message.Metadata(id = "pressed-message", pressed = true),
-            Message.Metadata(id = "normal-message", pressed = false)
-        )
-        val messages = mapOf(
-            "pressed-message" to createMessageData(style = "high-priority"),
-            "normal-message" to createMessageData(style = "high-priority"),
-        )
-        val styles = mapOf(
-            "high-priority" to createStyle(priority = 100),
-        )
-        val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
-        val messagingFeature = createMessagingFeature(
-            styles = styles,
-            messages = messages
-        )
-
-        every { metadataStorage.getMetadata() } returns metadataList
-
-        val storage = NimbusMessagingStorage(
-            testContext,
-            metadataStorage,
-            reportMalformedMessage,
-            gleanPlumb,
-            messagingFeature
-        )
-
-        val results = storage.getMessages()
-
-        assertEquals(1, results.size)
-        assertEquals("normal-message", results[0].id)
-    }
+            assertEquals("high-message", results[0].id)
+            assertEquals("medium-message", results[1].id)
+            assertEquals("low-message", results[2].id)
+        }
 
     @Test
-    fun `GIVEN dismissed message WHEN calling getMessages THEN filter out the dismissed message`() {
-        val metadataList = listOf(
-            Message.Metadata(id = "dismissed-message", dismissed = true),
-            Message.Metadata(id = "normal-message", dismissed = false)
-        )
-        val messages = mapOf(
-            "dismissed-message" to createMessageData(style = "high-priority"),
-            "normal-message" to createMessageData(style = "high-priority"),
-        )
-        val styles = mapOf(
-            "high-priority" to createStyle(priority = 100),
-        )
-        val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
-        val messagingFeature = createMessagingFeature(
-            styles = styles,
-            messages = messages
-        )
+    fun `GIVEN pressed message WHEN calling getMessages THEN filter out the pressed message`() =
+        runBlockingTest {
+            val metadataList = mapOf(
+                "pressed-message" to Message.Metadata(id = "pressed-message", pressed = true),
+                "normal-message" to Message.Metadata(id = "normal-message", pressed = false)
+            )
+            val messages = mapOf(
+                "pressed-message" to createMessageData(style = "high-priority"),
+                "normal-message" to createMessageData(style = "high-priority"),
+            )
+            val styles = mapOf(
+                "high-priority" to createStyle(priority = 100),
+            )
+            val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
+            val messagingFeature = createMessagingFeature(
+                styles = styles,
+                messages = messages
+            )
 
-        every { metadataStorage.getMetadata() } returns metadataList
+            coEvery { metadataStorage.getMetadata() } returns metadataList
 
-        val storage = NimbusMessagingStorage(
-            testContext,
-            metadataStorage,
-            reportMalformedMessage,
-            gleanPlumb,
-            messagingFeature
-        )
+            val storage = NimbusMessagingStorage(
+                testContext,
+                metadataStorage,
+                reportMalformedMessage,
+                gleanPlumb,
+                messagingFeature
+            )
 
-        val results = storage.getMessages()
+            val results = storage.getMessages()
 
-        assertEquals(1, results.size)
-        assertEquals("normal-message", results[0].id)
-    }
-
-    @Test
-    fun `GIVEN a message that the maxDisplayCount WHEN calling getMessages THEN filter out the message`() {
-        val metadataList = listOf(
-            Message.Metadata(id = "shown-many-times-message", displayCount = 10),
-            Message.Metadata(id = "normal-message", displayCount = 0)
-        )
-        val messages = mapOf(
-            "shown-many-times-message" to createMessageData(
-                style = "high-priority",
-                maxDisplayCount = 2
-            ),
-            "normal-message" to createMessageData(style = "high-priority"),
-        )
-        val styles = mapOf(
-            "high-priority" to createStyle(priority = 100),
-        )
-        val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
-        val messagingFeature = createMessagingFeature(
-            styles = styles,
-            messages = messages
-        )
-
-        every { metadataStorage.getMetadata() } returns metadataList
-
-        val storage = NimbusMessagingStorage(
-            testContext,
-            metadataStorage,
-            reportMalformedMessage,
-            gleanPlumb,
-            messagingFeature
-        )
-
-        val results = storage.getMessages()
-
-        assertEquals(1, results.size)
-        assertEquals("normal-message", results[0].id)
-    }
+            assertEquals(1, results.size)
+            assertEquals("normal-message", results[0].id)
+        }
 
     @Test
-    fun `GIVEN a malformed message WHEN calling getMessages THEN provide a list of messages ignoring the malformed one`() {
+    fun `GIVEN dismissed message WHEN calling getMessages THEN filter out the dismissed message`() =
+        runBlockingTest {
+            val metadataList = mapOf(
+                "dismissed-message" to Message.Metadata(id = "dismissed-message", dismissed = true),
+                "normal-message" to Message.Metadata(id = "normal-message", dismissed = false)
+            )
+            val messages = mapOf(
+                "dismissed-message" to createMessageData(style = "high-priority"),
+                "normal-message" to createMessageData(style = "high-priority"),
+            )
+            val styles = mapOf(
+                "high-priority" to createStyle(priority = 100),
+            )
+            val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
+            val messagingFeature = createMessagingFeature(
+                styles = styles,
+                messages = messages
+            )
+
+            coEvery { metadataStorage.getMetadata() } returns metadataList
+
+            val storage = NimbusMessagingStorage(
+                testContext,
+                metadataStorage,
+                reportMalformedMessage,
+                gleanPlumb,
+                messagingFeature
+            )
+
+            val results = storage.getMessages()
+
+            assertEquals(1, results.size)
+            assertEquals("normal-message", results[0].id)
+        }
+
+    @Test
+    fun `GIVEN a message that the maxDisplayCount WHEN calling getMessages THEN filter out the message`() =
+        runBlockingTest {
+            val metadataList = mapOf(
+                "shown-many-times-message" to Message.Metadata(
+                    id = "shown-many-times-message",
+                    displayCount = 10
+                ),
+                "normal-message" to Message.Metadata(id = "normal-message", displayCount = 0)
+            )
+            val messages = mapOf(
+                "shown-many-times-message" to createMessageData(
+                    style = "high-priority",
+                    maxDisplayCount = 2
+                ),
+                "normal-message" to createMessageData(style = "high-priority"),
+            )
+            val styles = mapOf(
+                "high-priority" to createStyle(priority = 100),
+            )
+            val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
+            val messagingFeature = createMessagingFeature(
+                styles = styles,
+                messages = messages
+            )
+
+            coEvery { metadataStorage.getMetadata() } returns metadataList
+
+            val storage = NimbusMessagingStorage(
+                testContext,
+                metadataStorage,
+                reportMalformedMessage,
+                gleanPlumb,
+                messagingFeature
+            )
+
+            val results = storage.getMessages()
+
+            assertEquals(1, results.size)
+            assertEquals("normal-message", results[0].id)
+        }
+
+    @Test
+    fun `GIVEN a malformed message WHEN calling getMessages THEN provide a list of messages ignoring the malformed one`() = runBlockingTest {
         val messages = storage.getMessages()
         val firstMessage = messages.first()
 
@@ -237,11 +251,11 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `WHEN calling updateMetadata THEN delegate to metadataStorage`() {
+    fun `WHEN calling updateMetadata THEN delegate to metadataStorage`() = runBlockingTest {
 
         storage.updateMetadata(mockk())
 
-        verify { metadataStorage.updateMetadata(any()) }
+        coEvery { metadataStorage.updateMetadata(any()) }
     }
 
     @Test

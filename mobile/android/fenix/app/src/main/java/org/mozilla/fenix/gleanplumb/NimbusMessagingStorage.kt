@@ -33,16 +33,14 @@ class NimbusMessagingStorage(
     /**
      * Returns a list of available messages descending sorted by their priority.
      */
-    fun getMessages(): List<Message> {
+    suspend fun getMessages(): List<Message> {
         val nimbusTriggers = nimbusFeature.triggers
         val nimbusStyles = nimbusFeature.styles
         val nimbusActions = nimbusFeature.actions
 
         val nimbusMessages = nimbusFeature.messages
         val defaultStyle = StyleData(context)
-        val storageMetadata = metadataStorage.getMetadata().associateBy {
-            it.id
-        }
+        val storageMetadata = metadataStorage.getMetadata()
 
         return nimbusMessages.mapNotNull { (key, value) ->
             val action = sanitizeAction(key, value.action, nimbusActions) ?: return@mapNotNull null
@@ -98,7 +96,7 @@ class NimbusMessagingStorage(
     /**
      * Updated the provided [metadata] in the storage.
      */
-    fun updateMetadata(metadata: Message.Metadata) {
+    suspend fun updateMetadata(metadata: Message.Metadata) {
         metadataStorage.updateMetadata(metadata)
     }
 
@@ -167,8 +165,7 @@ class NimbusMessagingStorage(
         }
     }
 
-    private fun addMetadata(id: String): Message.Metadata {
-        // This will be improve on https://github.com/mozilla-mobile/fenix/issues/24222
+    private suspend fun addMetadata(id: String): Message.Metadata {
         return metadataStorage.addMetadata(
             Message.Metadata(
                 id = id,

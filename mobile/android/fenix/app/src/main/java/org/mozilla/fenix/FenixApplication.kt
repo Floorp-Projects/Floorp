@@ -160,9 +160,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         GlobalScope.launch(Dispatchers.IO) {
             setStartupMetrics(store, settings())
         }
-        if (FeatureFlags.messagingFeature && settings().isExperimentationEnabled) {
-            components.appStore.dispatch(AppAction.MessagingAction.Restore)
-        }
     }
 
     @CallSuper
@@ -755,6 +752,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         )
         components.analytics.experiments.register(object : NimbusInterface.Observer {
+            override fun onExperimentsFetched() {
+                if (FeatureFlags.messagingFeature && settings().isExperimentationEnabled) {
+                    components.appStore.dispatch(AppAction.MessagingAction.Restore)
+                }
+            }
             override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
                 CustomizeHome.jumpBackIn.set(settings.showRecentTabsFeature)
                 CustomizeHome.recentlySaved.set(settings.showRecentBookmarksFeature)

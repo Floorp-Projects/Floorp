@@ -26,7 +26,7 @@ import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.gleanplumb.KeyPairMessageMetadataStorage
+import org.mozilla.fenix.gleanplumb.OnDiskMessageMetadataStorage
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.lazyMonitored
@@ -123,7 +123,7 @@ class Analytics(
     val messagingStorage by lazyMonitored {
         NimbusMessagingStorage(
             context = context,
-            metadataStorage = KeyPairMessageMetadataStorage(),
+            metadataStorage = OnDiskMessageMetadataStorage(context),
             gleanPlumb = experiments,
             reportMalformedMessage = {
                 metrics.track(Event.Messaging.MessageMalformed(it))
