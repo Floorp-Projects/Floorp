@@ -36,7 +36,6 @@ var pktPanelMessaging = {
 
       this.sendMessage("PKT_openTabWithUrl", {
         url: event.currentTarget.getAttribute(`href`),
-        activate: true,
         source,
         position,
       });
