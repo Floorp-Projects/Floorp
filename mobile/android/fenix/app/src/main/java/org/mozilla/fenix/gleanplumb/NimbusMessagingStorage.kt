@@ -12,7 +12,6 @@ import org.mozilla.experiments.nimbus.GleanPlumbInterface
 import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
-
 import org.mozilla.fenix.nimbus.Messaging
 import org.mozilla.fenix.nimbus.StyleData
 
@@ -22,6 +21,7 @@ import org.mozilla.fenix.nimbus.StyleData
 class NimbusMessagingStorage(
     private val context: Context,
     private val metadataStorage: MessageMetadataStorage,
+    private val reportMalformedMessage: (String) -> Unit,
     private val gleanPlumb: GleanPlumbInterface,
     private val messagingFeature: FeatureHolder<Messaging>
 ) {
@@ -45,14 +45,15 @@ class NimbusMessagingStorage(
         }
 
         return nimbusMessages.mapNotNull { (key, value) ->
-            val action = sanitizeAction(value.action, nimbusActions) ?: return@mapNotNull null
+            val action = sanitizeAction(key, value.action, nimbusActions) ?: return@mapNotNull null
             Message(
                 id = key,
                 data = value,
                 action = action,
                 style = nimbusStyles[value.style] ?: defaultStyle,
                 metadata = storageMetadata[key] ?: addMetadata(key),
-                triggers = sanitizeTriggers(value.trigger, nimbusTriggers) ?: return@mapNotNull null
+                triggers = sanitizeTriggers(key, value.trigger, nimbusTriggers)
+                    ?: return@mapNotNull null
             )
         }.filter {
             it.data.maxDisplayCount >= it.metadata.displayCount &&
@@ -85,13 +86,13 @@ class NimbusMessagingStorage(
     }
 
     /**
-     * Returns a valid action for the provided [message].
+     * Returns a pair of uuid and valid action for the provided [message].
      */
-    fun getMessageAction(message: Message): String {
+    fun getMessageAction(message: Message): Pair<String?, String> {
         val helper = gleanPlumb.createMessageHelper(customAttributes)
         val uuid = helper.getUuid(message.action)
 
-        return helper.stringFormat(message.action, uuid)
+        return Pair(uuid, helper.stringFormat(message.action, uuid))
     }
 
     /**
@@ -103,6 +104,7 @@ class NimbusMessagingStorage(
 
     @VisibleForTesting
     internal fun sanitizeAction(
+        messageId: String,
         unsafeAction: String,
         nimbusActions: Map<String, String>
     ): String? {
@@ -111,6 +113,7 @@ class NimbusMessagingStorage(
         } else {
             val safeAction = nimbusActions[unsafeAction]
             if (safeAction.isNullOrBlank() || safeAction.isEmpty()) {
+                reportMalformedMessage(messageId)
                 return null
             }
             safeAction
@@ -119,12 +122,14 @@ class NimbusMessagingStorage(
 
     @VisibleForTesting
     internal fun sanitizeTriggers(
+        messageId: String,
         unsafeTriggers: List<String>,
         nimbusTriggers: Map<String, String>
     ): List<String>? {
         return unsafeTriggers.map {
             val safeTrigger = nimbusTriggers[it]
             if (safeTrigger.isNullOrBlank() || safeTrigger.isEmpty()) {
+                reportMalformedMessage(messageId)
                 return null
             }
             safeTrigger
@@ -155,8 +160,7 @@ class NimbusMessagingStorage(
             try {
                 helper.evalJexl(condition)
             } catch (e: NimbusException.EvaluationException) {
-                // Report to glean as malformed message
-                // Will be addressed on https://github.com/mozilla-mobile/fenix/issues/24224
+                reportMalformedMessage(message.id)
                 logger.info("Unable to evaluate $condition")
                 false
             }

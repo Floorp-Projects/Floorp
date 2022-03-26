@@ -21,6 +21,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.experiments.createNimbus
@@ -124,6 +125,9 @@ class Analytics(
             context = context,
             metadataStorage = KeyPairMessageMetadataStorage(),
             gleanPlumb = experiments,
+            reportMalformedMessage = {
+                metrics.track(Event.Messaging.MessageMalformed(it))
+            },
             messagingFeature = FxNimbus.features.messaging,
         )
     }

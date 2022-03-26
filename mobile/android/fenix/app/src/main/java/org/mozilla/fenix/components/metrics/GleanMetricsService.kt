@@ -56,6 +56,7 @@ import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.GleanMetrics.Wallpapers
+import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
@@ -833,6 +834,52 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
             { SearchTerms.jumpBackInGroupTapped.record(it) }
+        )
+        is Event.Messaging.MessageShown -> EventWrapper<NoExtraKeys>(
+            {
+                Messaging.messageShown.record(
+                    Messaging.MessageShownExtra(
+                        messageKey = this.messageId
+                    )
+                )
+            }
+        )
+        is Event.Messaging.MessageClicked -> EventWrapper<NoExtraKeys>(
+            {
+                Messaging.messageClicked.record(
+                    Messaging.MessageClickedExtra(
+                        messageKey = this.messageId,
+                        actionUuid = this.uuid
+                    )
+                )
+            }
+        )
+        is Event.Messaging.MessageDismissed -> EventWrapper<NoExtraKeys>(
+            {
+                Messaging.messageDismissed.record(
+                    Messaging.MessageDismissedExtra(
+                        messageKey = this.messageId
+                    )
+                )
+            }
+        )
+        is Event.Messaging.MessageMalformed -> EventWrapper<NoExtraKeys>(
+            {
+                Messaging.malformed.record(
+                    Messaging.MalformedExtra(
+                        messageKey = this.messageId
+                    )
+                )
+            }
+        )
+        is Event.Messaging.MessageExpired -> EventWrapper<NoExtraKeys>(
+            {
+                Messaging.messageExpired.record(
+                    Messaging.MessageExpiredExtra(
+                        messageKey = this.messageId
+                    )
+                )
+            }
         )
         is Event.WallpaperSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Wallpapers.wallpaperSettingsOpened.record() }

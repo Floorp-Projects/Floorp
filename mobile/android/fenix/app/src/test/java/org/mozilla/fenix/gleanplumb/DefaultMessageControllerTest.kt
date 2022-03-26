@@ -20,6 +20,8 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDisplayed
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
 
@@ -29,12 +31,15 @@ class DefaultMessageControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val storageNimbus: NimbusMessagingStorage = mockk(relaxed = true)
     private lateinit var controller: DefaultMessageController
+    private lateinit var metrics: MetricController
     private val store: AppStore = mockk(relaxed = true)
 
     @Before
     fun setup() {
+        metrics = mockk(relaxed = true)
         controller = DefaultMessageController(
             messagingStorage = storageNimbus,
+            metrics = metrics,
             appStore = store,
             homeActivity = activity
         )
@@ -43,12 +48,13 @@ class DefaultMessageControllerTest {
     @Test
     fun `WHEN calling onMessagePressed THEN update the store and handle the action`() {
         val customController = spyk(controller)
-        every { customController.handleAction(any()) } returns mockk()
-
         val message = mockMessage()
+        every { customController.handleAction(any()) } returns mockk()
+        every { storageNimbus.getMessageAction(message) } returns Pair("uuid", message.id)
 
         customController.onMessagePressed(message)
 
+        verify { metrics.track(Event.Messaging.MessageClicked(message.id, "uuid")) }
         verify { customController.handleAction(any()) }
         verify { store.dispatch(MessageClicked(message)) }
     }
@@ -81,21 +87,25 @@ class DefaultMessageControllerTest {
 
         controller.onMessageDismissed(message)
 
+        verify { metrics.track(Event.Messaging.MessageDismissed(message.id)) }
         verify { store.dispatch(AppAction.MessagingAction.MessageDismissed(message)) }
     }
 
     @Test
     fun `WHEN calling onMessageDisplayed THEN report to the messageManager`() {
-        val message = mockMessage()
+        val data = MessageData(_context = testContext, maxDisplayCount = 1)
+        val message = mockMessage(data)
 
         controller.onMessageDisplayed(message)
 
+        verify { metrics.track(Event.Messaging.MessageExpired(message.id)) }
+        verify { metrics.track(Event.Messaging.MessageShown(message.id)) }
         verify { store.dispatch(MessageDisplayed(message)) }
     }
 
-    private fun mockMessage() = Message(
+    private fun mockMessage(data: MessageData = MessageData(_context = testContext)) = Message(
         id = "id",
-        data = MessageData(_context = testContext),
+        data = data,
         style = mockk(),
         action = "action",
         triggers = emptyList(),

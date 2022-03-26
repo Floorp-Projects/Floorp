@@ -7301,6 +7301,96 @@ search_terms:
       - android-probes@mozilla.com
     expires: 108
 
+messaging:
+  message_shown:
+    type: event
+    description: |
+      A message was shown to the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+  message_dismissed:
+    type: event
+    description: |
+      A message was dismissed by the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+  message_clicked:
+    type: event
+    description: |
+      A message was clicked by the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+      action_uuid:
+        description: The uuid of the action
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+  message_expired:
+    type: event
+    description: |
+      A message maxDisplayCount has been surpassed.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+  malformed:
+    type: event
+    description: |
+      A message was malformed.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 114
+
 wallpapers:
   wallpaper_settings_opened:
     type: event
