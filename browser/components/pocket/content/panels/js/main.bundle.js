@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 503:
+/***/ 122:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -49,105 +49,6 @@ function Header(props) {
 }
 
 /* harmony default export */ const Header_Header = (Header);
-;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function ArticleUrl(props) {
-  // We turn off the link if we're either a saved article, or if the url doesn't exist.
-  if (props.savedArticle || !props.url) {
-    return /*#__PURE__*/react.createElement("div", {
-      className: "stp_article_list_saved_article"
-    }, props.children);
-  }
-
-  return /*#__PURE__*/react.createElement("a", {
-    className: "stp_article_list_link",
-    href: props.url
-  }, props.children);
-}
-
-function Article(props) {
-  function encodeThumbnail(rawSource) {
-    return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
-  }
-
-  const {
-    article
-  } = props;
-  const url = article.url || article.resolved_url; // Using array notation because there is a key titled `1` (`images` is an object)
-
-  const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
-  const alt = article.alt || "thumbnail image";
-  const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
-
-  const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
-  return /*#__PURE__*/react.createElement("li", {
-    className: "stp_article_list_item"
-  }, /*#__PURE__*/react.createElement(ArticleUrl, {
-    url: url,
-    savedArticle: props.savedArticle
-  }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail ? /*#__PURE__*/react.createElement("img", {
-    className: "stp_article_list_thumb",
-    src: thumbnail,
-    alt: alt
-  }) : /*#__PURE__*/react.createElement("div", {
-    className: "stp_article_list_thumb_placeholder"
-  }), /*#__PURE__*/react.createElement("div", {
-    className: "stp_article_list_meta"
-  }, /*#__PURE__*/react.createElement("header", {
-    className: "stp_article_list_header"
-  }, title), /*#__PURE__*/react.createElement("p", {
-    className: "stp_article_list_publisher"
-  }, publisher)))));
-}
-
-function ArticleList(props) {
-  return /*#__PURE__*/react.createElement("ul", {
-    className: "stp_article_list"
-  }, props.articles?.map(article => /*#__PURE__*/react.createElement(Article, {
-    article: article,
-    savedArticle: props.savedArticle
-  })));
-}
-
-/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
-;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function PopularTopics(props) {
-  return /*#__PURE__*/react.createElement("ul", {
-    className: "stp_popular_topics"
-  }, props.topics?.map(topic => /*#__PURE__*/react.createElement("li", {
-    key: `item-${topic.topic}`,
-    className: "stp_popular_topic"
-  }, /*#__PURE__*/react.createElement("a", {
-    className: "stp_popular_topic_link",
-    href: `https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`
-  }, topic.title))));
-}
-
-/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
-;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function Button(props) {
-  return /*#__PURE__*/react.createElement("a", {
-    href: props.url,
-    onClick: props.onClick,
-    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
-  }, props.children);
-}
-
-/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/messages.js
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
 var pktPanelMessaging = {
@@ -189,7 +90,6 @@ var pktPanelMessaging = {
       event.preventDefault();
       this.sendMessage("PKT_openTabWithUrl", {
         url: event.currentTarget.getAttribute(`href`),
-        activate: true,
         source,
         position
       });
@@ -202,6 +102,149 @@ var pktPanelMessaging = {
 
 };
 /* harmony default export */ const messages = (pktPanelMessaging);
+;// CONCATENATED MODULE: ./content/panels/js/components/TelemetryLink/TelemetryLink.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function TelemetryLink(props) {
+  function onClick(event) {
+    if (props.onClick) {
+      onClick(event);
+    } else {
+      event.preventDefault();
+      messages.sendMessage("PKT_openTabWithUrl", {
+        url: event.currentTarget.getAttribute(`href`),
+        source: props.source,
+        ...(props.position || props.position === 0 ? {
+          position: props.position
+        } : {})
+      });
+    }
+  }
+
+  return /*#__PURE__*/react.createElement("a", {
+    href: props.href,
+    onClick: onClick,
+    target: "_blank",
+    className: props.className
+  }, props.children);
+}
+
+/* harmony default export */ const TelemetryLink_TelemetryLink = (TelemetryLink);
+;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function ArticleUrl(props) {
+  // We turn off the link if we're either a saved article, or if the url doesn't exist.
+  if (props.savedArticle || !props.url) {
+    return /*#__PURE__*/react.createElement("div", {
+      className: "stp_article_list_saved_article"
+    }, props.children);
+  }
+
+  return /*#__PURE__*/react.createElement(TelemetryLink_TelemetryLink, {
+    className: "stp_article_list_link",
+    href: props.url,
+    source: props.source,
+    position: props.position
+  }, props.children);
+}
+
+function Article(props) {
+  function encodeThumbnail(rawSource) {
+    return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
+  }
+
+  const {
+    article
+  } = props;
+  const url = article.url || article.resolved_url; // Using array notation because there is a key titled `1` (`images` is an object)
+
+  const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
+  const alt = article.alt || "thumbnail image";
+  const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
+
+  const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
+  return /*#__PURE__*/react.createElement("li", {
+    className: "stp_article_list_item"
+  }, /*#__PURE__*/react.createElement(ArticleUrl, {
+    url: url,
+    savedArticle: props.savedArticle,
+    position: props.position,
+    source: props.source
+  }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail ? /*#__PURE__*/react.createElement("img", {
+    className: "stp_article_list_thumb",
+    src: thumbnail,
+    alt: alt
+  }) : /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_thumb_placeholder"
+  }), /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_meta"
+  }, /*#__PURE__*/react.createElement("header", {
+    className: "stp_article_list_header"
+  }, title), /*#__PURE__*/react.createElement("p", {
+    className: "stp_article_list_publisher"
+  }, publisher)))));
+}
+
+function ArticleList(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_article_list"
+  }, props.articles?.map((article, position) => /*#__PURE__*/react.createElement(Article, {
+    article: article,
+    savedArticle: props.savedArticle,
+    position: position,
+    source: props.source
+  })));
+}
+
+/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
+;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function PopularTopics(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_popular_topics"
+  }, props.topics?.map((topic, position) => /*#__PURE__*/react.createElement("li", {
+    key: `item-${topic.topic}`,
+    className: "stp_popular_topic"
+  }, /*#__PURE__*/react.createElement(TelemetryLink_TelemetryLink, {
+    className: "stp_popular_topic_link",
+    href: `https://${props.pockethost}/explore/${topic.topic}?${props.utmParams}`,
+    source: props.source,
+    position: position
+  }, topic.title))));
+}
+
+/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
+;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function Button(props) {
+  return /*#__PURE__*/react.createElement(TelemetryLink_TelemetryLink, {
+    href: props.url,
+    onClick: props.onClick,
+    className: `stp_button${props?.style && ` stp_button_${props.style}`}`,
+    source: props.source
+  }, props.children);
+}
+
+/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -218,7 +261,10 @@ function Home(props) {
     locale,
     topics,
     pockethost,
-    hideRecentSaves
+    hideRecentSaves,
+    utmSource,
+    utmCampaign,
+    utmContent
   } = props;
   const [{
     articles,
@@ -228,6 +274,7 @@ function Home(props) {
     // Can be success, loading, or error.
     status: ""
   });
+  const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
   (0,react.useEffect)(() => {
     if (!hideRecentSaves) {
       // We don't display the loading message until instructed. This is because cache
@@ -278,11 +325,14 @@ function Home(props) {
         className: "header_medium",
         "data-l10n-id": "pocket-panel-home-most-recent-saves"
       }), articles.length > 3 ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
-        articles: articles.slice(0, 3)
+        articles: articles.slice(0, 3),
+        source: "home_recent_save"
       }), /*#__PURE__*/react.createElement("span", {
         className: "stp_button_wide"
       }, /*#__PURE__*/react.createElement(Button_Button, {
-        style: "secondary"
+        style: "secondary",
+        url: `https://${pockethost}/a?${utmParams}`,
+        source: "home_view_list"
       }, /*#__PURE__*/react.createElement("span", {
         "data-l10n-id": "pocket-panel-button-show-all"
       })))) : /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
@@ -304,14 +354,18 @@ function Home(props) {
   }, /*#__PURE__*/react.createElement("div", {
     className: "stp_panel stp_panel_home"
   }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
-    style: "primary"
+    style: "primary",
+    url: `https://${pockethost}/a?${utmParams}`,
+    source: "home_view_list"
   }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-my-list"
   }))), /*#__PURE__*/react.createElement("hr", null), recentSavesSection, /*#__PURE__*/react.createElement("hr", null), pockethost && locale?.startsWith("en") && topics?.length && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
     className: "header_medium"
   }, "Explore popular topics:"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
     topics: topics,
-    pockethost: pockethost
+    pockethost: pockethost,
+    utmParams: utmParams,
+    source: "home_popular_topic"
   }))));
 }
 
@@ -363,6 +417,9 @@ HomeOverlay.prototype = {
     const locale = searchParams.get(`locale`) || ``;
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
     const hideRecentSaves = searchParams.get(`hiderecentsaves`) === `true`;
+    const utmSource = searchParams.get(`utmSource`);
+    const utmCampaign = searchParams.get(`utmCampaign`);
+    const utmContent = searchParams.get(`utmContent`);
 
     if (this.active) {
       return;
@@ -376,6 +433,9 @@ HomeOverlay.prototype = {
         locale: locale,
         hideRecentSaves: hideRecentSaves,
         pockethost: pockethost,
+        utmSource: utmSource,
+        utmCampaign: utmCampaign,
+        utmContent: utmContent,
         topics: [{
           title: "Technology",
           topic: "technology"
@@ -463,14 +523,21 @@ HomeOverlay.prototype = {
 
 function Signup(props) {
   const {
-    locale
+    locale,
+    pockethost,
+    utmSource,
+    utmCampaign,
+    utmContent
   } = props;
+  const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
     className: "stp_panel stp_panel_signup"
   }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
-    style: "secondary"
+    style: "secondary",
+    url: `https://${pockethost}/login?${utmParams}`,
+    source: "log_in"
   }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-signup-login"
   }))), /*#__PURE__*/react.createElement("hr", null), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {
@@ -500,7 +567,9 @@ function Signup(props) {
   }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("span", {
     className: "stp_button_wide"
   }, /*#__PURE__*/react.createElement(Button_Button, {
-    style: "primary"
+    style: "primary",
+    url: `https://${pockethost}/ff_signup?${utmParams}`,
+    source: "sign_up_1"
   }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-button-activate"
   })))));
@@ -549,9 +618,10 @@ var SignupOverlay = function (options) {
     const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
-    const utmCampaign = searchParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
-    const utmSource = searchParams.get(`utmSource`) || `control`;
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
+    const utmSource = searchParams.get(`utmSource`);
+    const utmCampaign = searchParams.get(`utmCampaign`);
+    const utmContent = searchParams.get(`utmContent`);
 
     if (this.active) {
       return;
@@ -567,13 +637,18 @@ var SignupOverlay = function (options) {
 
       react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
         pockethost: pockethost,
+        utmSource: utmSource,
+        utmCampaign: utmCampaign,
+        utmContent: utmContent,
         locale: locale
       }), document.querySelector(`body`));
     } else {
       const templateData = {
         pockethost,
-        utmCampaign,
-        utmSource
+        utmCampaign: utmCampaign || `firefox_door_hanger_menu`,
+        // utmContent is now used for experiment branch in the new layouts,
+        // but for backwards comp reasons, we pass it in the old way as utmSource.
+        utmSource: utmContent || `control`
       }; // extra modifier class for language
 
       if (language) {
@@ -1276,6 +1351,9 @@ SavedOverlay.prototype = {
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
+    const utmSource = searchParams.get(`utmSource`);
+    const utmCampaign = searchParams.get(`utmCampaign`);
+    const utmContent = searchParams.get(`utmContent`);
 
     if (layoutRefresh) {
       // For now, we need to do a little work on the body element
@@ -1284,8 +1362,11 @@ SavedOverlay.prototype = {
       document.querySelector(`.pkt_ext_containersaved`)?.classList.remove(`pkt_ext_containersaved`); // Create actual content
 
       react_dom.render( /*#__PURE__*/react.createElement(Saved_Saved, {
+        locale: locale,
         pockethost: pockethost,
-        locale: locale
+        utmSource: utmSource,
+        utmCampaign: utmCampaign,
+        utmContent: utmContent
       }), document.querySelector(`body`));
     } else {
       // set host
@@ -1425,28 +1506,40 @@ StyleGuideOverlay.prototype = {
       className: "stp_styleguide_h4"
     }, "Button"), /*#__PURE__*/react.createElement(Button_Button, {
       style: "text",
-      url: "https://example.org"
+      url: "https://example.org",
+      source: "styleguide"
     }, "Text Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
-      style: "primary"
+      style: "primary",
+      url: "https://example.org",
+      source: "styleguide"
     }, "Primary Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
-      style: "secondary"
+      style: "secondary",
+      url: "https://example.org",
+      source: "styleguide"
     }, "Secondary Button"), /*#__PURE__*/react.createElement("span", {
       className: "stp_button_wide"
     }, /*#__PURE__*/react.createElement(Button_Button, {
-      style: "primary"
+      style: "primary",
+      url: "https://example.org",
+      source: "styleguide"
     }, "Primary Wide Button")), /*#__PURE__*/react.createElement("span", {
       className: "stp_button_wide"
     }, /*#__PURE__*/react.createElement(Button_Button, {
-      style: "secondary"
+      style: "secondary",
+      url: "https://example.org",
+      source: "styleguide"
     }, "Secondary Wide Button")), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "Header"), /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
-      style: "primary"
+      style: "primary",
+      url: "https://example.org",
+      source: "styleguide"
     }, "View My List")), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "PopularTopics"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
       pockethost: `getpocket.com`,
-      utmsource: `styleguide`,
+      source: `styleguide`,
+      utmParams: `utm_source=styleguide`,
       topics: [{
         title: "Self Improvement",
         topic: "self-improvement"
@@ -1463,6 +1556,7 @@ StyleGuideOverlay.prototype = {
     }), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "ArticleList"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+      source: `styleguide`,
       articles: [{
         title: "Article Title",
         publisher: "Publisher",
@@ -1742,7 +1836,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(503)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(122)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

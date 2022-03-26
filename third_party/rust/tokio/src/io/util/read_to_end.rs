@@ -1,47 +1,48 @@
+use crate::io::util::vec_with_initialized::{into_read_buf_parts, VecU8, VecWithInitialized};
 use crate::io::AsyncRead;
 
+use pin_project_lite::pin_project;
 use std::future::Future;
 use std::io;
-use std::mem::{self, MaybeUninit};
+use std::marker::PhantomPinned;
+use std::mem;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-#[derive(Debug)]
-#[must_use = "futures do nothing unless you `.await` or poll them"]
-#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
-pub struct ReadToEnd<'a, R: ?Sized> {
-    reader: &'a mut R,
-    buf: &'a mut Vec<u8>,
-    /// The number of bytes appended to buf. This can be less than buf.len() if
-    /// the buffer was not empty when the operation was started.
-    read: usize,
+pin_project! {
+    #[derive(Debug)]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    pub struct ReadToEnd<'a, R: ?Sized> {
+        reader: &'a mut R,
+        buf: VecWithInitialized<&'a mut Vec<u8>>,
+        // The number of bytes appended to buf. This can be less than buf.len() if
+        // the buffer was not empty when the operation was started.
+        read: usize,
+        // Make this future `!Unpin` for compatibility with async trait methods.
+        #[pin]
+        _pin: PhantomPinned,
+    }
 }
 
 pub(crate) fn read_to_end<'a, R>(reader: &'a mut R, buffer: &'a mut Vec<u8>) -> ReadToEnd<'a, R>
 where
     R: AsyncRead + Unpin + ?Sized,
 {
-    prepare_buffer(buffer, reader);
     ReadToEnd {
         reader,
-        buf: buffer,
+        buf: VecWithInitialized::new(buffer),
         read: 0,
+        _pin: PhantomPinned,
     }
 }
 
-/// # Safety
-///
-/// Before first calling this method, the unused capacity must have been
-/// prepared for use with the provided AsyncRead. This can be done using the
-/// `prepare_buffer` function later in this file.
-pub(super) unsafe fn read_to_end_internal<R: AsyncRead + ?Sized>(
-    buf: &mut Vec<u8>,
+pub(super) fn read_to_end_internal<V: VecU8, R: AsyncRead + ?Sized>(
+    buf: &mut VecWithInitialized<V>,
     mut reader: Pin<&mut R>,
     num_read: &mut usize,
     cx: &mut Context<'_>,
 ) -> Poll<io::Result<usize>> {
     loop {
-        // safety: The caller promised to prepare the buffer.
         let ret = ready!(poll_read_to_end(buf, reader.as_mut(), cx));
         match ret {
             Err(err) => return Poll::Ready(Err(err)),
@@ -56,14 +57,8 @@ pub(super) unsafe fn read_to_end_internal<R: AsyncRead + ?Sized>(
 /// Tries to read from the provided AsyncRead.
 ///
 /// The length of the buffer is increased by the number of bytes read.
-///
-/// # Safety
-///
-/// The caller ensures that the buffer has been prepared for use with the
-/// AsyncRead before calling this function. This can be done using the
-/// `prepare_buffer` function later in this file.
-unsafe fn poll_read_to_end<R: AsyncRead + ?Sized>(
-    buf: &mut Vec<u8>,
+fn poll_read_to_end<V: VecU8, R: AsyncRead + ?Sized>(
+    buf: &mut VecWithInitialized<V>,
     read: Pin<&mut R>,
     cx: &mut Context<'_>,
 ) -> Poll<io::Result<usize>> {
@@ -73,75 +68,34 @@ unsafe fn poll_read_to_end<R: AsyncRead + ?Sized>(
     // of data to return. Simply tacking on an extra DEFAULT_BUF_SIZE space every
     // time is 4,500 times (!) slower than this if the reader has a very small
     // amount of data to return.
-    reserve(buf, &*read, 32);
+    buf.reserve(32);
 
-    let unused_capacity: &mut [MaybeUninit<u8>] = get_unused_capacity(buf);
+    // Get a ReadBuf into the vector.
+    let mut read_buf = buf.get_read_buf();
 
-    // safety: The buffer has been prepared for use with the AsyncRead before
-    // calling this function.
-    let slice: &mut [u8] = &mut *(unused_capacity as *mut [MaybeUninit<u8>] as *mut [u8]);
+    let filled_before = read_buf.filled().len();
+    let poll_result = read.poll_read(cx, &mut read_buf);
+    let filled_after = read_buf.filled().len();
+    let n = filled_after - filled_before;
 
-    let res = ready!(read.poll_read(cx, slice));
-    if let Ok(num) = res {
-        // safety: There are two situations:
-        //
-        // 1. The AsyncRead has not overriden `prepare_uninitialized_buffer`.
-        //
-        // In this situation, the default implementation of that method will have
-        // zeroed the unused capacity. This means that setting the length will
-        // never expose uninitialized memory in the vector.
-        //
-        // Note that the assert! below ensures that we don't set the length to
-        // something larger than the capacity, which malicious implementors might
-        // try to have us do.
-        //
-        // 2. The AsyncRead has overriden `prepare_uninitialized_buffer`.
-        //
-        // In this case, the safety of the `set_len` call below relies on this
-        // guarantee from the documentation on `prepare_uninitialized_buffer`:
-        //
-        // > This function isn't actually unsafe to call but unsafe to implement.
-        // > The implementer must ensure that either the whole buf has been zeroed
-        // > or poll_read() overwrites the buffer without reading it and returns
-        // > correct value.
-        //
-        // Note that `prepare_uninitialized_buffer` is unsafe to implement, so this
-        // is a guarantee we can rely on in unsafe code.
-        //
-        // The assert!() is technically only necessary in the first case.
-        let new_len = buf.len() + num;
-        assert!(new_len <= buf.capacity());
+    // Update the length of the vector using the result of poll_read.
+    let read_buf_parts = into_read_buf_parts(read_buf);
+    buf.apply_read_buf(read_buf_parts);
 
-        buf.set_len(new_len);
+    match poll_result {
+        Poll::Pending => {
+            // In this case, nothing should have been read. However we still
+            // update the vector in case the poll_read call initialized parts of
+            // the vector's unused capacity.
+            debug_assert_eq!(filled_before, filled_after);
+            Poll::Pending
+        }
+        Poll::Ready(Err(err)) => {
+            debug_assert_eq!(filled_before, filled_after);
+            Poll::Ready(Err(err))
+        }
+        Poll::Ready(Ok(())) => Poll::Ready(Ok(n)),
     }
-    Poll::Ready(res)
-}
-
-/// This function prepares the unused capacity for use with the provided AsyncRead.
-pub(super) fn prepare_buffer<R: AsyncRead + ?Sized>(buf: &mut Vec<u8>, read: &R) {
-    let buffer = get_unused_capacity(buf);
-
-    // safety: This function is only unsafe to implement.
-    unsafe {
-        read.prepare_uninitialized_buffer(buffer);
-    }
-}
-
-/// Allocates more memory and ensures that the unused capacity is prepared for use
-/// with the `AsyncRead`.
-fn reserve<R: AsyncRead + ?Sized>(buf: &mut Vec<u8>, read: &R, bytes: usize) {
-    if buf.capacity() - buf.len() >= bytes {
-        return;
-    }
-    buf.reserve(bytes);
-    // The call above has reallocated the buffer, so we must reinitialize the entire
-    // unused capacity, even if we already initialized some of it before the resize.
-    prepare_buffer(buf, read);
-}
-
-/// Returns the unused capacity of the provided vector.
-fn get_unused_capacity(buf: &mut Vec<u8>) -> &mut [MaybeUninit<u8>] {
-    bytes::BufMut::bytes_mut(buf)
 }
 
 impl<A> Future for ReadToEnd<'_, A>
@@ -150,21 +104,9 @@ where
 {
     type Output = io::Result<usize>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let Self { reader, buf, read } = &mut *self;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let me = self.project();
 
-        // safety: The constructor of ReadToEnd calls `prepare_buffer`
-        unsafe { read_to_end_internal(buf, Pin::new(*reader), read, cx) }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn assert_unpin() {
-        use std::marker::PhantomPinned;
-        crate::is_unpin::<ReadToEnd<'_, PhantomPinned>>();
+        read_to_end_internal(me.buf, Pin::new(*me.reader), me.read, cx)
     }
 }

@@ -1,13 +1,19 @@
-#![allow(clippy::blacklisted_name, clippy::stable_sort_primitive)]
+#![cfg(feature = "macros")]
+#![allow(clippy::blacklisted_name)]
 
-use tokio::sync::{mpsc, oneshot};
-use tokio::task;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::wasm_bindgen_test as maybe_tokio_test;
+
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::test as maybe_tokio_test;
+
+use tokio::sync::oneshot;
 use tokio_test::{assert_ok, assert_pending, assert_ready};
 
 use futures::future::poll_fn;
 use std::task::Poll::Ready;
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_one_lit_expr_comma() {
     let foo = tokio::select! {
         foo = async { 1 } => foo,
@@ -16,7 +22,7 @@ async fn sync_one_lit_expr_comma() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn nested_one() {
     let foo = tokio::select! {
         foo = async { 1 } => tokio::select! {
@@ -27,7 +33,7 @@ async fn nested_one() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_one_lit_expr_no_comma() {
     let foo = tokio::select! {
         foo = async { 1 } => foo
@@ -36,7 +42,7 @@ async fn sync_one_lit_expr_no_comma() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_one_lit_expr_block() {
     let foo = tokio::select! {
         foo = async { 1 } => { foo }
@@ -45,7 +51,7 @@ async fn sync_one_lit_expr_block() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_one_await() {
     let foo = tokio::select! {
         foo = one() => foo,
@@ -54,7 +60,7 @@ async fn sync_one_await() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_one_ident() {
     let one = one();
 
@@ -65,7 +71,7 @@ async fn sync_one_ident() {
     assert_eq!(foo, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn sync_two() {
     use std::cell::Cell;
 
@@ -86,7 +92,7 @@ async fn sync_two() {
     assert!(res == 1 || res == 2);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn drop_in_fut() {
     let s = "hello".to_string();
 
@@ -101,7 +107,8 @@ async fn drop_in_fut() {
     assert_eq!(res, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
+#[cfg(feature = "full")]
 async fn one_ready() {
     let (tx1, rx1) = oneshot::channel::<i32>();
     let (_tx2, rx2) = oneshot::channel::<i32>();
@@ -118,20 +125,23 @@ async fn one_ready() {
     assert_eq!(1, v);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
+#[cfg(feature = "full")]
 async fn select_streams() {
+    use tokio::sync::mpsc;
+
     let (tx1, mut rx1) = mpsc::unbounded_channel::<i32>();
     let (tx2, mut rx2) = mpsc::unbounded_channel::<i32>();
 
     tokio::spawn(async move {
         assert_ok!(tx2.send(1));
-        task::yield_now().await;
+        tokio::task::yield_now().await;
 
         assert_ok!(tx1.send(2));
-        task::yield_now().await;
+        tokio::task::yield_now().await;
 
         assert_ok!(tx2.send(3));
-        task::yield_now().await;
+        tokio::task::yield_now().await;
 
         drop((tx1, tx2));
     });
@@ -153,11 +163,11 @@ async fn select_streams() {
         }
     }
 
-    msgs.sort();
+    msgs.sort_unstable();
     assert_eq!(&msgs[..], &[1, 2, 3]);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn move_uncompleted_futures() {
     let (tx1, mut rx1) = oneshot::channel::<i32>();
     let (tx2, mut rx2) = oneshot::channel::<i32>();
@@ -183,7 +193,7 @@ async fn move_uncompleted_futures() {
     assert!(ran);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn nested() {
     let res = tokio::select! {
         x = async { 1 } => {
@@ -196,7 +206,7 @@ async fn nested() {
     assert_eq!(res, 3);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn struct_size() {
     use futures::future;
     use std::mem;
@@ -238,7 +248,7 @@ async fn struct_size() {
     assert!(mem::size_of_val(&fut) <= 48);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn mutable_borrowing_future_with_same_borrow_in_block() {
     let mut value = 234;
 
@@ -252,7 +262,7 @@ async fn mutable_borrowing_future_with_same_borrow_in_block() {
     assert!(value >= 234);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn mutable_borrowing_future_with_same_borrow_in_block_and_else() {
     let mut value = 234;
 
@@ -269,7 +279,7 @@ async fn mutable_borrowing_future_with_same_borrow_in_block_and_else() {
     assert!(value >= 234);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn future_panics_after_poll() {
     use tokio_test::task;
 
@@ -299,7 +309,7 @@ async fn future_panics_after_poll() {
     assert_eq!(1, res);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn disable_with_if() {
     use tokio_test::task;
 
@@ -321,7 +331,7 @@ async fn disable_with_if() {
     assert_ready!(f.poll());
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn join_with_select() {
     use tokio_test::task;
 
@@ -357,20 +367,35 @@ async fn join_with_select() {
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn use_future_in_if_condition() {
     use tokio::time::{self, Duration};
 
-    let mut delay = time::delay_for(Duration::from_millis(50));
-
     tokio::select! {
-        _ = &mut delay, if !delay.is_elapsed() => {
+        _ = time::sleep(Duration::from_millis(10)), if false => {
+            panic!("if condition ignored")
         }
-        _ = async { 1 } => {
+        _ = async { 1u32 } => {
         }
     }
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
+async fn use_future_in_if_condition_biased() {
+    use tokio::time::{self, Duration};
+
+    tokio::select! {
+        biased;
+        _ = time::sleep(Duration::from_millis(10)), if false => {
+            panic!("if condition ignored")
+        }
+        _ = async { 1u32 } => {
+        }
+    }
+}
+
+#[maybe_tokio_test]
 async fn many_branches() {
     let num = tokio::select! {
         x = async { 1 } => x,
@@ -441,7 +466,7 @@ async fn many_branches() {
     assert_eq!(1, num);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn never_branch_no_warnings() {
     let t = tokio::select! {
         _ = async_never() => 0,
@@ -458,8 +483,118 @@ async fn require_mutable(_: &mut i32) {}
 async fn async_noop() {}
 
 async fn async_never() -> ! {
-    use tokio::time::Duration;
-    loop {
-        tokio::time::delay_for(Duration::from_millis(10)).await;
+    futures::future::pending().await
+}
+
+// From https://github.com/tokio-rs/tokio/issues/2857
+#[maybe_tokio_test]
+async fn mut_on_left_hand_side() {
+    let v = async move {
+        let ok = async { 1 };
+        tokio::pin!(ok);
+        tokio::select! {
+            mut a = &mut ok => {
+                a += 1;
+                a
+            }
+        }
     }
+    .await;
+    assert_eq!(v, 2);
+}
+
+#[maybe_tokio_test]
+async fn biased_one_not_ready() {
+    let (_tx1, rx1) = oneshot::channel::<i32>();
+    let (tx2, rx2) = oneshot::channel::<i32>();
+    let (tx3, rx3) = oneshot::channel::<i32>();
+
+    tx2.send(2).unwrap();
+    tx3.send(3).unwrap();
+
+    let v = tokio::select! {
+        biased;
+
+        _ = rx1 => unreachable!(),
+        res = rx2 => {
+            assert_ok!(res)
+        },
+        _ = rx3 => {
+            panic!("This branch should never be activated because `rx2` should be polled before `rx3` due to `biased;`.")
+        }
+    };
+
+    assert_eq!(2, v);
+}
+
+#[maybe_tokio_test]
+#[cfg(feature = "full")]
+async fn biased_eventually_ready() {
+    use tokio::task::yield_now;
+
+    let one = async {};
+    let two = async { yield_now().await };
+    let three = async { yield_now().await };
+
+    let mut count = 0u8;
+
+    tokio::pin!(one, two, three);
+
+    loop {
+        tokio::select! {
+            biased;
+
+            _ = &mut two, if count < 2 => {
+                count += 1;
+                assert_eq!(count, 2);
+            }
+            _ = &mut three, if count < 3 => {
+                count += 1;
+                assert_eq!(count, 3);
+            }
+            _ = &mut one, if count < 1 => {
+                count += 1;
+                assert_eq!(count, 1);
+            }
+            else => break,
+        }
+    }
+
+    assert_eq!(count, 3);
+}
+
+// https://github.com/tokio-rs/tokio/issues/3830
+// https://github.com/rust-lang/rust-clippy/issues/7304
+#[warn(clippy::default_numeric_fallback)]
+pub async fn default_numeric_fallback() {
+    tokio::select! {
+        _ = async {} => (),
+        else => (),
+    }
+}
+
+// https://github.com/tokio-rs/tokio/issues/4182
+#[maybe_tokio_test]
+async fn mut_ref_patterns() {
+    tokio::select! {
+        Some(mut foo) = async { Some("1".to_string()) } => {
+            assert_eq!(foo, "1");
+            foo = "2".to_string();
+            assert_eq!(foo, "2");
+        },
+    };
+
+    tokio::select! {
+        Some(ref foo) = async { Some("1".to_string()) } => {
+            assert_eq!(*foo, "1");
+        },
+    };
+
+    tokio::select! {
+        Some(ref mut foo) = async { Some("1".to_string()) } => {
+            assert_eq!(*foo, "1");
+            *foo = "2".to_string();
+            assert_eq!(*foo, "2");
+        },
+    };
 }

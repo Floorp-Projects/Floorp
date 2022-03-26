@@ -1,15 +1,37 @@
 #![warn(rust_2018_idioms)]
-#![cfg(feature = "full")]
+#![cfg(feature = "sync")]
+
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::wasm_bindgen_test as test;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::wasm_bindgen_test as maybe_tokio_test;
+
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::test as maybe_tokio_test;
 
 use tokio::sync::oneshot;
+use tokio::sync::oneshot::error::TryRecvError;
 use tokio_test::*;
 
 use std::future::Future;
 use std::pin::Pin;
+use std::task::{Context, Poll};
 
 trait AssertSend: Send {}
 impl AssertSend for oneshot::Sender<i32> {}
 impl AssertSend for oneshot::Receiver<i32> {}
+
+trait SenderExt {
+    fn poll_closed(&mut self, cx: &mut Context<'_>) -> Poll<()>;
+}
+impl<T> SenderExt for oneshot::Sender<T> {
+    fn poll_closed(&mut self, cx: &mut Context<'_>) -> Poll<()> {
+        tokio::pin! {
+            let fut = self.closed();
+        }
+        fut.poll(cx)
+    }
+}
 
 #[test]
 fn send_recv() {
@@ -26,7 +48,7 @@ fn send_recv() {
     assert_eq!(val, 1);
 }
 
-#[tokio::test]
+#[maybe_tokio_test]
 async fn async_send_recv() {
     let (tx, rx) = oneshot::channel();
 
@@ -72,6 +94,7 @@ fn close_rx() {
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn async_rx_closed() {
     let (mut tx, rx) = oneshot::channel::<()>();
 
@@ -156,6 +179,7 @@ fn explicit_close_try_recv() {
 
 #[test]
 #[should_panic]
+#[cfg(not(target_arch = "wasm32"))] // wasm currently doesn't support unwinding
 fn close_try_recv_poll() {
     let (_tx, rx) = oneshot::channel::<i32>();
     let mut rx = task::spawn(rx);
@@ -165,6 +189,27 @@ fn close_try_recv_poll() {
     assert_err!(rx.try_recv());
 
     let _ = rx.poll();
+}
+
+#[test]
+fn close_after_recv() {
+    let (tx, mut rx) = oneshot::channel::<i32>();
+
+    tx.send(17).unwrap();
+
+    assert_eq!(17, rx.try_recv().unwrap());
+    rx.close();
+}
+
+#[test]
+fn try_recv_after_completion() {
+    let (tx, mut rx) = oneshot::channel::<i32>();
+
+    tx.send(17).unwrap();
+
+    assert_eq!(17, rx.try_recv().unwrap());
+    assert_eq!(Err(TryRecvError::Closed), rx.try_recv());
+    rx.close();
 }
 
 #[test]

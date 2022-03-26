@@ -10,7 +10,7 @@ use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub(super) struct Sender {
-    tx: Arc<oneshot::Sender<()>>,
+    _tx: Arc<oneshot::Sender<()>>,
 }
 
 #[derive(Debug)]
@@ -20,7 +20,7 @@ pub(super) struct Receiver {
 
 pub(super) fn channel() -> (Sender, Receiver) {
     let (tx, rx) = oneshot::channel();
-    let tx = Sender { tx: Arc::new(tx) };
+    let tx = Sender { _tx: Arc::new(tx) };
     let rx = Receiver { rx };
 
     (tx, rx)
@@ -38,7 +38,7 @@ impl Receiver {
         use crate::runtime::enter::try_enter;
 
         if timeout == Some(Duration::from_nanos(0)) {
-            return true;
+            return false;
         }
 
         let mut e = match try_enter(false) {

@@ -57,6 +57,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
   using APZScrollAnimationType = mozilla::APZScrollAnimationType;
   using Element = mozilla::dom::Element;
+  using AnimationState = nsIScrollableFrame::AnimationState;
 
   class AsyncScroll;
   class AsyncSmoothMSDScroll;
@@ -507,8 +508,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
 
   bool IsLastScrollUpdateAnimating() const;
-  using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
-  bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
+  mozilla::EnumSet<AnimationState> ScrollAnimationState() const;
 
   void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
                                const APZScrollGeneration& aGenerationOnApz,
@@ -1105,8 +1105,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
   ScrollOrigin LastScrollOrigin() final { return mHelper.LastScrollOrigin(); }
-  bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
-    return mHelper.IsScrollAnimating(aIncludeApz);
+  using AnimationState = nsIScrollableFrame::AnimationState;
+  mozilla::EnumSet<AnimationState> ScrollAnimationState() const final {
+    return mHelper.ScrollAnimationState();
   }
   mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
@@ -1569,8 +1570,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
   ScrollOrigin LastScrollOrigin() final { return mHelper.LastScrollOrigin(); }
-  bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
-    return mHelper.IsScrollAnimating(aIncludeApz);
+  using AnimationState = nsIScrollableFrame::AnimationState;
+  mozilla::EnumSet<AnimationState> ScrollAnimationState() const final {
+    return mHelper.ScrollAnimationState();
   }
   mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();

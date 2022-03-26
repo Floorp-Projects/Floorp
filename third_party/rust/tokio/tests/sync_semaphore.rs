@@ -1,4 +1,7 @@
-#![cfg(feature = "full")]
+#![cfg(feature = "sync")]
+
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_test::wasm_bindgen_test as test;
 
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -23,6 +26,7 @@ fn try_acquire() {
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn acquire() {
     let sem = Arc::new(Semaphore::new(1));
     let p1 = sem.try_acquire().unwrap();
@@ -35,6 +39,7 @@ async fn acquire() {
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn add_permits() {
     let sem = Arc::new(Semaphore::new(0));
     let sem_clone = sem.clone();
@@ -59,6 +64,7 @@ fn forget() {
 }
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn stresstest() {
     let sem = Arc::new(Semaphore::new(5));
     let mut join_handles = Vec::new();
@@ -78,4 +84,19 @@ async fn stresstest() {
     let _p4 = sem.try_acquire().unwrap();
     let _p5 = sem.try_acquire().unwrap();
     assert!(sem.try_acquire().is_err());
+}
+
+#[test]
+fn add_max_amount_permits() {
+    let s = tokio::sync::Semaphore::new(0);
+    s.add_permits(usize::MAX >> 3);
+    assert_eq!(s.available_permits(), usize::MAX >> 3);
+}
+
+#[cfg(not(target_arch = "wasm32"))] // wasm currently doesn't support unwinding
+#[test]
+#[should_panic]
+fn add_more_than_max_amount_permits() {
+    let s = tokio::sync::Semaphore::new(1);
+    s.add_permits(usize::MAX >> 3);
 }

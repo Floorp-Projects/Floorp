@@ -1,4 +1,4 @@
-//! Unix handling of child processes
+//! Unix handling of child processes.
 //!
 //! Right now the only "fancy" thing about this is how we implement the
 //! `Future` implementation on `Child` to get the exit status. Unix offers
@@ -21,7 +21,9 @@
 //! processes in general aren't scalable (e.g. millions) so it shouldn't be that
 //! bad in theory...
 
-mod orphan;
+pub(crate) mod driver;
+
+pub(crate) mod orphan;
 use orphan::{OrphanQueue, OrphanQueueImpl, Wait};
 
 mod reap;
@@ -30,21 +32,23 @@ use reap::Reaper;
 use crate::io::PollEvented;
 use crate::process::kill::Kill;
 use crate::process::SpawnedChild;
+use crate::signal::unix::driver::Handle as SignalHandle;
 use crate::signal::unix::{signal, Signal, SignalKind};
 
-use mio::event::Evented;
-use mio::unix::{EventedFd, UnixReady};
-use mio::{Poll as MioPoll, PollOpt, Ready, Token};
+use mio::event::Source;
+use mio::unix::SourceFd;
+use once_cell::sync::Lazy;
 use std::fmt;
+use std::fs::File;
 use std::future::Future;
 use std::io;
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use std::pin::Pin;
-use std::process::ExitStatus;
+use std::process::{Child as StdChild, ExitStatus, Stdio};
 use std::task::Context;
 use std::task::Poll;
 
-impl Wait for std::process::Child {
+impl Wait for StdChild {
     fn id(&self) -> u32 {
         self.id()
     }
@@ -54,17 +58,15 @@ impl Wait for std::process::Child {
     }
 }
 
-impl Kill for std::process::Child {
+impl Kill for StdChild {
     fn kill(&mut self) -> io::Result<()> {
         self.kill()
     }
 }
 
-lazy_static::lazy_static! {
-    static ref ORPHAN_QUEUE: OrphanQueueImpl<std::process::Child> = OrphanQueueImpl::new();
-}
+static ORPHAN_QUEUE: Lazy<OrphanQueueImpl<StdChild>> = Lazy::new(OrphanQueueImpl::new);
 
-struct GlobalOrphanQueue;
+pub(crate) struct GlobalOrphanQueue;
 
 impl fmt::Debug for GlobalOrphanQueue {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -72,19 +74,21 @@ impl fmt::Debug for GlobalOrphanQueue {
     }
 }
 
-impl OrphanQueue<std::process::Child> for GlobalOrphanQueue {
-    fn push_orphan(&self, orphan: std::process::Child) {
-        ORPHAN_QUEUE.push_orphan(orphan)
+impl GlobalOrphanQueue {
+    fn reap_orphans(handle: &SignalHandle) {
+        ORPHAN_QUEUE.reap_orphans(handle)
     }
+}
 
-    fn reap_orphans(&self) {
-        ORPHAN_QUEUE.reap_orphans()
+impl OrphanQueue<StdChild> for GlobalOrphanQueue {
+    fn push_orphan(&self, orphan: StdChild) {
+        ORPHAN_QUEUE.push_orphan(orphan)
     }
 }
 
 #[must_use = "futures do nothing unless polled"]
 pub(crate) struct Child {
-    inner: Reaper<std::process::Child, GlobalOrphanQueue, Signal>,
+    inner: Reaper<StdChild, GlobalOrphanQueue, Signal>,
 }
 
 impl fmt::Debug for Child {
@@ -97,9 +101,9 @@ impl fmt::Debug for Child {
 
 pub(crate) fn spawn_child(cmd: &mut std::process::Command) -> io::Result<SpawnedChild> {
     let mut child = cmd.spawn()?;
-    let stdin = stdio(child.stdin.take())?;
-    let stdout = stdio(child.stdout.take())?;
-    let stderr = stdio(child.stderr.take())?;
+    let stdin = child.stdin.take().map(stdio).transpose()?;
+    let stdout = child.stdout.take().map(stdio).transpose()?;
+    let stderr = child.stderr.take().map(stdio).transpose()?;
 
     let signal = signal(SignalKind::child())?;
 
@@ -116,6 +120,10 @@ pub(crate) fn spawn_child(cmd: &mut std::process::Command) -> io::Result<Spawned
 impl Child {
     pub(crate) fn id(&self) -> u32 {
         self.inner.id()
+    }
+
+    pub(crate) fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
+        self.inner.inner_mut().try_wait()
     }
 }
 
@@ -134,94 +142,109 @@ impl Future for Child {
 }
 
 #[derive(Debug)]
-pub(crate) struct Fd<T> {
-    inner: T,
+pub(crate) struct Pipe {
+    // Actually a pipe and not a File. However, we are reusing `File` to get
+    // close on drop. This is a similar trick as `mio`.
+    fd: File,
 }
 
-impl<T> io::Read for Fd<T>
-where
-    T: io::Read,
-{
-    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
-        self.inner.read(bytes)
+impl<T: IntoRawFd> From<T> for Pipe {
+    fn from(fd: T) -> Self {
+        let fd = unsafe { File::from_raw_fd(fd.into_raw_fd()) };
+        Self { fd }
     }
 }
 
-impl<T> io::Write for Fd<T>
-where
-    T: io::Write,
-{
+impl<'a> io::Read for &'a Pipe {
+    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+        (&self.fd).read(bytes)
+    }
+}
+
+impl<'a> io::Write for &'a Pipe {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        self.inner.write(bytes)
+        (&self.fd).write(bytes)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
+        (&self.fd).flush()
     }
 }
 
-impl<T> AsRawFd for Fd<T>
-where
-    T: AsRawFd,
-{
+impl AsRawFd for Pipe {
     fn as_raw_fd(&self) -> RawFd {
-        self.inner.as_raw_fd()
+        self.fd.as_raw_fd()
     }
 }
 
-impl<T> Evented for Fd<T>
-where
-    T: AsRawFd,
-{
+pub(crate) fn convert_to_stdio(io: PollEvented<Pipe>) -> io::Result<Stdio> {
+    let mut fd = io.into_inner()?.fd;
+
+    // Ensure that the fd to be inherited is set to *blocking* mode, as this
+    // is the default that virtually all programs expect to have. Those
+    // programs that know how to work with nonblocking stdio will know how to
+    // change it to nonblocking mode.
+    set_nonblocking(&mut fd, false)?;
+
+    Ok(Stdio::from(fd))
+}
+
+impl Source for Pipe {
     fn register(
-        &self,
-        poll: &MioPoll,
-        token: Token,
-        interest: Ready,
-        opts: PollOpt,
+        &mut self,
+        registry: &mio::Registry,
+        token: mio::Token,
+        interest: mio::Interest,
     ) -> io::Result<()> {
-        EventedFd(&self.as_raw_fd()).register(poll, token, interest | UnixReady::hup(), opts)
+        SourceFd(&self.as_raw_fd()).register(registry, token, interest)
     }
 
     fn reregister(
-        &self,
-        poll: &MioPoll,
-        token: Token,
-        interest: Ready,
-        opts: PollOpt,
+        &mut self,
+        registry: &mio::Registry,
+        token: mio::Token,
+        interest: mio::Interest,
     ) -> io::Result<()> {
-        EventedFd(&self.as_raw_fd()).reregister(poll, token, interest | UnixReady::hup(), opts)
+        SourceFd(&self.as_raw_fd()).reregister(registry, token, interest)
     }
 
-    fn deregister(&self, poll: &MioPoll) -> io::Result<()> {
-        EventedFd(&self.as_raw_fd()).deregister(poll)
+    fn deregister(&mut self, registry: &mio::Registry) -> io::Result<()> {
+        SourceFd(&self.as_raw_fd()).deregister(registry)
     }
 }
 
-pub(crate) type ChildStdin = PollEvented<Fd<std::process::ChildStdin>>;
-pub(crate) type ChildStdout = PollEvented<Fd<std::process::ChildStdout>>;
-pub(crate) type ChildStderr = PollEvented<Fd<std::process::ChildStderr>>;
+pub(crate) type ChildStdio = PollEvented<Pipe>;
 
-fn stdio<T>(option: Option<T>) -> io::Result<Option<PollEvented<Fd<T>>>>
-where
-    T: AsRawFd,
-{
-    let io = match option {
-        Some(io) => io,
-        None => return Ok(None),
-    };
-
-    // Set the fd to nonblocking before we pass it to the event loop
+fn set_nonblocking<T: AsRawFd>(fd: &mut T, nonblocking: bool) -> io::Result<()> {
     unsafe {
-        let fd = io.as_raw_fd();
-        let r = libc::fcntl(fd, libc::F_GETFL);
-        if r == -1 {
+        let fd = fd.as_raw_fd();
+        let previous = libc::fcntl(fd, libc::F_GETFL);
+        if previous == -1 {
             return Err(io::Error::last_os_error());
         }
-        let r = libc::fcntl(fd, libc::F_SETFL, r | libc::O_NONBLOCK);
+
+        let new = if nonblocking {
+            previous | libc::O_NONBLOCK
+        } else {
+            previous & !libc::O_NONBLOCK
+        };
+
+        let r = libc::fcntl(fd, libc::F_SETFL, new);
         if r == -1 {
             return Err(io::Error::last_os_error());
         }
     }
-    Ok(Some(PollEvented::new(Fd { inner: io })?))
+
+    Ok(())
+}
+
+pub(super) fn stdio<T>(io: T) -> io::Result<PollEvented<Pipe>>
+where
+    T: IntoRawFd,
+{
+    // Set the fd to nonblocking before we pass it to the event loop
+    let mut pipe = Pipe::from(io);
+    set_nonblocking(&mut pipe, true)?;
+
+    PollEvented::new(pipe)
 }

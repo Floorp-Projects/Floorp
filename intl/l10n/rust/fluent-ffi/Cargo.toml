@@ -13,6 +13,6 @@ nsstring = { path = "../../../../xpcom/rust/nsstring" }
 cstr = "0.2"
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
-l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs.git", rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c" }
+l10nregistry = { path = "../l10nregistry-rs" }
 fluent-fallback = "0.6.0"
 futures = "0.3"

@@ -43,7 +43,7 @@ winapi = { version = "0.3.6", features = ["combaseapi", "memoryapi", "objbase"] 
 ashmem = "0.1"
 
 [dependencies.error-chain]
-version = "0.11.0"
+version = "0.12.0"
 default-features = false
 
 [build-dependencies]

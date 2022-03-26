@@ -16,8 +16,58 @@ fn notify_one() {
             });
         });
 
-        tx.notify();
+        tx.notify_one();
         th.join().unwrap();
+    });
+}
+
+#[test]
+fn notify_waiters() {
+    loom::model(|| {
+        let notify = Arc::new(Notify::new());
+        let tx = notify.clone();
+        let notified1 = notify.notified();
+        let notified2 = notify.notified();
+
+        let th = thread::spawn(move || {
+            tx.notify_waiters();
+        });
+
+        block_on(async {
+            notified1.await;
+            notified2.await;
+        });
+
+        th.join().unwrap();
+    });
+}
+
+#[test]
+fn notify_waiters_and_one() {
+    loom::model(|| {
+        let notify = Arc::new(Notify::new());
+        let tx1 = notify.clone();
+        let tx2 = notify.clone();
+
+        let th1 = thread::spawn(move || {
+            tx1.notify_waiters();
+        });
+
+        let th2 = thread::spawn(move || {
+            tx2.notify_one();
+        });
+
+        let th3 = thread::spawn(move || {
+            let notified = notify.notified();
+
+            block_on(async {
+                notified.await;
+            });
+        });
+
+        th1.join().unwrap();
+        th2.join().unwrap();
+        th3.join().unwrap();
     });
 }
 
@@ -34,12 +84,12 @@ fn notify_multi() {
             ths.push(thread::spawn(move || {
                 block_on(async {
                     notify.notified().await;
-                    notify.notify();
+                    notify.notify_one();
                 })
             }));
         }
 
-        notify.notify();
+        notify.notify_one();
 
         for th in ths.drain(..) {
             th.join().unwrap();
@@ -67,7 +117,7 @@ fn notify_drop() {
 
             block_on(poll_fn(|cx| {
                 if recv.as_mut().poll(cx).is_ready() {
-                    rx1.notify();
+                    rx1.notify_one();
                 }
                 Poll::Ready(())
             }));
@@ -77,12 +127,12 @@ fn notify_drop() {
             block_on(async {
                 rx2.notified().await;
                 // Trigger second notification
-                rx2.notify();
+                rx2.notify_one();
                 rx2.notified().await;
             });
         });
 
-        notify.notify();
+        notify.notify_one();
 
         th1.join().unwrap();
         th2.join().unwrap();

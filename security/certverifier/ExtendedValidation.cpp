@@ -1134,6 +1134,17 @@ static const struct EVInfo kEVInfos[] = {
     "c3MgR29sZCkgRsWRdGFuw7pzw610dsOhbnk=",
     "SUEs5AAQ",
   },
+  {
+    // CN=D-TRUST EV Root CA 1 2020,O=D-Trust GmbH,C=DE
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x08, 0x17, 0x0D, 0x1A, 0xA3, 0x64, 0x53, 0x90, 0x1A, 0x2F, 0x95,
+      0x92, 0x45, 0xE3, 0x47, 0xDB, 0x0C, 0x8D, 0x37, 0xAB, 0xAA, 0xBC,
+      0x56, 0xB8, 0x1A, 0xA1, 0x00, 0xDC, 0x95, 0x89, 0x70, 0xDB },
+    "MEgxCzAJBgNVBAYTAkRFMRUwEwYDVQQKEwxELVRydXN0IEdtYkgxIjAgBgNVBAMT"
+    "GUQtVFJVU1QgRVYgUm9vdCBDQSAxIDIwMjA=",
+    "XwJB13qHfEwDo6yWjfv/0A==",
+  },
     // clang-format on
 };
 

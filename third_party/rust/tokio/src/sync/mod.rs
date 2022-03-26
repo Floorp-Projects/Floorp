@@ -20,7 +20,7 @@
 //! few flavors of channels provided by Tokio. Each channel flavor supports
 //! different message passing patterns. When a channel supports multiple
 //! producers, many separate tasks may **send** messages. When a channel
-//! supports muliple consumers, many different separate tasks may **receive**
+//! supports multiple consumers, many different separate tasks may **receive**
 //! messages.
 //!
 //! Tokio provides many different channel flavors as different message passing
@@ -106,7 +106,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let (mut tx, mut rx) = mpsc::channel(100);
+//!     let (tx, mut rx) = mpsc::channel(100);
 //!
 //!     tokio::spawn(async move {
 //!         for i in 0..10 {
@@ -150,7 +150,7 @@
 //!     for _ in 0..10 {
 //!         // Each task needs its own `tx` handle. This is done by cloning the
 //!         // original handle.
-//!         let mut tx = tx.clone();
+//!         let tx = tx.clone();
 //!
 //!         tokio::spawn(async move {
 //!             tx.send(&b"data to write"[..]).await.unwrap();
@@ -213,7 +213,7 @@
 //!
 //!     // Spawn tasks that will send the increment command.
 //!     for _ in 0..10 {
-//!         let mut cmd_tx = cmd_tx.clone();
+//!         let cmd_tx = cmd_tx.clone();
 //!
 //!         join_handles.push(tokio::spawn(async move {
 //!             let (resp_tx, resp_rx) = oneshot::channel();
@@ -322,7 +322,7 @@
 //!     tokio::spawn(async move {
 //!         loop {
 //!             // Wait 10 seconds between checks
-//!             time::delay_for(Duration::from_secs(10)).await;
+//!             time::sleep(Duration::from_secs(10)).await;
 //!
 //!             // Load the configuration file
 //!             let new_config = Config::load_from_file().await.unwrap();
@@ -330,7 +330,7 @@
 //!             // If the configuration changed, send the new config value
 //!             // on the watch channel.
 //!             if new_config != config {
-//!                 tx.broadcast(new_config.clone()).unwrap();
+//!                 tx.send(new_config.clone()).unwrap();
 //!                 config = new_config;
 //!             }
 //!         }
@@ -355,17 +355,16 @@
 //!             let op = my_async_operation();
 //!             tokio::pin!(op);
 //!
-//!             // Receive the **initial** configuration value. As this is the
-//!             // first time the config is received from the watch, it will
-//!             // always complete immediatedly.
-//!             let mut conf = rx.recv().await.unwrap();
+//!             // Get the initial config value
+//!             let mut conf = rx.borrow().clone();
 //!
 //!             let mut op_start = Instant::now();
-//!             let mut delay = time::delay_until(op_start + conf.timeout);
+//!             let sleep = time::sleep_until(op_start + conf.timeout);
+//!             tokio::pin!(sleep);
 //!
 //!             loop {
 //!                 tokio::select! {
-//!                     _ = &mut delay => {
+//!                     _ = &mut sleep => {
 //!                         // The operation elapsed. Restart it
 //!                         op.set(my_async_operation());
 //!
@@ -373,14 +372,14 @@
 //!                         op_start = Instant::now();
 //!
 //!                         // Restart the timeout
-//!                         delay = time::delay_until(op_start + conf.timeout);
+//!                         sleep.set(time::sleep_until(op_start + conf.timeout));
 //!                     }
-//!                     new_conf = rx.recv() => {
-//!                         conf = new_conf.unwrap();
+//!                     _ = rx.changed() => {
+//!                         conf = rx.borrow().clone();
 //!
 //!                         // The configuration has been updated. Update the
-//!                         // `delay` using the new `timeout` value.
-//!                         delay.reset(op_start + conf.timeout);
+//!                         // `sleep` using the new `timeout` value.
+//!                         sleep.as_mut().reset(op_start + conf.timeout);
 //!                     }
 //!                     _ = &mut op => {
 //!                         // The operation completed!
@@ -406,7 +405,7 @@
 //!
 //! The remaining synchronization primitives focus on synchronizing state.
 //! These are asynchronous equivalents to versions provided by `std`. They
-//! operate in a similar way as their `std` counterparts parts but will wait
+//! operate in a similar way as their `std` counterparts but will wait
 //! asynchronously instead of blocking the thread.
 //!
 //! * [`Barrier`](Barrier) Ensures multiple tasks will wait for each other to
@@ -429,56 +428,70 @@
 //!   bounding of any kind.
 
 cfg_sync! {
+    /// Named future types.
+    pub mod futures {
+        pub use super::notify::Notified;
+    }
+
     mod barrier;
     pub use barrier::{Barrier, BarrierWaitResult};
 
     pub mod broadcast;
 
-    cfg_unstable! {
-        mod cancellation_token;
-        pub use cancellation_token::{CancellationToken, WaitForCancellationFuture};
-    }
-
     pub mod mpsc;
 
     mod mutex;
-    pub use mutex::{Mutex, MutexGuard, TryLockError, OwnedMutexGuard};
+    pub use mutex::{Mutex, MutexGuard, TryLockError, OwnedMutexGuard, MappedMutexGuard};
 
-    mod notify;
+    pub(crate) mod notify;
     pub use notify::Notify;
 
     pub mod oneshot;
 
     pub(crate) mod batch_semaphore;
-    pub(crate) mod semaphore_ll;
+    pub use batch_semaphore::{AcquireError, TryAcquireError};
+
     mod semaphore;
     pub use semaphore::{Semaphore, SemaphorePermit, OwnedSemaphorePermit};
 
     mod rwlock;
-    pub use rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+    pub use rwlock::RwLock;
+    pub use rwlock::owned_read_guard::OwnedRwLockReadGuard;
+    pub use rwlock::owned_write_guard::OwnedRwLockWriteGuard;
+    pub use rwlock::owned_write_guard_mapped::OwnedRwLockMappedWriteGuard;
+    pub use rwlock::read_guard::RwLockReadGuard;
+    pub use rwlock::write_guard::RwLockWriteGuard;
+    pub use rwlock::write_guard_mapped::RwLockMappedWriteGuard;
 
     mod task;
     pub(crate) use task::AtomicWaker;
+
+    mod once_cell;
+    pub use self::once_cell::{OnceCell, SetError};
 
     pub mod watch;
 }
 
 cfg_not_sync! {
+    cfg_fs! {
+        pub(crate) mod batch_semaphore;
+        mod mutex;
+        pub(crate) use mutex::Mutex;
+    }
+
+    #[cfg(any(feature = "rt", feature = "signal", all(unix, feature = "process")))]
+    pub(crate) mod notify;
+
+    #[cfg(any(feature = "rt", all(windows, feature = "process")))]
+    pub(crate) mod oneshot;
+
     cfg_atomic_waker_impl! {
         mod task;
         pub(crate) use task::AtomicWaker;
     }
 
-    #[cfg(any(
-            feature = "rt-core",
-            feature = "process",
-            feature = "signal"))]
-    pub(crate) mod oneshot;
-
-    cfg_signal! {
-        pub(crate) mod mpsc;
-        pub(crate) mod semaphore_ll;
-    }
+    #[cfg(any(feature = "signal", all(unix, feature = "process")))]
+    pub(crate) mod watch;
 }
 
 /// Unit tests

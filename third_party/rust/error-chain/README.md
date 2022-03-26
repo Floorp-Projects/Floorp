@@ -1,8 +1,8 @@
 # error-chain - Consistent error handling for Rust
 
-[![Build Status](https://api.travis-ci.org/rust-lang-nursery/error-chain.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/error-chain)
+[![Build Status](https://travis-ci.com/rust-lang-nursery/error-chain.svg?branch=master)](https://travis-ci.com/rust-lang-nursery/error-chain)
 [![Latest Version](https://img.shields.io/crates/v/error-chain.svg)](https://crates.io/crates/error-chain)
-[![License](https://img.shields.io/github/license/rust-lang-nursery/error-chain.svg)](https://github.com/rust-lang-nursery/error-chain)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-green.svg)](https://github.com/rust-lang-nursery/error-chain)
 
 `error-chain` makes it easy to take full advantage of Rust's error
 handling features without the overhead of maintaining boilerplate

@@ -2,7 +2,6 @@
 #![cfg(feature = "full")]
 
 use tokio::net::TcpListener;
-use tokio::prelude::*;
 use tokio_test::assert_ok;
 
 use std::io::prelude::*;
@@ -13,7 +12,7 @@ use std::thread;
 async fn echo_server() {
     const N: usize = 1024;
 
-    let mut srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
+    let srv = assert_ok!(TcpListener::bind("127.0.0.1:0").await);
     let addr = assert_ok!(srv.local_addr());
 
     let msg = "foo bar baz";
@@ -41,7 +40,7 @@ async fn echo_server() {
     let (mut a, _) = assert_ok!(srv.accept().await);
     let (mut b, _) = assert_ok!(srv.accept().await);
 
-    let n = assert_ok!(io::copy(&mut a, &mut b).await);
+    let n = assert_ok!(tokio::io::copy(&mut a, &mut b).await);
 
     let (expected, t2) = t.join().unwrap();
     let actual = t2.join().unwrap();
