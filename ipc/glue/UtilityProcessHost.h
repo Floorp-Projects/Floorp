@@ -72,9 +72,9 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   // Return the actor for the top-level actor of the process. If the process
   // has not connected yet, this returns null.
-  UtilityProcessParent* GetActor() const {
+  RefPtr<UtilityProcessParent> GetActor() const {
     MOZ_ASSERT(NS_IsMainThread());
-    return mUtilityProcessParent.get();
+    return mUtilityProcessParent;
   }
 
   bool IsConnected() const {
