@@ -36,10 +36,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 
-  // Notify the UtilityProcessManager that a top-level PUtility protocol has
-  // been terminated. This may be called from any thread.
-  void NotifyRemoteActorDestroyed();
-
   // Returns the platform pid for the Utility process.
   Maybe<base::ProcessId> ProcessPid();
 
@@ -49,9 +45,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   // Returns access to the PUtility protocol if a Utility process is present.
   UtilityProcessParent* GetProcessParent() { return mProcessParent; }
-
-  // Returns whether or not a Utility process was ever launched.
-  bool AttemptedProcess() const { return mNumProcessAttempts > 0; }
 
   // Returns the Utility Process
   UtilityProcessHost* Process() { return mProcess; }
