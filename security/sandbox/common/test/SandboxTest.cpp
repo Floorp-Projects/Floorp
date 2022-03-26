@@ -107,9 +107,41 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
 #endif
 
   for (const auto& processTypeName : aProcessesList) {
-    GeckoProcessType type = GeckoProcessStringToType(processTypeName);
-    if (type == GeckoProcessType::GeckoProcessType_Invalid) {
-      return NS_ERROR_ILLEGAL_VALUE;
+    SandboxingKind sandboxingKind = SandboxingKind::COUNT;
+    GeckoProcessType type = GeckoProcessType::GeckoProcessType_Invalid;
+    if (processTypeName.Find(":") != kNotFound) {
+      int32_t pos = processTypeName.Find(":");
+      nsCString processType = nsCString(Substring(processTypeName, 0, pos));
+      nsCString sandboxKindStr = nsCString(
+          Substring(processTypeName, pos + 1, processTypeName.Length()));
+
+      nsresult err;
+      uint64_t sbVal = (uint64_t)(sandboxKindStr.ToDouble(&err));
+      if (NS_FAILED(err)) {
+        NS_WARNING("Unable to get SandboxingKind");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      if (sbVal >= SandboxingKind::COUNT) {
+        NS_WARNING("Invalid sandboxing kind");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      if (!processType.Equals(
+              XRE_GeckoProcessTypeToString(GeckoProcessType_Utility))) {
+        NS_WARNING("Expected utility process type");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      sandboxingKind = (SandboxingKind)sbVal;
+      type = GeckoProcessType_Utility;
+    } else {
+      type = GeckoProcessStringToType(processTypeName);
+
+      if (type == GeckoProcessType::GeckoProcessType_Invalid) {
+        NS_WARNING("Invalid process type");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
     }
 
     RefPtr<ProcessPromise::Private> processPromise =
@@ -223,7 +255,7 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
       case GeckoProcessType_Utility: {
         RefPtr<UtilityProcessManager> utilityProc =
             UtilityProcessManager::GetSingleton();
-        utilityProc->LaunchProcess(SandboxingKind::GENERIC_UTILITY)
+        utilityProc->LaunchProcess(sandboxingKind)
             ->Then(
                 GetMainThreadSerialEventTarget(), __func__,
                 [processPromise, utilityProc]() {
@@ -253,8 +285,8 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
     RefPtr<ProcessPromise> aPromise(processPromise);
     aPromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [self, type](SandboxTestingParent* aValue) {
-          self->mSandboxTestingParents[type] = std::move(aValue);
+        [self](SandboxTestingParent* aValue) {
+          self->mSandboxTestingParents.AppendElement(aValue);
           return NS_OK;
         },
         [](nsresult aError) {
@@ -298,6 +330,9 @@ SandboxTest::FinishTests() {
   for (SandboxTestingParent* stp : mSandboxTestingParents) {
     SandboxTestingParent::Destroy(stp);
   }
+
+  // Make sure there is no leftover for test --verify to run without failure
+  mSandboxTestingParents.Clear();
 
 #if defined(XP_WIN)
   nsCOMPtr<nsIFile> testFile;
