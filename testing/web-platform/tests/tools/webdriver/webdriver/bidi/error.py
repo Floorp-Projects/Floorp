@@ -36,10 +36,6 @@ class InvalidArgumentException(BidiException):
 class NoSuchFrameException(BidiException):
     error_code = "no such frame"
 
-class NoSuchFrameException(BidiException):
-    error_code = "no such frame"
-
-
 class UnknownCommandException(BidiException):
     error_code = "unknown command"
 

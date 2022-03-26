@@ -1424,7 +1424,7 @@ function testAnimationSamples(animation, idlName, testSamples) {
   const target = animation.effect.target;
   for (const testSample of testSamples) {
     animation.currentTime = testSample.time;
-    assert_equals(getComputedStyle(target, pseudoType)[idlName].toLowerCase(),
+    assert_equals(getComputedStyle(target, pseudoType)[idlName],
                   testSample.expected,
                   `The value should be ${testSample.expected}` +
                   ` at ${testSample.time}ms`);
