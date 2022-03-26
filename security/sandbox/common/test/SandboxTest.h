@@ -11,6 +11,7 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/MozPromise.h"
 #include "GMPService.h"
+#include "nsTArray.h"
 
 #if !defined(MOZ_DEBUG) || !defined(ENABLE_TESTS)
 #  error "This file should not be used outside of debug with tests"
@@ -32,9 +33,7 @@ class SandboxTest : public mozISandboxTest {
 
  private:
   virtual ~SandboxTest() = default;
-  static constexpr size_t NumProcessTypes =
-      static_cast<size_t>(GeckoProcessType_End);
-  SandboxTestingParent* mSandboxTestingParents[NumProcessTypes];
+  nsTArray<SandboxTestingParent*> mSandboxTestingParents;
   RefPtr<gmp::GMPContentParent::CloseBlocker> mGMPContentParentWrapper;
 #if defined(XP_WIN)
   bool mChromeDirExisted = false;
