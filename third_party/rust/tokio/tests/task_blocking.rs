@@ -7,6 +7,10 @@ use tokio_test::assert_ok;
 use std::thread;
 use std::time::Duration;
 
+mod support {
+    pub(crate) mod mpsc_stream;
+}
+
 #[tokio::test]
 async fn basic_blocking() {
     // Run a few times
@@ -28,7 +32,7 @@ async fn basic_blocking() {
     }
 }
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn block_in_blocking() {
     // Run a few times
     for _ in 0..100 {
@@ -51,7 +55,7 @@ async fn block_in_blocking() {
     }
 }
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn block_in_block() {
     // Run a few times
     for _ in 0..100 {
@@ -71,7 +75,7 @@ async fn block_in_block() {
     }
 }
 
-#[tokio::test(basic_scheduler)]
+#[tokio::test(flavor = "current_thread")]
 #[should_panic]
 async fn no_block_in_basic_scheduler() {
     task::block_in_place(|| {});
@@ -79,10 +83,7 @@ async fn no_block_in_basic_scheduler() {
 
 #[test]
 fn yes_block_in_threaded_block_on() {
-    let mut rt = runtime::Builder::new()
-        .threaded_scheduler()
-        .build()
-        .unwrap();
+    let rt = runtime::Runtime::new().unwrap();
     rt.block_on(async {
         task::block_in_place(|| {});
     });
@@ -91,7 +92,7 @@ fn yes_block_in_threaded_block_on() {
 #[test]
 #[should_panic]
 fn no_block_in_basic_block_on() {
-    let mut rt = runtime::Builder::new().basic_scheduler().build().unwrap();
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async {
         task::block_in_place(|| {});
     });
@@ -99,15 +100,11 @@ fn no_block_in_basic_block_on() {
 
 #[test]
 fn can_enter_basic_rt_from_within_block_in_place() {
-    let mut outer = tokio::runtime::Builder::new()
-        .threaded_scheduler()
-        .build()
-        .unwrap();
+    let outer = tokio::runtime::Runtime::new().unwrap();
 
     outer.block_on(async {
         tokio::task::block_in_place(|| {
-            let mut inner = tokio::runtime::Builder::new()
-                .basic_scheduler()
+            let inner = tokio::runtime::Builder::new_current_thread()
                 .build()
                 .unwrap();
 
@@ -120,15 +117,11 @@ fn can_enter_basic_rt_from_within_block_in_place() {
 fn useful_panic_message_when_dropping_rt_in_rt() {
     use std::panic::{catch_unwind, AssertUnwindSafe};
 
-    let mut outer = tokio::runtime::Builder::new()
-        .threaded_scheduler()
-        .build()
-        .unwrap();
+    let outer = tokio::runtime::Runtime::new().unwrap();
 
     let result = catch_unwind(AssertUnwindSafe(|| {
         outer.block_on(async {
-            let _ = tokio::runtime::Builder::new()
-                .basic_scheduler()
+            let _ = tokio::runtime::Builder::new_current_thread()
                 .build()
                 .unwrap();
         });
@@ -139,7 +132,7 @@ fn useful_panic_message_when_dropping_rt_in_rt() {
     let err: &'static str = err.downcast_ref::<&'static str>().unwrap();
 
     assert!(
-        err.find("Cannot drop a runtime").is_some(),
+        err.contains("Cannot drop a runtime"),
         "Wrong panic message: {:?}",
         err
     );
@@ -147,14 +140,10 @@ fn useful_panic_message_when_dropping_rt_in_rt() {
 
 #[test]
 fn can_shutdown_with_zero_timeout_in_runtime() {
-    let mut outer = tokio::runtime::Builder::new()
-        .threaded_scheduler()
-        .build()
-        .unwrap();
+    let outer = tokio::runtime::Runtime::new().unwrap();
 
     outer.block_on(async {
-        let rt = tokio::runtime::Builder::new()
-            .basic_scheduler()
+        let rt = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
         rt.shutdown_timeout(Duration::from_nanos(0));
@@ -163,14 +152,10 @@ fn can_shutdown_with_zero_timeout_in_runtime() {
 
 #[test]
 fn can_shutdown_now_in_runtime() {
-    let mut outer = tokio::runtime::Builder::new()
-        .threaded_scheduler()
-        .build()
-        .unwrap();
+    let outer = tokio::runtime::Runtime::new().unwrap();
 
     outer.block_on(async {
-        let rt = tokio::runtime::Builder::new()
-            .basic_scheduler()
+        let rt = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
         rt.shutdown_background();
@@ -179,13 +164,13 @@ fn can_shutdown_now_in_runtime() {
 
 #[test]
 fn coop_disabled_in_block_in_place() {
-    let mut outer = tokio::runtime::Builder::new()
-        .threaded_scheduler()
+    let outer = tokio::runtime::Builder::new_multi_thread()
         .enable_time()
         .build()
         .unwrap();
 
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let (tx, rx) = support::mpsc_stream::unbounded_channel_stream();
+
     for i in 0..200 {
         tx.send(i).unwrap();
     }
@@ -195,7 +180,7 @@ fn coop_disabled_in_block_in_place() {
         let jh = tokio::spawn(async move {
             tokio::task::block_in_place(move || {
                 futures::executor::block_on(async move {
-                    use tokio::stream::StreamExt;
+                    use tokio_stream::StreamExt;
                     assert_eq!(rx.fold(0, |n, _| n + 1).await, 200);
                 })
             })
@@ -213,12 +198,10 @@ fn coop_disabled_in_block_in_place_in_block_on() {
     let (done_tx, done_rx) = std::sync::mpsc::channel();
     let done = done_tx.clone();
     thread::spawn(move || {
-        let mut outer = tokio::runtime::Builder::new()
-            .threaded_scheduler()
-            .build()
-            .unwrap();
+        let outer = tokio::runtime::Runtime::new().unwrap();
 
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        let (tx, rx) = support::mpsc_stream::unbounded_channel_stream();
+
         for i in 0..200 {
             tx.send(i).unwrap();
         }
@@ -227,7 +210,7 @@ fn coop_disabled_in_block_in_place_in_block_on() {
         outer.block_on(async move {
             tokio::task::block_in_place(move || {
                 futures::executor::block_on(async move {
-                    use tokio::stream::StreamExt;
+                    use tokio_stream::StreamExt;
                     assert_eq!(rx.fold(0, |n, _| n + 1).await, 200);
                 })
             })

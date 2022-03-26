@@ -1,59 +1,105 @@
-pub(crate) mod platform;
+#![cfg_attr(not(feature = "rt"), allow(dead_code))]
+
+mod interest;
+#[allow(unreachable_pub)]
+pub use interest::Interest;
+
+mod ready;
+#[allow(unreachable_pub)]
+pub use ready::Ready;
+
+mod registration;
+pub(crate) use registration::Registration;
 
 mod scheduled_io;
-pub(crate) use scheduled_io::ScheduledIo; // pub(crate) for tests
+use scheduled_io::ScheduledIo;
 
-use crate::loom::sync::atomic::AtomicUsize;
 use crate::park::{Park, Unpark};
-use crate::runtime::context;
-use crate::util::slab::{Address, Slab};
+use crate::util::slab::{self, Slab};
+use crate::{loom::sync::Mutex, util::bit};
 
-use mio::event::Evented;
 use std::fmt;
 use std::io;
-use std::sync::atomic::Ordering::SeqCst;
 use std::sync::{Arc, Weak};
-use std::task::Waker;
 use std::time::Duration;
 
-/// I/O driver, backed by Mio
+/// I/O driver, backed by Mio.
 pub(crate) struct Driver {
+    /// Tracks the number of times `turn` is called. It is safe for this to wrap
+    /// as it is mostly used to determine when to call `compact()`.
+    tick: u8,
+
     /// Reuse the `mio::Events` value across calls to poll.
-    events: mio::Events,
+    events: Option<mio::Events>,
+
+    /// Primary slab handle containing the state for each resource registered
+    /// with this driver. During Drop this is moved into the Inner structure, so
+    /// this is an Option to allow it to be vacated (until Drop this is always
+    /// Some).
+    resources: Option<Slab<ScheduledIo>>,
+
+    /// The system event queue.
+    poll: mio::Poll,
 
     /// State shared between the reactor and the handles.
     inner: Arc<Inner>,
-
-    _wakeup_registration: mio::Registration,
 }
 
-/// A reference to an I/O driver
+/// A reference to an I/O driver.
 #[derive(Clone)]
 pub(crate) struct Handle {
     inner: Weak<Inner>,
 }
 
+#[derive(Debug)]
+pub(crate) struct ReadyEvent {
+    tick: u8,
+    pub(crate) ready: Ready,
+}
+
 pub(super) struct Inner {
-    /// The underlying system event queue.
-    io: mio::Poll,
+    /// Primary slab handle containing the state for each resource registered
+    /// with this driver.
+    ///
+    /// The ownership of this slab is moved into this structure during
+    /// `Driver::drop`, so that `Inner::drop` can notify all outstanding handles
+    /// without risking new ones being registered in the meantime.
+    resources: Mutex<Option<Slab<ScheduledIo>>>,
 
-    /// Dispatch slabs for I/O and futures events
-    pub(super) io_dispatch: Slab<ScheduledIo>,
+    /// Registers I/O resources.
+    registry: mio::Registry,
 
-    /// The number of sources in `io_dispatch`.
-    n_sources: AtomicUsize,
+    /// Allocates `ScheduledIo` handles when creating new resources.
+    pub(super) io_dispatch: slab::Allocator<ScheduledIo>,
 
-    /// Used to wake up the reactor from a call to `turn`
-    wakeup: mio::SetReadiness,
+    /// Used to wake up the reactor from a call to `turn`.
+    waker: mio::Waker,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub(super) enum Direction {
+enum Direction {
     Read,
     Write,
 }
 
-const TOKEN_WAKEUP: mio::Token = mio::Token(Address::NULL);
+enum Tick {
+    Set(u8),
+    Clear(u8),
+}
+
+// TODO: Don't use a fake token. Instead, reserve a slot entry for the wakeup
+// token.
+const TOKEN_WAKEUP: mio::Token = mio::Token(1 << 31);
+
+const ADDRESS: bit::Pack = bit::Pack::least_significant(24);
+
+// Packs the generation value in the `readiness` field.
+//
+// The generation prevents a race condition where a slab slot is reused for a
+// new socket while the I/O driver is about to apply a readiness event. The
+// generation value is checked when setting new readiness. If the generation do
+// not match, then the readiness event is discarded.
+const GENERATION: bit::Pack = ADDRESS.then(7);
 
 fn _assert_kinds() {
     fn _assert<T: Send + Sync>() {}
@@ -67,24 +113,23 @@ impl Driver {
     /// Creates a new event loop, returning any error that happened during the
     /// creation.
     pub(crate) fn new() -> io::Result<Driver> {
-        let io = mio::Poll::new()?;
-        let wakeup_pair = mio::Registration::new2();
+        let poll = mio::Poll::new()?;
+        let waker = mio::Waker::new(poll.registry(), TOKEN_WAKEUP)?;
+        let registry = poll.registry().try_clone()?;
 
-        io.register(
-            &wakeup_pair.0,
-            TOKEN_WAKEUP,
-            mio::Ready::readable(),
-            mio::PollOpt::level(),
-        )?;
+        let slab = Slab::new();
+        let allocator = slab.allocator();
 
         Ok(Driver {
-            events: mio::Events::with_capacity(1024),
-            _wakeup_registration: wakeup_pair.0,
+            tick: 0,
+            events: Some(mio::Events::with_capacity(1024)),
+            poll,
+            resources: Some(slab),
             inner: Arc::new(Inner {
-                io,
-                io_dispatch: Slab::new(),
-                n_sources: AtomicUsize::new(0),
-                wakeup: wakeup_pair.1,
+                resources: Mutex::new(None),
+                registry,
+                io_dispatch: allocator,
+                waker,
             }),
         })
     }
@@ -102,64 +147,77 @@ impl Driver {
     }
 
     fn turn(&mut self, max_wait: Option<Duration>) -> io::Result<()> {
+        // How often to call `compact()` on the resource slab
+        const COMPACT_INTERVAL: u8 = 255;
+
+        self.tick = self.tick.wrapping_add(1);
+
+        if self.tick == COMPACT_INTERVAL {
+            self.resources.as_mut().unwrap().compact()
+        }
+
+        let mut events = self.events.take().expect("i/o driver event store missing");
+
         // Block waiting for an event to happen, peeling out how many events
         // happened.
-        match self.inner.io.poll(&mut self.events, max_wait) {
+        match self.poll.poll(&mut events, max_wait) {
             Ok(_) => {}
+            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {}
             Err(e) => return Err(e),
         }
 
         // Process all the events that came in, dispatching appropriately
-
-        for event in self.events.iter() {
+        for event in events.iter() {
             let token = event.token();
 
-            if token == TOKEN_WAKEUP {
-                self.inner
-                    .wakeup
-                    .set_readiness(mio::Ready::empty())
-                    .unwrap();
-            } else {
-                self.dispatch(token, event.readiness());
+            if token != TOKEN_WAKEUP {
+                self.dispatch(token, Ready::from_mio(event));
             }
         }
+
+        self.events = Some(events);
 
         Ok(())
     }
 
-    fn dispatch(&self, token: mio::Token, ready: mio::Ready) {
-        let mut rd = None;
-        let mut wr = None;
+    fn dispatch(&mut self, token: mio::Token, ready: Ready) {
+        let addr = slab::Address::from_usize(ADDRESS.unpack(token.0));
 
-        let address = Address::from_usize(token.0);
+        let resources = self.resources.as_mut().unwrap();
 
-        let io = match self.inner.io_dispatch.get(address) {
+        let io = match resources.get(addr) {
             Some(io) => io,
             None => return,
         };
 
-        if io
-            .set_readiness(address, |curr| curr | ready.as_usize())
-            .is_err()
-        {
+        let res = io.set_readiness(Some(token.0), Tick::Set(self.tick), |curr| curr | ready);
+
+        if res.is_err() {
             // token no longer valid!
             return;
         }
 
-        if ready.is_writable() || platform::is_hup(ready) || platform::is_error(ready) {
-            wr = io.writer.take_waker();
-        }
+        io.wake(ready);
+    }
+}
 
-        if !(ready & (!mio::Ready::writable())).is_empty() {
-            rd = io.reader.take_waker();
-        }
+impl Drop for Driver {
+    fn drop(&mut self) {
+        (*self.inner.resources.lock()) = self.resources.take();
+    }
+}
 
-        if let Some(w) = rd {
-            w.wake();
-        }
+impl Drop for Inner {
+    fn drop(&mut self) {
+        let resources = self.resources.lock().take();
 
-        if let Some(w) = wr {
-            w.wake();
+        if let Some(mut slab) = resources {
+            slab.for_each(|io| {
+                // If a task is waiting on the I/O resource, notify it. The task
+                // will then attempt to use the I/O resource and fail due to the
+                // driver being shutdown.
+                io.shutdown();
+            });
         }
     }
 }
@@ -193,18 +251,35 @@ impl fmt::Debug for Driver {
 
 // ===== impl Handle =====
 
-impl Handle {
-    /// Returns a handle to the current reactor
-    ///
-    /// # Panics
-    ///
-    /// This function panics if there is no current reactor set.
-    pub(super) fn current() -> Self {
-        context::io_handle().expect(
-            "there is no reactor running, must be called from the context of a Tokio 0.2.x runtime",
-        )
+cfg_rt! {
+    impl Handle {
+        /// Returns a handle to the current reactor.
+        ///
+        /// # Panics
+        ///
+        /// This function panics if there is no current reactor set and `rt` feature
+        /// flag is not enabled.
+        pub(super) fn current() -> Self {
+            crate::runtime::context::io_handle().expect("A Tokio 1.x context was found, but IO is disabled. Call `enable_io` on the runtime builder to enable IO.")
+        }
     }
+}
 
+cfg_not_rt! {
+    impl Handle {
+        /// Returns a handle to the current reactor.
+        ///
+        /// # Panics
+        ///
+        /// This function panics if there is no current reactor set, or if the `rt`
+        /// feature flag is not enabled.
+        pub(super) fn current() -> Self {
+            panic!("{}", crate::util::error::CONTEXT_MISSING_ERROR)
+        }
+    }
+}
+
+impl Handle {
     /// Forces a reactor blocked in a call to `turn` to wakeup, or otherwise
     /// makes the next call to `turn` return immediately.
     ///
@@ -216,7 +291,7 @@ impl Handle {
     /// return immediately.
     fn wakeup(&self) {
         if let Some(inner) = self.inner() {
-            inner.wakeup.set_readiness(mio::Ready::readable()).unwrap();
+            inner.waker.wake().expect("failed to wake I/O driver");
         }
     }
 
@@ -245,159 +320,35 @@ impl Inner {
     /// The registration token is returned.
     pub(super) fn add_source(
         &self,
-        source: &dyn Evented,
-        ready: mio::Ready,
-    ) -> io::Result<Address> {
-        let address = self.io_dispatch.alloc().ok_or_else(|| {
+        source: &mut impl mio::event::Source,
+        interest: Interest,
+    ) -> io::Result<slab::Ref<ScheduledIo>> {
+        let (address, shared) = self.io_dispatch.allocate().ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::Other,
                 "reactor at max registered I/O resources",
             )
         })?;
 
-        self.n_sources.fetch_add(1, SeqCst);
+        let token = GENERATION.pack(shared.generation(), ADDRESS.pack(address.as_usize(), 0));
 
-        self.io.register(
-            source,
-            mio::Token(address.to_usize()),
-            ready,
-            mio::PollOpt::edge(),
-        )?;
+        self.registry
+            .register(source, mio::Token(token), interest.to_mio())?;
 
-        Ok(address)
+        Ok(shared)
     }
 
     /// Deregisters an I/O resource from the reactor.
-    pub(super) fn deregister_source(&self, source: &dyn Evented) -> io::Result<()> {
-        self.io.deregister(source)
-    }
-
-    pub(super) fn drop_source(&self, address: Address) {
-        self.io_dispatch.remove(address);
-        self.n_sources.fetch_sub(1, SeqCst);
-    }
-
-    /// Registers interest in the I/O resource associated with `token`.
-    pub(super) fn register(&self, token: Address, dir: Direction, w: Waker) {
-        let sched = self
-            .io_dispatch
-            .get(token)
-            .unwrap_or_else(|| panic!("IO resource for token {:?} does not exist!", token));
-
-        let waker = match dir {
-            Direction::Read => &sched.reader,
-            Direction::Write => &sched.writer,
-        };
-
-        waker.register(w);
+    pub(super) fn deregister_source(&self, source: &mut impl mio::event::Source) -> io::Result<()> {
+        self.registry.deregister(source)
     }
 }
 
 impl Direction {
-    pub(super) fn mask(self) -> mio::Ready {
+    pub(super) fn mask(self) -> Ready {
         match self {
-            Direction::Read => {
-                // Everything except writable is signaled through read.
-                mio::Ready::all() - mio::Ready::writable()
-            }
-            Direction::Write => mio::Ready::writable() | platform::hup() | platform::error(),
+            Direction::Read => Ready::READABLE | Ready::READ_CLOSED,
+            Direction::Write => Ready::WRITABLE | Ready::WRITE_CLOSED,
         }
-    }
-}
-
-#[cfg(all(test, loom))]
-mod tests {
-    use super::*;
-    use loom::thread;
-
-    // No-op `Evented` impl just so we can have something to pass to `add_source`.
-    struct NotEvented;
-
-    impl Evented for NotEvented {
-        fn register(
-            &self,
-            _: &mio::Poll,
-            _: mio::Token,
-            _: mio::Ready,
-            _: mio::PollOpt,
-        ) -> io::Result<()> {
-            Ok(())
-        }
-
-        fn reregister(
-            &self,
-            _: &mio::Poll,
-            _: mio::Token,
-            _: mio::Ready,
-            _: mio::PollOpt,
-        ) -> io::Result<()> {
-            Ok(())
-        }
-
-        fn deregister(&self, _: &mio::Poll) -> io::Result<()> {
-            Ok(())
-        }
-    }
-
-    #[test]
-    fn tokens_unique_when_dropped() {
-        loom::model(|| {
-            let reactor = Driver::new().unwrap();
-            let inner = reactor.inner;
-            let inner2 = inner.clone();
-
-            let token_1 = inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            let thread = thread::spawn(move || {
-                inner2.drop_source(token_1);
-            });
-
-            let token_2 = inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            thread.join().unwrap();
-
-            assert!(token_1 != token_2);
-        })
-    }
-
-    #[test]
-    fn tokens_unique_when_dropped_on_full_page() {
-        loom::model(|| {
-            let reactor = Driver::new().unwrap();
-            let inner = reactor.inner;
-            let inner2 = inner.clone();
-            // add sources to fill up the first page so that the dropped index
-            // may be reused.
-            for _ in 0..31 {
-                inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            }
-
-            let token_1 = inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            let thread = thread::spawn(move || {
-                inner2.drop_source(token_1);
-            });
-
-            let token_2 = inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            thread.join().unwrap();
-
-            assert!(token_1 != token_2);
-        })
-    }
-
-    #[test]
-    fn tokens_unique_concurrent_add() {
-        loom::model(|| {
-            let reactor = Driver::new().unwrap();
-            let inner = reactor.inner;
-            let inner2 = inner.clone();
-
-            let thread = thread::spawn(move || {
-                let token_2 = inner2.add_source(&NotEvented, mio::Ready::all()).unwrap();
-                token_2
-            });
-
-            let token_1 = inner.add_source(&NotEvented, mio::Ready::all()).unwrap();
-            let token_2 = thread.join().unwrap();
-
-            assert!(token_1 != token_2);
-        })
     }
 }

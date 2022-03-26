@@ -1,4 +1,6 @@
-//! Definition of the `PollFn` adapter combinator
+#![allow(dead_code)]
+
+//! Definition of the `PollFn` adapter combinator.
 
 use std::fmt;
 use std::future::Future;

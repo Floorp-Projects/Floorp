@@ -19,6 +19,7 @@
 #include "nsIOutputStream.h"
 #include "nsMemory.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 
 #define NS_STORAGESTREAM_CID                         \
   { /* 669a9795-6ff7-4ed4-9150-c34ce2971b63 */       \
@@ -44,21 +45,32 @@ class nsStorageStream final : public nsIStorageStream, public nsIOutputStream {
  private:
   ~nsStorageStream();
 
-  nsSegmentedBuffer* mSegmentedBuffer;
-  uint32_t
-      mSegmentSize;  // All segments, except possibly the last, are of this size
-                     //   Must be power-of-2
-  uint32_t mSegmentSizeLog2;  // log2(mSegmentSize)
-  bool mWriteInProgress;      // true, if an un-Close'ed output stream exists
-  int32_t mLastSegmentNum;    // Last segment # in use, -1 initially
-  char* mWriteCursor;         // Pointer to next byte to be written
-  char* mSegmentEnd;          // Pointer to one byte after end of segment
-                              //   containing the write cursor
-  uint32_t mLogicalLength;    // Number of bytes written to stream
+  mozilla::Mutex mMutex{"nsStorageStream"};
+  nsSegmentedBuffer* mSegmentedBuffer GUARDED_BY(mMutex) = nullptr;
+  // All segments, except possibly the last, are of this size.  Must be
+  // power-of-2
+  uint32_t mSegmentSize GUARDED_BY(mMutex) = 0;
+  // log2(mSegmentSize)
+  uint32_t mSegmentSizeLog2 GUARDED_BY(mMutex) = 0;
+  // true, if an un-Close'ed output stream exists
+  bool mWriteInProgress GUARDED_BY(mMutex) = false;
+  // Last segment # in use, -1 initially
+  int32_t mLastSegmentNum GUARDED_BY(mMutex) = -1;
+  // Pointer to next byte to be written
+  char* mWriteCursor GUARDED_BY(mMutex) = nullptr;
+  // Pointer to one byte after end of segment containing the write cursor
+  char* mSegmentEnd GUARDED_BY(mMutex) = nullptr;
+  // Number of bytes written to stream
+  uint32_t mLogicalLength GUARDED_BY(mMutex) = 0;
+  // number of input streams actively reading a segment.
+  uint32_t mActiveSegmentBorrows GUARDED_BY(mMutex) = 0;
 
-  nsresult Seek(int32_t aPosition);
-  uint32_t SegNum(uint32_t aPosition) { return aPosition >> mSegmentSizeLog2; }
-  uint32_t SegOffset(uint32_t aPosition) {
+  nsresult SetLengthLocked(uint32_t aLength) REQUIRES(mMutex);
+  nsresult Seek(int32_t aPosition) REQUIRES(mMutex);
+  uint32_t SegNum(uint32_t aPosition) REQUIRES(mMutex) {
+    return aPosition >> mSegmentSizeLog2;
+  }
+  uint32_t SegOffset(uint32_t aPosition) REQUIRES(mMutex) {
     return aPosition & (mSegmentSize - 1);
   }
 };

@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import TelemetryLink from "../TelemetryLink/TelemetryLink";
 
 function ArticleUrl(props) {
   // We turn off the link if we're either a saved article, or if the url doesn't exist.
@@ -12,9 +13,14 @@ function ArticleUrl(props) {
     );
   }
   return (
-    <a className="stp_article_list_link" href={props.url}>
+    <TelemetryLink
+      className="stp_article_list_link"
+      href={props.url}
+      source={props.source}
+      position={props.position}
+    >
       {props.children}
-    </a>
+    </TelemetryLink>
   );
 }
 
@@ -42,7 +48,12 @@ function Article(props) {
     article.resolved_domain;
   return (
     <li className="stp_article_list_item">
-      <ArticleUrl url={url} savedArticle={props.savedArticle}>
+      <ArticleUrl
+        url={url}
+        savedArticle={props.savedArticle}
+        position={props.position}
+        source={props.source}
+      >
         <>
           {thumbnail ? (
             <img className="stp_article_list_thumb" src={thumbnail} alt={alt} />
@@ -62,8 +73,13 @@ function Article(props) {
 function ArticleList(props) {
   return (
     <ul className="stp_article_list">
-      {props.articles?.map(article => (
-        <Article article={article} savedArticle={props.savedArticle} />
+      {props.articles?.map((article, position) => (
+        <Article
+          article={article}
+          savedArticle={props.savedArticle}
+          position={position}
+          source={props.source}
+        />
       ))}
     </ul>
   );

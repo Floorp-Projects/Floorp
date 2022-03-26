@@ -20,25 +20,25 @@ use crate::process::kill::Kill;
 use crate::process::SpawnedChild;
 use crate::sync::oneshot;
 
-use mio_named_pipes::NamedPipe;
+use mio::windows::NamedPipe;
 use std::fmt;
 use std::future::Future;
 use std::io;
-use std::os::windows::prelude::*;
-use std::os::windows::process::ExitStatusExt;
+use std::os::windows::prelude::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle};
 use std::pin::Pin;
+use std::process::Stdio;
 use std::process::{Child as StdChild, Command as StdCommand, ExitStatus};
 use std::ptr;
 use std::task::Context;
 use std::task::Poll;
-use winapi::shared::minwindef::FALSE;
-use winapi::shared::winerror::WAIT_TIMEOUT;
-use winapi::um::handleapi::INVALID_HANDLE_VALUE;
-use winapi::um::processthreadsapi::GetExitCodeProcess;
-use winapi::um::synchapi::WaitForSingleObject;
+use winapi::shared::minwindef::{DWORD, FALSE};
+use winapi::um::handleapi::{DuplicateHandle, INVALID_HANDLE_VALUE};
+use winapi::um::processthreadsapi::GetCurrentProcess;
 use winapi::um::threadpoollegacyapiset::UnregisterWaitEx;
-use winapi::um::winbase::{RegisterWaitForSingleObject, INFINITE, WAIT_OBJECT_0};
-use winapi::um::winnt::{BOOLEAN, HANDLE, PVOID, WT_EXECUTEINWAITTHREAD, WT_EXECUTEONLYONCE};
+use winapi::um::winbase::{RegisterWaitForSingleObject, INFINITE};
+use winapi::um::winnt::{
+    BOOLEAN, DUPLICATE_SAME_ACCESS, HANDLE, PVOID, WT_EXECUTEINWAITTHREAD, WT_EXECUTEONLYONCE,
+};
 
 #[must_use = "futures do nothing unless polled"]
 pub(crate) struct Child {
@@ -67,9 +67,9 @@ unsafe impl Send for Waiting {}
 
 pub(crate) fn spawn_child(cmd: &mut StdCommand) -> io::Result<SpawnedChild> {
     let mut child = cmd.spawn()?;
-    let stdin = stdio(child.stdin.take());
-    let stdout = stdio(child.stdout.take());
-    let stderr = stdio(child.stderr.take());
+    let stdin = child.stdin.take().map(stdio).transpose()?;
+    let stdout = child.stdout.take().map(stdio).transpose()?;
+    let stderr = child.stderr.take().map(stdio).transpose()?;
 
     Ok(SpawnedChild {
         child: Child {
@@ -85,6 +85,10 @@ pub(crate) fn spawn_child(cmd: &mut StdCommand) -> io::Result<SpawnedChild> {
 impl Child {
     pub(crate) fn id(&self) -> u32 {
         self.child.id()
+    }
+
+    pub(crate) fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
+        self.child.try_wait()
     }
 }
 
@@ -106,11 +110,11 @@ impl Future for Child {
                     Poll::Ready(Err(_)) => panic!("should not be canceled"),
                     Poll::Pending => return Poll::Pending,
                 }
-                let status = try_wait(&inner.child)?.expect("not ready yet");
+                let status = inner.try_wait()?.expect("not ready yet");
                 return Poll::Ready(Ok(status));
             }
 
-            if let Some(e) = try_wait(&inner.child)? {
+            if let Some(e) = inner.try_wait()? {
                 return Poll::Ready(Ok(e));
             }
             let (tx, rx) = oneshot::channel();
@@ -140,6 +144,12 @@ impl Future for Child {
     }
 }
 
+impl AsRawHandle for Child {
+    fn as_raw_handle(&self) -> RawHandle {
+        self.child.as_raw_handle()
+    }
+}
+
 impl Drop for Waiting {
     fn drop(&mut self) {
         unsafe {
@@ -157,35 +167,39 @@ unsafe extern "system" fn callback(ptr: PVOID, _timer_fired: BOOLEAN) {
     let _ = complete.take().unwrap().send(());
 }
 
-pub(crate) fn try_wait(child: &StdChild) -> io::Result<Option<ExitStatus>> {
-    unsafe {
-        match WaitForSingleObject(child.as_raw_handle(), 0) {
-            WAIT_OBJECT_0 => {}
-            WAIT_TIMEOUT => return Ok(None),
-            _ => return Err(io::Error::last_os_error()),
-        }
-        let mut status = 0;
-        let rc = GetExitCodeProcess(child.as_raw_handle(), &mut status);
-        if rc == FALSE {
-            Err(io::Error::last_os_error())
-        } else {
-            Ok(Some(ExitStatus::from_raw(status)))
-        }
-    }
-}
+pub(crate) type ChildStdio = PollEvented<NamedPipe>;
 
-pub(crate) type ChildStdin = PollEvented<NamedPipe>;
-pub(crate) type ChildStdout = PollEvented<NamedPipe>;
-pub(crate) type ChildStderr = PollEvented<NamedPipe>;
-
-fn stdio<T>(option: Option<T>) -> Option<PollEvented<NamedPipe>>
+pub(super) fn stdio<T>(io: T) -> io::Result<PollEvented<NamedPipe>>
 where
     T: IntoRawHandle,
 {
-    let io = match option {
-        Some(io) => io,
-        None => return None,
-    };
     let pipe = unsafe { NamedPipe::from_raw_handle(io.into_raw_handle()) };
-    PollEvented::new(pipe).ok()
+    PollEvented::new(pipe)
+}
+
+pub(crate) fn convert_to_stdio(io: PollEvented<NamedPipe>) -> io::Result<Stdio> {
+    let named_pipe = io.into_inner()?;
+
+    // Mio does not implement `IntoRawHandle` for `NamedPipe`, so we'll manually
+    // duplicate the handle here...
+    unsafe {
+        let mut dup_handle = INVALID_HANDLE_VALUE;
+        let cur_proc = GetCurrentProcess();
+
+        let status = DuplicateHandle(
+            cur_proc,
+            named_pipe.as_raw_handle(),
+            cur_proc,
+            &mut dup_handle,
+            0 as DWORD,
+            FALSE,
+            DUPLICATE_SAME_ACCESS,
+        );
+
+        if status == 0 {
+            return Err(io::Error::last_os_error());
+        }
+
+        Ok(Stdio::from_raw_handle(dup_handle))
+    }
 }

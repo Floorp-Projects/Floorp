@@ -4,9 +4,8 @@
 //! To restore this read/write object from its `split::ReadHalf` and
 //! `split::WriteHalf` use `unsplit`.
 
-use crate::io::{AsyncRead, AsyncWrite};
+use crate::io::{AsyncRead, AsyncWrite, ReadBuf};
 
-use bytes::{Buf, BufMut};
 use std::cell::UnsafeCell;
 use std::fmt;
 use std::io;
@@ -64,7 +63,7 @@ impl<T> ReadHalf<T> {
     /// Checks if this `ReadHalf` and some `WriteHalf` were split from the same
     /// stream.
     pub fn is_pair_of(&self, other: &WriteHalf<T>) -> bool {
-        other.is_pair_of(&self)
+        other.is_pair_of(self)
     }
 
     /// Reunites with a previously split `WriteHalf`.
@@ -91,7 +90,7 @@ impl<T> ReadHalf<T> {
 }
 
 impl<T> WriteHalf<T> {
-    /// Check if this `WriteHalf` and some `ReadHalf` were split from the same
+    /// Checks if this `WriteHalf` and some `ReadHalf` were split from the same
     /// stream.
     pub fn is_pair_of(&self, other: &ReadHalf<T>) -> bool {
         Arc::ptr_eq(&self.inner, &other.inner)
@@ -102,19 +101,10 @@ impl<T: AsyncRead> AsyncRead for ReadHalf<T> {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
         let mut inner = ready!(self.inner.poll_lock(cx));
         inner.stream_pin().poll_read(cx, buf)
-    }
-
-    fn poll_read_buf<B: BufMut>(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut B,
-    ) -> Poll<io::Result<usize>> {
-        let mut inner = ready!(self.inner.poll_lock(cx));
-        inner.stream_pin().poll_read_buf(cx, buf)
     }
 }
 
@@ -137,20 +127,15 @@ impl<T: AsyncWrite> AsyncWrite for WriteHalf<T> {
         let mut inner = ready!(self.inner.poll_lock(cx));
         inner.stream_pin().poll_shutdown(cx)
     }
-
-    fn poll_write_buf<B: Buf>(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut B,
-    ) -> Poll<Result<usize, io::Error>> {
-        let mut inner = ready!(self.inner.poll_lock(cx));
-        inner.stream_pin().poll_write_buf(cx, buf)
-    }
 }
 
 impl<T> Inner<T> {
     fn poll_lock(&self, cx: &mut Context<'_>) -> Poll<Guard<'_, T>> {
-        if !self.locked.compare_and_swap(false, true, Acquire) {
+        if self
+            .locked
+            .compare_exchange(false, true, Acquire, Acquire)
+            .is_ok()
+        {
             Poll::Ready(Guard { inner: self })
         } else {
             // Spin... but investigate a better strategy

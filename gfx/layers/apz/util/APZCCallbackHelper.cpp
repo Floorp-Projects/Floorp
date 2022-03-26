@@ -814,9 +814,9 @@ void APZCCallbackHelper::NotifyFlushComplete(PresShell* aPresShell) {
 
 /* static */
 bool APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame) {
-  using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
+  using AnimationState = nsIScrollableFrame::AnimationState;
 
-  return aFrame->IsScrollAnimating(IncludeApzAnimation::No) ||
+  return aFrame->ScrollAnimationState().contains(AnimationState::MainThread) ||
          nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin());
 }
 

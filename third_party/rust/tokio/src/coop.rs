@@ -1,53 +1,33 @@
-//! Opt-in yield points for improved cooperative scheduling.
-//!
-//! A single call to [`poll`] on a top-level task may potentially do a lot of
-//! work before it returns `Poll::Pending`. If a task runs for a long period of
-//! time without yielding back to the executor, it can starve other tasks
-//! waiting on that executor to execute them, or drive underlying resources.
-//! Since Rust does not have a runtime, it is difficult to forcibly preempt a
-//! long-running task. Instead, this module provides an opt-in mechanism for
-//! futures to collaborate with the executor to avoid starvation.
-//!
-//! Consider a future like this one:
-//!
-//! ```
-//! # use tokio::stream::{Stream, StreamExt};
-//! async fn drop_all<I: Stream + Unpin>(mut input: I) {
-//!     while let Some(_) = input.next().await {}
-//! }
-//! ```
-//!
-//! It may look harmless, but consider what happens under heavy load if the
-//! input stream is _always_ ready. If we spawn `drop_all`, the task will never
-//! yield, and will starve other tasks and resources on the same executor. With
-//! opt-in yield points, this problem is alleviated:
-//!
-//! ```ignore
-//! # use tokio::stream::{Stream, StreamExt};
-//! async fn drop_all<I: Stream + Unpin>(mut input: I) {
-//!     while let Some(_) = input.next().await {
-//!         tokio::coop::proceed().await;
-//!     }
-//! }
-//! ```
-//!
-//! The `proceed` future will coordinate with the executor to make sure that
-//! every so often control is yielded back to the executor so it can run other
-//! tasks.
-//!
-//! # Placing yield points
-//!
-//! Voluntary yield points should be placed _after_ at least some work has been
-//! done. If they are not, a future sufficiently deep in the task hierarchy may
-//! end up _never_ getting to run because of the number of yield points that
-//! inevitably appear before it is reached. In general, you will want yield
-//! points to only appear in "leaf" futures -- those that do not themselves poll
-//! other futures. By doing this, you avoid double-counting each iteration of
-//! the outer future against the cooperating budget.
-//!
-//! [`poll`]: method@std::future::Future::poll
+#![cfg_attr(not(feature = "full"), allow(dead_code))]
 
-// NOTE: The doctests in this module are ignored since the whole module is (currently) private.
+//! Yield points for improved cooperative scheduling.
+//!
+//! Documentation for this can be found in the [`tokio::task`] module.
+//!
+//! [`tokio::task`]: crate::task.
+
+// ```ignore
+// # use tokio_stream::{Stream, StreamExt};
+// async fn drop_all<I: Stream + Unpin>(mut input: I) {
+//     while let Some(_) = input.next().await {
+//         tokio::coop::proceed().await;
+//     }
+// }
+// ```
+//
+// The `proceed` future will coordinate with the executor to make sure that
+// every so often control is yielded back to the executor so it can run other
+// tasks.
+//
+// # Placing yield points
+//
+// Voluntary yield points should be placed _after_ at least some work has been
+// done. If they are not, a future sufficiently deep in the task hierarchy may
+// end up _never_ getting to run because of the number of yield points that
+// inevitably appear before it is reached. In general, you will want yield
+// points to only appear in "leaf" futures -- those that do not themselves poll
+// other futures. By doing this, you avoid double-counting each iteration of
+// the outer future against the cooperating budget.
 
 use std::cell::Cell;
 
@@ -79,29 +59,24 @@ impl Budget {
     const fn unconstrained() -> Budget {
         Budget(None)
     }
-}
 
-cfg_rt_threaded! {
-    impl Budget {
-        fn has_remaining(self) -> bool {
-            self.0.map(|budget| budget > 0).unwrap_or(true)
-        }
+    fn has_remaining(self) -> bool {
+        self.0.map(|budget| budget > 0).unwrap_or(true)
     }
 }
 
-/// Run the given closure with a cooperative task budget. When the function
+/// Runs the given closure with a cooperative task budget. When the function
 /// returns, the budget is reset to the value prior to calling the function.
 #[inline(always)]
 pub(crate) fn budget<R>(f: impl FnOnce() -> R) -> R {
     with_budget(Budget::initial(), f)
 }
 
-cfg_rt_threaded! {
-    /// Set the current task's budget
-    #[cfg(feature = "blocking")]
-    pub(crate) fn set(budget: Budget) {
-        CURRENT.with(|cell| cell.set(budget))
-    }
+/// Runs the given closure with an unconstrained task budget. When the function returns, the budget
+/// is reset to the value prior to calling the function.
+#[inline(always)]
+pub(crate) fn with_unconstrained<R>(f: impl FnOnce() -> R) -> R {
+    with_budget(Budget::unconstrained(), f)
 }
 
 #[inline(always)]
@@ -128,15 +103,20 @@ fn with_budget<R>(budget: Budget, f: impl FnOnce() -> R) -> R {
     })
 }
 
-cfg_rt_threaded! {
-    #[inline(always)]
-    pub(crate) fn has_budget_remaining() -> bool {
-        CURRENT.with(|cell| cell.get().has_remaining())
+#[inline(always)]
+pub(crate) fn has_budget_remaining() -> bool {
+    CURRENT.with(|cell| cell.get().has_remaining())
+}
+
+cfg_rt_multi_thread! {
+    /// Sets the current task's budget.
+    pub(crate) fn set(budget: Budget) {
+        CURRENT.with(|cell| cell.set(budget))
     }
 }
 
-cfg_blocking_impl! {
-    /// Forcibly remove the budgeting constraints early.
+cfg_rt! {
+    /// Forcibly removes the budgeting constraints early.
     ///
     /// Returns the remaining budget
     pub(crate) fn stop() -> Budget {
@@ -202,7 +182,7 @@ cfg_coop! {
     }
 
     impl Budget {
-        /// Decrement the budget. Returns `true` if successful. Decrementing fails
+        /// Decrements the budget. Returns `true` if successful. Decrementing fails
         /// when there is not enough remaining budget.
         fn decrement(&mut self) -> bool {
             if let Some(num) = &mut self.0 {
@@ -226,6 +206,9 @@ cfg_coop! {
 #[cfg(all(test, not(loom)))]
 mod test {
     use super::*;
+
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     fn get() -> Budget {
         CURRENT.with(|cell| cell.get())
