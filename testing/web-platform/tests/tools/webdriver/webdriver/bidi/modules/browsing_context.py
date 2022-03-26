@@ -1,3 +1,4 @@
+from tokenize import Number
 from typing import Any, Optional, Mapping, MutableMapping
 
 from ._module import BidiModule, command
@@ -5,9 +6,7 @@ from ._module import BidiModule, command
 
 class BrowsingContext(BidiModule):
     @command
-    def get_tree(self,
-                 max_depth: Optional[int] = None,
-                 parent: Optional[str] = None) -> Mapping[str, Any]:
+    def get_tree(self, max_depth: Optional[int] = None, parent: Optional[str] = None):
         params: MutableMapping[str, Any] = {}
 
         if max_depth is not None:

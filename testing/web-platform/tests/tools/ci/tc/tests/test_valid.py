@@ -2,9 +2,9 @@ import json
 import os
 from unittest import mock
 
-import httpx
 import jsone
 import pytest
+import requests
 import yaml
 from jsonschema import validate
 
@@ -63,11 +63,11 @@ def test_verify_payload():
     """Verify that the decision task produces tasks with a valid payload"""
     from tools.ci.tc.decision import decide
 
-    r = httpx.get("https://community-tc.services.mozilla.com/schemas/queue/v1/create-task-request.json")
+    r = requests.get("https://community-tc.services.mozilla.com/schemas/queue/v1/create-task-request.json")
     r.raise_for_status()
     create_task_schema = r.json()
 
-    r = httpx.get("https://community-tc.services.mozilla.com/references/schemas/docker-worker/v1/payload.json")
+    r = requests.get("https://community-tc.services.mozilla.com/references/schemas/docker-worker/v1/payload.json")
     r.raise_for_status()
     payload_schema = r.json()
 

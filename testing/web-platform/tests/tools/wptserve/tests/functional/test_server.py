@@ -60,20 +60,12 @@ class TestRequestHandler(TestUsingServer):
         self.assertEqual(200, resp.getcode())
 
 
-class TestH2Version(TestUsingH2Server):
-    # The purpose of this test is to ensure that all TestUsingH2Server tests
-    # actually end up using HTTP/2, in case there's any protocol negotiation.
-    def test_http_version(self):
-        resp = self.client.get('/')
-
-        assert resp.http_version == 'HTTP/2'
-
-
 class TestFileHandlerH2(TestUsingH2Server):
     def test_not_handled(self):
-        resp = self.client.get("/not_existing")
+        self.conn.request("GET", "/not_existing")
+        resp = self.conn.get_response()
 
-        assert resp.status_code == 404
+        assert resp.status == 404
 
 
 class TestRewriterH2(TestUsingH2Server):
@@ -85,9 +77,10 @@ class TestRewriterH2(TestUsingH2Server):
         route = ("GET", "/test/rewritten", handler)
         self.server.rewriter.register("GET", "/test/original", route[1])
         self.server.router.register(*route)
-        resp = self.client.get("/test/original")
-        assert resp.status_code == 200
-        assert resp.content == b"/test/rewritten"
+        self.conn.request("GET", "/test/original")
+        resp = self.conn.get_response()
+        assert resp.status == 200
+        assert resp.read() == b"/test/rewritten"
 
 
 class TestRequestHandlerH2(TestUsingH2Server):
@@ -98,9 +91,10 @@ class TestRequestHandlerH2(TestUsingH2Server):
 
         route = ("GET", "/test/raises", handler)
         self.server.router.register(*route)
-        resp = self.client.get("/test/raises")
+        self.conn.request("GET", "/test/raises")
+        resp = self.conn.get_response()
 
-        assert resp.status_code == 500
+        assert resp.status == 500
 
     def test_frame_handler_exception(self):
         class handler_cls:
@@ -109,9 +103,10 @@ class TestRequestHandlerH2(TestUsingH2Server):
 
         route = ("GET", "/test/raises", handler_cls())
         self.server.router.register(*route)
-        resp = self.client.get("/test/raises")
+        self.conn.request("GET", "/test/raises")
+        resp = self.conn.get_response()
 
-        assert resp.status_code == 500
+        assert resp.status == 500
 
 
 if __name__ == "__main__":

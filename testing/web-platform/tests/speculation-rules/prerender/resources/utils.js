@@ -32,9 +32,7 @@ class PrerenderChannel extends EventTarget {
     this.#url = `/speculation-rules/prerender/resources/deprecated-broadcast-channel.py?name=${name}&uid=${uid}`;
     (async() => {
       while (this.#active) {
-        // Add the "keepalive" option to avoid fetch() results in unhandled
-        // rejection with fetch abortion due to window.close().
-        const messages = await (await fetch(this.#url, {keepalive: true})).json();
+        const messages = await (await fetch(this.#url)).json();
         for (const {data, id} of messages) {
           if (!this.#ids.has(id))
             this.dispatchEvent(new MessageEvent('message', {data}));
@@ -55,9 +53,7 @@ class PrerenderChannel extends EventTarget {
   async postMessage(data) {
     const id = new Date().valueOf();
     this.#ids.add(id);
-    // Add the "keepalive" option to prevent messages from being lost due to
-    // window.close().
-    await fetch(this.#url, {method: 'POST', body: JSON.stringify({data, id}), keepalive: true});
+    await fetch(this.#url, {method: 'POST', body: JSON.stringify({data, id})});
   }
 }
 
@@ -183,21 +179,13 @@ function createFrame(url) {
     });
 }
 
-async function create_prerendered_page(t, opt = {}) {
-  const baseUrl = '/speculation-rules/prerender/resources/exec.py';
+async function create_prerendered_page(t) {
   const init_uuid = token();
   const prerender_uuid = token();
-  const discard_uuid = token();
   const init_remote = new RemoteContext(init_uuid);
   const prerender_remote = new RemoteContext(prerender_uuid);
-  const discard_remote = new RemoteContext(discard_uuid);
-  window.open(`${baseUrl}?uuid=${init_uuid}&init`, '_blank', 'noopener');
-  const params = new URLSearchParams(baseUrl.search);
-  params.set('uuid', prerender_uuid);
-  params.set('discard_uuid', discard_uuid);
-  for (const p in opt)
-    params.set(p, opt[p]);
-  const url = `${baseUrl}?${params.toString()}`;
+  window.open(`/speculation-rules/prerender/resources/exec.html?uuid=${init_uuid}&init`, '_blank', 'noopener');
+  const url = `/speculation-rules/prerender/resources/exec.html?uuid=${prerender_uuid}&prerender`;
 
   await init_remote.execute_script(url => {
       const a = document.createElement('a');
@@ -210,48 +198,37 @@ async function create_prerendered_page(t, opt = {}) {
       document.head.appendChild(rules);
   }, [url]);
 
-  await Promise.any([
-    prerender_remote.execute_script(() => {
-        window.import_script_to_prerendered_page = src => {
-            const script = document.createElement('script');
-            script.src = src;
-            document.head.appendChild(script);
-            return new Promise(resolve => script.addEventListener('load', resolve));
-        }
-    }), new Promise(r => t.step_timeout(r, 3000))
-    ]);
+  await prerender_remote.execute_script(() => {
+      window.import_script_to_prerendered_page = src => {
+        const script = document.createElement('script');
+        script.src = src;
+        document.head.appendChild(script);
+        return new Promise(resolve => script.addEventListener('load', resolve));
+      }
+  });
 
   t.add_cleanup(() => {
     init_remote.execute_script(() => window.close());
-    discard_remote.execute_script(() => window.close());
     prerender_remote.execute_script(() => window.close());
   });
 
-  async function tryToActivate() {
-    const prerendering = prerender_remote.execute_script(() => new Promise(resolve => {
-        if (!document.prerendering)
-            resolve('activated');
-        else document.addEventListener('prerenderingchange', () => resolve('activated'));
-    }));
-
-    const discarded = discard_remote.execute_script(() => Promise.resolve('discarded'));
+  async function activate() {
+    const prerendering = prerender_remote.execute_script(() => new Promise(resolve =>
+      document.addEventListener('prerenderingchange', () => {
+        resolve(document.prerendering);
+      })));
 
     init_remote.execute_script(url => {
-        location.href = url;
+      location.href = url;
     }, [url]);
-    return Promise.any([prerendering, discarded]);
-  }
 
-  async function activate() {
-    const prerendering = await tryToActivate();
-    if (prerendering !== 'activated')
+    if (await prerendering)
       throw new Error('Should not be prerendering at this point')
   }
 
   return {
     exec: (fn, args) => prerender_remote.execute_script(fn, args),
-    activate,
-    tryToActivate
+    activate
   };
 }
 

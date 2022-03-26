@@ -84,9 +84,8 @@ def docker_run(**kwargs):
     if os.isatty(os.isatty(sys.stdout.fileno())):
         cmd.append("-it")
     cmd.extend(["wpt:docs", "./wpt"])
-    # /app/venv is created during docker build and is always active inside the
-    # container.
-    cmd.extend(["--venv", "/app/venv", "--skip-venv-setup"])
+    if kwargs["venv"]:
+        cmd.extend(["--venv", kwargs["venv"]])
     cmd.extend(["build-docs", "--type", kwargs["type"]])
     if kwargs["serve"] is not None:
         cmd.extend(["--serve", str(kwargs["serve"])])
@@ -97,6 +96,7 @@ def docker_run(**kwargs):
 def build(_venv, **kwargs):
     if kwargs["docker"]:
         docker_build()
+        kwargs["venv"] = "/app/venv"
         return docker_run(**kwargs)
 
     out_dir = os.path.join(here, "_build")
@@ -108,7 +108,7 @@ def build(_venv, **kwargs):
             sys.exit(1)
         if kwargs["serve"] is not None:
             executable = "sphinx-autobuild"
-            extras = ["--port", str(kwargs["serve"]),
+            extras = ["-p", str(kwargs["serve"]),
                       "--host", "0.0.0.0",
                       "--watch", os.path.abspath(os.path.join(here, os.pardir, "resources")),
                       # Ignore changes to files specified with glob pattern

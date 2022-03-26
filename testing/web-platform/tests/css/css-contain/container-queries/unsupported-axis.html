@@ -56,8 +56,8 @@
 </style>
 <script>
   test(function(t) {
-    // (height > 0px) requires container-type:size.
-    assert_equals(getComputedStyle(target).getPropertyValue('--height-or-width'), '');
+    // (height > 0px) should evaluate to "unknown".
+    assert_equals(getComputedStyle(target).getPropertyValue('--height-or-width'), 'true');
   }, '((height > 0px) or (width > 0px))');
 </script>
 
@@ -69,8 +69,8 @@
 </style>
 <script>
   test(function(t) {
-    // (height > 0px) requires container-type:size.
-    assert_equals(getComputedStyle(target).getPropertyValue('--width-or-height'), '');
+    // (height > 0px) should evaluate to "unknown".
+    assert_equals(getComputedStyle(target).getPropertyValue('--width-or-height'), 'true');
   }, '((width > 0px) or (height > 0px))');
 </script>
 
@@ -81,8 +81,9 @@
 </style>
 <script>
   test(function(t) {
-    // (orientation: landscape) requires container-type:size.
-    assert_equals(getComputedStyle(target).getPropertyValue('--orientation-or-width'), '');
+    // (orientation: landscape) depends on both axes, and should evaluate
+    // to "unknown".
+    assert_equals(getComputedStyle(target).getPropertyValue('--orientation-or-width'), 'true');
   }, '((orientation: landscape) or (width > 0px))');
 </script>
 
@@ -94,8 +95,9 @@
 </style>
 <script>
   test(function(t) {
-    // (orientation: landscape) requires container-type:size.
-    assert_equals(getComputedStyle(target).getPropertyValue('--width-or-orientation'), '');
+    // (orientation: landscape) depends on both axes, and should evaluate
+    // to "unknown".
+    assert_equals(getComputedStyle(target).getPropertyValue('--width-or-orientation'), 'true');
   }, '((width > 0px) or (orientation: landscape))');
 </script>
 

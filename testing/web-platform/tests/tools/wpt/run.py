@@ -395,8 +395,9 @@ class Chrome(BrowserSetup):
             kwargs["binary_args"].append("--no-sandbox")
 
 
-class ChromeAndroidBase(BrowserSetup):
-    experimental_channels = ("dev", "canary")
+class ChromeAndroid(BrowserSetup):
+    name = "chrome_android"
+    browser_cls = browser.ChromeAndroid
 
     def setup_kwargs(self, kwargs):
         if kwargs.get("device_serial"):
@@ -427,15 +428,7 @@ class ChromeAndroidBase(BrowserSetup):
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
-
-
-class ChromeAndroid(ChromeAndroidBase):
-    name = "chrome_android"
-    browser_cls = browser.ChromeAndroid
-
-    def setup_kwargs(self, kwargs):
-        super(ChromeAndroid, self).setup_kwargs(kwargs)
-        if kwargs["browser_channel"] in self.experimental_channels:
+        if browser_channel in ("dev", "canary"):
             logger.info("Automatically turning on experimental features for Chrome Dev/Canary")
             kwargs["binary_args"].append("--enable-experimental-web-platform-features")
             # HACK(Hexcles): work around https://github.com/web-platform-tests/wpt/issues/16448
@@ -451,20 +444,67 @@ class ChromeiOS(BrowserSetup):
             raise WptrunError("Unable to locate or install chromedriver binary")
 
 
-class AndroidWeblayer(ChromeAndroidBase):
+class AndroidWeblayer(BrowserSetup):
     name = "android_weblayer"
     browser_cls = browser.AndroidWeblayer
+    experimental_channels = ("dev", "canary")
 
     def setup_kwargs(self, kwargs):
-        super(AndroidWeblayer, self).setup_kwargs(kwargs)
-        if kwargs["browser_channel"] in self.experimental_channels:
+        if kwargs.get("device_serial"):
+            self.browser.device_serial = kwargs["device_serial"]
+        browser_channel = kwargs["browser_channel"]
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = None
+            if not kwargs["install_webdriver"]:
+                webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                install = self.prompt_install("chromedriver")
+
+                if install:
+                    logger.info("Downloading chromedriver")
+                    webdriver_binary = self.browser.install_webdriver(
+                        dest=self.venv.bin_path,
+                        channel=browser_channel)
+            else:
+                logger.info("Using webdriver binary %s" % webdriver_binary)
+
+            if webdriver_binary:
+                kwargs["webdriver_binary"] = webdriver_binary
+            else:
+                raise WptrunError("Unable to locate or install chromedriver binary")
+        if browser_channel in self.experimental_channels:
             logger.info("Automatically turning on experimental features for WebLayer Dev/Canary")
             kwargs["binary_args"].append("--enable-experimental-web-platform-features")
 
 
-class AndroidWebview(ChromeAndroidBase):
+class AndroidWebview(BrowserSetup):
     name = "android_webview"
     browser_cls = browser.AndroidWebview
+
+    def setup_kwargs(self, kwargs):
+        if kwargs.get("device_serial"):
+            self.browser.device_serial = kwargs["device_serial"]
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = None
+            if not kwargs["install_webdriver"]:
+                webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                install = self.prompt_install("chromedriver")
+
+                if install:
+                    logger.info("Downloading chromedriver")
+                    webdriver_binary = self.browser.install_webdriver(
+                        dest=self.venv.bin_path,
+                        channel=kwargs["browser_channel"])
+            else:
+                logger.info("Using webdriver binary %s" % webdriver_binary)
+
+            if webdriver_binary:
+                kwargs["webdriver_binary"] = webdriver_binary
+            else:
+                raise WptrunError("Unable to locate or install chromedriver binary")
 
 
 class Opera(BrowserSetup):

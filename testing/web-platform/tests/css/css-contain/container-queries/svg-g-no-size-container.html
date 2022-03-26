@@ -10,11 +10,8 @@
     container-type: size;
   }
 
-  @supports not (container-type: size) {
-    text { fill: red; }
-  }
   @container (width = 100px) {
-    text { fill: red; }
+    text { color: red; }
   }
 </style>
 <p>You should see the word PASS below and no red.</p>
