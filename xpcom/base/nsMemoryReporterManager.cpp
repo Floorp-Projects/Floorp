@@ -1816,12 +1816,9 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
 
   if (RefPtr<UtilityProcessManager> utility =
           UtilityProcessManager::GetIfExists()) {
-    for (RefPtr<UtilityProcessParent>& parent :
-         utility->GetAllProcessesProcessParent()) {
-      if (RefPtr<MemoryReportingProcess> proc =
-              utility->GetProcessMemoryReporter(parent)) {
-        s->mChildrenPending.AppendElement(proc.forget());
-      }
+    if (RefPtr<MemoryReportingProcess> proc =
+            utility->GetProcessMemoryReporter()) {
+      s->mChildrenPending.AppendElement(proc.forget());
     }
   }
 

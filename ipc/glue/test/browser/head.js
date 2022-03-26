@@ -8,8 +8,6 @@ const utilityProcessTest = Cc[
   "@mozilla.org/utility-process-test;1"
 ].createInstance(Ci.nsIUtilityProcessTest);
 
-const kGenericUtility = 0x0;
-
 function startUtilityProcess() {
   add_task(async () => {
     info("Start a UtilityProcess");

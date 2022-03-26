@@ -44,7 +44,7 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // This checks needs to be kept in sync with SandboxingKind enum living in
   // ipc/glue/UtilityProcessSandboxing.h
   if (*sandboxingKind < SandboxingKind::GENERIC_UTILITY ||
-      *sandboxingKind >= SandboxingKind::COUNT) {
+      *sandboxingKind > SandboxingKind::GENERIC_UTILITY) {
     return false;
   }
 
