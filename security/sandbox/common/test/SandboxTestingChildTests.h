@@ -580,7 +580,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
 #endif
 }
 
-void RunTestsUtility(SandboxTestingChild* child) {
+void RunTestsGenericUtility(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
 
 #ifdef XP_UNIX
