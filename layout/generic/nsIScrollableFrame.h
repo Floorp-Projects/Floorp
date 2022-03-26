@@ -411,28 +411,25 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual ScrollOrigin LastScrollOrigin() = 0;
 
   /**
-   * Returns whether there's an async scroll going on.
+   * Gets the async scroll animation state of this scroll frame.
    *
-   * The argument allows a subtle distinction that's needed for APZ. APZ scroll
-   * animations that are requested from the main thread go through three states:
-   * 1) pending, when the main thread has recorded that it wants apz to do a
-   * scroll animation, 2) requested, when the main thread has sent the request
-   * to the compositor (but it hasn't necessarily arrived yet), and 3) in
-   * progress, after apz has responded to the main thread that is got the
-   * request. When `IncludeApzAnimation::No` is given, APZ animations in any of
-   * the three states are not included, which is needed so that APZ can keep
-   * syncing the scroll offset properly. When
-   * `IncludeApzAnimation::PendingAndRequestedOnly` is given, only APZ
-   * animations in the pending or requested state are included, this is needed
-   * when saving the state of a scroll frame (we want to save the mDestination
-   * of the animation, but the repaint request that informs the main thread that
-   * the animation is in progress will also overwrite mDestination with the
-   * current scroll position). When `IncludeApzAnimation::Yes` is given, APZ
-   * animations in any state are included, this is what all other callers use.
+   * There are four possible kinds that can overlap.
+   * MainThread means async scroll animated by the main thread.
+   * APZ scroll animations that are requested from the main thread go through
+   * three states: 1) pending, when the main thread has recorded that it wants
+   * apz to do a scroll animation, 2) requested, when the main thread has sent
+   * the request to the compositor (but it hasn't necessarily arrived yet), and
+   * 3) in progress, after apz has responded to the main thread that it got the
+   * request.
    */
-  enum class IncludeApzAnimation : uint8_t { No, PendingAndRequestedOnly, Yes };
-  virtual bool IsScrollAnimating(
-      IncludeApzAnimation = IncludeApzAnimation::Yes) = 0;
+  enum class AnimationState {
+    MainThread,    // mAsyncScroll || mAsyncSmoothMSDScroll
+    APZPending,    // mScrollUpdates.LastElement() is Smooth or SmoothMsd
+    APZRequested,  // mApzAnimationRequested
+    APZInProgress  // mCurrentAPZScrollAnimationType !=
+                   // APZScrollAniationType::No
+  };
+  virtual mozilla::EnumSet<AnimationState> ScrollAnimationState() const = 0;
 
   /**
    * Returns the current generation counter for the scrollframe. This counter
