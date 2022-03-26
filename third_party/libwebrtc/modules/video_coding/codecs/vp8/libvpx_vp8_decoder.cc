@@ -132,7 +132,10 @@ LibvpxVp8Decoder::LibvpxVp8Decoder()
       key_frame_required_(true),
       deblock_params_(use_postproc_ ? GetPostProcParamsFromFieldTrialGroup()
                                     : absl::nullopt),
-      qp_smoother_(use_postproc_ ? new QpSmoother() : nullptr) {}
+      qp_smoother_(use_postproc_ ? new QpSmoother() : nullptr),
+      preferred_output_format_(field_trial::IsEnabled("WebRTC-NV12Decode")
+                                   ? VideoFrameBuffer::Type::kNV12
+                                   : VideoFrameBuffer::Type::kI420) {}
 
 LibvpxVp8Decoder::~LibvpxVp8Decoder() {
   inited_ = true;  // in order to do the actual release
@@ -328,8 +331,38 @@ int LibvpxVp8Decoder::ReturnFrame(
   last_frame_width_ = img->d_w;
   last_frame_height_ = img->d_h;
   // Allocate memory for decoded image.
-  rtc::scoped_refptr<I420Buffer> buffer =
-      buffer_pool_.CreateI420Buffer(img->d_w, img->d_h);
+  rtc::scoped_refptr<VideoFrameBuffer> buffer;
+
+  if (preferred_output_format_ == VideoFrameBuffer::Type::kNV12) {
+    // Convert instead of making a copy.
+    // Note: libvpx doesn't support creating NV12 image directly.
+    // Due to the bitstream structure such a change would just hide the
+    // conversion operation inside the decode call.
+    rtc::scoped_refptr<NV12Buffer> nv12_buffer =
+        buffer_pool_.CreateNV12Buffer(img->d_w, img->d_h);
+    buffer = nv12_buffer;
+    if (nv12_buffer.get()) {
+      libyuv::I420ToNV12(img->planes[VPX_PLANE_Y], img->stride[VPX_PLANE_Y],
+                         img->planes[VPX_PLANE_U], img->stride[VPX_PLANE_U],
+                         img->planes[VPX_PLANE_V], img->stride[VPX_PLANE_V],
+                         nv12_buffer->MutableDataY(), nv12_buffer->StrideY(),
+                         nv12_buffer->MutableDataUV(), nv12_buffer->StrideUV(),
+                         img->d_w, img->d_h);
+    }
+  } else {
+    rtc::scoped_refptr<I420Buffer> i420_buffer =
+        buffer_pool_.CreateI420Buffer(img->d_w, img->d_h);
+    buffer = i420_buffer;
+    if (i420_buffer.get()) {
+      libyuv::I420Copy(img->planes[VPX_PLANE_Y], img->stride[VPX_PLANE_Y],
+                       img->planes[VPX_PLANE_U], img->stride[VPX_PLANE_U],
+                       img->planes[VPX_PLANE_V], img->stride[VPX_PLANE_V],
+                       i420_buffer->MutableDataY(), i420_buffer->StrideY(),
+                       i420_buffer->MutableDataU(), i420_buffer->StrideU(),
+                       i420_buffer->MutableDataV(), i420_buffer->StrideV(),
+                       img->d_w, img->d_h);
+    }
+  }
 
   if (!buffer.get()) {
     // Pool has too many pending frames.
@@ -337,14 +370,6 @@ int LibvpxVp8Decoder::ReturnFrame(
                           1);
     return WEBRTC_VIDEO_CODEC_NO_OUTPUT;
   }
-
-  libyuv::I420Copy(img->planes[VPX_PLANE_Y], img->stride[VPX_PLANE_Y],
-                   img->planes[VPX_PLANE_U], img->stride[VPX_PLANE_U],
-                   img->planes[VPX_PLANE_V], img->stride[VPX_PLANE_V],
-                   buffer->MutableDataY(), buffer->StrideY(),
-                   buffer->MutableDataU(), buffer->StrideU(),
-                   buffer->MutableDataV(), buffer->StrideV(), img->d_w,
-                   img->d_h);
 
   VideoFrame decoded_image = VideoFrame::Builder()
                                  .set_video_frame_buffer(buffer)

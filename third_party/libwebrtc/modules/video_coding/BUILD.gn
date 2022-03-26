@@ -577,6 +577,7 @@ rtc_library("webrtc_vp9") {
     "../../rtc_base/synchronization:mutex",
     "../../system_wrappers:field_trial",
     "../rtp_rtcp:rtp_rtcp_format",
+    "//third_party/libyuv",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
   if (rtc_build_libvpx) {
