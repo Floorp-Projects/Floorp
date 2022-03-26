@@ -21,22 +21,13 @@
 
 namespace mozilla::ipc {
 
-static std::atomic<UtilityProcessParent*> sUtilityProcessParent;
-
 UtilityProcessParent::UtilityProcessParent(UtilityProcessHost* aHost)
     : mHost(aHost) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mHost);
-  sUtilityProcessParent = this;
 }
 
 UtilityProcessParent::~UtilityProcessParent() = default;
-
-/* static */
-UtilityProcessParent* UtilityProcessParent::GetSingleton() {
-  MOZ_DIAGNOSTIC_ASSERT(sUtilityProcessParent);
-  return sUtilityProcessParent;
-}
 
 bool UtilityProcessParent::SendRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
