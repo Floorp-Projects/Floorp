@@ -164,7 +164,8 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile,
     const RequestMemoryReportResolver& aResolver) {
-  nsPrintfCString processName("Utility (pid %u)", base::GetCurrentProcId());
+  nsPrintfCString processName("Utility (pid: %u, sandboxingKind: %" PRIu64 ")",
+                              base::GetCurrentProcId(), mSandbox);
 
   mozilla::dom::MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,

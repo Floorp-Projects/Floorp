@@ -258,11 +258,13 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         utilityProc->LaunchProcess(sandboxingKind)
             ->Then(
                 GetMainThreadSerialEventTarget(), __func__,
-                [processPromise, utilityProc]() {
-                  UtilityProcessParent* utilityParent =
-                      utilityProc ? utilityProc->GetProcessParent() : nullptr;
+                [processPromise, utilityProc, sandboxingKind]() {
+                  RefPtr<UtilityProcessParent> utilityParent =
+                      utilityProc
+                          ? utilityProc->GetProcessParent(sandboxingKind)
+                          : nullptr;
                   if (utilityParent) {
-                    return InitializeSandboxTestingActors(utilityParent,
+                    return InitializeSandboxTestingActors(utilityParent.get(),
                                                           processPromise);
                   }
                   return processPromise->Reject(NS_ERROR_FAILURE, __func__);
