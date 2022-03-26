@@ -1,7 +1,6 @@
-use crate::future::poll_fn;
-use crate::io::PollEvented;
-use crate::net::tcp::{Incoming, TcpStream};
-use crate::net::ToSocketAddrs;
+use crate::io::{Interest, PollEvented};
+use crate::net::tcp::TcpStream;
+use crate::net::{to_socket_addrs, ToSocketAddrs};
 
 use std::convert::TryFrom;
 use std::fmt;
@@ -9,13 +8,15 @@ use std::io;
 use std::net::{self, SocketAddr};
 use std::task::{Context, Poll};
 
-cfg_tcp! {
+cfg_net! {
     /// A TCP socket server, listening for connections.
     ///
-    /// You can accept a new connection by using the [`accept`](`TcpListener::accept`) method. Alternatively `TcpListener`
-    /// implements the [`Stream`](`crate::stream::Stream`) trait, which allows you to use the listener in places that want a
-    /// stream. The stream will never return `None` and will also not yield the peer's `SocketAddr` structure.  Iterating over
-    /// it is equivalent to calling accept in a loop.
+    /// You can accept a new connection by using the [`accept`](`TcpListener::accept`)
+    /// method.
+    ///
+    /// A `TcpListener` can be turned into a `Stream` with [`TcpListenerStream`].
+    ///
+    /// [`TcpListenerStream`]: https://docs.rs/tokio-stream/0.1/tokio_stream/wrappers/struct.TcpListenerStream.html
     ///
     /// # Errors
     ///
@@ -40,29 +41,11 @@ cfg_tcp! {
     ///
     /// #[tokio::main]
     /// async fn main() -> io::Result<()> {
-    ///     let mut listener = TcpListener::bind("127.0.0.1:8080").await?;
+    ///     let listener = TcpListener::bind("127.0.0.1:8080").await?;
     ///
     ///     loop {
     ///         let (socket, _) = listener.accept().await?;
     ///         process_socket(socket).await;
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// Using `impl Stream`:
-    /// ```no_run
-    /// use tokio::{net::TcpListener, stream::StreamExt};
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
-    ///     while let Some(stream) = listener.next().await {
-    ///         match stream {
-    ///             Ok(stream) => {
-    ///                 println!("new client!");
-    ///             }
-    ///             Err(e) => { /* connection failed */ }
-    ///         }
     ///     }
     /// }
     /// ```
@@ -81,9 +64,6 @@ impl TcpListener {
     /// method.
     ///
     /// The address type can be any implementor of the [`ToSocketAddrs`] trait.
-    /// Note that strings only implement this trait when the **`dns`** feature
-    /// is enabled, as strings may contain domain names that need to be resolved.
-    ///
     /// If `addr` yields multiple addresses, bind will be attempted with each of
     /// the addresses until one succeeds and returns the listener. If none of
     /// the addresses succeed in creating a listener, the error returned from
@@ -91,7 +71,11 @@ impl TcpListener {
     ///
     /// This function sets the `SO_REUSEADDR` option on the socket.
     ///
+    /// To configure the socket before binding, you can use the [`TcpSocket`]
+    /// type.
+    ///
     /// [`ToSocketAddrs`]: trait@crate::net::ToSocketAddrs
+    /// [`TcpSocket`]: struct@crate::net::TcpSocket
     ///
     /// # Examples
     ///
@@ -110,27 +94,8 @@ impl TcpListener {
     ///     Ok(())
     /// }
     /// ```
-    ///
-    /// Without the `dns` feature:
-    ///
-    /// ```no_run
-    /// use tokio::net::TcpListener;
-    /// use std::net::Ipv4Addr;
-    ///
-    /// use std::io;
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> io::Result<()> {
-    ///     let listener = TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), 2345)).await?;
-    ///
-    ///     // use the listener
-    ///
-    ///     # let _ = listener;
-    ///     Ok(())
-    /// }
-    /// ```
     pub async fn bind<A: ToSocketAddrs>(addr: A) -> io::Result<TcpListener> {
-        let addrs = addr.to_socket_addrs().await?;
+        let addrs = to_socket_addrs(addr).await?;
 
         let mut last_err = None;
 
@@ -150,7 +115,7 @@ impl TcpListener {
     }
 
     fn bind_addr(addr: SocketAddr) -> io::Result<TcpListener> {
-        let listener = mio::net::TcpListener::bind(&addr)?;
+        let listener = mio::net::TcpListener::bind(addr)?;
         TcpListener::new(listener)
     }
 
@@ -159,6 +124,13 @@ impl TcpListener {
     /// This function will yield once a new TCP connection is established. When
     /// established, the corresponding [`TcpStream`] and the remote peer's
     /// address will be returned.
+    ///
+    /// # Cancel safety
+    ///
+    /// This method is cancel safe. If the method is used as the event in a
+    /// [`tokio::select!`](crate::select) statement and some other branch
+    /// completes first, then it is guaranteed that no new connections were
+    /// accepted by this method.
     ///
     /// [`TcpStream`]: struct@crate::net::TcpStream
     ///
@@ -171,7 +143,7 @@ impl TcpListener {
     ///
     /// #[tokio::main]
     /// async fn main() -> io::Result<()> {
-    ///     let mut listener = TcpListener::bind("127.0.0.1:8080").await?;
+    ///     let listener = TcpListener::bind("127.0.0.1:8080").await?;
     ///
     ///     match listener.accept().await {
     ///         Ok((_socket, addr)) => println!("new client: {:?}", addr),
@@ -181,66 +153,51 @@ impl TcpListener {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn accept(&mut self) -> io::Result<(TcpStream, SocketAddr)> {
-        poll_fn(|cx| self.poll_accept(cx)).await
+    pub async fn accept(&self) -> io::Result<(TcpStream, SocketAddr)> {
+        let (mio, addr) = self
+            .io
+            .registration()
+            .async_io(Interest::READABLE, || self.io.accept())
+            .await?;
+
+        let stream = TcpStream::new(mio)?;
+        Ok((stream, addr))
     }
 
     /// Polls to accept a new incoming connection to this listener.
     ///
-    /// If there is no connection to accept, `Poll::Pending` is returned and
-    /// the current task will be notified by a waker.
-    pub fn poll_accept(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<io::Result<(TcpStream, SocketAddr)>> {
-        let (io, addr) = ready!(self.poll_accept_std(cx))?;
+    /// If there is no connection to accept, `Poll::Pending` is returned and the
+    /// current task will be notified by a waker.  Note that on multiple calls
+    /// to `poll_accept`, only the `Waker` from the `Context` passed to the most
+    /// recent call is scheduled to receive a wakeup.
+    pub fn poll_accept(&self, cx: &mut Context<'_>) -> Poll<io::Result<(TcpStream, SocketAddr)>> {
+        loop {
+            let ev = ready!(self.io.registration().poll_read_ready(cx))?;
 
-        let io = mio::net::TcpStream::from_stream(io)?;
-        let io = TcpStream::new(io)?;
-
-        Poll::Ready(Ok((io, addr)))
-    }
-
-    fn poll_accept_std(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<io::Result<(net::TcpStream, SocketAddr)>> {
-        ready!(self.io.poll_read_ready(cx, mio::Ready::readable()))?;
-
-        match self.io.get_ref().accept_std() {
-            Ok(pair) => Poll::Ready(Ok(pair)),
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                self.io.clear_read_ready(cx, mio::Ready::readable())?;
-                Poll::Pending
+            match self.io.accept() {
+                Ok((io, addr)) => {
+                    let io = TcpStream::new(io)?;
+                    return Poll::Ready(Ok((io, addr)));
+                }
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                    self.io.registration().clear_readiness(ev);
+                }
+                Err(e) => return Poll::Ready(Err(e)),
             }
-            Err(e) => Poll::Ready(Err(e)),
         }
     }
 
-    /// Creates a new TCP listener from the standard library's TCP listener.
+    /// Creates new `TcpListener` from a `std::net::TcpListener`.
     ///
-    /// This method can be used when the `Handle::tcp_listen` method isn't
-    /// sufficient because perhaps some more configuration is needed in terms of
-    /// before the calls to `bind` and `listen`.
+    /// This function is intended to be used to wrap a TCP listener from the
+    /// standard library in the Tokio equivalent. The conversion assumes nothing
+    /// about the underlying listener; it is left up to the user to set it in
+    /// non-blocking mode.
     ///
-    /// This API is typically paired with the `net2` crate and the `TcpBuilder`
+    /// This API is typically paired with the `socket2` crate and the `Socket`
     /// type to build up and customize a listener before it's shipped off to the
     /// backing event loop. This allows configuration of options like
     /// `SO_REUSEPORT`, binding to multiple addresses, etc.
-    ///
-    /// The `addr` argument here is one of the addresses that `listener` is
-    /// bound to and the listener will only be guaranteed to accept connections
-    /// of the same address type currently.
-    ///
-    /// The platform specific behavior of this function looks like:
-    ///
-    /// * On Unix, the socket is placed into nonblocking mode and connections
-    ///   can be accepted as normal
-    ///
-    /// * On Windows, the address is stored internally and all future accepts
-    ///   will only be for the same IP version as `addr` specified. That is, if
-    ///   `addr` is an IPv4 address then all sockets accepted will be IPv4 as
-    ///   well (same for IPv6).
     ///
     /// # Examples
     ///
@@ -251,6 +208,7 @@ impl TcpListener {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn Error>> {
     ///     let std_listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+    ///     std_listener.set_nonblocking(true)?;
     ///     let listener = TcpListener::from_std(std_listener)?;
     ///     Ok(())
     /// }
@@ -262,14 +220,56 @@ impl TcpListener {
     ///
     /// The runtime is usually set implicitly when this function is called
     /// from a future driven by a tokio runtime, otherwise runtime can be set
-    /// explicitly with [`Handle::enter`](crate::runtime::Handle::enter) function.
+    /// explicitly with [`Runtime::enter`](crate::runtime::Runtime::enter) function.
     pub fn from_std(listener: net::TcpListener) -> io::Result<TcpListener> {
-        let io = mio::net::TcpListener::from_std(listener)?;
+        let io = mio::net::TcpListener::from_std(listener);
         let io = PollEvented::new(io)?;
         Ok(TcpListener { io })
     }
 
-    fn new(listener: mio::net::TcpListener) -> io::Result<TcpListener> {
+    /// Turns a [`tokio::net::TcpListener`] into a [`std::net::TcpListener`].
+    ///
+    /// The returned [`std::net::TcpListener`] will have nonblocking mode set as
+    /// `true`.  Use [`set_nonblocking`] to change the blocking mode if needed.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use std::error::Error;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn Error>> {
+    ///     let tokio_listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    ///     let std_listener = tokio_listener.into_std()?;
+    ///     std_listener.set_nonblocking(false)?;
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// [`tokio::net::TcpListener`]: TcpListener
+    /// [`std::net::TcpListener`]: std::net::TcpListener
+    /// [`set_nonblocking`]: fn@std::net::TcpListener::set_nonblocking
+    pub fn into_std(self) -> io::Result<std::net::TcpListener> {
+        #[cfg(unix)]
+        {
+            use std::os::unix::io::{FromRawFd, IntoRawFd};
+            self.io
+                .into_inner()
+                .map(|io| io.into_raw_fd())
+                .map(|raw_fd| unsafe { std::net::TcpListener::from_raw_fd(raw_fd) })
+        }
+
+        #[cfg(windows)]
+        {
+            use std::os::windows::io::{FromRawSocket, IntoRawSocket};
+            self.io
+                .into_inner()
+                .map(|io| io.into_raw_socket())
+                .map(|raw_socket| unsafe { std::net::TcpListener::from_raw_socket(raw_socket) })
+        }
+    }
+
+    pub(crate) fn new(listener: mio::net::TcpListener) -> io::Result<TcpListener> {
         let io = PollEvented::new(listener)?;
         Ok(TcpListener { io })
     }
@@ -298,47 +298,7 @@ impl TcpListener {
     /// }
     /// ```
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
-        self.io.get_ref().local_addr()
-    }
-
-    /// Returns a stream over the connections being received on this listener.
-    ///
-    /// Note that `TcpListener` also directly implements `Stream`.
-    ///
-    /// The returned stream will never return `None` and will also not yield the
-    /// peer's `SocketAddr` structure. Iterating over it is equivalent to
-    /// calling accept in a loop.
-    ///
-    /// # Errors
-    ///
-    /// Note that accepting a connection can lead to various errors and not all
-    /// of them are necessarily fatal ‒ for example having too many open file
-    /// descriptors or the other side closing the connection while it waits in
-    /// an accept queue. These would terminate the stream if not handled in any
-    /// way.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use tokio::{net::TcpListener, stream::StreamExt};
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
-    ///     let mut incoming = listener.incoming();
-    ///
-    ///     while let Some(stream) = incoming.next().await {
-    ///         match stream {
-    ///             Ok(stream) => {
-    ///                 println!("new client!");
-    ///             }
-    ///             Err(e) => { /* connection failed */ }
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    pub fn incoming(&mut self) -> Incoming<'_> {
-        Incoming::new(self)
+        self.io.local_addr()
     }
 
     /// Gets the value of the `IP_TTL` option for this socket.
@@ -365,7 +325,7 @@ impl TcpListener {
     /// }
     /// ```
     pub fn ttl(&self) -> io::Result<u32> {
-        self.io.get_ref().ttl()
+        self.io.ttl()
     }
 
     /// Sets the value for the `IP_TTL` option on this socket.
@@ -390,34 +350,7 @@ impl TcpListener {
     /// }
     /// ```
     pub fn set_ttl(&self, ttl: u32) -> io::Result<()> {
-        self.io.get_ref().set_ttl(ttl)
-    }
-}
-
-#[cfg(feature = "stream")]
-impl crate::stream::Stream for TcpListener {
-    type Item = io::Result<TcpStream>;
-
-    fn poll_next(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
-        let (socket, _) = ready!(self.poll_accept(cx))?;
-        Poll::Ready(Some(Ok(socket)))
-    }
-}
-
-impl TryFrom<TcpListener> for mio::net::TcpListener {
-    type Error = io::Error;
-
-    /// Consumes value, returning the mio I/O object.
-    ///
-    /// See [`PollEvented::into_inner`] for more details about
-    /// resource deregistration that happens during the call.
-    ///
-    /// [`PollEvented::into_inner`]: crate::io::PollEvented::into_inner
-    fn try_from(value: TcpListener) -> Result<Self, Self::Error> {
-        value.io.into_inner()
+        self.io.set_ttl(ttl)
     }
 }
 
@@ -435,7 +368,7 @@ impl TryFrom<net::TcpListener> for TcpListener {
 
 impl fmt::Debug for TcpListener {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.io.get_ref().fmt(f)
+        self.io.fmt(f)
     }
 }
 
@@ -446,21 +379,19 @@ mod sys {
 
     impl AsRawFd for TcpListener {
         fn as_raw_fd(&self) -> RawFd {
-            self.io.get_ref().as_raw_fd()
+            self.io.as_raw_fd()
         }
     }
 }
 
 #[cfg(windows)]
 mod sys {
-    // TODO: let's land these upstream with mio and then we can add them here.
-    //
-    // use std::os::windows::prelude::*;
-    // use super::{TcpListener;
-    //
-    // impl AsRawHandle for TcpListener {
-    //     fn as_raw_handle(&self) -> RawHandle {
-    //         self.listener.io().as_raw_handle()
-    //     }
-    // }
+    use super::TcpListener;
+    use std::os::windows::prelude::*;
+
+    impl AsRawSocket for TcpListener {
+        fn as_raw_socket(&self) -> RawSocket {
+            self.io.as_raw_socket()
+        }
+    }
 }

@@ -20,9 +20,9 @@ function prepareTest() {
 
   result.buildID = Services.appinfo.platformBuildID;
   Services.prefs.setCharPref(PREF_UPGRADE, "");
-  result.contents = JSON.stringify({
+  result.contents = {
     "browser_upgrade_backup.js": Math.random(),
-  });
+  };
 
   return result;
 }
@@ -45,46 +45,41 @@ add_task(async function test_upgrade_backup() {
   let test = prepareTest();
   info("Let's check if we create an upgrade backup");
   await SessionFile.wipe();
-  await IOUtils.writeUTF8(Paths.clean, test.contents, {
+  await IOUtils.writeJSON(Paths.clean, test.contents, {
     compress: true,
   });
-  await SessionFile.read(); // First call to read() initializes the SessionWorker
+  info("Call `SessionFile.read()` to set state to 'clean'");
+  await SessionFile.read();
   await SessionFile.write(""); // First call to write() triggers the backup
 
-  is(
+  Assert.equal(
     Services.prefs.getCharPref(PREF_UPGRADE),
     test.buildID,
     "upgrade backup should be set"
   );
 
-  is(
+  Assert.ok(
     await IOUtils.exists(Paths.upgradeBackup),
-    true,
     "upgrade backup file has been created"
   );
 
-  let data = await IOUtils.read(Paths.upgradeBackup, { decompress: true });
-  is(
+  let data = await IOUtils.readJSON(Paths.upgradeBackup, { decompress: true });
+  Assert.deepEqual(
     test.contents,
-    new TextDecoder().decode(data),
+    data,
     "upgrade backup contains the expected contents"
   );
 
   info("Let's check that we don't overwrite this upgrade backup");
-  let newContents = JSON.stringify({
+  let newContents = {
     "something else entirely": Math.random(),
-  });
-  await IOUtils.writeUTF8(Paths.clean, newContents, {
+  };
+  await IOUtils.writeJSON(Paths.clean, newContents, {
     compress: true,
   });
-  await SessionFile.read(); // Reinitialize the SessionWorker
   await SessionFile.write(""); // Next call to write() shouldn't trigger the backup
-  data = await IOUtils.read(Paths.upgradeBackup, { decompress: true });
-  is(
-    test.contents,
-    new TextDecoder().decode(data),
-    "upgrade backup hasn't changed"
-  );
+  data = await IOUtils.readJSON(Paths.upgradeBackup, { decompress: true });
+  Assert.deepEqual(test.contents, data, "upgrade backup hasn't changed");
 });
 
 add_task(async function test_upgrade_backup_removal() {
@@ -92,15 +87,11 @@ add_task(async function test_upgrade_backup_removal() {
   let maxUpgradeBackups = Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3);
   info("Let's see if we remove backups if there are too many");
   await SessionFile.wipe();
-  await IOUtils.makeDirectory(Paths.backups);
-  await IOUtils.writeUTF8(Paths.clean, test.contents, {
+  await IOUtils.writeJSON(Paths.clean, test.contents, {
     compress: true,
   });
-
-  // if the nextUpgradeBackup already exists (from another test), remove it
-  if (await IOUtils.exists(Paths.nextUpgradeBackup)) {
-    await IOUtils.remove(Paths.nextUpgradeBackup);
-  }
+  info("Call `SessionFile.read()` to set state to 'clean'");
+  await SessionFile.read();
 
   // create dummy backups
   await IOUtils.writeUTF8(Paths.upgradeBackupPrefix + "20080101010101", "", {
@@ -125,8 +116,7 @@ add_task(async function test_upgrade_backup_removal() {
   // get currently existing backups
   let backups = await getUpgradeBackups();
 
-  // trigger new backup
-  await SessionFile.read(); // First call to read() initializes the SessionWorker
+  info("Write the session to disk and perform a backup");
   await SessionFile.write(""); // First call to write() triggers the backup and the cleanup
 
   // a new backup should have been created (and still exist)
@@ -135,9 +125,8 @@ add_task(async function test_upgrade_backup_removal() {
     test.buildID,
     "upgrade backup should be set"
   );
-  is(
+  Assert.ok(
     await IOUtils.exists(Paths.upgradeBackup),
-    true,
     "upgrade backup file has been created"
   );
 

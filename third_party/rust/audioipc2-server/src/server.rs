@@ -15,7 +15,7 @@ use audioipc::shm::SharedMem;
 use audioipc::{ipccore, rpccore, sys, PlatformHandle};
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
-use std::convert::From;
+use std::convert::{From, TryInto};
 use std::ffi::CStr;
 use std::mem::size_of;
 use std::os::raw::{c_long, c_void};
@@ -31,7 +31,7 @@ fn error(error: cubeb::Error) -> ClientMessage {
 }
 
 struct CubebDeviceCollectionManager {
-    servers: Mutex<Vec<Rc<RefCell<DeviceCollectionChangeCallback>>>>,
+    servers: Mutex<Vec<(Rc<DeviceCollectionChangeCallback>, cubeb::DeviceType)>>,
 }
 
 impl CubebDeviceCollectionManager {
@@ -42,51 +42,27 @@ impl CubebDeviceCollectionManager {
     }
 
     fn register(
-        &mut self,
+        &self,
         context: &cubeb::Context,
-        server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
+        server: &Rc<DeviceCollectionChangeCallback>,
         devtype: cubeb::DeviceType,
     ) -> cubeb::Result<()> {
-        server.borrow_mut().devtype.insert(devtype);
         let mut servers = self.servers.lock().unwrap();
-        let do_register = servers.is_empty();
-        if !servers.iter().any(|s| Rc::ptr_eq(s, server)) {
-            servers.push(server.clone());
-        }
-        if do_register {
+        if servers.is_empty() {
             self.internal_register(context, true)?;
         }
+        servers.push((server.clone(), devtype));
         Ok(())
     }
 
     fn unregister(
-        &mut self,
+        &self,
         context: &cubeb::Context,
-        server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
+        server: &Rc<DeviceCollectionChangeCallback>,
         devtype: cubeb::DeviceType,
     ) -> cubeb::Result<()> {
-        let do_remove = {
-            server.borrow_mut().devtype.remove(devtype);
-            server.borrow().devtype.is_empty()
-        };
         let mut servers = self.servers.lock().unwrap();
-        if do_remove {
-            servers.retain(|s| !Rc::ptr_eq(s, server));
-        }
-        if servers.is_empty() {
-            self.internal_register(context, false)?;
-        }
-        Ok(())
-    }
-
-    fn unregister_server(
-        &mut self,
-        context: &cubeb::Context,
-        server: &Rc<RefCell<DeviceCollectionChangeCallback>>,
-    ) -> cubeb::Result<()> {
-        server.borrow_mut().devtype = cubeb::DeviceType::UNKNOWN;
-        let mut servers = self.servers.lock().unwrap();
-        servers.retain(|s| !Rc::ptr_eq(s, server));
+        servers.retain(|(s, d)| !Rc::ptr_eq(s, server) || d != &devtype);
         if servers.is_empty() {
             self.internal_register(context, false)?;
         }
@@ -94,11 +70,6 @@ impl CubebDeviceCollectionManager {
     }
 
     fn internal_register(&self, context: &cubeb::Context, enable: bool) -> cubeb::Result<()> {
-        let user_ptr = if enable {
-            self as *const CubebDeviceCollectionManager as *mut c_void
-        } else {
-            std::ptr::null_mut()
-        };
         for &(dir, cb) in &[
             (
                 cubeb::DeviceType::INPUT,
@@ -113,25 +84,22 @@ impl CubebDeviceCollectionManager {
                 context.register_device_collection_changed(
                     dir,
                     if enable { Some(cb) } else { None },
-                    user_ptr,
+                    if enable {
+                        self as *const CubebDeviceCollectionManager as *mut c_void
+                    } else {
+                        std::ptr::null_mut()
+                    },
                 )?;
             }
         }
         Ok(())
     }
 
-    // Warning: this is called from an internal cubeb thread, so we must not mutate unprotected shared state.
     unsafe fn device_collection_changed_callback(&self, device_type: ffi::cubeb_device_type) {
         let servers = self.servers.lock().unwrap();
-        servers.iter().for_each(|server| {
-            if server
-                .borrow()
-                .devtype
-                .contains(cubeb::DeviceType::from_bits_truncate(device_type))
-            {
-                server
-                    .borrow_mut()
-                    .device_collection_changed_callback(device_type)
+        servers.iter().for_each(|(s, d)| {
+            if d.contains(cubeb::DeviceType::from_bits_truncate(device_type)) {
+                s.device_collection_changed_callback(device_type)
             }
         });
     }
@@ -258,13 +226,30 @@ impl ServerStreamCallbacks {
             output.len()
         );
 
-        unsafe {
-            if self.input_frame_size != 0 {
+        if self.input_frame_size != 0 {
+            if input.len() > self.shm.get_size() {
+                debug!(
+                    "bad input size: input={} shm={}",
+                    input.len(),
+                    self.shm.get_size()
+                );
+                return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
+            }
+            unsafe {
                 self.shm
                     .get_mut_slice(input.len())
                     .unwrap()
                     .copy_from_slice(input);
             }
+        }
+
+        if self.output_frame_size != 0 && output.len() > self.shm.get_size() {
+            debug!(
+                "bad output size: output={} shm={}",
+                output.len(),
+                self.shm.get_size()
+            );
+            return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
         }
 
         let r = self
@@ -278,13 +263,10 @@ impl ServerStreamCallbacks {
 
         match r {
             Ok(CallbackResp::Data(frames)) => {
-                if frames >= 0 {
+                if frames >= 0 && self.output_frame_size != 0 {
                     let nbytes = frames as usize * self.output_frame_size as usize;
-                    trace!("Reslice output to {}", nbytes);
                     unsafe {
-                        if self.output_frame_size != 0 {
-                            output[..nbytes].copy_from_slice(self.shm.get_slice(nbytes).unwrap());
-                        }
+                        output[..nbytes].copy_from_slice(self.shm.get_slice(nbytes).unwrap());
                     }
                 }
                 frames
@@ -357,11 +339,10 @@ impl Drop for ServerStream {
 
 struct DeviceCollectionChangeCallback {
     rpc: rpccore::Proxy<DeviceCollectionReq, DeviceCollectionResp>,
-    devtype: cubeb::DeviceType,
 }
 
 impl DeviceCollectionChangeCallback {
-    fn device_collection_changed_callback(&mut self, device_type: ffi::cubeb_device_type) {
+    fn device_collection_changed_callback(&self, device_type: ffi::cubeb_device_type) {
         // TODO: Assert device_type is in devtype.
         debug!(
             "Sending device collection ({:?}) changed event",
@@ -379,7 +360,7 @@ pub struct CubebServer {
     device_collection_thread: ipccore::EventLoopHandle,
     streams: slab::Slab<ServerStream>,
     remote_pid: Option<u32>,
-    device_collection_change_callbacks: Option<Rc<RefCell<DeviceCollectionChangeCallback>>>,
+    device_collection_change_callbacks: Option<Rc<DeviceCollectionChangeCallback>>,
     devidmap: DevIdMap,
     shm_area_size: usize,
 }
@@ -395,9 +376,13 @@ impl Drop for CubebServer {
                     context: Ok(context),
                 }) = state.as_mut()
                 {
-                    let r = manager.unregister_server(context, device_collection_change_callbacks);
+                    let r = manager.unregister(
+                        context,
+                        device_collection_change_callbacks,
+                        cubeb::DeviceType::all(),
+                    );
                     if r.is_err() {
-                        debug!("CubebServer: unregister_server failed: {:?}", r);
+                        debug!("CubebServer: unregister failed: {:?}", r);
                     }
                 }
             })
@@ -632,10 +617,7 @@ impl CubebServer {
                 };
 
                 self.device_collection_change_callbacks =
-                    Some(Rc::new(RefCell::new(DeviceCollectionChangeCallback {
-                        rpc,
-                        devtype: cubeb::DeviceType::empty(),
-                    })));
+                    Some(Rc::new(DeviceCollectionChangeCallback { rpc }));
                 let fd = RegisterDeviceCollectionChanged {
                     platform_handle: SerializableHandle::new(client_pipe, self.remote_pid.unwrap()),
                 };

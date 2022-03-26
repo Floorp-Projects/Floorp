@@ -84,14 +84,6 @@ gl.uniform4fv(colorLoc, [1, 127/255, 0, 1]);
 wtu.drawUnitQuad(gl);
 wtu.checkCanvas(gl, [255, 127, 0, 255], "should be orange");
 
-debug("Try linking");
-gl.linkProgram(prg);
-assertMsg(gl.getProgramParameter(prg, gl.LINK_STATUS) == false, "link should fail");
-debug("Draw green to show even though link failed old program is still valid");
-gl.uniform4fv(colorLoc, [0, 1, 0, 1]);
-wtu.drawUnitQuad(gl);
-wtu.checkCanvas(gl, [0, 255, 0, 255], "should be green");
-
 debug("Detach and delete shaders");
 gl.detachShader(prg, vs);
 gl.detachShader(prg, fs);
@@ -103,16 +95,21 @@ gl.uniform4fv(colorLoc, [0, 0, 1, 1]);
 wtu.drawUnitQuad(gl);
 wtu.checkCanvas(gl, [0, 0, 255, 255], "should be blue");
 
+debug("Try linking");
+gl.linkProgram(prg);
+assertMsg(gl.getProgramParameter(prg, gl.LINK_STATUS) == false, "link should fail");
+debug("Draw green to show even though link failed old program is still valid");
+gl.uniform4fv(colorLoc, [0, 1, 0, 1]);
+wtu.glErrorShouldBe(gl, 0, "no errors before draw");
+wtu.drawUnitQuad(gl);
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "should be invalid to draw after failed link");
+
 debug("Call useProgram to show old program can not be made current again");
 gl.useProgram(prg);
 wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "should be invalid");
 
-debug("Draw purple to show the original program is still usable");
-gl.uniform4fv(colorLoc, [1, 0, 1, 1]);
 wtu.drawUnitQuad(gl);
-wtu.checkCanvas(gl, [255, 0, 255, 255], "should be purple");
-
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "should be invalid to draw after failed link");
 
 var successfullyParsed = true;
 </script>

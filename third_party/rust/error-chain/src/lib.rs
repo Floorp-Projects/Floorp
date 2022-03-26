@@ -1,6 +1,5 @@
 #![deny(missing_docs)]
-#![allow(unknown_lints)] // to be removed when unused_doc_comments lints is merged
-#![doc(html_root_url = "https://docs.rs/error-chain/0.11.0")]
+#![doc(html_root_url = "https://docs.rs/error-chain/0.12.4")]
 
 //! A library for consistent and reliable error handling
 //!
@@ -164,6 +163,10 @@
 //!             display("unknown toolchain version: '{}'", v), // trailing comma is allowed
 //!         }
 //!     }
+//!
+//!     // If this annotation is left off, a variant `Msg(s: String)` will be added, and `From`
+//!     // impls will be provided for `String` and `&str`
+//!     skip_msg_variant
 //! }
 //!
 //! # fn main() {}
@@ -536,21 +539,9 @@
 //! [`map_err`]: https://doc.rust-lang.org/std/result/enum.Result.html#method.map_err
 //! [`BacktraceFrame`]: https://docs.rs/backtrace/0.3.2/backtrace/struct.BacktraceFrame.html
 
-
-#[cfg(feature = "backtrace")]
-extern crate backtrace;
-
 use std::error;
-use std::iter::Iterator;
-#[cfg(feature = "backtrace")]
-use std::sync::Arc;
 use std::fmt;
-
-#[cfg(feature = "backtrace")]
-pub use backtrace::Backtrace;
-#[cfg(not(feature = "backtrace"))]
-/// Dummy type used when the `backtrace` feature is disabled.
-pub type Backtrace = ();
+use std::iter::Iterator;
 
 #[macro_use]
 mod impl_error_chain_kind;
@@ -559,63 +550,43 @@ mod error_chain;
 #[macro_use]
 mod quick_main;
 pub use quick_main::ExitCode;
+mod backtrace;
 #[cfg(feature = "example_generated")]
 pub mod example_generated;
+pub use backtrace::Backtrace;
+#[doc(hidden)]
+pub use backtrace::InternalBacktrace;
 
 #[derive(Debug)]
+#[allow(unknown_lints, bare_trait_objects)]
 /// Iterator over the error chain using the `Error::cause()` method.
 pub struct Iter<'a>(Option<&'a error::Error>);
 
 impl<'a> Iter<'a> {
     /// Returns a new iterator over the error chain using `Error::cause()`.
+    #[allow(unknown_lints, bare_trait_objects)]
     pub fn new(err: Option<&'a error::Error>) -> Iter<'a> {
         Iter(err)
     }
 }
 
+#[allow(unknown_lints, bare_trait_objects)]
 impl<'a> Iterator for Iter<'a> {
     type Item = &'a error::Error;
 
     fn next<'b>(&'b mut self) -> Option<&'a error::Error> {
         match self.0.take() {
             Some(e) => {
-                self.0 = e.cause();
+                self.0 = match () {
+                    #[cfg(not(has_error_source))]
+                    () => e.cause(),
+                    #[cfg(has_error_source)]
+                    () => e.source(),
+                };
                 Some(e)
             }
             None => None,
         }
-    }
-}
-
-/// Returns a backtrace of the current call stack if `RUST_BACKTRACE`
-/// is set to anything but ``0``, and `None` otherwise.  This is used
-/// in the generated error implementations.
-#[cfg(feature = "backtrace")]
-#[doc(hidden)]
-pub fn make_backtrace() -> Option<Arc<Backtrace>> {
-    use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
-
-    // The lowest bit indicates whether the value was computed,
-    // while the second lowest bit is the actual "enabled" bit.
-    static BACKTRACE_ENABLED_CACHE: AtomicUsize = ATOMIC_USIZE_INIT;
-
-    let enabled = match BACKTRACE_ENABLED_CACHE.load(Ordering::Relaxed) {
-        0 => {
-            let enabled = match std::env::var_os("RUST_BACKTRACE") {
-                Some(ref val) if val != "0" => true,
-                _ => false
-            };
-            let encoded = ((enabled as usize) << 1) | 1;
-            BACKTRACE_ENABLED_CACHE.store(encoded, Ordering::Relaxed);
-            enabled
-        }
-        encoded => (encoded >> 1) != 0
-    };
-
-    if enabled {
-        Some(Arc::new(Backtrace::new()))
-    } else {
-        None
     }
 }
 
@@ -626,13 +597,16 @@ pub trait ChainedError: error::Error + Send + 'static {
     type ErrorKind;
 
     /// Constructs an error from a kind, and generates a backtrace.
-    fn from_kind(kind: Self::ErrorKind) -> Self where Self: Sized;
+    fn from_kind(kind: Self::ErrorKind) -> Self
+    where
+        Self: Sized;
 
     /// Constructs a chained error from another error and a kind, and generates a backtrace.
     fn with_chain<E, K>(error: E, kind: K) -> Self
-        where Self: Sized,
-              E: ::std::error::Error + Send + 'static,
-              K: Into<Self::ErrorKind>;
+    where
+        Self: Sized,
+        E: ::std::error::Error + Send + 'static,
+        K: Into<Self::ErrorKind>;
 
     /// Returns the kind of the error.
     fn kind(&self) -> &Self::ErrorKind;
@@ -653,19 +627,23 @@ pub trait ChainedError: error::Error + Send + 'static {
 
     /// Extends the error chain with a new entry.
     fn chain_err<F, EK>(self, error: F) -> Self
-        where F: FnOnce() -> EK,
-              EK: Into<Self::ErrorKind>;
+    where
+        F: FnOnce() -> EK,
+        EK: Into<Self::ErrorKind>;
 
     /// Creates an error from its parts.
     #[doc(hidden)]
-    fn new(kind: Self::ErrorKind, state: State) -> Self where Self: Sized;
+    fn new(kind: Self::ErrorKind, state: State) -> Self
+    where
+        Self: Sized;
 
     /// Returns the first known backtrace, either from its State or from one
     /// of the errors from `foreign_links`.
-    #[cfg(feature = "backtrace")]
     #[doc(hidden)]
-    fn extract_backtrace(e: &(error::Error + Send + 'static)) -> Option<Arc<Backtrace>>
-        where Self: Sized;
+    #[allow(unknown_lints, bare_trait_objects)]
+    fn extract_backtrace(e: &(error::Error + Send + 'static)) -> Option<InternalBacktrace>
+    where
+        Self: Sized;
 }
 
 /// A struct which formats an error for output.
@@ -673,18 +651,18 @@ pub trait ChainedError: error::Error + Send + 'static {
 pub struct DisplayChain<'a, T: 'a + ?Sized>(&'a T);
 
 impl<'a, T> fmt::Display for DisplayChain<'a, T>
-    where T: ChainedError
+where
+    T: ChainedError,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        // Keep `try!` for 1.10 support
-        try!(writeln!(fmt, "Error: {}", self.0));
+        writeln!(fmt, "Error: {}", self.0)?;
 
         for e in self.0.iter().skip(1) {
-            try!(writeln!(fmt, "Caused by: {}", e));
+            writeln!(fmt, "Caused by: {}", e)?;
         }
 
-        if let Some(backtrace) = self.0.backtrace() {
-            try!(writeln!(fmt, "{:?}", backtrace));
+        if let Some(backtrace) = ChainedError::backtrace(self.0) {
+            writeln!(fmt, "{:?}", backtrace)?;
         }
 
         Ok(())
@@ -694,56 +672,37 @@ impl<'a, T> fmt::Display for DisplayChain<'a, T>
 /// Common state between errors.
 #[derive(Debug)]
 #[doc(hidden)]
+#[allow(unknown_lints, bare_trait_objects)]
 pub struct State {
     /// Next error in the error chain.
     pub next_error: Option<Box<error::Error + Send>>,
     /// Backtrace for the current error.
-    #[cfg(feature = "backtrace")]
-    pub backtrace: Option<Arc<Backtrace>>,
+    pub backtrace: InternalBacktrace,
 }
 
 impl Default for State {
-    #[cfg(feature = "backtrace")]
     fn default() -> State {
         State {
             next_error: None,
-            backtrace: make_backtrace(),
+            backtrace: InternalBacktrace::new(),
         }
-    }
-
-    #[cfg(not(feature = "backtrace"))]
-    fn default() -> State {
-        State { next_error: None }
     }
 }
 
 impl State {
     /// Creates a new State type
-    #[cfg(feature = "backtrace")]
+    #[allow(unknown_lints, bare_trait_objects)]
     pub fn new<CE: ChainedError>(e: Box<error::Error + Send>) -> State {
-        let backtrace = CE::extract_backtrace(&*e).or_else(make_backtrace);
+        let backtrace = CE::extract_backtrace(&*e).unwrap_or_else(InternalBacktrace::new);
         State {
             next_error: Some(e),
             backtrace: backtrace,
         }
     }
 
-    /// Creates a new State type
-    #[cfg(not(feature = "backtrace"))]
-    pub fn new<CE: ChainedError>(e: Box<error::Error + Send>) -> State {
-        State { next_error: Some(e) }
-    }
-
     /// Returns the inner backtrace if present.
-    #[cfg(feature = "backtrace")]
     pub fn backtrace(&self) -> Option<&Backtrace> {
-        self.backtrace.as_ref().map(|v| &**v)
-    }
-
-    /// Returns the inner backtrace if present.
-    #[cfg(not(feature = "backtrace"))]
-    pub fn backtrace(&self) -> Option<&Backtrace> {
-        None
+        self.backtrace.as_backtrace()
     }
 }
 
@@ -845,7 +804,7 @@ macro_rules! bail {
 /// ```
 ///
 /// See documentation for `bail!` macro for further details.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! ensure {
     ($cond:expr, $e:expr) => {
         if !($cond) {
@@ -861,5 +820,5 @@ macro_rules! ensure {
 
 #[doc(hidden)]
 pub mod mock {
-    error_chain!{}
+    error_chain! {}
 }

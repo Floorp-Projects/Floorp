@@ -19,9 +19,6 @@
  * error are due to not having a profile when running some of the xpcshell
  * tests. Since most xpcshell tests also log these errors these tests don't
  * call do_get_profile unless necessary for the test.
- * The "This method is lossy. Use GetCanonicalPath !" warning on Windows in
- * nsLocalFileWin.cpp is from the call to GetNSSProfilePath in
- * nsNSSComponent.cpp due to it using GetNativeCanonicalPath.
  * "!mMainThread" in nsThreadManager.cpp are due to using timers and it might be
  * possible to fix some or all of these in the test itself.
  * "NS_FAILED(rv)" in nsThreadUtils.cpp are due to using timers and it might be

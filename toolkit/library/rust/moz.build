@@ -19,6 +19,7 @@ for feature in gkrust_features:
 # compilation artifacts with gkrust.
 RUST_TESTS = [
     "fog",
+    "l10nregistry",
     "selectors",
     "servo_arc",
     "stylo_tests",

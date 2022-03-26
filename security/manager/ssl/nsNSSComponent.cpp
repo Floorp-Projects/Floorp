@@ -102,23 +102,19 @@ int nsNSSComponent::mInstanceCount = 0;
 // Forward declaration.
 nsresult CommonInit();
 
-// Take an nsIFile and get a c-string representation of the location of that
-// file (encapsulated in an nsACString). This function handles a
-// platform-specific issue on Windows where Unicode characters that cannot be
-// mapped to the system's codepage will be dropped, resulting in a c-string
-// that is useless to describe the location of the file in question.
+// Take an nsIFile and get a UTF-8-encoded c-string representation of the
+// location of that file (encapsulated in an nsACString).
 // This operation is generally to be avoided, except when interacting with
 // third-party or legacy libraries that cannot handle `nsIFile`s (such as NSS).
+// |result| is encoded in UTF-8.
 nsresult FileToCString(const nsCOMPtr<nsIFile>& file, nsACString& result) {
 #ifdef XP_WIN
-  // Native path will drop Unicode characters that cannot be mapped to system's
-  // codepage, using short (canonical) path as workaround.
-  nsCOMPtr<nsILocalFileWin> fileWin = do_QueryInterface(file);
-  if (!fileWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
-    return NS_ERROR_FAILURE;
+  nsAutoString path;
+  nsresult rv = file->GetPath(path);
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF16toUTF8(path, result);
   }
-  return fileWin->GetNativeCanonicalPath(result);
+  return rv;
 #else
   return file->GetNativePath(result);
 #endif
@@ -733,8 +729,8 @@ class LoadLoadableCertsTask final : public Runnable {
   RefPtr<nsNSSComponent> mNSSComponent;
   bool mImportEnterpriseRoots;
   uint32_t mFamilySafetyMode;
-  Vector<nsCString> mPossibleLoadableRootsLocations;
-  Maybe<nsCString> mOSClientCertsModuleLocation;
+  Vector<nsCString> mPossibleLoadableRootsLocations;  // encoded in UTF-8
+  Maybe<nsCString> mOSClientCertsModuleLocation;      // encoded in UTF-8
 };
 
 nsresult LoadLoadableCertsTask::Dispatch() {
@@ -805,6 +801,7 @@ LoadLoadableCertsTask::Run() {
 
 // Returns by reference the path to the desired directory, based on the current
 // settings in the directory service.
+// |result| is encoded in UTF-8.
 static nsresult GetDirectoryPath(const char* directoryKey, nsCString& result) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -973,6 +970,7 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
 
 // Returns by reference the path to the directory containing the file that has
 // been loaded as MOZ_DLL_PREFIX nss3 MOZ_DLL_SUFFIX.
+// |result| is encoded in UTF-8.
 static nsresult GetNSS3Directory(nsCString& result) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1007,6 +1005,7 @@ static nsresult GetNSS3Directory(nsCString& result) {
 // The loadable roots library is probably in the same directory we loaded the
 // NSS shared library from, but in some cases it may be elsewhere. This function
 // enumerates and returns the possible locations as nsCStrings.
+// |possibleLoadableRootsLocations| is encoded in UTF-8.
 static nsresult ListPossibleLoadableRootsLocations(
     Vector<nsCString>& possibleLoadableRootsLocations) {
   MOZ_ASSERT(NS_IsMainThread());

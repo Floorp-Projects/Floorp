@@ -3,10 +3,11 @@ use crate::runtime::task::RawTask;
 use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::task::{Context, Poll, Waker};
 
-doc_rt_core! {
+cfg_rt! {
     /// An owned permission to join on a task (await its termination).
     ///
     /// This can be thought of as the equivalent of [`std::thread::JoinHandle`] for
@@ -45,6 +46,71 @@ doc_rt_core! {
     /// # }
     /// ```
     ///
+    /// The generic parameter `T` in `JoinHandle<T>` is the return type of the spawned task.
+    /// If the return value is an i32, the join handle has type `JoinHandle<i32>`:
+    ///
+    /// ```
+    /// use tokio::task;
+    ///
+    /// # async fn doc() {
+    /// let join_handle: task::JoinHandle<i32> = task::spawn(async {
+    ///     5 + 3
+    /// });
+    /// # }
+    ///
+    /// ```
+    ///
+    /// If the task does not have a return value, the join handle has type `JoinHandle<()>`:
+    ///
+    /// ```
+    /// use tokio::task;
+    ///
+    /// # async fn doc() {
+    /// let join_handle: task::JoinHandle<()> = task::spawn(async {
+    ///     println!("I return nothing.");
+    /// });
+    /// # }
+    /// ```
+    ///
+    /// Note that `handle.await` doesn't give you the return type directly. It is wrapped in a
+    /// `Result` because panics in the spawned task are caught by Tokio. The `?` operator has
+    /// to be double chained to extract the returned value:
+    ///
+    /// ```
+    /// use tokio::task;
+    /// use std::io;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> io::Result<()> {
+    ///     let join_handle: task::JoinHandle<Result<i32, io::Error>> = tokio::spawn(async {
+    ///         Ok(5 + 3)
+    ///     });
+    ///
+    ///     let result = join_handle.await??;
+    ///     assert_eq!(result, 8);
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// If the task panics, the error is a [`JoinError`] that contains the panic:
+    ///
+    /// ```
+    /// use tokio::task;
+    /// use std::io;
+    /// use std::panic;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> io::Result<()> {
+    ///     let join_handle: task::JoinHandle<Result<i32, io::Error>> = tokio::spawn(async {
+    ///         panic!("boom");
+    ///     });
+    ///
+    ///     let err = join_handle.await.unwrap_err();
+    ///     assert!(err.is_panic());
+    ///     Ok(())
+    /// }
+    ///
+    /// ```
     /// Child being detached and outliving its parent:
     ///
     /// ```no_run
@@ -56,7 +122,7 @@ doc_rt_core! {
     /// let original_task = task::spawn(async {
     ///     let _detached_task = task::spawn(async {
     ///         // Here we sleep to make sure that the first task returns before.
-    ///         time::delay_for(Duration::from_millis(10)).await;
+    ///         time::sleep(Duration::from_millis(10)).await;
     ///         // This will be called, even though the JoinHandle is dropped.
     ///         println!("♫ Still alive ♫");
     ///     });
@@ -68,13 +134,14 @@ doc_rt_core! {
     /// // We make sure that the new task has time to run, before the main
     /// // task returns.
     ///
-    /// time::delay_for(Duration::from_millis(1000)).await;
+    /// time::sleep(Duration::from_millis(1000)).await;
     /// # }
     /// ```
     ///
     /// [`task::spawn`]: crate::task::spawn()
     /// [`task::spawn_blocking`]: crate::task::spawn_blocking
     /// [`std::thread::JoinHandle`]: std::thread::JoinHandle
+    /// [`JoinError`]: crate::task::JoinError
     pub struct JoinHandle<T> {
         raw: Option<RawTask>,
         _p: PhantomData<T>,
@@ -84,11 +151,63 @@ doc_rt_core! {
 unsafe impl<T: Send> Send for JoinHandle<T> {}
 unsafe impl<T: Send> Sync for JoinHandle<T> {}
 
+impl<T> UnwindSafe for JoinHandle<T> {}
+impl<T> RefUnwindSafe for JoinHandle<T> {}
+
 impl<T> JoinHandle<T> {
     pub(super) fn new(raw: RawTask) -> JoinHandle<T> {
         JoinHandle {
             raw: Some(raw),
             _p: PhantomData,
+        }
+    }
+
+    /// Abort the task associated with the handle.
+    ///
+    /// Awaiting a cancelled task might complete as usual if the task was
+    /// already completed at the time it was cancelled, but most likely it
+    /// will fail with a [cancelled] `JoinError`.
+    ///
+    /// ```rust
+    /// use tokio::time;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///    let mut handles = Vec::new();
+    ///
+    ///    handles.push(tokio::spawn(async {
+    ///       time::sleep(time::Duration::from_secs(10)).await;
+    ///       true
+    ///    }));
+    ///
+    ///    handles.push(tokio::spawn(async {
+    ///       time::sleep(time::Duration::from_secs(10)).await;
+    ///       false
+    ///    }));
+    ///
+    ///    for handle in &handles {
+    ///        handle.abort();
+    ///    }
+    ///
+    ///    for handle in handles {
+    ///        assert!(handle.await.unwrap_err().is_cancelled());
+    ///    }
+    /// }
+    /// ```
+    /// [cancelled]: method@super::error::JoinError::is_cancelled
+    pub fn abort(&self) {
+        if let Some(raw) = self.raw {
+            raw.remote_abort();
+        }
+    }
+
+    /// Set the waker that is notified when the task completes.
+    pub(crate) fn set_join_waker(&mut self, waker: &Waker) {
+        if let Some(raw) = self.raw {
+            if raw.try_set_join_waker(waker) {
+                // In this case the task has already completed. We wake the waker immediately.
+                waker.wake_by_ref();
+            }
         }
     }
 }

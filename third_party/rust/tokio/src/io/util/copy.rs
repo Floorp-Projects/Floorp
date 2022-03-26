@@ -1,30 +1,118 @@
-use crate::io::{AsyncRead, AsyncWrite};
+use crate::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use std::future::Future;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-cfg_io_util! {
-    /// A future that asynchronously copies the entire contents of a reader into a
-    /// writer.
-    ///
-    /// This struct is generally created by calling [`copy`][copy]. Please
-    /// see the documentation of `copy()` for more details.
-    ///
-    /// [copy]: copy()
-    #[derive(Debug)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    pub struct Copy<'a, R: ?Sized, W: ?Sized> {
-        reader: &'a mut R,
-        read_done: bool,
-        writer: &'a mut W,
-        pos: usize,
-        cap: usize,
-        amt: u64,
-        buf: Box<[u8]>,
+#[derive(Debug)]
+pub(super) struct CopyBuffer {
+    read_done: bool,
+    need_flush: bool,
+    pos: usize,
+    cap: usize,
+    amt: u64,
+    buf: Box<[u8]>,
+}
+
+impl CopyBuffer {
+    pub(super) fn new() -> Self {
+        Self {
+            read_done: false,
+            need_flush: false,
+            pos: 0,
+            cap: 0,
+            amt: 0,
+            buf: vec![0; super::DEFAULT_BUF_SIZE].into_boxed_slice(),
+        }
     }
 
+    pub(super) fn poll_copy<R, W>(
+        &mut self,
+        cx: &mut Context<'_>,
+        mut reader: Pin<&mut R>,
+        mut writer: Pin<&mut W>,
+    ) -> Poll<io::Result<u64>>
+    where
+        R: AsyncRead + ?Sized,
+        W: AsyncWrite + ?Sized,
+    {
+        loop {
+            // If our buffer is empty, then we need to read some data to
+            // continue.
+            if self.pos == self.cap && !self.read_done {
+                let me = &mut *self;
+                let mut buf = ReadBuf::new(&mut me.buf);
+
+                match reader.as_mut().poll_read(cx, &mut buf) {
+                    Poll::Ready(Ok(_)) => (),
+                    Poll::Ready(Err(err)) => return Poll::Ready(Err(err)),
+                    Poll::Pending => {
+                        // Try flushing when the reader has no progress to avoid deadlock
+                        // when the reader depends on buffered writer.
+                        if self.need_flush {
+                            ready!(writer.as_mut().poll_flush(cx))?;
+                            self.need_flush = false;
+                        }
+
+                        return Poll::Pending;
+                    }
+                }
+
+                let n = buf.filled().len();
+                if n == 0 {
+                    self.read_done = true;
+                } else {
+                    self.pos = 0;
+                    self.cap = n;
+                }
+            }
+
+            // If our buffer has some data, let's write it out!
+            while self.pos < self.cap {
+                let me = &mut *self;
+                let i = ready!(writer.as_mut().poll_write(cx, &me.buf[me.pos..me.cap]))?;
+                if i == 0 {
+                    return Poll::Ready(Err(io::Error::new(
+                        io::ErrorKind::WriteZero,
+                        "write zero byte into writer",
+                    )));
+                } else {
+                    self.pos += i;
+                    self.amt += i as u64;
+                    self.need_flush = true;
+                }
+            }
+
+            // If pos larger than cap, this loop will never stop.
+            // In particular, user's wrong poll_write implementation returning
+            // incorrect written length may lead to thread blocking.
+            debug_assert!(
+                self.pos <= self.cap,
+                "writer returned length larger than input slice"
+            );
+
+            // If we've written all the data and we've seen EOF, flush out the
+            // data and finish the transfer.
+            if self.pos == self.cap && self.read_done {
+                ready!(writer.as_mut().poll_flush(cx))?;
+                return Poll::Ready(Ok(self.amt));
+            }
+        }
+    }
+}
+
+/// A future that asynchronously copies the entire contents of a reader into a
+/// writer.
+#[derive(Debug)]
+#[must_use = "futures do nothing unless you `.await` or poll them"]
+struct Copy<'a, R: ?Sized, W: ?Sized> {
+    reader: &'a mut R,
+    writer: &'a mut W,
+    buf: CopyBuffer,
+}
+
+cfg_io_util! {
     /// Asynchronously copies the entire contents of a reader into a writer.
     ///
     /// This function returns a future that will continuously read data from
@@ -40,8 +128,8 @@ cfg_io_util! {
     ///
     /// # Errors
     ///
-    /// The returned future will finish with an error will return an error
-    /// immediately if any call to `poll_read` or `poll_write` returns an error.
+    /// The returned future will return an error immediately if any call to
+    /// `poll_read` or `poll_write` returns an error.
     ///
     /// # Examples
     ///
@@ -58,20 +146,16 @@ cfg_io_util! {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn copy<'a, R, W>(reader: &'a mut R, writer: &'a mut W) -> Copy<'a, R, W>
+    pub async fn copy<'a, R, W>(reader: &'a mut R, writer: &'a mut W) -> io::Result<u64>
     where
         R: AsyncRead + Unpin + ?Sized,
         W: AsyncWrite + Unpin + ?Sized,
     {
         Copy {
             reader,
-            read_done: false,
             writer,
-            amt: 0,
-            pos: 0,
-            cap: 0,
-            buf: vec![0; 2048].into_boxed_slice(),
-        }
+            buf: CopyBuffer::new()
+        }.await
     }
 }
 
@@ -83,53 +167,9 @@ where
     type Output = io::Result<u64>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<u64>> {
-        loop {
-            // If our buffer is empty, then we need to read some data to
-            // continue.
-            if self.pos == self.cap && !self.read_done {
-                let me = &mut *self;
-                let n = ready!(Pin::new(&mut *me.reader).poll_read(cx, &mut me.buf))?;
-                if n == 0 {
-                    self.read_done = true;
-                } else {
-                    self.pos = 0;
-                    self.cap = n;
-                }
-            }
+        let me = &mut *self;
 
-            // If our buffer has some data, let's write it out!
-            while self.pos < self.cap {
-                let me = &mut *self;
-                let i = ready!(Pin::new(&mut *me.writer).poll_write(cx, &me.buf[me.pos..me.cap]))?;
-                if i == 0 {
-                    return Poll::Ready(Err(io::Error::new(
-                        io::ErrorKind::WriteZero,
-                        "write zero byte into writer",
-                    )));
-                } else {
-                    self.pos += i;
-                    self.amt += i as u64;
-                }
-            }
-
-            // If we've written all the data and we've seen EOF, flush out the
-            // data and finish the transfer.
-            if self.pos == self.cap && self.read_done {
-                let me = &mut *self;
-                ready!(Pin::new(&mut *me.writer).poll_flush(cx))?;
-                return Poll::Ready(Ok(self.amt));
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn assert_unpin() {
-        use std::marker::PhantomPinned;
-        crate::is_unpin::<Copy<'_, PhantomPinned, PhantomPinned>>();
+        me.buf
+            .poll_copy(cx, Pin::new(&mut *me.reader), Pin::new(&mut *me.writer))
     }
 }

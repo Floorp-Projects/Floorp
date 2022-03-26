@@ -15,27 +15,42 @@ StyleGuideOverlay.prototype = {
       <div>
         <h3>JSX Components:</h3>
         <h4 className="stp_styleguide_h4">Button</h4>
-        <Button style="text" url="https://example.org">
+        <Button style="text" url="https://example.org" source="styleguide">
           Text Button
         </Button>
         <br />
-        <Button style="primary">Primary Button</Button>
+        <Button style="primary" url="https://example.org" source="styleguide">
+          Primary Button
+        </Button>
         <br />
-        <Button style="secondary">Secondary Button</Button>
+        <Button style="secondary" url="https://example.org" source="styleguide">
+          Secondary Button
+        </Button>
         <span className="stp_button_wide">
-          <Button style="primary">Primary Wide Button</Button>
+          <Button style="primary" url="https://example.org" source="styleguide">
+            Primary Wide Button
+          </Button>
         </span>
         <span className="stp_button_wide">
-          <Button style="secondary">Secondary Wide Button</Button>
+          <Button
+            style="secondary"
+            url="https://example.org"
+            source="styleguide"
+          >
+            Secondary Wide Button
+          </Button>
         </span>
         <h4 className="stp_styleguide_h4">Header</h4>
         <Header>
-          <Button style="primary">View My List</Button>
+          <Button style="primary" url="https://example.org" source="styleguide">
+            View My List
+          </Button>
         </Header>
         <h4 className="stp_styleguide_h4">PopularTopics</h4>
         <PopularTopics
           pockethost={`getpocket.com`}
-          utmsource={`styleguide`}
+          source={`styleguide`}
+          utmParams={`utm_source=styleguide`}
           topics={[
             { title: "Self Improvement", topic: "self-improvement" },
             { title: "Food", topic: "food" },
@@ -45,6 +60,7 @@ StyleGuideOverlay.prototype = {
         />
         <h4 className="stp_styleguide_h4">ArticleList</h4>
         <ArticleList
+          source={`styleguide`}
           articles={[
             {
               title: "Article Title",

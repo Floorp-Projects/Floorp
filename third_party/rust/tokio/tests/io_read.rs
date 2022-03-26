@@ -1,7 +1,7 @@
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
 
-use tokio::io::{AsyncRead, AsyncReadExt};
+use tokio::io::{AsyncRead, AsyncReadExt, ReadBuf};
 use tokio_test::assert_ok;
 
 use std::io;
@@ -19,13 +19,13 @@ async fn read() {
         fn poll_read(
             mut self: Pin<&mut Self>,
             _cx: &mut Context<'_>,
-            buf: &mut [u8],
-        ) -> Poll<io::Result<usize>> {
+            buf: &mut ReadBuf<'_>,
+        ) -> Poll<io::Result<()>> {
             assert_eq!(0, self.poll_cnt);
             self.poll_cnt += 1;
 
-            buf[0..11].copy_from_slice(b"hello world");
-            Poll::Ready(Ok(11))
+            buf.put_slice(b"hello world");
+            Poll::Ready(Ok(()))
         }
     }
 
@@ -43,12 +43,11 @@ impl AsyncRead for BadAsyncRead {
     fn poll_read(
         self: Pin<&mut Self>,
         _cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
-        for b in &mut *buf {
-            *b = b'a';
-        }
-        Poll::Ready(Ok(buf.len() * 2))
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        *buf = ReadBuf::new(Box::leak(vec![0; buf.capacity()].into_boxed_slice()));
+        buf.advance(buf.capacity());
+        Poll::Ready(Ok(()))
     }
 }
 

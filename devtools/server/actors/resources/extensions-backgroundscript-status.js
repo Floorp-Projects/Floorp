@@ -4,11 +4,7 @@
 
 "use strict";
 
-loader.lazyImporter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+const Services = require("Services");
 
 const {
   TYPES: { EXTENSIONS_BGSCRIPT_STATUS },
@@ -33,20 +29,25 @@ class ExtensionsBackgroundScriptStatusWatcher {
    *        Dictionary object with following attributes:
    *        - onAvailable: mandatory function
    *          This will be called for each resource.
-   *        - onUpdated: optional function
-   *          This would be called multiple times for each resource.
    */
-  async watch(rootActor, { onAvailable, onUpdated }) {
+  async watch(rootActor, { onAvailable }) {
     this.rootActor = rootActor;
     this.onAvailable = onAvailable;
-    this.onUpdated = onUpdated;
 
-    this.unwatchBackgroundStatusUpdates = ExtensionParent.DebugUtils.watchBackgroundScriptStatusUpdates(
-      this.onBackgroundScriptStatus
-    );
+    Services.obs.addObserver(this, "extension:background-script-status");
   }
 
-  onBackgroundScriptStatus = (addonId, isRunning) => {
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "extension:background-script-status": {
+        const { addonId, isRunning } = subject.wrappedJSObject;
+        this.onBackgroundScriptStatus(addonId, isRunning);
+        break;
+      }
+    }
+  }
+
+  onBackgroundScriptStatus(addonId, isRunning) {
     this.onAvailable([
       {
         resourceType: EXTENSIONS_BGSCRIPT_STATUS,
@@ -56,10 +57,13 @@ class ExtensionsBackgroundScriptStatusWatcher {
         },
       },
     ]);
-  };
+  }
 
   destroy() {
-    this.unwatchBackgroundStatusUpdates?.();
+    if (this.onAvailable) {
+      this.onAvailable = null;
+      Services.obs.removeObserver(this, "extension:background-script-status");
+    }
   }
 }
 

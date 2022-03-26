@@ -1503,17 +1503,6 @@ const DebugUtils = {
     throw Error(`Unable to terminate background script for ${addonId}`);
   },
 
-  watchBackgroundScriptStatusUpdates(callback) {
-    const listener = (_evtName, addonId, isRunning) => {
-      callback(addonId, isRunning);
-    };
-    apiManager.on(`devtools:background-script-status`, listener);
-
-    return () => {
-      apiManager.off(`devtools:background-script-status`, listener);
-    };
-  },
-
   /**
    * Retrieve a XUL browser element which has been configured to be able to connect
    * the devtools actor with the process where the extension is running.

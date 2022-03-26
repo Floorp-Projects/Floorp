@@ -1,7 +1,6 @@
-use crate::io::{AsyncBufRead, AsyncRead};
+use crate::io::{AsyncBufRead, AsyncRead, ReadBuf};
 
 use pin_project_lite::pin_project;
-use std::mem::MaybeUninit;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{cmp, io};
@@ -76,24 +75,31 @@ impl<R: AsyncRead> Take<R> {
 }
 
 impl<R: AsyncRead> AsyncRead for Take<R> {
-    unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [MaybeUninit<u8>]) -> bool {
-        self.inner.prepare_uninitialized_buffer(buf)
-    }
-
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<Result<usize, io::Error>> {
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<Result<(), io::Error>> {
         if self.limit_ == 0 {
-            return Poll::Ready(Ok(0));
+            return Poll::Ready(Ok(()));
         }
 
         let me = self.project();
-        let max = std::cmp::min(buf.len() as u64, *me.limit_) as usize;
-        let n = ready!(me.inner.poll_read(cx, &mut buf[..max]))?;
+        let mut b = buf.take(*me.limit_ as usize);
+
+        let buf_ptr = b.filled().as_ptr();
+        ready!(me.inner.poll_read(cx, &mut b))?;
+        assert_eq!(b.filled().as_ptr(), buf_ptr);
+
+        let n = b.filled().len();
+
+        // We need to update the original ReadBuf
+        unsafe {
+            buf.assume_init(n);
+        }
+        buf.advance(n);
         *me.limit_ -= n as u64;
-        Poll::Ready(Ok(n))
+        Poll::Ready(Ok(()))
     }
 }
 

@@ -673,23 +673,23 @@
  * MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG: Applies to method declarations.
  *   Callers of the annotated method must return from that function within the
  *   calling block using an explicit `return` statement if the "this" value for
- * the call is a parameter of the caller.  Only calls to Constructors,
- * references to local and member variables, and calls to functions or methods
- * marked as MOZ_MAY_CALL_AFTER_MUST_RETURN may be made after the
+ *   the call is a parameter of the caller.  Only calls to Constructors,
+ *   references to local and member variables, and calls to functions or
+ *   methods marked as MOZ_MAY_CALL_AFTER_MUST_RETURN may be made after the
  *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG call.
  * MOZ_MAY_CALL_AFTER_MUST_RETURN: Applies to function or method declarations.
  *   Calls to these methods may be made in functions after calls a
  *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG method.
  * MOZ_LIFETIME_BOUND: Applies to method declarations.
  *   The result of calling these functions on temporaries may not be returned as
- * a reference or bound to a reference variable.
+ *   a reference or bound to a reference variable.
  * MOZ_UNANNOTATED/MOZ_ANNOTATED: Applies to Mutexes/Monitors and variations on
- * them. MOZ_UNANNOTATED indicates that the Mutex/Monitor/etc hasn't been
- * examined and annotated using macros from mfbt/ThreadSafety --
- * GUARDED_BY()/REQUIRES()/etc. MOZ_ANNOTATED is used in rare cases to indicate
- * that is has been looked at, but it did not need any
- * GUARDED_BY()/REQUIRES()/etc (and thus static analysis knows it can ignore
- * this Mutex/Monitor/etc)
+ *   them. MOZ_UNANNOTATED indicates that the Mutex/Monitor/etc hasn't been
+ *   examined and annotated using macros from mfbt/ThreadSafety --
+ *   GUARDED_BY()/REQUIRES()/etc. MOZ_ANNOTATED is used in rare cases to
+ *   indicate that is has been looked at, but it did not need any
+ *   GUARDED_BY()/REQUIRES()/etc (and thus static analysis knows it can ignore
+ *   this Mutex/Monitor/etc)
  */
 
 // gcc emits a nuisance warning -Wignored-attributes because attributes do not

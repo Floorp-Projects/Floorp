@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,8 +12,8 @@
 
 [package]
 name = "error-chain"
-version = "0.11.0"
-authors = ["Brian Anderson <banderson@mozilla.com>", "Paul Colomiets <paul@colomiets.name>", "Colin Kiegel <kiegel@gmx.de>", "Yamakaky <yamakaky@yamaworld.fr>"]
+version = "0.12.4"
+authors = ["Brian Anderson <banderson@mozilla.com>", "Paul Colomiets <paul@colomiets.name>", "Colin Kiegel <kiegel@gmx.de>", "Yamakaky <yamakaky@yamaworld.fr>", "Andrew Gauger <andygauge@gmail.com>"]
 description = "Yet another error boilerplate library."
 documentation = "https://docs.rs/error-chain"
 readme = "README.md"
@@ -22,11 +22,11 @@ categories = ["rust-patterns"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang-nursery/error-chain"
 [dependencies.backtrace]
-version = "0.3"
+version = "0.3.3"
 optional = true
+[build-dependencies.version_check]
+version = "0.9"
 
 [features]
-example_generated = []
 default = ["backtrace", "example_generated"]
-[badges.travis-ci]
-repository = "rust-lang-nursery/error-chain"
+example_generated = []

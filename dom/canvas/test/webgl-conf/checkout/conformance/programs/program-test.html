@@ -314,7 +314,7 @@ function go() {
 
     // Invalid link leaves previous valid program intact.
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing with a valid program shouldn't generate a GL error");
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "drawing with a just-failed-relink program should error");
 
     gl.useProgram(progGood1);
     gl.drawArrays(gl.TRIANGLES, 0, 4);

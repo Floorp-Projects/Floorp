@@ -1,9 +1,10 @@
 use std::any::Any;
 use std::fmt;
 use std::io;
-use std::sync::Mutex;
 
-doc_rt_core! {
+use crate::util::SyncWrapper;
+
+cfg_rt! {
     /// Task failed to execute to completion.
     pub struct JoinError {
         repr: Repr,
@@ -12,43 +13,28 @@ doc_rt_core! {
 
 enum Repr {
     Cancelled,
-    Panic(Mutex<Box<dyn Any + Send + 'static>>),
+    Panic(SyncWrapper<Box<dyn Any + Send + 'static>>),
 }
 
 impl JoinError {
-    #[doc(hidden)]
-    #[deprecated]
-    pub fn cancelled() -> JoinError {
-        Self::cancelled2()
-    }
-
-    pub(crate) fn cancelled2() -> JoinError {
+    pub(crate) fn cancelled() -> JoinError {
         JoinError {
             repr: Repr::Cancelled,
         }
     }
 
-    #[doc(hidden)]
-    #[deprecated]
-    pub fn panic(err: Box<dyn Any + Send + 'static>) -> JoinError {
-        Self::panic2(err)
-    }
-
-    pub(crate) fn panic2(err: Box<dyn Any + Send + 'static>) -> JoinError {
+    pub(crate) fn panic(err: Box<dyn Any + Send + 'static>) -> JoinError {
         JoinError {
-            repr: Repr::Panic(Mutex::new(err)),
+            repr: Repr::Panic(SyncWrapper::new(err)),
         }
     }
 
-    /// Returns true if the error was caused by the task being cancelled
+    /// Returns true if the error was caused by the task being cancelled.
     pub fn is_cancelled(&self) -> bool {
-        match &self.repr {
-            Repr::Cancelled => true,
-            _ => false,
-        }
+        matches!(&self.repr, Repr::Cancelled)
     }
 
-    /// Returns true if the error was caused by the task panicking
+    /// Returns true if the error was caused by the task panicking.
     ///
     /// # Examples
     ///
@@ -65,10 +51,7 @@ impl JoinError {
     /// }
     /// ```
     pub fn is_panic(&self) -> bool {
-        match &self.repr {
-            Repr::Panic(_) => true,
-            _ => false,
-        }
+        matches!(&self.repr, Repr::Panic(_))
     }
 
     /// Consumes the join error, returning the object with which the task panicked.
@@ -124,7 +107,7 @@ impl JoinError {
     /// ```
     pub fn try_into_panic(self) -> Result<Box<dyn Any + Send + 'static>, JoinError> {
         match self.repr {
-            Repr::Panic(p) => Ok(p.into_inner().expect("Extracting panic from mutex")),
+            Repr::Panic(p) => Ok(p.into_inner()),
             _ => Err(self),
         }
     }

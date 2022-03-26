@@ -44,10 +44,10 @@ var SignupOverlay = function(options) {
     const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
-    const utmCampaign =
-      searchParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
-    const utmSource = searchParams.get(`utmSource`) || `control`;
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
+    const utmSource = searchParams.get(`utmSource`);
+    const utmCampaign = searchParams.get(`utmCampaign`);
+    const utmContent = searchParams.get(`utmContent`);
 
     if (this.active) {
       return;
@@ -65,14 +65,22 @@ var SignupOverlay = function(options) {
         ?.classList.remove(`pkt_ext_containersignup`);
       // Create actual content
       ReactDOM.render(
-        <Signup pockethost={pockethost} locale={locale} />,
+        <Signup
+          pockethost={pockethost}
+          utmSource={utmSource}
+          utmCampaign={utmCampaign}
+          utmContent={utmContent}
+          locale={locale}
+        />,
         document.querySelector(`body`)
       );
     } else {
       const templateData = {
         pockethost,
-        utmCampaign,
-        utmSource,
+        utmCampaign: utmCampaign || `firefox_door_hanger_menu`,
+        // utmContent is now used for experiment branch in the new layouts,
+        // but for backwards comp reasons, we pass it in the old way as utmSource.
+        utmSource: utmContent || `control`,
       };
 
       // extra modifier class for language

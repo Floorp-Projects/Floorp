@@ -23,10 +23,10 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "e012b2151fb6f0ffd50e91baa7756e77a3c416d9", optional = true }
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="df4dc0288b07b865440f4c7e41ca49ca9ccffc63", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.10", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "f8f611808168b7b1395b2e5dc17e5e6e2b975c6d", optional = true } # macos (v2) branch
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "f8f611808168b7b1395b2e5dc17e5e6e2b975c6d", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "405b8208a8fb32e13db87c252aba9b371ae47859", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "405b8208a8fb32e13db87c252aba9b371ae47859", optional = true }
+audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
+audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -70,7 +70,7 @@ rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
-l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs.git", rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c" }
+l10nregistry = { path = "../../../../intl/l10n/rust/l10nregistry-rs" }
 fluent-fallback = "0.6.0"
 localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 

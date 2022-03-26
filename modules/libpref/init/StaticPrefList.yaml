@@ -12668,7 +12668,13 @@
 
 - name: webgl.out-of-process.worker
   type: RelaxedAtomicBool
+# (When reading the next line, know that preprocessor.py doesn't
+# understand parentheses, but && is higher precedence than ||.)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
+#else
+  value: false
+#endif
   mirror: always
 
 - name: webgl.out-of-process.force

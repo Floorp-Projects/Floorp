@@ -665,6 +665,9 @@ SavedOverlay.prototype = {
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
+    const utmSource = searchParams.get(`utmSource`);
+    const utmCampaign = searchParams.get(`utmCampaign`);
+    const utmContent = searchParams.get(`utmContent`);
 
     if (layoutRefresh) {
       // For now, we need to do a little work on the body element
@@ -677,7 +680,13 @@ SavedOverlay.prototype = {
         ?.classList.remove(`pkt_ext_containersaved`);
       // Create actual content
       ReactDOM.render(
-        <Saved pockethost={pockethost} locale={locale} />,
+        <Saved
+          locale={locale}
+          pockethost={pockethost}
+          utmSource={utmSource}
+          utmCampaign={utmCampaign}
+          utmContent={utmContent}
+        />,
         document.querySelector(`body`)
       );
     } else {

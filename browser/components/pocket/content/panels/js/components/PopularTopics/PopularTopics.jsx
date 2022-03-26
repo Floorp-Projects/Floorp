@@ -3,18 +3,21 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import TelemetryLink from "../TelemetryLink/TelemetryLink";
 
 function PopularTopics(props) {
   return (
     <ul className="stp_popular_topics">
-      {props.topics?.map(topic => (
+      {props.topics?.map((topic, position) => (
         <li key={`item-${topic.topic}`} className="stp_popular_topic">
-          <a
+          <TelemetryLink
             className="stp_popular_topic_link"
-            href={`https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`}
+            href={`https://${props.pockethost}/explore/${topic.topic}?${props.utmParams}`}
+            source={props.source}
+            position={position}
           >
             {topic.title}
-          </a>
+          </TelemetryLink>
         </li>
       ))}
     </ul>

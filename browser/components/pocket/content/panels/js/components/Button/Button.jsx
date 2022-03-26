@@ -3,16 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import TelemetryLink from "../TelemetryLink/TelemetryLink";
 
 function Button(props) {
   return (
-    <a
+    <TelemetryLink
       href={props.url}
       onClick={props.onClick}
       className={`stp_button${props?.style && ` stp_button_${props.style}`}`}
+      source={props.source}
     >
       {props.children}
-    </a>
+    </TelemetryLink>
   );
 }
 
