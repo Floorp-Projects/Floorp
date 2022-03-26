@@ -168,13 +168,16 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReentrantMonitorAutoEnter {
    * @param aReentrantMonitor A valid mozilla::ReentrantMonitor*.
    **/
   explicit ReentrantMonitorAutoEnter(
-      mozilla::ReentrantMonitor& aReentrantMonitor) CAPABILITY_ACQUIRE(aReentrantMonitor)
+      mozilla::ReentrantMonitor& aReentrantMonitor)
+      CAPABILITY_ACQUIRE(aReentrantMonitor)
       : mReentrantMonitor(&aReentrantMonitor) {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
     mReentrantMonitor->Enter();
   }
 
-  ~ReentrantMonitorAutoEnter(void) CAPABILITY_RELEASE() { mReentrantMonitor->Exit(); }
+  ~ReentrantMonitorAutoEnter(void) CAPABILITY_RELEASE() {
+    mReentrantMonitor->Exit();
+  }
 
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT) {
     return mReentrantMonitor->Wait(aInterval);
