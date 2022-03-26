@@ -201,22 +201,6 @@ void UtilityProcessManager::OnProcessUnexpectedShutdown(
   DestroyProcess();
 }
 
-void UtilityProcessManager::NotifyRemoteActorDestroyed() {
-  if (!NS_IsMainThread()) {
-    RefPtr<UtilityProcessManager> self = this;
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "UtilityProcessManager::NotifyRemoteActorDestroyed()",
-        [self]() { self->NotifyRemoteActorDestroyed(); }));
-    return;
-  }
-
-  // One of the bridged top-level actors for the Utility process has been
-  // prematurely terminated, and we're receiving a notification. This
-  // can happen if the ActorDestroy for a bridged protocol fires
-  // before the ActorDestroy for PUtilityProcessParent.
-  OnProcessUnexpectedShutdown(mProcess);
-}
-
 void UtilityProcessManager::CleanShutdown() { DestroyProcess(); }
 
 void UtilityProcessManager::DestroyProcess() {
