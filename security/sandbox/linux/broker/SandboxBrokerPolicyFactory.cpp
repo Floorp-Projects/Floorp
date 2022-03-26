@@ -61,7 +61,7 @@ static const int access = SandboxBroker::MAY_ACCESS;
 static const int deny = SandboxBroker::FORCE_DENY;
 }  // namespace
 
-static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
+static void AddMesaPaths(SandboxBroker::Policy* aPolicy) {
   // Bug 1401666: Mesa driver loader part 2: Mesa <= 12 using libudev
   if (auto dir = opendir("/dev/dri")) {
     while (auto entry = readdir(dir)) {
@@ -121,6 +121,26 @@ static void AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy) {
       }
     }
     closedir(dir);
+  }
+
+  // https://gitlab.freedesktop.org/mesa/mesa/-/commit/04bdbbcab3c4862bf3f54ce60fcc1d2007776f80
+  aPolicy->AddPath(rdonly, "/usr/share/drirc.d");
+
+  // https://dri.freedesktop.org/wiki/ConfigurationInfrastructure/
+  aPolicy->AddPath(rdonly, "/etc/drirc");
+
+  nsCOMPtr<nsIFile> drirc;
+  nsresult rv =
+      GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(drirc));
+  if (NS_SUCCEEDED(rv)) {
+    rv = drirc->AppendNative(".drirc"_ns);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoCString tmpPath;
+      rv = drirc->GetNativePath(tmpPath);
+      if (NS_SUCCEEDED(rv)) {
+        aPolicy->AddPath(rdonly, tmpPath.get());
+      }
+    }
   }
 }
 
@@ -359,7 +379,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   policy->AddDir(rdonly, "/var/cache/fontconfig");
 
   if (!headless) {
-    AddMesaSysfsPaths(policy);
+    AddMesaPaths(policy);
   }
   AddLdconfigPaths(policy);
   AddLdLibraryEnvPaths(policy);
@@ -824,7 +844,7 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
 
   // VA-API needs DRI and GPU detection
   policy->AddDir(rdwr, "/dev/dri");
-  AddMesaSysfsPaths(policy.get());
+  AddMesaPaths(policy.get());
 
   // FFmpeg and GPU drivers may need general-case library loading
   AddLdconfigPaths(policy.get());

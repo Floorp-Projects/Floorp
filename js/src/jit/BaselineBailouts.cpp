@@ -545,12 +545,16 @@ bool BaselineStackBuilder::initFrame() {
   }
   prevFramePtr_ = virtualPointerAtStackOffset(0);
 
-  // Get the pc. If we are handling an exception, resume at the pc of the
-  // catch or finally block.
-  pc_ = catchingException() ? excInfo_->resumePC()
-                            : script_->offsetToPC(iter_.pcOffset());
+  // Get the pc and ResumeMode. If we are handling an exception, resume at the
+  // pc of the catch or finally block.
+  if (catchingException()) {
+    pc_ = excInfo_->resumePC();
+    resumeMode_ = mozilla::Some(ResumeMode::ResumeAt);
+  } else {
+    pc_ = script_->offsetToPC(iter_.pcOffset());
+    resumeMode_ = mozilla::Some(iter_.resumeMode());
+  }
   op_ = JSOp(*pc_);
-  resumeMode_ = mozilla::Some(iter_.resumeMode());
 
   return true;
 }
