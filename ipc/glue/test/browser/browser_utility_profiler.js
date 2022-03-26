@@ -20,11 +20,8 @@ add_task(async () => {
   await TestUtils.waitForCondition(async () => {
     profile = await Services.profiler.getProfileDataAsync();
     return (
-      // Search for process name to not be disturbed by other types of utility
-      // e.g. Utility AudioDecoder
-      profile.processes.filter(
-        ps => ps.threads[0].processName === "Utility Process"
-      ).length === 1
+      profile.processes.filter(ps => ps.threads[0].processType === "utility")
+        .length === 1
     );
   }, "Give time for the profiler to start and collect some samples");
 

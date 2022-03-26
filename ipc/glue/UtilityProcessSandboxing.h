@@ -16,9 +16,7 @@ namespace ipc {
 // to be updated as well.
 enum SandboxingKind : uint64_t {
 
-  GENERIC_UTILITY,
-
-  COUNT,
+  GENERIC_UTILITY = 0x01,
 
 };
 
