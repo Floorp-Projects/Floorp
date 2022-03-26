@@ -5,7 +5,6 @@
 
 dictionary SecurePaymentConfirmationRequest {
     required BufferSource challenge;
-    required USVString rpId;
     required FrozenArray<BufferSource> credentialIds;
     required PaymentCredentialInstrument instrument;
     unsigned long timeout;

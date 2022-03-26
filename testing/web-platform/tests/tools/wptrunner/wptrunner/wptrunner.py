@@ -54,9 +54,7 @@ def get_loader(test_paths, product, debug=None, run_info_extras=None, chunker_kw
                                     browser_channel=kwargs.get("browser_channel"),
                                     verify=kwargs.get("verify"),
                                     debug=debug,
-                                    extras=run_info_extras,
-                                    device_serials=kwargs.get("device_serial"),
-                                    adb_binary=kwargs.get("adb_binary"))
+                                    extras=run_info_extras)
 
     test_manifests = testloader.ManifestLoader(test_paths, force_manifest_update=kwargs["manifest_update"],
                                                manifest_download=kwargs["manifest_download"]).load()
@@ -465,7 +463,6 @@ def start(**kwargs):
         else:
             rv = not run_tests(**kwargs)[0] or logged_critical.has_log
     finally:
-        logger.shutdown()
         logger.remove_handler(handler)
     return rv
 

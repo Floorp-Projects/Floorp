@@ -30,6 +30,7 @@ job_path_map = {
     "resources_unittest": ["resources/", "tools/"],
     "tools_unittest": ["tools/"],
     "wptrunner_unittest": ["tools/"],
+    "build_css": ["css/"],
     "update_built": ["update-built-tests\\.sh",
                      "conformance-checkers/",
                      "css/css-ui/",
