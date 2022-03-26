@@ -54,8 +54,8 @@ UtilityProcessManager::UtilityProcessManager() : mObserver(new Observer(this)) {
 }
 
 UtilityProcessManager::~UtilityProcessManager() {
-  // The Utility process should ALL have already been shut down.
-  MOZ_ASSERT(NoMoreProcesses());
+  // The Utility process should have already been shut down.
+  MOZ_ASSERT(!mProcess && !mProcessParent);
 }
 
 NS_IMPL_ISUPPORTS(UtilityProcessManager::Observer, nsIObserver);
@@ -80,15 +80,16 @@ void UtilityProcessManager::OnXPCOMShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   sXPCOMShutdown = true;
   nsContentUtils::UnregisterShutdownObserver(mObserver);
-  CleanShutdownAllProcesses();
+  CleanShutdown();
 }
 
 void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (NoMoreProcesses()) {
+  if (!mProcess) {
     // Process hasn't been launched yet
     return;
   }
+
   // We know prefs are ASCII here.
   NS_LossyConvertUTF16toASCII strData(aData);
 
@@ -99,27 +100,12 @@ void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
 
   mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref);
-
-  for (auto& p : mProcesses) {
-    if (!p) {
-      continue;
-    }
-
-    if (p->mProcessParent) {
-      Unused << p->mProcessParent->SendPreferenceUpdate(pref);
-    } else if (IsProcessLaunching(p->mSandbox)) {
-      p->mQueuedPrefs.AppendElement(pref);
-    }
+  if (bool(mProcessParent)) {
+    MOZ_ASSERT(mQueuedPrefs.IsEmpty());
+    Unused << mProcessParent->SendPreferenceUpdate(pref);
+  } else if (IsProcessLaunching()) {
+    mQueuedPrefs.AppendElement(pref);
   }
-}
-
-RefPtr<UtilityProcessManager::ProcessFields> UtilityProcessManager::GetProcess(
-    SandboxingKind aSandbox) {
-  if (!mProcesses[aSandbox]) {
-    return nullptr;
-  }
-
-  return mProcesses[aSandbox];
 }
 
 RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
@@ -131,20 +117,14 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
                                                        __func__);
   }
 
-  RefPtr<ProcessFields> p = GetProcess(aSandbox);
-  if (p && p->mNumProcessAttempts) {
+  if (mNumProcessAttempts) {
     // We failed to start the Utility process earlier, abort now.
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
 
-  if (p && p->mLaunchPromise && p->mProcess) {
-    return p->mLaunchPromise;
-  }
-
-  if (!p) {
-    p = new ProcessFields(aSandbox);
-    mProcesses[aSandbox] = p;
+  if (mLaunchPromise && mProcess) {
+    return mLaunchPromise;
   }
 
   std::vector<std::string> extraArgs;
@@ -153,164 +133,119 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
 
   // The subprocess is launched asynchronously, so we
   // wait for the promise to be resolved to acquire the IPDL actor.
-  p->mProcess = new UtilityProcessHost(aSandbox, this);
-  if (!p->mProcess->Launch(extraArgs)) {
-    p->mNumProcessAttempts++;
-    DestroyProcess(aSandbox);
+  mProcess = new UtilityProcessHost(aSandbox, this);
+  if (!mProcess->Launch(extraArgs)) {
+    mNumProcessAttempts++;
+    DestroyProcess();
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
 
   RefPtr<UtilityProcessManager> self = this;
-  p->mLaunchPromise = p->mProcess->LaunchPromise()->Then(
+  mLaunchPromise = mProcess->LaunchPromise()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self, p, aSandbox](bool) {
+      [self](bool) {
         if (self->IsShutdown()) {
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
 
-        if (self->IsProcessDestroyed(aSandbox)) {
+        if (self->IsProcessDestroyed()) {
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
 
-        p->mProcessParent = p->mProcess->GetActor();
+        self->mProcessParent = self->mProcess->GetActor();
 
         // Flush any pref updates that happened during
         // launch and weren't included in the blobs set
         // up in LaunchUtilityProcess.
-        for (const mozilla::dom::Pref& pref : p->mQueuedPrefs) {
-          Unused << NS_WARN_IF(!p->mProcessParent->SendPreferenceUpdate(pref));
+        for (const mozilla::dom::Pref& pref : self->mQueuedPrefs) {
+          Unused << NS_WARN_IF(
+              !self->mProcessParent->SendPreferenceUpdate(pref));
         }
-        p->mQueuedPrefs.Clear();
+        self->mQueuedPrefs.Clear();
 
         CrashReporter::AnnotateCrashReport(
             CrashReporter::Annotation::UtilityProcessStatus, "Running"_ns);
 
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::UtilityProcessSandboxingKind,
-            (unsigned int)aSandbox);
-
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
-      [self, p, aSandbox](nsresult aError) {
+      [self](nsresult aError) {
         if (GetSingleton()) {
-          p->mNumProcessAttempts++;
-          self->DestroyProcess(aSandbox);
+          self->mNumProcessAttempts++;
+          self->DestroyProcess();
         }
         return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
       });
-
-  return p->mLaunchPromise;
+  return mLaunchPromise;
 }
 
-bool UtilityProcessManager::IsProcessLaunching(SandboxingKind aSandbox) {
+bool UtilityProcessManager::IsProcessLaunching() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<ProcessFields> p = GetProcess(aSandbox);
-  if (!p) {
-    MOZ_CRASH("Cannot check process launching with no process");
-    return false;
-  }
-
-  return p->mProcess && !(p->mProcessParent);
+  return mProcess && !mProcessParent;
 }
 
-bool UtilityProcessManager::IsProcessDestroyed(SandboxingKind aSandbox) {
+bool UtilityProcessManager::IsProcessDestroyed() const {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ProcessFields> p = GetProcess(aSandbox);
-  if (!p) {
-    MOZ_CRASH("Cannot check process destroyed with no process");
-    return false;
-  }
-  return !p->mProcess && !p->mProcessParent;
+  return !mProcessParent && !mProcess;
 }
 
 void UtilityProcessManager::OnProcessUnexpectedShutdown(
     UtilityProcessHost* aHost) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mProcess && mProcess == aHost);
 
-  for (auto& it : mProcesses) {
-    if (it && it->mProcess && it->mProcess == aHost) {
-      it->mNumUnexpectedCrashes++;
-      DestroyProcess(it->mSandbox);
-      return;
-    }
+  mNumUnexpectedCrashes++;
+
+  DestroyProcess();
+}
+
+void UtilityProcessManager::NotifyRemoteActorDestroyed() {
+  if (!NS_IsMainThread()) {
+    RefPtr<UtilityProcessManager> self = this;
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "UtilityProcessManager::NotifyRemoteActorDestroyed()",
+        [self]() { self->NotifyRemoteActorDestroyed(); }));
+    return;
   }
 
-  MOZ_CRASH(
-      "Called UtilityProcessManager::OnProcessUnexpectedShutdown with invalid "
-      "aHost");
+  // One of the bridged top-level actors for the Utility process has been
+  // prematurely terminated, and we're receiving a notification. This
+  // can happen if the ActorDestroy for a bridged protocol fires
+  // before the ActorDestroy for PUtilityProcessParent.
+  OnProcessUnexpectedShutdown(mProcess);
 }
 
-void UtilityProcessManager::CleanShutdownAllProcesses() {
-  for (auto& it : mProcesses) {
-    if (it) {
-      DestroyProcess(it->mSandbox);
-    }
-  }
-}
+void UtilityProcessManager::CleanShutdown() { DestroyProcess(); }
 
-void UtilityProcessManager::CleanShutdown(SandboxingKind aSandbox) {
-  DestroyProcess(aSandbox);
-}
-
-uint16_t UtilityProcessManager::AliveProcesses() {
-  uint16_t alive = 0;
-  for (auto& p : mProcesses) {
-    if (p != nullptr) {
-      alive++;
-    }
-  }
-  return alive;
-}
-
-bool UtilityProcessManager::NoMoreProcesses() { return AliveProcesses() == 0; }
-
-void UtilityProcessManager::DestroyProcess(SandboxingKind aSandbox) {
+void UtilityProcessManager::DestroyProcess() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (AliveProcesses() <= 1) {
-    if (mObserver) {
-      Preferences::RemoveObserver(mObserver, "");
-    }
-
-    mObserver = nullptr;
-    sSingleton = nullptr;
+  mQueuedPrefs.Clear();
+  if (mObserver) {
+    Preferences::RemoveObserver(mObserver, "");
   }
 
-  RefPtr<ProcessFields> p = GetProcess(aSandbox);
-  if (!p) {
-    MOZ_CRASH("Cannot get no ProcessFields");
+  mObserver = nullptr;
+  mProcessParent = nullptr;
+  sSingleton = nullptr;
+
+  if (!mProcess) {
     return;
   }
 
-  p->mQueuedPrefs.Clear();
-  p->mProcessParent = nullptr;
-
-  if (!p->mProcess) {
-    return;
-  }
-
-  p->mProcess->Shutdown();
-  p->mProcess = nullptr;
-
-  mProcesses[aSandbox] = nullptr;
+  mProcess->Shutdown();
+  mProcess = nullptr;
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::UtilityProcessStatus, "Destroyed"_ns);
 }
 
-Maybe<base::ProcessId> UtilityProcessManager::ProcessPid(
-    SandboxingKind aSandbox) {
+Maybe<base::ProcessId> UtilityProcessManager::ProcessPid() {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ProcessFields> p = GetProcess(aSandbox);
-  if (!p) {
-    return Nothing();
-  }
-  if (p->mProcessParent) {
-    return Some(p->mProcessParent->OtherPid());
+  if (mProcessParent) {
+    return Some(mProcessParent->OtherPid());
   }
   return Nothing();
 }
@@ -319,17 +254,13 @@ class UtilityMemoryReporter : public MemoryReportingProcess {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityMemoryReporter, override)
 
-  explicit UtilityMemoryReporter(UtilityProcessParent* aParent) {
-    mParent = aParent;
-  }
-
   bool IsAlive() const override { return bool(GetParent()); }
 
   bool SendRequestMemoryReport(
       const uint32_t& aGeneration, const bool& aAnonymize,
       const bool& aMinimizeMemoryUsage,
       const Maybe<ipc::FileDescriptor>& aDMDFile) override {
-    RefPtr<UtilityProcessParent> parent = GetParent();
+    UtilityProcessParent* parent = GetParent();
     if (!parent) {
       return false;
     }
@@ -339,24 +270,33 @@ class UtilityMemoryReporter : public MemoryReportingProcess {
   }
 
   int32_t Pid() const override {
-    if (RefPtr<UtilityProcessParent> parent = GetParent()) {
+    if (UtilityProcessParent* parent = GetParent()) {
       return (int32_t)parent->OtherPid();
     }
     return 0;
   }
 
  private:
-  RefPtr<UtilityProcessParent> GetParent() const { return mParent; }
-
-  RefPtr<UtilityProcessParent> mParent = nullptr;
+  UtilityProcessParent* GetParent() const {
+    if (RefPtr<UtilityProcessManager> utilitypm =
+            UtilityProcessManager::GetSingleton()) {
+      if (UtilityProcessParent* parent = utilitypm->GetProcessParent()) {
+        return parent;
+      }
+    }
+    return nullptr;
+  }
 
  protected:
   ~UtilityMemoryReporter() = default;
 };
 
-RefPtr<MemoryReportingProcess> UtilityProcessManager::GetProcessMemoryReporter(
-    UtilityProcessParent* parent) {
-  return new UtilityMemoryReporter(parent);
+RefPtr<MemoryReportingProcess>
+UtilityProcessManager::GetProcessMemoryReporter() {
+  if (!mProcess || !mProcess->IsConnected()) {
+    return nullptr;
+  }
+  return new UtilityMemoryReporter();
 }
 
 }  // namespace mozilla::ipc
