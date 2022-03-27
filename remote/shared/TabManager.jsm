@@ -135,7 +135,7 @@ var TabManager = {
   },
 
   /**
-   * Retrieve a the browser element corresponding to the provided unique id,
+   * Retrieve the browser element corresponding to the provided unique id,
    * previously generated via getIdForBrowser.
    *
    * TODO: To avoid creating strong references on browser elements and
@@ -161,6 +161,23 @@ var TabManager = {
       }
     }
     return null;
+  },
+
+  /**
+   * Retrieve the browsing context corresponding to the provided unique id.
+   *
+   * @param {String} id
+   *     A browsing context unique id (created by getIdForBrowsingContext).
+   * @return {BrowsingContext=}
+   *     The browsing context found for this id, null if none was found.
+   */
+  getBrowsingContextById(id) {
+    const browser = this.getBrowserById(id);
+    if (browser) {
+      return browser.browsingContext;
+    }
+
+    return BrowsingContext.get(id);
   },
 
   /**
