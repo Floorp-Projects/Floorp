@@ -8,9 +8,13 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+var prefs = [
+  ["apz.test.mac.synth_wheel_input", true]
+];
+
 var subtests = [
-  {"file": "helper_scroll_linked_effect_by_wheel.html",
-   "prefs": [["apz.test.mac.synth_wheel_input", true]]},
+  {"file": "helper_scroll_linked_effect_by_wheel.html", prefs},
+  {"file": "helper_scroll_linked_effect_detector.html", prefs}
 ];
 
 if (isApzEnabled()) {
