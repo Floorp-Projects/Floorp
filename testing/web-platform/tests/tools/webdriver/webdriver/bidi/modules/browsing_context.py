@@ -5,6 +5,15 @@ from ._module import BidiModule, command
 
 class BrowsingContext(BidiModule):
     @command
+    def close(self, context: Optional[str] = None) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = {}
+
+        if context is not None:
+            params["context"] = context
+
+        return params
+
+    @command
     def get_tree(self,
                  max_depth: Optional[int] = None,
                  parent: Optional[str] = None) -> Mapping[str, Any]:
