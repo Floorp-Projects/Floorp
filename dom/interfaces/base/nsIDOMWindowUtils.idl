@@ -2250,6 +2250,14 @@ interface nsIDOMWindowUtils : nsISupports {
 
   // Used for testing to check the suspend status.
   readonly attribute bool suspendedByBrowsingContextGroup;
+
+  // Whether there's any scroll-linked effect in this document. This is only
+  // meaningful after the script in question tried to mutate something in a
+  // scroll event callback until the next refresh driver tick happens.
+  //
+  // See https://firefox-source-docs.mozilla.org/performance/scroll-linked_effects.html
+  // about scroll-linked effects.
+  readonly attribute bool hasScrollLinkedEffect;
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
