@@ -11,6 +11,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/TypedEnumBits.h"
+#include "nsCSSPropertyID.h"
 #include "nsCoord.h"
 #include "X11UndefineNone.h"
 
@@ -140,8 +141,9 @@ class ServoStyleSetSizes {
 // A callback that can be sent via FFI which will be invoked _right before_
 // being mutated, and at most once.
 struct DeclarationBlockMutationClosure {
-  // The callback function. The argument is `data`.
-  void (*function)(void*) = nullptr;
+  // The callback function. The first argument is `data`, the second is the
+  // property id that changed.
+  void (*function)(void*, nsCSSPropertyID) = nullptr;
   void* data = nullptr;
 };
 

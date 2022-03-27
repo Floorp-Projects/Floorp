@@ -266,23 +266,6 @@ void ActiveLayerTracker::NotifyRestyle(nsIFrame* aFrame,
   }
 }
 
-/* static */
-void ActiveLayerTracker::NotifyAnimated(nsIFrame* aFrame,
-                                        nsCSSPropertyID aProperty,
-                                        const nsACString& aNewValue,
-                                        nsDOMCSSDeclaration* aDOMCSSDecl) {
-  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
-  uint8_t& mutationCount = layerActivity->RestyleCountForProperty(aProperty);
-  if (mutationCount != 0xFF) {
-    nsAutoCString oldValue;
-    aDOMCSSDecl->GetPropertyValue(aProperty, oldValue);
-    if (oldValue != aNewValue) {
-      // We know this is animated, so just hack the mutation count.
-      mutationCount = 0xFF;
-    }
-  }
-}
-
 static bool IsPresContextInScriptAnimationCallback(
     nsPresContext* aPresContext) {
   if (aPresContext->RefreshDriver()->IsInRefresh()) {
@@ -296,10 +279,11 @@ static bool IsPresContextInScriptAnimationCallback(
 
 /* static */
 void ActiveLayerTracker::NotifyInlineStyleRuleModified(
-    nsIFrame* aFrame, nsCSSPropertyID aProperty, const nsACString& aNewValue,
-    nsDOMCSSDeclaration* aDOMCSSDecl) {
+    nsIFrame* aFrame, nsCSSPropertyID aProperty) {
   if (IsPresContextInScriptAnimationCallback(aFrame->PresContext())) {
-    NotifyAnimated(aFrame, aProperty, aNewValue, aDOMCSSDecl);
+    LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
+    // We know this is animated, so just hack the mutation count.
+    layerActivity->RestyleCountForProperty(aProperty) = 0xff;
   }
 }
 
