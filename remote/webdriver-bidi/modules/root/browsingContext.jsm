@@ -17,11 +17,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  Log: "chrome://remote/content/shared/Log.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.WEBDRIVER_BIDI)
+);
 
 class BrowsingContextModule extends Module {
   #contextListener;
@@ -43,6 +48,53 @@ class BrowsingContextModule extends Module {
   destroy() {
     this.#contextListener.off("attached", this.#onContextAttached);
     this.#contextListener.destroy();
+  }
+
+  /**
+   * Close the provided browsing context.
+   *
+   * @param {Object=} options
+   * @param {string} context
+   *     Id of the browsing context to close.
+   *
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {InvalidArgumentError}
+   *     If the browsing context is not a top-level one.
+   */
+  close(options = {}) {
+    const { context: contextId } = options;
+
+    assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = TabManager.getBrowsingContextById(contextId);
+    if (!context) {
+      throw new error.NoSuchFrameError(
+        `Browsing Context with id ${contextId} not found`
+      );
+    }
+
+    if (context.parent) {
+      throw new error.InvalidArgumentError(
+        `Browsing Context with id ${contextId} is not top-level`
+      );
+    }
+
+    if (TabManager.getTabCount() === 1) {
+      // The behavior when closing the last tab is currently unspecified.
+      // Warn the consumer about potential issues
+      logger.warn(
+        `Closing the last open tab (Browsing Context id ${contextId}), expect inconsistent behavior across platforms`
+      );
+    }
+
+    const browser = context.embedderElement;
+    const tabBrowser = TabManager.getTabBrowser(browser.ownerGlobal);
+    const tab = tabBrowser.getTabForBrowser(browser);
+    TabManager.removeTab(tab);
   }
 
   /**
@@ -107,13 +159,7 @@ class BrowsingContextModule extends Module {
         `Expected "parent" to be a string, got ${parentId}`
       );
 
-      // If the parent id is for a top-level browsing context get the browsing
-      // context via the unique id and the related content browser.
-      const browser = TabManager.getBrowserById(parentId);
-      contexts =
-        browser !== null
-          ? [browser.browsingContext]
-          : [this.#getBrowsingContext(parentId)];
+      contexts = [this.#getBrowsingContext(parentId)];
     } else {
       // Return all top-level browsing contexts.
       contexts = TabManager.browsers.map(browser => browser.browsingContext);
@@ -143,7 +189,7 @@ class BrowsingContextModule extends Module {
       return null;
     }
 
-    const context = BrowsingContext.get(contextId);
+    const context = TabManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new error.NoSuchFrameError(
         `Browsing Context with id ${contextId} not found`

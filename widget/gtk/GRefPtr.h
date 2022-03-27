@@ -12,8 +12,10 @@
 #include <gtk/gtk.h>
 #include "mozilla/RefPtr.h"
 
+#ifdef MOZ_ENABLE_DBUS
 // TODO: Remove this (we should use GDBus instead, which is not deprecated).
-#include <dbus/dbus-glib.h>
+#  include <dbus/dbus-glib.h>
+#endif
 
 namespace mozilla {
 
@@ -38,7 +40,9 @@ GOBJECT_TRAITS(GAppInfo)
 GOBJECT_TRAITS(GdkDragContext)
 GOBJECT_TRAITS(GdkPixbuf)
 
+#ifdef MOZ_ENABLE_DBUS
 GOBJECT_TRAITS(DBusGProxy)
+#endif
 
 #undef GOBJECT_TRAITS
 
@@ -62,6 +66,7 @@ struct RefPtrTraits<GDBusNodeInfo> {
   }
 };
 
+#ifdef MOZ_ENABLE_DBUS
 template <>
 struct RefPtrTraits<DBusGConnection> {
   static void AddRef(DBusGConnection* aObject) {
@@ -71,6 +76,7 @@ struct RefPtrTraits<DBusGConnection> {
     dbus_g_connection_unref(aObject);
   }
 };
+#endif
 
 }  // namespace mozilla
 

@@ -6,6 +6,7 @@ BROWSER_CHROME_MANIFESTS += [
     "listeners/test/browser/browser.ini",
     "messagehandler/test/browser/broadcast/browser.ini",
     "messagehandler/test/browser/browser.ini",
+    "test/browser/browser.ini",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
