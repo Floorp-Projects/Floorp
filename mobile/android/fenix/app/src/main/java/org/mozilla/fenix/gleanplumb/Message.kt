@@ -27,6 +27,12 @@ data class Message(
     val triggers: List<String>,
     val metadata: Metadata
 ) {
+    val maxDisplayCount: Int
+        get() = style.maxDisplayCount
+
+    val priority: Int
+        get() = style.priority
+
     /**
      * A data class that holds metadata that help to identify if a message should shown.
      *

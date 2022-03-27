@@ -93,7 +93,7 @@ class DefaultMessageControllerTest {
 
     @Test
     fun `WHEN calling onMessageDisplayed THEN report to the messageManager`() {
-        val data = MessageData(_context = testContext, maxDisplayCount = 1)
+        val data = MessageData(_context = testContext)
         val message = mockMessage(data)
 
         controller.onMessageDisplayed(message)
@@ -106,7 +106,7 @@ class DefaultMessageControllerTest {
     private fun mockMessage(data: MessageData = MessageData(_context = testContext)) = Message(
         id = "id",
         data = data,
-        style = mockk(),
+        style = mockk(relaxed = true),
         action = "action",
         triggers = emptyList(),
         metadata = Message.Metadata(

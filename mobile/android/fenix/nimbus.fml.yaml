@@ -94,51 +94,77 @@ features:
           expressions. Each entry maps to a
           valid JEXL expression.
         type: Map<String, String>
-        default:
-          english-speaking: "'en' in locale"
-          ALWAYS: "true"
-          NEW_USER: "days_since_install < 7"
-
+        default: {}
       styles:
         description: >
           A map of styles to configure message
           appearance.
         type: Map<String, StyleData>
-        default:
-          urgent:
-            background-color: red
-            text-color: white
-            button-background: bright-blue
-            button-text-color: white
-            priority: 70
-          warning:
-            background-color: cyan,
-            text-color: black,
-            button-background: bright-blue
-            button-text-color: white
-            priority: 55
-          default:
-            background-color: blue
-            text-color: white
-            button-background: bright-blue
-            button-text-color: white
-            priority: 50
-          excited:
-            background-color: blue
-            text-color: white
-            button-background: bright-blue
-            button-text-color: white
-            priority: 60
+        default: {}
 
       actions:
         type: Map<String, String>
         description: A growable map of action URLs.
-        default:
-          OPEN_SYNC_SETTINGS: firefox://settings/sync
-          OPEN_POCKET_SETTINGS: https:///getpocket.com/settings?fxa={fxa-token}
-          OPEN_SETTINGS: ://settings
-
+        default: {}
+      on-control:
+        type: ControlMessageBehavior
+        description: What should be displayed when a control message is selected.
+        default: show-next-message
     defaults:
+      - value:
+          triggers:
+            USER_RECENTLY_INSTALLED:  days_since_install < 7
+            USER_RECENTLY_UPDATED:    days_since_update < 7 && days_since_install != days_since_update
+            USER_TIER_ONE_COUNTRY:    ('US' in locale || 'GB' in locale || 'CA' in locale || 'DE' in locale || 'FR' in locale)
+            USER_EN_SPEAKER:          "'en' in locale"
+            USER_DE_SPEAKER:          "'de' in locale"
+            USER_FR_SPEAKER:          "'fr' in locale"
+            DEVICE_ANDROID:           os == 'Android'
+            DEVICE_IOS:               os == 'iOS'
+            ALWAYS:                   "true"
+            NEVER:                    "false"
+          actions:
+            ENABLE_PRIVATE_BROWSING:            ://enable_private_browsing
+            INSTALL_SEARCH_WIDGET:              ://install_search_widget
+            MAKE_DEFAULT_BROWSER:               ://make_default_browser
+            VIEW_BOOKMARKS:                     ://urls_bookmarks
+            VIEW_COLLECTIONS:                   ://home_collections
+            VIEW_HISTORY:                       ://urls_history
+            VIEW_HOMESCREEN:                    ://home
+            OPEN_SETTINGS_ACCESSIBILITY:        ://settings_accessibility
+            OPEN_SETTINGS_ADDON_MANAGER:        ://settings_addon_manager
+            OPEN_SETTINGS_DELETE_BROWSING_DATA: ://settings_delete_browsing_data
+            OPEN_SETTINGS_LOGINS:               ://settings_logins
+            OPEN_SETTINGS_NOTIFICATIONS:        ://settings_notifications
+            OPEN_SETTINGS_PRIVACY:              ://settings_privacy
+            OPEN_SETTINGS_SEARCH_ENGINE:        ://settings_search_engine
+            OPEN_SETTINGS_TRACKING_PROTECTION:  ://settings_tracking_protection
+            OPEN_SETTINGS_WALLPAPERS:           ://settings_wallpapers
+            OPEN_SETTINGS:                      ://settings
+            TURN_ON_SYNC:                       ://turn_on_sync
+          styles:
+            DEFAULT:
+              priority: 50
+              max-display-count: 5
+            PERSISTENT:
+              priority: 50
+              max-display-count: 20
+            WARNING:
+              priority: 60
+              max-display-count: 10
+            URGENT:
+              priority: 100
+              max-display-count: 10
+
+      - channel: developer
+        value:
+          styles:
+            DEFAULT:
+              priority: 50
+              max-display-count: 100
+            EXPIRES_QUICKLY:
+              priority: 100
+              max-display-count: 1
       - channel: developer
         value: {
           "messages": {
@@ -147,13 +173,10 @@ features:
               "text": "Love Firefox? Fill in our survey!",
               "action": "https://surveyprovider.com/survey-id/{uuid}",
               "trigger": [ "ALWAYS" ],
-              "max-display-count": 5,
-              "style": "warning",
+              "style": "DEFAULT",
               "button-label": "Go to the survey"
             }
-          },
-
-          "message-under-experiment": "my-viewpoint-survey"
+          }
         }
       - channel: developer
         value: {
@@ -161,12 +184,9 @@ features:
             "private-tabs-auto-close": {
               "action": "OPEN_SETTINGS",
               "text": "Sharing your phone? Autoclosing private tabs is for you!",
-              "style": "warning",
               "trigger": [
-                  "NEW_USER",
-                  "first-private-tabs-opened"
-              ],
-              "max-display-count": 5
+                  "USER_RECENTLY_INSTALLED"
+              ]
             }
           },
 
@@ -175,21 +195,13 @@ features:
       - channel: developer
         value: {
           "triggers": {
-            "ireland": "'IE' in locale"
+            "USER_IE_COUNTRY": "'IE' in locale"
           },
 
           "styles": {
             "irish-green": {
-              "background-color": "green",
-              "text-color": "dark-green",
-              "button-background": "foo",
-              "button-text-color": "very-green",
               "priority": 50
             }
-          },
-
-          "actions": {
-            "OPEN_SETTINGS": "://settings"
           },
 
           "messages": {
@@ -199,9 +211,8 @@ features:
               "style": "irish-green",
               "trigger": [
                   "NEW_USER",
-                  "ireland"
-              ],
-              "max-display-count": 5
+                  "USER_IE_COUNTRY"
+              ]
             }
           },
 
@@ -220,7 +231,7 @@ types:
         and call to action.
       fields:
         action:
-          type: String
+          type: Text
           description: >
             A URL of a page or a deeplink.
             This may have substitution variables in.
@@ -239,7 +250,6 @@ types:
           type: Boolean
           description: "Indicates if this message is the control message, if true shouldn't be displayed"
           default: false
-
         button-label:
           type: Option<Text>
           description: >
@@ -251,20 +261,7 @@ types:
           description: >
             The style as described in a
             `StyleData` from the styles table.
-          default: "default"
-        max-display-count:
-          type: Int
-          description: >
-            The number of sessions the user is
-            shown the message before the message expires.
-            If the user is able to dismiss the message,
-            this is the number of times they dismiss
-            it before the message expires.
-             A count of -1 means that the message will
-            never expire.
-          default: 5
-        # These triggers aren't part of the MVP,
-        # so may be excluded.
+          default: DEFAULT
         trigger:
           type: List<String>
           description: >
@@ -277,31 +274,27 @@ types:
         A group of properities (predominantly visual) to
         describe the style of the message.
       fields:
-        # How the string is transformed into a color is unspecified
-        background-color:
-          type: String
-          description: The color of the background.
-          default: "blue"
-        text-color:
-          type: String
-          description: The color of the background.
-          default: "white"
-        button-background:
-          type: String
-          description: The color of the button background.
-          default: "bright-blue"
-        button-text-color:
-          type: String
-          description: The color of the button text.
-          default: "white"
         priority:
           type: Int
           description: >
             The importance of this message.
             0 is not very important, 100 is very important.
           default: 50
+        max-display-count:
+          type: Int
+          description: >
+            How many sessions will this message be shown to the user
+            before it is expired.
+          default: 5
 
   enums:
+    ControlMessageBehavior:
+      description: An enum to influence what should be displayed when a control message is selected.
+      variants:
+        show-next-message:
+          description: The next eligible message should be shown.
+        show-none:
+          description: The surface should show no message.
     HomeScreenSection:
       description: The identifiers for the sections of the homescreen.
       variants:

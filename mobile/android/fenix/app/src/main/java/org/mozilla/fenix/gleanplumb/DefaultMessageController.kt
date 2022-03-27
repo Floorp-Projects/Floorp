@@ -42,7 +42,7 @@ class DefaultMessageController(
     }
 
     override fun onMessageDisplayed(message: Message) {
-        if (message.data.maxDisplayCount <= message.metadata.displayCount + 1) {
+        if (message.maxDisplayCount <= message.metadata.displayCount + 1) {
             metrics.track(Event.Messaging.MessageExpired(message.id))
         }
         metrics.track(Event.Messaging.MessageShown(message.id))

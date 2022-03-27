@@ -73,7 +73,7 @@ class MessagingMiddleware(
         val newMessage = oldMessage.copy(
             metadata = newMetadata
         )
-        val newMessages = if (newMetadata.displayCount < oldMessage.data.maxDisplayCount) {
+        val newMessages = if (newMetadata.displayCount < oldMessage.maxDisplayCount) {
             updateMessage(context, oldMessage, newMessage)
         } else {
             consumeMessageToShowIfNeeded(context, oldMessage)

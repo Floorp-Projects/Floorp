@@ -37,6 +37,7 @@ import org.mozilla.fenix.gleanplumb.MessagingState
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
+import org.mozilla.fenix.nimbus.StyleData
 
 @RunWith(FenixRobolectricTestRunner::class)
 class MessagingMiddlewareTest {
@@ -276,12 +277,13 @@ class MessagingMiddlewareTest {
 
     @Test
     fun `GIVEN a message with that not surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN update the available messages and the updateMetadata`() {
+        val style: StyleData = mockk(relaxed = true)
         val oldMessageData: MessageData = mockk(relaxed = true)
         val oldMessage = Message(
             "oldMessage",
             oldMessageData,
             action = "action",
-            mockk(relaxed = true),
+            style,
             listOf("trigger"),
             Message.Metadata("same-id", displayCount = 0)
         )
@@ -289,7 +291,7 @@ class MessagingMiddlewareTest {
         val spiedMiddleware = spyk(middleware)
 
         every { spiedMiddleware.now() } returns 0
-        every { oldMessageData.maxDisplayCount } returns 2
+        every { style.maxDisplayCount } returns 2
         every {
             spiedMiddleware.updateMessage(
                 middlewareContext,
@@ -307,12 +309,13 @@ class MessagingMiddlewareTest {
 
     @Test
     fun `GIVEN a message with that surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN remove the message and consume it`() {
+        val style: StyleData = mockk(relaxed = true)
         val oldMessageData: MessageData = mockk(relaxed = true)
         val oldMessage = Message(
             "oldMessage",
             oldMessageData,
             action = "action",
-            mockk(relaxed = true),
+            style,
             listOf("trigger"),
             Message.Metadata("same-id", displayCount = 0)
         )
@@ -320,7 +323,7 @@ class MessagingMiddlewareTest {
         val spiedMiddleware = spyk(middleware)
 
         every { spiedMiddleware.now() } returns 0
-        every { oldMessageData.maxDisplayCount } returns 1
+        every { style.maxDisplayCount } returns 1
         every {
             spiedMiddleware.consumeMessageToShowIfNeeded(
                 middlewareContext,

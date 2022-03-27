@@ -12,6 +12,7 @@ import org.mozilla.experiments.nimbus.GleanPlumbInterface
 import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
+import org.mozilla.fenix.nimbus.ControlMessageBehavior
 import org.mozilla.fenix.nimbus.Messaging
 import org.mozilla.fenix.nimbus.StyleData
 
@@ -23,12 +24,13 @@ class NimbusMessagingStorage(
     private val metadataStorage: MessageMetadataStorage,
     private val reportMalformedMessage: (String) -> Unit,
     private val gleanPlumb: GleanPlumbInterface,
-    private val messagingFeature: FeatureHolder<Messaging>
+    private val messagingFeature: FeatureHolder<Messaging>,
+    private val attributeProvider: CustomAttributeProvider? = null
 ) {
     private val logger = Logger("MessagingStorage")
     private val nimbusFeature = messagingFeature.value()
     private val customAttributes: JSONObject
-        get() = JSONObject()
+        get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
     /**
      * Returns a list of available messages descending sorted by their priority.
@@ -54,7 +56,7 @@ class NimbusMessagingStorage(
                     ?: return@mapNotNull null
             )
         }.filter {
-            it.data.maxDisplayCount >= it.metadata.displayCount &&
+            it.maxDisplayCount >= it.metadata.displayCount &&
                 !it.metadata.dismissed &&
                 !it.metadata.pressed
         }.sortedByDescending {
@@ -66,21 +68,33 @@ class NimbusMessagingStorage(
      * Returns the next higher priority message which all their triggers are true.
      */
     fun getNextMessage(availableMessages: List<Message>): Message? {
+        val jexlCache = HashMap<String, Boolean>()
         val helper = gleanPlumb.createMessageHelper(customAttributes)
-        var message = availableMessages.firstOrNull {
-            isMessageEligible(it, helper)
+        val message = availableMessages.firstOrNull {
+            isMessageEligible(it, helper, jexlCache)
         } ?: return null
 
-        if (isMessageUnderExperiment(message, nimbusFeature.messageUnderExperiment)) {
-            messagingFeature.recordExposure()
+        // Check this isn't an experimental message. If not, we can go ahead and return it.
+        if (!isMessageUnderExperiment(message, nimbusFeature.messageUnderExperiment)) {
+            return message
+        }
+        // If the message is under experiment, then we need to record the exposure
+        messagingFeature.recordExposure()
 
-            if (message.data.isControl) {
-                message = availableMessages.firstOrNull {
-                    !it.data.isControl && isMessageEligible(it, helper)
-                } ?: return null
+        // If this is an experimental message, but not a placebo, then just return the message.
+        return if (!message.data.isControl) {
+            message
+        } else {
+            // This is a control, so we need to either return the next message (there may not be one)
+            // or not display anything.
+            when (getOnControlBehavior()) {
+                ControlMessageBehavior.SHOW_NEXT_MESSAGE -> availableMessages.firstOrNull {
+                    // There should only be one control message, and we've just detected it.
+                    !it.data.isControl && isMessageEligible(it, helper, jexlCache)
+                }
+                ControlMessageBehavior.SHOW_NONE -> null
             }
         }
-        return message
     }
 
     /**
@@ -136,7 +150,7 @@ class NimbusMessagingStorage(
 
     @VisibleForTesting
     internal fun isMessageUnderExperiment(message: Message, expression: String?): Boolean {
-        return when {
+        return message.data.isControl || when {
             expression.isNullOrBlank() -> {
                 false
             }
@@ -152,18 +166,25 @@ class NimbusMessagingStorage(
     @VisibleForTesting
     internal fun isMessageEligible(
         message: Message,
-        helper: GleanPlumbMessageHelper
+        helper: GleanPlumbMessageHelper,
+        jexlCache: MutableMap<String, Boolean> = mutableMapOf()
     ): Boolean {
         return message.triggers.all { condition ->
-            try {
-                helper.evalJexl(condition)
-            } catch (e: NimbusException.EvaluationException) {
-                reportMalformedMessage(message.id)
-                logger.info("Unable to evaluate $condition")
-                false
-            }
+            jexlCache[condition]
+                ?: try {
+                    helper.evalJexl(condition).also { result ->
+                        jexlCache[condition] = result
+                    }
+                } catch (e: NimbusException.EvaluationException) {
+                    reportMalformedMessage(message.id)
+                    logger.info("Unable to evaluate $condition")
+                    false
+                }
         }
     }
+
+    @VisibleForTesting
+    internal fun getOnControlBehavior(): ControlMessageBehavior = nimbusFeature.onControl
 
     private suspend fun addMetadata(id: String): Message.Metadata {
         return metadataStorage.addMetadata(
