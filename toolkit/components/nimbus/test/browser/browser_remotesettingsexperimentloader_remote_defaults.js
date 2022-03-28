@@ -296,10 +296,12 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
 
 add_task(async function test_finalizeRemoteConfigs_cleanup() {
   const featureFoo = new ExperimentFeature("foo", {
-    foo: { description: "mochitests" },
+    description: "mochitests",
+    variables: {},
   });
   const featureBar = new ExperimentFeature("bar", {
-    foo: { description: "mochitests" },
+    description: "mochitests",
+    variables: {},
   });
 
   registerCleanupFunction(
