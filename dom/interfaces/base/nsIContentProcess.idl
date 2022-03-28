@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+[scriptable, builtinclass, uuid(456f58be-29dd-4973-885b-95aece1c9a8a)]
+interface nsIContentProcessInfo : nsISupports
+{
+  /**
+   * Is this content process alive?
+   */
+  readonly attribute boolean isAlive;
+
+  /**
+   * The content process's PID.
+   * Throws if the process is not alive.
+   */
+  readonly attribute int32_t processId;
+
+  /**
+   * Number of opened tabs living in this content process.
+   */
+  readonly attribute int32_t tabCount;
+
+  /**
+   * The process manager for this ContentParent (so a process message manager
+   * as opposed to a frame message manager.
+   */
+  readonly attribute nsISupports messageManager;
+};
+
+[scriptable, uuid(83ffb063-5f65-4c45-ae07-3f553e0809bb)]
+interface nsIContentProcessProvider : nsISupports
+{
+  /**
+   * Return this from provideProcess to create a new process.
+   */
+  const int32_t NEW_PROCESS = -1;
+
+  /**
+   * Given aAliveProcesses, choose which process of aType to use. Return
+   * nsIContentProcessProvider.NEW_PROCESS to ask the caller to create a new
+   * content process.
+   */
+  int32_t provideProcess(in AUTF8String aType,
+                         in Array<nsIContentProcessInfo> aAliveProcesses,
+                         in uint32_t aMaxCount);
+};
