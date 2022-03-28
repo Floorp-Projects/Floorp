@@ -102,6 +102,7 @@ class ModuleLoaderBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader);
 
+  using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
   using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
   using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
@@ -127,6 +128,13 @@ class ModuleLoaderBase : public nsISupports {
   // Create a module load request for a static module import.
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) = 0;
+
+ public:
+  // Called by HostImportModuleDynamically hook.
+  virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
+      JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
+      JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) = 0;
 
   // Public API methods.
 
