@@ -6,9 +6,9 @@
 scripts:
   # bundle: Build all assets for activity stream
   bundle:
-    webpack: webpack --config webpack.system-addon.config.js
+    webpack: webpack-cli --config webpack.system-addon.config.js
     css: sass content-src/styles:css --no-source-map
-    welcomeBundle: webpack --config webpack.aboutwelcome.config.js
+    welcomeBundle: webpack-cli --config webpack.aboutwelcome.config.js
     welcomeCss: sass content-src/aboutwelcome:aboutwelcome/content --no-source-map
     html: rimraf prerendered && node ./bin/render-activity-stream-html.js
 
