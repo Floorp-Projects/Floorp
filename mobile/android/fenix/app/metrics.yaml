@@ -1398,7 +1398,7 @@ metrics:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
     metadata:
@@ -1420,7 +1420,7 @@ metrics:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
     metadata:
@@ -5794,7 +5794,7 @@ perf.startup:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   cold_view_app_to_first_frame:
@@ -5823,7 +5823,7 @@ perf.startup:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   cold_unknwn_app_to_first_frame:
@@ -5850,7 +5850,7 @@ perf.startup:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   application_on_create:
@@ -5869,7 +5869,7 @@ perf.startup:
     data_sensitivity:
       - technical
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   startup_type:
@@ -5946,7 +5946,7 @@ perf.startup:
     data_sensitivity:
       - interaction
     notification_emails:
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mleclair@mozilla.com
     expires: never
 
@@ -6159,7 +6159,7 @@ storage.stats:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   app_bytes:
@@ -6187,7 +6187,7 @@ storage.stats:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   cache_bytes:
@@ -6212,7 +6212,7 @@ storage.stats:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
   data_dir_bytes:
@@ -6239,7 +6239,7 @@ storage.stats:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - perf-android-fe@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
       - mcomella@mozilla.com
     expires: never
 
