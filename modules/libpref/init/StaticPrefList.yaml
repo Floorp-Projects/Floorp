@@ -2560,15 +2560,6 @@
 #endif
   mirror: always
 
-# If true, disables non-required re-use of content processes. This can be used
-# in tests to force a new process to be used whenever a process selection
-# decision is made. Setting this pref can cause dom.ipc.processCount limits to
-# be exceeded.
-- name: dom.ipc.disableContentProcessReuse
-  type: bool
-  value: false
-  mirror: always
-
 - name: dom.ipc.tabs.disabled
   type: bool
   value: false

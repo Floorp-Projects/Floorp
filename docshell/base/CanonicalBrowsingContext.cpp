@@ -1758,7 +1758,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
   // When this PendingRemotenessChange was created, it was given a
   // `mContentParent`.
   if (mContentParent) {
-    mContentParent->RemoveKeepAlive(mTarget->BrowserId());
+    mContentParent->RemoveKeepAlive();
     mContentParent = nullptr;
   }
 
@@ -1914,7 +1914,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     // Switching to local, so we don't need to create a new process, and will
     // instead use our embedder process.
     change->mContentParent = embedderBrowser->Manager();
-    change->mContentParent->AddKeepAlive(BrowserId());
+    change->mContentParent->AddKeepAlive();
     change->ProcessLaunched();
     return promise.forget();
   }
@@ -1933,7 +1933,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
       aOptions.mReplaceBrowsingContext &&
       aOptions.mRemoteType == existingProcess->GetRemoteType()) {
     change->mContentParent = existingProcess;
-    change->mContentParent->AddKeepAlive(BrowserId());
+    change->mContentParent->AddKeepAlive();
     change->ProcessLaunched();
     return promise.forget();
   }
@@ -1955,7 +1955,6 @@ CanonicalBrowsingContext::ChangeRemoteness(
   change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
       /* aRemoteType = */ aOptions.mRemoteType,
       /* aGroup = */ finalGroup,
-      /* aBrowserId */ BrowserId(),
       /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
       /* aPreferUsed = */ preferUsed);
   if (!change->mContentParent) {
@@ -1966,7 +1965,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
   // Add a KeepAlive used by this ContentParent, which will be cleared when
   // the change is complete. This should prevent the process dying before
   // we're ready to use it.
-  change->mContentParent->AddKeepAlive(BrowserId());
+  change->mContentParent->AddKeepAlive();
   if (change->mContentParent->IsLaunching()) {
     change->mContentParent->WaitForLaunchAsync()->Then(
         GetMainThreadSerialEventTarget(), __func__,
