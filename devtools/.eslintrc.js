@@ -121,7 +121,6 @@ module.exports = {
         "shared/loader/browser-loader.js",
         "shared/loader/worker-loader.js",
         "startup/aboutdebugging-registration.js",
-        "startup/aboutdevtools/aboutdevtools-registration.js",
         "startup/aboutdevtoolstoolbox-registration.js",
         "startup/devtools-startup.js",
       ],
