@@ -136,26 +136,24 @@ void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
     } else {
       loadFlags &= ~nsIRequest::LOAD_BACKGROUND;
     }
-    rv = ModifyLoadFlags(loadFlags);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ModifyLoadFlags() failed!");
+    ModifyLoadFlags(loadFlags);
   }
 }
 
-nsresult BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags) {
+void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags) {
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   MOZ_ASSERT(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
 
+  nsresult status;
+  mChannel->GetStatus(&status);
+
   bool inLoadGroup = false;
   if (loadGroup) {
-    nsresult status;
-    mChannel->GetStatus(&status);
-
     rv = loadGroup->RemoveRequest(mChannel, nullptr, status);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_SUCCEEDED(rv)) {
+      inLoadGroup = true;
     }
-    inLoadGroup = true;
   }
 
   rv = mChannel->SetLoadFlags(aFlags);
@@ -165,8 +163,6 @@ nsresult BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags) {
     rv = loadGroup->AddRequest(mChannel, nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
-
-  return NS_OK;
 }
 
 }  // namespace mozilla
