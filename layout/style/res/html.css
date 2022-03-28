@@ -807,14 +807,14 @@ dialog {
   display: block;
   inset-inline-start: 0;
   inset-inline-end: 0;
-  color: black;
   margin: auto;
   border-width: initial;
   border-style: solid;
   border-color: initial;
   border-image: initial;
   padding: 1em;
-  background: white;
+  background-color: Canvas;
+  color: CanvasText;
   width: -moz-fit-content;
   height: -moz-fit-content;
 }
