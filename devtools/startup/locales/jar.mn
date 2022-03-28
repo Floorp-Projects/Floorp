@@ -5,8 +5,3 @@
 
 [localization] @AB_CD@.jar:
     devtools/startup                         (%*.ftl)
-
-@AB_CD@.jar:
-%   locale devtools-startup @AB_CD@ %locale/@AB_CD@/devtools/startup/
-    locale/@AB_CD@/devtools/startup/ (%*.dtd)
-    locale/@AB_CD@/devtools/startup/ (%*.properties)

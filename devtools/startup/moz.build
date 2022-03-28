@@ -15,7 +15,6 @@ if CONFIG["MOZ_DEVTOOLS"] == "all":
     ]
 
     DIRS += [
-        "aboutdevtools",
         "locales",
     ]
 
