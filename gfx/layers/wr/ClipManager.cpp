@@ -13,6 +13,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDisplayList.h"
+#include "nsRefreshDriver.h"
 #include "nsStyleStructInlines.h"
 #include "UnitTransforms.h"
 
@@ -336,8 +337,9 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   // Currently we track scroll-linked effects at the granularity of documents,
   // not scroll frames, so we consider a scroll frame to have a scroll-linked
   // effect whenever its containing document does.
+  nsPresContext* presContext = aItem->Frame()->PresContext();
   const bool hasScrollLinkedEffect =
-      aItem->Frame()->PresContext()->Document()->HasScrollLinkedEffect();
+      presContext->Document()->HasScrollLinkedEffect();
 
   return Some(mBuilder->DefineScrollLayer(
       viewId, parent, wr::ToLayoutRect(contentRect),
