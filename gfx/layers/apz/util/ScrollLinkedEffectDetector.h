@@ -8,6 +8,7 @@
 #define mozilla_layers_ScrollLinkedEffectDetector_h
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 
@@ -33,11 +34,12 @@ class MOZ_STACK_CLASS ScrollLinkedEffectDetector final {
  public:
   static void PositioningPropertyMutated();
 
-  explicit ScrollLinkedEffectDetector(dom::Document*);
+  ScrollLinkedEffectDetector(dom::Document*, const TimeStamp& aTimeStamp);
   ~ScrollLinkedEffectDetector();
 
  private:
   RefPtr<dom::Document> mDocument;
+  TimeStamp mTimeStamp;
 };
 
 }  // namespace layers

@@ -19,7 +19,6 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsQueryObject.h"
-#include "mozilla/layers/ScrollLinkedEffectDetector.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -53,33 +52,6 @@ void nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                            ErrorResult& aRv) {
   if (IsReadOnly()) {
     return;
-  }
-
-  switch (aPropID) {
-    case eCSSProperty_background_position:
-    case eCSSProperty_background_position_x:
-    case eCSSProperty_background_position_y:
-    case eCSSProperty_transform:
-    case eCSSProperty_translate:
-    case eCSSProperty_rotate:
-    case eCSSProperty_scale:
-    case eCSSProperty_top:
-    case eCSSProperty_left:
-    case eCSSProperty_bottom:
-    case eCSSProperty_right:
-    case eCSSProperty_margin:
-    case eCSSProperty_margin_top:
-    case eCSSProperty_margin_left:
-    case eCSSProperty_margin_bottom:
-    case eCSSProperty_margin_right:
-    case eCSSProperty_margin_inline_start:
-    case eCSSProperty_margin_inline_end:
-    case eCSSProperty_margin_block_start:
-    case eCSSProperty_margin_block_end:
-      mozilla::layers::ScrollLinkedEffectDetector::PositioningPropertyMutated();
-      break;
-    default:
-      break;
   }
 
   if (aValue.IsEmpty()) {
@@ -136,7 +108,7 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
   // doesn't modify any existing declaration and that is why the callback isn't
   // called implicitly.
   if (closure.function && !closureData.mWasCalled) {
-    closure.function(&closureData);
+    closure.function(&closureData, eCSSProperty_UNKNOWN);
   }
 
   RefPtr<DeclarationBlock> newdecl = DeclarationBlock::FromCssText(
