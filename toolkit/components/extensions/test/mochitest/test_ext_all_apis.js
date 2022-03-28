@@ -95,6 +95,8 @@ let expectedBackgroundApis = [
   "runtime.onInstalled",
   "runtime.onMessageExternal",
   "runtime.onStartup",
+  "runtime.onSuspend",
+  "runtime.onSuspendCanceled",
   "runtime.onUpdateAvailable",
   "runtime.openOptionsPage",
   "runtime.reload",
