@@ -13,6 +13,8 @@ FINAL_TARGET_FILES.actors += [
     "GeckoViewContentParent.jsm",
     "GeckoViewFormValidationChild.jsm",
     "GeckoViewPromptChild.jsm",
+    "GeckoViewPrompterChild.jsm",
+    "GeckoViewPrompterParent.jsm",
     "GeckoViewSettingsChild.jsm",
     "LoadURIDelegateChild.jsm",
     "MediaControlDelegateChild.jsm",
