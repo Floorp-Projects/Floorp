@@ -716,6 +716,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aRemoteType = */ remoteType,
             /* aGroup */ nullptr,
+            /* aBrowserId */ 0,
             hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
             /* aPreferUsed */ true)
             ->Then(GetCurrentSerialEventTarget(), __func__,
