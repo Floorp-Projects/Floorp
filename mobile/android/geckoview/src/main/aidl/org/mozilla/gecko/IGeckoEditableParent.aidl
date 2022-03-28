@@ -32,5 +32,5 @@ interface IGeckoEditableParent {
     void onDefaultKeyEvent(IBinder token, in KeyEvent event);
 
     // Update the screen location of current composition.
-    void updateCompositionRects(IBinder token, in RectF[] rects);
+    void updateCompositionRects(IBinder token, in RectF[] rects, in RectF caretRect);
 }

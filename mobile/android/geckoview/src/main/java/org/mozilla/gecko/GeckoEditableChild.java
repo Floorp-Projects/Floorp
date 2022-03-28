@@ -424,7 +424,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
   }
 
   @WrapForJNI(calledFrom = "gecko")
-  private void updateCompositionRects(final RectF[] rects) {
+  private void updateCompositionRects(final RectF[] rects, final RectF caretRect) {
     if (DEBUG) {
       // GeckoEditableListener methods should all be called from the Gecko thread
       ThreadUtils.assertOnGeckoThread();
@@ -435,7 +435,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
     }
 
     try {
-      mEditableParent.updateCompositionRects(mEditableChild.asBinder(), rects);
+      mEditableParent.updateCompositionRects(mEditableChild.asBinder(), rects, caretRect);
     } catch (final RemoteException e) {
       Log.e(LOGTAG, "Remote call failed", e);
     }
