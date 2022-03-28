@@ -7600,6 +7600,23 @@ power:
     keyed: true
     keys: *per_process_type_keys
 
+  wakeups_per_process_type:
+    bug_numbers:
+      - 1759535
+    description: >
+      How many times threads woke up and could have woken up a CPU core. Broken down by process type.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    keyed: true
+    keys: *per_process_type_keys
+
   total_cpu_time_ms:
     bug_numbers:
       - 1736040
@@ -7614,10 +7631,7 @@ power:
     products:
       - 'firefox'
     record_in_processes:
-      - 'main'
-      - 'content'
-      - 'gpu'
-      - 'socket'
+      - 'all'
 
   total_gpu_time_ms:
     bug_numbers:
@@ -7635,6 +7649,21 @@ power:
     record_in_processes:
       - 'main'
       - 'gpu'
+
+  total_thread_wakeups:
+    bug_numbers:
+      - 1759535
+    description: >
+      How many times threads woke up and could have woken up a CPU core.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
 
 gifft.validation:
   main_ping_assembling:

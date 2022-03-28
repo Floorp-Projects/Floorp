@@ -163,6 +163,8 @@ void RecordPowerMetrics() {
                     type);
     previousGpuTime += newGpuTime;
   }
+
+  profiler_record_wakeup_count(type);
 }
 
 /**

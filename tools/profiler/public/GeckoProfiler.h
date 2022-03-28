@@ -342,6 +342,10 @@ struct ProfilerBufferInfo {
 // buffer is being written to, and how much data is visible.
 mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 
+// Record through glean how many times profiler_thread_wake has been
+// called.
+void profiler_record_wakeup_count(const nsACString& aProcessType);
+
 //---------------------------------------------------------------------------
 // Output profiles
 //---------------------------------------------------------------------------

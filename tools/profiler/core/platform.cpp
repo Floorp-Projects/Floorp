@@ -52,6 +52,7 @@
 #include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Printf.h"
@@ -6424,7 +6425,50 @@ struct THREAD_BASIC_INFORMATION {
 };
 #endif
 
+static mozilla::Atomic<uint64_t, mozilla::MemoryOrdering::Relaxed> gWakeCount(
+    0);
+
+namespace geckoprofiler::markers {
+struct WakeUpCountMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("WakeUpCount");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int32_t aCount,
+                                   const ProfilerString8View& aType) {
+    aWriter.IntProperty("Count", aCount);
+    aWriter.StringProperty("label", aType);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyFormat("Count", MS::Format::Integer);
+    schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.label}: {marker.data.count}");
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
+
+void profiler_record_wakeup_count(const nsACString& aProcessType) {
+  static uint64_t previousThreadWakeCount = 0;
+
+  uint64_t newWakeups = gWakeCount - previousThreadWakeCount;
+  if (newWakeups < std::numeric_limits<int32_t>::max()) {
+    int32_t newWakeups32 = int32_t(newWakeups);
+    mozilla::glean::power::total_thread_wakeups.Add(newWakeups32);
+    mozilla::glean::power::wakeups_per_process_type.Get(aProcessType)
+        .Add(newWakeups32);
+    PROFILER_MARKER("Thread Wake-ups", OTHER, {}, WakeUpCountMarker,
+                    newWakeups32, aProcessType);
+  }
+
+  previousThreadWakeCount += newWakeups;
+}
+
 void profiler_mark_thread_awake() {
+  ++gWakeCount;
   if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
   }
