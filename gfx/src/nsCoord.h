@@ -153,6 +153,19 @@ inline nscoord NSToCoordRoundWithClamp(float aValue) {
   return NSToCoordRound(aValue);
 }
 
+inline nscoord NSToCoordRoundWithClamp(double aValue) {
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of double, to avoid overflow
+  if (aValue >= double(nscoord_MAX)) {
+    return nscoord_MAX;
+  }
+  if (aValue <= double(nscoord_MIN)) {
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordRound(aValue);
+}
+
 /**
  * Returns aCoord * aScale, capping the product to nscoord_MAX or nscoord_MIN as
  * appropriate for the signs of aCoord and aScale.  If requireNotNegative is
