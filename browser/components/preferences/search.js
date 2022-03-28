@@ -335,57 +335,66 @@ var gSearchPane = {
   },
 
   /**
-   * nsIObserver implementation.  We observe the following:
+   * Update the default engine UI and engine tree view as appropriate when engine changes
+   * or locale changes occur.
    *
-   * * browser-search-engine-modified: Update the default engine UI and engine
-   *   tree view as appropriate when engine changes occur.
+   * @param {Object} engine
+   * @param {string} data
    */
-  observe(subject, topic, data) {
-    if (topic == "browser-search-engine-modified") {
-      let engine = subject;
-      engine.QueryInterface(Ci.nsISearchEngine);
-      switch (data) {
-        case "engine-added":
-          gEngineView._engineStore.addEngine(engine);
-          gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
+  browserSearchEngineModified(engine, data) {
+    engine.QueryInterface(Ci.nsISearchEngine);
+    switch (data) {
+      case "engine-added":
+        gEngineView._engineStore.addEngine(engine);
+        gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
+        gSearchPane.buildDefaultEngineDropDowns();
+        break;
+      case "engine-changed":
+        gSearchPane.buildDefaultEngineDropDowns();
+        gEngineView._engineStore.updateEngine(engine);
+        gEngineView.invalidate();
+        break;
+      case "engine-removed":
+        gSearchPane.remove(engine);
+        break;
+      case "engine-default": {
+        // If the user is going through the drop down using up/down keys, the
+        // dropdown may still be open (eg. on Windows) when engine-default is
+        // fired, so rebuilding the list unconditionally would get in the way.
+        let selectedEngine = document.getElementById("defaultEngine")
+          .selectedItem.engine;
+        if (selectedEngine.name != engine.name) {
           gSearchPane.buildDefaultEngineDropDowns();
-          break;
-        case "engine-changed":
-          gSearchPane.buildDefaultEngineDropDowns();
-          gEngineView._engineStore.updateEngine(engine);
-          gEngineView.invalidate();
-          break;
-        case "engine-removed":
-          gSearchPane.remove(engine);
-          break;
-        case "engine-default": {
+        }
+        break;
+      }
+      case "engine-default-private": {
+        if (
+          this._separatePrivateDefaultEnabledPref.value &&
+          this._separatePrivateDefaultPref.value
+        ) {
           // If the user is going through the drop down using up/down keys, the
           // dropdown may still be open (eg. on Windows) when engine-default is
           // fired, so rebuilding the list unconditionally would get in the way.
-          let selectedEngine = document.getElementById("defaultEngine")
+          const selectedEngine = document.getElementById("defaultPrivateEngine")
             .selectedItem.engine;
           if (selectedEngine.name != engine.name) {
             gSearchPane.buildDefaultEngineDropDowns();
           }
-          break;
         }
-        case "engine-default-private": {
-          if (
-            this._separatePrivateDefaultEnabledPref.value &&
-            this._separatePrivateDefaultPref.value
-          ) {
-            // If the user is going through the drop down using up/down keys, the
-            // dropdown may still be open (eg. on Windows) when engine-default is
-            // fired, so rebuilding the list unconditionally would get in the way.
-            const selectedEngine = document.getElementById(
-              "defaultPrivateEngine"
-            ).selectedItem.engine;
-            if (selectedEngine.name != engine.name) {
-              gSearchPane.buildDefaultEngineDropDowns();
-            }
-          }
-          break;
-        }
+        break;
+      }
+    }
+  },
+
+  /**
+   * nsIObserver implementation.
+   */
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "browser-search-engine-modified": {
+        this.browserSearchEngineModified(subject, data);
+        break;
       }
     }
   },
@@ -729,30 +738,34 @@ function EngineView(aEngineStore) {
 
   UrlbarPrefs.addObserver(this);
 
-  // This maps local shortcut sources to their l10n names.  The names are needed
-  // by getCellText.  Getting the names is async but getCellText is not, so we
-  // cache them here to retrieve them syncronously in getCellText.
-  this._localShortcutL10nNames = new Map();
-  document.l10n
-    .formatValues(
-      UrlbarUtils.LOCAL_SEARCH_MODES.map(mode => {
-        let name = UrlbarUtils.getResultSourceName(mode.source);
-        return { id: `urlbar-search-mode-${name}` };
-      })
-    )
-    .then(names => {
-      for (let { source } of UrlbarUtils.LOCAL_SEARCH_MODES) {
-        this._localShortcutL10nNames.set(source, names.shift());
-      }
-      // Invalidate the tree now that we have the names in case getCellText was
-      // called before name retrieval finished.
-      this.invalidate();
-    });
+  this.loadL10nNames();
 }
 
 EngineView.prototype = {
   _engineStore: null,
   tree: null,
+
+  loadL10nNames() {
+    // This maps local shortcut sources to their l10n names.  The names are needed
+    // by getCellText.  Getting the names is async but getCellText is not, so we
+    // cache them here to retrieve them syncronously in getCellText.
+    this._localShortcutL10nNames = new Map();
+    return document.l10n
+      .formatValues(
+        UrlbarUtils.LOCAL_SEARCH_MODES.map(mode => {
+          let name = UrlbarUtils.getResultSourceName(mode.source);
+          return { id: `urlbar-search-mode-${name}` };
+        })
+      )
+      .then(names => {
+        for (let { source } of UrlbarUtils.LOCAL_SEARCH_MODES) {
+          this._localShortcutL10nNames.set(source, names.shift());
+        }
+        // Invalidate the tree now that we have the names in case getCellText was
+        // called before name retrieval finished.
+        this.invalidate();
+      });
+  },
 
   get lastEngineIndex() {
     return this._engineStore.engines.length - 1;
