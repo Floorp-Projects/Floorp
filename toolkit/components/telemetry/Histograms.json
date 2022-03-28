@@ -15999,26 +15999,15 @@
     "description": "WebRender scene swap time in miliseconds"
   },
   "WR_FRAMEBUILD_TIME": {
-    "record_in_processes": [ "main", "gpu" ],
-    "products": [ "firefox", "fennec", "geckoview_streaming" ],
-    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com" ],
-    "bug_numbers": [ 1470901, 1584109 ],
+    "record_in_processes": ["main", "gpu"],
+    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
+    "bug_numbers": [1470901, 1584109],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
-  },
-  "WR_RASTERIZE_GLYPHS_TIME": {
-    "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
-    "bug_numbers": [ ],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Time taken by WebRender to rasterize a set of glyphs"
   },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],
