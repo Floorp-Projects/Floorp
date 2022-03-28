@@ -44,9 +44,6 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
 
   ScriptLoader* GetScriptLoader();
 
-  // Methods that must be overwritten by an extending class
-  void EnsureModuleHooksInitialized() override;
-
   /**
    * Start a load for a module script URI.
    * Sets up the necessary security flags before calling StartLoadInternal.
