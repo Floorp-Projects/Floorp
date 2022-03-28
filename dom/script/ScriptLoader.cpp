@@ -490,7 +490,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   aRequest->mFetchSourceOnly = true;
   nsresult rv;
   if (aRequest->IsModuleRequest()) {
-    rv = mModuleLoader->RestartModuleLoad(aRequest);
+    rv = mModuleLoader->RestartModuleLoad(aRequest->AsModuleRequest());
   } else {
     rv = StartLoad(aRequest);
   }
@@ -504,8 +504,11 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
 }
 
 nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
-  return aRequest->IsModuleRequest() ? mModuleLoader->StartModuleLoad(aRequest)
-                                     : StartClassicLoad(aRequest);
+  if (aRequest->IsModuleRequest()) {
+    return mModuleLoader->StartModuleLoad(aRequest->AsModuleRequest());
+  }
+
+  return StartClassicLoad(aRequest);
 }
 
 nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
