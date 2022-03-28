@@ -17,6 +17,7 @@ events:
         description: |
           The method used to open Fenix. Possible values are: `app_icon`,
           `custom_tab` or `link`
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/968
       - https://github.com/mozilla-mobile/fenix/issues/10616

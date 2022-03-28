@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -50,10 +49,10 @@ class HomeActivityTest {
         val launcherIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }.toSafeIntent()
-        assertEquals(Event.OpenedApp.Source.APP_ICON, activity.getIntentSource(launcherIntent))
+        assertEquals("APP_ICON", activity.getIntentSource(launcherIntent))
 
         val viewIntent = Intent(Intent.ACTION_VIEW).toSafeIntent()
-        assertEquals(Event.OpenedApp.Source.LINK, activity.getIntentSource(viewIntent))
+        assertEquals("LINK", activity.getIntentSource(viewIntent))
 
         val otherIntent = Intent().toSafeIntent()
         assertNull(activity.getIntentSource(otherIntent))

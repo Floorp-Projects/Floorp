@@ -89,10 +89,6 @@ private class EventWrapper<T : Enum<T>>(
 // FIXME(#19967): Migrate to non-deprecated API.
 private val Event.wrapper: EventWrapper<*>?
     get() = when (this) {
-        is Event.OpenedApp -> EventWrapper(
-            { Events.appOpened.record(it) },
-            { Events.appOpenedKeys.valueOf(it) }
-        )
         is Event.SearchBarTapped -> EventWrapper(
             { Events.searchBarTapped.record(it) },
             { Events.searchBarTappedKeys.valueOf(it) }

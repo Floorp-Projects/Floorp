@@ -28,7 +28,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
@@ -43,13 +42,13 @@ class ExternalAppBrowserActivityTest {
         val launcherIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_LAUNCHER)
         }.toSafeIntent()
-        assertEquals(Event.OpenedApp.Source.CUSTOM_TAB, activity.getIntentSource(launcherIntent))
+        assertEquals("CUSTOM_TAB", activity.getIntentSource(launcherIntent))
 
         val viewIntent = Intent(Intent.ACTION_VIEW).toSafeIntent()
-        assertEquals(Event.OpenedApp.Source.CUSTOM_TAB, activity.getIntentSource(viewIntent))
+        assertEquals("CUSTOM_TAB", activity.getIntentSource(viewIntent))
 
         val otherIntent = Intent().toSafeIntent()
-        assertEquals(Event.OpenedApp.Source.CUSTOM_TAB, activity.getIntentSource(otherIntent))
+        assertEquals("CUSTOM_TAB", activity.getIntentSource(otherIntent))
     }
 
     @Test

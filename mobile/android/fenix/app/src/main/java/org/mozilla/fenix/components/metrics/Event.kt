@@ -284,13 +284,6 @@ sealed class Event {
             get() = hashMapOf(Logins.saveLoginsSettingChangedKeys.setting to setting.name)
     }
 
-    data class OpenedApp(val source: Source) : Event() {
-        enum class Source { APP_ICON, LINK, CUSTOM_TAB }
-
-        override val extras: Map<Events.appOpenedKeys, String>?
-            get() = hashMapOf(Events.appOpenedKeys.source to source.name)
-    }
-
     data class SearchBarTapped(val source: Source) : Event() {
         enum class Source { HOME, BROWSER }
 

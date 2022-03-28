@@ -37,30 +37,6 @@ class GleanMetricsServiceTest {
     }
 
     @Test
-    fun `the app_opened event is correctly recorded`() {
-        // Build the event wrapper used by Fenix.
-        val event = Event.OpenedApp(Event.OpenedApp.Source.APP_ICON)
-
-        // Feed the wrapped event in the Glean service.
-        gleanService.track(event)
-
-        // Use the testing API to verify that it's correctly recorded.
-        assertTrue(Events.appOpened.testHasValue())
-
-        // Get all the recorded events. We only expect 1 to be recorded.
-        val events = Events.appOpened.testGetValue()
-        assertEquals(1, events.size)
-
-        // Verify that we get the expected content out.
-        assertEquals("events", events[0].category)
-        assertEquals("app_opened", events[0].name)
-
-        // We only expect 1 extra key.
-        assertEquals(1, events[0].extra!!.size)
-        assertEquals("APP_ICON", events[0].extra!!["source"])
-    }
-
-    @Test
     fun `synced tab event is correctly recorded`() {
         assertFalse(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
         gleanService.track(Event.SyncedTabSuggestionClicked)
