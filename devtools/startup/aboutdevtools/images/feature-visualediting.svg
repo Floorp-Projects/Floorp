@@ -1,9 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M74.9 77.01l76.85-33.52" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"/>
-  <path d="M119.1 27h-15.8 15.8zm-17.28.38a7.38 7.38 0 10-14.76 0 7.38 7.38 0 0014.76 0h0zM108.83 90.88h15.8-15.8zm17.28 1.38a7.38 7.38 0 1114.75 0 7.38 7.38 0 01-14.75 0h0z" stroke="#0022A9" stroke-width="4" stroke-linecap="round"/>
-  <path d="M71 93.02c18.14 4.2 36.25-7.22 40.47-25.47l.9-3.94 2-8.6c4.2-18.25 17.2-30.19 35.33-26" stroke="#0080FF" stroke-width="5" stroke-linecap="round"/>
-  <path d="M71.16 99.3a6.15 6.15 0 100-12.3 6.15 6.15 0 000 12.3zM150.16 33.3a6.15 6.15 0 100-12.3 6.15 6.15 0 000 12.3z" fill="#0080FF"/>
-</svg>
