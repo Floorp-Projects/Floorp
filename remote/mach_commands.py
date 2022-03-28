@@ -192,6 +192,7 @@ def npm(*args, **kwargs):
     from mozprocess import processhandler
 
     env = None
+    npm, _ = nodeutil.find_npm_executable()
     if kwargs.get("env"):
         env = os.environ.copy()
         env.update(kwargs["env"])
@@ -201,7 +202,7 @@ def npm(*args, **kwargs):
         proc_kwargs["processOutputLine"] = kwargs["processOutputLine"]
 
     p = processhandler.ProcessHandler(
-        cmd="npm",
+        cmd=npm,
         args=list(args),
         cwd=kwargs.get("cwd"),
         env=env,
@@ -211,7 +212,7 @@ def npm(*args, **kwargs):
     if not kwargs.get("wait", True):
         return p
 
-    wait_proc(p, cmd="npm", exit_on_fail=kwargs.get("exit_on_fail", True))
+    wait_proc(p, cmd=npm, exit_on_fail=kwargs.get("exit_on_fail", True))
 
     return p.returncode
 
