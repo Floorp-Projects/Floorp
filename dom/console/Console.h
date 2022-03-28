@@ -369,8 +369,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   MOZ_CAN_RUN_SCRIPT
   void ExecuteDumpFunction(const nsAString& aMessage);
 
-  bool IsEnabled(JSContext* aCx) const;
-
   bool ShouldProceed(MethodName aName) const;
 
   uint32_t WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const;
