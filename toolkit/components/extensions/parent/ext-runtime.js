@@ -7,17 +7,21 @@
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
-});
 
-XPCOMUtils.defineLazyPreferenceGetter(
+ChromeUtils.defineModuleGetter(
   this,
-  "gRuntimeTimeout",
-  "extensions.webextensions.runtime.timeout",
-  5000
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManagerPrivate",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DevToolsShim",
+  "chrome://devtools-startup/content/DevToolsShim.jsm"
 );
 
 this.runtime = class extends ExtensionAPI {
@@ -87,51 +91,6 @@ this.runtime = class extends ExtensionAPI {
             });
             return () => {
               AddonManager.removeUpgradeListener(instanceID);
-            };
-          },
-        }).api(),
-
-        onSuspend: new EventManager({
-          context,
-          name: "runtime.onSuspend",
-          resetIdleOnEvent: false,
-          register: fire => {
-            let listener = async () => {
-              let timedOut = false;
-              async function promiseFire() {
-                try {
-                  await fire.async();
-                } catch (e) {}
-              }
-              await Promise.race([
-                promiseFire(),
-                ExtensionUtils.promiseTimeout(gRuntimeTimeout).then(() => {
-                  timedOut = true;
-                }),
-              ]);
-              if (timedOut) {
-                Cu.reportError(
-                  `runtime.onSuspend in ${extension.id} took too long`
-                );
-              }
-            };
-            extension.on("background-script-suspend", listener);
-            return () => {
-              extension.off("background-script-suspend", listener);
-            };
-          },
-        }).api(),
-
-        onSuspendCanceled: new EventManager({
-          context,
-          name: "runtime.onSuspendCanceled",
-          register: fire => {
-            let listener = () => {
-              fire.async();
-            };
-            extension.on("background-script-suspend-canceled", listener);
-            return () => {
-              extension.off("background-script-suspend-canceled", listener);
             };
           },
         }).api(),

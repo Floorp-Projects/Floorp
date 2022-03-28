@@ -2230,7 +2230,6 @@ class EventManager {
       register,
       extensionApi,
       inputHandling = false,
-      resetIdleOnEvent = true,
     } = params;
     this.context = context;
     this.module = module;
@@ -2238,7 +2237,6 @@ class EventManager {
     this.name = name;
     this.register = register;
     this.inputHandling = inputHandling;
-    this.resetIdleOnEvent = resetIdleOnEvent;
     if (!name) {
       this.name = `${module}.${event}`;
     }
@@ -2543,11 +2541,7 @@ class EventManager {
     };
 
     let { extension } = this.context;
-    const resetIdle = () => {
-      if (this.resetIdleOnEvent) {
-        extension?.emit("background-script-reset-idle");
-      }
-    };
+    const resetIdle = () => extension?.emit("background-script-reset-idle");
 
     let fire = {
       // Bug 1754866 fire.sync doesn't match documentation.

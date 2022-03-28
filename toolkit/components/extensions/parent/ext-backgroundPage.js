@@ -47,33 +47,6 @@ function notifyBackgroundScriptStatus(addonId, isRunning) {
   Services.obs.notifyObservers(subject, "extension:background-script-status");
 }
 
-/**
- * Background Page state transitions:
- *
- *    ------> STOPPED <-------
- *    |         |            |
- *    |         v            |
- *    |      STARTING >------|
- *    |         |            |
- *    |         v            ^
- *    |----< RUNNING ----> SUSPENDING
- *              ^            v
- *              |------------|
- *
- * STARTING:   The background is being built.
- * RUNNING:    The background is running.
- * SUSPENDING: The background is suspending, runtime.onSuspend will be called.
- * STOPPED:    The background is not running.
- *
- * For persistent backgrounds, the SUSPENDING is not used.
- */
-const BACKGROUND_STATE = {
-  STARTING: "starting",
-  RUNNING: "running",
-  SUSPENDING: "suspending",
-  STOPPED: "stopped",
-};
-
 // Responsible for the background_page section of the manifest.
 class BackgroundPage extends HiddenExtensionPage {
   constructor(extension, options) {
@@ -318,7 +291,6 @@ this.backgroundPage = class extends ExtensionAPI {
 
     let { extension } = this;
     let { manifest } = extension;
-    extension.backgroundState = BACKGROUND_STATE.STARTING;
 
     let BackgroundClass = manifest.background.service_worker
       ? BackgroundWorker
@@ -368,15 +340,10 @@ this.backgroundPage = class extends ExtensionAPI {
 
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
-      let done = event => {
+      let done = () => {
         extension.off("background-script-started", done);
         extension.off("background-script-aborted", done);
         extension.off("shutdown", done);
-        if (event == "background-script-started" && this.bgInstance) {
-          extension.backgroundState = BACKGROUND_STATE.RUNNING;
-        } else {
-          extension.backgroundState = BACKGROUND_STATE.STOPPED;
-        }
         resolve();
       };
       extension.on("background-script-started", done);
@@ -411,11 +378,6 @@ this.backgroundPage = class extends ExtensionAPI {
         return;
       }
 
-      if (extension.backgroundState == BACKGROUND_STATE.SUSPENDING) {
-        extension.backgroundState = BACKGROUND_STATE.RUNNING;
-        // call runtime.onSuspendCanceled
-        extension.emit("background-script-suspend-canceled");
-      }
       this.resetIdleTimer();
     };
 
@@ -425,29 +387,22 @@ this.backgroundPage = class extends ExtensionAPI {
     extension.once("background-script-started", resetBackgroundIdle);
 
     extension.terminateBackground = async () => {
-      await bgStartupPromise;
-      if (!this.extension) {
-        // Extension was already shut down.
-        return;
-      }
-      if (extension.backgroundState != BACKGROUND_STATE.RUNNING) {
-        return;
-      }
-      extension.backgroundState = BACKGROUND_STATE.SUSPENDING;
       this.clearIdleTimer();
-      // call runtime.onSuspend
-      await extension.emit("background-script-suspend");
-      // If in the meantime another event fired, state will be RUNNING,
-      // and if it was shutdown it will be STOPPED.
-      if (extension.backgroundState != BACKGROUND_STATE.SUSPENDING) {
-        return;
-      }
       extension.off("background-script-reset-idle", resetBackgroundIdle);
+      await bgStartupPromise;
       this.onShutdown(false);
       EventManager.clearPrimedListeners(this.extension, false);
       // Setup background startup listeners for next primed event.
       return this.primeBackground(false);
     };
+
+    extension.once("terminate-background-script", async () => {
+      if (!this.extension) {
+        // Extension was already shut down.
+        return;
+      }
+      this.extension.terminateBackground();
+    });
 
     // Persistent backgrounds are started immediately except during APP_STARTUP.
     // Non-persistent backgrounds must be started immediately for new install or enable
@@ -487,14 +442,12 @@ this.backgroundPage = class extends ExtensionAPI {
   }
 
   onShutdown(isAppShutdown) {
-    this.extension.backgroundState = BACKGROUND_STATE.STOPPED;
     // Ensure there is no backgroundTimer running
     this.clearIdleTimer();
 
     if (this.bgInstance) {
       this.bgInstance.shutdown(isAppShutdown);
       this.bgInstance = null;
-      // Emit an event for tests.
       this.extension.emit("shutdown-background-script");
     } else {
       EventManager.clearPrimedListeners(this.extension, false);
@@ -503,7 +456,6 @@ this.backgroundPage = class extends ExtensionAPI {
 
   async onManifestEntry(entryName) {
     let { extension } = this;
-    extension.backgroundState = BACKGROUND_STATE.STOPPED;
 
     await this.primeBackground();
 
