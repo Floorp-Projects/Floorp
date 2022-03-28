@@ -2040,16 +2040,36 @@ body.theme_dark #stp_style_guide {
   padding: 4px 8px;
   transition: background-color 200ms ease-in-out;
 }
+body.theme_dark .stp_tag_picker .stp_tag_picker_tag {
+  background: #2B2A33;
+  color: #FBFBFB;
+}
+
 .stp_tag_picker .stp_tag_picker_tag_remove {
   padding: 5px;
   color: #5B5B66;
   font-weight: 400;
 }
+body.theme_dark .stp_tag_picker .stp_tag_picker_tag_remove {
+  color: #8F8F9D;
+}
+
 .stp_tag_picker .stp_tag_picker_tag_duplicate {
   background-color: #bbb;
 }
+body.theme_dark .stp_tag_picker .stp_tag_picker_tag_duplicate {
+  background-color: #666;
+}
+
 .stp_tag_picker .stp_tag_picker_input {
-  flex-grow: 1;
+  border: 1px solid #8F8F9D;
+  border-radius: 3px;
+  padding: 6px;
+  width: 100%;
+}
+body.theme_dark .stp_tag_picker .stp_tag_picker_input {
+  background: none;
+  color: #FBFBFB;
 }
 
 .stp_popular_topics {
