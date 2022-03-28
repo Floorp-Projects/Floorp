@@ -1,11 +1,7 @@
 mod asynchronous;
 mod synchronous;
 
-use std::{
-    cell::{Ref, RefCell},
-    collections::HashSet,
-    rc::Rc,
-};
+use std::{collections::HashSet, rc::Rc, sync::Mutex, sync::MutexGuard};
 
 use crate::errors::L10nRegistrySetupError;
 use crate::source::{FileSource, ResourceId};
@@ -23,13 +19,13 @@ pub type FluentResourceSet = Vec<Rc<FluentResource>>;
 
 #[derive(Default)]
 struct Shared<P, B> {
-    sources: RefCell<Vec<Vec<FileSource>>>,
+    sources: Mutex<Vec<Vec<FileSource>>>,
     provider: P,
     bundle_adapter: Option<B>,
 }
 
 pub struct L10nRegistryLocked<'a, B> {
-    lock: Ref<'a, Vec<Vec<FileSource>>>,
+    lock: MutexGuard<'a, Vec<Vec<FileSource>>>,
     bundle_adapter: Option<&'a B>,
 }
 
@@ -106,7 +102,11 @@ impl<P, B> L10nRegistry<P, B> {
 
     pub fn lock(&self) -> L10nRegistryLocked<'_, B> {
         L10nRegistryLocked {
-            lock: self.shared.sources.borrow(),
+            // The lock() method only fails here if another thread has panicked
+            // while holding the lock. In this case, we'll propagate the panic
+            // as well. It's not clear what the recovery strategy would be for
+            // us to deal with a panic in another thread.
+            lock: self.shared.sources.lock().unwrap(),
             bundle_adapter: self.shared.bundle_adapter.as_ref(),
         }
     }
@@ -118,7 +118,7 @@ impl<P, B> L10nRegistry<P, B> {
         let mut sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
 
         for new_source in new_sources {
@@ -141,7 +141,7 @@ impl<P, B> L10nRegistry<P, B> {
         let mut sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
 
         for upd_source in upd_sources {
@@ -168,7 +168,7 @@ impl<P, B> L10nRegistry<P, B> {
         let mut sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         let del_sources: Vec<String> = del_sources.into_iter().map(|s| s.to_string()).collect();
 
@@ -185,7 +185,7 @@ impl<P, B> L10nRegistry<P, B> {
         let mut sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         sources.clear();
         Ok(())
@@ -195,7 +195,7 @@ impl<P, B> L10nRegistry<P, B> {
         let sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         Ok(sources.iter().flatten().map(|s| s.name.clone()).collect())
     }
@@ -204,7 +204,7 @@ impl<P, B> L10nRegistry<P, B> {
         let sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         Ok(sources.iter().flatten().any(|source| source.name == name))
     }
@@ -213,7 +213,7 @@ impl<P, B> L10nRegistry<P, B> {
         let sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         Ok(sources
             .iter()
@@ -225,7 +225,7 @@ impl<P, B> L10nRegistry<P, B> {
         let sources = self
             .shared
             .sources
-            .try_borrow_mut()
+            .try_lock()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         let mut result = HashSet::new();
         for source in sources.iter().flatten() {
