@@ -124,6 +124,7 @@ class BrowserFragment :
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
     private lateinit var trackingProtectionPanel: TrackingProtectionPanel
+    private var tabsPopup: TabsPopup? = null
 
     /**
      * The ID of the tab associated with this fragment.
@@ -624,6 +625,11 @@ class BrowserFragment :
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        tabsPopup?.dismiss()
+    }
+
     override fun onHomePressed() = pictureInPictureFeature?.onHomePressed() ?: false
 
     @Suppress("ComplexMethod", "ReturnCount")
@@ -738,13 +744,14 @@ class BrowserFragment :
     private fun tabCounterListener() {
         val openedTabs = requireComponents.store.state.tabs.size
 
-        val tabsPopup = TabsPopup(binding.browserToolbar, requireComponents)
-        tabsPopup.showAsDropDown(
-            binding.browserToolbar,
-            0,
-            0,
-            Gravity.END
-        )
+        tabsPopup = TabsPopup(binding.browserToolbar, requireComponents).also { currentTabsPopup ->
+            currentTabsPopup.showAsDropDown(
+                binding.browserToolbar,
+                0,
+                0,
+                Gravity.END
+            )
+        }
 
         TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
 
