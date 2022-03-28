@@ -76,13 +76,6 @@ add_task(async function() {
 
   is(gDevTools._toolboxes.size, 0, "No toolbox has been opened");
 
-  const browser = gBrowser.selectedTab.linkedBrowser;
-  const location = browser.documentURI.spec;
-  ok(
-    !location.startsWith("about:devtools"),
-    "The current tab is not about:devtools"
-  );
-
   info("Open the context menu for the content page.");
   const contextMenu = win.document.getElementById("contentAreaContextMenu");
   const popupShownPromise = BrowserTestUtils.waitForEvent(

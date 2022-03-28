@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   return Telemetry;
 });
 
-const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 const EXPORTED_SYMBOLS = ["DevToolsShim"];
@@ -44,7 +43,7 @@ function removeItem(array, callback) {
  * that work whether Devtools are enabled or not.
  *
  * It can be used to start listening to devtools events before DevTools are ready. As soon
- * as DevTools are enabled, the DevToolsShim will forward all the requests received until
+ * as DevTools are ready, the DevToolsShim will forward all the requests received until
  * then to the real DevTools instance.
  */
 const DevToolsShim = {
@@ -60,13 +59,11 @@ const DevToolsShim = {
   },
 
   /**
-   * Returns true if DevTools are enabled for the current profile. If devtools are not
-   * enabled, initializing DevTools will open the onboarding page. Some entry points
-   * should no-op in this case.
+   * Returns true if DevTools are enabled. This now only depends on the policy.
+   * TODO: Merge isEnabled and isDisabledByPolicy.
    */
   isEnabled: function() {
-    const enabled = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
-    return enabled && !this.isDisabledByPolicy();
+    return !this.isDisabledByPolicy();
   },
 
   /**
