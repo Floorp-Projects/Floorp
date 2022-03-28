@@ -2167,7 +2167,8 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
   }
 
   @Override // IGeckoEditableParent
-  public void updateCompositionRects(final IBinder token, final RectF[] rects) {
+  public void updateCompositionRects(
+      final IBinder token, final RectF[] rects, final RectF caretRect) {
     // On Gecko or binder thread.
     if (DEBUG) {
       Log.d(LOGTAG, "updateCompositionRects(rects.length = " + rects.length + ")");
@@ -2184,7 +2185,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
             if (mListener == null) {
               return;
             }
-            mListener.updateCompositionRects(rects);
+            mListener.updateCompositionRects(rects, caretRect);
           }
         });
   }
