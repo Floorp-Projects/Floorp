@@ -1099,9 +1099,11 @@ static void ComputeObjectAnchorCoord(const LengthPercentage& aCoord,
 
   // The anchor-point doesn't care about our image's size; just the size
   // of the region we're rendering into.
-  *aAnchorPointCoord = aCoord.Resolve(aOriginBounds, NSToCoordRoundWithClamp);
+  *aAnchorPointCoord = aCoord.Resolve(
+      aOriginBounds, static_cast<nscoord (*)(float)>(NSToCoordRoundWithClamp));
   // Adjust aTopLeftCoord by the specified % of the extra space.
-  *aTopLeftCoord = aCoord.Resolve(extraSpace, NSToCoordRoundWithClamp);
+  *aTopLeftCoord = aCoord.Resolve(
+      extraSpace, static_cast<nscoord (*)(float)>(NSToCoordRoundWithClamp));
 }
 
 void nsImageRenderer::ComputeObjectAnchorPoint(const Position& aPos,
