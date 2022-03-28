@@ -51,3 +51,31 @@ add_task(async function test_replaceTabsWithWindow() {
   gBrowser.removeTab(nonAdoptableTab);
   await BrowserTestUtils.closeWindow(win2);
 });
+
+add_task(async function test_on_drop() {
+  const nonAdoptableTab = await addTab("data:text/html,<title>nonAdoptableTab");
+  const auxiliaryTab = await addTab("data:text/html,<title>auxiliaryTab");
+  const selectedTab = await addTab("data:text/html,<title>selectedTab");
+  gBrowser.selectedTabs = [selectedTab, nonAdoptableTab, auxiliaryTab];
+
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const gBrowser2 = win2.gBrowser;
+  makeAdoptTabFailOnceFor(gBrowser2, nonAdoptableTab);
+  const initialTab = gBrowser2.tabs[0];
+  await dragAndDrop(selectedTab, initialTab, false, win2, false);
+
+  // nonAdoptableTab couldn't be adopted, but the new window should have adopted
+  // the other 2 tabs, and they should be in the right position.
+  is(gBrowser2.tabs.length, 3, "There are 3 tabs");
+  is(gBrowser2.tabs[0].label, "auxiliaryTab", "auxiliaryTab became tab 0");
+  is(gBrowser2.tabs[1].label, "selectedTab", "selectedTab became tab 1");
+  is(gBrowser2.tabs[2], initialTab, "initialTab became tab 2");
+  is(gBrowser2.selectedTab, gBrowser2.tabs[1], "Tab 1 is selected");
+  is(gBrowser2.multiSelectedTabsCount, 2, "Three multiselected tabs");
+  ok(gBrowser2.tabs[0].multiselected, "Tab 0 is multiselected");
+  ok(gBrowser2.tabs[1].multiselected, "Tab 1 is multiselected");
+  ok(!gBrowser2.tabs[2].multiselected, "Tab 2 is not multiselected");
+
+  gBrowser.removeTab(nonAdoptableTab);
+  await BrowserTestUtils.closeWindow(win2);
+});
