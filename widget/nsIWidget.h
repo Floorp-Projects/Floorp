@@ -1710,9 +1710,9 @@ class nsIWidget : public nsISupports {
   /**
    * Wayland specific routines.
    */
-  virtual LayoutDeviceIntRect GetMoveToRectPopupRect() const {
+  virtual LayoutDeviceIntSize GetMoveToRectPopupSize() const {
     NS_WARNING("GetLayoutPopupRect implemented only for wayland");
-    return LayoutDeviceIntRect();
+    return LayoutDeviceIntSize();
   }
 
   /**
