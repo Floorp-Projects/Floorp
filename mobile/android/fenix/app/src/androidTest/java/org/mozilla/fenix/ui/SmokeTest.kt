@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -323,6 +324,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24458")
     @Test
     // Verifies the Add to top sites option in a tab's 3 dot menu
     fun openMainMenuAddTopSiteTest() {

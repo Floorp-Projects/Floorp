@@ -54,6 +54,7 @@ class TopSitesTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24462")
     @Test
     fun verifyAddToFirefoxHome() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -100,6 +101,7 @@ class TopSitesTest {
         mDevice.pressBack()
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24376")
     @Test
     fun verifyOpenTopSitePrivateTab() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

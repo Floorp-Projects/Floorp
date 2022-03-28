@@ -48,6 +48,7 @@ class SettingsHomepageTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24375")
     @SmokeTest
     @Test
     fun jumpBackInOptionTest() {
