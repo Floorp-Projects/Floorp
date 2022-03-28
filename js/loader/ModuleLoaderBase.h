@@ -138,7 +138,7 @@ class ModuleLoaderBase : public nsISupports {
 #endif
 
   static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-      ScriptLoaderInterface* loader, LoadedScript* aScript,
+      ModuleLoaderBase* loader, LoadedScript* aScript,
       const nsAString& aSpecifier);
   static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
                                        const nsAString& aSpecifier,

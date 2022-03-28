@@ -48,6 +48,12 @@ class ServiceWorkerRegistrationDescriptor;
 }  // namespace dom
 }  // namespace mozilla
 
+namespace JS {
+namespace loader {
+class ModuleLoaderBase;
+}  // namespace loader
+}  // namespace JS
+
 /**
  * See <https://developer.mozilla.org/en-US/docs/Glossary/Global_object>.
  */
@@ -241,6 +247,14 @@ class nsIGlobalObject : public nsISupports,
    * principal.
    */
   virtual uint32_t GetPrincipalHashValue() const { return 0; }
+
+  /**
+   * Get the module loader to use for this global, if any. By default this
+   * returns null.
+   */
+  virtual JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) {
+    return nullptr;
+  }
 
  protected:
   virtual ~nsIGlobalObject();
