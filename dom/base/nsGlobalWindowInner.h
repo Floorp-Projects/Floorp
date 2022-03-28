@@ -1340,6 +1340,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     mStorageAllowedReasonCache = 0;
   }
 
+  virtual JS::loader::ModuleLoaderBase* GetModuleLoader(
+      JSContext* aCx) override;
+
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
