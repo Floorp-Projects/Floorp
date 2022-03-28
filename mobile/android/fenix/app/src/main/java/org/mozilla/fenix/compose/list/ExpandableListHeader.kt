@@ -36,7 +36,9 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param expandActionContentDescription The content description for expanding the section.
  * @param collapseActionContentDescription The content description for collapsing the section.
  * @param onClick Optional lambda for handling header clicks.
+ * @param actions Optional Composable for adding UI to the end of the header.
  */
+@Suppress("LongParameterList")
 @Composable
 fun ExpandableListHeader(
     headerText: String,
@@ -44,37 +46,44 @@ fun ExpandableListHeader(
     expandActionContentDescription: String? = null,
     collapseActionContentDescription: String? = null,
     onClick: () -> Unit = {},
+    actions: @Composable () -> Unit = {},
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        PrimaryText(
-            text = headerText,
-            fontSize = 14.sp,
-            fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
-            maxLines = 1,
-        )
-
-        expanded?.let {
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Icon(
-                painter = painterResource(
-                    if (expanded) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
-                ),
-                contentDescription = if (expanded) {
-                    collapseActionContentDescription
-                } else {
-                    expandActionContentDescription
-                },
-                modifier = Modifier.size(20.dp),
-                tint = FirefoxTheme.colors.iconPrimary,
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PrimaryText(
+                text = headerText,
+                fontSize = 14.sp,
+                fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
+                maxLines = 1,
             )
+
+            expanded?.let {
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Icon(
+                    painter = painterResource(
+                        if (expanded) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
+                    ),
+                    contentDescription = if (expanded) {
+                        collapseActionContentDescription
+                    } else {
+                        expandActionContentDescription
+                    },
+                    modifier = Modifier.size(20.dp),
+                    tint = FirefoxTheme.colors.iconPrimary,
+                )
+            }
         }
+
+        actions()
     }
 }
 
@@ -100,6 +109,55 @@ private fun CollapsibleHeaderPreview() {
                 collapseActionContentDescription = "",
                 onClick = { println("Clicked section header") },
             )
+        }
+    }
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun HeaderWithClickableIconPreview() {
+    FirefoxTheme {
+        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+            ExpandableListHeader(headerText = "Section title") {
+                Box(
+                    modifier = Modifier
+                        .clickable(onClick = { println("delete clicked") })
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete),
+                        contentDescription = "click me",
+                        modifier = Modifier.size(20.dp),
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun CollapsibleHeaderWithClickableIconPreview() {
+    FirefoxTheme {
+        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+            ExpandableListHeader(
+                headerText = "Section title",
+                expanded = true,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clickable(onClick = { println("delete clicked") })
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete),
+                        contentDescription = "click me",
+                        modifier = Modifier.size(20.dp),
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                }
+            }
         }
     }
 }
