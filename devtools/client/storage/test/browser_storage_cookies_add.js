@@ -7,7 +7,8 @@
 "use strict";
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
+  const TEST_URL = MAIN_DOMAIN + "storage-cookies.html";
+  await openTabAndSetupStorage(TEST_URL);
   showAllColumns(true);
 
   await performAdd(["cookies", "http://test1.example.org"]);
@@ -15,4 +16,15 @@ add_task(async function() {
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
+
+  info("Check it does work in private tabs too");
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
+  const privateTab = await addTab(TEST_URL, privateWindow);
+  await openStoragePanel({ tab: privateTab });
+  await performAdd(["cookies", "http://test1.example.org"]);
+  await performAdd(["cookies", "http://test1.example.org"]);
+  privateWindow.close();
 });
