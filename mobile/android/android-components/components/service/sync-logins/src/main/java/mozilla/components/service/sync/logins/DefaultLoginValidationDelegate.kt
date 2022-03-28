@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
@@ -21,7 +22,8 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class DefaultLoginValidationDelegate(
     private val storage: Lazy<LoginsStorage>,
-    private val scope: CoroutineScope = CoroutineScope(IO)
+    private val scope: CoroutineScope = CoroutineScope(IO),
+    private val crashReporting: CrashReporting? = null
 ) : LoginValidationDelegate {
     private val logger = Logger("DefaultAddonUpdater")
 
@@ -34,7 +36,8 @@ class DefaultLoginValidationDelegate(
             val foundLogin = try {
                 storage.value.findLoginToUpdate(entry)
             } catch (e: LoginsStorageException) {
-                logger.error("Failure in shouldUpdateOrCreateAsync: $e")
+                logger.warn("Failure in shouldUpdateOrCreateAsync: $e")
+                crashReporting?.submitCaughtException(e)
                 null
             }
             if (foundLogin == null) Result.CanBeCreated else Result.CanBeUpdated(foundLogin)
