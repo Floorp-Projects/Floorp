@@ -521,7 +521,6 @@ EXTRA_JS_MODULES += [
     "DOMRequestHelper.jsm",
     "IndexedDBHelper.jsm",
     "LocationHelper.jsm",
-    "ProcessSelector.jsm",
     "SlowScriptDebug.jsm",
 ]
 
