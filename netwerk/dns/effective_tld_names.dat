@@ -7131,7 +7131,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-03-22T15:14:59Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-03-27T15:13:38Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8468,7 +8468,7 @@ hermes
 // hgtv : 2015-07-02 Lifestyle Domain Holdings, Inc.
 hgtv
 
-// hiphop : 2014-03-06 Dot Hip Hop LLC
+// hiphop : 2014-03-06 Dot Hip Hop, LLC
 hiphop
 
 // hisamitsu : 2015-07-16 Hisamitsu Pharmaceutical Co.,Inc.
@@ -9995,7 +9995,7 @@ toray
 // toshiba : 2014-04-10 TOSHIBA Corporation
 toshiba
 
-// total : 2015-08-06 Total SA
+// total : 2015-08-06 TOTAL SE
 total
 
 // tours : 2015-01-22 Binky Moon, LLC
@@ -10632,6 +10632,12 @@ hlx3.page
 // Agnat sp. z o.o. : https://domena.pl
 // Submitted by Przemyslaw Plewa <it-admin@domena.pl>
 beep.pl
+
+// Airkit : https://www.airkit.com/
+// Submitted by Grant Cooksey <security@airkit.com>
+airkitapps.com
+airkitapps-au.com
+airkitapps.eu
 
 // Aiven: https://aiven.io/
 // Submitted by Etienne Stalmans <security@aiven.io>
@@ -11663,6 +11669,11 @@ en-root.fr
 mytuleap.com
 tuleap-partners.com
 
+// Encoretivity AB: https://encore.dev
+// Submitted by André Eriksson <andre@encore.dev>
+encr.app
+encoreapi.com
+
 // ECG Robotics, Inc: https://ecgrobotics.org
 // Submitted by <frc1533@ecgrobotics.org>
 onred.one
@@ -12656,6 +12667,10 @@ ip.linodeusercontent.com
 // LiquidNet Ltd : http://www.liquidnetlimited.com/
 // Submitted by Victor Velchev <admin@liquidnetlimited.com>
 we.bs
+
+// Localcert : https://localcert.dev
+// Submitted by Lann Martin <security@localcert.dev>
+*.user.localcert.dev
 
 // localzone.xyz
 // Submitted by Kenny Niehage <hello@yahe.sh>
