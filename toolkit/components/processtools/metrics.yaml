@@ -92,6 +92,23 @@ power:
     expires: never
     telemetry_mirror: POWER_GPU_TIME_BOGUS_VALUES
 
+  wakeups_per_process_type:
+    type: labeled_counter
+    description: >
+      How many times threads woke up and could have woken up a CPU core.
+      Broken down by process type.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759535
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759535
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: *per_process_type_labels
+    telemetry_mirror: POWER_WAKEUPS_PER_PROCESS_TYPE
+
   total_cpu_time_ms:
     type: counter
     description: >
@@ -125,3 +142,18 @@ power:
       - florian@mozilla.com
     expires: never
     telemetry_mirror: POWER_TOTAL_GPU_TIME_MS
+
+  total_thread_wakeups:
+    type: counter
+    description: >
+      How many times threads woke up and could have woken up a CPU core.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759535
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759535
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    telemetry_mirror: POWER_TOTAL_THREAD_WAKEUPS
