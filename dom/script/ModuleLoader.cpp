@@ -241,47 +241,8 @@ bool HostImportModuleDynamically(JSContext* aCx,
   }
 
   // Create a new top-level load request.
-  RefPtr<ScriptFetchOptions> options;
-  nsIURI* baseURL = nullptr;
-  nsCOMPtr<Element> element;
-  RefPtr<ScriptLoadContext> context;
-  if (script) {
-    options = script->GetFetchOptions();
-    baseURL = script->BaseURL();
-    nsCOMPtr<Element> element = script->GetScriptElement();
-    context = new ScriptLoadContext(element);
-  } else {
-    // We don't have a referencing script so fall back on using
-    // options from the document. This can happen when the user
-    // triggers an inline event handler, as there is no active script
-    // there.
-    Document* document = static_cast<ModuleLoader*>(loader.get())
-                             ->GetScriptLoader()
-                             ->GetDocument();
-
-    // Use the document's principal for all loads, except WebExtension
-    // content-scripts.
-    // Only remember the global for content-scripts as well.
-    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
-    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
-      principal = document->NodePrincipal();
-      MOZ_ASSERT(global);
-      global = nullptr;  // Null global is the usual case for most loads.
-    } else {
-      MOZ_ASSERT(
-          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
-    }
-
-    options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
-    baseURL = document->GetDocBaseURI();
-    context = new ScriptLoadContext(nullptr);
-  }
-
-  RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
-      uri, options, baseURL, context, loader.get(), aReferencingPrivate,
-      specifierString, aPromise);
+  RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
+      aCx, uri, script, aReferencingPrivate, specifierString, aPromise);
 
   loader->StartDynamicImport(request);
   return true;
@@ -544,7 +505,6 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
   return request.forget();
 }
 
-/* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
   RefPtr<ScriptLoadContext> newContext =
@@ -563,23 +523,56 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   return request.forget();
 }
 
-/* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    ScriptLoadContext* aContext, ModuleLoaderBase* aLoader,
+    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
-  aContext->mIsInline = false;
-  aContext->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
+  RefPtr<ScriptFetchOptions> options;
+  nsIURI* baseURL = nullptr;
+  RefPtr<ScriptLoadContext> context;
+
+  if (aMaybeActiveScript) {
+    options = aMaybeActiveScript->GetFetchOptions();
+    baseURL = aMaybeActiveScript->BaseURL();
+    nsCOMPtr<Element> element = aMaybeActiveScript->GetScriptElement();
+    context = new ScriptLoadContext(element);
+  } else {
+    // We don't have a referencing script so fall back on using
+    // options from the document. This can happen when the user
+    // triggers an inline event handler, as there is no active script
+    // there.
+    Document* document = GetScriptLoader()->GetDocument();
+
+    // Use the document's principal for all loads, except WebExtension
+    // content-scripts.
+    // Only remember the global for content-scripts as well.
+    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
+    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
+      principal = document->NodePrincipal();
+      MOZ_ASSERT(global);
+      global = nullptr;  // Null global is the usual case for most loads.
+    } else {
+      MOZ_ASSERT(
+          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
+    }
+
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
+    baseURL = document->GetDocBaseURI();
+    context = new ScriptLoadContext(nullptr);
+  }
+
+  context->mIsInline = false;
+  context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
+      aURI, options, SRIMetadata(), baseURL, context, true,
       /* is top level */ true, /* is dynamic import */
-      aLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI),
-      nullptr);
+      this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
   request->mDynamicReferencingPrivate = aReferencingPrivate;
   request->mDynamicSpecifier = aSpecifier;
