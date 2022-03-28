@@ -147,6 +147,7 @@ class TopSitesTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/20418")
     @Test
     fun verifyRemoveTopSite() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

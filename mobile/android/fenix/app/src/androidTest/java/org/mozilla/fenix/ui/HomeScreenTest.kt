@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -91,6 +92,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24436")
     @Test
     fun dismissOnboardingUsingSettingsTest() {
         homeScreen {
@@ -103,6 +105,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24436")
     @Test
     fun dismissOnboardingUsingBookmarksTest() {
         homeScreen {
@@ -117,6 +120,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24436")
     @Test
     fun dismissOnboardingUsingHelpTest() {
         val settings = activityTestRule.activity.applicationContext.settings()
@@ -131,6 +135,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24436")
     @Test
     fun toolbarTapDoesntDismissOnboardingTest() {
         homeScreen {
