@@ -198,6 +198,7 @@
 #include "nsICaptivePortalService.h"
 #include "nsICertOverrideService.h"
 #include "nsIClipboard.h"
+#include "nsIContentProcess.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsICookie.h"
 #include "nsICrashService.h"
@@ -525,6 +526,70 @@ uint64_t ComputeLoadedOriginHash(nsIPrincipal* aPrincipal) {
   return ((uint64_t)originNoSuffix) << 32 | originSuffix;
 }
 
+class ScriptableCPInfo final : public nsIContentProcessInfo {
+ public:
+  explicit ScriptableCPInfo(ContentParent* aParent) : mContentParent(aParent) {
+    MOZ_ASSERT(mContentParent);
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPROCESSINFO
+
+  void ProcessDied() { mContentParent = nullptr; }
+
+ private:
+  ~ScriptableCPInfo() { MOZ_ASSERT(!mContentParent, "must call ProcessDied"); }
+
+  ContentParent* mContentParent;
+};
+
+NS_IMPL_ISUPPORTS(ScriptableCPInfo, nsIContentProcessInfo)
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetIsAlive(bool* aIsAlive) {
+  *aIsAlive = mContentParent != nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetProcessId(int32_t* aPID) {
+  if (!mContentParent) {
+    *aPID = -1;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aPID = mContentParent->Pid();
+  if (*aPID == -1) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetTabCount(int32_t* aTabCount) {
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  *aTabCount = cpm->GetBrowserParentCountByProcessId(mContentParent->ChildID());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetMessageManager(nsISupports** aMessenger) {
+  *aMessenger = nullptr;
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  RefPtr<ProcessMessageManager> manager = mContentParent->GetMessageManager();
+  manager.forget(aMessenger);
+  return NS_OK;
+}
+
 ProcessID GetTelemetryProcessID(const nsACString& remoteType) {
   // OOP WebExtensions run in a content process.
   // For Telemetry though we want to break out collected data from the
@@ -769,6 +834,39 @@ void ContentParent::ReleaseCachedProcesses() {
   }
 }
 
+/*static*/
+already_AddRefed<ContentParent> ContentParent::MinTabSelect(
+    const nsTArray<ContentParent*>& aContentParents,
+    int32_t aMaxContentParents) {
+  uint32_t maxSelectable =
+      std::min(static_cast<uint32_t>(aContentParents.Length()),
+               static_cast<uint32_t>(aMaxContentParents));
+  uint32_t min = INT_MAX;
+  RefPtr<ContentParent> candidate;
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+
+  for (uint32_t i = 0; i < maxSelectable; i++) {
+    ContentParent* p = aContentParents[i];
+    MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
+
+    uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
+    if (tabCount < min) {
+      candidate = p;
+      min = tabCount;
+    }
+  }
+
+  // If all current processes have at least one tab and we have not yet reached
+  // the maximum, use a new process.
+  if (min > 0 &&
+      aContentParents.Length() < static_cast<uint32_t>(aMaxContentParents)) {
+    return nullptr;
+  }
+
+  // Otherwise we return candidate.
+  return candidate.forget();
+}
+
 /* static */
 already_AddRefed<nsIPrincipal>
 ContentParent::CreateRemoteTypeIsolationPrincipal(
@@ -789,81 +887,62 @@ ContentParent::CreateRemoteTypeIsolationPrincipal(
   return principal.forget();
 }
 
-// Determine the effective number of tabs which are loaded in a given content
-// process, based on the keepalive table. We don't count `0` (as it doesn't
-// correspond to a tab), and `aIgnoreBrowserId` (as it corresponds to the
-// navigating tab, or is `0`) when doing the counts.
-uint32_t ContentParent::EffectiveTabCount(uint64_t aIgnoreBrowserId) {
-  nsTHashSet<uint64_t> browserIds;
-  // First, collect the BrowserIds associated with each KeepAlive.
-  for (const auto& id : mKeepAlivesByBrowserId.Keys()) {
-    if (id != 0 && id != aIgnoreBrowserId) {
-      browserIds.Insert(aIgnoreBrowserId);
-    }
-  }
-  // Then, collect the BrowserIds associated with each existing BrowserParent,
-  // even if they're still actively being destroyed. (FIXME: Why should we be
-  // counting tabs as they're being unloaded?)
-  for (auto* bp : ManagedPBrowserParent()) {
-    uint64_t browserId =
-        BrowserParent::GetFrom(bp)->GetBrowsingContext()->BrowserId();
-    if (browserId != 0 && browserId != aIgnoreBrowserId) {
-      browserIds.Insert(browserId);
-    }
-  }
-  return browserIds.Count();
-}
-
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     const nsACString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
-    uint32_t aMaxContentParents, uint64_t aBrowserId, bool aPreferUsed,
-    ProcessPriority aPriority) {
+    uint32_t aMaxContentParents, bool aPreferUsed, ProcessPriority aPriority) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   AutoRestore ar(sInProcessSelector);
   sInProcessSelector = true;
 #endif
 
-  if (!StaticPrefs::dom_ipc_disableContentProcessReuse() &&
-      !aContentParents.IsEmpty()) {
-    // Collect a list of eligible content processes which are tied for the
-    // lowest effective tab count. We only consider at most `aMaxContentParents`
-    // processes even if more are available, in case the process count was
-    // dropped by a test.
-    RefPtr<ContentParent> selected;
-    uint32_t minTabCount = UINT32_MAX;
-    uint32_t processCount =
-        std::min(aMaxContentParents, uint32_t(aContentParents.Length()));
-    for (uint32_t i = 0; i < processCount; ++i) {
-      uint32_t effectiveTabCount =
-          aContentParents[i]->EffectiveTabCount(aBrowserId);
-      if (effectiveTabCount < minTabCount) {
-        minTabCount = effectiveTabCount;
-        selected = aContentParents[i];
-      }
-    }
+  uint32_t numberOfParents = aContentParents.Length();
+  nsTArray<RefPtr<nsIContentProcessInfo>> infos(numberOfParents);
+  for (auto* cp : aContentParents) {
+    infos.AppendElement(cp->mScriptableHelper);
+  }
 
-    // If every tab has at least one tab (other than our tab, which was excluded
-    // from the count) already loaded in it, prefer creating a new process.
-    if (minTabCount > 0 && !aPreferUsed &&
-        aMaxContentParents > aContentParents.Length()) {
-      selected = nullptr;
-    }
+  if (aPreferUsed && numberOfParents) {
+    // If we prefer re-using existing content processes, we don't want to create
+    // a new process, and instead re-use an existing one, so pretend the process
+    // limit is at the current number of processes.
+    aMaxContentParents = numberOfParents;
+  }
 
-    // If we successfully selected a content process, return it.
-    if (selected) {
+  nsCOMPtr<nsIContentProcessProvider> cpp =
+      do_GetService("@mozilla.org/ipc/processselector;1");
+  int32_t index;
+  if (cpp && NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, infos,
+                                              aMaxContentParents, &index))) {
+    // If the provider returned an existing ContentParent, use that one.
+    if (0 <= index && static_cast<uint32_t>(index) <= aMaxContentParents) {
+      RefPtr<ContentParent> retval = aContentParents[index];
       if (profiler_thread_is_being_profiled_for_markers()) {
-        nsPrintfCString marker("Reused process %" PRIu64,
-                               (uint64_t)selected->ChildID());
+        nsPrintfCString marker("Reused process %u",
+                               (unsigned int)retval->ChildID());
         PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
       }
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("GetUsedProcess: Reused process %p (%" PRIu64 ") for %s",
-               selected.get(), (uint64_t)selected->ChildID(),
+              ("GetUsedProcess: Reused process %p (%u) for %s", retval.get(),
+               (unsigned int)retval->ChildID(),
                PromiseFlatCString(aRemoteType).get()));
-      selected->AssertAlive();
-      selected->StopRecycling();
-      return selected.forget();
+      retval->AssertAlive();
+      retval->StopRecycling();
+      return retval.forget();
+    }
+  } else {
+    // If there was a problem with the JS chooser, fall back to a random
+    // selection.
+    NS_WARNING("nsIContentProcessProvider failed to return a process");
+    RefPtr<ContentParent> random;
+    if ((random = MinTabSelect(aContentParents, aMaxContentParents))) {
+      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+              ("GetUsedProcess: Reused random process %p (%d) for %s",
+               random.get(), (unsigned int)random->ChildID(),
+               PromiseFlatCString(aRemoteType).get()));
+      random->AssertAlive();
+      random->StopRecycling();
+      return random.forget();
     }
   }
 
@@ -943,7 +1022,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
 already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsedLaunchingBrowserProcess(
     const nsACString& aRemoteType, BrowsingContextGroup* aGroup,
-    uint64_t aBrowserId, ProcessPriority aPriority, bool aPreferUsed) {
+    ProcessPriority aPriority, bool aPreferUsed) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("GetNewOrUsedProcess for type %s",
            PromiseFlatCString(aRemoteType).get()));
@@ -968,9 +1047,8 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
   uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
 
   // Let's try and reuse an existing process.
-  contentParent =
-      GetUsedBrowserProcess(aRemoteType, contentParents, maxContentParents,
-                            aBrowserId, aPreferUsed, aPriority);
+  contentParent = GetUsedBrowserProcess(
+      aRemoteType, contentParents, maxContentParents, aPreferUsed, aPriority);
 
   if (!contentParent) {
     // No reusable process. Let's create and launch one.
@@ -1013,12 +1091,11 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
 RefPtr<ContentParent::LaunchPromise>
 ContentParent::GetNewOrUsedBrowserProcessAsync(const nsACString& aRemoteType,
                                                BrowsingContextGroup* aGroup,
-                                               uint64_t aBrowserId,
                                                ProcessPriority aPriority,
                                                bool aPreferUsed) {
   // Obtain a `ContentParent` launched asynchronously.
   RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aRemoteType, aGroup, aBrowserId, aPriority, aPreferUsed);
+      aRemoteType, aGroup, aPriority, aPreferUsed);
   if (!contentParent) {
     // In case of launch error, stop here.
     return LaunchPromise::CreateAndReject(LaunchError(), __func__);
@@ -1029,9 +1106,9 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(const nsACString& aRemoteType,
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
     const nsACString& aRemoteType, BrowsingContextGroup* aGroup,
-    uint64_t aBrowserId, ProcessPriority aPriority, bool aPreferUsed) {
+    ProcessPriority aPriority, bool aPreferUsed) {
   RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aRemoteType, aGroup, aBrowserId, aPriority, aPreferUsed);
+      aRemoteType, aGroup, aPriority, aPreferUsed);
   if (!contentParent || !contentParent->WaitForLaunchSync(aPriority)) {
     // In case of launch error, stop here.
     return nullptr;
@@ -1397,8 +1474,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
           aContext.JSPluginId(), PROCESS_PRIORITY_FOREGROUND);
     } else {
       constructorSender = GetNewOrUsedBrowserProcess(
-          remoteType, aBrowsingContext->Group(), aBrowsingContext->BrowserId(),
-          PROCESS_PRIORITY_FOREGROUND);
+          remoteType, aBrowsingContext->Group(), PROCESS_PRIORITY_FOREGROUND);
     }
     if (!constructorSender) {
       return nullptr;
@@ -1856,6 +1932,11 @@ void ContentParent::MarkAsDead() {
   }
 #endif
 
+  if (mScriptableHelper) {
+    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
+    mScriptableHelper = nullptr;
+  }
+
   mLifecycleState = LifecycleState::DEAD;
 }
 
@@ -2133,7 +2214,7 @@ bool ContentParent::ShouldKeepProcessAlive() {
     return true;
   }
 
-  if (!mKeepAlivesByBrowserId.IsEmpty()) {
+  if (mNumKeepaliveCalls > 0) {
     return true;
   }
 
@@ -2204,21 +2285,14 @@ void ContentParent::NotifyTabDestroying() {
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 }
 
-void ContentParent::AddKeepAlive(uint64_t aBrowserId) {
+void ContentParent::AddKeepAlive() {
   // Something wants to keep this content process alive.
-  auto& numKeepaliveCalls = mKeepAlivesByBrowserId.LookupOrInsert(aBrowserId);
-  ++numKeepaliveCalls;
+  ++mNumKeepaliveCalls;
 }
 
-void ContentParent::RemoveKeepAlive(uint64_t aBrowserId) {
-  MOZ_DIAGNOSTIC_ASSERT(!mKeepAlivesByBrowserId.IsEmpty());
-
-  auto entry = mKeepAlivesByBrowserId.Lookup(aBrowserId);
-  MOZ_DIAGNOSTIC_ASSERT(entry && entry.Data() > 0);
-  --entry.Data();
-  if (entry.Data() == 0) {
-    entry.Remove();
-  }
+void ContentParent::RemoveKeepAlive() {
+  MOZ_DIAGNOSTIC_ASSERT(mNumKeepaliveCalls > 0);
+  --mNumKeepaliveCalls;
 
   MaybeBeginShutDown();
 }
@@ -2664,6 +2738,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mJSPluginID(aJSPluginID),
       mRemoteWorkerActorData("ContentParent::mRemoteWorkerActorData"),
       mNumDestroyingTabs(0),
+      mNumKeepaliveCalls(0),
       mLifecycleState(LifecycleState::LAUNCHING),
       mIsForBrowser(!mRemoteType.IsEmpty()),
       mCalledClose(false),
@@ -2705,6 +2780,10 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
           ("CreateSubprocess: ContentParent %p mSubprocess %p handle %" PRIuPTR,
            this, mSubprocess,
            mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
+
+  // This is safe to do in the constructor, as it doesn't take a strong
+  // reference.
+  mScriptableHelper = new ScriptableCPInfo(this);
 }
 
 ContentParent::~ContentParent() {
@@ -2733,6 +2812,13 @@ ContentParent::~ContentParent() {
          this, mSubprocess,
          mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->Destroy();
+  }
+
+  // Make sure to clear the connection from `mScriptableHelper` if it hasn't
+  // been cleared yet.
+  if (mScriptableHelper) {
+    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
+    mScriptableHelper = nullptr;
   }
 }
 
