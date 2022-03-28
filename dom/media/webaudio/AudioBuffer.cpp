@@ -135,6 +135,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(AudioBufferMemoryTrackerMallocSizeOf)
 NS_IMETHODIMP
 AudioBufferMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                                          nsISupports* aData, bool) {
+  StaticMutexAutoLock lock(sMutex);
   const size_t amount =
       std::accumulate(mBuffers.cbegin(), mBuffers.cend(), size_t(0),
                       [](size_t val, const AudioBuffer* buffer) {
