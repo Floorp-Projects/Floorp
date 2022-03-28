@@ -139,9 +139,8 @@ void DnsAndConnectSocket::PrintDiagnostics(nsCString& log) {
 void nsHttpConnection::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("    CanDirectlyActivate = %d\n", CanDirectlyActivate());
 
-  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n",
-                   mTlsHandshaker->NPNComplete(),
-                   mTlsHandshaker->SetupSSLCalled());
+  log.AppendPrintf("    npncomplete = %d  setupSSLCalled = %d\n", mNPNComplete,
+                   mSetupSSLCalled);
 
   log.AppendPrintf("    spdyVersion = %d  reportedSpdy = %d everspdy = %d\n",
                    static_cast<int32_t>(mUsingSpdyVersion), mReportedSpdy,
