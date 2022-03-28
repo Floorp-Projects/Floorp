@@ -48,8 +48,7 @@ namespace mozilla::dom {
 // DOM module loader
 //////////////////////////////////////////////////////////////
 
-ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : ModuleLoaderBase(aLoader) {
-}
+ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : ModuleLoaderBase(aLoader) {}
 
 ScriptLoader* ModuleLoader::GetScriptLoader() {
   return static_cast<ScriptLoader*>(mLoader.get());
