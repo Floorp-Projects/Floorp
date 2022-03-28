@@ -9988,11 +9988,24 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Whether we ignore less restricted referrer policies for top navigations.
+- name: network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation
+  type: bool
+  value: false
+  mirror: always
+
 
 # Set to ignore referrer policies which is less restricted than the default for
 # cross-site requests in the private browsing mode, including 'unsafe-url',
 # 'no-referrer-when-downgrade' and 'origin-when-cross-origin'.
 - name: network.http.referer.disallowCrossSiteRelaxingDefault.pbmode
+  type: bool
+  value: true
+  mirror: always
+
+# Whether we ignore less restricted referrer policies for top navigations in the
+# private browsing mode.
+- name: network.http.referer.disallowCrossSiteRelaxingDefault.pbmode.top_navigation
   type: bool
   value: true
   mirror: always
