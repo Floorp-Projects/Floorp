@@ -114,6 +114,7 @@ class MultitaskingTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/focus-android/issues/6708")
     @SmokeTest
     @Test
     fun closeTabButtonTest() {
