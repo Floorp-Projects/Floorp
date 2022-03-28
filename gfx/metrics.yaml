@@ -31,20 +31,3 @@ paint:
       - mwoodrow@mozilla.com
     expires: never
     telemetry_mirror: PAINT_BUILD_DISPLAYLIST_TIME
-
-wr:
-  rasterize_glyphs_time:
-    type: timing_distribution
-    description: >
-      The time to rasterize glyphs for consumption by WebRender.
-    time_unit: microsecond
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1728423
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1728423
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-    expires: never
-    telemetry_mirror: WR_RASTERIZE_GLYPHS_TIME
