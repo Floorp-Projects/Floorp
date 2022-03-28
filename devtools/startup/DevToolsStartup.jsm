@@ -27,7 +27,6 @@ const kDebuggerPrefs = [
   "devtools.chrome.enabled",
 ];
 
-const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
@@ -87,11 +86,6 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   const Telemetry = require("devtools/client/shared/telemetry");
 
   return Telemetry;
-});
-
-XPCOMUtils.defineLazyGetter(this, "StartupBundle", function() {
-  const url = "chrome://devtools-startup/locale/startup.properties";
-  return Services.strings.createBundle(url);
 });
 
 XPCOMUtils.defineLazyGetter(this, "KeyShortcutsBundle", function() {
@@ -318,7 +312,6 @@ XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
 });
 
 function DevToolsStartup() {
-  this.onEnabledPrefChanged = this.onEnabledPrefChanged.bind(this);
   this.onWindowReady = this.onWindowReady.bind(this);
   this.addDevToolsItemsToSubview = this.addDevToolsItemsToSubview.bind(this);
   this.onMoreToolsViewShowing = this.onMoreToolsViewShowing.bind(this);
@@ -369,10 +362,6 @@ DevToolsStartup.prototype = {
     const isInitialLaunch =
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
-      // Enable devtools for all users on startup (onboarding experiment from Bug 1408969
-      // is over).
-      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
-
       // The F12 shortcut might be disabled to avoid accidental usage.
       // Users who are already considered as devtools users should not be
       // impacted.
@@ -390,12 +379,6 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(
         this.onWindowReady,
         "browser-delayed-startup-finished"
-      );
-
-      // Update menu items when devtools.enabled changes.
-      Services.prefs.addObserver(
-        DEVTOOLS_ENABLED_PREF,
-        this.onEnabledPrefChanged
       );
 
       // Add DevTools menu items to the "More Tools" view.
@@ -525,9 +508,6 @@ DevToolsStartup.prototype = {
     if (!this.initialized) {
       this.hookBrowserToolsMenu(window);
     }
-
-    this.createDevToolsEnableMenuItem(window);
-    this.updateDevToolsMenuItems(window);
   },
 
   /**
@@ -590,11 +570,9 @@ DevToolsStartup.prototype = {
   },
 
   addDevToolsItemsToSubview(subview) {
-    if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-      // If DevTools are enabled, initialize DevTools to create all menuitems in the
-      // system menu before trying to copy them.
-      this.initDevTools("HamburgerMenu");
-    }
+    // Initialize DevTools to create all menuitems in the system menu before
+    // trying to copy them.
+    this.initDevTools("HamburgerMenu");
 
     // Populate the subview with whatever menuitems are in the developer
     // menu. We skip menu elements, because the menu panel has no way
@@ -696,62 +674,10 @@ DevToolsStartup.prototype = {
   hookBrowserToolsMenu(window) {
     const menu = window.document.getElementById("browserToolsMenu");
     const onPopupShowing = () => {
-      if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-        return;
-      }
       menu.removeEventListener("popupshowing", onPopupShowing);
       this.initDevTools("SystemMenu");
     };
     menu.addEventListener("popupshowing", onPopupShowing);
-  },
-
-  /**
-   * Create a new menu item to enable DevTools and insert it DevTools's submenu in the
-   * System Menu.
-   */
-  createDevToolsEnableMenuItem(window) {
-    const { document } = window;
-
-    // Create the menu item.
-    const item = document.createXULElement("menuitem");
-    item.id = "enableDeveloperTools";
-    item.setAttribute(
-      "label",
-      StartupBundle.GetStringFromName("enableDevTools.label")
-    );
-    item.setAttribute(
-      "accesskey",
-      StartupBundle.GetStringFromName("enableDevTools.accesskey")
-    );
-
-    // The menu item should open the install page for DevTools.
-    item.addEventListener("command", () => {
-      this.openInstallPage("SystemMenu");
-    });
-
-    // Insert the menu item in the DevTools submenu.
-    const systemMenuItem = document.getElementById("menuWebDeveloperPopup");
-    systemMenuItem.appendChild(item);
-  },
-
-  /**
-   * Update the visibility the menu item to enable DevTools.
-   */
-  updateDevToolsMenuItems(window) {
-    const item = window.document.getElementById("enableDeveloperTools");
-    item.hidden = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
-  },
-
-  /**
-   * Loop on all windows and update the hidden attribute of the "enable DevTools" menu
-   * item.
-   */
-  onEnabledPrefChanged() {
-    for (const window of Services.wm.getEnumerator("navigator:browser")) {
-      if (window.gBrowserInit && window.gBrowserInit.delayedStartupFinished) {
-        this.updateDevToolsMenuItems(window);
-      }
-    }
   },
 
   /**
@@ -864,20 +790,16 @@ DevToolsStartup.prototype = {
           return;
         }
       }
-      if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-        const id = key.toolId || key.id;
-        this.openInstallPage("KeyShortcut", id);
-      } else {
-        // Record the timing at which this event started in order to compute later in
-        // gDevTools.showToolbox, the complete time it takes to open the toolbox.
-        // i.e. especially take `initDevTools` into account.
-        const startTime = Cu.now();
-        const require = this.initDevTools("KeyShortcut", key);
-        const {
-          gDevToolsBrowser,
-        } = require("devtools/client/framework/devtools-browser");
-        await gDevToolsBrowser.onKeyShortcut(window, key, startTime);
-      }
+
+      // Record the timing at which this event started in order to compute later in
+      // gDevTools.showToolbox, the complete time it takes to open the toolbox.
+      // i.e. especially take `initDevTools` into account.
+      const startTime = Cu.now();
+      const require = this.initDevTools("KeyShortcut", key);
+      const {
+        gDevToolsBrowser,
+      } = require("devtools/client/framework/devtools-browser");
+      await gDevToolsBrowser.onKeyShortcut(window, key, startTime);
     } catch (e) {
       console.error(`Exception while trigerring key ${key}: ${e}\n${e.stack}`);
     }
@@ -914,12 +836,6 @@ DevToolsStartup.prototype = {
   },
 
   initDevTools: function(reason, key = "") {
-    // If an entry point is fired and tools are not enabled open the installation page
-    if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-      this.openInstallPage(reason);
-      return null;
-    }
-
     // In the case of the --jsconsole and --jsdebugger command line parameters
     // there is no browser window yet so we don't send any telemetry yet.
     if (reason !== "CommandLine") {
@@ -934,66 +850,6 @@ DevToolsStartup.prototype = {
     // and initialize all devtools machinery.
     require("devtools/client/framework/devtools-browser");
     return require;
-  },
-
-  /**
-   * Open about:devtools to start the onboarding flow.
-   *
-   * @param {String} reason
-   *        One of "KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu",
-   *        "CommandLine".
-   * @param {String} keyId
-   *        Optional. If the onboarding flow was triggered by a keyboard shortcut, pass
-   *        the shortcut key id (or toolId) to about:devtools.
-   */
-  openInstallPage: function(reason, keyId) {
-    // If DevTools are completely disabled, bail out here as this might be called directly
-    // from other files.
-    if (this.isDisabledByPolicy()) {
-      return;
-    }
-
-    const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-
-    // Focus about:devtools tab if there is already one opened in the current window.
-    for (const tab of gBrowser.tabs) {
-      const browser = tab.linkedBrowser;
-      // browser.documentURI might be undefined if the browser tab is still loading.
-      const location = browser.documentURI ? browser.documentURI.spec : "";
-      if (
-        location.startsWith("about:devtools") &&
-        !location.startsWith("about:devtools-toolbox")
-      ) {
-        // Focus the existing about:devtools tab and bail out.
-        gBrowser.selectedTab = tab;
-        return;
-      }
-    }
-
-    let url = "about:devtools";
-
-    const params = [];
-    if (reason) {
-      params.push("reason=" + encodeURIComponent(reason));
-    }
-
-    const selectedBrowser = gBrowser.selectedBrowser;
-    if (selectedBrowser) {
-      params.push("tabid=" + selectedBrowser.outerWindowID);
-    }
-
-    if (keyId) {
-      params.push("keyid=" + keyId);
-    }
-
-    if (params.length > 0) {
-      url += "?" + params.join("&");
-    }
-
-    // Set relatedToCurrent: true to open the tab next to the current one.
-    gBrowser.selectedTab = gBrowser.addTrustedTab(url, {
-      relatedToCurrent: true,
-    });
   },
 
   handleConsoleFlag: function(cmdLine) {
