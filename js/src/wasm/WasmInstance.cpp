@@ -1433,10 +1433,9 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
   // Add debug filtering table.
   if (metadata().debugEnabled) {
-    size_t numBytes = (metadata().debugFuncReturnTypes.length() + 7) >> 3;
-    debugFilter_ = (uint32_t*)js_calloc(
-        AlignBytes(numBytes, sizeof(uint32_t)) / sizeof(uint32_t),
-        sizeof(uint32_t));
+    size_t numFuncs = metadata().debugFuncReturnTypes.length();
+    size_t numWords = std::max<size_t>((numFuncs + 31) / 32, 1);
+    debugFilter_ = (uint32_t*)js_calloc(numWords, sizeof(uint32_t));
     if (!debugFilter_) {
       return false;
     }
@@ -1628,18 +1627,14 @@ void Instance::resetInterrupt(JSContext* cx) {
 }
 
 bool Instance::debugFilter(uint32_t funcIndex) const {
-  return (debugFilter_[funcIndex / sizeof(uint32_t)] >>
-          funcIndex % sizeof(uint32_t)) &
-         1;
+  return (debugFilter_[funcIndex / 32] >> funcIndex % 32) & 1;
 }
 
 void Instance::setDebugFilter(uint32_t funcIndex, bool value) {
   if (value) {
-    debugFilter_[funcIndex / sizeof(uint32_t)] |=
-        (1 << funcIndex % sizeof(uint32_t));
+    debugFilter_[funcIndex / 32] |= (1 << funcIndex % 32);
   } else {
-    debugFilter_[funcIndex / sizeof(uint32_t)] &=
-        ~(1 << funcIndex % sizeof(uint32_t));
+    debugFilter_[funcIndex / 32] &= ~(1 << funcIndex % 32);
   }
 }
 
