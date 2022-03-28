@@ -43,6 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="19dp"
         android:layout_marginEnd="24dp"
+        android:importantForAutofill="no"
         app:layout_constraintBottom_toBottomOf="@id/homescreen_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/homescreen_icon"
