@@ -1705,26 +1705,6 @@
       "last_modified": 1613587855073
     },
     {
-      "schema": 1613395973788,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pl",
-                "szl"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "pwn-pl@search.mozilla.org"
-      },
-      "id": "2ca17e29-ed08-4218-99f6-0615c8bc5c67",
-      "last_modified": 1613587855070
-    },
-    {
       "schema": 1613395970632,
       "appliesTo": [
         {
@@ -2374,64 +2354,6 @@
       "last_modified": 1586375636481
     },
     {
-      "schema": 1586273291150,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "oshiete-goo@search.mozilla.org"
-      },
-      "id": "daa695d9-3f38-494b-81f1-1f601bbe5163",
-      "last_modified": 1586375636478
-    },
-    {
-      "schema": 1582890770937,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sv-SE"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "allaannonser-sv-SE@search.mozilla.org"
-      },
-      "id": "69a82554-c9b4-4c84-98c7-80f86fa7174a",
-      "last_modified": 1583937832369
-    },
-    {
-      "schema": 1582890772625,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sk"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "atlas-sk@search.mozilla.org"
-      },
-      "id": "6cebcf52-2cfa-4da2-ae4d-2c845ebdbc0b",
-      "last_modified": 1583937832365
-    },
-    {
       "schema": 1582890773480,
       "appliesTo": [
         {
@@ -2449,44 +2371,6 @@
       },
       "id": "c1a6845f-015e-4e67-bc64-6e39a843643f",
       "last_modified": 1583937832363
-    },
-    {
-      "schema": 1582890774347,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sk"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "azet-sk@search.mozilla.org"
-      },
-      "id": "3c632ae9-f758-43b5-9d06-b9c1b6bc7105",
-      "last_modified": 1583937832361
-    },
-    {
-      "schema": 1582890775198,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "gd"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "bbc-alba@search.mozilla.org"
-      },
-      "id": "4ab14cdb-35ea-42dc-8500-110eb3088b89",
-      "last_modified": 1583937832358
     },
     {
       "schema": 1582890776067,
@@ -2509,44 +2393,6 @@
       "last_modified": 1583937832356
     },
     {
-      "schema": 1582890776913,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fy-NL"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "fy-NL"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "nl"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "bolcom@search.mozilla.org"
-      },
-      "id": "3d0ab163-0808-4be0-b479-0900dcdc8e35",
-      "last_modified": 1583937832354
-    },
-    {
       "schema": 1582890777775,
       "appliesTo": [
         {
@@ -2564,25 +2410,6 @@
       },
       "id": "d908d622-0387-4d36-8098-1a9e32c0c697",
       "last_modified": 1583937832352
-    },
-    {
-      "schema": 1582890778608,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "en-GB"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "chambers-en-GB@search.mozilla.org"
-      },
-      "id": "270000f0-8527-4f98-aa17-879820209f68",
-      "last_modified": 1583937832350
     },
     {
       "schema": 1582890779439,
@@ -2623,47 +2450,6 @@
       "last_modified": 1583937832346
     },
     {
-      "schema": 1582890781123,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ca",
-                "ca-valencia"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "diec2@search.mozilla.org"
-      },
-      "id": "055103b9-1f4a-43d0-9b99-5b8d7209b022",
-      "last_modified": 1583937832343
-    },
-    {
-      "schema": 1582890781968,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "es-AR",
-                "es-CL",
-                "es-ES"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "drae@search.mozilla.org"
-      },
-      "id": "3d27c51f-83d4-43be-af84-4d7a51c5a8e4",
-      "last_modified": 1583937832341
-    },
-    {
       "schema": 1582890782823,
       "appliesTo": [
         {
@@ -2681,25 +2467,6 @@
       },
       "id": "1fc1b257-3e6b-4cfb-a323-64c1429bcf51",
       "last_modified": 1583937832339
-    },
-    {
-      "schema": 1582890783661,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "et"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "eki-ee@search.mozilla.org"
-      },
-      "id": "63b74323-1d14-4989-921f-7cc32bfee072",
-      "last_modified": 1583937832336
     },
     {
       "schema": 1582890784534,
@@ -2740,44 +2507,6 @@
       "last_modified": 1583937832332
     },
     {
-      "schema": 1582890786256,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "kk"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "flip@search.mozilla.org"
-      },
-      "id": "d045762c-52ac-4c16-8ca3-072aecea83da",
-      "last_modified": 1583937832330
-    },
-    {
-      "schema": 1582890787108,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "br"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "freelang@search.mozilla.org"
-      },
-      "id": "ed6a0f8c-e496-4d9c-936c-b906892e3d23",
-      "last_modified": 1583937832327
-    },
-    {
       "schema": 1582890787961,
       "appliesTo": [
         {
@@ -2796,63 +2525,6 @@
       },
       "id": "f458e78b-9128-4027-b344-538f5661c148",
       "last_modified": 1583937832325
-    },
-    {
-      "schema": 1582890788795,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "heureka-cz@search.mozilla.org"
-      },
-      "id": "b9a718b5-fc78-40b8-b1c3-2e15d2009f5c",
-      "last_modified": 1583937832323
-    },
-    {
-      "schema": 1582890789635,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "uk"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "hotline-ua@search.mozilla.org"
-      },
-      "id": "da2ec2d3-6c5c-4191-b428-351fbea8aeba",
-      "last_modified": 1583937832321
-    },
-    {
-      "schema": 1582890790469,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "kn"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "kannadastore@search.mozilla.org"
-      },
-      "id": "ae1cfae5-0516-41c0-99af-fd3d92a77aa8",
-      "last_modified": 1583937832318
     },
     {
       "schema": 1582890791315,
@@ -2875,25 +2547,6 @@
       },
       "id": "03d60939-2c92-45b0-874f-11c8e6d0c2b9",
       "last_modified": 1583937832316
-    },
-    {
-      "schema": 1582890792162,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "hy-AM"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "list-am@search.mozilla.org"
-      },
-      "id": "206db966-db1f-492d-9ab0-71b3e12b434e",
-      "last_modified": 1583937832313
     },
     {
       "schema": 1582890793008,
@@ -2932,44 +2585,6 @@
       },
       "id": "9a404348-0998-42c4-9d87-45ef47672c95",
       "last_modified": 1583937832306
-    },
-    {
-      "schema": 1582890795553,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fy-NL"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "fy-NL"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "nl"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "marktplaats@search.mozilla.org"
-      },
-      "id": "7823cbee-e13e-4de6-8cf1-86e9234f06ae",
-      "last_modified": 1583937832304
     },
     {
       "schema": 1582890796393,
@@ -3043,44 +2658,6 @@
       "last_modified": 1583937832300
     },
     {
-      "schema": 1582890798070,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "he"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "morfix-dic@search.mozilla.org"
-      },
-      "id": "3d05b67d-ef69-4abf-82ab-c943a7e3eff3",
-      "last_modified": 1583937832298
-    },
-    {
-      "schema": 1582890798901,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sl"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "najdi-si@search.mozilla.org"
-      },
-      "id": "dd8dcdda-7da8-46db-823b-d33fb1da63f8",
-      "last_modified": 1583937832295
-    },
-    {
       "schema": 1582890799757,
       "appliesTo": [
         {
@@ -3098,25 +2675,6 @@
       },
       "id": "4135dc8f-f0bf-475b-b39f-74c4256572af",
       "last_modified": 1583937832292
-    },
-    {
-      "schema": 1582890800610,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "et"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "neti-ee@search.mozilla.org"
-      },
-      "id": "2260d56e-d47c-435e-9cb8-9c7c67e8df7c",
-      "last_modified": 1583937832289
     },
     {
       "schema": 1582890801444,
@@ -3138,82 +2696,6 @@
       "last_modified": 1583937832287
     },
     {
-      "schema": 1582890802297,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "bs"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "olx@search.mozilla.org"
-      },
-      "id": "af72d7ef-4255-4362-b328-703aea68ee7e",
-      "last_modified": 1583937832283
-    },
-    {
-      "schema": 1582890803993,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "et"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "osta-ee@search.mozilla.org"
-      },
-      "id": "af16e0da-1bcf-4769-b9bb-e43a94bfac75",
-      "last_modified": 1583937832276
-    },
-    {
-      "schema": 1582890804842,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ru"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "ozonru@search.mozilla.org"
-      },
-      "id": "f62fc00c-2e87-4e95-aa11-0db075cd5741",
-      "last_modified": 1583937832272
-    },
-    {
-      "schema": 1582890805689,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cy"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "palasprint@search.mozilla.org"
-      },
-      "id": "656d9e4e-74d5-4eee-bee3-519b4d9bfd37",
-      "last_modified": 1583937832269
-    },
-    {
       "schema": 1582890806533,
       "appliesTo": [
         {
@@ -3231,25 +2713,6 @@
       },
       "id": "acc27094-9f0a-49af-868b-8b6ecbbda976",
       "last_modified": 1583937832267
-    },
-    {
-      "schema": 1582890807390,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sr"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "pogodak@search.mozilla.org"
-      },
-      "id": "3bb87247-c36b-4606-a0d6-92b14eaeba86",
-      "last_modified": 1583937832264
     },
     {
       "schema": 1582890808245,
@@ -3271,25 +2734,6 @@
       "last_modified": 1583937832261
     },
     {
-      "schema": 1582890809085,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ru"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "priceru@search.mozilla.org"
-      },
-      "id": "de771801-5bca-436c-be56-f882897c46f2",
-      "last_modified": 1583937832259
-    },
-    {
       "schema": 1582890809928,
       "appliesTo": [
         {
@@ -3307,26 +2751,6 @@
       },
       "id": "8a7de784-efa5-428f-9193-a0d3368b80d4",
       "last_modified": 1583937832257
-    },
-    {
-      "schema": 1582890812485,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "nb-NO",
-                "nn-NO"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "qxl-NO@search.mozilla.org"
-      },
-      "id": "e54d56d1-defb-4e34-b85e-9814cb7797c2",
-      "last_modified": 1583937832249
     },
     {
       "schema": 1582890814195,
@@ -3366,45 +2790,6 @@
       },
       "id": "e7dcde21-5b5e-4406-b602-0611130fd3a6",
       "last_modified": 1583937832242
-    },
-    {
-      "schema": 1582890816739,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ltg",
-                "lv"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "sslv@search.mozilla.org"
-      },
-      "id": "74f2f615-8d17-4133-82c1-18d03643c383",
-      "last_modified": 1583937832237
-    },
-    {
-      "schema": 1582890817589,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ga-IE"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "tearma@search.mozilla.org"
-      },
-      "id": "518293ee-4bf0-4514-9b73-c6fb646a8a18",
-      "last_modified": 1583937832235
     },
     {
       "schema": 1582890819290,
@@ -3521,25 +2906,6 @@
       },
       "id": "43559b11-05dc-4750-b131-afdbd9d25905",
       "last_modified": 1583937832210
-    },
-    {
-      "schema": 1582890824418,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sk"
-              ]
-            }
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "zoznam-sk@search.mozilla.org"
-      },
-      "id": "e332f9dd-d1c5-4cc9-8534-3fd9938b970c",
-      "last_modified": 1583937832207
     }
   ]
 }
