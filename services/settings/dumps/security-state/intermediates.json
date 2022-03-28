@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1648176526823,
+      "derHash": "wGjXdnhCVXcrvGrp9wpTakEK1oilDd6vv2a8xSVHlvY=",
+      "subject": "CN=AC Firmaprofesional - Secure Web 2022,OU=Security Services,O=Firmaprofesional S.A.,C=ES",
+      "subjectDN": "MIGTMQswCQYDVQQGEwJFUzEeMBwGA1UECgwVRmlybWFwcm9mZXNpb25hbCBTLkEuMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxGjAYBgNVBAsMEVNlY3VyaXR5IFNlcnZpY2VzMS4wLAYDVQQDDCVBQyBGaXJtYXByb2Zlc2lvbmFsIC0gU2VjdXJlIFdlYiAyMDIy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5dd2eb36f234589fb384beb746dd8d2cec537d6c518a137014dc35d6fec9cf18",
+        "size": 2304,
+        "filename": "AzLO0BInI3V3PWBUXkW0rLPDpBwERRuBl6yYvAtDJ3M=.pem",
+        "location": "security-state-staging/intermediates/ef3746fc-8994-492e-8ecb-f23ad21be72b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "AzLO0BInI3V3PWBUXkW0rLPDpBwERRuBl6yYvAtDJ3M=",
+      "crlite_enrolled": false,
+      "id": "fb1dc569-0bb6-4432-bd65-32a8206361a7",
+      "last_modified": 1648177065480
+    },
+    {
       "schema": 1648111717634,
       "derHash": "+RIKcdUGl7mZKnNXoKmg3cS/w1mPy08BZClkgk088nY=",
       "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q1,O=GlobalSign nv-sa,C=BE",
