@@ -23,10 +23,12 @@
 #include "mozilla/CycleCollectedJSContext.h"  // nsAutoMicroTask
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
-#include "nsICacheInfoChannel.h"  //nsICacheInfoChannel
+#include "nsICacheInfoChannel.h"  // nsICacheInfoChannel
 #include "nsNetUtil.h"            // NS_NewURI
+#include "nsThreadUtils.h"        // GetMainThreadSerialEventTarget
 #include "xpcpublic.h"
 
+using mozilla::GetMainThreadSerialEventTarget;
 using mozilla::Preferences;
 using mozilla::dom::AutoJSAPI;
 
@@ -341,6 +343,60 @@ LoadedScript* ModuleLoaderBase::GetLoadedScriptOrNull(
           aReferencingPrivate);
 
   return script;
+}
+
+nsresult ModuleLoaderBase::StartModuleLoad(ModuleLoadRequest* aRequest) {
+  return StartOrRestartModuleLoad(aRequest, RestartRequest::No);
+}
+
+nsresult ModuleLoaderBase::RestartModuleLoad(ModuleLoadRequest* aRequest) {
+  return StartOrRestartModuleLoad(aRequest, RestartRequest::Yes);
+}
+
+nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
+                                                    RestartRequest aRestart) {
+  MOZ_ASSERT(aRequest->IsFetching());
+  aRequest->SetUnknownDataType();
+
+  // If we're restarting the request, the module should already be in the
+  // "fetching" map.
+  MOZ_ASSERT_IF(
+      aRestart == RestartRequest::Yes,
+      IsModuleFetching(aRequest->mURI,
+                       aRequest->GetLoadContext()->GetWebExtGlobal()));
+
+  // Check with the derived class whether we should load this module.
+  nsresult rv = NS_OK;
+  if (!CanStartLoad(aRequest, &rv)) {
+    return rv;
+  }
+
+  // Check whether the module has been fetched or is currently being fetched,
+  // and if so wait for it rather than starting a new fetch.
+  ModuleLoadRequest* request = aRequest->AsModuleRequest();
+
+  if (aRestart == RestartRequest::No &&
+      ModuleMapContainsURL(request->mURI,
+                           aRequest->GetLoadContext()->GetWebExtGlobal())) {
+    LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
+    WaitForModuleFetch(request->mURI,
+                       aRequest->GetLoadContext()->GetWebExtGlobal())
+        ->Then(GetMainThreadSerialEventTarget(), __func__, request,
+               &ModuleLoadRequest::ModuleLoaded,
+               &ModuleLoadRequest::LoadFailed);
+    return NS_OK;
+  }
+
+  rv = StartFetch(aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We successfully started fetching a module so put its URL in the module
+  // map and mark it as fetching.
+  if (aRestart == RestartRequest::No) {
+    SetModuleFetchStarted(aRequest->AsModuleRequest());
+  }
+
+  return NS_OK;
 }
 
 bool ModuleLoaderBase::ModuleMapContainsURL(nsIURI* aURL,

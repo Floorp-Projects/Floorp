@@ -111,18 +111,10 @@ class ModuleLoaderBase : public nsISupports {
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
-  // Methods that must be overwritten by an extending class. These are called
+  // Methods that must be implemented by an extending class. These are called
   // internally by ModuleLoaderBase.
 
  private:
-  virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
-  virtual nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) = 0;
-  virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
-  virtual nsresult CompileOrFinishModuleScript(
-      JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-      JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
-      JS::MutableHandle<JSObject*> aModuleScript) = 0;
-
   // Create a module load request for a static module import.
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) = 0;
@@ -133,6 +125,20 @@ class ModuleLoaderBase : public nsISupports {
       JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) = 0;
 
+  // Check whether we can load a module. May return false with |aRvOut| set to
+  // NS_OK to abort load without returning an error.
+  virtual bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) = 0;
+
+  // Start the process of fetching module source or bytecode. This is only
+  // called if CanStartLoad returned true.
+  virtual nsresult StartFetch(ModuleLoadRequest* aRequest) = 0;
+
+  virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
+  virtual nsresult CompileOrFinishModuleScript(
+      JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+      JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
+      JS::MutableHandle<JSObject*> aModuleScript) = 0;
+
   // Public API methods.
 
  public:
@@ -141,6 +147,11 @@ class ModuleLoaderBase : public nsISupports {
 #ifdef DEBUG
   bool HasDynamicImport(ModuleLoadRequest* aRequest) const;
 #endif
+
+  // Start a load for a module script URI. Returns immediately if the module is
+  // already being loaded.
+  nsresult StartModuleLoad(ModuleLoadRequest* aRequest);
+  nsresult RestartModuleLoad(ModuleLoadRequest* aRequest);
 
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
@@ -155,15 +166,6 @@ class ModuleLoaderBase : public nsISupports {
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
   void CancelAndClearDynamicImports();
-
-  // Protected methods for used by concrete implementation.
-
- protected:
-  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
-      nsIURI* aURL, nsIGlobalObject* aGlobal);
-  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
 
   // Internal methods.
 
@@ -199,6 +201,16 @@ class ModuleLoaderBase : public nsISupports {
                                        uint32_t aLineNumber,
                                        uint32_t aColumnNumber,
                                        JS::MutableHandle<JS::Value> errorOut);
+
+  enum class RestartRequest { No, Yes };
+  nsresult StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
+                                    RestartRequest aRestart);
+
+  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  bool IsModuleFetching(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
+      nsIURI* aURL, nsIGlobalObject* aGlobal);
+  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
 
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
