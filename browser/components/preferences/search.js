@@ -484,10 +484,17 @@ var gSearchPane = {
 
   remove(aEngine) {
     let index = gEngineView._engineStore.removeEngine(aEngine);
+    if (!gEngineView.tree) {
+      // Only update the selection if it's visible in the UI.
+      return;
+    }
+
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
+
     gEngineView.selection.select(Math.min(index, gEngineView.rowCount - 1));
     gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
+
     document.getElementById("engineList").focus();
   },
 
@@ -652,12 +659,9 @@ EngineStore.prototype = {
     let engineToUpdate = this._engines.findIndex(
       e => e.originalEngine == newEngine
     );
-    if (engineToUpdate == -1) {
-      console.error("Could not find engine to update");
-      return;
+    if (engineToUpdate != -1) {
+      this.engines[engineToUpdate] = this._cloneEngine(newEngine);
     }
-
-    this.engines[engineToUpdate] = this._cloneEngine(newEngine);
   },
 
   moveEngine(aEngine, aNewIndex) {
