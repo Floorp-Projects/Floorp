@@ -27,7 +27,6 @@ add_task(async function test_updates_post_policy() {
     "devtools dedicated disabled pref can not be updated"
   );
 
-  await expectErrorPage("about:devtools");
   await expectErrorPage("about:devtools-toolbox");
   await expectErrorPage("about:debugging");
 
