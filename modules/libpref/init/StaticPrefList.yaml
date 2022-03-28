@@ -1775,6 +1775,14 @@
 # Prefs starting with "devtools."
 #---------------------------------------------------------------------------
 
+# Tells if DevTools have been explicitely enabled by the user. This pref
+# allows to disable all features related to DevTools for users that never use
+# them. Until bug 1361080 lands, we always consider them enabled.
+- name: devtools.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: devtools.console.stdout.chrome
   type: RelaxedAtomicBool
   value: @IS_NOT_MOZILLA_OFFICIAL@
