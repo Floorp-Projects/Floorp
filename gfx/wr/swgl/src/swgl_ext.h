@@ -796,9 +796,9 @@ static int blendTextureNearestRepeat(S sampler, vec2 uv, int span,
   // greater than one pixel, we can still check if we don't move far enough from
   // the pixel center on that axis to hit the next pixel.
   if ((int(min_uv.x) + (REPEAT ? 1 : 0) >= int(max_uv.x) ||
-       (uv_step.x * span * (REPEAT ? uv_scale.x : 1.0f) < 0.5f)) &&
+       (abs(uv_step.x) * span * (REPEAT ? uv_scale.x : 1.0f) < 0.5f)) &&
       (int(min_uv.y) + (REPEAT ? 1 : 0) >= int(max_uv.y) ||
-       (uv_step.y * span * (REPEAT ? uv_scale.y : 1.0f) < 0.5f))) {
+       (abs(uv_step.y) * span * (REPEAT ? uv_scale.y : 1.0f) < 0.5f))) {
     vec2 repeated_uv = REPEAT
                            ? tileRepeatUV(uv, tile_repeat) * uv_scale + min_uv
                            : clamp(uv, min_uv, max_uv);
