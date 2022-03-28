@@ -21,17 +21,16 @@ static const int64_t gEndOffsets[] = {501, 772, 1244, 1380, 1543, 2015};
 
 TEST(WebMBuffered, BasicTests)
 {
-  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  parser.Append(nullptr, 0, mapping, dummy);
+  parser.Append(nullptr, 0, mapping);
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 0);
 
   unsigned char buf[] = {0x1a, 0x45, 0xdf, 0xa3};
-  parser.Append(buf, ArrayLength(buf), mapping, dummy);
+  parser.Append(buf, ArrayLength(buf), mapping);
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 4);
@@ -60,14 +59,13 @@ static void ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer) {
 
 TEST(WebMBuffered, RealData)
 {
-  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
 
   nsTArray<uint8_t> webmData;
   ReadFile("test.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  parser.Append(webmData.Elements(), webmData.Length(), mapping, dummy);
+  parser.Append(webmData.Elements(), webmData.Length(), mapping);
   EXPECT_EQ(mapping.Length(), 6u);
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, int64_t(webmData.Length()));
@@ -82,7 +80,6 @@ TEST(WebMBuffered, RealData)
 
 TEST(WebMBuffered, RealDataAppend)
 {
-  ReentrantMonitor dummy MOZ_UNANNOTATED("dummy");
   WebMBufferedParser parser(0);
   nsTArray<WebMTimeDataOffset> mapping;
 
@@ -92,7 +89,7 @@ TEST(WebMBuffered, RealDataAppend)
   uint32_t arrayEntries = mapping.Length();
   size_t offset = 0;
   while (offset < webmData.Length()) {
-    parser.Append(webmData.Elements() + offset, 1, mapping, dummy);
+    parser.Append(webmData.Elements() + offset, 1, mapping);
     offset += 1;
     EXPECT_EQ(parser.mCurrentOffset, int64_t(offset));
     if (mapping.Length() != arrayEntries) {

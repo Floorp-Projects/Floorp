@@ -37,8 +37,7 @@ static uint32_t VIntLength(unsigned char aFirstByte, uint32_t* aMask) {
 }
 
 bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
-                                nsTArray<WebMTimeDataOffset>& aMapping,
-                                ReentrantMonitor& aReentrantMonitor) {
+                                nsTArray<WebMTimeDataOffset>& aMapping) {
   static const uint32_t EBML_ID = 0x1a45dfa3;
   static const uint32_t SEGMENT_ID = 0x18538067;
   static const uint32_t SEGINFO_ID = 0x1549a966;
@@ -197,7 +196,6 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           // It's possible we've parsed this data before, so avoid inserting
           // duplicate WebMTimeDataOffset entries.
           {
-            ReentrantMonitorAutoEnter mon(aReentrantMonitor);
             int64_t endOffset = mBlockOffset + mBlockSize +
                                 mElement.mID.mLength + mElement.mSize.mLength;
             uint32_t idx = aMapping.IndexOfFirstElementGt(endOffset);
@@ -413,10 +411,10 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
     }
   }
 
-  // thread-safety gets annoyed at pass-by-reference of a locked value
-  PUSH_IGNORE_THREAD_SAFETY
-  mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping, mReentrantMonitor);
-  POP_THREAD_SAFETY
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping);
+  }
 
   // Merge parsers with overlapping regions and clean up the remnants.
   uint32_t i = 0;
