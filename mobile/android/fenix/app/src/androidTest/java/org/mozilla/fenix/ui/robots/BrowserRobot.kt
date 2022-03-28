@@ -889,7 +889,6 @@ private val getLocationButton = mDevice.findObject(UiSelector().text("Get Locati
 val userNameTextBox =
     mDevice.findObject(
         UiSelector()
-            .index(0)
             .resourceId("username")
             .className("android.widget.EditText")
             .packageName("$packageName")
@@ -898,7 +897,6 @@ val userNameTextBox =
 private val submitLoginButton =
     mDevice.findObject(
         UiSelector()
-            .index(2)
             .resourceId("submit")
             .textContains("Submit Query")
             .className("android.widget.Button")
@@ -908,7 +906,6 @@ private val submitLoginButton =
 val passwordTextBox =
     mDevice.findObject(
         UiSelector()
-            .index(1)
             .resourceId("password")
             .className("android.widget.EditText")
             .packageName("$packageName")

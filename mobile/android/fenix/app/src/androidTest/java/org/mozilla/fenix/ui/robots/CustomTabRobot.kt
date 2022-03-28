@@ -178,7 +178,6 @@ private val progressBar =
 private val submitLoginButton =
     mDevice.findObject(
         UiSelector()
-            .index(2)
             .resourceId("submit")
             .textContains("Submit Query")
             .className("android.widget.Button")
