@@ -22,18 +22,15 @@ bugzilla-components:
     description: Generate metadata about source files and Bugzilla
     treeherder:
         symbol: Bugzilla
-        tier: 2
+        tier: 1
     index:
         product: source
         job-name: source-bugzilla-info
     run:
         mach: file-info bugzilla-automation /builds/worker/artifacts
     worker:
-        max-run-time: 2700
-    run-on-projects: ['mozilla-central']
-    when:
-        files-changed:
-            - "**"
+        max-run-time: 1800
+    run-on-projects: ['autoland', 'mozilla-central']
 
 test-info-xorigin:
     description: Generate test manifest metadata for tests disabled on cross-origin
