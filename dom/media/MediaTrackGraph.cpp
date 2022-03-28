@@ -1382,7 +1382,16 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
   // thread, and so the monitor need not be held to check mLifecycleState.
   // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
   // graphs that have not started.
+
+  // While changes occur on mainthread, this assert confirms that
+  // this code shouldn't run if mainthread might be changing the state (to
+  // > LIFECYCLE_RUNNING)
+
+  // Ignore mutex warning: static during execution of the graph
+  PUSH_IGNORE_THREAD_SAFETY
   MOZ_DIAGNOSTIC_ASSERT(mLifecycleState <= LIFECYCLE_RUNNING);
+  POP_THREAD_SAFETY
+
   MOZ_ASSERT(OnGraphThread());
 
   WebCore::DenormalDisabler disabler;
@@ -2570,7 +2579,8 @@ bool SourceMediaTrack::PullNewData(GraphTime aDesiredUpToTime) {
  */
 static void MoveToSegment(SourceMediaTrack* aTrack, MediaSegment* aIn,
                           MediaSegment* aOut, TrackTime aCurrentTime,
-                          TrackTime aDesiredUpToTime) {
+                          TrackTime aDesiredUpToTime)
+    REQUIRES(aTrack->GetMutex()) {
   MOZ_ASSERT(aIn->GetType() == aOut->GetType());
   MOZ_ASSERT(aOut->GetDuration() >= aCurrentTime);
   MOZ_ASSERT(aDesiredUpToTime >= aCurrentTime);
