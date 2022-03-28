@@ -21,11 +21,9 @@ class CompositorWidget;
 }  // namespace widget
 namespace gl {
 
-RefPtr<GLLibraryEGL> DefaultEglLibrary(nsACString* const out_failureId);
-
 inline std::shared_ptr<EglDisplay> DefaultEglDisplay(
     nsACString* const out_failureId) {
-  const auto lib = DefaultEglLibrary(out_failureId);
+  const auto lib = GLLibraryEGL::Get(out_failureId);
   if (!lib) {
     return nullptr;
   }

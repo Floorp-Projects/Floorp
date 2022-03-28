@@ -1173,7 +1173,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE(
   }
 
   nsCString failureId;
-  const auto lib = gl::DefaultEglLibrary(&failureId);
+  const auto lib = gl::GLLibraryEGL::Get(&failureId);
   if (!lib) {
     aError.Assign(
         nsPrintfCString("RcANGLE(load EGL lib failed: %s)", failureId.get()));
