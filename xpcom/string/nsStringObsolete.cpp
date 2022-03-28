@@ -11,14 +11,12 @@
  * nsTString obsolete API support
  */
 
-#if MOZ_STRING_WITH_OBSOLETE_API
-
-#  include "nsDependentString.h"
-#  include "nsDependentSubstring.h"
-#  include "nsReadableUtils.h"
-#  include "nsCRT.h"
-#  include "nsUTF8Utils.h"
-#  include "prdtoa.h"
+#include "nsDependentString.h"
+#include "nsDependentSubstring.h"
+#include "nsReadableUtils.h"
+#include "nsCRT.h"
+#include "nsUTF8Utils.h"
+#include "prdtoa.h"
 
 /* ***** BEGIN RICKG BLOCK *****
  *
@@ -218,19 +216,19 @@ static int32_t RFindChar2(const char16_t* aDest, uint32_t aDestLength,
  * @return  -1,0,1 depending on <,==,>
  */
 static
-#  ifdef __SUNPRO_CC
+#ifdef __SUNPRO_CC
     inline
-#  endif /* __SUNPRO_CC */
+#endif /* __SUNPRO_CC */
     int32_t
     Compare1To1(const char* aStr1, const char* aStr2, uint32_t aCount,
                 bool aIgnoreCase) {
   int32_t result = 0;
   if (aIgnoreCase)
-#  if defined(LIBFUZZER) && defined(LINUX)
+#if defined(LIBFUZZER) && defined(LINUX)
     result = int32_t(strncasecmp(aStr1, aStr2, aCount));
-#  else
+#else
     result = int32_t(PL_strncasecmp(aStr1, aStr2, aCount));
-#  endif
+#endif
   else
     result = nsCharTraits<char>::compare(aStr1, aStr2, aCount);
 
@@ -253,9 +251,9 @@ static
  * @return  -1,0,1 depending on <,==,>
  */
 static
-#  ifdef __SUNPRO_CC
+#ifdef __SUNPRO_CC
     inline
-#  endif /* __SUNPRO_CC */
+#endif /* __SUNPRO_CC */
     int32_t
     Compare2To2(const char16_t* aStr1, const char16_t* aStr2, uint32_t aCount) {
   int32_t result;
@@ -292,9 +290,9 @@ static
  * @return  -1,0,1 depending on <,==,>
  */
 static
-#  ifdef __SUNPRO_CC
+#ifdef __SUNPRO_CC
     inline
-#  endif /* __SUNPRO_CC */
+#endif /* __SUNPRO_CC */
     int32_t
     Compare2To1(const char16_t* aStr1, const char* aStr2, uint32_t aCount,
                 bool aIgnoreCase) {
@@ -308,7 +306,7 @@ static
         char16_t c2 = char16_t((unsigned char)*s2++);
 
         if (c1 != c2) {
-#  ifdef DEBUG
+#ifdef DEBUG
           // we won't warn on c1>=128 (the 2-byte value) because often
           // it is just fine to compare an constant, ascii value (i.e. "body")
           // against some non-ascii value (i.e. a unicode string that
@@ -317,7 +315,7 @@ static
             NS_WARNING(
                 "got a non-ASCII string, but we can't do an accurate case "
                 "conversion!");
-#  endif
+#endif
 
           // can't do case conversion on characters out of our range
           if (aIgnoreCase && c1 < 128 && c2 < 128) {
@@ -519,9 +517,9 @@ static int32_t StripChars2(char16_t* aString, uint32_t aLength,
 
 // This function is used to implement FindCharInSet and friends
 template <class CharT>
-#  ifndef __SUNPRO_CC
+#ifndef __SUNPRO_CC
 static
-#  endif /* !__SUNPRO_CC */
+#endif /* !__SUNPRO_CC */
     CharT
     GetFindInSetFilter(const CharT* set) {
   CharT filter = ~CharT(0);  // All bits set
@@ -613,9 +611,9 @@ struct nsBufferRoutines<char16_t> {
 //-----------------------------------------------------------------------------
 
 template <class L, class R>
-#  ifndef __SUNPRO_CC
+#ifndef __SUNPRO_CC
 static
-#  endif /* !__SUNPRO_CC */
+#endif /* !__SUNPRO_CC */
     int32_t
     FindSubstring(const L* big, uint32_t bigLen, const R* little,
                   uint32_t littleLen, bool ignoreCase) {
@@ -631,9 +629,9 @@ static
 }
 
 template <class L, class R>
-#  ifndef __SUNPRO_CC
+#ifndef __SUNPRO_CC
 static
-#  endif /* !__SUNPRO_CC */
+#endif /* !__SUNPRO_CC */
     int32_t
     RFindSubstring(const L* big, uint32_t bigLen, const R* little,
                    uint32_t littleLen, bool ignoreCase) {
@@ -651,9 +649,9 @@ static
 }
 
 template <class CharT, class SetCharT>
-#  ifndef __SUNPRO_CC
+#ifndef __SUNPRO_CC
 static
-#  endif /* !__SUNPRO_CC */
+#endif /* !__SUNPRO_CC */
     int32_t
     FindCharInSet(const CharT* data, uint32_t dataLen, const SetCharT* set) {
   CharT filter = nsBufferRoutines<CharT>::get_find_in_set_filter(set);
@@ -678,9 +676,9 @@ static
 }
 
 template <class CharT, class SetCharT>
-#  ifndef __SUNPRO_CC
+#ifndef __SUNPRO_CC
 static
-#  endif /* !__SUNPRO_CC */
+#endif /* !__SUNPRO_CC */
     int32_t
     RFindCharInSet(const CharT* data, uint32_t dataLen, const SetCharT* set) {
   CharT filter = nsBufferRoutines<CharT>::get_find_in_set_filter(set);
@@ -774,7 +772,7 @@ static void RFind_ComputeSearchRange(uint32_t bigLen, uint32_t littleLen,
 
 //-----------------------------------------------------------------------------
 
-#  include "nsTStringObsolete.cpp"
+#include "nsTStringObsolete.cpp"
 
 //-----------------------------------------------------------------------------
 
@@ -995,5 +993,3 @@ float nsTString<T>::ToFloatAllowTrailingChars(nsresult* aErrorCode) const {
 
 template class nsTString<char>;
 template class nsTString<char16_t>;
-
-#endif  // !MOZ_STRING_WITH_OBSOLETE_API
