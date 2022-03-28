@@ -313,7 +313,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset,
                                                   int64_t aEndOffset,
                                                   uint64_t* aStartTime,
                                                   uint64_t* aEndTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   // Find the first WebMTimeDataOffset at or after aStartOffset.
   uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset - 1,
@@ -360,7 +360,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset,
 }
 
 bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   if (mTimeMapping.IsEmpty()) {
     return false;
@@ -412,7 +412,7 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
   }
 
   {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    MutexAutoLock lock(mMutex);
     mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping);
   }
 
@@ -432,12 +432,12 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
     return;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   mLastBlockOffset = mRangeParsers.LastElement().mBlockEndOffset;
 }
 
 void WebMBufferedState::Reset() {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   mRangeParsers.Clear();
   mTimeMapping.Clear();
 }
@@ -500,13 +500,13 @@ int64_t WebMBufferedState::GetInitEndOffset() {
 }
 
 int64_t WebMBufferedState::GetLastBlockOffset() {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   return mLastBlockOffset;
 }
 
 bool WebMBufferedState::GetStartTime(uint64_t* aTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   if (mTimeMapping.IsEmpty()) {
     return false;
@@ -523,7 +523,7 @@ bool WebMBufferedState::GetStartTime(uint64_t* aTime) {
 
 bool WebMBufferedState::GetNextKeyframeTime(uint64_t aTime,
                                             uint64_t* aKeyframeTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   int64_t offset = 0;
   bool rv = GetOffsetForTime(aTime, &offset);
   if (!rv) {
