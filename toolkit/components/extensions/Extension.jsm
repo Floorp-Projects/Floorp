@@ -1000,6 +1000,21 @@ class ExtensionData {
     return !this.eventPagesEnabled || manifest.background.persistent;
   }
 
+  /**
+   * backgroundState can be starting, running, suspending or stopped.
+   * It is undefined if the extension has no background page.
+   * See ext-backgroundPage.js for more details.
+   *
+   * @param {string} state starting, running, suspending or stopped
+   */
+  set backgroundState(state) {
+    this._backgroundState = state;
+  }
+
+  get backgroundState() {
+    return this._backgroundState;
+  }
+
   async getExtensionVersionWithoutValidation() {
     return (await this.readJSON("manifest.json")).version;
   }
