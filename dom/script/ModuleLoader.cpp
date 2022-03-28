@@ -48,7 +48,7 @@ namespace mozilla::dom {
 //////////////////////////////////////////////////////////////
 // DOM module loader Helpers
 //////////////////////////////////////////////////////////////
-static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
+static ModuleLoaderBase* GetCurrentModuleLoader(JSContext* aCx) {
   auto reportError = mozilla::MakeScopeExit([aCx]() {
     JS_ReportErrorASCII(aCx, "No ScriptLoader found for the current context");
   });
@@ -63,23 +63,7 @@ static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
     return nullptr;
   }
 
-  nsGlobalWindowInner* innerWindow = nullptr;
-  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global)) {
-    innerWindow = nsGlobalWindowInner::Cast(win);
-  } else {
-    innerWindow = xpc::SandboxWindowOrNull(object, aCx);
-  }
-
-  if (!innerWindow) {
-    return nullptr;
-  }
-
-  Document* document = innerWindow->GetDocument();
-  if (!document) {
-    return nullptr;
-  }
-
-  ScriptLoader* loader = document->ScriptLoader();
+  ModuleLoaderBase* loader = global->GetModuleLoader(aCx);
   if (!loader) {
     return nullptr;
   }
@@ -161,7 +145,7 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
       return nullptr;
     }
 
-    RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+    RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
     if (!loader) {
       return nullptr;
     }
@@ -185,7 +169,7 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
 
     // Let resolved module script be moduleMap[url]. (This entry must exist for
     // us to have gotten to this point.)
-    ModuleScript* ms = loader->GetModuleLoader()->GetFetchedModule(uri, global);
+    ModuleScript* ms = loader->GetFetchedModule(uri, global);
     MOZ_ASSERT(ms, "Resolved module not found in module map");
     MOZ_ASSERT(!ms->HasParseError());
     MOZ_ASSERT(ms->ModuleRecord());
@@ -236,7 +220,7 @@ bool HostImportModuleDynamically(JSContext* aCx,
     return false;
   }
 
-  RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
+  RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
   if (!loader) {
     return false;
   }
@@ -271,7 +255,9 @@ bool HostImportModuleDynamically(JSContext* aCx,
     // options from the document. This can happen when the user
     // triggers an inline event handler, as there is no active script
     // there.
-    Document* document = loader->GetDocument();
+    Document* document = static_cast<ModuleLoader*>(loader.get())
+                             ->GetScriptLoader()
+                             ->GetDocument();
 
     // Use the document's principal for all loads, except WebExtension
     // content-scripts.
@@ -294,10 +280,10 @@ bool HostImportModuleDynamically(JSContext* aCx,
   }
 
   RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
-      uri, options, baseURL, context, loader, aReferencingPrivate,
+      uri, options, baseURL, context, loader.get(), aReferencingPrivate,
       specifierString, aPromise);
 
-  loader->GetModuleLoader()->StartDynamicImport(request);
+  loader->StartDynamicImport(request);
   return true;
 }
 
@@ -580,7 +566,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    ScriptLoadContext* aContext, ScriptLoader* aLoader,
+    ScriptLoadContext* aContext, ModuleLoaderBase* aLoader,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
@@ -592,8 +578,8 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
       /* is top level */ true, /* is dynamic import */
-      aLoader->GetModuleLoader(),
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
+      aLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI),
+      nullptr);
 
   request->mDynamicReferencingPrivate = aReferencingPrivate;
   request->mDynamicSpecifier = aSpecifier;

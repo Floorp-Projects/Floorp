@@ -353,7 +353,7 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
 }
 
 already_AddRefed<nsIURI> ModuleLoaderBase::ResolveModuleSpecifier(
-    ScriptLoaderInterface* aLoader, LoadedScript* aScript,
+    ModuleLoaderBase* aLoader, LoadedScript* aScript,
     const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
@@ -383,7 +383,7 @@ already_AddRefed<nsIURI> ModuleLoaderBase::ResolveModuleSpecifier(
   if (aScript) {
     baseURL = aScript->BaseURL();
   } else {
-    baseURL = aLoader->GetBaseURI();
+    baseURL = aLoader->mLoader->GetBaseURI();
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
@@ -432,7 +432,7 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
     // and requested.
     ModuleLoaderBase* requestModuleLoader = aRequest->mLoader;
     nsCOMPtr<nsIURI> uri =
-        ResolveModuleSpecifier(requestModuleLoader->mLoader, ms, specifier);
+        ResolveModuleSpecifier(requestModuleLoader, ms, specifier);
     if (!uri) {
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
