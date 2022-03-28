@@ -11,6 +11,7 @@
 #include "ScriptLoadRequest.h"
 
 #include "js/TypeDecls.h"  // JS::MutableHandle, JS::Handle, JS::Root
+#include "js/Modules.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -114,9 +115,6 @@ class ModuleLoaderBase : public nsISupports {
   // internally by ModuleLoaderBase.
 
  private:
-  virtual void EnsureModuleHooksInitialized() {
-    MOZ_ASSERT(false, "You must override EnsureModuleHooksInitialized");
-  }
   virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
@@ -129,7 +127,6 @@ class ModuleLoaderBase : public nsISupports {
   virtual already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) = 0;
 
- public:
   // Called by HostImportModuleDynamically hook.
   virtual already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
@@ -144,17 +141,6 @@ class ModuleLoaderBase : public nsISupports {
 #ifdef DEBUG
   bool HasDynamicImport(ModuleLoadRequest* aRequest) const;
 #endif
-
-  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-      ModuleLoaderBase* loader, LoadedScript* aScript,
-      const nsAString& aSpecifier);
-  static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
-                                       const nsAString& aSpecifier,
-                                       uint32_t aLineNumber,
-                                       uint32_t aColumnNumber,
-                                       JS::MutableHandle<JS::Value> errorOut);
-
-  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
@@ -183,6 +169,38 @@ class ModuleLoaderBase : public nsISupports {
 
  private:
   friend class JS::loader::ModuleLoadRequest;
+
+  static ModuleLoaderBase* GetCurrentModuleLoader(JSContext* aCx);
+  static LoadedScript* GetLoadedScriptOrNull(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate);
+
+  static void EnsureModuleHooksInitialized();
+
+  static void DynamicImportPrefChangedCallback(const char* aPrefName,
+                                               void* aClosure);
+
+  static JSObject* HostResolveImportedModule(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSObject*> aModuleRequest);
+  static bool HostPopulateImportMeta(JSContext* aCx,
+                                     JS::Handle<JS::Value> aReferencingPrivate,
+                                     JS::Handle<JSObject*> aMetaObject);
+  static bool HostImportModuleDynamically(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise);
+  static bool HostGetSupportedImportAssertions(
+      JSContext* aCx, JS::ImportAssertionVector& aValues);
+
+  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
+      ModuleLoaderBase* aLoader, LoadedScript* aScript,
+      const nsAString& aSpecifier);
+  static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
+                                       const nsAString& aSpecifier,
+                                       uint32_t aLineNumber,
+                                       uint32_t aColumnNumber,
+                                       JS::MutableHandle<JS::Value> errorOut);
+
+  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
   // Helper function to set up the global correctly for dynamic imports.
   nsresult EvaluateModule(ScriptLoadRequest* aRequest);
