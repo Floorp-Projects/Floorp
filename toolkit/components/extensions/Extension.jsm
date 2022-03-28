@@ -2268,6 +2268,11 @@ class Extension extends ExtensionData {
       this.policy.permissions = Array.from(this.permissions);
       this.policy.allowedOrigins = this.allowedOrigins;
 
+      if (this.policy.active) {
+        this.setSharedData("", this.serialize());
+        Services.ppmm.sharedData.flush();
+      }
+
       this.cachePermissions();
       this.updatePermissions();
     });
@@ -2289,6 +2294,11 @@ class Extension extends ExtensionData {
 
       this.policy.permissions = Array.from(this.permissions);
       this.policy.allowedOrigins = this.allowedOrigins;
+
+      if (this.policy.active) {
+        this.setSharedData("", this.serialize());
+        Services.ppmm.sharedData.flush();
+      }
 
       this.cachePermissions();
       this.updatePermissions();
