@@ -33,7 +33,12 @@ const policiesToTest = [
     policies: {
       DisableDeveloperTools: true,
     },
-    urls: ["about:debugging", "about:devtools-toolbox", "about:profiling"],
+    urls: [
+      "about:devtools",
+      "about:debugging",
+      "about:devtools-toolbox",
+      "about:profiling",
+    ],
   },
   {
     policies: {

@@ -4479,7 +4479,7 @@ pref("devtools.jsonview.enabled", true);
 pref("devtools.theme", "auto", sticky);
 
 // Completely disable DevTools entry points, as well as all DevTools command
-// line arguments.
+// line arguments This should be merged with devtools.enabled, see Bug 1440675.
 pref("devtools.policy.disabled", false);
 
 // Enable deprecation warnings.
