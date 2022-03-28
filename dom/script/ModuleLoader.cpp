@@ -28,7 +28,6 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/Preferences.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
@@ -46,298 +45,10 @@ namespace mozilla::dom {
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
 //////////////////////////////////////////////////////////////
-// DOM module loader Helpers
-//////////////////////////////////////////////////////////////
-static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
-  auto reportError = mozilla::MakeScopeExit([aCx]() {
-    JS_ReportErrorASCII(aCx, "No ScriptLoader found for the current context");
-  });
-
-  JS::Rooted<JSObject*> object(aCx, JS::CurrentGlobalOrNull(aCx));
-  if (!object) {
-    return nullptr;
-  }
-
-  nsIGlobalObject* global = xpc::NativeGlobal(object);
-  if (!global) {
-    return nullptr;
-  }
-
-  nsGlobalWindowInner* innerWindow = nullptr;
-  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global)) {
-    innerWindow = nsGlobalWindowInner::Cast(win);
-  } else {
-    innerWindow = xpc::SandboxWindowOrNull(object, aCx);
-  }
-
-  if (!innerWindow) {
-    return nullptr;
-  }
-
-  Document* document = innerWindow->GetDocument();
-  if (!document) {
-    return nullptr;
-  }
-
-  ScriptLoader* loader = document->ScriptLoader();
-  if (!loader) {
-    return nullptr;
-  }
-
-  reportError.release();
-  return loader;
-}
-
-static LoadedScript* GetLoadedScriptOrNull(
-    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate) {
-  if (aReferencingPrivate.isUndefined()) {
-    return nullptr;
-  }
-
-  auto* script = static_cast<LoadedScript*>(aReferencingPrivate.toPrivate());
-  if (script->IsEventScript()) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT_IF(
-      script->IsModuleScript(),
-      JS::GetModulePrivate(script->AsModuleScript()->ModuleRecord()) ==
-          aReferencingPrivate);
-
-  return script;
-}
-
-//////////////////////////////////////////////////////////////
-// DOM module loader Host Hooks
-//////////////////////////////////////////////////////////////
-bool HostGetSupportedImportAssertions(JSContext* aCx,
-                                      JS::ImportAssertionVector& aValues) {
-  MOZ_ASSERT(aValues.empty());
-
-  if (!aValues.reserve(1)) {
-    JS_ReportOutOfMemory(aCx);
-    return false;
-  }
-
-  aValues.infallibleAppend(JS::ImportAssertion::Type);
-
-  return true;
-}
-
-// 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
-/**
- * Implement the HostResolveImportedModule abstract operation.
- *
- * Resolve a module specifier string and look this up in the module
- * map, returning the result. This is only called for previously
- * loaded modules and always succeeds.
- *
- * @param aReferencingPrivate A JS::Value which is either undefined
- *                            or contains a LoadedScript private pointer.
- * @param aModuleRequest A module request object.
- * @returns module This is set to the module found.
- */
-JSObject* HostResolveImportedModule(JSContext* aCx,
-                                    JS::Handle<JS::Value> aReferencingPrivate,
-                                    JS::Handle<JSObject*> aModuleRequest) {
-  JS::Rooted<JSObject*> module(aCx);
-
-  {
-    // LoadedScript should only live in this block, otherwise it will be a GC
-    // hazard
-    RefPtr<LoadedScript> script(
-        GetLoadedScriptOrNull(aCx, aReferencingPrivate));
-
-    JS::Rooted<JSString*> specifierString(
-        aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
-    if (!specifierString) {
-      return nullptr;
-    }
-
-    // Let url be the result of resolving a module specifier given referencing
-    // module script and specifier.
-    nsAutoJSString string;
-    if (!string.init(aCx, specifierString)) {
-      return nullptr;
-    }
-
-    RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
-    if (!loader) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIURI> uri =
-        ModuleLoaderBase::ResolveModuleSpecifier(loader, script, string);
-
-    // This cannot fail because resolving a module specifier must have been
-    // previously successful with these same two arguments.
-    MOZ_ASSERT(uri, "Failed to resolve previously-resolved module specifier");
-
-    // Use sandboxed global when doing a WebExtension content-script load.
-    nsCOMPtr<nsIGlobalObject> global;
-    if (BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(aCx))
-            ->ContentScriptAddonPolicy()) {
-      global = xpc::CurrentNativeGlobal(aCx);
-      MOZ_ASSERT(global);
-      MOZ_ASSERT(
-          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
-    }
-
-    // Let resolved module script be moduleMap[url]. (This entry must exist for
-    // us to have gotten to this point.)
-    ModuleScript* ms = loader->GetModuleLoader()->GetFetchedModule(uri, global);
-    MOZ_ASSERT(ms, "Resolved module not found in module map");
-    MOZ_ASSERT(!ms->HasParseError());
-    MOZ_ASSERT(ms->ModuleRecord());
-
-    module.set(ms->ModuleRecord());
-  }
-  return module;
-}
-
-bool HostPopulateImportMeta(JSContext* aCx,
-                            JS::Handle<JS::Value> aReferencingPrivate,
-                            JS::Handle<JSObject*> aMetaObject) {
-  RefPtr<ModuleScript> script =
-      static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT(script->IsModuleScript());
-  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
-             aReferencingPrivate);
-
-  nsAutoCString url;
-  MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());
-  MOZ_ALWAYS_SUCCEEDS(script->BaseURL()->GetAsciiSpec(url));
-
-  JS::Rooted<JSString*> urlString(aCx, JS_NewStringCopyZ(aCx, url.get()));
-  if (!urlString) {
-    JS_ReportOutOfMemory(aCx);
-    return false;
-  }
-
-  return JS_DefineProperty(aCx, aMetaObject, "url", urlString,
-                           JSPROP_ENUMERATE);
-}
-
-bool HostImportModuleDynamically(JSContext* aCx,
-                                 JS::Handle<JS::Value> aReferencingPrivate,
-                                 JS::Handle<JSObject*> aModuleRequest,
-                                 JS::Handle<JSObject*> aPromise) {
-  RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
-
-  JS::Rooted<JSString*> specifierString(
-      aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
-  if (!specifierString) {
-    return false;
-  }
-
-  // Attempt to resolve the module specifier.
-  nsAutoJSString specifier;
-  if (!specifier.init(aCx, specifierString)) {
-    return false;
-  }
-
-  RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
-  if (!loader) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri =
-      ModuleLoaderBase::ResolveModuleSpecifier(loader, script, specifier);
-  if (!uri) {
-    JS::Rooted<JS::Value> error(aCx);
-    nsresult rv = ModuleLoaderBase::HandleResolveFailure(aCx, script, specifier,
-                                                         0, 0, &error);
-    if (NS_FAILED(rv)) {
-      JS_ReportOutOfMemory(aCx);
-      return false;
-    }
-
-    JS_SetPendingException(aCx, error);
-    return false;
-  }
-
-  // Create a new top-level load request.
-  RefPtr<ScriptFetchOptions> options;
-  nsIURI* baseURL = nullptr;
-  nsCOMPtr<Element> element;
-  RefPtr<ScriptLoadContext> context;
-  if (script) {
-    options = script->GetFetchOptions();
-    baseURL = script->BaseURL();
-    nsCOMPtr<Element> element = script->GetScriptElement();
-    context = new ScriptLoadContext(element);
-  } else {
-    // We don't have a referencing script so fall back on using
-    // options from the document. This can happen when the user
-    // triggers an inline event handler, as there is no active script
-    // there.
-    Document* document = loader->GetDocument();
-
-    // Use the document's principal for all loads, except WebExtension
-    // content-scripts.
-    // Only remember the global for content-scripts as well.
-    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
-    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
-      principal = document->NodePrincipal();
-      MOZ_ASSERT(global);
-      global = nullptr;  // Null global is the usual case for most loads.
-    } else {
-      MOZ_ASSERT(
-          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
-    }
-
-    options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
-    baseURL = document->GetDocBaseURI();
-    context = new ScriptLoadContext(nullptr);
-  }
-
-  RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
-      uri, options, baseURL, context, loader, aReferencingPrivate,
-      specifierString, aPromise);
-
-  loader->GetModuleLoader()->StartDynamicImport(request);
-  return true;
-}
-
-void DynamicImportPrefChangedCallback(const char* aPrefName, void* aClosure) {
-  bool enabled = Preferences::GetBool(aPrefName);
-  JS::ModuleDynamicImportHook hook =
-      enabled ? HostImportModuleDynamically : nullptr;
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSRuntime* rt = JS_GetRuntime(jsapi.cx());
-  JS::SetModuleDynamicImportHook(rt, hook);
-}
-
-//////////////////////////////////////////////////////////////
 // DOM module loader
 //////////////////////////////////////////////////////////////
 
-ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : ModuleLoaderBase(aLoader) {
-  EnsureModuleHooksInitialized();
-}
-
-void ModuleLoader::EnsureModuleHooksInitialized() {
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSRuntime* rt = JS_GetRuntime(jsapi.cx());
-  if (JS::GetModuleResolveHook(rt)) {
-    return;
-  }
-
-  JS::SetModuleResolveHook(rt, HostResolveImportedModule);
-  JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
-  JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
-                                     HostReleaseTopLevelScript);
-  JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
-
-  Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
-                                       "javascript.options.dynamicImport",
-                                       (void*)nullptr);
-}
+ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : ModuleLoaderBase(aLoader) {}
 
 ScriptLoader* ModuleLoader::GetScriptLoader() {
   return static_cast<ScriptLoader*>(mLoader.get());
@@ -558,7 +269,6 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
   return request.forget();
 }
 
-/* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
   RefPtr<ScriptLoadContext> newContext =
@@ -577,23 +287,56 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   return request.forget();
 }
 
-/* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    ScriptLoadContext* aContext, ScriptLoader* aLoader,
+    JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
-  aContext->mIsInline = false;
-  aContext->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
+  RefPtr<ScriptFetchOptions> options;
+  nsIURI* baseURL = nullptr;
+  RefPtr<ScriptLoadContext> context;
+
+  if (aMaybeActiveScript) {
+    options = aMaybeActiveScript->GetFetchOptions();
+    baseURL = aMaybeActiveScript->BaseURL();
+    nsCOMPtr<Element> element = aMaybeActiveScript->GetScriptElement();
+    context = new ScriptLoadContext(element);
+  } else {
+    // We don't have a referencing script so fall back on using
+    // options from the document. This can happen when the user
+    // triggers an inline event handler, as there is no active script
+    // there.
+    Document* document = GetScriptLoader()->GetDocument();
+
+    // Use the document's principal for all loads, except WebExtension
+    // content-scripts.
+    // Only remember the global for content-scripts as well.
+    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
+    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
+      principal = document->NodePrincipal();
+      MOZ_ASSERT(global);
+      global = nullptr;  // Null global is the usual case for most loads.
+    } else {
+      MOZ_ASSERT(
+          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
+    }
+
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
+    baseURL = document->GetDocBaseURI();
+    context = new ScriptLoadContext(nullptr);
+  }
+
+  context->mIsInline = false;
+  context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
+      aURI, options, SRIMetadata(), baseURL, context, true,
       /* is top level */ true, /* is dynamic import */
-      aLoader->GetModuleLoader(),
-      ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
+      this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
   request->mDynamicReferencingPrivate = aReferencingPrivate;
   request->mDynamicSpecifier = aSpecifier;

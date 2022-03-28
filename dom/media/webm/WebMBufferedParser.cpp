@@ -413,7 +413,10 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
     }
   }
 
+  // thread-safety gets annoyed at pass-by-reference of a locked value
+  PUSH_IGNORE_THREAD_SAFETY
   mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping, mReentrantMonitor);
+  POP_THREAD_SAFETY
 
   // Merge parsers with overlapping regions and clean up the remnants.
   uint32_t i = 0;

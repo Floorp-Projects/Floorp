@@ -80,15 +80,15 @@ class GraphRunner final : public Runnable {
 
   // Monitor used for yielding mThread through Wait(), and scheduling mThread
   // through Signal() from a GraphDriver.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
   // The MediaTrackGraph we're running. Weakptr beecause this graph owns us and
   // guarantees that our lifetime will not go beyond that of itself.
   MediaTrackGraphImpl* const mGraph;
   // State being handed over to the graph through OneIteration. Protected by
   // mMonitor.
-  Maybe<IterationState> mIterationState;
+  Maybe<IterationState> mIterationState GUARDED_BY(mMonitor);
   // Result from mGraph's OneIteration. Protected by mMonitor.
-  IterationResult mIterationResult;
+  IterationResult mIterationResult GUARDED_BY(mMonitor);
 
   enum class ThreadState {
     Wait,      // Waiting for a message.  This is the initial state.
@@ -100,7 +100,7 @@ class GraphRunner final : public Runnable {
   };
   // Protected by mMonitor until set to Shutdown, after which this is not
   // modified.
-  ThreadState mThreadState;
+  ThreadState mThreadState GUARDED_BY(mMonitor);
 
   // The thread running mGraph.  Set on construction, after other members are
   // initialized.  Cleared at the end of Shutdown().
