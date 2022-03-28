@@ -1922,6 +1922,15 @@ mozilla::dom::BrowsingContext* nsFocusManager::GetCommonAncestor(
 bool nsFocusManager::AdjustInProcessWindowFocus(
     BrowsingContext* aBrowsingContext, bool aCheckPermission, bool aIsVisible,
     uint64_t aActionId) {
+  if (ActionIdComparableAndLower(aActionId,
+                                 mActionIdForFocusedBrowsingContextInContent)) {
+    LOGFOCUS(
+        ("Ignored an attempt to adjust an in-process BrowsingContext [%p] as "
+         "focused from another process due to stale action id %" PRIu64 ".",
+         aBrowsingContext, aActionId));
+    return false;
+  }
+
   BrowsingContext* bc = aBrowsingContext;
   bool needToNotifyOtherProcess = false;
   while (bc) {
