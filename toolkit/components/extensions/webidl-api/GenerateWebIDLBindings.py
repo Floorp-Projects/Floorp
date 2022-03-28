@@ -1179,7 +1179,15 @@ class APINamespace:
                         type_id = type_data["id"]
                     elif "$extend" in type_data:
                         type_id = type_data["$extend"]
-                    elif "unsupported" not in type_data:
+                    elif "unsupported" in type_data:
+                        # No need to raise an error for an unsupported type
+                        # it will ignored below before adding it to the map
+                        # of the namespace types.
+                        pass
+                    else:
+                        # Supported entries without an "id" or "$extend"
+                        # property are unexpected, log a warning and
+                        # fail explicitly if that happens to be the case.
                         logging.critical(
                             "Error loading schema data type from '%s %s': %s",
                             schema_group,
@@ -1191,13 +1199,15 @@ class APINamespace:
                             % (schema_group, api_path),
                         )
 
-                    # Skip unsupported type.
                     if "unsupported" in type_data:
+                        # Skip unsupported type.
                         logging.debug(
                             "Skipping unsupported type '%s'",
                             "%s %s.%s" % (schema_group, api_path, type_id),
                         )
                         continue
+
+                    assert type_id
                     type_entry = self.types.getOrCreate(type_id)
                     type_entry.add_schema(type_data, schema_group)
 
