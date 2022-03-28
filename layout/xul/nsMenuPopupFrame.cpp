@@ -1569,23 +1569,23 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 #ifdef MOZ_WAYLAND
   if (IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
-      nsRect prefRect = LayoutDeviceIntRect::ToAppUnits(
-          widget->GetMoveToRectPopupRect(), presContext->AppUnitsPerDevPixel());
-      if (prefRect.width > 0 && mRect.width > prefRect.width) {
+      nsSize prefSize = LayoutDeviceIntRect::ToAppUnits(
+          widget->GetMoveToRectPopupSize(), presContext->AppUnitsPerDevPixel());
+      if (prefSize.width > 0 && mRect.width > prefSize.width) {
         LOG_WAYLAND(
             "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
             "width from %d to %d",
             widget, mRect.width / presContext->AppUnitsPerDevPixel(),
-            prefRect.width / presContext->AppUnitsPerDevPixel());
-        mRect.width = prefRect.width;
+            prefSize.width / presContext->AppUnitsPerDevPixel());
+        mRect.width = prefSize.width;
       }
-      if (prefRect.height > 0 && mRect.height > prefRect.height) {
+      if (prefSize.height > 0 && mRect.height > prefSize.height) {
         LOG_WAYLAND(
             "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
             "height from %d to %d",
             widget, mRect.height / presContext->AppUnitsPerDevPixel(),
-            prefRect.height / presContext->AppUnitsPerDevPixel());
-        mRect.height = prefRect.height;
+            prefSize.height / presContext->AppUnitsPerDevPixel());
+        mRect.height = prefSize.height;
       }
     }
   }

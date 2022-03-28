@@ -406,8 +406,8 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntPoint& aLockCenter) override;
   void LockNativePointer() override;
   void UnlockNativePointer() override;
-  LayoutDeviceIntRect GetMoveToRectPopupRect() const override {
-    return mMoveToRectPopupRect;
+  LayoutDeviceIntSize GetMoveToRectPopupSize() const override {
+    return mMoveToRectPopupSize;
   };
 #endif
 
@@ -821,9 +821,9 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<nsWindow> mWaylandPopupPrev;
 
   // When popup is resized by Gtk by move-to-rect callback,
-  // we store final popup size here. Then we use mMoveToRectPopupRect size
+  // we store final popup size here. Then we use mMoveToRectPopupSize size
   // in following popup operations unless mLayoutPopupSizeCleared is set.
-  LayoutDeviceIntRect mMoveToRectPopupRect;
+  LayoutDeviceIntSize mMoveToRectPopupSize;
 
   LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 

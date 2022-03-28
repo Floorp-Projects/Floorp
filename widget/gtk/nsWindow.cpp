@@ -1030,19 +1030,8 @@ void nsWindow::Move(double aX, double aY) {
     return;
   }
 
-  if (IsWaylandPopup()) {
-    // TODO: Do we need this?
-    auto prefBounds = mMoveToRectPopupRect;
-    if (prefBounds.TopLeft() != mBounds.TopLeft()) {
-      NativeMoveResize(/* move */ true, /* resize */ false);
-      NotifyRollupGeometryChange();
-    } else {
-      LOG("  mBounds same as mMoveToRectPopupRect, no need to move");
-    }
-  } else {
-    NativeMoveResize(/* move */ true, /* resize */ false);
-    NotifyRollupGeometryChange();
-  }
+  NativeMoveResize(/* move */ true, /* resize */ false);
+  NotifyRollupGeometryChange();
 }
 
 bool nsWindow::IsPopup() const { return mWindowType == eWindowType_popup; }
@@ -1928,13 +1917,13 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
     // Wayland compositor changed popup size request from layout.
     // Set the constraints to use them in nsMenuPopupFrame::SetPopupPosition().
     if (newBounds.width < mBounds.width) {
-      mMoveToRectPopupRect.width = newBounds.width;
+      mMoveToRectPopupSize.width = newBounds.width;
     }
     if (newBounds.height < mBounds.height) {
-      mMoveToRectPopupRect.height = newBounds.height;
+      mMoveToRectPopupSize.height = newBounds.height;
     }
-    LOG("  mMoveToRectPopupRect set to [%d, %d]", mMoveToRectPopupRect.width,
-        mMoveToRectPopupRect.height);
+    LOG("  mMoveToRectPopupSize set to [%d, %d]", mMoveToRectPopupSize.width,
+        mMoveToRectPopupSize.height);
   }
   mBounds = newBounds;
   WaylandPopupPropagateChangesToLayout(needsPositionUpdate, needsSizeUpdate);
