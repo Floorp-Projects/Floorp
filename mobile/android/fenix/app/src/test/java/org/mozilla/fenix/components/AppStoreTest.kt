@@ -36,6 +36,8 @@ import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
@@ -148,6 +150,25 @@ class AppStoreTest {
 
         assertEquals(recentTabs, appStore.state.recentTabs)
         assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
+    }
+
+    @Test
+    fun `GIVEN initial state WHEN recent synced tab state is changed THEN state updated`() = runBlocking {
+        appStore = AppStore(
+            AppState(
+                recentSyncedTabState = RecentSyncedTabState.None
+            )
+        )
+
+        val loading = RecentSyncedTabState.Loading
+        appStore.dispatch(AppAction.RecentSyncedTabStateChange(loading)).join()
+        assertEquals(loading, appStore.state.recentSyncedTabState)
+
+        val recentSyncedTab = RecentSyncedTab("device name", "title", "url", null)
+        val success = RecentSyncedTabState.Success(recentSyncedTab)
+        appStore.dispatch(AppAction.RecentSyncedTabStateChange(success)).join()
+        assertEquals(success, appStore.state.recentSyncedTabState)
+        assertEquals(recentSyncedTab, (appStore.state.recentSyncedTabState as RecentSyncedTabState.Success).tab)
     }
 
     @Test

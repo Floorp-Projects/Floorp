@@ -43,7 +43,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -69,7 +69,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -95,7 +95,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -121,7 +121,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -149,7 +149,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = updatedRecentTabs,
                 recentBookmarks = updatedBookmarks,
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -184,7 +184,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = updatedRecentTabs,
                 recentBookmarks = updatedBookmarks,
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -236,7 +236,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -263,7 +263,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 
@@ -290,7 +290,7 @@ class BlocklistMiddlewareTest {
                 showCollectionPlaceholder = store.state.showCollectionPlaceholder,
                 recentTabs = store.state.recentTabs,
                 recentBookmarks = listOf(updatedBookmark),
-                recentHistory = store.state.recentHistory
+                recentHistory = store.state.recentHistory,
             )
         ).joinBlocking()
 

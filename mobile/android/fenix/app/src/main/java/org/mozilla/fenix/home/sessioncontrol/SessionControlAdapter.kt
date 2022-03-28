@@ -248,7 +248,8 @@ class SessionControlAdapter(
             RecentTabViewHolder.LAYOUT_ID -> return RecentTabViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
-                interactor = interactor
+                recentTabInteractor = interactor,
+                recentSyncedTabInteractor = interactor,
             )
             RecentlyVisitedViewHolder.LAYOUT_ID -> return RecentlyVisitedViewHolder(
                 composeView = ComposeView(parent.context),

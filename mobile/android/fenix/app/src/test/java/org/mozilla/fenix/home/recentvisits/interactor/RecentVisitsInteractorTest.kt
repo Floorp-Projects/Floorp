@@ -13,6 +13,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
+import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
@@ -24,6 +25,7 @@ class RecentVisitsInteractorTest {
     private val defaultSessionControlController: DefaultSessionControlController =
         mockk(relaxed = true)
     private val recentTabController: RecentTabController = mockk(relaxed = true)
+    private val recentSyncedTabController: RecentSyncedTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
@@ -35,6 +37,7 @@ class RecentVisitsInteractorTest {
         interactor = SessionControlInteractor(
             defaultSessionControlController,
             recentTabController,
+            recentSyncedTabController,
             recentBookmarksController,
             recentVisitsController,
             pocketStoriesController

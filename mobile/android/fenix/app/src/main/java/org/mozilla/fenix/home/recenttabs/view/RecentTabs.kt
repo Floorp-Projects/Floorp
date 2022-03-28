@@ -16,7 +16,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,8 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -49,7 +46,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +53,6 @@ import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
@@ -74,18 +69,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param menuItems List of [RecentTabMenuItem] shown long clicking a [RecentTab].
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  * @param onRecentSearchGroupClick Invoked when the user clicks on a recent search group.
- * @param onRecentSyncedTabClick Invoked when the user clicks on the recent synced tab.
- * @param onSyncedTabSeeAllButtonClick Invoked when user clicks on the "See all" button in the synced tab card.
  */
 @Composable
-@Suppress("LongParameterList")
 fun RecentTabs(
     recentTabs: List<RecentTab>,
     menuItems: List<RecentTabMenuItem>,
     onRecentTabClick: (String) -> Unit = {},
     onRecentSearchGroupClick: (String) -> Unit = {},
-    onRecentSyncedTabClick: (RecentTab.SyncedTab) -> Unit = {},
-    onSyncedTabSeeAllButtonClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -107,15 +97,6 @@ fun RecentTabs(
                             tabId = tab.tabId,
                             count = tab.count,
                             onSearchGroupClick = onRecentSearchGroupClick
-                        )
-                    }
-                }
-                is RecentTab.SyncedTab -> {
-                    if (FeatureFlags.taskContinuityFeature) {
-                        RecentSyncedTabItem(
-                            tab,
-                            onRecentSyncedTabClick,
-                            onSyncedTabSeeAllButtonClick,
                         )
                     }
                 }
@@ -277,124 +258,6 @@ private fun RecentSearchGroupItem(
 }
 
 /**
- * A recent synced tab.
- *
- * @param tab Optional synced tab. If null, displays placeholders.
- * @param onRecentSyncedTabClick Invoked when item is clicked.
- * @param onSeeAllButtonClick Invoked when "See all" button is clicked.
- */
-@Suppress("LongMethod")
-@Composable
-private fun RecentSyncedTabItem(
-    tab: RecentTab.SyncedTab?,
-    onRecentSyncedTabClick: (RecentTab.SyncedTab) -> Unit,
-    onSeeAllButtonClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .clickable { tab?.let { onRecentSyncedTabClick(tab) } },
-        shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 6.dp
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                if (tab == null) {
-                    RecentTabImagePlaceholder()
-                } else {
-                    ThumbnailCard(
-                        url = tab.url,
-                        key = tab.url.hashCode().toString(),
-                        modifier = Modifier
-                            .size(108.dp, 80.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    if (tab == null) {
-                        RecentTabTitlePlaceholder()
-                    } else {
-                        PrimaryText(
-                            text = tab.title,
-                            fontSize = 14.sp,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 2,
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (tab == null) {
-                            Box(
-                                modifier = Modifier
-                                    .background(FirefoxTheme.colors.layer3)
-                                    .size(18.dp)
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.ic_synced_tabs),
-                                contentDescription = stringResource(
-                                    R.string.recent_tabs_synced_device_icon_content_description
-                                ),
-                                modifier = Modifier.size(18.dp, 18.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        if (tab == null) {
-                            TextLinePlaceHolder()
-                        } else {
-                            SecondaryText(
-                                text = tab.deviceDisplayName,
-                                fontSize = 12.sp,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = onSeeAllButtonClick,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    backgroundColor = if (tab == null) {
-                        FirefoxTheme.colors.layer3
-                    } else {
-                        FirefoxTheme.colors.actionSecondary
-                    }
-                ),
-                elevation = ButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .height(36.dp)
-                    .fillMaxWidth()
-            ) {
-                if (tab != null) {
-                    Text(
-                        text = stringResource(R.string.recent_tabs_see_all_synced_tabs_button_text),
-                        textAlign = TextAlign.Center,
-                        color = FirefoxTheme.colors.textActionSecondary
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
  * A recent tab image.
  *
  * @param tab [RecentTab] that was recently viewed.
@@ -436,19 +299,6 @@ fun RecentTabImage(
             modifier = modifier
         )
     }
-}
-
-/**
- * A placeholder for a recent tab image.
- */
-@Composable
-private fun RecentTabImagePlaceholder() {
-    Box(
-        modifier = Modifier
-            .size(108.dp, 80.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(color = FirefoxTheme.colors.layer3)
-    )
 }
 
 /**
@@ -550,28 +400,4 @@ private fun RecentTabIcon(
             }
         }
     }
-}
-
-/**
- * A placeholder for a tab title.
- */
-@Composable
-private fun RecentTabTitlePlaceholder() {
-    Column {
-        TextLinePlaceHolder()
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextLinePlaceHolder()
-    }
-}
-
-@Composable
-private fun TextLinePlaceHolder() {
-    Box(
-        modifier = Modifier
-            .height(12.dp)
-            .fillMaxWidth()
-            .background(FirefoxTheme.colors.layer3)
-    )
 }

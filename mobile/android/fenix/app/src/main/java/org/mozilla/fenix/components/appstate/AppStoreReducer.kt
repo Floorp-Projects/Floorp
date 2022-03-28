@@ -75,6 +75,11 @@ internal object AppStoreReducer {
                 recentTabs = state.recentTabs.filterOutTab(action.recentTab)
             )
         }
+        is AppAction.RecentSyncedTabStateChange -> {
+            state.copy(
+                recentSyncedTabState = action.state
+            )
+        }
         is AppAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
         is AppAction.RemoveRecentBookmark -> {
             state.copy(recentBookmarks = state.recentBookmarks.filterNot { it.url == action.recentBookmark.url })

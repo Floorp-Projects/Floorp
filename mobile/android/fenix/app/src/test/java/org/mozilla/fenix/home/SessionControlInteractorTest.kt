@@ -18,6 +18,8 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -27,6 +29,7 @@ class SessionControlInteractorTest {
 
     private val controller: DefaultSessionControlController = mockk(relaxed = true)
     private val recentTabController: RecentTabController = mockk(relaxed = true)
+    private val recentSyncedTabController: RecentSyncedTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
 
@@ -40,6 +43,7 @@ class SessionControlInteractorTest {
         interactor = SessionControlInteractor(
             controller,
             recentTabController,
+            recentSyncedTabController,
             recentBookmarksController,
             recentVisitsController,
             pocketStoriesController
@@ -169,6 +173,21 @@ class SessionControlInteractorTest {
     fun onRecentTabShowAllClicked() {
         interactor.onRecentTabShowAllClicked()
         verify { recentTabController.handleRecentTabShowAllClicked() }
+    }
+
+    @Test
+    fun `WHEN recent synced tab is clicked THEN the tab is handled`() {
+        val tab: RecentSyncedTab = mockk()
+        interactor.onRecentSyncedTabClicked(tab)
+
+        verify { recentSyncedTabController.handleRecentSyncedTabClick(tab) }
+    }
+
+    @Test
+    fun `WHEN recent synced tabs show all is clicked THEN show all synced tabs is handled`() {
+        interactor.onSyncedTabShowAllClicked()
+
+        verify { recentSyncedTabController.handleSyncedTabShowAllClicked() }
     }
 
     @Test

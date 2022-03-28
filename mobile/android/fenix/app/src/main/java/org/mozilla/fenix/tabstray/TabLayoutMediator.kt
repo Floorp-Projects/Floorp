@@ -14,6 +14,7 @@ import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
+import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_SYNCED_TABS
 import org.mozilla.fenix.utils.Do
 
 /**
@@ -46,9 +47,10 @@ class TabLayoutMediator(
     @VisibleForTesting
     internal fun selectActivePage() {
         val selectedPagerPosition =
-            when (browsingModeManager.mode.isPrivate) {
-                true -> POSITION_PRIVATE_TABS
-                false -> POSITION_NORMAL_TABS
+            when {
+                browsingModeManager.mode.isPrivate -> POSITION_PRIVATE_TABS
+                tabsTrayStore.state.selectedPage == Page.SyncedTabs -> POSITION_SYNCED_TABS
+                else -> POSITION_NORMAL_TABS
             }
 
         selectTabAtPosition(selectedPagerPosition)

@@ -28,8 +28,11 @@ class TabLayoutMediatorTest {
     fun `page to normal tab position when mode is also normal`() {
         val mediator = TabLayoutMediator(tabLayout, viewPager, interactor, modeManager, tabsTrayStore)
 
+        val mockState: TabsTrayState = mockk()
         every { modeManager.mode }.answers { BrowsingMode.Normal }
         every { tabLayout.getTabAt(POSITION_NORMAL_TABS) }.answers { tab }
+        every { tabsTrayStore.state } returns mockState
+        every { mockState.selectedPage } returns Page.NormalTabs
 
         mediator.selectActivePage()
 
@@ -49,6 +52,20 @@ class TabLayoutMediatorTest {
 
         verify { tab.select() }
         verify { tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(POSITION_PRIVATE_TABS))) }
+    }
+
+    @Test
+    fun `page to synced tabs when selected page is also synced tabs`() {
+        val mediator = TabLayoutMediator(tabLayout, viewPager, interactor, modeManager, tabsTrayStore)
+
+        val mockState: TabsTrayState = mockk()
+        every { modeManager.mode }.answers { BrowsingMode.Normal }
+        every { tabsTrayStore.state } returns mockState
+        every { mockState.selectedPage } returns Page.SyncedTabs
+
+        mediator.selectActivePage()
+
+        verify { viewPager.setCurrentItem(POSITION_SYNCED_TABS, false) }
     }
 
     @Test

@@ -15,6 +15,7 @@ import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.gleanplumb.MessagingState
@@ -32,6 +33,7 @@ import org.mozilla.fenix.gleanplumb.MessagingState
  * @property topSites The list of [TopSite] in the [HomeFragment].
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
  * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
+ * @property recentSyncedTabState The [RecentSyncedTabState] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property recentHistory The list of [RecentlyVisitedItem]s.
  * @property pocketStories The list of currently shown [PocketRecommendedStory]s.
@@ -48,6 +50,7 @@ data class AppState(
     val topSites: List<TopSite> = emptyList(),
     val showCollectionPlaceholder: Boolean = false,
     val recentTabs: List<RecentTab> = emptyList(),
+    val recentSyncedTabState: RecentSyncedTabState = RecentSyncedTabState.None,
     val recentBookmarks: List<RecentBookmark> = emptyList(),
     val recentHistory: List<RecentlyVisitedItem> = emptyList(),
     val pocketStories: List<PocketRecommendedStory> = emptyList(),

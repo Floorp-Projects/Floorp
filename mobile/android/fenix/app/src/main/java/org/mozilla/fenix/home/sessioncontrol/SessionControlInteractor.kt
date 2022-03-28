@@ -17,9 +17,12 @@ import org.mozilla.fenix.home.pocket.PocketStoriesInteractor
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
+import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
+import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
@@ -253,6 +256,7 @@ interface MessageCardInteractor {
 class SessionControlInteractor(
     private val controller: SessionControlController,
     private val recentTabController: RecentTabController,
+    private val recentSyncedTabController: RecentSyncedTabController,
     private val recentBookmarksController: RecentBookmarksController,
     private val recentVisitsController: RecentVisitsController,
     private val pocketStoriesController: PocketStoriesController
@@ -263,6 +267,7 @@ class SessionControlInteractor(
     ToolbarInteractor,
     MessageCardInteractor,
     RecentTabInteractor,
+    RecentSyncedTabInteractor,
     RecentBookmarksInteractor,
     RecentVisitsInteractor,
     CustomizeHomeIteractor,
@@ -382,6 +387,14 @@ class SessionControlInteractor(
 
     override fun onRemoveRecentTab(tab: RecentTab.Tab) {
         recentTabController.handleRecentTabRemoved(tab)
+    }
+
+    override fun onRecentSyncedTabClicked(tab: RecentSyncedTab) {
+        recentSyncedTabController.handleRecentSyncedTabClick(tab)
+    }
+
+    override fun onSyncedTabShowAllClicked() {
+        recentSyncedTabController.handleSyncedTabShowAllClicked()
     }
 
     override fun onRecentBookmarkClicked(bookmark: RecentBookmark) {
