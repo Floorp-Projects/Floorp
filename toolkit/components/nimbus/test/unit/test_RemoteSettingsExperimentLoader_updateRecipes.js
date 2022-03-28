@@ -6,6 +6,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { FirstStartup } = ChromeUtils.import(
   "resource://gre/modules/FirstStartup.jsm"
 );
+const { NimbusFeatures } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
@@ -302,6 +305,108 @@ add_task(async function test_updateRecipes_invalidBranchAfterUpdate() {
   );
   equal(
     loader.manager.onFinalize.callCount,
+    2,
+    "should have called .onFinalize again"
+  );
+
+  ok(
+    loader.manager.onFinalize.secondCall.calledWith("rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: ["foo"],
+    }),
+    "should call .onFinalize with an invalid branch"
+  );
+});
+
+add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  const recipe = ExperimentFakes.recipe("foo");
+  const badRecipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        ...recipe.branches[0],
+        features: [
+          {
+            featureId: "testFeature",
+            value: { testInt: "abc123", enabled: true },
+          },
+        ],
+      },
+      {
+        ...recipe.branches[1],
+        features: [
+          {
+            featureId: "testFeature",
+            value: { testInt: "xyz456", enabled: true },
+          },
+        ],
+      },
+    ],
+  });
+
+  const EXPECTED_SCHEMA = {
+    $schema: "https://json-schema.org/draft/2019-09/schema",
+    title: "testFeature",
+    description: NimbusFeatures.testFeature.manifest.description,
+    type: "object",
+    properties: {
+      testInt: {
+        type: "number",
+      },
+    },
+    additionalProperties: true,
+  };
+
+  sinon.spy(loader, "updateRecipes");
+  sinon.spy(loader, "_generateVariablesOnlySchema");
+  sinon.stub(loader, "setTimer");
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+
+  sinon.stub(manager, "onFinalize");
+  sinon.stub(manager, "onRecipe");
+  sinon.stub(manager.store, "ready").resolves();
+
+  await loader.init();
+  ok(manager.onRecipe.calledOnce, "should call .updateRecipes");
+  equal(loader.manager.onRecipe.callCount, 1, "should call .onRecipe once");
+  ok(
+    loader.manager.onRecipe.calledWith(recipe, "rs-loader"),
+    "should call .onRecipe with argument data"
+  );
+  equal(loader.manager.onFinalize.callCount, 1, "should call .onFinalize once");
+  ok(
+    loader.manager.onFinalize.calledWith("rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: [],
+    }),
+    "should call .onFinalize with nomismatches or invalid recipes"
+  );
+
+  ok(
+    loader._generateVariablesOnlySchema.calledOnce,
+    "Should have generated a schema for testFeature"
+  );
+  ok(
+    loader._generateVariablesOnlySchema.returned(EXPECTED_SCHEMA),
+    "should have generated a schema with one field"
+  );
+
+  info("Replacing recipe with an invalid one");
+
+  loader.remoteSettingsClient.get.resolves([badRecipe]);
+
+  await loader.updateRecipes("timer");
+  equal(
+    manager.onRecipe.callCount,
+    1,
+    "should not have called .onRecipe again"
+  );
+  equal(
+    manager.onFinalize.callCount,
     2,
     "should have called .onFinalize again"
   );
