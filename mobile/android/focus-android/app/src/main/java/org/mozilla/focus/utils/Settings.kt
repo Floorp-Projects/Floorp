@@ -18,6 +18,7 @@ import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 import org.mozilla.focus.settings.permissions.AutoplayOption
 import org.mozilla.focus.settings.permissions.getValueByPrefKey
+import org.mozilla.focus.utils.AppConstants.isKlarBuild
 
 const val ERASE_CFR_LIMIT = 3
 
@@ -171,7 +172,7 @@ class Settings(
         )
 
     var isExperimentationEnabled: Boolean
-        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), true)
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), !isKlarBuild)
         set(value) {
             preferences.edit()
                 .putBoolean(getPreferenceKey(R.string.pref_key_studies), value)
