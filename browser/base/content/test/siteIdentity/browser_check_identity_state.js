@@ -71,7 +71,6 @@ add_task(async function chromeUITest() {
     "certificate",
     "compat",
     "config",
-    "devtools",
     "downloads",
     "ion",
     "license",
