@@ -53,7 +53,6 @@
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE u"child-process-shutdown"_ns
 
 class nsConsoleService;
-class nsIContentProcessInfo;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
 class nsIRemoteTab;
@@ -177,15 +176,6 @@ class ContentParent final
       nsIPrincipal* aPrincipal, const char* aMethod);
 
   /**
-   * Picks a random content parent from |aContentParents| respecting the index
-   * limit set by |aMaxContentParents|.
-   * Returns null if non available.
-   */
-  static already_AddRefed<ContentParent> MinTabSelect(
-      const nsTArray<ContentParent*>& aContentParents,
-      int32_t maxContentParents);
-
-  /**
    * Get or create a content process for:
    * 1. browser iframe
    * 2. remote xul <browser>
@@ -193,11 +183,13 @@ class ContentParent final
    */
   static RefPtr<ContentParent::LaunchPromise> GetNewOrUsedBrowserProcessAsync(
       const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
+      uint64_t aBrowserId = 0,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
   static already_AddRefed<ContentParent> GetNewOrUsedBrowserProcess(
       const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
+      uint64_t aBrowserId = 0,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -214,6 +206,7 @@ class ContentParent final
    */
   static already_AddRefed<ContentParent> GetNewOrUsedLaunchingBrowserProcess(
       const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
+      uint64_t aBrowserId = 0,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -373,9 +366,10 @@ class ContentParent final
   void NotifyTabDestroyed(const TabId& aTabId, bool aNotifiedDestroying);
 
   // Manage the set of `KeepAlive`s on this ContentParent which are preventing
-  // it from being destroyed.
-  void AddKeepAlive();
-  void RemoveKeepAlive();
+  // it from being destroyed. This is keyed by BrowserId to allow it to be used
+  // to assist in process selection.
+  void AddKeepAlive(uint64_t aBrowserId = 0);
+  void RemoveKeepAlive(uint64_t aBrowserId = 0);
 
   TestShellParent* CreateTestShell();
 
@@ -409,8 +403,6 @@ class ContentParent final
   }
 
   GeckoChildProcessHost* Process() const { return mSubprocess; }
-
-  nsIContentProcessInfo* ScriptableHelper() const { return mScriptableHelper; }
 
   mozilla::dom::ProcessMessageManager* GetMessageManager() const {
     return mMessageManager;
@@ -1474,7 +1466,12 @@ class ContentParent final
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
       const nsACString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
-      uint32_t aMaxContentParents, bool aPreferUsed, ProcessPriority aPriority);
+      uint32_t aMaxContentParents, uint64_t aBrowserId, bool aPreferUsed,
+      ProcessPriority aPriority);
+
+  // Count the number of tabs loaded in this ContentParent. Tabs associated with
+  // the given BrowserId will not be counted, if passed.
+  uint32_t EffectiveTabCount(uint64_t aIgnoreBrowserId = 0);
 
   void AddToPool(nsTArray<ContentParent*>&);
   void RemoveFromPool(nsTArray<ContentParent*>&);
@@ -1550,7 +1547,10 @@ class ContentParent final
   // NotifyTabDestroying() but not called NotifyTabDestroyed().
   int32_t mNumDestroyingTabs;
 
-  uint32_t mNumKeepaliveCalls;
+  // The number of KeepAlive calls for this ContentParent, keyed by BrowserId.
+  // This is used to track the number of tabs which are actively being hosted by
+  // each ContentParent.
+  nsTHashMap<uint64_t, uint32_t> mKeepAlivesByBrowserId;
 
   // The process starts in the LAUNCHING state, and transitions to
   // ALIVE once it can accept IPC messages.  It remains ALIVE only
@@ -1589,8 +1589,6 @@ class ContentParent final
   uint8_t mIsInputPriorityEventEnabled : 1;
 
   uint8_t mIsInPool : 1;
-
-  nsCOMPtr<nsIContentProcessInfo> mScriptableHelper;
 
   nsTArray<nsCOMPtr<nsIObserver>> mIdleListeners;
 
