@@ -230,4 +230,4 @@ jobs:
         parent: debian10-base
     decision:
         symbol: I(decision)
-        parent: ubuntu1804-base
+        parent: ubuntu2004-base
