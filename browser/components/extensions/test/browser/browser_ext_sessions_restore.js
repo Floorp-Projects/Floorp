@@ -191,3 +191,44 @@ add_task(async function test_sessions_restore() {
 
   await extension.unload();
 });
+
+add_task(async function test_sessions_event_page() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "eventpage@sessions" } },
+      permissions: ["sessions", "tabs"],
+      background: { persistent: false },
+    },
+    background() {
+      browser.sessions.onChanged.addListener(() => {
+        browser.test.sendMessage("changed");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  // test events waken background
+  await extension.terminateBackground();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:config");
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  for (let url of ["about:robots", "about:mozilla"]) {
+    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+  }
+  await BrowserTestUtils.closeWindow(win);
+
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("changed");
+  ok(true, "persistent event woke background");
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});
