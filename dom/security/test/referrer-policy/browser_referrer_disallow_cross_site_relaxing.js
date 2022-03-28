@@ -5,7 +5,7 @@
 
 "use strict";
 
-requestLongerTimeout(5);
+requestLongerTimeout(6);
 
 const TEST_DOMAIN = "https://example.com/";
 const TEST_SAME_SITE_DOMAIN = "https://test1.example.com/";
@@ -247,7 +247,7 @@ async function runTestIniFrame(gBrowser, enabled) {
   }
 }
 
-async function runTestForLinkClick(gBrowser, enabled) {
+async function runTestForLinkClick(gBrowser, enabled, expectNoConsole) {
   for (let type of ["meta", "header"]) {
     for (let test of TEST_CASES) {
       info(`Test link click: ${test.toSource()}`);
@@ -255,6 +255,8 @@ async function runTestForLinkClick(gBrowser, enabled) {
       let expected = enabled
         ? getExpectedReferrer(referrerURL, test.expect)
         : getExpectedReferrer(referrerURL, test.original);
+
+      let expected_console = expectNoConsole ? undefined : test.expect_console;
 
       Services.console.reset();
 
@@ -264,7 +266,7 @@ async function runTestForLinkClick(gBrowser, enabled) {
           let linkURL = test.test_url + "?show";
 
           let consolePromise = createConsoleMessageVerificationPromise(
-            test.expect_console,
+            expected_console,
             enabled,
             linkURL
           );
@@ -290,7 +292,7 @@ async function runTestForLinkClick(gBrowser, enabled) {
 
           await verifyResultInPage(browser, expected);
           await consolePromise;
-          if (!test.expect_console) {
+          if (!expected_console) {
             verifyNoConsoleMessage();
           }
         }
@@ -330,11 +332,21 @@ add_task(async function test_iframe_pbmode() {
 
 add_task(async function test_link_click() {
   for (let enabled of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["network.http.referer.disallowCrossSiteRelaxingDefault", enabled]],
-    });
+    for (let enabled_top of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["network.http.referer.disallowCrossSiteRelaxingDefault", enabled],
+          [
+            "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation",
+            enabled_top,
+          ],
+        ],
+      });
 
-    await runTestForLinkClick(gBrowser, enabled);
+      // We won't show the console message if the strict rule is disabled for
+      // the top navigation.
+      await runTestForLinkClick(gBrowser, enabled && enabled_top, !enabled_top);
+    }
   }
 });
 
@@ -342,19 +354,31 @@ add_task(async function test_link_click_pbmode() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   for (let enabled of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [
-          "network.http.referer.disallowCrossSiteRelaxingDefault.pbmode",
-          enabled,
+    for (let enabled_top of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          [
+            "network.http.referer.disallowCrossSiteRelaxingDefault.pbmode",
+            enabled,
+          ],
+          [
+            "network.http.referer.disallowCrossSiteRelaxingDefault.pbmode.top_navigation",
+            enabled_top,
+          ],
+          // Disable https first mode for private browsing mode to test downgrade
+          // cases.
+          ["dom.security.https_first_pbm", false],
         ],
-        // Disable https first mode for private browsing mode to test downgrade
-        // cases.
-        ["dom.security.https_first_pbm", false],
-      ],
-    });
+      });
 
-    await runTestForLinkClick(win.gBrowser, enabled);
+      // We won't show the console message if the strict rule is disabled for
+      // the top navigation in the private browsing window.
+      await runTestForLinkClick(
+        win.gBrowser,
+        enabled && enabled_top,
+        !enabled_top
+      );
+    }
   }
 
   await BrowserTestUtils.closeWindow(win);
