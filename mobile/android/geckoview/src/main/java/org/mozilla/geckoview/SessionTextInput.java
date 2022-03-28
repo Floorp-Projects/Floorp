@@ -147,7 +147,7 @@ public final class SessionTextInput {
 
     void onDefaultKeyEvent(KeyEvent event);
 
-    void updateCompositionRects(final RectF[] aRects);
+    void updateCompositionRects(final RectF[] aRects, final RectF aCaretRect);
   }
 
   private static final class DefaultDelegate implements GeckoSession.TextInputDelegate {

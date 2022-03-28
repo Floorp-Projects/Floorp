@@ -795,24 +795,40 @@ void GeckoEditableSupport::UpdateCompositionRects() {
   RefPtr<TextComposition> composition(GetComposition());
   NS_ENSURE_TRUE_VOID(mDispatcher && widget);
 
-  if (!composition) {
-    return;
+  jni::ObjectArray::LocalRef rects;
+  if (composition) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    uint32_t offset = composition->NativeOffsetOfStartComposition();
+    WidgetQueryContentEvent queryTextRectsEvent(true, eQueryTextRectArray,
+                                                widget);
+    queryTextRectsEvent.InitForQueryTextRectArray(
+        offset, composition->String().Length());
+    widget->DispatchEvent(&queryTextRectsEvent, status);
+    rects = ConvertRectArrayToJavaRectFArray(
+        queryTextRectsEvent.Succeeded()
+            ? queryTextRectsEvent.mReply->mRectArray
+            : CopyableTArray<mozilla::LayoutDeviceIntRect>());
+  } else {
+    rects = ConvertRectArrayToJavaRectFArray(
+        CopyableTArray<mozilla::LayoutDeviceIntRect>());
   }
 
+  WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, widget);
+  WidgetQueryContentEvent::Options options;
+  options.mRelativeToInsertionPoint = true;
+  queryCaretRectEvent.InitForQueryCaretRect(0, options);
+
   nsEventStatus status = nsEventStatus_eIgnore;
-  uint32_t offset = composition->NativeOffsetOfStartComposition();
-  WidgetQueryContentEvent queryTextRectsEvent(true, eQueryTextRectArray,
-                                              widget);
-  queryTextRectsEvent.InitForQueryTextRectArray(offset,
-                                                composition->String().Length());
-  widget->DispatchEvent(&queryTextRectsEvent, status);
+  widget->DispatchEvent(&queryCaretRectEvent, status);
+  auto caretRect =
+      queryCaretRectEvent.Succeeded()
+          ? java::sdk::RectF::New(queryCaretRectEvent.mReply->mRect.x,
+                                  queryCaretRectEvent.mReply->mRect.y,
+                                  queryCaretRectEvent.mReply->mRect.XMost(),
+                                  queryCaretRectEvent.mReply->mRect.YMost())
+          : java::sdk::RectF::New();
 
-  auto rects = ConvertRectArrayToJavaRectFArray(
-      queryTextRectsEvent.Succeeded()
-          ? queryTextRectsEvent.mReply->mRectArray
-          : CopyableTArray<mozilla::LayoutDeviceIntRect>());
-
-  mEditable->UpdateCompositionRects(rects);
+  mEditable->UpdateCompositionRects(rects, caretRect);
 }
 
 void GeckoEditableSupport::OnImeSynchronize() {
