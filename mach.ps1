@@ -1,7 +1,7 @@
 $mypath = $MyInvocation.MyCommand.Path
 $machpath = $mypath.substring(0, $mypath.length - 4)
 
-if (Get-Command py) {
+if (Get-Command py -ErrorAction SilentlyContinue) {
   $python_executable = "py"
 } else {
   $python_executable = "python"
