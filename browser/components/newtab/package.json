@@ -25,6 +25,7 @@
     "babel-loader": "8.2.3",
     "babel-plugin-jsm-to-commonjs": "0.5.0",
     "babel-plugin-jsm-to-esmodules": "0.6.0",
+    "buffer": "6.0.3",
     "chai": "4.3.4",
     "chai-json-schema": "1.5.1",
     "enzyme": "3.11.0",
@@ -55,8 +56,9 @@
     "sass-lint": "1.13.1",
     "shelljs": "0.8.4",
     "sinon": "12.0.1",
-    "webpack": "4.41.6",
-    "webpack-cli": "4.5.0",
+    "stream-browserify": "3.0.0",
+    "webpack": "5.56.0",
+    "webpack-cli": "4.9.1",
     "yamscripts": "0.1.0"
   },
   "engines": {
@@ -80,9 +82,9 @@
   },
   "scripts": {
     "bundle": "npm-run-all bundle:*",
-    "bundle:webpack": "webpack --config webpack.system-addon.config.js",
+    "bundle:webpack": "webpack-cli --config webpack.system-addon.config.js",
     "bundle:css": "sass content-src/styles:css --no-source-map",
-    "bundle:welcomeBundle": "webpack --config webpack.aboutwelcome.config.js",
+    "bundle:welcomeBundle": "webpack-cli --config webpack.aboutwelcome.config.js",
     "bundle:welcomeCss": "sass content-src/aboutwelcome:aboutwelcome/content --no-source-map",
     "bundle:html": "rimraf prerendered && node ./bin/render-activity-stream-html.js",
     "buildmc": "npm-run-all buildmc:*",
