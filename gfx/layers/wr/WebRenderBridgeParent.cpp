@@ -2303,11 +2303,16 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     // Trigger another CompositeToTarget() call because there might be another
     // frame that we want to generate after this one.
     // It will check if we actually want to generate the frame or not.
-    mCompositorScheduler->ScheduleComposition(aReasons);
+    mCompositorScheduler->ScheduleComposition(
+        wr::RenderReasons::ASYNC_IMAGE_COMPOSITE_UNTIL);
   }
 
-  bool generateFrame = mAsyncImageManager->GetAndResetWillGenerateFrame() ||
-                       !fastTxn.IsEmpty() || aForceGenerateFrame;
+  bool generateFrame = !fastTxn.IsEmpty() || aForceGenerateFrame;
+
+  if (mAsyncImageManager->GetAndResetWillGenerateFrame()) {
+    aReasons |= wr::RenderReasons::ASYNC_IMAGE;
+    generateFrame = true;
+  }
 
   if (!generateFrame) {
     // Could skip generating frame now.
