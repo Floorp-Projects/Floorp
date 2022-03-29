@@ -22,7 +22,7 @@ const { Rep, CommentNode } = REPS;
 const stubs = require("devtools/client/shared/components/test/node/stubs/reps/comment-node");
 
 describe("CommentNode", () => {
-  const stub = stubs.get("Comment");
+  const stub = stubs.get("Comment")._grip;
 
   it("selects CommentNode Rep correctly", () => {
     expect(getRep(stub)).toEqual(CommentNode.rep);
@@ -52,7 +52,7 @@ describe("CommentNode", () => {
   });
 
   it("renders as expected", () => {
-    const object = stubs.get("Comment");
+    const object = stubs.get("Comment")._grip;
     const renderRep = props => shallow(CommentNode.rep({ object, ...props }));
 
     let component = renderRep({ mode: undefined });

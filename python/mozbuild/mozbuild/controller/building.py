@@ -921,6 +921,7 @@ class CCacheStats(object):
         ("bad_args", "Uncacheable/Bad compiler arguments"),
         ("autoconf", "Uncacheable/Autoconf compile/link"),
         ("no_input", "Uncacheable/No input file"),
+        ("unsupported_code_directive", "Uncacheable/Unsupported code directive"),
         ("num_cleanups", "Primary storage/Cleanups"),
         ("cache_files", "Primary storage/Files"),
         # Cache size is reported in GB, see

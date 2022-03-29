@@ -27,9 +27,8 @@ Running GeckoView with environment variables
 After a successful ``./mach build``, ``./mach run --setenv`` can be used to run GeckoView with
 the given environment variables.
 
-For example, to wait for attaching a debugger when starting a content tab process, use
-``./mach run --setenv MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab`` and then attach to that
-process within Android Studio.
+For example, to enable extended logging for ``JSComponentLoader``, run ``./mach
+run --setenv MOZ_LOG=JSComponentLoader:5``.
 
 Reading configuration from a file
 ------------------------------------------------
