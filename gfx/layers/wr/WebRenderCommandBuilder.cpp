@@ -229,7 +229,8 @@ struct Grouper {
                                    wr::DisplayListBuilder& aBuilder,
                                    wr::IpcResourceUpdateQueue& aResources,
                                    DIGroup* aGroup, nsDisplayItem* aItem,
-                                   const StackingContextHelper& aSc);
+                                   const StackingContextHelper& aSc,
+                                   bool* aOutIsInvisible);
   ~Grouper() = default;
 };
 
@@ -1083,26 +1084,58 @@ class WebRenderGroupData : public WebRenderUserData {
   DIGroup mFollowingGroup;
 };
 
-static bool IsItemProbablyActive(
+enum class ItemActivity : uint8_t {
+  /// Item must not be active.
+  No = 0,
+  /// Could be active if it has no layerization cost.
+  /// Typically active if first of an item group.
+  Could = 1,
+  /// Should be active unless something external makes that less useful.
+  /// For example if the item is affected by a complex mask, it remains
+  /// inactive.
+  Should = 2,
+  /// Must be active regardless of external factors.
+  Must = 3,
+};
+
+ItemActivity CombineActivity(ItemActivity a, ItemActivity b) {
+  return a > b ? a : b;
+}
+
+bool ActivityAtLeast(ItemActivity rhs, ItemActivity atLeast) {
+  return rhs >= atLeast;
+}
+
+static ItemActivity IsItemProbablyActive(
     nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder, bool aSiblingActive);
 
-static bool HasActiveChildren(const nsDisplayList& aList,
-                              mozilla::wr::DisplayListBuilder& aBuilder,
-                              mozilla::wr::IpcResourceUpdateQueue& aResources,
-                              const mozilla::layers::StackingContextHelper& aSc,
-                              mozilla::layers::RenderRootStateManager* aManager,
-                              nsDisplayListBuilder* aDisplayListBuilder) {
+static ItemActivity HasActiveChildren(
+    const nsDisplayList& aList, mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const mozilla::layers::StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  ItemActivity activity = ItemActivity::No;
   for (nsDisplayItem* item : aList) {
-    if (IsItemProbablyActive(item, aBuilder, aResources, aSc, aManager,
-                             aDisplayListBuilder, false)) {
-      return true;
+    // Here we only want to know if a child must be active, so we don't specify
+    // when the item is first or last, which can cause an item that could be
+    // either decide to be active. This is a bit conservative and avoids some
+    // extra layers. It's a good tradeoff until we get to the point where most
+    // items could have been active but none *had* to. Right now this is
+    // unlikely but as more svg items get webrenderized it will be better to
+    // make them active more aggressively.
+    auto childActivity = IsItemProbablyActive(
+        item, aBuilder, aResources, aSc, aManager, aDisplayListBuilder, false);
+    activity = CombineActivity(activity, childActivity);
+    if (activity == ItemActivity::Must) {
+      return activity;
     }
   }
-  return false;
+  return activity;
 }
 
 // This function decides whether we want to treat this item as "active", which
@@ -1112,7 +1145,7 @@ static bool HasActiveChildren(const nsDisplayList& aList,
 //
 // We can't easily use GetLayerState because it wants a bunch of layers related
 // information.
-static bool IsItemProbablyActive(
+static ItemActivity IsItemProbablyActive(
     nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
@@ -1126,55 +1159,103 @@ static bool IsItemProbablyActive(
       const Matrix4x4Flagged& t = transformItem->GetTransform();
       Matrix t2d;
       bool is2D = t.Is2D(&t2d);
-      GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
-      return transformItem->MayBeAnimated(aDisplayListBuilder) || !is2D ||
-             HasActiveChildren(*transformItem->GetChildren(), aBuilder,
-                               aResources, aSc, aManager, aDisplayListBuilder);
+      if (!is2D) {
+        return ItemActivity::Must;
+      }
+
+      auto activity =
+          HasActiveChildren(*transformItem->GetChildren(), aBuilder, aResources,
+                            aSc, aManager, aDisplayListBuilder);
+
+      if (transformItem->MayBeAnimated(aDisplayListBuilder)) {
+        activity = CombineActivity(activity, ItemActivity::Should);
+      }
+
+      return activity;
     }
     case DisplayItemType::TYPE_OPACITY: {
       nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
-      bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder,
-                                                  opacityItem->Frame());
-      GP("active: %d\n", active);
-      return active ||
-             HasActiveChildren(*opacityItem->GetChildren(), aBuilder,
+      if (opacityItem->NeedsActiveLayer(aDisplayListBuilder,
+                                        opacityItem->Frame())) {
+        return ItemActivity::Must;
+      }
+      return HasActiveChildren(*opacityItem->GetChildren(), aBuilder,
                                aResources, aSc, aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_FOREIGN_OBJECT: {
-      return true;
+      return ItemActivity::Must;
     }
     case DisplayItemType::TYPE_SVG_GEOMETRY: {
-      if (StaticPrefs::gfx_webrender_svg_images()) {
-        auto* svgItem = static_cast<DisplaySVGGeometry*>(aItem);
-        return svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
-                                       aDisplayListBuilder);
+      auto* svgItem = static_cast<DisplaySVGGeometry*>(aItem);
+      if (StaticPrefs::gfx_webrender_svg_images() &&
+          svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
+                                  aDisplayListBuilder)) {
+        bool snap = false;
+        auto bounds = aItem->GetBounds(aDisplayListBuilder, &snap);
+
+        // Arbitrary threshold up for adjustments. What we want to avoid here
+        // is alternating between active and non active items and create a lot
+        // of overlapping blobs, so we only make images active if they are
+        // costly enough that it's worth the risk of having more layers. As we
+        // move more blob items into wr dislplay items it will become less of a
+        // concern.
+        int32_t largeish = 512;
+
+        if (aHasActivePrecedingSibling || bounds.width > largeish ||
+            bounds.height > largeish) {
+          return ItemActivity::Should;
+        }
+
+        return ItemActivity::Could;
       }
-      return false;
+
+      return ItemActivity::No;
     }
     case DisplayItemType::TYPE_BLEND_MODE: {
       /* BLEND_MODE needs to be active if it might have a previous sibling
        * that is active so that it's able to blend with that content. */
-      return aHasActivePrecedingSibling ||
-             HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
+      if (aHasActivePrecedingSibling) {
+        return ItemActivity::Must;
+      }
+
+      return HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
                                aManager, aDisplayListBuilder);
+    }
+    case DisplayItemType::TYPE_MASK: {
+      if (aItem->GetChildren()) {
+        auto activity =
+            HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
+                              aManager, aDisplayListBuilder);
+        // For masked items, don't bother with making children active since we
+        // are going to have to need to paint and upload a large mask anyway.
+        if (activity < ItemActivity::Must) {
+          return ItemActivity::No;
+        }
+        return activity;
+      }
+      return ItemActivity::No;
     }
     case DisplayItemType::TYPE_WRAP_LIST:
     case DisplayItemType::TYPE_CONTAINER:
-    case DisplayItemType::TYPE_MASK:
     case DisplayItemType::TYPE_PERSPECTIVE: {
       if (aItem->GetChildren()) {
         return HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources,
                                  aSc, aManager, aDisplayListBuilder);
       }
-      return false;
+      return ItemActivity::No;
     }
     case DisplayItemType::TYPE_FILTER: {
       nsDisplayFilters* filters = static_cast<nsDisplayFilters*>(aItem);
-      return filters->CanCreateWebRenderCommands();
+      if (filters->CanCreateWebRenderCommands()) {
+        // Items are usually expensive enough on the CPU that we want to
+        // make them active whenever we can.
+        return ItemActivity::Must;
+      }
+      return ItemActivity::No;
     }
     default:
       // TODO: handle other items?
-      return false;
+      return ItemActivity::No;
   }
 }
 
@@ -1196,6 +1277,9 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
   // We need to track whether we have active siblings for mixed blend mode.
   bool encounteredActiveItem = false;
   bool isFirstGroup = true;
+  // Track whether the item is the first (visible) of its group in which case
+  // making it active won't add extra layers.
+  bool isFirst = true;
 
   for (auto it = aList->begin(); it != aList->end(); ++it) {
     nsDisplayItem* item = *it;
@@ -1208,8 +1292,15 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       }
     }
 
-    if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
-                             mDisplayListBuilder, encounteredActiveItem)) {
+    bool isLast = it.HasNext();
+
+    auto activity =
+        IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
+                             mDisplayListBuilder, encounteredActiveItem);
+    auto threshold =
+        isFirst || isLast ? ItemActivity::Could : ItemActivity::Should;
+
+    if (activity >= threshold) {
       encounteredActiveItem = true;
       // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
@@ -1284,9 +1375,15 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       isFirstGroup = false;
       startOfCurrentGroup = aList->end();
       currentGroup = &groupData->mFollowingGroup;
+      isFirst = true;
     } else {  // inactive item
+      bool isInvisible = false;
       ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
-                                  currentGroup, item, aSc);
+                                  currentGroup, item, aSc, &isInvisible);
+      if (!isInvisible) {
+        // Invisible items don't count.
+        isFirst = false;
+      }
     }
   }
 
@@ -1303,8 +1400,9 @@ bool Grouper::ConstructGroupInsideInactive(
     nsDisplayList* aList, const StackingContextHelper& aSc) {
   bool invalidated = false;
   for (nsDisplayItem* item : *aList) {
-    invalidated |= ConstructItemInsideInactive(aCommandBuilder, aBuilder,
-                                               aResources, aGroup, item, aSc);
+    bool invisible = false;
+    invalidated |= ConstructItemInsideInactive(
+        aCommandBuilder, aBuilder, aResources, aGroup, item, aSc, &invisible);
   }
   return invalidated;
 }
@@ -1312,7 +1410,8 @@ bool Grouper::ConstructGroupInsideInactive(
 bool Grouper::ConstructItemInsideInactive(
     WebRenderCommandBuilder* aCommandBuilder, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources, DIGroup* aGroup,
-    nsDisplayItem* aItem, const StackingContextHelper& aSc) {
+    nsDisplayItem* aItem, const StackingContextHelper& aSc,
+    bool* aOutIsInvisible) {
   nsDisplayList* children = aItem->GetChildren();
   BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
 
@@ -1321,6 +1420,7 @@ bool Grouper::ConstructItemInsideInactive(
    * time that we painted */
   data->mInvalid = false;
   data->mInvisible = aItem->IsInvisible();
+  *aOutIsInvisible = data->mInvisible;
 
   // we compute the geometry change here because we have the transform around
   // still
