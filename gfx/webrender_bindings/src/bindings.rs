@@ -1669,6 +1669,8 @@ pub extern "C" fn wr_window_new(
         clear_color: color,
         precache_flags,
         namespace_alloc_by_client: true,
+        // Font namespace must be allocated by the client
+        shared_font_namespace: Some(next_namespace_id()),
         // SWGL doesn't support the GL_ALWAYS depth comparison function used by
         // `clear_caches_with_quads`, but scissored clears work well.
         clear_caches_with_quads: !software && !allow_scissored_cache_clears,
