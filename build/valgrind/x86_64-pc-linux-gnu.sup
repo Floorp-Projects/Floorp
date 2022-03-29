@@ -973,3 +973,32 @@
   fun:_ZN9webrender8renderer8Renderer20update_texture_cache*
   fun:_ZN9webrender8renderer8Renderer11render_impl*
 }
+
+# Suppression for a dynamic-atom leak apparently related to shutdown timing/race. See bug 1748520.
+#
+# 20 bytes in 1 blocks are definitely lost in loss record 3,754 of 20,244
+#    at 0x48397B5: malloc+117 (vg_replace_malloc.c:381)
+#    by 0x12CD30: moz_xmalloc+16 (checkouts/gecko/memory/mozalloc/mozalloc.cpp:52)
+#    by 0xAEE7F3C: nsDynamicAtom::Create(nsTSubstring<char16_t> const&, unsigned int)+140 (checkouts/gecko/xpcom/ds/nsAtomTable.cpp:90)
+#    by 0xAEE8DC9: nsAtomTable::Atomize(nsTSubstring<char> const&)+265 (checkouts/gecko/xpcom/ds/nsAtomTable.cpp:566)
+#    by 0xAFD5857: nsLanguageAtomService::LookupLanguage(nsTSubstring<char> const&)+87 (checkouts/gecko/intl/locale/nsLanguageAtomService.cpp:102)
+#    by 0xBCE209E: gfxFcPlatformFontList::TryLangForGroup(nsTSubstring<char> const&, nsAtom*, nsTSubstring<char>&, bool)+382 (checkouts/gecko/gfx/thebes/gfxFcPlatformFontList.cpp:2504)
+#    by 0xBCDD57E: gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom*, nsTSubstring<char>&, bool)+734 (checkouts/gecko/gfx/thebes/gfxFcPlatformFontList.cpp:2569)
+#    by 0xBCE03A1: gfxFcPlatformFontList::FindGenericFamilies(nsPresContext*, nsTString<char> const&, nsAtom*)+113 (checkouts/gecko/gfx/thebes/gfxFcPlatformFontList.cpp:2299)
+#    by 0xBCE02F4: gfxFcPlatformFontList::GetDefaultFontForPlatform(nsPresContext*, gfxFontStyle const*, nsAtom*)+68 (checkouts/gecko/gfx/thebes/gfxFcPlatformFontList.cpp:1991)
+#    by 0xBD2E807: gfxPlatformFontList::GetDefaultFont(nsPresContext*, gfxFontStyle const*)+39 (checkouts/gecko/gfx/thebes/gfxPlatformFontList.cpp:2319)
+#    by 0xBD2CBBF: gfxPlatformFontList::InitFontList()+1279 (checkouts/gecko/gfx/thebes/gfxPlatformFontList.cpp:573)
+#    by 0xBD2C5C8: gfxPlatformFontList::Initialize(gfxPlatformFontList*)+72 (checkouts/gecko/gfx/thebes/gfxPlatformFontList.cpp:259)
+#    by 0xBCE8F8E: gfxPlatform::Init()+3070 (checkouts/gecko/gfx/thebes/gfxPlatform.cpp:963)
+{
+   Bug 1748520
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN13nsDynamicAtom6Create*
+   fun:_ZN11nsAtomTable7Atomize*
+   fun:_ZN21nsLanguageAtomService14LookupLanguage*
+   ...
+   fun:_ZN11gfxPlatform4InitEv
+}
