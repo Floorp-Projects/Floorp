@@ -813,6 +813,8 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
   policy->AddDir(rdonly, "/usr/lib");
   policy->AddDir(rdonly, "/usr/lib32");
   policy->AddDir(rdonly, "/usr/lib64");
+  policy->AddDir(rdonly, "/run/opengl-driver/lib");
+  policy->AddDir(rdonly, "/nix/store");
 
   // Bug 1647957: memory reporting.
   AddMemoryReporting(policy.get(), aPid);
