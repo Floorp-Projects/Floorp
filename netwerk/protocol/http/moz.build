@@ -153,6 +153,7 @@ UNIFIED_SOURCES += [
     "SocketWrapper.cpp",
     "SpeculativeTransaction.cpp",
     "TLSFilterTransaction.cpp",
+    "TlsHandshaker.cpp",
     "TRRServiceChannel.cpp",
 ]
 
