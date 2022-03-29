@@ -93,6 +93,39 @@ async function test_screen_content(
 }
 
 // eslint-disable-next-line no-unused-vars
+async function test_element_styles(
+  browser,
+  elementSelector,
+  expectedStyles = {},
+  unexpectedStyles = {}
+) {
+  await ContentTask.spawn(
+    browser,
+    [elementSelector, expectedStyles, unexpectedStyles],
+    async ([selector, expected, unexpected]) => {
+      const element = await ContentTaskUtils.waitForCondition(() =>
+        content.document.querySelector(selector)
+      );
+      const computedStyles = content.window.getComputedStyle(element);
+      Object.entries(expected).forEach(([attr, val]) =>
+        is(
+          computedStyles[attr],
+          val,
+          `${selector} should have computed ${attr} of ${val}`
+        )
+      );
+      Object.entries(unexpected).forEach(([attr, val]) =>
+        isnot(
+          computedStyles[attr],
+          val,
+          `${selector} should not have computed ${attr} of ${val}`
+        )
+      );
+    }
+  );
+}
+
+// eslint-disable-next-line no-unused-vars
 async function onButtonClick(browser, elementId) {
   await ContentTask.spawn(
     browser,
