@@ -562,6 +562,7 @@ bitflags! {
         /// to see which frames were driven by the vsync scheduler so
         /// we store a bit for it.
         const VSYNC                         = 1 << 16;
+        const SKIPPED_COMPOSITE             = 1 << 17;
     }
 }
 
