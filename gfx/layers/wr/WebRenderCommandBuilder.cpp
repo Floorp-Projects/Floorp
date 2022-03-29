@@ -1111,14 +1111,15 @@ static ItemActivity IsItemProbablyActive(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, bool aSiblingActive);
+    nsDisplayListBuilder* aDisplayListBuilder, bool aSiblingActive,
+    bool aUniformlyScaled);
 
 static ItemActivity HasActiveChildren(
     const nsDisplayList& aList, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
+    nsDisplayListBuilder* aDisplayListBuilder, bool aUniformlyScaled) {
   ItemActivity activity = ItemActivity::No;
   for (nsDisplayItem* item : aList) {
     // Here we only want to know if a child must be active, so we don't specify
@@ -1128,8 +1129,9 @@ static ItemActivity HasActiveChildren(
     // items could have been active but none *had* to. Right now this is
     // unlikely but as more svg items get webrenderized it will be better to
     // make them active more aggressively.
-    auto childActivity = IsItemProbablyActive(
-        item, aBuilder, aResources, aSc, aManager, aDisplayListBuilder, false);
+    auto childActivity =
+        IsItemProbablyActive(item, aBuilder, aResources, aSc, aManager,
+                             aDisplayListBuilder, false, aUniformlyScaled);
     activity = CombineActivity(activity, childActivity);
     if (activity == ItemActivity::Must) {
       return activity;
@@ -1150,8 +1152,8 @@ static ItemActivity IsItemProbablyActive(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder,
-    bool aHasActivePrecedingSibling) {
+    nsDisplayListBuilder* aDisplayListBuilder, bool aHasActivePrecedingSibling,
+    bool aUniformlyScaled) {
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_TRANSFORM: {
       nsDisplayTransform* transformItem =
@@ -1163,9 +1165,9 @@ static ItemActivity IsItemProbablyActive(
         return ItemActivity::Must;
       }
 
-      auto activity =
-          HasActiveChildren(*transformItem->GetChildren(), aBuilder, aResources,
-                            aSc, aManager, aDisplayListBuilder);
+      auto activity = HasActiveChildren(*transformItem->GetChildren(), aBuilder,
+                                        aResources, aSc, aManager,
+                                        aDisplayListBuilder, aUniformlyScaled);
 
       if (transformItem->MayBeAnimated(aDisplayListBuilder)) {
         activity = CombineActivity(activity, ItemActivity::Should);
@@ -1180,14 +1182,15 @@ static ItemActivity IsItemProbablyActive(
         return ItemActivity::Must;
       }
       return HasActiveChildren(*opacityItem->GetChildren(), aBuilder,
-                               aResources, aSc, aManager, aDisplayListBuilder);
+                               aResources, aSc, aManager, aDisplayListBuilder,
+                               aUniformlyScaled);
     }
     case DisplayItemType::TYPE_FOREIGN_OBJECT: {
       return ItemActivity::Must;
     }
     case DisplayItemType::TYPE_SVG_GEOMETRY: {
       auto* svgItem = static_cast<DisplaySVGGeometry*>(aItem);
-      if (StaticPrefs::gfx_webrender_svg_images() &&
+      if (StaticPrefs::gfx_webrender_svg_images() && aUniformlyScaled &&
           svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
                                   aDisplayListBuilder)) {
         bool snap = false;
@@ -1219,13 +1222,13 @@ static ItemActivity IsItemProbablyActive(
       }
 
       return HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
-                               aManager, aDisplayListBuilder);
+                               aManager, aDisplayListBuilder, aUniformlyScaled);
     }
     case DisplayItemType::TYPE_MASK: {
       if (aItem->GetChildren()) {
         auto activity =
             HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
-                              aManager, aDisplayListBuilder);
+                              aManager, aDisplayListBuilder, aUniformlyScaled);
         // For masked items, don't bother with making children active since we
         // are going to have to need to paint and upload a large mask anyway.
         if (activity < ItemActivity::Must) {
@@ -1240,7 +1243,8 @@ static ItemActivity IsItemProbablyActive(
     case DisplayItemType::TYPE_PERSPECTIVE: {
       if (aItem->GetChildren()) {
         return HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources,
-                                 aSc, aManager, aDisplayListBuilder);
+                                 aSc, aManager, aDisplayListBuilder,
+                                 aUniformlyScaled);
       }
       return ItemActivity::No;
     }
@@ -1294,9 +1298,14 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
     bool isLast = it.HasNext();
 
-    auto activity =
-        IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
-                             mDisplayListBuilder, encounteredActiveItem);
+    // WebRender's anti-aliasing approximation is not very good under
+    // non-uniform scales.
+    bool uniformlyScaled =
+        fabs(aGroup->mScale.width - aGroup->mScale.height) < 0.1;
+
+    auto activity = IsItemProbablyActive(
+        item, aBuilder, aResources, aSc, manager, mDisplayListBuilder,
+        encounteredActiveItem, uniformlyScaled);
     auto threshold =
         isFirst || isLast ? ItemActivity::Could : ItemActivity::Should;
 
