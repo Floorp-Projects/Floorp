@@ -9,7 +9,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -21,7 +20,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -432,7 +430,6 @@ public class GeckoViewActivity extends AppCompatActivity
   private boolean mFullScreen;
 
   private HashMap<String, Integer> mNotificationIDMap = new HashMap<>();
-  private HashMap<Integer, WebNotification> mNotificationMap = new HashMap<>();
   private int mLastID = 100;
 
   private ProgressBar mProgressView;
@@ -710,6 +707,14 @@ public class GeckoViewActivity extends AppCompatActivity
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    // We might have been started because the user clicked on a notification
+    WebNotification notification = getIntent().getParcelableExtra("onClick");
+    if (notification != null) {
+      getIntent().removeExtra("onClick");
+      notification.click();
+    }
+
     Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() + " - application start");
     createNotificationChannel();
     setContentView(R.layout.geckoview_activity);
@@ -778,6 +783,14 @@ public class GeckoViewActivity extends AppCompatActivity
       sGeckoRuntime.getWebExtensionController().setDebuggerDelegate(sExtensionManager);
       sGeckoRuntime.setAutocompleteStorageDelegate(new ExampleAutocompleteStorageDelegate());
       sGeckoRuntime.getOrientationController().setDelegate(new ExampleOrientationDelegate());
+      sGeckoRuntime.setServiceWorkerDelegate(
+          new GeckoRuntime.ServiceWorkerDelegate() {
+            @NonNull
+            @Override
+            public GeckoResult<GeckoSession> onOpenWindow(@NonNull String url) {
+              return mNavigationDelegate.onNewSession(null, url);
+            }
+          });
 
       // `getSystemService` call requires API level 23
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -788,12 +801,12 @@ public class GeckoViewActivity extends AppCompatActivity
               @Override
               public void onShowNotification(@NonNull WebNotification notification) {
                 Intent clickIntent = new Intent(GeckoViewActivity.this, GeckoViewActivity.class);
-                clickIntent.putExtra("onClick", notification.tag);
+                clickIntent.putExtra("onClick", notification);
                 PendingIntent dismissIntent =
                     PendingIntent.getActivity(GeckoViewActivity.this, mLastID, clickIntent, 0);
 
-                Notification.Builder builder =
-                    new Notification.Builder(GeckoViewActivity.this)
+                NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(GeckoViewActivity.this, CHANNEL_ID)
                         .setContentTitle(notification.title)
                         .setContentText(notification.text)
                         .setSmallIcon(R.drawable.ic_status_logo)
@@ -801,7 +814,6 @@ public class GeckoViewActivity extends AppCompatActivity
                         .setAutoCancel(true);
 
                 mNotificationIDMap.put(notification.tag, mLastID);
-                mNotificationMap.put(mLastID, notification);
 
                 if (notification.imageUrl != null && notification.imageUrl.length() > 0) {
                   final GeckoWebExecutor executor = new GeckoWebExecutor(sGeckoRuntime);
@@ -814,7 +826,7 @@ public class GeckoViewActivity extends AppCompatActivity
                   response.accept(
                       value -> {
                         Bitmap bitmap = BitmapFactory.decodeStream(value.body);
-                        builder.setLargeIcon(Icon.createWithBitmap(bitmap));
+                        builder.setLargeIcon(bitmap);
                         notificationManager.notify(mLastID++, builder.build());
                       });
                 } else {
@@ -827,7 +839,6 @@ public class GeckoViewActivity extends AppCompatActivity
                 if (mNotificationIDMap.containsKey(notification.tag)) {
                   int id = mNotificationIDMap.get(notification.tag);
                   notificationManager.cancel(id);
-                  mNotificationMap.remove(id);
                   mNotificationIDMap.remove(notification.tag);
                 }
               }
@@ -1029,13 +1040,16 @@ public class GeckoViewActivity extends AppCompatActivity
     return createSession(null);
   }
 
+  private final GeckoSession.NavigationDelegate mNavigationDelegate =
+      new ExampleNavigationDelegate();
+
   private void connectSession(GeckoSession session) {
     session.setContentDelegate(new ExampleContentDelegate());
     session.setHistoryDelegate(new ExampleHistoryDelegate());
     final ExampleContentBlockingDelegate cb = new ExampleContentBlockingDelegate();
     session.setContentBlockingDelegate(cb);
     session.setProgressDelegate(new ExampleProgressDelegate(cb));
-    session.setNavigationDelegate(new ExampleNavigationDelegate());
+    session.setNavigationDelegate(mNavigationDelegate);
 
     final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt(this);
     prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
@@ -1369,11 +1383,10 @@ public class GeckoViewActivity extends AppCompatActivity
     }
 
     if (intent.hasExtra("onClick")) {
-      int key = intent.getExtras().getInt("onClick");
-      WebNotification notification = mNotificationMap.get(key);
+      WebNotification notification = intent.getExtras().getParcelable("onClick");
       if (notification != null) {
+        intent.removeExtra("onClick");
         notification.click();
-        mNotificationMap.remove(key);
       }
     }
 

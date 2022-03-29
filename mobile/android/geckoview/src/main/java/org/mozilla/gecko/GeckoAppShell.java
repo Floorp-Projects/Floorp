@@ -762,6 +762,14 @@ public class GeckoAppShell {
   public static void onNotificationClick(final String name, final String cookie) {
     if (GeckoThread.isRunning()) {
       notifyAlertListener(name, "alertclickcallback", cookie);
+    } else {
+      GeckoThread.queueNativeCallUntil(
+          GeckoThread.State.PROFILE_READY,
+          GeckoAppShell.class,
+          "notifyAlertListener",
+          name,
+          "alertclickcallback",
+          cookie);
     }
   }
 

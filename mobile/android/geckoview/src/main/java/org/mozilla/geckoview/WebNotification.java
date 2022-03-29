@@ -4,6 +4,9 @@
 
 package org.mozilla.geckoview;
 
+import android.os.Parcel;
+import android.os.ParcelFormatException;
+import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
@@ -17,7 +20,7 @@ import org.mozilla.gecko.util.ThreadUtils;
  * can be received by connecting a {@link WebNotificationDelegate} to {@link GeckoRuntime} via
  * {@link GeckoRuntime#setWebNotificationDelegate(WebNotificationDelegate)}.
  */
-public class WebNotification {
+public class WebNotification implements Parcelable {
 
   /**
    * Title is shown at the top of the notification window.
@@ -157,4 +160,67 @@ public class WebNotification {
     ThreadUtils.assertOnUiThread();
     GeckoAppShell.onNotificationClose(tag, mCookie);
   }
+
+  // Increment this value whenever anything changes in the parcelable representation.
+  private static final int VERSION = 1;
+
+  // To avoid TransactionTooLargeException, we only store small imageUrls
+  private static final int IMAGE_URL_LENGTH_MAX = 150;
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(final Parcel dest, final int flags) {
+    dest.writeInt(VERSION);
+    dest.writeString(title);
+    dest.writeString(tag);
+    dest.writeString(mCookie);
+    dest.writeString(text);
+    if (imageUrl.length() < IMAGE_URL_LENGTH_MAX) {
+      dest.writeString(imageUrl);
+    } else {
+      dest.writeString(null);
+    }
+    dest.writeString(textDirection);
+    dest.writeString(lang);
+    dest.writeInt(requireInteraction ? 1 : 0);
+    dest.writeString(source);
+    dest.writeInt(silent ? 1 : 0);
+    dest.writeIntArray(vibrate);
+  }
+
+  private WebNotification(final Parcel in) {
+    title = in.readString();
+    tag = in.readString();
+    mCookie = in.readString();
+    text = in.readString();
+    imageUrl = in.readString();
+    textDirection = in.readString();
+    lang = in.readString();
+    requireInteraction = in.readInt() == 1;
+    source = in.readString();
+    silent = in.readInt() == 1;
+    vibrate = in.createIntArray();
+  }
+
+  public static final Creator<WebNotification> CREATOR =
+      new Creator<>() {
+        @Override
+        public WebNotification createFromParcel(final Parcel in) {
+          final int version = in.readInt();
+          if (version != VERSION) {
+            throw new ParcelFormatException(
+                "Mismatched version: " + version + " expected: " + VERSION);
+          }
+          return new WebNotification(in);
+        }
+
+        @Override
+        public WebNotification[] newArray(final int size) {
+          return new WebNotification[size];
+        }
+      };
 }
