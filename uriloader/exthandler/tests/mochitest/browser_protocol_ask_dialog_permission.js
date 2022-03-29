@@ -7,11 +7,6 @@ let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
 );
 
-const ROOT_PATH = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content/",
-  ""
-);
-
 // Testing multiple protocol / origin combinations takes long on debug.
 requestLongerTimeout(3);
 
@@ -125,9 +120,6 @@ async function triggerOpenProto(
     useNullPrincipal = false,
     useExtensionPrincipal = false,
     omitTriggeringPrincipal = false,
-    useJSRedirect = false,
-    serverRedirect = "",
-    linkToRedirect = false,
   } = {}
 ) {
   let uri = `${scheme}://test`;
@@ -177,65 +169,6 @@ async function triggerOpenProto(
       null,
       browser.browsingContext
     );
-    return;
-  }
-
-  if (useJSRedirect) {
-    let innerParams = new URLSearchParams();
-    innerParams.set("uri", uri);
-    let params = new URLSearchParams();
-    params.set(
-      "uri",
-      "https://example.com/" +
-        ROOT_PATH +
-        "script_redirect.html?" +
-        innerParams.toString()
-    );
-    uri =
-      "https://example.org/" +
-      ROOT_PATH +
-      "script_redirect.html?" +
-      params.toString();
-    BrowserTestUtils.loadURI(browser, uri);
-    return;
-  }
-
-  if (serverRedirect) {
-    let innerParams = new URLSearchParams();
-    innerParams.set("uri", uri);
-    innerParams.set("redirectType", serverRedirect);
-    let params = new URLSearchParams();
-    params.set(
-      "uri",
-      "https://example.com/" +
-        ROOT_PATH +
-        "redirect_helper.sjs?" +
-        innerParams.toString()
-    );
-    uri =
-      "https://example.org/" +
-      ROOT_PATH +
-      "redirect_helper.sjs?" +
-      params.toString();
-    BrowserTestUtils.loadURI(browser, uri);
-    return;
-  }
-
-  if (linkToRedirect) {
-    let params = new URLSearchParams();
-    params.set("uri", uri);
-    uri =
-      "https://example.com/" +
-      ROOT_PATH +
-      "redirect_helper.sjs?" +
-      params.toString();
-    await ContentTask.spawn(browser, { uri }, args => {
-      let textLink = content.document.createElement("a");
-      textLink.href = args.uri;
-      textLink.textContent = "click me";
-      content.document.body.appendChild(textLink);
-      textLink.click();
-    });
     return;
   }
 
@@ -296,7 +229,6 @@ async function testOpenProto(
 
     let {
       hasCheckbox,
-      checkboxOrigin,
       hasChangeApp,
       chooserIsNext,
       actionCheckbox,
@@ -322,7 +254,6 @@ async function testOpenProto(
     await testCheckbox(dialogEl, dialogType, {
       hasCheckbox,
       actionCheckbox,
-      checkboxOrigin,
     });
 
     // Check the button label depending on whether we would show the chooser
@@ -380,11 +311,7 @@ async function testOpenProto(
   }
 
   // Clean up test extension if needed.
-  if (testExtension) {
-    await testExtension.unload();
-    // Don't try to unload it again later!
-    testExtension = null;
-  }
+  await testExtension?.unload();
 }
 
 /**
@@ -403,7 +330,7 @@ async function testOpenProto(
 async function testCheckbox(
   dialogEl,
   dialogType,
-  { hasCheckbox, hasCheckboxState = false, actionCheckbox, checkboxOrigin }
+  { hasCheckbox, hasCheckboxState = false, actionCheckbox }
 ) {
   let checkbox = dialogEl.ownerDocument.getElementById("remember");
   if (typeof hasCheckbox == "boolean") {
@@ -429,14 +356,6 @@ async function testCheckbox(
 
   if (typeof hasCheckboxState == "boolean") {
     is(checkbox.checked, hasCheckboxState, "Dialog checkbox has correct state");
-  }
-
-  if (checkboxOrigin) {
-    let doc = dialogEl.ownerDocument;
-    let hostFromLabel = doc.l10n.getAttributes(
-      doc.getElementById("remember-label")
-    ).args.host;
-    is(hostFromLabel, checkboxOrigin, "Checkbox should be for correct domain.");
   }
 
   if (typeof actionCheckbox == "boolean") {
@@ -843,106 +762,6 @@ add_task(async function test_extension_principal() {
         useExtensionPrincipal: true,
       },
       chooserDialogOptions: {
-        hasCheckbox: true,
-        actionConfirm: false, // Cancel dialog
-      },
-    });
-  });
-});
-
-/**
- * Test that we use the redirect principal for the dialog when applicable.
- */
-add_task(async function test_redirect_principal() {
-  let scheme = TEST_PROTOS[0];
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "location",
-      },
-      permDialogOptions: {
-        checkboxOrigin: ORIGIN1,
-        chooserIsNext: true,
-        hasCheckbox: true,
-        actionConfirm: false, // Cancel dialog
-      },
-    });
-  });
-});
-
-/**
- * Test that we use the redirect principal for the dialog for refresh headers.
- */
-add_task(async function test_redirect_principal() {
-  let scheme = TEST_PROTOS[0];
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "refresh",
-      },
-      permDialogOptions: {
-        checkboxOrigin: ORIGIN1,
-        chooserIsNext: true,
-        hasCheckbox: true,
-        actionConfirm: false, // Cancel dialog
-      },
-    });
-  });
-});
-
-/**
- * Test that we use the redirect principal for the dialog for meta refreshes.
- */
-add_task(async function test_redirect_principal() {
-  let scheme = TEST_PROTOS[0];
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "meta-refresh",
-      },
-      permDialogOptions: {
-        checkboxOrigin: ORIGIN1,
-        chooserIsNext: true,
-        hasCheckbox: true,
-        actionConfirm: false, // Cancel dialog
-      },
-    });
-  });
-});
-
-/**
- * Test that we use the redirect principal for the dialog for JS redirects.
- */
-add_task(async function test_redirect_principal_js() {
-  let scheme = TEST_PROTOS[0];
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await testOpenProto(browser, scheme, {
-      loadOptions: {
-        useJSRedirect: true,
-      },
-      permDialogOptions: {
-        checkboxOrigin: ORIGIN1,
-        chooserIsNext: true,
-        hasCheckbox: true,
-        actionConfirm: false, // Cancel dialog
-      },
-    });
-  });
-});
-
-/**
- * Test that we use the redirect principal for the dialog for link clicks.
- */
-add_task(async function test_redirect_principal_links() {
-  let scheme = TEST_PROTOS[0];
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    await testOpenProto(browser, scheme, {
-      loadOptions: {
-        linkToRedirect: true,
-      },
-      permDialogOptions: {
-        checkboxOrigin: ORIGIN1,
-        chooserIsNext: true,
         hasCheckbox: true,
         actionConfirm: false, // Cancel dialog
       },
