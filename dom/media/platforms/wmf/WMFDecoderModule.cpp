@@ -16,7 +16,6 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
-#include "AOMDecoder.h"
 #include "WMF.h"
 #include "WMFAudioMFTManager.h"
 #include "WMFMediaDataDecoder.h"
@@ -35,6 +34,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWindowsHelpers.h"
 #include "prsystem.h"
+
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -341,9 +344,11 @@ bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
     return true;
   }
 
+#ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(trackInfo.mMimeType) && WMFDecoderModule::HasAV1()) {
     return true;
   }
+#endif
 
   // Some unsupported codec.
   return false;
