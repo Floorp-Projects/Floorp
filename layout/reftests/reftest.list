@@ -90,6 +90,9 @@ include css-gradients/reftest.list
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
 
+# css page
+include css-page/reftest.list
+
 # css parsing
 include css-parsing/reftest.list
 
