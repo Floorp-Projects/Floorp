@@ -329,6 +329,7 @@ Uncacheable:
   Compilation failed:         49
   No input file:               9
   Preprocessing failed:       90
+  Unsupported code directive:  1
     """.format(
         timestamp=time.strftime("%c")
     )
