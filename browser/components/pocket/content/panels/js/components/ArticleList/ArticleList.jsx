@@ -18,6 +18,7 @@ function ArticleUrl(props) {
       href={props.url}
       source={props.source}
       position={props.position}
+      model={props.model}
     >
       {props.children}
     </TelemetryLink>
@@ -33,8 +34,12 @@ function Article(props) {
       : null;
   }
 
-  const { article } = props;
-  const url = article.url || article.resolved_url;
+  const { article, savedArticle, position, source, model, utmParams } = props;
+  const url = new URL(article.url || article.resolved_url || "");
+  const urlSearchParams = new URLSearchParams(utmParams);
+  for (let [key, val] of urlSearchParams.entries()) {
+    url.searchParams.set(key, val);
+  }
   // Using array notation because there is a key titled `1` (`images` is an object)
   const thumbnail =
     article.thumbnail ||
@@ -49,10 +54,12 @@ function Article(props) {
   return (
     <li className="stp_article_list_item">
       <ArticleUrl
-        url={url}
-        savedArticle={props.savedArticle}
-        position={props.position}
-        source={props.source}
+        url={url.href}
+        savedArticle={savedArticle}
+        position={position}
+        source={source}
+        model={model}
+        utmParams={utmParams}
       >
         <>
           {thumbnail ? (
@@ -79,6 +86,8 @@ function ArticleList(props) {
           savedArticle={props.savedArticle}
           position={position}
           source={props.source}
+          model={props.model}
+          utmParams={props.utmParams}
         />
       ))}
     </ul>

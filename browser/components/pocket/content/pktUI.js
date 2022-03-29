@@ -513,8 +513,9 @@ var pktUI = (function() {
 
     // We don't track every click, only clicks with a known source.
     if (data.source) {
-      const { position, source } = data;
+      const { position, source, model } = data;
       const payload = pktTelemetry.createPingPayload({
+        ...(model ? { model } : {}),
         events: [
           {
             action: "click",

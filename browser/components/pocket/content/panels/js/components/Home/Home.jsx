@@ -94,6 +94,7 @@ function Home(props) {
               <ArticleList
                 articles={articles.slice(0, 3)}
                 source="home_recent_save"
+                utmParams={utmParams}
               />
               <span className="stp_button_wide">
                 <Button
@@ -106,7 +107,11 @@ function Home(props) {
               </span>
             </>
           ) : (
-            <ArticleList articles={articles} />
+            <ArticleList
+              articles={articles}
+              source="home_recent_save"
+              utmParams={utmParams}
+            />
           )}
         </>
       );
