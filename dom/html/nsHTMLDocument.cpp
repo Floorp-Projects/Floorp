@@ -675,7 +675,7 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
     case kCharsetFromDocTypeDefault:
     case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
     case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
-    case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8:
+    case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII:
     case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
     case kCharsetFromParentFrame:
     case kCharsetFromXmlDeclaration:

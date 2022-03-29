@@ -8817,37 +8817,48 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors a node in the window has been observed by mutation observers, but has not had beforeinput event listeners"
   },
-  "ENCODING_OVERRIDE_SITUATION_2": {
-    "record_in_processes": ["main", "content"],
+  "ENCODING_OVERRIDE_SITUATION_TEXT": {
+    "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
-    "bug_numbers": [840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463, 1706838],
-    "expires_in_version": "96",
+    "bug_numbers": [840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463, 1706838, 1712928],
+    "expires_in_version": "106",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["AutoOverridden", "ManuallyOverridden", "LocalLabeled", "LocalUnlabeled", "UnlabeledInLk", "UnlabeledJp", "UnlabeledNonUtf8", "UnlabeledUtf8", "ChannelNonUtf8", "ChannelUtf8", "MetaNonUtf8", "MetaUtf8", "Bug", "UnlabeledAscii", "UnlabeledNonUtf8TLD"],
-    "description": "Labeling status of top-level page when overriding encoding"
+    "labels": ["UnlabeledAscii", "UnlabeledNonUtf8TLD", "UnlabeledNonUtf8", "UnlabeledUtf8", "ChannelNonUtf8", "ChannelUtf8", "Bug"],
+    "description": "Labeling status of top-level page when overriding encoding for plain text"
+  },
+  "ENCODING_OVERRIDE_SITUATION_HTML": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["hsivonen@mozilla.com"],
+    "bug_numbers": [840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463, 1706838, 1712928],
+    "expires_in_version": "106",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["UnlabeledAscii", "UnlabeledNonUtf8TLD", "UnlabeledNonUtf8", "UnlabeledUtf8", "ChannelNonUtf8", "ChannelUtf8", "InternalNonUtf8", "InternalUtf8", "LocalLabeled", "Bug"],
+    "description": "Labeling status of top-level page when overriding encoding for HTML"
   },
   "ENCODING_DETECTION_OUTCOME_TEXT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
-    "bug_numbers": [1686463, 1702248, 1706838],
-    "expires_in_version": "96",
+    "bug_numbers": [1686463, 1702248, 1706838, 1712928],
+    "expires_in_version": "106",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal"],
+    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal", "TldFinalA", "ContentFinalA", "GenericFinalA"],
     "description": "Type of automatic encoding detection outcome for text/plain excluding ASCII-only"
   },
   "ENCODING_DETECTION_OUTCOME_HTML": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
-    "bug_numbers": [1686463, 1702248, 1706838],
-    "expires_in_version": "96",
+    "bug_numbers": [1686463, 1702248, 1706838, 1712928],
+    "expires_in_version": "106",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal"],
+    "labels": ["UtfInitial", "UtfFinal", "TldInitial", "TldFinal", "ContentInitial", "ContentFinal", "GenericInitial", "GenericFinal", "TldFinalA", "ContentFinalA", "GenericFinalA"],
     "description": "Type of automatic encoding detection outcome for text/html excluding ASCII-only"
   },
   "LONG_REFLOW_INTERRUPTIBLE": {

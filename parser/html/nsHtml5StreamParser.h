@@ -711,8 +711,6 @@ class nsHtml5StreamParser final : public nsISupports {
 
   bool mDetectorHasSeenNonAscii;
 
-  bool mDetectorHadOnlySeenAsciiWhenFirstGuessing;
-
   /**
    * If true, we are decoding a local file that lacks an encoding
    * declaration and we are not tokenizing yet.

@@ -113,6 +113,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Document.h"
+#include "nsHTMLDocument.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
@@ -1655,91 +1656,132 @@ nsDocShell::ForceEncodingDetection() {
 
   mForcedAutodetection = true;
 
-  LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_AUTOMATIC"));
-  Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_AUTOMATIC,
-                       true);
-
   nsIURI* url = doc->GetOriginalURI();
   bool isFileURL = url && SchemeIsFile(url);
 
   int32_t charsetSource = doc->GetDocumentCharacterSetSource();
   auto encoding = doc->GetDocumentCharacterSet();
-  switch (charsetSource) {
-    case kCharsetFromInitialUserForcedAutoDetection:
-    case kCharsetFromFinalUserForcedAutoDetection:
-      LOGCHARSETMENU(("AutoOverridden"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::AutoOverridden);
-      break;
-    case kCharsetFromInitialAutoDetectionASCII:
-      // Deliberately no final version
-      LOGCHARSETMENU(("UnlabeledAscii"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledAscii);
-      break;
-    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic:
-    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic:
-    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content:
-    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content:
-      LOGCHARSETMENU(("UnlabeledNonUtf8"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledNonUtf8);
-      break;
-    case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
-    case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
-      LOGCHARSETMENU(("UnlabeledNonUtf8TLD"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledNonUtf8TLD);
-      break;
-    case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
-    case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8:
-      LOGCHARSETMENU(("UnlabeledUtf8"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledUtf8);
-      break;
-    case kCharsetFromChannel:
-      if (encoding == UTF_8_ENCODING) {
-        LOGCHARSETMENU(("ChannelUtf8"));
+  // AsHTMLDocument is valid, because we called
+  // WillIgnoreCharsetOverride() above.
+  if (doc->AsHTMLDocument()->IsPlainText()) {
+    switch (charsetSource) {
+      case kCharsetFromInitialAutoDetectionASCII:
+        // Deliberately no final version
+        LOGCHARSETMENU(("TEXT:UnlabeledAscii"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ChannelUtf8);
-      } else {
-        LOGCHARSETMENU(("ChannelNonUtf8"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::UnlabeledAscii);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8GenericInitialWasASCII:
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8ContentInitialWasASCII:
+        LOGCHARSETMENU(("TEXT:UnlabeledNonUtf8"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ChannelNonUtf8);
-      }
-      break;
-    case kCharsetFromXmlDeclaration:
-    case kCharsetFromMetaTag:
-      if (isFileURL) {
-        LOGCHARSETMENU(("LocalLabeled"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::
+                UnlabeledNonUtf8);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII:
+        LOGCHARSETMENU(("TEXT:UnlabeledNonUtf8TLD"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::LocalLabeled);
-      } else if (encoding == UTF_8_ENCODING) {
-        LOGCHARSETMENU(("MetaUtf8"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::
+                UnlabeledNonUtf8TLD);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
+      case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII:
+        LOGCHARSETMENU(("TEXT:UnlabeledUtf8"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::MetaUtf8);
-      } else {
-        LOGCHARSETMENU(("MetaNonUtf8"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::UnlabeledUtf8);
+        break;
+      case kCharsetFromChannel:
+        if (encoding == UTF_8_ENCODING) {
+          LOGCHARSETMENU(("TEXT:ChannelUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::ChannelUtf8);
+        } else {
+          LOGCHARSETMENU(("TEXT:ChannelNonUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::
+                  ChannelNonUtf8);
+        }
+        break;
+      default:
+        LOGCHARSETMENU(("TEXT:Bug"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::MetaNonUtf8);
-      }
-      break;
-    case kCharsetFromFinalAutoDetectionFile:
-      if (isFileURL) {
-        LOGCHARSETMENU(("LocalUnlabeled"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_TEXT::Bug);
+        break;
+    }
+  } else {
+    switch (charsetSource) {
+      case kCharsetFromInitialAutoDetectionASCII:
+        // Deliberately no final version
+        LOGCHARSETMENU(("HTML:UnlabeledAscii"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::LocalUnlabeled);
-      } else {
-        LOGCHARSETMENU(("Bug"));
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::UnlabeledAscii);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8GenericInitialWasASCII:
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8ContentInitialWasASCII:
+        LOGCHARSETMENU(("HTML:UnlabeledNonUtf8"));
         Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::Bug);
-      }
-      break;
-    default:
-      LOGCHARSETMENU(("Bug"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::Bug);
-      break;
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::
+                UnlabeledNonUtf8);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
+      case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII:
+        LOGCHARSETMENU(("HTML:UnlabeledNonUtf8TLD"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::
+                UnlabeledNonUtf8TLD);
+        break;
+      case kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8:
+      case kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII:
+        LOGCHARSETMENU(("HTML:UnlabeledUtf8"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::UnlabeledUtf8);
+        break;
+      case kCharsetFromChannel:
+        if (encoding == UTF_8_ENCODING) {
+          LOGCHARSETMENU(("HTML:ChannelUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::ChannelUtf8);
+        } else {
+          LOGCHARSETMENU(("HTML:ChannelNonUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::
+                  ChannelNonUtf8);
+        }
+        break;
+      case kCharsetFromXmlDeclaration:
+      case kCharsetFromMetaTag:
+        if (isFileURL) {
+          LOGCHARSETMENU(("HTML:LocalLabeled"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::LocalLabeled);
+        } else if (encoding == UTF_8_ENCODING) {
+          LOGCHARSETMENU(("HTML:MetaUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::InternalUtf8);
+        } else {
+          LOGCHARSETMENU(("HTML:MetaNonUtf8"));
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::
+                  InternalNonUtf8);
+        }
+        break;
+      default:
+        LOGCHARSETMENU(("HTML:Bug"));
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_HTML::Bug);
+        break;
+    }
   }
   return NS_OK;
 }
