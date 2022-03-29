@@ -804,7 +804,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #  ifdef MOZ_WAYLAND_USE_VAAPI
     // Create VideoFramePool in case we need it.
     if (!mVideoFramePool && mEnableHardwareDecoding) {
-      mVideoFramePool = MakeUnique<VideoFramePool>();
+      mVideoFramePool = MakeUnique<VideoFramePool<LIBAV_VER>>();
     }
 
     // Release unused VA-API surfaces before avcodec_receive_frame() as
