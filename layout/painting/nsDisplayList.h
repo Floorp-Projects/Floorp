@@ -2994,6 +2994,8 @@ struct LinkedListIterator {
 
   explicit LinkedListIterator(Node* aNode = nullptr) : mNode(aNode) {}
 
+  bool HasNext() const { return mNode != nullptr; }
+
   LinkedListIterator<T>& operator++() {
     MOZ_ASSERT(mNode);
     mNode = mNode->mNext;
