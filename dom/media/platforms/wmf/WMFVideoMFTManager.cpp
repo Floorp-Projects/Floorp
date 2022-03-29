@@ -18,7 +18,6 @@
 #include "MediaInfo.h"
 #include "MediaTelemetryConstants.h"
 #include "VPXDecoder.h"
-#include "AOMDecoder.h"
 #include "VideoUtils.h"
 #include "WMFDecoderModule.h"
 #include "WMFUtils.h"
@@ -39,6 +38,10 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
+
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -155,8 +158,10 @@ WMFVideoMFTManager::WMFVideoMFTManager(
     mStreamType = VP8;
   } else if (VPXDecoder::IsVP9(aConfig.mMimeType)) {
     mStreamType = VP9;
+#ifdef MOZ_AV1
   } else if (AOMDecoder::IsAV1(aConfig.mMimeType)) {
     mStreamType = AV1;
+#endif
   } else {
     mStreamType = Unknown;
   }
