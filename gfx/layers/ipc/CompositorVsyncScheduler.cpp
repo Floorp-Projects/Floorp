@@ -161,7 +161,8 @@ void CompositorVsyncScheduler::ScheduleComposition(wr::RenderReasons aReasons) {
       // through the main thread of the UI process. It's possible that
       // we're blocking there waiting on a composite, so schedule an initial
       // one now to get things started.
-      PostCompositeTask(vsyncEvent, aReasons);
+      PostCompositeTask(vsyncEvent,
+                        aReasons | wr::RenderReasons::START_OBSERVING_VSYNC);
     } else {
       mRendersDelayedByVsyncReasons = aReasons;
     }
