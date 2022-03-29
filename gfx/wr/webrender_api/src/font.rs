@@ -105,7 +105,7 @@ impl FontKey {
 /// Note that fonts need to be instantiated before being used, which involves
 /// assigning size and various other options. The word 'template' here is
 /// intended to distinguish this data from instance-specific data.
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum FontTemplate {
     Raw(Arc<Vec<u8>>, u32),
     Native(NativeFontHandle),

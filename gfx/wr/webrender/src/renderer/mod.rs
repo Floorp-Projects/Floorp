@@ -34,7 +34,7 @@
 //! up the scissor, are accepting already transformed coordinates, which we can get by
 //! calling `DrawTarget::to_framebuffer_rect`
 
-use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
+use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode, IdNamespace};
 use api::{DocumentId, Epoch, ExternalImageHandler, RenderReasons};
 use api::CrashAnnotator;
 #[cfg(feature = "replay")]
@@ -1215,7 +1215,12 @@ impl Renderer {
 
         // Ensure shared font keys exist within their own unique namespace so
         // that they don't accidentally collide across Renderer instances.
-        let fonts = SharedFontResources::new(RenderBackend::next_namespace_id());
+        let font_namespace = if namespace_alloc_by_client {
+            options.shared_font_namespace.expect("Shared font namespace must be allocated by client")
+        } else {
+            RenderBackend::next_namespace_id()
+        };
+        let fonts = SharedFontResources::new(font_namespace);
 
         let blob_image_handler = options.blob_image_handler.take();
         let scene_builder_hooks = options.scene_builder_hooks;
@@ -5583,6 +5588,10 @@ pub struct RendererOptions {
     pub chase_primitive: ChasePrimitive,
     pub support_low_priority_transactions: bool,
     pub namespace_alloc_by_client: bool,
+    /// If namespaces are allocated by the client, then the namespace for fonts
+    /// must also be allocated by the client to avoid namespace collisions with
+    /// the backend.
+    pub shared_font_namespace: Option<IdNamespace>,
     pub testing: bool,
     /// Set to true if this GPU supports hardware fast clears as a performance
     /// optimization. Likely requires benchmarking on various GPUs to see if
@@ -5677,6 +5686,7 @@ impl Default for RendererOptions {
             chase_primitive: ChasePrimitive::Nothing,
             support_low_priority_transactions: false,
             namespace_alloc_by_client: false,
+            shared_font_namespace: None,
             testing: false,
             gpu_supports_fast_clears: false,
             allow_dual_source_blending: true,
