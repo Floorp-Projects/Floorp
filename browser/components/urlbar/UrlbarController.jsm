@@ -866,7 +866,7 @@ class TelemetryEvent {
     } else if (event.type == "blur") {
       action = "blur";
     } else {
-      action = MouseEvent.isInstance(event) ? "click" : "enter";
+      action = event instanceof MouseEvent ? "click" : "enter";
     }
     let method = action == "blur" ? "abandonment" : "engagement";
     let value = this._startEventInfo.interactionType;

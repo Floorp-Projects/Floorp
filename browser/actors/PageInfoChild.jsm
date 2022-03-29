@@ -175,7 +175,7 @@ class PageInfoChild extends JSWindowActorChild {
     }
 
     // One swi^H^H^Hif-else to rule them all.
-    if (content.HTMLImageElement.isInstance(elem)) {
+    if (elem instanceof content.HTMLImageElement) {
       addMedia(
         elem.src,
         "img",
@@ -184,7 +184,7 @@ class PageInfoChild extends JSWindowActorChild {
         false,
         !elem.hasAttribute("alt")
       );
-    } else if (content.SVGImageElement.isInstance(elem)) {
+    } else if (elem instanceof content.SVGImageElement) {
       try {
         // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
         //       or the URI formed from the baseURI and the URL is not a valid URI.
@@ -197,17 +197,17 @@ class PageInfoChild extends JSWindowActorChild {
           addMedia(href, "img", "", elem, false);
         }
       } catch (e) {}
-    } else if (content.HTMLVideoElement.isInstance(elem)) {
+    } else if (elem instanceof content.HTMLVideoElement) {
       addMedia(elem.currentSrc, "video", "", elem, false);
-    } else if (content.HTMLAudioElement.isInstance(elem)) {
+    } else if (elem instanceof content.HTMLAudioElement) {
       addMedia(elem.currentSrc, "audio", "", elem, false);
-    } else if (content.HTMLLinkElement.isInstance(elem)) {
+    } else if (elem instanceof content.HTMLLinkElement) {
       if (elem.rel && /\bicon\b/i.test(elem.rel)) {
         addMedia(elem.href, "link", "", elem, false);
       }
     } else if (
-      content.HTMLInputElement.isInstance(elem) ||
-      content.HTMLButtonElement.isInstance(elem)
+      elem instanceof content.HTMLInputElement ||
+      elem instanceof content.HTMLButtonElement
     ) {
       if (elem.type.toLowerCase() == "image") {
         addMedia(
@@ -219,9 +219,9 @@ class PageInfoChild extends JSWindowActorChild {
           !elem.hasAttribute("alt")
         );
       }
-    } else if (content.HTMLObjectElement.isInstance(elem)) {
+    } else if (elem instanceof content.HTMLObjectElement) {
       addMedia(elem.data, "object", this.getValueText(elem), elem, false);
-    } else if (content.HTMLEmbedElement.isInstance(elem)) {
+    } else if (elem instanceof content.HTMLEmbedElement) {
       addMedia(elem.src, "embed", "", elem, false);
     }
 
@@ -240,12 +240,12 @@ class PageInfoChild extends JSWindowActorChild {
     let imageText;
     if (
       !isBG &&
-      !content.SVGImageElement.isInstance(item) &&
-      !content.ImageDocument.isInstance(document)
+      !(item instanceof content.SVGImageElement) &&
+      !(document instanceof content.ImageDocument)
     ) {
       imageText = item.title || item.alt;
 
-      if (!imageText && !content.HTMLImageElement.isInstance(item)) {
+      if (!imageText && !(item instanceof content.HTMLImageElement)) {
         imageText = this.getValueText(item);
       }
     }
@@ -255,9 +255,9 @@ class PageInfoChild extends JSWindowActorChild {
     result.numFrames = 1;
 
     if (
-      content.HTMLObjectElement.isInstance(item) ||
-      content.HTMLEmbedElement.isInstance(item) ||
-      content.HTMLLinkElement.isInstance(item)
+      item instanceof content.HTMLObjectElement ||
+      item instanceof content.HTMLEmbedElement ||
+      item instanceof content.HTMLLinkElement
     ) {
       result.mimeType = item.type;
     }
@@ -290,13 +290,13 @@ class PageInfoChild extends JSWindowActorChild {
       }
     }
 
-    result.HTMLLinkElement = content.HTMLLinkElement.isInstance(item);
-    result.HTMLInputElement = content.HTMLInputElement.isInstance(item);
-    result.HTMLImageElement = content.HTMLImageElement.isInstance(item);
-    result.HTMLObjectElement = content.HTMLObjectElement.isInstance(item);
-    result.SVGImageElement = content.SVGImageElement.isInstance(item);
-    result.HTMLVideoElement = content.HTMLVideoElement.isInstance(item);
-    result.HTMLAudioElement = content.HTMLAudioElement.isInstance(item);
+    result.HTMLLinkElement = item instanceof content.HTMLLinkElement;
+    result.HTMLInputElement = item instanceof content.HTMLInputElement;
+    result.HTMLImageElement = item instanceof content.HTMLImageElement;
+    result.HTMLObjectElement = item instanceof content.HTMLObjectElement;
+    result.SVGImageElement = item instanceof content.SVGImageElement;
+    result.HTMLVideoElement = item instanceof content.HTMLVideoElement;
+    result.HTMLAudioElement = item instanceof content.HTMLAudioElement;
 
     if (isBG) {
       // Items that are showing this image as a background
@@ -307,7 +307,7 @@ class PageInfoChild extends JSWindowActorChild {
       img.src = url;
       result.naturalWidth = img.naturalWidth;
       result.naturalHeight = img.naturalHeight;
-    } else if (!content.SVGImageElement.isInstance(item)) {
+    } else if (!(item instanceof content.SVGImageElement)) {
       // SVG items do not have integer values for height or width,
       // so we must handle them differently in order to correctly
       // serialize
@@ -318,7 +318,7 @@ class PageInfoChild extends JSWindowActorChild {
       result.height = item.height;
     }
 
-    if (content.SVGImageElement.isInstance(item)) {
+    if (item instanceof content.SVGImageElement) {
       result.SVGImageElementWidth = item.width.baseVal.value;
       result.SVGImageElementHeight = item.height.baseVal.value;
     }
@@ -337,9 +337,9 @@ class PageInfoChild extends JSWindowActorChild {
 
     // Form input elements don't generally contain information that is useful to our callers, so return nothing.
     if (
-      content.HTMLInputElement.isInstance(node) ||
-      content.HTMLSelectElement.isInstance(node) ||
-      content.HTMLTextAreaElement.isInstance(node)
+      node instanceof content.HTMLInputElement ||
+      node instanceof content.HTMLSelectElement ||
+      node instanceof content.HTMLTextAreaElement
     ) {
       return valueText;
     }
@@ -357,7 +357,7 @@ class PageInfoChild extends JSWindowActorChild {
       } else if (nodeType == content.Node.ELEMENT_NODE) {
         // And elements can have more text inside them.
         // Images are special, we want to capture the alt text as if the image weren't there.
-        if (content.HTMLImageElement.isInstance(childNode)) {
+        if (childNode instanceof content.HTMLImageElement) {
           valueText += " " + this.getAltText(childNode);
         } else {
           valueText += " " + this.getValueText(childNode);

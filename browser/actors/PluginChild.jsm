@@ -71,7 +71,7 @@ class PluginChild extends JSWindowActorChild {
    * document that GMP is being used in.
    */
   async onPluginCrashed(aEvent) {
-    if (!this.contentWindow.PluginCrashedEvent.isInstance(aEvent)) {
+    if (!(aEvent instanceof this.contentWindow.PluginCrashedEvent)) {
       return;
     }
 

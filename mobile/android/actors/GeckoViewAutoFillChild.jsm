@@ -49,13 +49,13 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
         break;
       }
       case "focusin": {
-        if (contentWindow.HTMLInputElement.isInstance(aEvent.composedTarget)) {
+        if (aEvent.composedTarget instanceof contentWindow.HTMLInputElement) {
           this._autofill.onFocus(aEvent.composedTarget);
         }
         break;
       }
       case "focusout": {
-        if (contentWindow.HTMLInputElement.isInstance(aEvent.composedTarget)) {
+        if (aEvent.composedTarget instanceof contentWindow.HTMLInputElement) {
           this._autofill.onFocus(null);
         }
         break;

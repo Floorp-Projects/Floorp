@@ -842,7 +842,7 @@ async function readUpdateConfig() {
 
     return config;
   } catch (e) {
-    if (DOMException.isInstance(e) && e.name == "NotFoundError") {
+    if (e instanceof DOMException && e.name == "NotFoundError") {
       if (updateConfigNeedsMigration()) {
         const migrationConfig = makeMigrationUpdateConfig();
         setUpdateConfigMigrationDone();

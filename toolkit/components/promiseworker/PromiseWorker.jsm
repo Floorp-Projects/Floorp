@@ -342,7 +342,7 @@ BasePromiseWorker.prototype = {
           throw this.ExceptionHandlers[error.data.exn](error.data);
         }
 
-        if (ErrorEvent.isInstance(error)) {
+        if (error instanceof ErrorEvent) {
           // Other errors get propagated as instances of ErrorEvent
           this.log(
             "Error serialized by DOM",

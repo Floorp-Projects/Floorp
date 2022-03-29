@@ -88,7 +88,7 @@ var PropertyListUtils = Object.freeze({
    *        The reaon for failure is reported to the Error Console.
    */
   read: function PLU_read(aFile, aCallback) {
-    if (!(aFile instanceof Ci.nsIFile || File.isInstance(aFile))) {
+    if (!(aFile instanceof Ci.nsIFile || aFile instanceof File)) {
       throw new Error("aFile is not a file object");
     }
     if (typeof aCallback != "function") {

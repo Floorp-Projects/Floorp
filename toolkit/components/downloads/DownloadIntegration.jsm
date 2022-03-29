@@ -629,7 +629,7 @@ var DownloadIntegration = {
           );
         } catch (ex) {
           // If writing to the file fails, we ignore the error and continue.
-          if (!DOMException.isInstance(ex)) {
+          if (!(ex instanceof DOMException)) {
             Cu.reportError(ex);
           }
         }
@@ -669,7 +669,7 @@ var DownloadIntegration = {
       // We should report errors with making the permissions less restrictive
       // or marking the file as read-only on Unix and Mac, but this should not
       // prevent the download from completing.
-      if (!DOMException.isInstance(ex)) {
+      if (!(ex instanceof DOMException)) {
         Cu.reportError(ex);
       }
     }

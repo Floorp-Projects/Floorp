@@ -94,12 +94,12 @@ let StartupCache;
 const global = this;
 
 function verifyActorForContext(actor, context) {
-  if (JSWindowActorParent.isInstance(actor)) {
+  if (actor instanceof JSWindowActorParent) {
     let target = actor.browsingContext.top.embedderElement;
     if (context.parentMessageManager !== target.messageManager) {
       throw new Error("Got message on unexpected message manager");
     }
-  } else if (JSProcessActorParent.isInstance(actor)) {
+  } else if (actor instanceof JSProcessActorParent) {
     if (actor.manager.remoteType !== context.extension.remoteType) {
       throw new Error("Got message from unexpected process");
     }
@@ -301,7 +301,7 @@ const ProxyMessenger = {
       url: source.url,
     };
 
-    if (JSWindowActorParent.isInstance(source.actor)) {
+    if (source.actor instanceof JSWindowActorParent) {
       let browser = source.actor.browsingContext.top.embedderElement;
       let data =
         browser && apiManager.global.tabTracker.getBrowserData(browser);
@@ -836,7 +836,7 @@ ParentAPIManager = {
         throw new Error(`Bad sender context envType: ${sender.envType}`);
       }
 
-      if (JSWindowActorParent.isInstance(actor)) {
+      if (actor instanceof JSWindowActorParent) {
         let processMessageManager =
           target.messageManager.processMessageManager ||
           Services.ppmm.getChildAt(0);
@@ -852,7 +852,7 @@ ParentAPIManager = {
             "Attempt to create privileged extension parent from incorrect child process"
           );
         }
-      } else if (JSProcessActorParent.isInstance(actor)) {
+      } else if (actor instanceof JSProcessActorParent) {
         if (actor.manager.remoteType !== extension.remoteType) {
           throw new Error(
             "Attempt to create privileged extension parent from incorrect child process"
@@ -1934,7 +1934,7 @@ StartupCache = {
 
       result = aomStartup.decodeBlob(buffer);
     } catch (e) {
-      if (!DOMException.isInstance(e) || e.name !== "NotFoundError") {
+      if (!(e instanceof DOMException) || e.name !== "NotFoundError") {
         Cu.reportError(e);
       }
     }

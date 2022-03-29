@@ -70,7 +70,7 @@ nsTerminatorTelemetry.prototype = {
       try {
         data = await IOUtils.readJSON(PATH);
       } catch (ex) {
-        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+        if (ex instanceof DOMException && ex.name == "NotFoundError") {
           return;
         }
         // Let other errors be reported by Promise's error-reporting.

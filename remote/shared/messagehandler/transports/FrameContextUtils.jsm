@@ -8,7 +8,7 @@ const EXPORTED_SYMBOLS = ["isBrowsingContextCompatible"];
 
 function isExtensionContext(browsingContext) {
   let principal;
-  if (CanonicalBrowsingContext.isInstance(browsingContext)) {
+  if (browsingContext instanceof CanonicalBrowsingContext) {
     principal = browsingContext.currentWindowGlobal.documentPrincipal;
   } else {
     principal = browsingContext.window.document.nodePrincipal;
@@ -22,7 +22,7 @@ function isExtensionContext(browsingContext) {
 }
 
 function isParentProcess(browsingContext) {
-  if (CanonicalBrowsingContext.isInstance(browsingContext)) {
+  if (browsingContext instanceof CanonicalBrowsingContext) {
     return browsingContext.currentWindowGlobal.osPid === -1;
   }
 

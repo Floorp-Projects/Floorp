@@ -405,7 +405,7 @@ Finder.prototype = {
     if (
       focusedElement &&
       "frameLoader" in focusedElement &&
-      BrowsingContext.isInstance(focusedElement.browsingContext)
+      focusedElement.browsingContext instanceof BrowsingContext
     ) {
       return {
         focusedChildBrowserContextId: focusedElement.browsingContext.id,
