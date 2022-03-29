@@ -83,6 +83,8 @@ class nsPrintSettings : public nsIPrintSettings {
   virtual nsresult _Clone(nsIPrintSettings** _retval);
   virtual nsresult _Assign(nsIPrintSettings* aPS);
 
+  typedef enum { eHeader, eFooter } nsHeaderFooterEnum;
+
   // Members
   nsWeakPtr mSession;  // Should never be touched by Clone or Assign
 
@@ -93,20 +95,19 @@ class nsPrintSettings : public nsIPrintSettings {
 
   nsTArray<int32_t> mPageRanges;
 
-  double mScaling = 1.0;
-  bool mPrintBGColors = false;
-  bool mPrintBGImages = false;
+  double mScaling;
+  bool mPrintBGColors;  // print background colors
+  bool mPrintBGImages;  // print background images
 
-  bool mIsCancelled = false;
-  bool mSaveOnCancel = true;
-  bool mPrintSilent = false;
-  bool mShrinkToFit = true;
-  bool mShowMarginGuides = false;
-  bool mHonorPageRuleMargins = true;
-  bool mIsPrintSelectionRBEnabled = false;
-  bool mPrintSelectionOnly = false;
-
-  int32_t mPrintPageDelay = 50;  // XXX Do we really want this?
+  bool mIsCancelled;
+  bool mSaveOnCancel;
+  bool mPrintSilent;
+  bool mShrinkToFit;
+  bool mShowMarginGuides;
+  bool mHonorPageRuleMargins;
+  bool mIsPrintSelectionRBEnabled;
+  bool mPrintSelectionOnly;
+  int32_t mPrintPageDelay;
 
   nsString mTitle;
   nsString mURL;
@@ -114,24 +115,23 @@ class nsPrintSettings : public nsIPrintSettings {
   nsString mFooterStrs[NUM_HEAD_FOOT];
 
   nsString mPaperId;
-  double mPaperWidth = 8.5;
-  double mPaperHeight = 11.0;
-  int16_t mPaperSizeUnit = kPaperSizeInches;
+  double mPaperWidth;
+  double mPaperHeight;
+  int16_t mPaperSizeUnit;
 
-  bool mPrintReversed = false;
-  bool mPrintInColor = true;
-  int32_t mOrientation = kPortraitOrientation;
-  int32_t mResolution = 0;
-  int32_t mDuplex = kDuplexNone;
-  int32_t mNumCopies = 1;
-  int32_t mNumPagesPerSheet = 1;
-  int16_t mOutputFormat = kOutputFormatNative;
-  OutputDestinationType mOutputDestination = kOutputDestinationPrinter;
+  bool mPrintReversed;
+  bool mPrintInColor;    // a false means grayscale
+  int32_t mOrientation;  // see orientation consts
+  int32_t mResolution;
+  int32_t mDuplex;
+  int32_t mNumCopies;
+  int32_t mNumPagesPerSheet;
   nsString mPrinter;
+  bool mPrintToFile;
   nsString mToFileName;
-  nsCOMPtr<nsIOutputStream> mOutputStream;
-  bool mIsInitedFromPrinter = false;
-  bool mIsInitedFromPrefs = false;
+  int16_t mOutputFormat;
+  bool mIsInitedFromPrinter;
+  bool mIsInitedFromPrefs;
 };
 
 #endif /* nsPrintSettings_h__ */

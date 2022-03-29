@@ -9,9 +9,8 @@
 #include <Carbon/Carbon.h>
 #include "PrintTarget.h"
 
-class nsIOutputStream;
-
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 /**
  * CoreGraphics printing target.
@@ -19,9 +18,8 @@ namespace mozilla::gfx {
 class PrintTargetCG final : public PrintTarget {
  public:
   static already_AddRefed<PrintTargetCG> CreateOrNull(
-      nsIOutputStream* aOutputStream, PMPrintSession aPrintSession,
-      PMPageFormat aPageFormat, PMPrintSettings aPrintSettings,
-      const IntSize& aSize);
+      PMPrintSession aPrintSession, PMPageFormat aPageFormat,
+      PMPrintSettings aPrintSettings, const IntSize& aSize);
 
   nsresult BeginPrinting(const nsAString& aTitle,
                          const nsAString& aPrintToFileName, int32_t aStartPage,
@@ -34,17 +32,16 @@ class PrintTargetCG final : public PrintTarget {
   already_AddRefed<DrawTarget> GetReferenceDrawTarget() final;
 
  private:
-  PrintTargetCG(CGContextRef aPrintToStreamContext,
-                PMPrintSession aPrintSession, PMPageFormat aPageFormat,
+  PrintTargetCG(PMPrintSession aPrintSession, PMPageFormat aPageFormat,
                 PMPrintSettings aPrintSettings, const IntSize& aSize);
   ~PrintTargetCG();
 
-  CGContextRef mPrintToStreamContext = nullptr;
   PMPrintSession mPrintSession;
   PMPageFormat mPageFormat;
   PMPrintSettings mPrintSettings;
 };
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_PRINTTARGETCG_H */

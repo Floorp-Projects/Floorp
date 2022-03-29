@@ -154,15 +154,14 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   aSettings->GetPrinterName(data->printerName());
 
-  data->outputDestination() = aSettings->GetOutputDestination();
+  aSettings->GetPrintToFile(&data->printToFile());
 
   aSettings->GetToFileName(data->toFileName());
 
-  data->outputFormat() = aSettings->GetOutputFormat();
-  data->printPageDelay() = aSettings->GetPrintPageDelay();
-  data->resolution() = aSettings->GetResolution();
-  data->duplex() = aSettings->GetDuplex();
-
+  aSettings->GetOutputFormat(&data->outputFormat());
+  aSettings->GetPrintPageDelay(&data->printPageDelay());
+  aSettings->GetResolution(&data->resolution());
+  aSettings->GetDuplex(&data->duplex());
   aSettings->GetIsInitializedFromPrinter(&data->isInitializedFromPrinter());
   aSettings->GetIsInitializedFromPrefs(&data->isInitializedFromPrefs());
 
@@ -242,11 +241,11 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetNumCopies(data.numCopies());
   settings->SetNumPagesPerSheet(data.numPagesPerSheet());
 
-  settings->SetOutputDestination(
-      nsIPrintSettings::OutputDestinationType(data.outputDestination()));
   settings->SetPrinterName(data.printerName());
+
+  settings->SetPrintToFile(data.printToFile());
+
   settings->SetToFileName(data.toFileName());
-  // Output stream intentionally unset, child processes shouldn't care about it.
 
   settings->SetOutputFormat(data.outputFormat());
   settings->SetPrintPageDelay(data.printPageDelay());
@@ -525,9 +524,7 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
 
   if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
     if (GETBOOLPREF(kPrintToFile, &b)) {
-      aPS->SetOutputDestination(
-          b ? nsIPrintSettings::kOutputDestinationFile
-            : nsIPrintSettings::kOutputDestinationPrinter);
+      aPS->SetPrintToFile(b);
       noValidPrefsFound = false;
     }
   }
@@ -743,9 +740,9 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
   }
 
   if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
-    Preferences::SetBool(GetPrefName(kPrintToFile, aPrinterName),
-                         aPS->GetOutputDestination() ==
-                             nsIPrintSettings::kOutputDestinationFile);
+    if (NS_SUCCEEDED(aPS->GetPrintToFile(&b))) {
+      Preferences::SetBool(GetPrefName(kPrintToFile, aPrinterName), b);
+    }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {

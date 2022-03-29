@@ -575,8 +575,7 @@ class Page extends Domain {
     printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
     printSettings.printerName = "";
     printSettings.printSilent = true;
-    printSettings.outputDestination =
-      Ci.nsIPrintSettings.kOutputDestinationFile;
+    printSettings.printToFile = true;
     printSettings.toFileName = filePath;
 
     printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;

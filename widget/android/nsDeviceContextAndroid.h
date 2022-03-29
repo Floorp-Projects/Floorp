@@ -10,7 +10,7 @@
 
 class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec {
  private:
-  virtual ~nsDeviceContextSpecAndroid();
+  ~nsDeviceContextSpecAndroid() {}
 
  public:
   NS_DECL_ISUPPORTS

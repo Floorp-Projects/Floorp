@@ -111,7 +111,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   // Get the Printer Name to be used and output format.
   nsAutoString printerName;
   if (mPrintSettings) {
-    mOutputFormat = mPrintSettings->GetOutputFormat();
+    mPrintSettings->GetOutputFormat(&mOutputFormat);
     mPrintSettings->GetPrinterName(printerName);
   }
 
@@ -272,6 +272,9 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 #endif
 
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    nsString filename;
+    mPrintSettings->GetToFileName(filename);
+
     double width, height;
     mPrintSettings->GetEffectiveSheetSize(&width, &height);
     if (width <= 0 || height <= 0) {
@@ -282,37 +285,26 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
     width /= TWIPS_PER_POINT_FLOAT;
     height /= TWIPS_PER_POINT_FLOAT;
 
-    auto stream = [&]() -> nsCOMPtr<nsIOutputStream> {
-      if (mPrintSettings->GetOutputDestination() ==
-          nsIPrintSettings::kOutputDestinationStream) {
-        nsCOMPtr<nsIOutputStream> out;
-        mPrintSettings->GetOutputStream(getter_AddRefs(out));
-        return out;
-      }
-      nsAutoString filename;
-      mPrintSettings->GetToFileName(filename);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv;
+    if (!filename.IsEmpty()) {
+      file = do_CreateInstance("@mozilla.org/file/local;1");
+      rv = file->InitWithPath(filename);
+    } else {
+      rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile));
+      file = mTempFile;
+    }
 
-      nsCOMPtr<nsIFile> file;
-      nsresult rv;
-      if (!filename.IsEmpty()) {
-        file = do_CreateInstance("@mozilla.org/file/local;1");
-        rv = file->InitWithPath(filename);
-      } else {
-        rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile));
-        file = mTempFile;
-      }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
 
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-
-      nsCOMPtr<nsIFileOutputStream> stream =
-          do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-      if (NS_FAILED(stream->Init(file, -1, -1, 0))) {
-        return nullptr;
-      }
-      return stream;
-    }();
+    nsCOMPtr<nsIFileOutputStream> stream =
+        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    rv = stream->Init(file, -1, -1, 0);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
 
     return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
   }
@@ -614,7 +606,8 @@ nsPrinterListWin::InitPrintSettingsFromPrinter(
   }
 
   // When printing to PDF on Windows there is no associated printer driver.
-  int16_t outputFormat = aPrintSettings->GetOutputFormat();
+  int16_t outputFormat;
+  aPrintSettings->GetOutputFormat(&outputFormat);
   if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
     return NS_OK;
   }

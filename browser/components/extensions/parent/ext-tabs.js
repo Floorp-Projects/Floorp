@@ -1351,8 +1351,7 @@ this.tabs = class extends ExtensionAPI {
                 printSettings.isInitializedFromPrinter = true;
                 printSettings.isInitializedFromPrefs = true;
 
-                printSettings.outputDestination =
-                  Ci.nsIPrintSettings.kOutputDestinationFile;
+                printSettings.printToFile = true;
                 printSettings.toFileName = picker.file.path;
 
                 printSettings.printSilent = true;
