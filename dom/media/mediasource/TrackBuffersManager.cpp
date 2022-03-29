@@ -2980,8 +2980,28 @@ void TrackBuffersManager::TrackData::AddSizeOfResources(
   }
 }
 
+RefPtr<GenericPromise> TrackBuffersManager::RequestDebugInfo(
+    dom::TrackBuffersManagerDebugInfo& aInfo) const {
+  const RefPtr<TaskQueue> taskQueue = GetTaskQueueSafe();
+  if (!taskQueue) {
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
+  if (!taskQueue->IsCurrentThreadIn()) {
+    // Run the request on the task queue if it's not already.
+    return InvokeAsync(taskQueue.get(), __func__,
+                       [this, self = RefPtr{this}, &aInfo] {
+                         return RequestDebugInfo(aInfo);
+                       });
+  }
+  GetDebugInfo(aInfo);
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 void TrackBuffersManager::GetDebugInfo(
-    dom::TrackBuffersManagerDebugInfo& aInfo) {
+    dom::TrackBuffersManagerDebugInfo& aInfo) const {
+  MOZ_ASSERT(OnTaskQueue(),
+             "This shouldn't be called off the task queue because we're about "
+             "to touch a lot of data that is used on the task queue");
   CopyUTF8toUTF16(mType.Type().AsString(), aInfo.mType);
 
   if (HasAudio()) {
