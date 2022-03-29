@@ -433,10 +433,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0xa011);
       APPEND_DEVICE(0xa012);
       break;
-    case DeviceFamily::Bug1760464:
-      APPEND_DEVICE(0x0a16);  // Intel HD Graphics Family on Haswell Ultrabooks
-      APPEND_DEVICE(0x041e);  // Intel HD Graphics 4400
-      break;
     case DeviceFamily::AmdR600:
       // AMD R600 generation GPUs
       // R600
@@ -954,9 +950,6 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::Bug1116812:
     case DeviceFamily::Bug1155608:
     case DeviceFamily::Bug1207665:
-    case DeviceFamily::Bug1760464:
-      vendor = DeviceVendor::Intel;
-      break;
     case DeviceFamily::NvidiaAll:
     case DeviceFamily::NvidiaBlockD3D9Layers:
     case DeviceFamily::NvidiaRolloutWebRender:
