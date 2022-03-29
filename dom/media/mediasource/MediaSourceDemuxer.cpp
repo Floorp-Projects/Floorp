@@ -230,14 +230,23 @@ MediaSourceDemuxer::~MediaSourceDemuxer() {
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
-void MediaSourceDemuxer::GetDebugInfo(dom::MediaSourceDemuxerDebugInfo& aInfo) {
+RefPtr<GenericPromise> MediaSourceDemuxer::GetDebugInfo(
+    dom::MediaSourceDemuxerDebugInfo& aInfo) const {
   MonitorAutoLock mon(mMonitor);
+  nsTArray<RefPtr<GenericPromise>> promises;
   if (mAudioTrack) {
-    mAudioTrack->GetDebugInfo(aInfo.mAudioTrack);
+    promises.AppendElement(mAudioTrack->RequestDebugInfo(aInfo.mAudioTrack));
   }
   if (mVideoTrack) {
-    mVideoTrack->GetDebugInfo(aInfo.mVideoTrack);
+    promises.AppendElement(mVideoTrack->RequestDebugInfo(aInfo.mVideoTrack));
   }
+  return GenericPromise::All(GetCurrentSerialEventTarget(), promises)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          []() { return GenericPromise::CreateAndResolve(true, __func__); },
+          [] {
+            return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          });
 }
 
 MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,

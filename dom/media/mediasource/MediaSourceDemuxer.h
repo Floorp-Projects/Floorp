@@ -50,9 +50,12 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
   void NotifyInitDataArrived();
 
-  // Returns a structure describing the state of the MediaSource internal
+  // Populates aInfo with info describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
-  void GetDebugInfo(dom::MediaSourceDemuxerDebugInfo& aInfo);
+  // aInfo should *not* be accessed until the returned promise has been resolved
+  // or rejected.
+  RefPtr<GenericPromise> GetDebugInfo(
+      dom::MediaSourceDemuxerDebugInfo& aInfo) const;
 
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
