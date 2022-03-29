@@ -1721,7 +1721,7 @@ function RecvStartPrint(isPrintSelection, printRange)
     ps.unwriteableMarginRight = 0;
     ps.unwriteableMarginLeft = 0;
     ps.unwriteableMarginBottom = 0;
-    ps.outputDestination = Ci.nsIPrintSettings.kOutputDestinationFile;
+    ps.printToFile = true;
     ps.toFileName = file.path;
     ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
     ps.printSelectionOnly = isPrintSelection;

@@ -1181,18 +1181,15 @@ var PrintSettingsViewProxy = {
       printerInfo.defaultSettings.toFileName = "";
       printerInfo.defaultSettings.outputFormat =
         Ci.nsIPrintSettings.kOutputFormatPDF;
-      printerInfo.defaultSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationFile;
+      printerInfo.defaultSettings.printToFile = true;
       printerInfo.paperList = this.fallbackPaperList;
     }
     printerInfo.settings = printerInfo.defaultSettings.clone();
     // Apply any previously persisted user values
     // Don't apply kInitSavePrintToFile though, that should only be true for
     // the PDF printer.
-    printerInfo.settings.outputDestination =
-      printerName == PrintUtils.SAVE_TO_PDF_PRINTER
-        ? Ci.nsIPrintSettings.kOutputDestinationFile
-        : Ci.nsIPrintSettings.kOutputDestinationPrinter;
+    printerInfo.settings.printToFile =
+      printerName == PrintUtils.SAVE_TO_PDF_PRINTER;
     let flags =
       printerInfo.settings.kInitSaveAll ^
       printerInfo.settings.kInitSavePrintToFile;
@@ -2618,7 +2615,7 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
   update(settings) {
     this.numCopies = settings.numCopies;
     this.duplex = settings.duplex;
-    this.outputDestination = settings.outputDestination;
+    this.printToFile = settings.printToFile;
     this.render();
   }
 
@@ -2631,10 +2628,7 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
 
     // When printing to a printer (not to a file) update
     // the sheet count to account for duplex printing.
-    if (
-      this.outputDestination == Ci.nsIPrintSettings.kOutputDestinationPrinter &&
-      this.duplex != Ci.nsIPrintSettings.kDuplexNone
-    ) {
+    if (!this.printToFile && this.duplex != Ci.nsIPrintSettings.kDuplexNone) {
       sheetCount = Math.ceil(sheetCount / 2);
     }
 
