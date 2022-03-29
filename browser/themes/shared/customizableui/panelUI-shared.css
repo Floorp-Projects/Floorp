@@ -211,8 +211,7 @@ toolbarseparator + .panel-subview-body,
 
 #wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
 #wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls,
-panelview .toolbaritem-combined-buttons,
-#widget-overflow-fixed-list .toolbaritem-combined-buttons {
+:is(panelview, #widget-overflow-fixed-list) .toolbaritem-combined-buttons {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
@@ -386,7 +385,7 @@ panelview[id^=PanelUI-webext-] {
   min-width: calc(var(--menu-panel-width) + 32px);
 }
 
-panelview .toolbaritem-combined-buttons > toolbarbutton > .toolbarbutton-icon {
+:is(panelview, #widget-overflow-fixed-list) .toolbaritem-combined-buttons > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -1387,7 +1386,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-panelview .toolbaritem-combined-buttons > :is(toolbarbutton, .toolbarbutton-1) {
+:is(panelview, #widget-overflow-fixed-list) .toolbaritem-combined-buttons > :is(toolbarbutton, .toolbarbutton-1) {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
