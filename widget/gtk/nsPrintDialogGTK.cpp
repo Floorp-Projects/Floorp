@@ -409,7 +409,8 @@ nsresult nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings* aNSSettings) {
     // printing won't occur! (We manually copy the spool file when this flag is
     // set, because we love our embedders) Even if it is print-to-file in GTK's
     // case, GTK does The Right Thing when we send the job.
-    aNSSettings->SetPrintToFile(false);
+    aNSSettings->SetOutputDestination(
+        nsIPrintSettings::kOutputDestinationPrinter);
 
     aNSSettings->SetShrinkToFit(
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(shrink_to_fit_toggle)));

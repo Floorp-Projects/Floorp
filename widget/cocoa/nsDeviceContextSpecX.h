@@ -37,13 +37,14 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
   virtual ~nsDeviceContextSpecX();
 
  protected:
-  PMPrintSession mPrintSession;    // printing context.
-  PMPageFormat mPageFormat;        // page format.
-  PMPrintSettings mPrintSettings;  // print settings.
+  PMPrintSession mPrintSession = nullptr;    // printing context.
+  PMPageFormat mPageFormat = nullptr;        // page format.
+  PMPrintSettings mPrintSettings = nullptr;  // print settings.
+  nsCOMPtr<nsIOutputStream> mOutputStream;   // Output stream from settings.
 #ifdef MOZ_ENABLE_SKIA_PDF
-  nsCOMPtr<nsIFile>
-      mTempFile;  // file "print" output is generated to if printing via PDF
-  bool mPrintViaSkPDF;
+  // file "print" output generated if printing via PDF
+  nsCOMPtr<nsIFile> mTempFile;
+  bool mPrintViaSkPDF = false;
 #endif
 };
 
