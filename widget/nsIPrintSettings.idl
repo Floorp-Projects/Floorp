@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-
 %{ C++
 #include "nsMargin.h"
 #include "nsTArray.h"
@@ -22,6 +21,7 @@ native nsNativeIntMargin(nsIntMargin);
 [ref] native nsNativeIntMarginRef(nsIntMargin);
 
 interface nsIPrintSession;
+interface nsIOutputStream;
 
 /**
  * Simplified graphics interface for JS rendering.
@@ -78,23 +78,24 @@ interface nsIPrintSettings : nsISupports
   const long kJustCenter = 1;
   const long kJustRight  = 2;
 
-  /**
-   * Page Size Unit Constants
-   */
+  /** Page Size Unit Constants */
   const short kPaperSizeInches      = 0;
   const short kPaperSizeMillimeters = 1;
 
-  /**
-   * Orientation Constants
-   */
+  /** Orientation Constants */
   const short kPortraitOrientation  = 0;
   const short kLandscapeOrientation = 1;
 
-  /**
-   * Output file format
-   */
+  /** Output file format */
   const short kOutputFormatNative = 0;
   const short kOutputFormatPDF    = 2;
+
+  /** Output destination */
+  cenum OutputDestinationType : 8 {
+    kOutputDestinationPrinter = 0,
+    kOutputDestinationFile = 1,
+    kOutputDestinationStream = 2,
+  };
 
   /**
    * Duplex printing options.
@@ -298,17 +299,19 @@ interface nsIPrintSettings : nsISupports
    */
   attribute long    numPagesPerSheet;
 
-  attribute AString printerName;   /* name of destination printer */
+  /** Output device information */
+  [infallible] attribute nsIPrintSettings_OutputDestinationType outputDestination;
+  [infallible] attribute short outputFormat;
 
-  attribute boolean printToFile;
-  attribute AString toFileName;
-  attribute short   outputFormat;
+  attribute AString printerName;          /* for kOutputDestinationPrinter */
+  attribute AString toFileName;           /* for kOutputDestinationFile */
+  attribute nsIOutputStream outputStream; /* for kOutputDestinationPrinter */
 
-  attribute long    printPageDelay; /* in milliseconds */
+  [infallible] attribute long printPageDelay; /* in milliseconds */
 
-  attribute long    resolution;     /* print resolution (dpi) */
+  [infallible] attribute long resolution;     /* print resolution (dpi) */
 
-  attribute long    duplex;         /* duplex mode */
+  [infallible] attribute long duplex;         /* duplex mode */
 
   /* initialize helpers */
   /**
@@ -316,7 +319,7 @@ interface nsIPrintSettings : nsISupports
    * from a printer specified by the "printerName" attr.
    * If a different name is set into the "printerName"
    * attribute than the one it was initialized with the PS
-   * will then get intialized from that printer.
+   * will then get initialized from that printer.
    */
   attribute boolean isInitializedFromPrinter;
 
@@ -324,7 +327,7 @@ interface nsIPrintSettings : nsISupports
    * This attribute tracks whether the PS has been initialized
    * from prefs. If a different name is set into the "printerName"
    * attribute than the one it was initialized with the PS
-   * will then get intialized from prefs again.
+   * will then get initialized from prefs again.
    */
   attribute boolean isInitializedFromPrefs;
 

@@ -285,7 +285,8 @@ class PrintHelper {
     defaultSettings.printerName = name;
     defaultSettings.toFileName = "";
     defaultSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
-    defaultSettings.printToFile = false;
+    defaultSettings.outputDestination =
+      Ci.nsIPrintSettings.kOutputDestinationPrinter;
     defaultSettings.paperSizeUnit = paperSizeUnit;
     if (paperId) {
       defaultSettings.paperId = paperId;

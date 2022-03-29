@@ -314,11 +314,13 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
   if (prntdlg.Flags & PD_PRINTTOFILE) {
     char16ptr_t fileName = &(((wchar_t*)devnames)[devnames->wOutputOffset]);
     NS_ASSERTION(wcscmp(fileName, L"FILE:") == 0, "FileName must be `FILE:`");
+    aPrintSettings->SetOutputDestination(
+        nsIPrintSettings::kOutputDestinationFile);
     aPrintSettings->SetToFileName(nsDependentString(fileName));
-    aPrintSettings->SetPrintToFile(true);
   } else {
     // clear "print to file" info
-    aPrintSettings->SetPrintToFile(false);
+    aPrintSettings->SetOutputDestination(
+        nsIPrintSettings::kOutputDestinationPrinter);
     aPrintSettings->SetToFileName(u""_ns);
   }
 
