@@ -391,7 +391,8 @@ HandlerService.prototype = {
         "browser.download.improvements_to_download_panel"
       ) &&
       !Services.policies.getActivePolicies()?.Handlers &&
-      !this._store.data.isDownloadsImprovementsAlreadyMigrated
+      !this._store.data.isDownloadsImprovementsAlreadyMigrated &&
+      AppConstants.MOZ_APP_NAME != "thunderbird"
     ) {
       for (let [type, mimeInfo] of Object.entries(this._store.data.mimeTypes)) {
         let isViewableInternally =
