@@ -96,6 +96,10 @@ const ONBOARDING_MESSAGES = () => [
                           alt_text: {
                             string_id: "spotlight-focus-promo-qr-code",
                           },
+                          image_overrides: {
+                            de:
+                              "chrome://browser/content/assets/klar-qr-code.svg",
+                          },
                         },
                         marketplace_buttons: {
                           ios_link: {

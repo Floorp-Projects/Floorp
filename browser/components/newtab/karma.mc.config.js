@@ -281,7 +281,10 @@ module.exports = function(config) {
             loader: "babel-loader",
             options: {
               presets: ["@babel/preset-react"],
-              plugins: ["@babel/plugin-proposal-optional-chaining"],
+              plugins: [
+                "@babel/plugin-proposal-nullish-coalescing-operator",
+                "@babel/plugin-proposal-optional-chaining",
+              ],
             },
           },
           {

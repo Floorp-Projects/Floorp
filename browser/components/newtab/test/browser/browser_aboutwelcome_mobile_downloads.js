@@ -8,8 +8,7 @@ const BASE_CONTENT = {
       type: "mobile_downloads",
       data: {
         QR_code: {
-          image_url:
-            "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
+          image_url: "focus-qr-code.svg",
           alt_text: "Test alt",
         },
         email: {
@@ -39,13 +38,18 @@ async function openAboutWelcome(json) {
   return tab.linkedBrowser;
 }
 
+function setLocale(locale) {
+  Services.locale.availableLocales = [locale];
+  Services.locale.requestedLocales = [locale];
+}
+
 const ALT_TEXT = BASE_CONTENT.content.tiles.data.QR_code.alt_text;
 
 /**
  * Test rendering a screen with a mobile downloads tile
  * including QR code, email, and marketplace elements
  */
-add_task(async function test_aboutwelcome_mobile_downloads() {
+add_task(async function test_aboutwelcome_mobile_downloads_all() {
   const TEST_JSON = JSON.stringify([BASE_CONTENT]);
   let browser = await openAboutWelcome(TEST_JSON);
 
@@ -67,33 +71,37 @@ add_task(async function test_aboutwelcome_mobile_downloads() {
  * Test rendering a screen with a mobile downloads tile
  * including only a QR code and marketplace elements
  */
-add_task(async function test_aboutwelcome_mobile_downloads() {
-  const SCREEN_CONTENT = Object.assign({}, BASE_CONTENT);
-  delete SCREEN_CONTENT.content.tiles.data.email;
-  const TEST_JSON = JSON.stringify([SCREEN_CONTENT]);
-  let browser = await openAboutWelcome(TEST_JSON);
+add_task(
+  async function test_aboutwelcome_mobile_downloads_qr_and_marketplace() {
+    const SCREEN_CONTENT = structuredClone(BASE_CONTENT);
+    delete SCREEN_CONTENT.content.tiles.data.email;
+    const TEST_JSON = JSON.stringify([SCREEN_CONTENT]);
+    let browser = await openAboutWelcome(TEST_JSON);
 
-  await test_screen_content(
-    browser,
-    "renders screen with QR code and marketplace badges",
-    // Expected selectors:
-    [
-      `img.qr-code-image[alt="${ALT_TEXT}"]`,
-      "ul.mobile-download-buttons",
-      "li.android",
-      "li.ios",
-    ],
-    // Unexpected selectors:
-    [`button.email-link`]
-  );
-});
+    await test_screen_content(
+      browser,
+      "renders screen with QR code and marketplace badges",
+      // Expected selectors:
+      [
+        `img.qr-code-image[alt="${ALT_TEXT}"]`,
+        "ul.mobile-download-buttons",
+        "li.android",
+        "li.ios",
+      ],
+      // Unexpected selectors:
+      [`button.email-link`]
+    );
+  }
+);
 
 /**
  * Test rendering a screen with a mobile downloads tile
  * including only a QR code
  */
-add_task(async function test_aboutwelcome_mobile_downloads() {
-  let SCREEN_CONTENT = Object.assign({}, BASE_CONTENT);
+add_task(async function test_aboutwelcome_mobile_downloads_qr() {
+  let SCREEN_CONTENT = structuredClone(BASE_CONTENT);
+  const QR_CODE_SRC = "focus-qr-code.svg";
+
   delete SCREEN_CONTENT.content.tiles.data.email;
   delete SCREEN_CONTENT.content.tiles.data.marketplace_buttons;
   const TEST_JSON = JSON.stringify([SCREEN_CONTENT]);
@@ -103,8 +111,32 @@ add_task(async function test_aboutwelcome_mobile_downloads() {
     browser,
     "renders screen with QR code",
     // Expected selectors:
-    [`img.qr-code-image[alt="${ALT_TEXT}"]`],
+    [`img.qr-code-image[alt="${ALT_TEXT}"][src="${QR_CODE_SRC}"]`],
     // Unexpected selectors:
     ["button.email-link", "li.android", "li.ios"]
+  );
+});
+
+// /**
+//  * Test rendering QR code image override for a locale
+//  */
+add_task(async function test_aboutwelcome_localized_qr_override() {
+  const TEST_LOCALE = "de";
+  setLocale(TEST_LOCALE);
+
+  const DE_QR_CODE_SRC = "klar-qr-code.svg";
+  let SCREEN_CONTENT = structuredClone(BASE_CONTENT);
+  SCREEN_CONTENT.content.tiles.data.QR_code.image_overrides = {
+    de: DE_QR_CODE_SRC,
+  };
+
+  const TEST_JSON = JSON.stringify([SCREEN_CONTENT]);
+  let browser = await openAboutWelcome(TEST_JSON);
+
+  await test_screen_content(
+    browser,
+    "renders screen with localized QR code",
+    // Expected selectors:
+    [`img.qr-code-image[src="${DE_QR_CODE_SRC}"]`]
   );
 });
