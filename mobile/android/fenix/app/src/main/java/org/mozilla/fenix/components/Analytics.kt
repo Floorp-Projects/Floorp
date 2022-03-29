@@ -49,6 +49,13 @@ class Analytics(
         }
 
         if (isSentryEnabled()) {
+            // We treat caught exceptions similar to debug logging.
+            // On the release channel volume of these is too high for our Sentry instances, and
+            // we get most value out of nightly/beta logging anyway.
+            val shouldSendCaughtExceptions = when (Config.channel) {
+                ReleaseChannel.Release -> false
+                else -> true
+            }
             val sentryService = SentryService(
                 context,
                 BuildConfig.SENTRY_TOKEN,
@@ -58,6 +65,7 @@ class Analytics(
                 ),
                 environment = BuildConfig.BUILD_TYPE,
                 sendEventForNativeCrashes = false, // Do not send native crashes to Sentry
+                sendCaughtExceptions = shouldSendCaughtExceptions,
                 sentryProjectUrl = getSentryProjectUrl()
             )
 
@@ -133,7 +141,7 @@ class Analytics(
     }
 }
 
-fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
+private fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
 
 private fun getSentryProjectUrl(): String? {
     val baseUrl = "https://sentry.prod.mozaws.net/operations"
