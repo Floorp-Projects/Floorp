@@ -1,5 +1,11 @@
 defaults pref(layout.css.named-pages.enabled,true)
 
+fails == page-name-display-none-child.html page-name-display-none-child-ref.html
+fails == page-name-siblings-001.html page-name-siblings-ref.html
+fails == page-name-siblings-002.html page-name-siblings-ref.html
+fails == page-name-siblings-003.html page-name-siblings-ref.html
+fails == page-name-siblings-004.html page-name-siblings-ref.html
+fails == page-name-siblings-005.html page-name-siblings-ref.html
 # Auto-generated test cases
 fails == page-name-two-page-001.html page-name-two-page-ref.html
 fails == page-name-two-page-002.html page-name-two-page-ref.html
