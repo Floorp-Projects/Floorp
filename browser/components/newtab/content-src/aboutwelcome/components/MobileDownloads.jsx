@@ -21,7 +21,7 @@ export const MarketplaceButtons = props => {
           target="_blank"
           data-l10n-id={"spotlight-android-marketplace-button"}
           onClick={e => {
-            props.handleAction(e, iosLink);
+            props.handleAction(e, androidLink);
           }}
           style={{ backgroundImage: getIconSrc("android") }}
         ></button>
@@ -32,7 +32,7 @@ export const MarketplaceButtons = props => {
           target="_blank"
           data-l10n-id={"spotlight-ios-marketplace-button"}
           onClick={e => {
-            props.handleAction(e, androidLink);
+            props.handleAction(e, iosLink);
           }}
           style={{ backgroundImage: getIconSrc("ios") }}
         ></button>
@@ -57,7 +57,10 @@ export const MobileDownloads = props => {
           }
           className="qr-code-image"
           alt={typeof QRCode.alt_text === "string" ? QRCode.alt_text : ""}
-          src={props.data.QR_code.image_url}
+          src={
+            QRCode.image_overrides?.[document.documentElement.lang] ??
+            QRCode.image_url
+          }
         />
       ) : null}
       {showEmailLink ? (
