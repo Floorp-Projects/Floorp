@@ -46,7 +46,7 @@ class Cookie final : public nsICookie {
 
  public:
   // Returns false if rawSameSite has an invalid value, compared to sameSite.
-  static bool ValidateSameSite(const CookieStruct& aCookieData);
+  static bool ValidateRawSame(const CookieStruct& aCookieData);
 
   // Generate a unique and monotonically increasing creation time. See comment
   // in Cookie.cpp.
