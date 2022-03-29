@@ -1590,7 +1590,8 @@ void WebRenderBridgeParent::FlushFrameGeneration(wr::RenderReasons aReasons) {
     mCompositorScheduler->CancelCurrentCompositeTask();
     // Update timestamp of scheduler for APZ and animation.
     mCompositorScheduler->UpdateLastComposeTime();
-    MaybeGenerateFrame(VsyncId(), /* aForceGenerateFrame */ true, aReasons);
+    MaybeGenerateFrame(VsyncId(), /* aForceGenerateFrame */ true,
+                       aReasons | wr::RenderReasons::FLUSH);
   }
 }
 
