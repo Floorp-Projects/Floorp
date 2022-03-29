@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    window.addEventListener("load", () => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("letter-spacing", "65535pc");
+      const node = document.createTextNode("\rï¿»ð¨\nó =Â ð£%?;ð©á©¿ðï¿½");
+      text.appendChild(node);
+      svg.appendChild(text);
+      document.documentElement.appendChild(svg);
+      const rect = new DOMRectReadOnly(-128, 256, 0, 1024);
+      node.convertRectFromNode(rect, document, {});
+    })
+  </script>
+</head>
+</html>

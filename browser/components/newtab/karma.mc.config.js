@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const path = require("path");
+const webpack = require("webpack");
 
 const PATHS = {
   // Where is the entry point for the unit tests?
@@ -224,7 +225,16 @@ module.exports = function(config) {
       resolve: {
         extensions: [".js", ".jsx"],
         modules: [PATHS.moduleResolveDirectory, "node_modules"],
+        fallback: {
+          stream: require.resolve("stream-browserify"),
+          buffer: require.resolve("buffer"),
+        },
       },
+      plugins: [
+        new webpack.DefinePlugin({
+          "process.env.NODE_ENV": JSON.stringify("development"),
+        }),
+      ],
       externals: {
         // enzyme needs these for backwards compatibility with 0.13.
         // see https://github.com/airbnb/enzyme/blob/master/docs/guides/webpack.md#using-enzyme-with-webpack

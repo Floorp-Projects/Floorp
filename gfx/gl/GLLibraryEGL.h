@@ -13,6 +13,8 @@
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "nsISupports.h"
 #include "prlink.h"
 
@@ -125,13 +127,21 @@ class GLLibraryEGL final {
   std::unordered_map<EGLDisplay, std::weak_ptr<EglDisplay>> mActiveDisplays;
 
  public:
-  static RefPtr<GLLibraryEGL> Create(nsACString* const out_failureId);
+  static RefPtr<GLLibraryEGL> Get(nsACString* const out_failureId);
+  static void Shutdown();
 
  private:
   ~GLLibraryEGL() = default;
 
+  static StaticMutex sMutex;
+  static StaticRefPtr<GLLibraryEGL> sInstance GUARDED_BY(sMutex);
+
   bool Init(nsACString* const out_failureId);
   void InitLibExtensions();
+
+  std::shared_ptr<EglDisplay> CreateDisplayLocked(
+      bool forceAccel, nsACString* const out_failureId,
+      const StaticMutexAutoLock& aProofOfLock);
 
  public:
   Maybe<SymbolLoader> GetSymbolLoader() const;
@@ -599,8 +609,9 @@ class EglDisplay final {
   struct PrivateUseOnly final {};
 
  public:
-  static std::shared_ptr<EglDisplay> Create(GLLibraryEGL&, EGLDisplay,
-                                            bool isWarp);
+  static std::shared_ptr<EglDisplay> Create(
+      GLLibraryEGL&, EGLDisplay, bool isWarp,
+      const StaticMutexAutoLock& aProofOfLock);
 
   // Only `public` for make_shared.
   EglDisplay(const PrivateUseOnly&, GLLibraryEGL&, EGLDisplay, bool isWarp);

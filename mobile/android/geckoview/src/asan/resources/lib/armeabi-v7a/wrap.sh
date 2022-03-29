@@ -1,4 +1,9 @@
 #!/system/bin/sh
+# shellcheck shell=ksh
+
+# call getprop before setting LD_PRELOAD
+os_version=$(getprop ro.build.version.sdk)
+
 # These options mirror those in mozglue/build/AsanOptions.cpp
 # except for fast_unwind_* which are only needed on Android
 options=(
@@ -15,10 +20,32 @@ options=(
   allocator_may_return_null=1
 )
 if [ -e "/data/local/tmp/asan.options.gecko" ]; then
-  options+=("$(cat /data/local/tmp/asan.options.gecko | tr -d '\n')")
+  options+=("$(tr -d '\n' < /data/local/tmp/asan.options.gecko)")
 fi
-LIB_PATH="$(cd "$(dirname "$0")" && pwd)"
+
+# : is the usual separator for ASAN options
+# save and reset IFS so it doesn't interfere with later commands
+old_ifs="$IFS"
 IFS=:
-export ASAN_OPTIONS="${options[*]}"
-export LD_PRELOAD="$(ls "$LIB_PATH"/libclang_rt.asan-*-android.so)"
-exec "$@"
+ASAN_OPTIONS="${options[*]}"
+export ASAN_OPTIONS
+IFS="$old_ifs"
+
+LIB_PATH="$(cd "$(dirname "$0")" && pwd)"
+LD_PRELOAD="$(ls "$LIB_PATH"/libclang_rt.asan-*-android.so)"
+export LD_PRELOAD
+
+cmd="$1"
+shift
+
+# enable debugging
+# https://developer.android.com/ndk/guides/wrap-script#debugging_when_using_wrapsh
+if [ "$os_version" -eq "27" ]; then
+  args=("-Xrunjdwp:transport=dt_android_adb,suspend=n,server=y" -Xcompiler-option --debuggable)
+elif [ "$os_version" -eq "28" ]; then
+  args=(-XjdwpProvider:adbconnection "-XjdwpOptions:suspend=n,server=y" -Xcompiler-option --debuggable)
+else
+  args=(-XjdwpProvider:adbconnection)
+fi
+
+exec "$cmd" "${args[@]}" "$@"

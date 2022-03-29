@@ -24,7 +24,52 @@ function normalizePermissions(perms) {
   return perms;
 }
 
-this.permissions = class extends ExtensionAPI {
+this.permissions = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onAdded({ fire }) {
+      let { extension } = this;
+      let callback = (event, change) => {
+        if (change.extensionId == extension.id && change.added) {
+          let perms = normalizePermissions(change.added);
+          if (perms.permissions.length || perms.origins.length) {
+            fire.async(perms);
+          }
+        }
+      };
+
+      extensions.on("change-permissions", callback);
+      return {
+        unregister() {
+          extensions.off("change-permissions", callback);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onRemoved({ fire }) {
+      let { extension } = this;
+      let callback = (event, change) => {
+        if (change.extensionId == extension.id && change.removed) {
+          let perms = normalizePermissions(change.removed);
+          if (perms.permissions.length || perms.origins.length) {
+            fire.async(perms);
+          }
+        }
+      };
+
+      extensions.on("change-permissions", callback);
+      return {
+        unregister() {
+          extensions.off("change-permissions", callback);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     let { extension } = context;
 
@@ -128,42 +173,16 @@ this.permissions = class extends ExtensionAPI {
 
         onAdded: new EventManager({
           context,
-          name: "permissions.onAdded",
-          register: fire => {
-            let callback = (event, change) => {
-              if (change.extensionId == extension.id && change.added) {
-                let perms = normalizePermissions(change.added);
-                if (perms.permissions.length || perms.origins.length) {
-                  fire.async(perms);
-                }
-              }
-            };
-
-            extensions.on("change-permissions", callback);
-            return () => {
-              extensions.off("change-permissions", callback);
-            };
-          },
+          module: "permissions",
+          event: "onAdded",
+          extensionApi: this,
         }).api(),
 
         onRemoved: new EventManager({
           context,
-          name: "permissions.onRemoved",
-          register: fire => {
-            let callback = (event, change) => {
-              if (change.extensionId == extension.id && change.removed) {
-                let perms = normalizePermissions(change.removed);
-                if (perms.permissions.length || perms.origins.length) {
-                  fire.async(perms);
-                }
-              }
-            };
-
-            extensions.on("change-permissions", callback);
-            return () => {
-              extensions.off("change-permissions", callback);
-            };
-          },
+          module: "permissions",
+          event: "onRemoved",
+          extensionApi: this,
         }).api(),
       },
     };

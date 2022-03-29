@@ -122,13 +122,6 @@ AsyncTransform APZSampler::GetCurrentAsyncTransform(
                                         aComponents);
 }
 
-ScreenMargin APZSampler::GetGeckoFixedLayerMargins() const {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnSamplerThread();
-
-  return mApz->GetGeckoFixedLayerMargins();
-}
-
 ParentLayerRect APZSampler::GetCompositionBounds(
     const LayersId& aLayersId,
     const ScrollableLayerGuid::ViewID& aScrollId) const {

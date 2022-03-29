@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals startBackground, analytics, communication, Raven, catcher, auth, log, browser, getStrings */
+/* globals startBackground, analytics, communication, catcher, log, browser, getStrings */
 
 "use strict";
 
 this.senderror = (function() {
   const exports = {};
-
-  const manifest = browser.runtime.getManifest();
 
   // Do not show an error more than every ERROR_TIME_LIMIT milliseconds:
   const ERROR_TIME_LIMIT = 3000;
@@ -101,13 +99,6 @@ this.senderror = (function() {
       log.error("Telemetry disabled. Not sending critical error:", e);
       return;
     }
-    const dsn = auth.getSentryPublicDSN();
-    if (!dsn) {
-      return;
-    }
-    if (!Raven.isSetup()) {
-      Raven.config(dsn, { allowSecretKey: true }).install();
-    }
     const exception = new Error(e.message);
     exception.stack = e.multilineStack || e.stack || undefined;
 
@@ -138,13 +129,6 @@ this.senderror = (function() {
       }
     }
     rest.stack = exception.stack;
-    Raven.captureException(exception, {
-      logger: "addon",
-      tags: { category: e.popupMessage },
-      release: manifest.version,
-      message: exception.message,
-      extra: rest,
-    });
   };
 
   catcher.registerHandler(errorObj => {

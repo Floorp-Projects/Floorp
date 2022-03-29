@@ -37,8 +37,7 @@ static uint32_t VIntLength(unsigned char aFirstByte, uint32_t* aMask) {
 }
 
 bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
-                                nsTArray<WebMTimeDataOffset>& aMapping,
-                                ReentrantMonitor& aReentrantMonitor) {
+                                nsTArray<WebMTimeDataOffset>& aMapping) {
   static const uint32_t EBML_ID = 0x1a45dfa3;
   static const uint32_t SEGMENT_ID = 0x18538067;
   static const uint32_t SEGINFO_ID = 0x1549a966;
@@ -197,7 +196,6 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           // It's possible we've parsed this data before, so avoid inserting
           // duplicate WebMTimeDataOffset entries.
           {
-            ReentrantMonitorAutoEnter mon(aReentrantMonitor);
             int64_t endOffset = mBlockOffset + mBlockSize +
                                 mElement.mID.mLength + mElement.mSize.mLength;
             uint32_t idx = aMapping.IndexOfFirstElementGt(endOffset);
@@ -315,7 +313,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset,
                                                   int64_t aEndOffset,
                                                   uint64_t* aStartTime,
                                                   uint64_t* aEndTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   // Find the first WebMTimeDataOffset at or after aStartOffset.
   uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset - 1,
@@ -362,7 +360,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset,
 }
 
 bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   if (mTimeMapping.IsEmpty()) {
     return false;
@@ -413,10 +411,10 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
     }
   }
 
-  // thread-safety gets annoyed at pass-by-reference of a locked value
-  PUSH_IGNORE_THREAD_SAFETY
-  mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping, mReentrantMonitor);
-  POP_THREAD_SAFETY
+  {
+    MutexAutoLock lock(mMutex);
+    mRangeParsers[idx].Append(aBuffer, aLength, mTimeMapping);
+  }
 
   // Merge parsers with overlapping regions and clean up the remnants.
   uint32_t i = 0;
@@ -434,12 +432,12 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer,
     return;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   mLastBlockOffset = mRangeParsers.LastElement().mBlockEndOffset;
 }
 
 void WebMBufferedState::Reset() {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   mRangeParsers.Clear();
   mTimeMapping.Clear();
 }
@@ -502,13 +500,13 @@ int64_t WebMBufferedState::GetInitEndOffset() {
 }
 
 int64_t WebMBufferedState::GetLastBlockOffset() {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   return mLastBlockOffset;
 }
 
 bool WebMBufferedState::GetStartTime(uint64_t* aTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
 
   if (mTimeMapping.IsEmpty()) {
     return false;
@@ -525,7 +523,7 @@ bool WebMBufferedState::GetStartTime(uint64_t* aTime) {
 
 bool WebMBufferedState::GetNextKeyframeTime(uint64_t aTime,
                                             uint64_t* aKeyframeTime) {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  MutexAutoLock lock(mMutex);
   int64_t offset = 0;
   bool rv = GetOffsetForTime(aTime, &offset);
   if (!rv) {

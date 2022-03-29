@@ -23,12 +23,12 @@
 #include "debugger/Debugger.h"
 #include "ds/Sort.h"
 #include "jit/MacroAssembler.h"
-#include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
 #include "gc/GCContext-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -316,6 +316,7 @@ void DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx,
     return;
   }
 
+  MOZ_RELEASE_ASSERT(&instance->metadata() == &metadata());
   uint32_t numFuncs = metadata().debugFuncReturnTypes.length();
   if (enabled) {
     MOZ_ASSERT(enterAndLeaveFrameTrapsCounter_ > 0);

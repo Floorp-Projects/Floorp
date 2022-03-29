@@ -8,7 +8,7 @@
 
 #  include "nsISupportsImpl.h"
 #  include "nsTArray.h"
-#  include "mozilla/ReentrantMonitor.h"
+#  include "mozilla/Mutex.h"
 #  include "MediaResource.h"
 
 namespace mozilla {
@@ -88,12 +88,10 @@ struct WebMBufferedParser {
   }
 
   // Steps the parser through aLength bytes of data.  Always consumes
-  // aLength bytes.  Updates mCurrentOffset before returning.  Acquires
-  // aReentrantMonitor before using aMapping.
+  // aLength bytes.  Updates mCurrentOffset before returning.
   // Returns false if an error was encountered.
   bool Append(const unsigned char* aBuffer, uint32_t aLength,
-              nsTArray<WebMTimeDataOffset>& aMapping,
-              ReentrantMonitor& aReentrantMonitor);
+              nsTArray<WebMTimeDataOffset>& aMapping);
 
   bool operator==(int64_t aOffset) const { return mCurrentOffset == aOffset; }
 
@@ -263,8 +261,7 @@ class WebMBufferedState final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebMBufferedState)
 
  public:
-  WebMBufferedState()
-      : mReentrantMonitor("WebMBufferedState"), mLastBlockOffset(-1) {
+  WebMBufferedState() : mMutex("WebMBufferedState"), mLastBlockOffset(-1) {
     MOZ_COUNT_CTOR(WebMBufferedState);
   }
 
@@ -298,13 +295,13 @@ class WebMBufferedState final {
   MOZ_COUNTED_DTOR(WebMBufferedState)
 
   // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
-  ReentrantMonitor mReentrantMonitor;
+  Mutex mMutex;
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.
-  nsTArray<WebMTimeDataOffset> mTimeMapping GUARDED_BY(mReentrantMonitor);
+  nsTArray<WebMTimeDataOffset> mTimeMapping GUARDED_BY(mMutex);
   // The last complete block parsed. -1 if not set.
-  int64_t mLastBlockOffset GUARDED_BY(mReentrantMonitor);
+  int64_t mLastBlockOffset GUARDED_BY(mMutex);
 
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<WebMBufferedParser> mRangeParsers;

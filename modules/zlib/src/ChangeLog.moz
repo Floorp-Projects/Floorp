@@ -71,3 +71,7 @@ Mozilla.org changes:
 - 28 May 2021
   Add <unistd.h> because of the error: implicit declaration of function {lseek, read, write} is invalid in C99.
   See bug #1701197
+
+- 28 March 2022
+  Backport upstream fix for CVE-2018-25032
+  See bug #1761799
