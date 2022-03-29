@@ -3057,54 +3057,6 @@ bool BytecodeEmitter::emitIteratorNext(
   return true;
 }
 
-bool BytecodeEmitter::emitPushNotUndefinedOrNull() {
-  //                [stack] V
-  MOZ_ASSERT(bytecodeSection().stackDepth() > 0);
-
-  if (!emit1(JSOp::Dup)) {
-    //              [stack] V V
-    return false;
-  }
-  if (!emit1(JSOp::Undefined)) {
-    //              [stack] V V UNDEFINED
-    return false;
-  }
-  if (!emit1(JSOp::StrictNe)) {
-    //              [stack] V NEQ
-    return false;
-  }
-
-  JumpList undefinedOrNullJump;
-  if (!emitJump(JSOp::And, &undefinedOrNullJump)) {
-    //              [stack] V NEQ
-    return false;
-  }
-
-  if (!emit1(JSOp::Pop)) {
-    //              [stack] V
-    return false;
-  }
-  if (!emit1(JSOp::Dup)) {
-    //              [stack] V V
-    return false;
-  }
-  if (!emit1(JSOp::Null)) {
-    //              [stack] V V NULL
-    return false;
-  }
-  if (!emit1(JSOp::StrictNe)) {
-    //              [stack] V NEQ
-    return false;
-  }
-
-  if (!emitJumpTargetAndPatch(undefinedOrNullJump)) {
-    //              [stack] V NOT-UNDEF-OR-NULL
-    return false;
-  }
-
-  return true;
-}
-
 bool BytecodeEmitter::emitIteratorCloseInScope(
     EmitterScope& currentScope,
     IteratorKind iterKind /* = IteratorKind::Sync */,
@@ -3169,12 +3121,13 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
   //
   // Do nothing if "return" is undefined or null.
   InternalIfEmitter ifReturnMethodIsDefined(this);
-  if (!emitPushNotUndefinedOrNull()) {
-    //              [stack] ... ITER RET NOT-UNDEF-OR-NULL
+  if (!emit1(JSOp::IsNullOrUndefined)) {
+    //              [stack] ... ITER RET NULL-OR-UNDEF
     return false;
   }
 
-  if (!ifReturnMethodIsDefined.emitThenElse()) {
+  if (!ifReturnMethodIsDefined.emitThenElse(
+          IfEmitter::ConditionKind::Negative)) {
     //              [stack] ... ITER RET
     return false;
   }
@@ -5425,12 +5378,11 @@ bool BytecodeEmitter::emitAsyncIterator() {
   }
 
   InternalIfEmitter ifAsyncIterIsUndefined(this);
-  if (!emitPushNotUndefinedOrNull()) {
-    //              [stack] OBJ ITERFN !UNDEF-OR-NULL
+  if (!emit1(JSOp::IsNullOrUndefined)) {
+    //              [stack] OBJ ITERFN NULL-OR-UNDEF
     return false;
   }
-  if (!ifAsyncIterIsUndefined.emitThenElse(
-          IfEmitter::ConditionKind::Negative)) {
+  if (!ifAsyncIterIsUndefined.emitThenElse()) {
     //              [stack] OBJ ITERFN
     return false;
   }
@@ -6674,13 +6626,13 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
     // Step 7.b.ii.
     InternalIfEmitter ifThrowMethodIsNotDefined(this);
-    if (!emitPushNotUndefinedOrNull()) {
-      //            [stack] NEXT ITER RECEIVED ITER THROW
-      //            [stack]   NOT-UNDEF-OR_NULL
+    if (!emit1(JSOp::IsNullOrUndefined)) {
+      //            [stack] NEXT ITER RECEIVED ITER THROW NULL-OR-UNDEF
       return false;
     }
 
-    if (!ifThrowMethodIsNotDefined.emitThenElse()) {
+    if (!ifThrowMethodIsNotDefined.emitThenElse(
+            IfEmitter::ConditionKind::Negative)) {
       //            [stack] NEXT ITER RECEIVED ITER THROW
       return false;
     }
@@ -6785,15 +6737,16 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //
     // Do nothing if "return" is undefined or null.
     InternalIfEmitter ifReturnMethodIsDefined(this);
-    if (!emitPushNotUndefinedOrNull()) {
-      //            [stack] NEXT ITER RECEIVED ITER RET NOT-UNDEF-OR_NULL
+    if (!emit1(JSOp::IsNullOrUndefined)) {
+      //            [stack] NEXT ITER RECEIVED ITER RET NULL-OR-UNDEF
       return false;
     }
 
     // Step 7.c.iv.
     //
     // Call "return" with the argument passed to Generator.prototype.return.
-    if (!ifReturnMethodIsDefined.emitThenElse()) {
+    if (!ifReturnMethodIsDefined.emitThenElse(
+            IfEmitter::ConditionKind::Negative)) {
       //            [stack] NEXT ITER RECEIVED ITER RET
       return false;
     }
