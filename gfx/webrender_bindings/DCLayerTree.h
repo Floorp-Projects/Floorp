@@ -274,7 +274,7 @@ class DCSurfaceVideo : public DCSurface {
   DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree);
 
   void AttachExternalImage(wr::ExternalImageId aExternalImage);
-  gfx::Matrix CalculateSwapChainSize(const gfx::Matrix& aTransform);
+  bool CalculateSwapChainSize(gfx::Matrix& aTransform);
   void PresentVideo();
 
   DCSurfaceVideo* AsDCSurfaceVideo() override { return this; }
