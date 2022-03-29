@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <script>
     window.addEventListener("pageshow", ({ persisted }) => {
-      let bc = new BroadcastChannel("bug1740517");
+      let bc = new BroadcastChannel("form_restoration");
       bc.addEventListener("message", ({ data }) => {
         switch (data) {
           case "enter_data":
@@ -12,7 +12,7 @@
             break;
           case "navigate":
             bc.close();
-            document.location = "file_bug1740517.html?1";
+            document.location = "file_form_restoration_no_store.html?1";
             break;
           case "back":
             bc.close();
