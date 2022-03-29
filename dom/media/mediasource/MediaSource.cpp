@@ -629,9 +629,17 @@ already_AddRefed<Promise> MediaSource::MozDebugReaderData(ErrorResult& aRv) {
     return nullptr;
   }
   MOZ_ASSERT(domPromise);
-  MediaSourceDecoderDebugInfo info;
-  mDecoder->GetDebugInfo(info);
-  domPromise->MaybeResolve(info);
+  UniquePtr<MediaSourceDecoderDebugInfo> info =
+      MakeUnique<MediaSourceDecoderDebugInfo>();
+  mDecoder->RequestDebugInfo(*info)->Then(
+      mAbstractMainThread, __func__,
+      [domPromise, infoPtr = std::move(info)] {
+        domPromise->MaybeResolve(infoPtr.get());
+      },
+      [] {
+        MOZ_ASSERT_UNREACHABLE("Unexpected rejection while getting debug data");
+      });
+
   return domPromise.forget();
 }
 

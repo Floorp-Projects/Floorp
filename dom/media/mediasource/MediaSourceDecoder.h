@@ -54,9 +54,11 @@ class MediaSourceDecoder : public MediaDecoder,
 
   bool IsTransportSeekable() override { return true; }
 
-  // Returns a structure describing the state of the MediaSource internal
-  // buffered data. Used for debugging purposes.
-  void GetDebugInfo(dom::MediaSourceDecoderDebugInfo& aInfo);
+  // Requests that the MediaSourceDecoder populates aInfo with debug
+  // information. This may be done asynchronously, and aInfo should *not* be
+  // accessed by the caller until the returned promise is resolved or rejected.
+  RefPtr<GenericPromise> RequestDebugInfo(
+      dom::MediaSourceDecoderDebugInfo& aInfo);
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
 
