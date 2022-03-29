@@ -1,7 +1,0 @@
-
-# Allow STL's use of malloc/new.
-DisableStlWrapping()
-
-# This must also be present in testing/cppunittest.ini. (That location is
-# hardcoded!)
-CppUnitTests(['TestRunOnTemporaryStack'])
