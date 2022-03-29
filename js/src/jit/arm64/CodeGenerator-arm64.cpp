@@ -2525,7 +2525,14 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
   }
 
   // Act on flag.
-  Assembler::Condition cond = JSOpToCondition(ins->compareType(), ins->jsop());
+  Assembler::Condition cond;
+  if (compTy == MCompare::Compare_Float32 ||
+      compTy == MCompare::Compare_Double) {
+    cond = Assembler::ConditionFromDoubleCondition(
+        JSOpToDoubleCondition(ins->jsop()));
+  } else {
+    cond = JSOpToCondition(compTy, ins->jsop());
+  }
   MIRType insTy = ins->mir()->type();
   if (insTy == MIRType::Int32 || insTy == MIRType::Int64) {
     Register destReg = ToRegister(ins->output());
