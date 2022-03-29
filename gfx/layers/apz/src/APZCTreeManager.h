@@ -558,8 +558,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> FindZoomableApzc(
       AsyncPanZoomController* aStart) const;
 
-  ScreenMargin GetGeckoFixedLayerMargins() const;
-
   ScreenMargin GetCompositorFixedLayerMargins() const;
 
   APZScrollGeneration NewAPZScrollGeneration() {
