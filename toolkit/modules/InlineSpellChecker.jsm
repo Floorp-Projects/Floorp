@@ -425,7 +425,7 @@ var SpellCheckHelper = {
   SPELLCHECKABLE: 0x100,
 
   isTargetAKeywordField(aNode, window) {
-    if (!(aNode instanceof window.HTMLInputElement)) {
+    if (!window.HTMLInputElement.isInstance(aNode)) {
       return false;
     }
 
@@ -460,7 +460,7 @@ var SpellCheckHelper = {
 
   isEditable(element, window) {
     var flags = 0;
-    if (element instanceof window.HTMLInputElement) {
+    if (window.HTMLInputElement.isInstance(element)) {
       flags |= this.INPUT;
       if (element.mozIsTextField(false) || element.type == "number") {
         flags |= this.TEXTINPUT;
@@ -486,7 +486,7 @@ var SpellCheckHelper = {
           flags |= this.PASSWORD;
         }
       }
-    } else if (element instanceof window.HTMLTextAreaElement) {
+    } else if (window.HTMLTextAreaElement.isInstance(element)) {
       flags |= this.TEXTINPUT | this.TEXTAREA;
       if (!element.readOnly) {
         flags |= this.SPELLCHECKABLE | this.EDITABLE;

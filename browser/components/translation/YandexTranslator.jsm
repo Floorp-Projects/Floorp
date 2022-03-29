@@ -149,7 +149,7 @@ YandexTranslator.prototype = {
    * @param   aError   [optional] The XHR object of the request that failed.
    */
   _chunkFailed(aError) {
-    if (aError instanceof XMLHttpRequest) {
+    if (XMLHttpRequest.isInstance(aError)) {
       let body = aError.responseText;
       let json = { code: 0 };
       try {

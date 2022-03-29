@@ -82,7 +82,7 @@ class LegacyPermissionStore {
     try {
       prefs.data = await IOUtils.readJSON(path);
     } catch (e) {
-      if (!(e instanceof DOMException && e.name == "NotFoundError")) {
+      if (!(DOMException.isInstance(e) && e.name == "NotFoundError")) {
         Cu.reportError(e);
       }
     }
@@ -178,7 +178,7 @@ class PermissionStore {
       await this.migrateFrom(oldStore);
       migrationWasSuccessful = true;
     } catch (e) {
-      if (!(e instanceof DOMException && e.name == "NotFoundError")) {
+      if (!(DOMException.isInstance(e) && e.name == "NotFoundError")) {
         Cu.reportError(e);
       }
     }

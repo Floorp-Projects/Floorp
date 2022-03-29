@@ -131,9 +131,8 @@ class DateTimePickerChild extends JSWindowActorChild {
       case "MozOpenDateTimePicker": {
         // Time picker is disabled when preffed off
         if (
-          !(
-            aEvent.originalTarget instanceof
-            aEvent.originalTarget.ownerGlobal.HTMLInputElement
+          !aEvent.originalTarget.ownerGlobal.HTMLInputElement.isInstance(
+            aEvent.originalTarget
           ) ||
           (aEvent.originalTarget.type == "time" && !this.getTimePickerPref())
         ) {

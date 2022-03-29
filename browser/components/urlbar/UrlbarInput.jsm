@@ -436,7 +436,7 @@ class UrlbarInput {
    * @param {Event} [event] The event triggering the open.
    */
   handleCommand(event = null) {
-    let isMouseEvent = event instanceof this.window.MouseEvent;
+    let isMouseEvent = this.window.MouseEvent.isInstance(event);
     if (isMouseEvent && event.button == 2) {
       // Do nothing for right clicks.
       return;
@@ -2322,7 +2322,7 @@ class UrlbarInput {
     // Only add the suffix when the URL bar value isn't already "URL-like",
     // and only if we get a keyboard event, to match user expectations.
     if (
-      !(event instanceof KeyboardEvent) ||
+      !KeyboardEvent.isInstance(event) ||
       event._disableCanonization ||
       !event.ctrlKey ||
       !UrlbarPrefs.get("ctrlCanonizesURLs") ||
@@ -2529,7 +2529,7 @@ class UrlbarInput {
    * @returns {"current" | "tabshifted" | "tab" | "save" | "window"}
    */
   _whereToOpen(event) {
-    let isKeyboardEvent = event instanceof KeyboardEvent;
+    let isKeyboardEvent = KeyboardEvent.isInstance(event);
     let reuseEmpty = isKeyboardEvent;
     let where = undefined;
     if (
@@ -3390,8 +3390,9 @@ class UrlbarInput {
 
   _on_drop(event) {
     let droppedItem = getDroppableData(event);
-    let droppedURL =
-      droppedItem instanceof URL ? droppedItem.href : droppedItem;
+    let droppedURL = URL.isInstance(droppedItem)
+      ? droppedItem.href
+      : droppedItem;
     if (droppedURL && droppedURL !== this.window.gBrowser.currentURI.spec) {
       let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
       this.value = droppedURL;
