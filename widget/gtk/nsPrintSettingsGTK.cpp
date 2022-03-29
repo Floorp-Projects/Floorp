@@ -612,6 +612,9 @@ nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t>& aPages) {
 
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetResolution(int32_t* aResolution) {
+  if (!gtk_print_settings_has_key(mPrintSettings,
+                                  GTK_PRINT_SETTINGS_RESOLUTION))
+    return NS_ERROR_FAILURE;
   *aResolution = gtk_print_settings_get_resolution(mPrintSettings);
   return NS_OK;
 }

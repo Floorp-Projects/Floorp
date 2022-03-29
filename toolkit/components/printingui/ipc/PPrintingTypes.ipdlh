@@ -57,13 +57,10 @@ struct PrintData {
   int32_t orientation;
   int32_t numCopies;
   int32_t numPagesPerSheet;
-
-  // TODO: Do we really need to deal with these in child processes?
-  short outputDestination;
-  short outputFormat;
   nsString printerName;
+  bool printToFile;
   nsString toFileName;
-
+  short outputFormat;
   int32_t printPageDelay;
   int32_t resolution;
   int32_t duplex;

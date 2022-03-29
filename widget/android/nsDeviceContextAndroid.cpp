@@ -11,50 +11,32 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIPrintSettings.h"
-#include "nsIFileStreams.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsAnonymousTemporaryFile.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 
-nsDeviceContextSpecAndroid::~nsDeviceContextSpecAndroid() {
-  if (mTempFile) {
-    mTempFile->Remove(false);
-  }
-}
-
 already_AddRefed<PrintTarget> nsDeviceContextSpecAndroid::MakePrintTarget() {
-  double width, height;
-  mPrintSettings->GetEffectiveSheetSize(&width, &height);
+  nsresult rv =
+      NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  // convert twips to points
-  width /= TWIPS_PER_POINT_FLOAT;
-  height /= TWIPS_PER_POINT_FLOAT;
+  nsAutoCString filename("tmp-printing.pdf");
+  mTempFile->AppendNative(filename);
+  rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  auto stream = [&]() -> nsCOMPtr<nsIOutputStream> {
-    if (mPrintSettings->GetOutputDestination() ==
-        nsIPrintSettings::kOutputDestinationStream) {
-      nsCOMPtr<nsIOutputStream> out;
-      mPrintSettings->GetOutputStream(getter_AddRefs(out));
-      return out;
-    }
-    if (NS_FAILED(
-            NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile)))) {
-      return nullptr;
-    }
-    // Print to printer not supported...
-    nsCOMPtr<nsIFileOutputStream> s =
-        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    if (NS_FAILED(s->Init(mTempFile, -1, -1, 0))) {
-      return nullptr;
-    }
-    return s;
-  }();
+  nsCOMPtr<nsIFileOutputStream> stream =
+      do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+  rv = stream->Init(mTempFile, -1, -1, 0);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
+  // XXX: what should we do here for size? screen size?
+  IntSize size(480, 800);
+
+  return PrintTargetPDF::CreateOrNull(stream, size);
 }
 
 NS_IMETHODIMP
@@ -74,23 +56,24 @@ nsDeviceContextSpecAndroid::BeginDocument(const nsAString& aTitle,
 
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::EndDocument() {
-  if (mPrintSettings->GetOutputDestination() ==
-          nsIPrintSettings::kOutputDestinationFile &&
-      mTempFile) {
-    nsAutoString targetPath;
-    mPrintSettings->GetToFileName(targetPath);
-    nsCOMPtr<nsIFile> destFile;
-    MOZ_TRY(NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile)));
-    nsAutoString destLeafName;
-    MOZ_TRY(destFile->GetLeafName(destLeafName));
+  nsString targetPath;
+  nsCOMPtr<nsIFile> destFile;
+  mPrintSettings->GetToFileName(targetPath);
 
-    nsCOMPtr<nsIFile> destDir;
-    MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
+  nsresult rv = NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    MOZ_TRY(mTempFile->MoveTo(destDir, destLeafName));
-    destFile->SetPermissions(0666);
+  nsAutoString destLeafName;
+  rv = destFile->GetLeafName(destLeafName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    mTempFile = nullptr;
-  }
+  nsCOMPtr<nsIFile> destDir;
+  rv = destFile->GetParent(getter_AddRefs(destDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mTempFile->MoveTo(destDir, destLeafName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  destFile->SetPermissions(0666);
   return NS_OK;
 }

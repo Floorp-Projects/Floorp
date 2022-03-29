@@ -270,11 +270,7 @@ var PrintUtils = {
 
     async function makePrintSettingsMaybeEnsuringToFileName() {
       let settings = PrintUtils.getPrintSettings();
-      if (
-        settings.outputDestination ==
-          Ci.nsIPrintSettings.kOutputDestinationFile &&
-        !settings.toFileName
-      ) {
+      if (settings.printToFile && !settings.toFileName) {
         // TODO(bug 1748004): We should consider generating the file name
         // from the document's title as we do in print.js's pickFileName
         // (including using DownloadPaths.sanitize!).

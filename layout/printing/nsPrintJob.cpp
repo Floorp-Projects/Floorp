@@ -1080,9 +1080,10 @@ nsresult nsPrintJob::SetupToPrintContent() {
 
   nsAutoString fileNameStr;
   // check to see if we are printing to a file
-  if (printData->mPrintSettings->GetOutputDestination() ==
-      nsIPrintSettings::kOutputDestinationFile) {
-    // On some platforms the BeginDocument needs to know the name of the file.
+  bool isPrintToFile = false;
+  printData->mPrintSettings->GetPrintToFile(&isPrintToFile);
+  if (isPrintToFile) {
+    // On some platforms The BeginDocument needs to know the name of the file.
     printData->mPrintSettings->GetToFileName(fileNameStr);
   }
 
@@ -2331,7 +2332,8 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
   if (!mPagePrintTimer) {
     // Get the delay time in between the printing of each page
     // this gives the user more time to press cancel
-    int32_t printPageDelay = mPrt->mPrintSettings->GetPrintPageDelay();
+    int32_t printPageDelay = 50;
+    mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
     nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
     NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);

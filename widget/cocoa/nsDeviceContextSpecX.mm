@@ -24,7 +24,6 @@
 #include "nsCUPSShim.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
-#include "nsIOutputStream.h"
 #include "nsPaper.h"
 #include "nsPrinterListCUPS.h"
 #include "nsPrintSettingsX.h"
@@ -41,11 +40,23 @@ using mozilla::gfx::PrintTargetCG;
 #ifdef MOZ_ENABLE_SKIA_PDF
 using mozilla::gfx::PrintTargetSkPDF;
 #endif
+using mozilla::gfx::SurfaceFormat;
+
+static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 
 //----------------------------------------------------------------------
 // nsDeviceContentSpecX
 
-nsDeviceContextSpecX::nsDeviceContextSpecX() = default;
+nsDeviceContextSpecX::nsDeviceContextSpecX()
+    : mPrintSession(nullptr),
+      mPageFormat(nullptr),
+      mPrintSettings(nullptr)
+#ifdef MOZ_ENABLE_SKIA_PDF
+      ,
+      mPrintViaSkPDF(false)
+#endif
+{
+}
 
 nsDeviceContextSpecX::~nsDeviceContextSpecX() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
@@ -74,15 +85,12 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
     return NS_ERROR_NO_INTERFACE;
   }
 
+  bool toFile;
+  settings->GetPrintToFile(&toFile);
+
   NSPrintInfo* printInfo = settings->CreateOrCopyPrintInfo();
   if (!printInfo) {
     return NS_ERROR_FAILURE;
-  }
-  if (aPS->GetOutputDestination() == nsIPrintSettings::kOutputDestinationStream) {
-    aPS->GetOutputStream(getter_AddRefs(mOutputStream));
-    if (!mOutputStream) {
-      return NS_ERROR_FAILURE;
-    }
   }
   mPrintSession = static_cast<PMPrintSession>([printInfo PMPrintSession]);
   mPageFormat = static_cast<PMPageFormat>([printInfo PMPageFormat]);
@@ -130,7 +138,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
   }
 #endif
 
-  int16_t outputFormat = aPS->GetOutputFormat();
+  int16_t outputFormat;
+  aPS->GetOutputFormat(&outputFormat);
 
   if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
     // We don't actually currently support/use kOutputFormatPDF on mac, but
@@ -278,7 +287,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget() {
 
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
-    // TODO: Add support for stream printing via SkPDF if we enable that again.
     nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsAutoCString tempPath("tmp-printing.pdf");
@@ -291,6 +299,5 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget() {
   }
 #endif
 
-  return PrintTargetCG::CreateOrNull(mOutputStream, mPrintSession, mPageFormat, mPrintSettings,
-                                     size);
+  return PrintTargetCG::CreateOrNull(mPrintSession, mPageFormat, mPrintSettings, size);
 }
