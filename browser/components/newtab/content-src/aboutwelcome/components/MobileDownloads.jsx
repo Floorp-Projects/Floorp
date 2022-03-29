@@ -8,33 +8,22 @@ import { Localized } from "./MSLocalized";
 export const MarketplaceButtons = props => {
   const { ios_link: iosLink, android_link: androidLink } = props.links;
 
-  const getIconSrc = platform => {
-    const fileType = platform === "android" ? ".png" : ".svg";
-    return `url(chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en-US/${platform}${fileType})`;
-  };
-
   return (
     <ul className="mobile-download-buttons">
       <li className="android">
         <button
-          rel="external noreferrer"
-          target="_blank"
           data-l10n-id={"spotlight-android-marketplace-button"}
           onClick={e => {
             props.handleAction(e, androidLink);
           }}
-          style={{ backgroundImage: getIconSrc("android") }}
         ></button>
       </li>
       <li className="ios">
         <button
-          rel="external noreferrer"
-          target="_blank"
           data-l10n-id={"spotlight-ios-marketplace-button"}
           onClick={e => {
             props.handleAction(e, iosLink);
           }}
-          style={{ backgroundImage: getIconSrc("ios") }}
         ></button>
       </li>
     </ul>
