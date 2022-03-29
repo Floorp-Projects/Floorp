@@ -5385,6 +5385,26 @@ bool BaselineCodeGen<Handler>::emit_IsGenClosing() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_IsNullOrUndefined() {
+  frame.syncStack(0);
+
+  Label isNullOrUndefined, done;
+  masm.branchTestNull(Assembler::Equal, frame.addressOfStackValue(-1),
+                      &isNullOrUndefined);
+  masm.branchTestUndefined(Assembler::Equal, frame.addressOfStackValue(-1),
+                           &isNullOrUndefined);
+  masm.moveValue(BooleanValue(false), R0);
+  masm.jump(&done);
+
+  masm.bind(&isNullOrUndefined);
+  masm.moveValue(BooleanValue(true), R0);
+
+  masm.bind(&done);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetRval() {
   frame.syncStack(0);
 
