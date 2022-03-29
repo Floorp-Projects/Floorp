@@ -228,17 +228,20 @@ RefPtr<GenericPromise> MediaSourceDecoder::RequestDebugInfo(
   // This should be safe to call off main thead, but there's no such usage at
   // time of writing. Can be carefully relaxed if needed.
   MOZ_ASSERT(NS_IsMainThread(), "Expects to be called on main thread.");
+  nsTArray<RefPtr<GenericPromise>> promises;
   if (mReader) {
-    return mReader->RequestDebugInfo(aInfo.mReader)
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [this, self = RefPtr<MediaSourceDecoder>{this}, &aInfo] {
-                 if (mDemuxer) {
-                   mDemuxer->GetDebugInfo(aInfo.mDemuxer);
-                 }
-                 return GenericPromise::CreateAndResolve(true, __func__);
-               });
+    promises.AppendElement(mReader->RequestDebugInfo(aInfo.mReader));
   }
-  return GenericPromise::CreateAndResolve(true, __func__);
+  if (mDemuxer) {
+    promises.AppendElement(mDemuxer->GetDebugInfo(aInfo.mDemuxer));
+  }
+  return GenericPromise::All(GetCurrentSerialEventTarget(), promises)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          []() { return GenericPromise::CreateAndResolve(true, __func__); },
+          [] {
+            return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          });
 }
 
 double MediaSourceDecoder::GetDuration() {
