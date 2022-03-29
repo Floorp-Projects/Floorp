@@ -30,7 +30,9 @@ import mozilla.components.concept.base.crash.Breadcrumb as MozillaBreadcrumb
  * @param dsn Data Source Name of the Sentry server.
  * @param tags A list of additional tags that will be sent together with crash reports.
  * @param environment An optional, environment name string or null to set none
+ * @param sendEventForNativeCrashes Allows configuring if native crashes should be submitted. Disabled by default.
  * @param sentryProjectUrl Base URL of the Sentry web interface pointing to the app/project.
+ * @param sendCaughtExceptions Allows configuring if caught exceptions should be submitted. Enabled by default.
  */
 class SentryService(
     private val applicationContext: Context,
@@ -39,6 +41,7 @@ class SentryService(
     private val environment: String? = null,
     private val sendEventForNativeCrashes: Boolean = false,
     private val sentryProjectUrl: String? = null,
+    private val sendCaughtExceptions: Boolean = true,
 ) : CrashReporterService {
 
     override val id: String = "new-sentry-instance"
@@ -76,6 +79,9 @@ class SentryService(
     }
 
     override fun report(throwable: Throwable, breadcrumbs: ArrayList<MozillaBreadcrumb>): String? {
+        if (!sendCaughtExceptions) {
+            return null
+        }
         prepareReport(breadcrumbs, SentryLevel.INFO)
         return reportToSentry(throwable)
     }
