@@ -193,6 +193,12 @@ To select tasks manually using a fuzzy search interface, run:
 
     $ ./mach try fuzzy
 
+To rerun the same tasks:
+
+.. code-block:: shell
+
+    $ ./mach try again
+
 From `Treeherder <https://treeherder.mozilla.org/>`__ (our continuous integration system), it is also possible to attach new jobs. As every review has
 a try CI run associated, it makes this work easier. See :ref:`attach-job-review` for
 more information.
