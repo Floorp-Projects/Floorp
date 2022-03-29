@@ -395,7 +395,7 @@ class ContextMenuChild extends JSWindowActorChild {
       if (node.nodeType == node.TEXT_NODE) {
         // Add this text to our collection.
         text += " " + node.data;
-      } else if (node instanceof this.contentWindow.HTMLImageElement) {
+      } else if (this.contentWindow.HTMLImageElement.isInstance(node)) {
         // If it has an "alt" attribute, add that.
         let altText = node.getAttribute("alt");
         if (altText && altText != "") {
@@ -463,11 +463,11 @@ class ContextMenuChild extends JSWindowActorChild {
   }
 
   _isTargetATextBox(node) {
-    if (node instanceof this.contentWindow.HTMLInputElement) {
+    if (this.contentWindow.HTMLInputElement.isInstance(node)) {
       return node.mozIsTextField(false);
     }
 
-    return node instanceof this.contentWindow.HTMLTextAreaElement;
+    return this.contentWindow.HTMLTextAreaElement.isInstance(node);
   }
 
   /**
@@ -800,9 +800,9 @@ class ContextMenuChild extends JSWindowActorChild {
     if (node.containingShadowRoot?.isUAWidget()) {
       const host = node.containingShadowRoot.host;
       if (
-        host instanceof this.contentWindow.HTMLMediaElement ||
-        host instanceof this.contentWindow.HTMLEmbedElement ||
-        host instanceof this.contentWindow.HTMLObjectElement
+        this.contentWindow.HTMLMediaElement.isInstance(host) ||
+        this.contentWindow.HTMLEmbedElement.isInstance(host) ||
+        this.contentWindow.HTMLObjectElement.isInstance(host)
       ) {
         node = host;
       }
@@ -973,10 +973,10 @@ class ContextMenuChild extends JSWindowActorChild {
         imageText: context.target.title || context.target.alt,
       };
       const { SVGAnimatedLength } = context.target.ownerGlobal;
-      if (context.imageInfo.height instanceof SVGAnimatedLength) {
+      if (SVGAnimatedLength.isInstance(context.imageInfo.height)) {
         context.imageInfo.height = context.imageInfo.height.animVal.value;
       }
-      if (context.imageInfo.width instanceof SVGAnimatedLength) {
+      if (SVGAnimatedLength.isInstance(context.imageInfo.width)) {
         context.imageInfo.width = context.imageInfo.width.animVal.value;
       }
 
@@ -1033,9 +1033,11 @@ class ContextMenuChild extends JSWindowActorChild {
           descURL
         );
       }
-    } else if (context.target instanceof this.contentWindow.HTMLCanvasElement) {
+    } else if (
+      this.contentWindow.HTMLCanvasElement.isInstance(context.target)
+    ) {
       context.onCanvas = true;
-    } else if (context.target instanceof this.contentWindow.HTMLVideoElement) {
+    } else if (this.contentWindow.HTMLVideoElement.isInstance(context.target)) {
       const mediaURL = context.target.currentSrc || context.target.src;
 
       if (this._isMediaURLReusable(mediaURL)) {
@@ -1061,7 +1063,7 @@ class ContextMenuChild extends JSWindowActorChild {
       } else {
         context.onVideo = true;
       }
-    } else if (context.target instanceof this.contentWindow.HTMLAudioElement) {
+    } else if (this.contentWindow.HTMLAudioElement.isInstance(context.target)) {
       context.onAudio = true;
       const mediaURL = context.target.currentSrc || context.target.src;
 
@@ -1092,7 +1094,7 @@ class ContextMenuChild extends JSWindowActorChild {
       }
 
       context.onKeywordField = editFlags & SpellCheckHelper.KEYWORD;
-    } else if (context.target instanceof this.contentWindow.HTMLHtmlElement) {
+    } else if (this.contentWindow.HTMLHtmlElement.isInstance(context.target)) {
       const bodyElt = context.target.ownerDocument.body;
 
       if (bodyElt) {
@@ -1141,12 +1143,13 @@ class ContextMenuChild extends JSWindowActorChild {
           // Be consistent with what hrefAndLinkNodeForClickEvent
           // does in browser.js
           (this._isXULTextLinkLabel(elem) ||
-            (elem instanceof this.contentWindow.HTMLAnchorElement &&
+            (this.contentWindow.HTMLAnchorElement.isInstance(elem) &&
               elem.href) ||
-            (elem instanceof this.contentWindow.SVGAElement &&
+            (this.contentWindow.SVGAElement.isInstance(elem) &&
               (elem.href || elem.hasAttributeNS(XLINK_NS, "href"))) ||
-            (elem instanceof this.contentWindow.HTMLAreaElement && elem.href) ||
-            elem instanceof this.contentWindow.HTMLLinkElement ||
+            (this.contentWindow.HTMLAreaElement.isInstance(elem) &&
+              elem.href) ||
+            this.contentWindow.HTMLLinkElement.isInstance(elem) ||
             elem.getAttributeNS(XLINK_NS, "type") == "simple")
         ) {
           // Target is a link or a descendant of a link.

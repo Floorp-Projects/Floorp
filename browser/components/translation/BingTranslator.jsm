@@ -143,7 +143,7 @@ BingTranslator.prototype = {
    */
   _chunkFailed(aError) {
     if (
-      aError instanceof XMLHttpRequest &&
+      XMLHttpRequest.isInstance(aError) &&
       [400, 401].includes(aError.status)
     ) {
       let body = aError.responseText;

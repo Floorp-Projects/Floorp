@@ -173,7 +173,7 @@ class AboutReaderChild extends JSWindowActorChild {
       !this.isAboutReader &&
       this.contentWindow &&
       this.contentWindow.windowRoot &&
-      this.document instanceof this.contentWindow.HTMLDocument &&
+      this.contentWindow.HTMLDocument.isInstance(this.document) &&
       !this.document.mozSyntheticDocument
     );
   }

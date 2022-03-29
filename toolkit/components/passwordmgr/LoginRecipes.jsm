@@ -380,7 +380,7 @@ this.LoginRecipesContent = {
     // ownerGlobal doesn't exist in content privileged windows.
     if (
       // eslint-disable-next-line mozilla/use-ownerGlobal
-      !(field instanceof aParent.ownerDocument.defaultView.HTMLInputElement)
+      !aParent.ownerDocument.defaultView.HTMLInputElement.isInstance(field)
     ) {
       log.warn("Login field isn't an <input> so ignoring it:", aSelector);
       return null;

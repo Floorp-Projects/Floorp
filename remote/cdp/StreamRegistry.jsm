@@ -43,7 +43,7 @@ class StreamRegistry {
   }
 
   async _discard(stream) {
-    if (stream instanceof OS.File) {
+    if (OS.File.isInstance(stream)) {
       let fileInfo;
 
       // Also remove the temporary file
@@ -70,7 +70,7 @@ class StreamRegistry {
   add(stream) {
     let handle;
 
-    if (stream instanceof OS.File) {
+    if (OS.File.isInstance(stream)) {
       handle = Services.uuid
         .generateUUID()
         .toString()
