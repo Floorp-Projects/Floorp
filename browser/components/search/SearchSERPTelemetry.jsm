@@ -601,10 +601,7 @@ class ContentHandler {
   init(providerInfo) {
     Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", providerInfo);
 
-    Cc["@mozilla.org/network/http-activity-distributor;1"]
-      .getService(Ci.nsIHttpActivityDistributor)
-      .addObserver(this);
-
+    Services.obs.addObserver(this, "http-on-examine-response");
     Services.obs.addObserver(this, "http-on-stop-request");
   }
 
@@ -612,10 +609,7 @@ class ContentHandler {
    * Uninitializes the content handler.
    */
   uninit() {
-    Cc["@mozilla.org/network/http-activity-distributor;1"]
-      .getService(Ci.nsIHttpActivityDistributor)
-      .removeObserver(this);
-
+    Services.obs.removeObserver(this, "http-on-examine-response");
     Services.obs.removeObserver(this, "http-on-stop-request");
   }
 
@@ -705,6 +699,9 @@ class ContentHandler {
       case "http-on-stop-request":
         this._reportChannelBandwidth(aSubject);
         break;
+      case "http-on-examine-response":
+        this.observeActivity(aSubject);
+        break;
     }
   }
 
@@ -713,59 +710,37 @@ class ContentHandler {
    * from a search provider page was followed, and if then if that link was an
    * ad click or not.
    *
-   * @param {nsIChannel} nativeChannel   The channel that generated the activity.
-   * @param {number}     activityType    The type of activity.
-   * @param {number}     activitySubtype The subtype for the activity.
+   * @param {nsIChannel} channel   The channel that generated the activity.
    */
-  observeActivity(
-    nativeChannel,
-    activityType,
-    activitySubtype /*,
-    timestamp,
-    extraSizeData,
-    extraStringData*/
-  ) {
-    // NOTE: the channel handling code here is inspired by WebRequest.jsm.
-    if (
-      !this._browserInfoByURL.size ||
-      activityType !=
-        Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
-      activitySubtype !=
-        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
-    ) {
+  observeActivity(channel) {
+    if (!(channel instanceof Ci.nsIChannel)) {
       return;
     }
 
-    // Sometimes we get a NullHttpChannel, which implements nsIHttpChannel but
-    // not nsIChannel.
-    if (!(nativeChannel instanceof Ci.nsIChannel)) {
-      return;
-    }
-    let channel = ChannelWrapper.get(nativeChannel);
-    // The wrapper is consistent across redirects, so we can use it to track state.
-    if (channel._adClickRecorded) {
+    let wrappedChannel = ChannelWrapper.get(channel);
+    if (wrappedChannel._adClickRecorded) {
       logConsole.debug("Ad click already recorded");
       return;
     }
 
-    // Make a trip through the event loop to make sure statuses have a chance to
-    // be processed before we get all the info.
     Services.tm.dispatchToMainThread(() => {
       // We suspect that No Content (204) responses are used to transfer or
       // update beacons. They used to lead to double-counting ad-clicks, so let's
       // ignore them.
-      if (channel.statusCode == 204) {
+      if (wrappedChannel.statusCode == 204) {
         logConsole.debug("Ignoring activity from ambiguous responses");
         return;
       }
 
-      let originURL = channel.originURI && channel.originURI.spec;
+      // The wrapper is consistent across redirects, so we can use it to track state.
+      let originURL = wrappedChannel.originURI && wrappedChannel.originURI.spec;
       let item = this._findBrowserItemForURL(originURL);
       if (!originURL || !item) {
         return;
       }
 
-      let URL = channel.finalURL;
+      let URL = wrappedChannel.finalURL;
+
       let info = this._getProviderInfoForURL(URL, true);
       if (!info) {
         return;
@@ -789,7 +764,7 @@ class ContentHandler {
           `${info.telemetryId}:${item.info.type}`,
           1
         );
-        channel._adClickRecorded = true;
+        wrappedChannel._adClickRecorded = true;
       } catch (e) {
         Cu.reportError(e);
       }
