@@ -60,25 +60,17 @@ bool Link::ElementHasHref() const {
 
 void Link::VisitedQueryFinished(bool aVisited) {
   MOZ_ASSERT(mRegistered, "Setting the link state of an unregistered Link!");
-  MOZ_ASSERT(mState == State::Unvisited,
-             "Why would we want to know our visited state otherwise?");
 
   auto newState = aVisited ? State::Visited : State::Unvisited;
 
   // Set our current state as appropriate.
   mState = newState;
 
-  // We will be no longer registered if we're visited, as it'd be pointless, we
-  // never transition from visited -> unvisited.
-  if (aVisited) {
-    mRegistered = false;
-  }
-
   MOZ_ASSERT(LinkState() == NS_EVENT_STATE_VISITED ||
                  LinkState() == NS_EVENT_STATE_UNVISITED,
              "Unexpected state obtained from LinkState()!");
 
-  // Tell the element to update its visited state
+  // Tell the element to update its visited state.
   mElement->UpdateState(true);
 
   if (StaticPrefs::layout_css_always_repaint_on_unvisited()) {
