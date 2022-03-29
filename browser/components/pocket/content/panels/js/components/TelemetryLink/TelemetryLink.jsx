@@ -14,9 +14,8 @@ function TelemetryLink(props) {
       panelMessaging.sendMessage("PKT_openTabWithUrl", {
         url: event.currentTarget.getAttribute(`href`),
         source: props.source,
-        ...(props.position || props.position === 0
-          ? { position: props.position }
-          : {}),
+        model: props.model,
+        position: props.position,
       });
     }
   }
