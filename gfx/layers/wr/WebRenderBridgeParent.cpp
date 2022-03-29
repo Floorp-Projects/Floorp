@@ -2181,7 +2181,8 @@ void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
     if (mCompositorScheduler) {
-      mCompositorScheduler->ScheduleComposition(mSkippedCompositeReasons);
+      mCompositorScheduler->ScheduleComposition(
+          mSkippedCompositeReasons | RenderReasons::SKIPPED_COMPOSITE);
     }
     mSkippedCompositeReasons = wr::RenderReasons::NONE;
   }
@@ -2217,7 +2218,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   if (paused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
     mCompositionOpportunityId = mCompositionOpportunityId.Next();
-    PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
+    PROFILER_MARKER_TEXT("Discarded composite", GRAPHICS,
                          MarkerInnerWindowId(innerWindowId),
                          paused ? "Paused"_ns : "No display list"_ns);
     return;
