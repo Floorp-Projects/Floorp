@@ -10,6 +10,10 @@ import androidx.paging.PagingState
 import org.mozilla.fenix.components.history.HistoryDB
 import org.mozilla.fenix.components.history.PagedHistoryProvider
 
+/**
+ * PagingSource of History items, used in History Screen. It is the data source for the
+ * Flow<PagingData>, that provides HistoryAdapter with items to display.
+ */
 class HistoryDataSource(
     private val historyProvider: PagedHistoryProvider
 ) : PagingSource<Int, History>() {

@@ -148,6 +148,9 @@ class SitePermissionsViewHolder(
 ) :
     RecyclerView.ViewHolder(view)
 
+/**
+ * Adapter for the list of site permission exceptions.
+ */
 class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
     PagingDataAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback) {
 
