@@ -374,8 +374,11 @@ class _RemoteSettingsExperimentLoader {
             );
           }
         } else {
-          // TODO: Convert NimbusFeatures[featureId].manifest.variables into a
-          //       schema OR add schemas for all.
+          const schema = this._generateVariablesOnlySchema(
+            featureId,
+            NimbusFeatures[featureId].manifest
+          );
+          validator = validatorCache[featureId] = new Validator(schema);
           continue;
         }
 
@@ -400,6 +403,53 @@ class _RemoteSettingsExperimentLoader {
     }
 
     return true;
+  }
+
+  _generateVariablesOnlySchema(featureId, manifest) {
+    // See-also: https://github.com/mozilla/experimenter/blob/main/app/experimenter/features/__init__.py#L21-L64
+    const schema = {
+      $schema: "https://json-schema.org/draft/2019-09/schema",
+      title: featureId,
+      description: manifest.description,
+      type: "object",
+      properties: {},
+      additionalProperties: true,
+    };
+
+    for (const [varName, desc] of Object.entries(manifest.variables)) {
+      const prop = {};
+      switch (desc.type) {
+        case "boolean":
+        case "string":
+          prop.type = desc.type;
+          break;
+
+        case "int":
+          // NB: This is what Experimenter maps the int type to.
+          prop.type = "number";
+          break;
+
+        case "json":
+          // NB: Experimenter presently ignores the json type, it will still be
+          // allowed under additionalProperties.
+          continue;
+
+        default:
+          // NB: Experimenter doesn't outright reject invalid types either.
+          Cu.reportError(
+            `Feature ID ${featureId} has variable ${varName} with invalid FML type: ${prop.type}`
+          );
+          continue;
+      }
+
+      if (prop.type === "string" && !!desc.enum) {
+        prop.enum = [...desc.enum];
+      }
+
+      schema.properties[varName] = prop;
+    }
+
+    return schema;
   }
 }
 

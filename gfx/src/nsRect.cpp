@@ -22,13 +22,9 @@ const mozilla::gfx::IntRect& GetMaxSizedIntRect() {
 }
 
 bool nsRect::Overflows() const {
-#ifdef NS_COORD_IS_FLOAT
-  return false;
-#else
   mozilla::CheckedInt<int32_t> xMost = this->x;
   xMost += this->width;
   mozilla::CheckedInt<int32_t> yMost = this->y;
   yMost += this->height;
   return !xMost.isValid() || !yMost.isValid();
-#endif
 }

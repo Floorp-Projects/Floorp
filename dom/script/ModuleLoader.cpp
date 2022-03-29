@@ -54,23 +54,25 @@ ScriptLoader* ModuleLoader::GetScriptLoader() {
   return static_cast<ScriptLoader*>(mLoader.get());
 }
 
-nsresult ModuleLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
-  return StartModuleLoadImpl(aRequest, RestartRequest::No);
-}
-
-nsresult ModuleLoader::RestartModuleLoad(ScriptLoadRequest* aRequest) {
-  return StartModuleLoadImpl(aRequest, RestartRequest::Yes);
-}
-
-nsresult ModuleLoader::StartModuleLoadImpl(ScriptLoadRequest* aRequest,
-                                           RestartRequest aRestart) {
-  MOZ_ASSERT(aRequest->IsFetching());
-  NS_ENSURE_TRUE(GetScriptLoader()->GetDocument(), NS_ERROR_NULL_POINTER);
-  aRequest->SetUnknownDataType();
+bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
+  if (!GetScriptLoader()->GetDocument()) {
+    *aRvOut = NS_ERROR_NULL_POINTER;
+    return false;
+  }
 
   // If this document is sandboxed without 'allow-scripts', abort.
   if (GetScriptLoader()->GetDocument()->HasScriptsBlockedBySandbox()) {
-    return NS_OK;
+    *aRvOut = NS_OK;
+    return false;
+  }
+
+  // To prevent dynamic code execution, content scripts can only
+  // load moz-extension URLs.
+  nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
+  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
+      !aRequest->mURI->SchemeIs("moz-extension")) {
+    *aRvOut = NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
+    return false;
   }
 
   if (LOG_ENABLED()) {
@@ -80,37 +82,10 @@ nsresult ModuleLoader::StartModuleLoadImpl(ScriptLoadRequest* aRequest,
          url.get()));
   }
 
-  // To prevent dynamic code execution, content scripts can only
-  // load moz-extension URLs.
-  nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
-  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
-      !aRequest->mURI->SchemeIs("moz-extension")) {
-    return NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
-  }
+  return true;
+}
 
-  // Check whether the module has been fetched or is currently being fetched,
-  // and if so wait for it rather than starting a new fetch.
-  ModuleLoadRequest* request = aRequest->AsModuleRequest();
-
-  // If we're restarting the request, the module should already be in the
-  // "fetching" map.
-  MOZ_ASSERT_IF(
-      aRestart == RestartRequest::Yes,
-      IsModuleFetching(request->mURI,
-                       aRequest->GetLoadContext()->GetWebExtGlobal()));
-
-  if (aRestart == RestartRequest::No &&
-      ModuleMapContainsURL(request->mURI,
-                           aRequest->GetLoadContext()->GetWebExtGlobal())) {
-    LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
-    WaitForModuleFetch(request->mURI,
-                       aRequest->GetLoadContext()->GetWebExtGlobal())
-        ->Then(GetMainThreadSerialEventTarget(), __func__, request,
-               &ModuleLoadRequest::ModuleLoaded,
-               &ModuleLoadRequest::LoadFailed);
-    return NS_OK;
-  }
-
+nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   nsSecurityFlags securityFlags;
 
   // According to the spec, module scripts have different behaviour to classic
@@ -134,14 +109,8 @@ nsresult ModuleLoader::StartModuleLoadImpl(ScriptLoadRequest* aRequest,
 
   // Delegate Shared Behavior to base ScriptLoader
   nsresult rv = GetScriptLoader()->StartLoadInternal(aRequest, securityFlags);
-
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We successfully started fetching a module so put its URL in the module
-  // map and mark it as fetching.
-  if (aRestart == RestartRequest::No) {
-    SetModuleFetchStarted(aRequest->AsModuleRequest());
-  }
   LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
 
   return NS_OK;

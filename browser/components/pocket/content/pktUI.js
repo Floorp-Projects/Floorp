@@ -378,7 +378,12 @@ var pktUI = (function() {
         pktUIMessaging.sendMessageToPanel(saveLinkMessageId, successResponse);
         SaveToPocket.itemSaved();
 
-        if (item?.resolved_id && item?.resolved_id !== "0") {
+        if (
+          item?.resolved_id &&
+          item?.resolved_id !== "0" &&
+          NimbusFeatures.saveToPocket.getVariable("layoutRefresh") &&
+          !NimbusFeatures.saveToPocket.getVariable("hideRecentSaves")
+        ) {
           pktApi.getArticleInfo(item.resolved_url, {
             success(data) {
               pktUIMessaging.sendMessageToPanel("PKT_renderSavedStory", data);

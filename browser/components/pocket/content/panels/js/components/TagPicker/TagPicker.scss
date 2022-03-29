@@ -26,19 +26,40 @@
     margin-inline-end: 8px;
     padding: 4px 8px;
     transition: background-color 200ms ease-in-out;
+
+    @include theme_dark {
+      background: #2B2A33;
+      color: #FBFBFB;
+    }
   }
 
   .stp_tag_picker_tag_remove {
     padding: 5px;
     color: #5B5B66;
     font-weight: 400;
+
+    @include theme_dark {
+      color: #8F8F9D;
+    }
   }
 
   .stp_tag_picker_tag_duplicate {
     background-color: #bbb;
+
+    @include theme_dark {
+      background-color: #666;
+    }
   }
 
   .stp_tag_picker_input {
-    flex-grow: 1;
+    border: 1px solid #8F8F9D;
+    border-radius: 3px;
+    padding: 6px;
+    width: 100%;
+
+    @include theme_dark {
+      background: none;
+      color: #FBFBFB;
+    }
   }
 }

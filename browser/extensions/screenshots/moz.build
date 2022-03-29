@@ -26,7 +26,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"] += [
 
 FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["background"] += [
     "background/analytics.js",
-    "background/auth.js",
     "background/communication.js",
     "background/deviceInfo.js",
     "background/main.js",
@@ -38,7 +37,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["background"] += [
 
 FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["build"] += [
     "build/inlineSelectionCss.js",
-    "build/raven.js",
     "build/selection.js",
     "build/shot.js",
     "build/thumbnailGenerator.js",

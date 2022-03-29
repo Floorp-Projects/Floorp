@@ -239,3 +239,5 @@ skip-if(Android) load 1671950.html # No print-preview support on android
 load 1678947.html
 load 1693032.html
 load 1758029-1.html
+HTTP load 1755770-1.html
+HTTP load 1755770-2.html

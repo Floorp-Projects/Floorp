@@ -537,6 +537,24 @@ telemetry-python:
         files-changed:
             - 'toolkit/components/telemetry/**'
 
+webext:
+    description: WebExtensions python utilities unit tests
+    platform:
+        - linux1804-64/opt
+    python-version: [3]
+    treeherder:
+        symbol: webext-py
+        tier: 2
+    run:
+        using: python-test
+        subsuite: webext-python
+    when:
+        files-changed:
+            - 'toolkit/components/extensions/webidl-api/**'
+            - 'toolkit/components/extensions/schemas/*.json'
+            - 'browser/components/extensions/schemas/*.json'
+            - 'mobile/android/components/extensions/schemas/*.json'
+
 xpcom:
     description: xpcom unit tests
     platform:
