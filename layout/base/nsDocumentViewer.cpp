@@ -2586,9 +2586,10 @@ nsDocumentViewer::SetReloadEncodingAndSource(const Encoding* aEncoding,
                                              int32_t aSource) {
   MOZ_ASSERT(
       aSource == kCharsetUninitialized ||
-      (aSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+      (aSource >=
+           kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII &&
        aSource <=
-           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD) ||
+           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII) ||
       aSource == kCharsetFromFinalUserForcedAutoDetection);
   mReloadEncoding = aEncoding;
   mReloadEncodingSource = aSource;

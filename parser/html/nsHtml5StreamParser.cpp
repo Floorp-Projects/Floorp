@@ -239,7 +239,6 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
       mDetectorHasSeenNonAscii(false),
-      mDetectorHadOnlySeenAsciiWhenFirstGuessing(false),
       mDecodingLocalFileWithoutTokenizing(false),
       mBufferingBytes(false),
       mFlushTimer(NS_NewTimer(mEventTarget)),
@@ -290,20 +289,22 @@ nsresult nsHtml5StreamParser::GetChannel(nsIChannel** aChannel) {
 
 std::tuple<NotNull<const Encoding*>, nsCharsetSource>
 nsHtml5StreamParser::GuessEncoding(bool aInitial) {
-  if (aInitial) {
-    if (!mDetectorHasSeenNonAscii) {
-      mDetectorHadOnlySeenAsciiWhenFirstGuessing = true;
-    }
-  }
   MOZ_ASSERT(
       mCharsetSource != kCharsetFromFinalUserForcedAutoDetection &&
-      mCharsetSource != kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+      mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII &&
       mCharsetSource !=
           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic &&
       mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8GenericInitialWasASCII &&
+      mCharsetSource !=
           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content &&
       mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8ContentInitialWasASCII &&
+      mCharsetSource !=
           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD &&
+      mCharsetSource !=
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII &&
       mCharsetSource != kCharsetFromFinalAutoDetectionFile);
   auto ifHadBeenForced = mDetector->Guess(EmptyCString(), true);
   auto encoding =
@@ -330,13 +331,28 @@ nsHtml5StreamParser::GuessEncoding(bool aInitial) {
     } else if (!mDetectorHasSeenNonAscii) {
       source = kCharsetFromInitialAutoDetectionASCII;  // deliberately Initial
     } else if (ifHadBeenForced == UTF_8_ENCODING) {
-      // XXX subdivide by mDetectorHadOnlySeenAsciiWhenFirstGuessing in
-      // follow-up Not doing now to scope down the telemetry data review.
-      source = kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8;
+      MOZ_ASSERT(mCharsetSource == kCharsetFromInitialAutoDetectionASCII ||
+                 mCharsetSource ==
+                     kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8);
+      source = kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII;
     } else if (encoding != ifHadBeenForced) {
-      source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD;
+      if (mCharsetSource == kCharsetFromInitialAutoDetectionASCII) {
+        source =
+            kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII;
+      } else {
+        source =
+            kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD;
+      }
     } else if (EncodingDetector::TldMayAffectGuess(mTLD)) {
-      source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content;
+      if (mCharsetSource == kCharsetFromInitialAutoDetectionASCII) {
+        source =
+            kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8ContentInitialWasASCII;
+      } else {
+        source = kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content;
+      }
+    } else if (mCharsetSource == kCharsetFromInitialAutoDetectionASCII) {
+      source =
+          kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8GenericInitialWasASCII;
     }
   } else if (source ==
              kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic) {
@@ -485,7 +501,8 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(Span<const uint8_t> aFromSegment,
   MOZ_ASSERT(IsParserThread(), "Wrong thread!");
   MOZ_ASSERT_IF(aEof, aFromSegment.IsEmpty());
 
-  if (mCharsetSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+  if (mCharsetSource >=
+          kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII &&
       mCharsetSource <= kCharsetFromFinalUserForcedAutoDetection) {
     if (mMode == PLAIN_TEXT || mMode == VIEW_SOURCE_PLAIN) {
       mTreeBuilder->MaybeComplainAboutCharset("EncDetectorReloadPlain", true,
@@ -2273,9 +2290,9 @@ void nsHtml5StreamParser::ParseAvailableData() {
                 // Request a reload from the docshell.
                 MOZ_ASSERT(
                     (source >=
-                         kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+                         kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII &&
                      source <=
-                         kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD) ||
+                         kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII) ||
                     source == kCharsetFromFinalUserForcedAutoDetection);
                 mTreeBuilder->NeedsCharsetSwitchTo(encoding, source, 0);
                 requestedReload = true;
@@ -2323,7 +2340,7 @@ void nsHtml5StreamParser::ParseAvailableData() {
                 } else if (
                     mCharsetSource >= kCharsetFromXmlDeclaration &&
                     !(mCharsetSource >=
-                          kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+                          kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII &&
                       mCharsetSource <=
                           kCharsetFromFinalUserForcedAutoDetection)) {
                   mTreeBuilder->MaybeComplainAboutCharset("EncError", true, 0);
