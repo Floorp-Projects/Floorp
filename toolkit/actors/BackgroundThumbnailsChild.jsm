@@ -26,7 +26,7 @@ class BackgroundThumbnailsChild extends JSWindowActorChild {
       case "Browser:Thumbnail:ContentInfo": {
         if (
           message.data.isImage ||
-          this.document instanceof this.contentWindow.ImageDocument
+          this.contentWindow.ImageDocument.isInstance(this.document)
         ) {
           // To avoid sending additional messages between processes, we return
           // the image data directly with the size info.

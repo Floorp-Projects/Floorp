@@ -207,7 +207,7 @@ var ClientIDImpl = {
       });
       this._saveClientIdTask = null;
     } catch (ex) {
-      if (!(ex instanceof DOMException) || ex.name !== "AbortError") {
+      if (!DOMException.isInstance(ex) || ex.name !== "AbortError") {
         throw ex;
       }
     }

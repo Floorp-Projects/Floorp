@@ -102,10 +102,10 @@ class PromptFactory {
           id: String(id),
           disabled: disabled || child.disabled,
         };
-        if (child instanceof win.HTMLOptGroupElement) {
+        if (win.HTMLOptGroupElement.isInstance(child)) {
           item.label = child.label;
           item.items = enumList(child, item.disabled);
-        } else if (child instanceof win.HTMLOptionElement) {
+        } else if (win.HTMLOptionElement.isInstance(child)) {
           item.label = child.label || child.text;
           item.selected = child.selected;
         } else {
@@ -140,7 +140,7 @@ class PromptFactory {
         let dispatchEvents = false;
         if (!aElement.multiple) {
           const elem = map[result.choices[0]];
-          if (elem && elem instanceof win.HTMLOptionElement) {
+          if (elem && win.HTMLOptionElement.isInstance(elem)) {
             dispatchEvents = !elem.selected;
             elem.selected = true;
           } else {
@@ -153,7 +153,7 @@ class PromptFactory {
             const elem = map[i];
             const index = result.choices.indexOf(String(i));
             if (
-              elem instanceof win.HTMLOptionElement &&
+              win.HTMLOptionElement.isInstance(elem) &&
               elem.selected !== index >= 0
             ) {
               // Current selected is not the same as the new selected state.
@@ -386,7 +386,7 @@ class PromptFactory {
   callProxy(aMethod, aArguments) {
     const prompt = new PromptDelegate(aArguments[0]);
     let promptArgs;
-    if (aArguments[0] instanceof BrowsingContext) {
+    if (BrowsingContext.isInstance(aArguments[0])) {
       // Called by BrowsingContext prompt method, strip modalType.
       [, , /*browsingContext*/ /*modalType*/ ...promptArgs] = aArguments;
     } else {

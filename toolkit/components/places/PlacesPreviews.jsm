@@ -162,7 +162,7 @@ class DeletionHandler {
         PlacesPreviews.onDelete(filePath);
         deleted.push(hash);
       } catch (ex) {
-        if (ex instanceof DOMException && ex.name == "NotFoundError") {
+        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
           deleted.push(hash);
         } else {
           logConsole.error("Unable to delete file: " + filePath);
@@ -335,7 +335,7 @@ const PlacesPreviews = new (class extends EventEmitter {
         }
       } catch (ex) {
         // If the file doesn't exist, we always update it.
-        if (!(ex instanceof DOMException) || ex.name != "NotFoundError") {
+        if (!DOMException.isInstance(ex) || ex.name != "NotFoundError") {
           logConsole.error("Error while trying to stat() preview" + ex);
           return false;
         }
