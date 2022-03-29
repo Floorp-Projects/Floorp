@@ -209,13 +209,6 @@ function wrapExceptions(global, fn) {
   }
 }
 
-function specialPowersHasInstance(value) {
-  // Because we return wrapped versions of this function, when it's called its
-  // wrapper will unwrap the "this" as well as the function itself.  So our
-  // "this" is the unwrapped thing we started out with.
-  return value instanceof this;
-}
-
 let SpecialPowersHandler = {
   construct(target, args) {
     // The arguments may or may not be wrappers. Unwrap them if necessary.
@@ -270,14 +263,6 @@ let SpecialPowersHandler = {
     return wrapExceptions(global, () => {
       let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
       let val = Reflect.get(obj, prop);
-      if (val === undefined && prop == Symbol.hasInstance) {
-        // Special-case Symbol.hasInstance to pass the hasInstance check on to our
-        // target.  We only do this when the target doesn't have its own
-        // Symbol.hasInstance already.  Once we get rid of JS engine class
-        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
-        // remove this bit (bug 1448400).
-        return wrapPrivileged(specialPowersHasInstance, global);
-      }
       return wrapIfUnwrapped(val, global);
     });
   },
@@ -308,20 +293,6 @@ let SpecialPowersHandler = {
       let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
 
       if (desc === undefined) {
-        if (prop == Symbol.hasInstance) {
-          // Special-case Symbol.hasInstance to pass the hasInstance check on to
-          // our target.  We only do this when the target doesn't have its own
-          // Symbol.hasInstance already.  Once we get rid of JS engine class
-          // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
-          // can remove this bit (bug 1448400).
-          return {
-            value: wrapPrivileged(specialPowersHasInstance, global),
-            writeable: true,
-            configurable: true,
-            enumerable: false,
-          };
-        }
-
         return undefined;
       }
 
