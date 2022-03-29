@@ -287,7 +287,8 @@ void WinWebAuthnManager::Register(
         break;
     }
 
-    if (extra.Extensions().Length() > (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
+    if (extra.Extensions().Length() >
+        (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
       nsresult aError = NS_ERROR_DOM_INVALID_STATE_ERR;
       MaybeAbortRegister(aTransactionId, aError);
       return;
@@ -457,8 +458,9 @@ void WinWebAuthnManager::Register(
     nsTArray<uint8_t> attObject;
     if (winAttestation == WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE) {
       // Zero AAGuid
+      const uint8_t zeroGuid[16] = {0};
       authenticatorData.ReplaceElementsAt(32 + 1 + 4 /*AAGuid offset*/, 16,
-                                          0x0);
+                                          zeroGuid, 16);
 
       CryptoBuffer authData;
       authData.Assign(authenticatorData);
