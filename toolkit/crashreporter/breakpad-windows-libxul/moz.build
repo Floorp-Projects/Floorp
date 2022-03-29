@@ -26,6 +26,4 @@ SOURCES += objs_crash_generation
 SOURCES += objs_handler
 SOURCES += objs_client_common
 
-TEST_DIRS += ["../breakpad-client/windows/unittests/"]
-
 DisableStlWrapping()
