@@ -312,7 +312,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
     // GetCurrentJSStack() hand out the JSContext it found.
     JSContext* cx = frame ? nsContentUtils::GetCurrentJSContext() : nullptr;
 
-    for (uint32_t i = 0; frame; ++i) {
+    while (frame) {
       nsString fileNameUTF16;
       frame->GetFilename(cx, fileNameUTF16);
 
