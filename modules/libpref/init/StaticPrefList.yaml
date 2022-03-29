@@ -5837,16 +5837,21 @@
   # Whether to use a video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-overlay-win
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
+    mirror: once
+  # Enable video overlay even when it is blocked.
+-   name: gfx.webrender.dcomp-video-overlay-win-force-enabled
+    type: bool
+    value: false
     mirror: once
   # Whether to use a yuv video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-yuv-overlay-win
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: once
 -   name: gfx.webrender.dcomp-video-vp-scaling-win
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: once
 #endif
 
