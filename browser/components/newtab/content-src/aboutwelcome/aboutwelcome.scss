@@ -727,7 +727,9 @@ body {
         height: 45px;
         width: 152px;
         background-repeat: no-repeat;
-        background-size: cover;
+        background-size: contain;
+        background-position: center;
+        box-shadow: none;
       }
 
       &:not(:first-child) {
