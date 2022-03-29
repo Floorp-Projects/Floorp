@@ -75,6 +75,7 @@ events:
         description: |
           A boolean that tells us whether the URL was autofilled by an
           Autocomplete suggestion
+        type: boolean
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/959
       - https://github.com/mozilla-mobile/fenix/issues/19923

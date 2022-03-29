@@ -284,11 +284,6 @@ sealed class Event {
             get() = hashMapOf(Logins.saveLoginsSettingChangedKeys.setting to setting.name)
     }
 
-    data class EnteredUrl(val autoCompleted: Boolean) : Event() {
-        override val extras: Map<Events.enteredUrlKeys, String>?
-            get() = mapOf(Events.enteredUrlKeys.autocomplete to autoCompleted.toString())
-    }
-
     data class PerformedSearch(val eventSource: EventSource) : Event() {
         sealed class EngineSource {
             abstract val engine: SearchEngine

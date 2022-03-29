@@ -31,6 +31,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -592,20 +593,19 @@ class DefaultSessionControlController(
             engine = searchEngine
         )
 
-        val event = if (clipboardText.isUrl() || searchEngine == null) {
-            Event.EnteredUrl(false)
+        if (clipboardText.isUrl() || searchEngine == null) {
+            Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
         } else {
             val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.ACTION
-            searchAccessPoint.let { sap ->
+            val event = searchAccessPoint.let { sap ->
                 MetricsUtils.createSearchEvent(
                     searchEngine,
                     store,
                     sap
                 )
             }
+            event?.let { activity.metrics.track(it) }
         }
-
-        event?.let { activity.metrics.track(it) }
     }
 
     override fun handlePaste(clipboardText: String) {

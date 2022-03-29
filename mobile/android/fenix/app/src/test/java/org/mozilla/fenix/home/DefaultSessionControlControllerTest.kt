@@ -39,6 +39,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -47,6 +48,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -841,6 +843,8 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handlePasteAndGo() {
+        assertFalse(Events.enteredUrl.testHasValue())
+
         createController().handlePasteAndGo("text")
 
         verify {
@@ -861,8 +865,8 @@ class DefaultSessionControlControllerTest {
                 from = BrowserDirection.FromHome,
                 engine = searchEngine
             )
-            metrics.track(any<Event.EnteredUrl>())
         }
+        assertTrue(Events.enteredUrl.testHasValue())
     }
 
     @Test

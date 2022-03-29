@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -101,24 +102,25 @@ class SearchDialogController(
             requestDesktopMode = fromHomeScreen && activity.settings().openNextTabInDesktopMode
         )
 
-        val event = if (url.isUrl() || searchEngine == null) {
-            Event.EnteredUrl(false)
+        if (url.isUrl() || searchEngine == null) {
+            Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
         } else {
             val searchAccessPoint = when (fragmentStore.state.searchAccessPoint) {
                 Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.ACTION
                 else -> fragmentStore.state.searchAccessPoint
             }
 
-            searchAccessPoint?.let { sap ->
+            val event = searchAccessPoint?.let { sap ->
                 MetricsUtils.createSearchEvent(
                     searchEngine,
                     store,
                     sap
                 )
             }
+            event?.let {
+                metrics.track(it)
+            }
         }
-
-        event?.let { metrics.track(it) }
     }
 
     override fun handleEditingCancelled() {
@@ -157,7 +159,7 @@ class SearchDialogController(
             flags = flags
         )
 
-        metrics.track(Event.EnteredUrl(false))
+        Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {

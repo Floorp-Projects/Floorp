@@ -89,10 +89,6 @@ private class EventWrapper<T : Enum<T>>(
 // FIXME(#19967): Migrate to non-deprecated API.
 private val Event.wrapper: EventWrapper<*>?
     get() = when (this) {
-        is Event.EnteredUrl -> EventWrapper(
-            { Events.enteredUrl.record(it) },
-            { Events.enteredUrlKeys.valueOf(it) }
-        )
         is Event.PerformedSearch -> EventWrapper(
             {
                 Metrics.searchCount[this.eventSource.countLabel].add(1)
