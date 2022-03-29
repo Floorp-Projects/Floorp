@@ -274,12 +274,10 @@ public final class GeckoRuntime implements Parcelable {
                     session -> {
                       if (session != null) {
                         if (!session.isOpen()) {
-                          result.completeExceptionally(
-                              new RuntimeException("Returned GeckoSession must be open."));
-                        } else {
-                          session.loadUri(url);
-                          result.complete(session.getId());
+                          session.open(sRuntime);
                         }
+                        session.loadUri(url);
+                        result.complete(session.getId());
                       } else {
                         result.complete(null);
                       }
