@@ -21,22 +21,17 @@ bool OptionalEmitter::emitJumpShortCircuit() {
              state_ == State::ShortCircuitForCall);
   MOZ_ASSERT(initialDepth_ + 1 == bce_->bytecodeSection().stackDepth());
   InternalIfEmitter ifEmitter(bce_);
-  if (!bce_->emitPushNotUndefinedOrNull()) {
-    //              [stack] OBJ NOT-UNDEFINED-OR-NULL
-    return false;
-  }
-
-  if (!bce_->emit1(JSOp::Not)) {
-    //              [stack] OBJ UNDEFINED-OR-NULL
-    return false;
+  if (!bce_->emit1(JSOp::IsNullOrUndefined)) {
+    //              [stack] OBJ NULL-OR-UNDEF
   }
 
   if (!ifEmitter.emitThen()) {
+    //              [stack] OBJ
     return false;
   }
 
   if (!bce_->emitJump(JSOp::Goto, &jumpShortCircuit_)) {
-    //              [stack] UNDEFINED-OR-NULL
+    //              [stack] OBJ
     return false;
   }
 
@@ -60,17 +55,13 @@ bool OptionalEmitter::emitJumpShortCircuitForCall() {
   }
 
   InternalIfEmitter ifEmitter(bce_);
-  if (!bce_->emitPushNotUndefinedOrNull()) {
-    //              [stack] THIS CALLEE NOT-UNDEFINED-OR-NULL
-    return false;
-  }
-
-  if (!bce_->emit1(JSOp::Not)) {
-    //              [stack] THIS CALLEE UNDEFINED-OR-NULL
+  if (!bce_->emit1(JSOp::IsNullOrUndefined)) {
+    //              [stack] THIS CALLEE NULL-OR-UNDEF
     return false;
   }
 
   if (!ifEmitter.emitThen()) {
+    //              [stack] THIS CALLEE
     return false;
   }
 
@@ -80,7 +71,7 @@ bool OptionalEmitter::emitJumpShortCircuitForCall() {
   }
 
   if (!bce_->emitJump(JSOp::Goto, &jumpShortCircuit_)) {
-    //              [stack] UNDEFINED-OR-NULL
+    //              [stack] THIS
     return false;
   }
 
@@ -111,17 +102,15 @@ bool OptionalEmitter::emitOptionalJumpTarget(JSOp op,
   // if we get to this point, it means that the optional chain did not short
   // circuit, so we should skip the short circuiting bytecode.
   if (!bce_->emitJump(JSOp::Goto, &jumpFinish_)) {
-    //              [stack] # if call
-    //              [stack] CALLEE THIS
-    //              [stack] # otherwise, if defined
-    //              [stack] VAL
-    //              [stack] # otherwise
-    //              [stack] UNDEFINED-OR-NULL
+    //              [stack] RESULT
     return false;
   }
 
   if (!bce_->emitJumpTargetAndPatch(jumpShortCircuit_)) {
-    //              [stack] UNDEFINED-OR-NULL
+    //              [stack] # if call
+    //              [stack] THIS
+    //              [stack] # otherwise
+    //              [stack] OBJ
     return false;
   }
 

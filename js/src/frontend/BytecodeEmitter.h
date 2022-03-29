@@ -552,9 +552,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Helper to emit JSOp::BuiltinObject.
   [[nodiscard]] bool emitBuiltinObject(BuiltinObjectKind kind);
 
-  // Push whether the value atop of the stack is non-undefined and non-null.
-  [[nodiscard]] bool emitPushNotUndefinedOrNull();
-
   // Emit a bytecode followed by an uint16 immediate operand stored in
   // big-endian order.
   [[nodiscard]] bool emitUint16Operand(JSOp op, uint32_t operand);
