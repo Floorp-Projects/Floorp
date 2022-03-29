@@ -1503,6 +1503,14 @@ bool WarpBuilder::build_Goto(BytecodeLocation loc) {
   return buildForwardGoto(loc.getJumpTarget());
 }
 
+bool WarpBuilder::build_IsNullOrUndefined(BytecodeLocation loc) {
+  MDefinition* value = current->peek(-1);
+  auto* isNullOrUndef = MIsNullOrUndefined::New(alloc(), value);
+  current->add(isNullOrUndef);
+  current->push(isNullOrUndef);
+  return true;
+}
+
 bool WarpBuilder::build_DebugCheckSelfHosted(BytecodeLocation loc) {
 #ifdef DEBUG
   MDefinition* val = current->pop();
