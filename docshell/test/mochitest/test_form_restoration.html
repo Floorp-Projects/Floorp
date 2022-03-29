@@ -52,6 +52,21 @@
         is(formData, "initial", "We shouldn't restore form data when going back to a page with a no-store header.");
       });
     });
+
+    /* Test for bug1752250 */
+    add_task(async function location_reload() {
+      await startTest(async (aBroadcastChannel) => {
+        // update form data
+        aBroadcastChannel.postMessage("enter_data");
+
+        // reload
+        let { persisted, formData } = await postMessageAndWait(aBroadcastChannel, "reload");
+
+        // check form data
+        ok(!persisted, "Page with a no-store header shouldn't be bfcached.");
+        is(formData, "initial", "We shouldn't restore form data when reload a page with a no-store header.");
+      });
+    });
   </script>
 </head>
 <body>
