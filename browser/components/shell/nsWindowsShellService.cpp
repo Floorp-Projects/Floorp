@@ -242,6 +242,37 @@ nsWindowsShellService::IsDefaultHandlerFor(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowsShellService::QueryCurrentDefaultHandlerFor(
+    const nsAString& aFileExtensionOrProtocol, nsAString& aResult) {
+  aResult.Truncate();
+
+  RefPtr<IApplicationAssociationRegistration> pAAR;
+  HRESULT hr = CoCreateInstance(
+      CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC,
+      IID_IApplicationAssociationRegistration, getter_AddRefs(pAAR));
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  const nsString& flatClass = PromiseFlatString(aFileExtensionOrProtocol);
+
+  LPWSTR registeredApp;
+  bool isProtocol = flatClass.First() != L'.';
+  ASSOCIATIONTYPE queryType = isProtocol ? AT_URLPROTOCOL : AT_FILEEXTENSION;
+  hr = pAAR->QueryCurrentDefault(flatClass.get(), queryType, AL_EFFECTIVE,
+                                 &registeredApp);
+  if (hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION)) {
+    return NS_OK;
+  }
+  NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
+
+  aResult = registeredApp;
+  CoTaskMemFree(registeredApp);
+
+  return NS_OK;
+}
+
 nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
   IApplicationAssociationRegistrationUI* pAARUI;
   HRESULT hr = CoCreateInstance(

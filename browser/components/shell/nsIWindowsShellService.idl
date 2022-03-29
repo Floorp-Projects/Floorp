@@ -159,4 +159,15 @@ interface nsIWindowsShellService : nsISupports
    * or protocol (like "https").
    */
   boolean isDefaultHandlerFor(in AString aFileExtensionOrProtocol);
+
+
+  /*
+   * Return the Windows ProgID currently registered to handle the gven
+   * file extension (like ".pdf") or protocol (like "https").
+   *
+   * @return string ProgID, or "" when no association is registered.
+   * @throws NS_ERROR_FAILURE when the file extension or protocol
+   *         cannot be determined.
+   */
+  AString queryCurrentDefaultHandlerFor(in AString aFileExtensionOrProtocol);
 };
