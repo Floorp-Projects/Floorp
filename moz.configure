@@ -597,12 +597,10 @@ option(env="MAKE", nargs=1, help="Path to GNU make")
 @depends("MAKE", host)
 def possible_makes(make, host):
     candidates = []
-    if host.kernel == "WINNT":
-        candidates.append("mingw32-make")
     if make:
         candidates.append(make[0])
     if host.kernel == "WINNT":
-        candidates.extend(("mozmake", "make", "gmake"))
+        candidates.extend(("mozmake", "mingw32-make", "make", "gmake"))
     else:
         candidates.extend(("gmake", "make"))
     return candidates
