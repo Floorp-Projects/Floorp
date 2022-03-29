@@ -173,6 +173,10 @@ nsILayoutHistoryState* SessionHistoryInfo::GetLayoutHistoryState() {
 
 void SessionHistoryInfo::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
   mSharedState.Get()->mLayoutHistoryState = aState;
+  if (mSharedState.Get()->mLayoutHistoryState) {
+    mSharedState.Get()->mLayoutHistoryState->SetScrollPositionOnly(
+        !mSharedState.Get()->mSaveLayoutState);
+  }
 }
 
 nsIPrincipal* SessionHistoryInfo::GetTriggeringPrincipal() const {
@@ -1520,6 +1524,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aWriter, aActor, aParam.mSharedState.Get()->mCacheKey);
   WriteIPDLParam(aWriter, aActor,
                  aParam.mSharedState.Get()->mIsFrameNavigation);
+  WriteIPDLParam(aWriter, aActor, aParam.mSharedState.Get()->mSaveLayoutState);
 }
 
 bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
@@ -1612,7 +1617,9 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
       !ReadIPDLParam(aReader, aActor,
                      &aResult->mSharedState.Get()->mCacheKey) ||
       !ReadIPDLParam(aReader, aActor,
-                     &aResult->mSharedState.Get()->mIsFrameNavigation)) {
+                     &aResult->mSharedState.Get()->mIsFrameNavigation) ||
+      !ReadIPDLParam(aReader, aActor,
+                     &aResult->mSharedState.Get()->mSaveLayoutState)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
   }
