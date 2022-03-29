@@ -29,7 +29,7 @@ checkbox[disabled="true"] {
 
 .checkbox-check {
   appearance: none;
-  color: var(--checkbox-border-color, ThreeDDarkShadow);
+  color: var(--checkbox-border-color, ThreeDShadow);
   background-color: var(--checkbox-unchecked-bgcolor, Field);
   border: 1px solid currentColor;
   border-radius: 2px;
