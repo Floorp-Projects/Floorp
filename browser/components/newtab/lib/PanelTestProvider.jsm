@@ -587,6 +587,9 @@ const MESSAGES = () => [
                   alt_text: {
                     string_id: "spotlight-focus-promo-qr-code",
                   },
+                  image_overrides: {
+                    de: "chrome://browser/content/assets/klar-qr-code.svg",
+                  },
                 },
                 email: {
                   link_text: "Email yourself a link",
