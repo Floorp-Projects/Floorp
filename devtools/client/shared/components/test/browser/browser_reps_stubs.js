@@ -26,6 +26,14 @@ const EXPRESSIONS_BY_FILE = {
       }`,
     ],
   ]),
+  "comment-node.js": new Map([
+    [
+      "Comment",
+      `{
+      document.createComment("test\\nand test\\nand test\\nand test\\nand test\\nand test\\nand test")
+    }`,
+    ],
+  ]),
   "infinity.js": new Map([
     ["Infinity", `Infinity`],
     ["NegativeInfinity", `-Infinity`],
@@ -45,7 +53,6 @@ const EXPRESSIONS_BY_FILE = {
   // "accessible.js",
   // "accessor.js",
   // "big-int.js",
-  // "comment-node.js",
   // "date-time.js",
   // "document-type.js",
   // "document.js",
