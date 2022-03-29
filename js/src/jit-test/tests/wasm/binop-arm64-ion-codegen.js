@@ -300,7 +300,7 @@ codegenTestARM64_adhoc(
     'f',
     `9e6703e0  fmov    d0, xzr
      1e622000  fcmp    d0, d2
-     1e63bc20  fcsel   d0, d1, d3, lt`)
+     1e633c20  fcsel   d0, d1, d3, lo`)
 
 // FP ABS should not tie its input to its output.
 
