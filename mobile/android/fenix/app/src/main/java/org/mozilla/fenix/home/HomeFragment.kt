@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home
 
-import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
@@ -15,10 +14,8 @@ import android.os.StrictMode
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.AccessibilityDelegate
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -39,15 +36,11 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -116,7 +109,6 @@ import org.mozilla.fenix.home.recentvisits.controller.DefaultRecentVisitsControl
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
-import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -551,10 +543,6 @@ class HomeFragment : Fragment() {
 
         if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
             navigateToSearch()
-        } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
-            /* Triggered when the user has added a tab to a collection and has tapped
-            * the View action on the [TabsTrayDialogFragment] snackbar.*/
-            scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
         }
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
@@ -1021,134 +1009,6 @@ class HomeFragment : Fragment() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
-    /**
-     * This method will find and scroll to the row of the specified collection Id.
-     * */
-    private fun scrollAndAnimateCollection(
-        collectionIdToSelect: Long = -1
-    ) {
-        if (view != null && collectionIdToSelect >= 0) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                val recyclerView = sessionControlView!!.view
-                delay(ANIM_SCROLL_DELAY)
-                val indexOfCollection =
-                    NON_COLLECTION_ITEM_NUM + findIndexOfSpecificCollection(collectionIdToSelect)
-
-                val lastVisiblePosition =
-                    (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
-                        ?: 0
-
-                if (lastVisiblePosition < indexOfCollection) {
-                    val onScrollListener = object : RecyclerView.OnScrollListener() {
-                        override fun onScrollStateChanged(
-                            recyclerView: RecyclerView,
-                            newState: Int
-                        ) {
-                            super.onScrollStateChanged(recyclerView, newState)
-                            if (newState == SCROLL_STATE_IDLE) {
-                                appBarLayout?.setExpanded(false)
-                                animateCollection(indexOfCollection)
-                                recyclerView.removeOnScrollListener(this)
-                            }
-                        }
-                    }
-                    recyclerView.addOnScrollListener(onScrollListener)
-                    recyclerView.smoothScrollToPosition(indexOfCollection)
-                } else {
-                    appBarLayout?.setExpanded(false)
-                    animateCollection(indexOfCollection)
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns index of the collection with the specified id.
-     * */
-    private fun findIndexOfSpecificCollection(
-        changedCollectionId: Long
-    ): Int {
-        var result = 0
-        requireComponents.core.tabCollectionStorage.cachedTabCollections
-            .filterIndexed { index, tabCollection ->
-                if (tabCollection.id == changedCollectionId) {
-                    result = index
-                    return@filterIndexed true
-                }
-                false
-            }
-        return result
-    }
-
-    /**
-     * Will highlight the border of the collection with the specified index.
-     * */
-    private fun animateCollection(indexOfCollection: Int) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val viewHolder =
-                sessionControlView!!.view.findViewHolderForAdapterPosition(indexOfCollection)
-            val border =
-                (viewHolder as? CollectionViewHolder)?.itemView?.findViewById<View>(R.id.selected_border)
-            val listener = object : Animator.AnimatorListener {
-                override fun onAnimationCancel(animation: Animator?) {
-                    border?.visibility = View.GONE
-                }
-
-                override fun onAnimationStart(animation: Animator?) { /* noop */
-                }
-
-                override fun onAnimationRepeat(animation: Animator?) { /* noop */
-                }
-
-                override fun onAnimationEnd(animation: Animator?) {
-                    border?.animate()?.alpha(0.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
-                        ?.setDuration(FADE_ANIM_DURATION)
-                        ?.start()
-                }
-            }
-            border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
-                ?.setDuration(FADE_ANIM_DURATION)
-                ?.setListener(listener)?.start()
-        }.invokeOnCompletion {
-            val a11yEnabled = context?.settings()?.accessibilityServicesEnabled ?: false
-            if (a11yEnabled) {
-                focusCollectionForTalkBack(indexOfCollection)
-            }
-        }
-    }
-
-    /**
-     * Will focus the collection with [indexOfCollection] for accessibility services.
-     * */
-    private fun focusCollectionForTalkBack(indexOfCollection: Int) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            var focusedForAccessibility = false
-            view?.let { mainView ->
-                mainView.accessibilityDelegate = object : AccessibilityDelegate() {
-                    override fun onRequestSendAccessibilityEvent(
-                        host: ViewGroup,
-                        child: View,
-                        event: AccessibilityEvent
-                    ): Boolean {
-                        if (!focusedForAccessibility &&
-                            event.eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED
-                        ) {
-                            sessionControlView?.view?.findViewHolderForAdapterPosition(
-                                indexOfCollection
-                            )?.itemView?.let { viewToFocus ->
-                                focusedForAccessibility = true
-                                viewToFocus.requestFocus()
-                                viewToFocus.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
-                                return false
-                            }
-                        }
-                        return super.onRequestSendAccessibilityEvent(host, child, event)
-                    }
-                }
-            }
-        }
-    }
-
     private fun showRenamedSnackbar() {
         view?.let { view ->
             val string = view.context.getString(R.string.snackbar_collection_renamed)
@@ -1221,17 +1081,7 @@ class HomeFragment : Fragment() {
         const val ALL_PRIVATE_TABS = "all_private"
 
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
-        private const val FOCUS_ON_COLLECTION = "focusOnCollection"
 
-        /**
-         * Represents the number of items in [sessionControlView] that are NOT part of
-         * the list of collections. At the moment these are topSites pager, collections header.
-         * */
-        private const val NON_COLLECTION_ITEM_NUM = 2
-
-        private const val ANIM_SCROLL_DELAY = 100L
-        private const val ANIM_ON_SCREEN_DELAY = 200L
-        private const val FADE_ANIM_DURATION = 150L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
 

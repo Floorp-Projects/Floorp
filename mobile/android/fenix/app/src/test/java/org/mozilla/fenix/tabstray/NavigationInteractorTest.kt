@@ -255,7 +255,7 @@ class NavigationInteractorTest {
         browserStore: BrowserStore = store,
         dismissTabTray: () -> Unit = { },
         dismissTabTrayAndNavigateHome: (String) -> Unit = { _ -> },
-        showCollectionSnackbar: (Int, Boolean, Long?) -> Unit = { _, _, _ -> },
+        showCollectionSnackbar: (Int, Boolean) -> Unit = { _, _ -> },
         showBookmarkSnackbar: (Int) -> Unit = { _ -> },
         showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> }
     ): NavigationInteractor {

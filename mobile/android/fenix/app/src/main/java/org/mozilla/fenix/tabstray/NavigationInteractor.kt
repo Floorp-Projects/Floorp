@@ -111,7 +111,6 @@ class DefaultNavigationInteractor(
     private val showCollectionSnackbar: (
         tabSize: Int,
         isNewCollection: Boolean,
-        collectionToSelect: Long?
     ) -> Unit,
     private val showBookmarkSnackbar: (tabSize: Int) -> Unit,
     private val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
@@ -226,7 +225,7 @@ class DefaultNavigationInteractor(
                     )
                 }
                 id?.apply {
-                    showCollectionSnackbar(tabs.size, isNewCollection, id)
+                    showCollectionSnackbar(tabs.size, isNewCollection)
                 }
             },
             onNegativeButtonClick = {}

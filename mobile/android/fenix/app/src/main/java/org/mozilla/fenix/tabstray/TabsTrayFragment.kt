@@ -59,7 +59,6 @@ import org.mozilla.fenix.tabstray.ext.anchorWithAction
 import org.mozilla.fenix.tabstray.ext.bookmarkMessage
 import org.mozilla.fenix.tabstray.ext.collectionMessage
 import org.mozilla.fenix.tabstray.ext.make
-import org.mozilla.fenix.tabstray.ext.orDefault
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
@@ -559,7 +558,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     internal fun showCollectionSnackbar(
         tabSize: Int,
         isNewCollection: Boolean = false,
-        collectionToSelect: Long?
     ) {
         runIfFragmentIsAttached {
             FenixSnackbar
@@ -569,7 +567,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     findNavController().navigate(
                         TabsTrayFragmentDirections.actionGlobalHome(
                             focusOnAddressBar = false,
-                            focusOnCollection = collectionToSelect.orDefault()
                         )
                     )
                     dismissTabsTray()
