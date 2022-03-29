@@ -148,7 +148,7 @@ var MockFilePicker = {
     this.pendingPromises = [];
 
     for (let file of files) {
-      if (this.window.File.isInstance(file)) {
+      if (file instanceof this.window.File) {
         this.returnData.push(this.internalFileData({ domFile: file }));
       } else {
         let promise = this.window.File.createFromNsIFile(file, {

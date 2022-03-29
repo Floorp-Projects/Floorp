@@ -128,7 +128,7 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
     return (
       win &&
       win.HTMLInputElement &&
-      win.HTMLInputElement.isInstance(focus) &&
+      focus instanceof win.HTMLInputElement &&
       !focus.mozIsTextField(/* excludePassword */ true)
     );
   }
@@ -149,8 +149,8 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       win &&
       win.HTMLInputElement &&
       win.HTMLTextAreaElement &&
-      !win.HTMLInputElement.isInstance(focus) &&
-      !win.HTMLTextAreaElement.isInstance(focus)
+      !(focus instanceof win.HTMLInputElement) &&
+      !(focus instanceof win.HTMLTextAreaElement)
     );
   }
 

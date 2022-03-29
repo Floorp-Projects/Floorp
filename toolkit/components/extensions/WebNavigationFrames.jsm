@@ -87,7 +87,7 @@ var WebNavigationFrames = {
   },
 
   getFromWindow(target) {
-    if (Window.isInstance(target)) {
+    if (target instanceof Window) {
       return getFrameId(BrowsingContext.getFromWindow(target));
     }
     return -1;

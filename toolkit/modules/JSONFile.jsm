@@ -240,7 +240,7 @@ JSONFile.prototype = {
         cleansedBasename,
         errorNo ? errorNo.toString() : ""
       );
-      if (!(DOMException.isInstance(ex) && ex.name == "NotFoundError")) {
+      if (!(ex instanceof DOMException && ex.name == "NotFoundError")) {
         Cu.reportError(ex);
 
         // Move the original file to a backup location, ignoring errors.
@@ -264,7 +264,7 @@ JSONFile.prototype = {
         try {
           await IOUtils.copy(this._options.backupFile, this.path);
         } catch (e) {
-          if (!(DOMException.isInstance(e) && e.name == "NotFoundError")) {
+          if (!(e instanceof DOMException && e.name == "NotFoundError")) {
             Cu.reportError(e);
           }
         }
@@ -283,7 +283,7 @@ JSONFile.prototype = {
           }
           this._recordTelemetry("load", cleansedBasename, "used_backup");
         } catch (e3) {
-          if (!(DOMException.isInstance(e3) && e3.name == "NotFoundError")) {
+          if (!(e3 instanceof DOMException && e3.name == "NotFoundError")) {
             Cu.reportError(e3);
           }
         }

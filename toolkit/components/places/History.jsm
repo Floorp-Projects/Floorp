@@ -511,7 +511,7 @@ var History = Object.freeze({
 
     if (
       hasURL &&
-      !URL.isInstance(filter.url) &&
+      !(filter.url instanceof URL) &&
       typeof filter.url != "string" &&
       !(filter.url instanceof Ci.nsIURI)
     ) {
@@ -1147,7 +1147,7 @@ var notifyOnResult = async function(data, onResult) {
 var fetch = async function(db, guidOrURL, options) {
   let whereClauseFragment = "";
   let params = {};
-  if (URL.isInstance(guidOrURL)) {
+  if (guidOrURL instanceof URL) {
     whereClauseFragment = "WHERE h.url_hash = hash(:url) AND h.url = :url";
     params.url = guidOrURL.href;
   } else {
@@ -1274,7 +1274,7 @@ var fetchMany = async function(db, guidOrURLs) {
     let urls = [];
     let guids = [];
     for (let v of chunk) {
-      if (URL.isInstance(v)) {
+      if (v instanceof URL) {
         urls.push(v);
       } else {
         guids.push(v);

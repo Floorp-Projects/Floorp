@@ -78,7 +78,7 @@ var ErrorsTelemetry = {
     }
 
     if (
-      DOMException.isInstance(error) ||
+      error instanceof DOMException ||
       error instanceof DataMigrationAbortedError
     ) {
       if (error.name.length > 80) {
@@ -809,7 +809,7 @@ this.ExtensionStorageIDB = {
 
     let errorMessage;
 
-    if (DOMException.isInstance(error)) {
+    if (error instanceof DOMException) {
       switch (error.name) {
         case "DataCloneError":
           errorMessage = String(error);

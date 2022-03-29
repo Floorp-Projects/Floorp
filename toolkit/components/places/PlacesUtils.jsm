@@ -233,7 +233,7 @@ const BOOKMARK_VALIDATORS = Object.freeze({
       val =>
         (typeof val == "string" && val.length <= DB_URL_LENGTH_MAX) ||
         (val instanceof Ci.nsIURI && val.spec.length <= DB_URL_LENGTH_MAX) ||
-        (URL.isInstance(val) && val.href.length <= DB_URL_LENGTH_MAX)
+        (val instanceof URL && val.href.length <= DB_URL_LENGTH_MAX)
     ).call(this, v);
     if (typeof v === "string") {
       return new URL(v);
@@ -533,7 +533,7 @@ var PlacesUtils = {
    * @return nsIURI for the given URL.
    */
   toURI(url) {
-    url = URL.isInstance(url) ? url.href : url;
+    url = url instanceof URL ? url.href : url;
 
     return NetUtil.newURI(url);
   },
@@ -597,7 +597,7 @@ var PlacesUtils = {
   parseActionUrl(url) {
     if (url instanceof Ci.nsIURI) {
       url = url.spec;
-    } else if (URL.isInstance(url)) {
+    } else if (url instanceof URL) {
       url = url.href;
     }
     // Faster bailout.
@@ -1233,7 +1233,7 @@ var PlacesUtils = {
       }
       return new URL(key);
     }
-    if (URL.isInstance(key)) {
+    if (key instanceof URL) {
       return key;
     }
     if (key instanceof Ci.nsIURI) {

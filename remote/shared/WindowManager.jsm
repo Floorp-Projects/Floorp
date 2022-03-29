@@ -108,7 +108,7 @@ class WindowManager {
    * @return {WindowProperties} A window properties object.
    */
   getWindowProperties(win, options = {}) {
-    if (!Window.isInstance(win)) {
+    if (!(win instanceof Window)) {
       throw new TypeError("Invalid argument, expected a Window object");
     }
 
