@@ -25,17 +25,21 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -90,6 +94,9 @@ class DefaultBrowserToolbarControllerTest {
 
     private lateinit var store: BrowserStore
     private val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setUp() {
@@ -221,6 +228,8 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarClick() {
         val controller = createController()
+        assertFalse(Events.searchBarTapped.testHasValue())
+
         controller.handleToolbarClick()
 
         val homeDirections = BrowserFragmentDirections.actionGlobalHome()
@@ -228,9 +237,11 @@ class DefaultBrowserToolbarControllerTest {
             sessionId = "1"
         )
 
-        verify {
-            metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
-        }
+        assertTrue(Events.searchBarTapped.testHasValue())
+        val snapshot = Events.searchBarTapped.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("BROWSER", snapshot.single().extra?.getValue("source"))
+
         verify {
             // shows the home screen "behind" the search dialog
             navController.navigate(homeDirections)
@@ -243,6 +254,8 @@ class DefaultBrowserToolbarControllerTest {
         val searchResultsTab = createTab("https://google.com?q=mozilla+website", searchTerms = "mozilla website")
         store.dispatch(TabListAction.AddTabAction(searchResultsTab, select = true)).joinBlocking()
 
+        assertFalse(Events.searchBarTapped.testHasValue())
+
         val controller = createController()
         controller.handleToolbarClick()
 
@@ -251,9 +264,11 @@ class DefaultBrowserToolbarControllerTest {
             sessionId = searchResultsTab.id
         )
 
-        verify {
-            metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
-        }
+        assertTrue(Events.searchBarTapped.testHasValue())
+        val snapshot = Events.searchBarTapped.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("BROWSER", snapshot.single().extra?.getValue("source"))
+
         // Does not show the home screen "behind" the search dialog if the current session has search terms.
         verify(exactly = 0) {
             navController.navigate(homeDirections)

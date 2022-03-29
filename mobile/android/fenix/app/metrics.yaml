@@ -47,6 +47,7 @@ events:
         description: |
           The view the user was on when they initiated the search (For example:
           `Home` or `Browser`)
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/959
       - https://github.com/mozilla-mobile/fenix/issues/19923

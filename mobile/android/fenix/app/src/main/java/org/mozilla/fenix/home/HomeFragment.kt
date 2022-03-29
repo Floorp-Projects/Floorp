@@ -76,6 +76,7 @@ import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -491,7 +492,6 @@ class HomeFragment : Fragment() {
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
         binding.toolbarWrapper.setOnClickListener {
             navigateToSearch()
-            requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
         binding.toolbarWrapper.setOnLongClickListener {
@@ -865,13 +865,16 @@ class HomeFragment : Fragment() {
         navigateToSearch()
     }
 
-    private fun navigateToSearch() {
+    @VisibleForTesting
+    internal fun navigateToSearch() {
         val directions =
             HomeFragmentDirections.actionGlobalSearchDialog(
                 sessionId = null
             )
 
         nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
+
+        Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")

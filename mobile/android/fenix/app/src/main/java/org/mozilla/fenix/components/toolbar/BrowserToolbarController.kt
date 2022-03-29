@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -92,7 +93,7 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleToolbarClick() {
-        metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
+        Events.searchBarTapped.record(Events.SearchBarTappedExtra("BROWSER"))
         // If we're displaying awesomebar search results, Home screen will not be visible (it's
         // covered up with the search results). So, skip the navigation event in that case.
         // If we don't, there's a visual flickr as we navigate to Home and then display search

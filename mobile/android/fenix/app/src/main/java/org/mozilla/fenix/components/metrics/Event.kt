@@ -284,13 +284,6 @@ sealed class Event {
             get() = hashMapOf(Logins.saveLoginsSettingChangedKeys.setting to setting.name)
     }
 
-    data class SearchBarTapped(val source: Source) : Event() {
-        enum class Source { HOME, BROWSER }
-
-        override val extras: Map<Events.searchBarTappedKeys, String>?
-            get() = mapOf(Events.searchBarTappedKeys.source to source.name)
-    }
-
     data class EnteredUrl(val autoCompleted: Boolean) : Event() {
         override val extras: Map<Events.enteredUrlKeys, String>?
             get() = mapOf(Events.enteredUrlKeys.autocomplete to autoCompleted.toString())
