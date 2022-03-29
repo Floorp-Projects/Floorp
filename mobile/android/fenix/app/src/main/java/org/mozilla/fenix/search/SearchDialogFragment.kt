@@ -66,10 +66,12 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.awesomebar.toSearchProviderState
+import org.mozilla.fenix.search.toolbar.IncreasedTapAreaActionDecorator
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.widget.VoiceSearchActivity
@@ -252,6 +254,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             else -> {}
         }
 
+        binding.searchEnginesShortcutButton.increaseTapArea(TAP_INCREASE_DPS)
         binding.searchEnginesShortcutButton.setOnClickListener {
             interactor.onSearchShortcutsButtonClicked()
         }
@@ -263,6 +266,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         )
 
         binding.qrScanButton.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
+        binding.qrScanButton.increaseTapArea(TAP_INCREASE_DPS)
 
         binding.qrScanButton.setOnClickListener {
             if (!requireContext().hasCamera()) { return@setOnClickListener }
@@ -636,14 +640,16 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 requireContext().settings().shouldShowVoiceSearch
 
         if (isVisible) {
-            toolbarView.view.addEditActionEnd(
-                BrowserToolbar.Button(
-                    AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
-                    requireContext().getString(R.string.voice_search_content_description),
-                    visible = { true },
-                    listener = ::launchVoiceSearch
-                )
+            val voiceSearchAction = BrowserToolbar.Button(
+                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                requireContext().getString(R.string.voice_search_content_description),
+                visible = { true },
+                listener = ::launchVoiceSearch
             )
+            toolbarView.view.run {
+                addEditActionEnd(IncreasedTapAreaActionDecorator(voiceSearchAction))
+                invalidateActions()
+            }
             voiceSearchButtonAlreadyAdded = true
         }
     }
@@ -719,6 +725,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     companion object {
+        private const val TAP_INCREASE_DPS = 8
         private const val QR_FRAGMENT_TAG = "MOZAC_QR_FRAGMENT"
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
