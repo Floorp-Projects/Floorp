@@ -1,5 +1,6 @@
 package org.mozilla.geckoview.test
 
+import android.os.Parcel
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
@@ -59,6 +60,20 @@ class WebNotificationTest : BaseSessionTest() {
         sessionRule.waitForResult(notificationResult)
     }
 
+    fun assertNotificationData(notification: WebNotification, requireInteraction: Boolean) {
+        assertThat("Title should match", notification.title, equalTo("The Title"))
+        assertThat("Body should match", notification.text, equalTo("The Text"))
+        assertThat("Tag should match", notification.tag, endsWith("Tag"))
+        assertThat("ImageUrl should match", notification.imageUrl, endsWith("icon.png"))
+        assertThat("Language should match", notification.lang, equalTo("en-US"))
+        assertThat("Direction should match", notification.textDirection, equalTo("ltr"))
+        assertThat("Require Interaction should match", notification.requireInteraction,
+            equalTo(requireInteraction))
+        assertThat("Vibrate should match", notification.vibrate, equalTo(intArrayOf(1, 2, 3, 4)))
+        assertThat("Silent should match", notification.silent, equalTo(false))
+        assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
+    }
+
     @Test fun onShowNotification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
         val notificationResult = GeckoResult<Void>()
@@ -68,17 +83,7 @@ class WebNotificationTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onShowNotification(notification: WebNotification) {
-                    assertThat("Title should match", notification.title, equalTo("The Title"))
-                    assertThat("Body should match", notification.text, equalTo("The Text"))
-                    assertThat("Tag should match", notification.tag, endsWith("Tag"))
-                    assertThat("ImageUrl should match", notification.imageUrl, endsWith("icon.png"))
-                    assertThat("Language should match", notification.lang, equalTo("en-US"))
-                    assertThat("Direction should match", notification.textDirection, equalTo("ltr"))
-                    assertThat("Require Interaction should match", notification.requireInteraction,
-                            equalTo(requireInteraction))
-                    assertThat("Vibrate should match", notification.vibrate, equalTo(intArrayOf(1, 2, 3, 4)))
-                    assertThat("Silent should match", notification.silent, equalTo(false))
-                    assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
+                    assertNotificationData(notification, requireInteraction)
                     notificationResult.complete(null)
                 }
         })
@@ -108,6 +113,52 @@ class WebNotificationTest : BaseSessionTest() {
         """.trimIndent())
 
         sessionRule.waitForResult(closeCalled)
+    }
+
+    @Test fun clickNotificationParceled() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
+        val notificationResult = GeckoResult<WebNotification>()
+        val requireInteraction =
+            sessionRule.getPrefs("dom.webnotifications.requireinteraction.enabled")[0] as Boolean
+
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
+            @GeckoSessionTestRule.AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+                notificationResult.complete(notification)
+            }
+        })
+
+        val promiseResult = mainSession.evaluatePromiseJS("""
+            new Promise(resolve => {
+                const notification = new Notification('The Title', {
+                   body: 'The Text',
+                   cookie: 'Cookie',
+                   icon: 'icon.png',
+                   tag: 'Tag',
+                   dir: 'ltr',
+                   lang: 'en-US',
+                   requireInteraction: true,
+                   vibrate: [1,2,3,4]
+                });
+                notification.onclick = function() {
+                    resolve(1);
+                }
+            });
+        """.trimIndent())
+
+        val notification = sessionRule.waitForResult(notificationResult)
+        assertNotificationData(notification, requireInteraction)
+
+        // Test that we can click from a deserialized notification
+        val parcel = Parcel.obtain()
+        notification.writeToParcel(parcel, 0)
+        parcel.setDataPosition(0);
+
+        val deserialized = WebNotification.CREATOR.createFromParcel(parcel)
+        assertNotificationData(deserialized, requireInteraction)
+
+        deserialized!!.click()
+        assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
     }
 
     @Test fun clickNotification() {

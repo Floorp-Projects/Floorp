@@ -14,9 +14,14 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v100
-- ⚠️ Changed [`GeckoSession.isOpen`][99.1] to `@UiThread`.
+- ⚠️ Changed [`GeckoSession.isOpen`][100.1] to `@UiThread`.
+- [`WebNotification`][100.2] now implements [`Parcelable`][100.3] to support
+  persisting notifications and responding to them while the browser is not
+  running.
 
 [100.1]: {{javadoc_uri}}/GeckoSession.html#isOpen()
+[100.2]: {{javadoc_uri}}/WebNotification.html
+[100.3]: https://developer.android.com/reference/android/os/Parcelable
 
 ## v99
 - Removed deprecated `GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`.
@@ -1144,4 +1149,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 24b60ce96bd68c81a55110bd1a3c57442dd8c65f
+[api-version]: 68503adf56bf73da9de696e2d9d725368e27008d

@@ -2260,9 +2260,10 @@ package org.mozilla.geckoview {
     method @NonNull public WebMessage.Builder uri(@NonNull String);
   }
 
-  public class WebNotification {
+  public class WebNotification implements Parcelable {
     method @UiThread public void click();
     method @UiThread public void dismiss();
+    field public static final Parcelable.Creator<WebNotification> CREATOR;
     field @Nullable public final String imageUrl;
     field @Nullable public final String lang;
     field @NonNull public final boolean requireInteraction;
