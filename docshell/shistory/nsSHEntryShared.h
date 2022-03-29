@@ -81,6 +81,7 @@ struct SHEntrySharedState {
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   uint32_t mCacheKey = 0;
   bool mIsFrameNavigation = false;
+  bool mSaveLayoutState = true;
 
  protected:
   static uint64_t GenerateId();
@@ -146,8 +147,6 @@ class SHEntrySharedParentState : public SHEntrySharedState {
 
   // This flag is about necko cache, not bfcache.
   bool mExpired = false;
-
-  bool mSaveLayoutState = true;
 };
 
 /**
