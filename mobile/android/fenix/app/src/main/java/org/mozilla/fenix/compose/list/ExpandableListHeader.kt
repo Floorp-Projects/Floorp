@@ -46,16 +46,21 @@ fun ExpandableListHeader(
     expanded: Boolean? = null,
     expandActionContentDescription: String? = null,
     collapseActionContentDescription: String? = null,
-    onClick: () -> Unit = {},
+    onClick: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = when (onClick != null) {
+            true -> Modifier.clickable { onClick() }
+            false -> Modifier
+        }.then(
+            Modifier.fillMaxWidth()
+        ),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier
                 .weight(1f)
-                .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
