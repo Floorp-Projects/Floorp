@@ -118,9 +118,8 @@ function TelemetryLink(props) {
       messages.sendMessage("PKT_openTabWithUrl", {
         url: event.currentTarget.getAttribute(`href`),
         source: props.source,
-        ...(props.position || props.position === 0 ? {
-          position: props.position
-        } : {})
+        model: props.model,
+        position: props.position
       });
     }
   }
@@ -153,7 +152,8 @@ function ArticleUrl(props) {
     className: "stp_article_list_link",
     href: props.url,
     source: props.source,
-    position: props.position
+    position: props.position,
+    model: props.model
   }, props.children);
 }
 
@@ -163,9 +163,20 @@ function Article(props) {
   }
 
   const {
-    article
+    article,
+    savedArticle,
+    position,
+    source,
+    model,
+    utmParams
   } = props;
-  const url = article.url || article.resolved_url; // Using array notation because there is a key titled `1` (`images` is an object)
+  const url = new URL(article.url || article.resolved_url || "");
+  const urlSearchParams = new URLSearchParams(utmParams);
+
+  for (let [key, val] of urlSearchParams.entries()) {
+    url.searchParams.set(key, val);
+  } // Using array notation because there is a key titled `1` (`images` is an object)
+
 
   const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
   const alt = article.alt || "thumbnail image";
@@ -175,10 +186,12 @@ function Article(props) {
   return /*#__PURE__*/react.createElement("li", {
     className: "stp_article_list_item"
   }, /*#__PURE__*/react.createElement(ArticleUrl, {
-    url: url,
-    savedArticle: props.savedArticle,
-    position: props.position,
-    source: props.source
+    url: url.href,
+    savedArticle: savedArticle,
+    position: position,
+    source: source,
+    model: model,
+    utmParams: utmParams
   }, /*#__PURE__*/react.createElement(react.Fragment, null, thumbnail ? /*#__PURE__*/react.createElement("img", {
     className: "stp_article_list_thumb",
     src: thumbnail,
@@ -201,7 +214,9 @@ function ArticleList(props) {
     article: article,
     savedArticle: props.savedArticle,
     position: position,
-    source: props.source
+    source: props.source,
+    model: props.model,
+    utmParams: props.utmParams
   })));
 }
 
@@ -326,7 +341,8 @@ function Home(props) {
         "data-l10n-id": "pocket-panel-home-most-recent-saves"
       }), articles.length > 3 ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
         articles: articles.slice(0, 3),
-        source: "home_recent_save"
+        source: "home_recent_save",
+        utmParams: utmParams
       }), /*#__PURE__*/react.createElement("span", {
         className: "stp_button_wide"
       }, /*#__PURE__*/react.createElement(Button_Button, {
@@ -336,7 +352,9 @@ function Home(props) {
       }, /*#__PURE__*/react.createElement("span", {
         "data-l10n-id": "pocket-panel-button-show-all"
       })))) : /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
-        articles: articles
+        articles: articles,
+        source: "home_recent_save",
+        utmParams: utmParams
       }));
     } else {
       recentSavesSection = /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
@@ -684,7 +702,11 @@ var SignupOverlay = function (options) {
 
 function Saved(props) {
   const {
-    locale
+    locale,
+    pockethost,
+    utmSource,
+    utmCampaign,
+    utmContent
   } = props; // savedStatus can be success, loading, or error.
 
   const [{
@@ -700,7 +722,11 @@ function Saved(props) {
     removedErrorMessage
   }, setRemovedStatusState] = (0,react.useState)({});
   const [savedStory, setSavedStoryState] = (0,react.useState)();
-  const [similarRecs, setSimilarRecsState] = (0,react.useState)();
+  const [{
+    similarRecs,
+    similarRecsModel
+  }, setSimilarRecsState] = (0,react.useState)({});
+  const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
 
   function removeItem(event) {
     event.preventDefault();
@@ -763,8 +789,15 @@ function Saved(props) {
     messages.addMessageListener("PKT_renderItemRecs", function (resp) {
       const {
         data
-      } = resp;
-      setSimilarRecsState(data?.recommendations?.map(rec => rec.item));
+      } = resp; // This is the ML model used to recommend the story.
+      // Right now this value is the same for all three items returned together,
+      // so we can just use the first item's value for all.
+
+      const model = data?.recommendations?.[0]?.experiment || "";
+      setSimilarRecsState({
+        similarRecs: data?.recommendations?.map(rec => rec.item),
+        similarRecsModel: model
+      });
     }); // tell back end we're ready
 
     messages.sendMessage("PKT_show_saved");
@@ -790,7 +823,9 @@ function Saved(props) {
   }, /*#__PURE__*/react.createElement("div", {
     className: "stp_panel stp_panel_saved"
   }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
-    style: "primary"
+    style: "primary",
+    url: `https://${pockethost}/a?${utmParams}`,
+    source: "view_list"
   }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-my-list"
   }))), /*#__PURE__*/react.createElement("hr", null), !removedStatus && savedStatus === "success" && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
@@ -799,7 +834,6 @@ function Saved(props) {
     "data-l10n-id": "pocket-panel-saved-page-saved-b"
   }), /*#__PURE__*/react.createElement(Button_Button, {
     style: "text",
-    url: "google.com",
     onClick: removeItem
   }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-button-remove"
@@ -812,7 +846,10 @@ function Saved(props) {
   }), similarRecs?.length && locale?.startsWith("en") && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("h3", {
     className: "header_medium"
   }, "Similar Stories"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
-    articles: similarRecs
+    articles: similarRecs,
+    source: "on_save_recs",
+    model: similarRecsModel,
+    utmParams: utmParams
   }))), savedStatus === "loading" && /*#__PURE__*/react.createElement("h3", {
     className: "header_large",
     "data-l10n-id": "pocket-panel-saved-saving-tags"
