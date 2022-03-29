@@ -22,7 +22,7 @@ add_task(async function() {
     private: true,
   });
   ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
-  const privateTab = await addTab(TEST_URL, privateWindow);
+  const privateTab = await addTab(TEST_URL, { window: privateWindow });
   await openStoragePanel({ tab: privateTab });
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
