@@ -96,6 +96,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #endif
   }
   gfx::YUVColorSpace GetFrameColorSpace() const;
+  gfx::ColorRange GetFrameColorRange() const;
 
   MediaResult CreateImage(int64_t aOffset, int64_t aPts, int64_t aDuration,
                           MediaDataDecoder::DecodedData& aResults) const;
