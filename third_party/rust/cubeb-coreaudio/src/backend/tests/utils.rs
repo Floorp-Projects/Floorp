@@ -188,21 +188,15 @@ fn test_enable_audiounit_in_scope(
     }
 }
 
-pub fn test_get_default_source_name(scope: Scope) -> Option<String> {
-    if let Some(source) = test_get_default_source_data(scope) {
+pub fn test_get_source_name(device: AudioObjectID, scope: Scope) -> Option<String> {
+    if let Some(source) = test_get_source_data(device, scope) {
         Some(u32_to_string(source))
     } else {
         None
     }
 }
 
-pub fn test_get_default_source_data(scope: Scope) -> Option<u32> {
-    let device = test_get_default_device(scope.clone());
-    if device.is_none() {
-        return None;
-    }
-
-    let device = device.unwrap();
+pub fn test_get_source_data(device: AudioObjectID, scope: Scope) -> Option<u32> {
     let address = AudioObjectPropertyAddress {
         mSelector: kAudioDevicePropertyDataSource,
         mScope: match scope {
