@@ -275,6 +275,11 @@ pref("browser.shell.setDefaultBrowserUserChoice", true);
 // When setting the default browser on Windows 10 using the UserChoice
 // registry keys, also try to set Firefox as the default PDF handler.
 pref("browser.shell.setDefaultPDFHandler", false);
+// When setting Firefox as the default PDF handler (subject to conditions
+// above), only set Firefox as the default PDF handler when the existing handler
+// is a known browser, and not when existing handler is another PDF handler such
+// as Acrobat Reader or Nitro PDF.
+pref("browser.shell.setDefaultPDFHandler.onlyReplaceBrowsers", true);
 #endif
 
 
