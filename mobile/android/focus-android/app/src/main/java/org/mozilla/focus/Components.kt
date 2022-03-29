@@ -7,6 +7,7 @@ package org.mozilla.focus
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import mozilla.components.browser.icons.BrowserIcons
@@ -71,7 +72,6 @@ import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
 import org.mozilla.focus.utils.Features
-import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
 
@@ -242,11 +242,17 @@ private fun createCrashReporter(context: Context): CrashReporter {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
     }
 
+    val crashReportingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        PendingIntent.FLAG_MUTABLE
+    } else {
+        0 // No flags. Default behavior.
+    }
+
     val pendingIntent = PendingIntent.getActivity(
         context,
         0,
         intent,
-        IntentUtils.defaultIntentPendingFlags
+        crashReportingIntentFlags
     )
 
     return CrashReporter(
