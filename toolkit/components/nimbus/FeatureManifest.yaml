@@ -350,6 +350,13 @@ shellService:
       type: boolean
       fallbackPref: browser.shell.setDefaultPDFHandler
       description: Should setting it as the default browser set it as the default PDF handler.
+    setDefaultPDFHandlerOnlyReplaceBrowsers:
+      type: boolean
+      fallbackPref: browser.shell.setDefaultPDFHandler.onlyReplaceBrowsers
+      description: >-
+        Should setting it as the default PDF handler only replace existing PDF
+        handlers that are browsers, and not other PDF handlers such as Acrobat
+        Reader or Nitro PDF.
 upgradeDialog:
   description: The dialog shown for major upgrades
   hasExposure: false
