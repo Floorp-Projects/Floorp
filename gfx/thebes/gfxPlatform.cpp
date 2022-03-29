@@ -2663,6 +2663,29 @@ void gfxPlatform::InitWebRenderConfig() {
       MOZ_ASSERT(gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
       useVideoOverlay = true;
     }
+
+    if (useVideoOverlay &&
+        !StaticPrefs::
+            gfx_webrender_dcomp_video_overlay_win_force_enabled_AtStartup()) {
+      nsCString failureId;
+      int32_t status;
+      const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
+                                              failureId, &status))) {
+        FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+        feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
+                                 "gfxInfo is broken",
+                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
+        useVideoOverlay = false;
+      } else {
+        if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
+          FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+          feature.DisableByDefault(FeatureStatus::Blocked,
+                                   "Blocklisted by gfxInfo", failureId);
+          useVideoOverlay = false;
+        }
+      }
+    }
   }
 
   if (useVideoOverlay) {
