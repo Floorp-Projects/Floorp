@@ -595,6 +595,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::MoreIter:
       case JSOp::EndIter:
       case JSOp::IsNoIter:
+      case JSOp::IsNullOrUndefined:
       case JSOp::DelProp:
       case JSOp::StrictDelProp:
       case JSOp::DelElem:

@@ -743,6 +743,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
 
     case JSOp::IsGenClosing:
     case JSOp::IsNoIter:
+    case JSOp::IsNullOrUndefined:
     case JSOp::MoreIter:
       // Keep the top value and push one more value.
       MOZ_ASSERT(nuses == 1);
@@ -2149,6 +2150,9 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOp::IsConstructing:
         return write("JS_IS_CONSTRUCTING");
+
+      case JSOp::IsNullOrUndefined:
+        return write("IS_NULL_OR_UNDEF");
 
       case JSOp::Iter:
         return write("ITER");
