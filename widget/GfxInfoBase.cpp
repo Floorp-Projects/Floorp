@@ -241,6 +241,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBGPU:
       name = BLOCKLIST_PREF_BRANCH "webgpu";
       break;
+    case nsIGfxInfo::FEATURE_VIDEO_OVERLAY:
+      name = BLOCKLIST_PREF_BRANCH "video-overlay";
+      break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
       name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
       break;
@@ -502,6 +505,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("WEBGPU")) {
     return nsIGfxInfo::FEATURE_WEBGPU;
+  }
+  if (aFeature.EqualsLiteral("VIDEO_OVERLAY")) {
+    return nsIGfxInfo::FEATURE_VIDEO_OVERLAY;
   }
   if (aFeature.EqualsLiteral("WEBRENDER_PARTIAL_PRESENT")) {
     return nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT;
@@ -1247,7 +1253,8 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
 }
 
 bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const {
-  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER;
+  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER ||
+         aFeature == nsIGfxInfo::FEATURE_VIDEO_OVERLAY;
 }
 
 nsresult GfxInfoBase::GetFeatureStatusImpl(
@@ -1389,6 +1396,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_DMABUF,
                         nsIGfxInfo::FEATURE_VAAPI,
                         nsIGfxInfo::FEATURE_WEBGPU,
+                        nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
                         nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
                         0};
 

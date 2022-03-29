@@ -60,3 +60,7 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = "xul"
 
 REQUIRES_UNIFIED_BUILD = True
+
+# Must be defined unconditionally (TC tasks doesn't account for build
+# configs and these tests do not depend on the bindings to be enabled).
+PYTHON_UNITTEST_MANIFESTS += ["test/python.ini"]

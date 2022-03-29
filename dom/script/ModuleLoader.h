@@ -44,20 +44,10 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
 
   ScriptLoader* GetScriptLoader();
 
-  /**
-   * Start a load for a module script URI.
-   * Sets up the necessary security flags before calling StartLoadInternal.
-   * Short-circuits if the module is already being loaded.
-   */
-  nsresult StartModuleLoad(ScriptLoadRequest* aRequest) override;
-  nsresult RestartModuleLoad(ScriptLoadRequest* aRequest) override;
+  bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) override;
 
- private:
-  enum class RestartRequest { No, Yes };
-  nsresult StartModuleLoadImpl(ScriptLoadRequest* aRequest,
-                               RestartRequest aRestart);
+  nsresult StartFetch(ModuleLoadRequest* aRequest) override;
 
- public:
   void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) override;
 
   nsresult CompileOrFinishModuleScript(

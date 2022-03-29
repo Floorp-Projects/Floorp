@@ -1174,7 +1174,7 @@ void FormatUsageAuthority::AllowSizedTexFormat(GLenum sizedFormat,
   if (usage->format->compression) {
     MOZ_ASSERT(usage->isFilterable, "Compressed formats should be filterable.");
   } else {
-    MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack,
+    MOZ_ASSERT(!usage->validUnpacks.empty() && usage->idealUnpack,
                "AddTexUnpack() first.");
   }
 
@@ -1186,7 +1186,7 @@ void FormatUsageAuthority::AllowSizedTexFormat(GLenum sizedFormat,
 void FormatUsageAuthority::AllowUnsizedTexFormat(const PackingInfo& pi,
                                                  const FormatUsageInfo* usage) {
   MOZ_ASSERT(!usage->format->compression);
-  MOZ_ASSERT(usage->validUnpacks.size() && usage->idealUnpack,
+  MOZ_ASSERT(!usage->validUnpacks.empty() && usage->idealUnpack,
              "AddTexUnpack() first.");
 
   AlwaysInsert(mUnsizedTexFormatMap, pi, usage);

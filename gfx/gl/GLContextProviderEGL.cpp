@@ -237,7 +237,7 @@ class GLContextEGLFactory {
 already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     EGLNativeWindowType aWindow, bool aHardwareWebRender, bool aUseGles) {
   nsCString failureId;
-  const auto lib = gl::DefaultEglLibrary(&failureId);
+  const auto lib = GLLibraryEGL::Get(&failureId);
   if (!lib) {
     gfxCriticalNote << "Failed[3] to load EGL library: " << failureId.get();
     return nullptr;
@@ -1211,30 +1211,7 @@ GLContext* GLContextProviderEGL::GetGlobalContext() { return nullptr; }
 
 // -
 
-static StaticMutex sMutex MOZ_UNANNOTATED;
-static StaticRefPtr<GLLibraryEGL> gDefaultEglLibrary;
-
-RefPtr<GLLibraryEGL> DefaultEglLibrary(nsACString* const out_failureId) {
-  StaticMutexAutoLock lock(sMutex);
-  if (!gDefaultEglLibrary) {
-    gDefaultEglLibrary = GLLibraryEGL::Create(out_failureId);
-    if (!gDefaultEglLibrary) {
-      NS_WARNING("GLLibraryEGL::Create failed");
-    }
-  }
-  return gDefaultEglLibrary.get();
-}
-
-// -
-
-/*static*/
-void GLContextProviderEGL::Shutdown() {
-  StaticMutexAutoLock lock(sMutex);
-  if (!gDefaultEglLibrary) {
-    return;
-  }
-  gDefaultEglLibrary = nullptr;
-}
+/*static*/ void GLContextProviderEGL::Shutdown() { GLLibraryEGL::Shutdown(); }
 
 } /* namespace gl */
 } /* namespace mozilla */

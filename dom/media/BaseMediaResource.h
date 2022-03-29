@@ -127,7 +127,7 @@ class BaseMediaResource : public MediaResource,
   // Set the request's load flags to aFlags.  If the request is part of a
   // load group, the request is removed from the group, the flags are set, and
   // then the request is added back to the load group.
-  void ModifyLoadFlags(nsLoadFlags aFlags);
+  nsresult ModifyLoadFlags(nsLoadFlags aFlags);
 
   RefPtr<MediaResourceCallback> mCallback;
 

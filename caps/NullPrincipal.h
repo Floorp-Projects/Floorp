@@ -116,6 +116,10 @@ class NullPrincipal final : public BasePrincipal {
 
  private:
   FRIEND_TEST(OriginAttributes, NullPrincipal);
+  FRIEND_TEST(NullPrincipalPrecursor, EscapingRoundTrips);
+
+  static void EscapePrecursorQuery(nsACString& aPrecursorQuery);
+  static void UnescapePrecursorQuery(nsACString& aPrecursorQuery);
 
   // If aIsFirstParty is true, this NullPrincipal will be initialized based on
   // the aOriginAttributes with FirstPartyDomain set to a unique value.  This
