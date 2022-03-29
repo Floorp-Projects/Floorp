@@ -165,11 +165,18 @@ add_task(async function() {
   const checkbox = lastHeader.querySelector("input");
   checkbox.click();
 
+  const waitForHeadersPanel = waitUntil(() =>
+    document.querySelector(".headers-overview")
+  );
+
   info("Click on the button to send a new request");
   const waitUntilEventsDisplayed = waitForNetworkEvents(monitor, 1);
   const buttonSend = document.querySelector("#http-custom-request-send-button");
   buttonSend.click();
   await waitUntilEventsDisplayed;
+
+  await waitForHeadersPanel;
+  await waitForRequestData(store, ["requestHeaders"]);
 
   const newRequestSelected = getSelectedRequest(store.getState());
   let found = newRequestSelected.requestHeaders.headers.some(
