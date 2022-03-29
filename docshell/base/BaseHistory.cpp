@@ -108,10 +108,6 @@ void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // This will not catch a case where it is registered for two different URIs.
   MOZ_DIAGNOSTIC_ASSERT(!links->mLinks.Contains(aLink),
                         "Already tracking this Link object!");
-  // FIXME(emilio): We should consider changing this (see the entry.Remove()
-  // call in NotifyVisitedInThisProcess).
-  MOZ_DIAGNOSTIC_ASSERT(links->mStatus != VisitedStatus::Visited,
-                        "We don't keep tracking known-visited links");
 
   links->mLinks.AppendElement(aLink);
 
@@ -198,15 +194,6 @@ void BaseHistory::NotifyVisitedInThisProcess(nsIURI* aURI,
   const bool visited = aStatus == VisitedStatus::Visited;
   for (Link* link : links.mLinks.BackwardRange()) {
     link->VisitedQueryFinished(visited);
-  }
-
-  // We never go from visited -> unvisited.
-  //
-  // FIXME(emilio): It seems unfortunate to remove a link to a visited uri and
-  // then re-add it to the document to trigger a new visited query. It shouldn't
-  // if we keep track of mStatus.
-  if (visited) {
-    entry.Remove();
   }
 }
 
