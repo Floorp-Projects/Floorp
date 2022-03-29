@@ -553,8 +553,9 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
 
   auto* surfaceVideo = surface->AsDCSurfaceVideo();
   if (surfaceVideo) {
-    transform = surfaceVideo->CalculateSwapChainSize(transform);
-    surfaceVideo->PresentVideo();
+    if (surfaceVideo->CalculateSwapChainSize(transform)) {
+      surfaceVideo->PresentVideo();
+    }
   }
 
   transform.PreTranslate(-virtualOffset.x, -virtualOffset.y);
@@ -824,15 +825,17 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   mRenderTextureHost = texture;
 }
 
-gfx::Matrix DCSurfaceVideo::CalculateSwapChainSize(
-    const gfx::Matrix& aTransform) {
+bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
   if (!mRenderTextureHost) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return aTransform;
+    return false;
   }
 
   mVideoSize = mRenderTextureHost->AsRenderDXGITextureHost()->GetSize(0);
 
+  // When RenderTextureHost, swapChainSize or VideoSwapChain are updated,
+  // DCSurfaceVideo::PresentVideo() needs to be called.
+  bool needsToPresent = mPrevTexture != mRenderTextureHost;
   gfx::IntSize swapChainSize = mVideoSize;
   gfx::Matrix transform = aTransform;
 
@@ -864,6 +867,7 @@ gfx::Matrix DCSurfaceVideo::CalculateSwapChainSize(
   }
 
   if (!mVideoSwapChain || mSwapChainSize != swapChainSize) {
+    needsToPresent = true;
     ReleaseDecodeSwapChainResources();
     // Update mSwapChainSize before creating SwapChain
     mSwapChainSize = swapChainSize;
@@ -886,7 +890,9 @@ gfx::Matrix DCSurfaceVideo::CalculateSwapChainSize(
     }
   }
 
-  return transform;
+  aTransform = transform;
+
+  return needsToPresent;
 }
 
 void DCSurfaceVideo::PresentVideo() {

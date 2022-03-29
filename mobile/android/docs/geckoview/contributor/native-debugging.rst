@@ -146,39 +146,21 @@ GeckoView’s runtime environment.
 Making processes wait for a Java debugger
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following environment variable makes the main (Gecko) process wait
-for a Java debugger to connect:
+The ``set-debug-app`` command will make Android wait for a debugger before
+running an app or service. e.g., to make GeckoViewExample wait, run the
+following:
 
 .. code:: shell
 
-   MOZ_DEBUG_WAIT_FOR_JAVA_DEBUGGER=1
+adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example
 
-This is a superset of Android Studio’s built-in debugging support so
-it’s not particularly useful (unless you want to attach a different jdwp
-debugger).
-
-The following environment variable makes every child process wait for a
-Java debugger to connect:
+The above command works with child processes too, e.g. to make the GPU
+process wait for a debugger, run:
 
 .. code:: shell
 
-   MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=
+adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example:gpu
 
-Set ``MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=suffix`` in the environment
-to make child processes with an Android process name ending with
-``suffix`` wait for a Java debugger to connect. For example, the
-following environment variable makes every child content process wait
-for a Java debugger to connect:
-
-.. code:: shell
-
-   MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab
-
-An easy way to set this is with ``./mach run``:
-
-.. code:: shell
-
-   ./mach run --setenv MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=:tab
 
 Attaching a Java debugger to a waiting child process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
