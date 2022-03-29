@@ -986,37 +986,21 @@ const MarketplaceButtons = props => {
     ios_link: iosLink,
     android_link: androidLink
   } = props.links;
-
-  const getIconSrc = platform => {
-    const fileType = platform === "android" ? ".png" : ".svg";
-    return `url(chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en-US/${platform}${fileType})`;
-  };
-
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
     className: "mobile-download-buttons"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
     className: "android"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    rel: "external noreferrer",
-    target: "_blank",
     "data-l10n-id": "spotlight-android-marketplace-button",
     onClick: e => {
       props.handleAction(e, androidLink);
-    },
-    style: {
-      backgroundImage: getIconSrc("android")
     }
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
     className: "ios"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    rel: "external noreferrer",
-    target: "_blank",
     "data-l10n-id": "spotlight-ios-marketplace-button",
     onClick: e => {
       props.handleAction(e, iosLink);
-    },
-    style: {
-      backgroundImage: getIconSrc("ios")
     }
   })));
 };

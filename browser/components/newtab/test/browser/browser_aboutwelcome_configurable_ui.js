@@ -41,38 +41,6 @@ async function openAboutWelcome(json) {
   return tab.linkedBrowser;
 }
 
-async function test_computed_styles(
-  browser,
-  elementSelector,
-  expectedStyles = {},
-  unexpectedStyles = {}
-) {
-  await ContentTask.spawn(
-    browser,
-    [elementSelector, expectedStyles, unexpectedStyles],
-    async ([selector, expected, unexpected]) => {
-      const element = await ContentTaskUtils.waitForCondition(() =>
-        content.document.querySelector(selector)
-      );
-      const computedStyles = content.window.getComputedStyle(element);
-      Object.entries(expected).forEach(([attr, val]) =>
-        is(
-          computedStyles[attr],
-          val,
-          `${selector} should have computed ${attr} of ${val}`
-        )
-      );
-      Object.entries(unexpected).forEach(([attr, val]) =>
-        isnot(
-          computedStyles[attr],
-          val,
-          `${selector} should not have computed ${attr} of ${val}`
-        )
-      );
-    }
-  );
-}
-
 /**
  * Test rendering a screen in about welcome with decorative noodles
  */
@@ -202,7 +170,7 @@ add_task(async function test_aboutwelcome_with_title_styles() {
     [`div.welcome-text.fancy.slim.larger`]
   );
 
-  await test_computed_styles(
+  await test_element_styles(
     browser,
     "#mainContentHeader",
     // Expected styles:
@@ -284,7 +252,7 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
   );
 
   // Ensure title inherits light text color
-  await test_computed_styles(
+  await test_element_styles(
     browser,
     "#mainContentHeader",
     // Expected styles:
@@ -294,7 +262,7 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
   );
 
   // Ensure next step indicator inherits light color
-  await test_computed_styles(
+  await test_element_styles(
     browser,
     ".indicator:not(.current)",
     // Expected styles:
