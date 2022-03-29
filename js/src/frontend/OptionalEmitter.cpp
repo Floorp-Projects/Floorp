@@ -20,24 +20,15 @@ bool OptionalEmitter::emitJumpShortCircuit() {
   MOZ_ASSERT(state_ == State::Start || state_ == State::ShortCircuit ||
              state_ == State::ShortCircuitForCall);
   MOZ_ASSERT(initialDepth_ + 1 == bce_->bytecodeSection().stackDepth());
-  InternalIfEmitter ifEmitter(bce_);
+
   if (!bce_->emit1(JSOp::IsNullOrUndefined)) {
     //              [stack] OBJ NULL-OR-UNDEF
   }
-
-  if (!ifEmitter.emitThen()) {
+  if (!bce_->emitJump(JSOp::JumpIfTrue, &jumpShortCircuit_)) {
     //              [stack] OBJ
     return false;
   }
 
-  if (!bce_->emitJump(JSOp::Goto, &jumpShortCircuit_)) {
-    //              [stack] OBJ
-    return false;
-  }
-
-  if (!ifEmitter.emitEnd()) {
-    return false;
-  }
 #ifdef DEBUG
   state_ = State::ShortCircuit;
 #endif
