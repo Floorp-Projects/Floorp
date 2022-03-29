@@ -74,36 +74,45 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
   width /= TWIPS_PER_POINT_FLOAT;
   height /= TWIPS_PER_POINT_FLOAT;
 
-  nsresult rv;
-
   // We shouldn't be attempting to get a surface if we've already got a spool
   // file.
   MOZ_ASSERT(!mSpoolFile);
 
-  // Spool file. Use Glib's temporary file function since we're
-  // already dependent on the gtk software stack.
-  gchar* buf;
-  gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nullptr);
-  if (-1 == fd) return nullptr;
-  close(fd);
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(buf), false,
-                             getter_AddRefs(mSpoolFile));
-  if (NS_FAILED(rv)) {
-    unlink(buf);
+  auto stream = [&]() -> nsCOMPtr<nsIOutputStream> {
+    if (mPrintSettings->GetOutputDestination() ==
+        nsIPrintSettings::kOutputDestinationStream) {
+      nsCOMPtr<nsIOutputStream> out;
+      mPrintSettings->GetOutputStream(getter_AddRefs(out));
+      return out;
+    }
+    // Spool file. Use Glib's temporary file function since we're
+    // already dependent on the gtk software stack.
+    gchar* buf;
+    gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nullptr);
+    if (-1 == fd) {
+      return nullptr;
+    }
+    close(fd);
+    if (NS_FAILED(NS_NewNativeLocalFile(nsDependentCString(buf), false,
+                                        getter_AddRefs(mSpoolFile)))) {
+      unlink(buf);
+      g_free(buf);
+      return nullptr;
+    }
+    mSpoolName = buf;
     g_free(buf);
+    mSpoolFile->SetPermissions(0600);
+    nsCOMPtr<nsIFileOutputStream> stream =
+        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    if (NS_FAILED(stream->Init(mSpoolFile, -1, -1, 0))) {
+      return nullptr;
+    }
+    return stream;
+  }();
+
+  if (!stream) {
     return nullptr;
   }
-
-  mSpoolName = buf;
-  g_free(buf);
-
-  mSpoolFile->SetPermissions(0600);
-
-  nsCOMPtr<nsIFileOutputStream> stream =
-      do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-  rv = stream->Init(mSpoolFile, -1, -1, 0);
-  if (NS_FAILED(rv)) return nullptr;
 
   return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
 }
@@ -196,12 +205,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
   if (!mPrintSettings) {
     return NS_ERROR_NO_INTERFACE;
   }
-
-  // This is only set by embedders
-  bool toFile;
-  aPS->GetPrintToFile(&toFile);
-
-  mToPrinter = !toFile && !aIsPrintPreview;
 
   mGtkPrintSettings = mPrintSettings->GetGtkPrintSettings();
   mGtkPageSetup = mPrintSettings->GetGtkPageSetup();
@@ -309,55 +312,65 @@ nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle,
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
-  if (mToPrinter) {
-    // At this point, we might have a GtkPrinter set up in nsPrintSettingsGTK,
-    // or we might not. In the single-process case, we probably will, as this
-    // is populated by the print settings dialog, or set to the default
-    // printer.
-    // In the multi-process case, we proxy the print settings dialog over to
-    // the parent process, and only get the name of the printer back on the
-    // content process side. In that case, we need to enumerate the printers
-    // on the content side, and find a printer with a matching name.
+  switch (mPrintSettings->GetOutputDestination()) {
+    case nsIPrintSettings::kOutputDestinationPrinter: {
+      // At this point, we might have a GtkPrinter set up in nsPrintSettingsGTK,
+      // or we might not. In the single-process case, we probably will, as this
+      // is populated by the print settings dialog, or set to the default
+      // printer.
+      // In the multi-process case, we proxy the print settings dialog over to
+      // the parent process, and only get the name of the printer back on the
+      // content process side. In that case, we need to enumerate the printers
+      // on the content side, and find a printer with a matching name.
 
-    if (mPrintSettings->GetGtkPrinter()) {
-      // We have a printer, so we can print right away.
-      StartPrintJob();
-    } else {
-      // We don't have a printer. We have to enumerate the printers and find
-      // one with a matching name.
-      NS_DispatchToCurrentThread(
-          NewRunnableMethod("nsDeviceContextSpecGTK::EnumeratePrinters", this,
-                            &nsDeviceContextSpecGTK::EnumeratePrinters));
+      if (mPrintSettings->GetGtkPrinter()) {
+        // We have a printer, so we can print right away.
+        StartPrintJob();
+      } else {
+        // We don't have a printer. We have to enumerate the printers and find
+        // one with a matching name.
+        NS_DispatchToCurrentThread(
+            NewRunnableMethod("nsDeviceContextSpecGTK::EnumeratePrinters", this,
+                              &nsDeviceContextSpecGTK::EnumeratePrinters));
+      }
+      break;
     }
-  } else {
-    // Handle print-to-file ourselves for the benefit of embedders
-    nsString targetPath;
-    nsCOMPtr<nsIFile> destFile;
-    mPrintSettings->GetToFileName(targetPath);
+    case nsIPrintSettings::kOutputDestinationFile: {
+      // Handle print-to-file ourselves for the benefit of embedders
+      nsString targetPath;
+      nsCOMPtr<nsIFile> destFile;
+      mPrintSettings->GetToFileName(targetPath);
 
-    nsresult rv = NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv =
+          NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString destLeafName;
-    rv = destFile->GetLeafName(destLeafName);
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsAutoString destLeafName;
+      rv = destFile->GetLeafName(destLeafName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIFile> destDir;
-    rv = destFile->GetParent(getter_AddRefs(destDir));
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIFile> destDir;
+      rv = destFile->GetParent(getter_AddRefs(destDir));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSpoolFile->MoveTo(destDir, destLeafName);
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = mSpoolFile->MoveTo(destDir, destLeafName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    mSpoolFile = nullptr;
+      mSpoolFile = nullptr;
 
-    // This is the standard way to get the UNIX umask. Ugh.
-    mode_t mask = umask(0);
-    umask(mask);
-    // If you're not familiar with umasks, they contain the bits of what NOT
-    // to set in the permissions (thats because files and directories have
-    // different numbers of bits for their permissions)
-    destFile->SetPermissions(0666 & ~(mask));
+      // This is the standard way to get the UNIX umask. Ugh.
+      mode_t mask = umask(0);
+      umask(mask);
+      // If you're not familiar with umasks, they contain the bits of what NOT
+      // to set in the permissions (thats because files and directories have
+      // different numbers of bits for their permissions)
+      destFile->SetPermissions(0666 & ~(mask));
+      break;
+    }
+    case nsIPrintSettings::kOutputDestinationStream:
+      // Nothing to do, handled in MakePrintTarget.
+      MOZ_ASSERT(!mSpoolFile);
+      break;
   }
   return NS_OK;
 }

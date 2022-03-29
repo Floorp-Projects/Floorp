@@ -10,13 +10,17 @@
 #include "mozilla/gfx/HelpersCairo.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
+#include "nsIOutputStream.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
-PrintTargetCG::PrintTargetCG(PMPrintSession aPrintSession, PMPageFormat aPageFormat,
-                             PMPrintSettings aPrintSettings, const IntSize& aSize)
+static size_t PutBytesNull(void* info, const void* buffer, size_t count) { return count; }
+
+PrintTargetCG::PrintTargetCG(CGContextRef aPrintToStreamContext, PMPrintSession aPrintSession,
+                             PMPageFormat aPageFormat, PMPrintSettings aPrintSettings,
+                             const IntSize& aSize)
     : PrintTarget(/* aCairoSurface */ nullptr, aSize),
+      mPrintToStreamContext(aPrintToStreamContext),
       mPrintSession(aPrintSession),
       mPageFormat(aPageFormat),
       mPrintSettings(aPrintSettings) {
@@ -41,23 +45,79 @@ PrintTargetCG::~PrintTargetCG() {
   ::PMRelease(mPageFormat);
   ::PMRelease(mPrintSettings);
 
+  if (mPrintToStreamContext) {
+    CGContextRelease(mPrintToStreamContext);
+  }
+
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+static size_t WriteStreamBytes(void* aInfo, const void* aBuffer, size_t aCount) {
+  auto* stream = static_cast<nsIOutputStream*>(aInfo);
+  auto* data = static_cast<const char*>(aBuffer);
+  size_t remaining = aCount;
+  do {
+    uint32_t wrote = 0;
+    // Handle potential narrowing from size_t to uint32_t.
+    uint32_t toWrite = uint32_t(std::min(remaining, size_t(std::numeric_limits<uint32_t>::max())));
+    if (NS_WARN_IF(NS_FAILED(stream->Write(data, toWrite, &wrote)))) {
+      break;
+    }
+    data += wrote;
+    remaining -= size_t(wrote);
+  } while (remaining);
+  return aCount;
+}
+
+static void ReleaseStream(void* aInfo) {
+  auto* stream = static_cast<nsIOutputStream*>(aInfo);
+  stream->Close();
+  NS_RELEASE(stream);
+}
+
+static CGContextRef CreatePrintToStreamContext(nsIOutputStream* aOutputStream,
+                                               const IntSize& aSize) {
+  MOZ_ASSERT(aOutputStream);
+
+  NS_ADDREF(aOutputStream);  // Matched by the NS_RELEASE in ReleaseStream.
+
+  CGRect pageBox{{0.0, 0.0}, {CGFloat(aSize.width), CGFloat(aSize.height)}};
+  CGDataConsumerCallbacks callbacks = {WriteStreamBytes, ReleaseStream};
+  CGDataConsumerRef consumer = CGDataConsumerCreate(aOutputStream, &callbacks);
+
+  // This metadata is added by the CorePrinting APIs in the non-stream case.
+  NSString* bundleName =
+      [NSBundle.mainBundle.localizedInfoDictionary objectForKey:(NSString*)kCFBundleNameKey];
+  CFMutableDictionaryRef auxiliaryInfo = CFDictionaryCreateMutable(
+      kCFAllocatorDefault, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+  CFDictionaryAddValue(auxiliaryInfo, kCGPDFContextCreator, (__bridge CFStringRef)bundleName);
+
+  CGContextRef pdfContext = CGPDFContextCreate(consumer, &pageBox, auxiliaryInfo);
+  CGDataConsumerRelease(consumer);
+  CFRelease(auxiliaryInfo);
+  return pdfContext;
+}
+
 /* static */ already_AddRefed<PrintTargetCG> PrintTargetCG::CreateOrNull(
-    PMPrintSession aPrintSession, PMPageFormat aPageFormat, PMPrintSettings aPrintSettings,
-    const IntSize& aSize) {
+    nsIOutputStream* aOutputStream, PMPrintSession aPrintSession, PMPageFormat aPageFormat,
+    PMPrintSettings aPrintSettings, const IntSize& aSize) {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }
 
+  CGContextRef printToStreamContext = nullptr;
+  if (aOutputStream) {
+    printToStreamContext = CreatePrintToStreamContext(aOutputStream, aSize);
+    if (!printToStreamContext) {
+      return nullptr;
+    }
+  }
+
   RefPtr<PrintTargetCG> target =
-      new PrintTargetCG(aPrintSession, aPageFormat, aPrintSettings, aSize);
+      new PrintTargetCG(printToStreamContext, aPrintSession, aPageFormat, aPrintSettings, aSize);
 
   return target.forget();
 }
-
-static size_t PutBytesNull(void* info, const void* buffer, size_t count) { return count; }
 
 already_AddRefed<DrawTarget> PrintTargetCG::GetReferenceDrawTarget() {
   if (!mRefDT) {
@@ -95,6 +155,10 @@ nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& 
                                       int32_t aStartPage, int32_t aEndPage) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
+  if (mPrintToStreamContext) {
+    return NS_OK;
+  }
+
   // Print Core of Application Service sent print job with names exceeding
   // 255 bytes. This is a workaround until fix it.
   // (https://openradar.appspot.com/34428043)
@@ -127,6 +191,12 @@ nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& 
 nsresult PrintTargetCG::EndPrinting() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
+  if (mPrintToStreamContext) {
+    CGContextFlush(mPrintToStreamContext);
+    CGPDFContextClose(mPrintToStreamContext);
+    return NS_OK;
+  }
+
   ::PMSessionEndDocumentNoDialog(mPrintSession);
   return NS_OK;
 
@@ -143,19 +213,24 @@ nsresult PrintTargetCG::AbortPrinting() {
 nsresult PrintTargetCG::BeginPage() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  PMSessionError(mPrintSession);
-  OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, NULL);
-  if (status != noErr) {
-    return NS_ERROR_ABORT;
-  }
-
   CGContextRef context;
-  // This call will fail if it wasn't called between the PMSessionBeginPage/
-  // PMSessionEndPage calls:
-  ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
+  if (mPrintToStreamContext) {
+    CGContextBeginPage(mPrintToStreamContext, nullptr);
+    context = mPrintToStreamContext;
+  } else {
+    PMSessionError(mPrintSession);
+    OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, nullptr);
+    if (status != noErr) {
+      return NS_ERROR_ABORT;
+    }
 
-  if (!context) {
-    return NS_ERROR_FAILURE;
+    // This call will fail if it wasn't called between the PMSessionBeginPage/
+    // PMSessionEndPage calls:
+    ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
+
+    if (!context) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   unsigned int width = static_cast<unsigned int>(mSize.width);
@@ -185,9 +260,13 @@ nsresult PrintTargetCG::EndPage() {
   cairo_surface_finish(mCairoSurface);
   mCairoSurface = nullptr;
 
-  OSStatus status = ::PMSessionEndPageNoDialog(mPrintSession);
-  if (status != noErr) {
-    return NS_ERROR_ABORT;
+  if (mPrintToStreamContext) {
+    CGContextEndPage(mPrintToStreamContext);
+  } else {
+    OSStatus status = ::PMSessionEndPageNoDialog(mPrintSession);
+    if (status != noErr) {
+      return NS_ERROR_ABORT;
+    }
   }
 
   return PrintTarget::EndPage();
@@ -195,5 +274,4 @@ nsresult PrintTargetCG::EndPage() {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
