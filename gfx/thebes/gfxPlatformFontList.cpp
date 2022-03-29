@@ -588,15 +588,21 @@ bool gfxPlatformFontList::InitFontList() {
 }
 
 void gfxPlatformFontList::InitializeCodepointsWithNoFonts() {
+  auto& first = mCodepointsWithNoFonts[FontVisibility(0)];
   for (auto& bitset : mCodepointsWithNoFonts) {
-    bitset.reset();
-    bitset.SetRange(0, 0x1f);            // C0 controls
-    bitset.SetRange(0x7f, 0x9f);         // C1 controls
-    bitset.SetRange(0xE000, 0xF8FF);     // PUA
-    bitset.SetRange(0xF0000, 0x10FFFD);  // Supplementary PUA
-    bitset.SetRange(0xfdd0, 0xfdef);     // noncharacters
-    for (unsigned i = 0; i <= 0x100000; i += 0x10000) {
-      bitset.SetRange(i + 0xfffe, i + 0xffff);  // noncharacters
+    if (&bitset == &first) {
+      bitset.reset();
+      bitset.SetRange(0, 0x1f);            // C0 controls
+      bitset.SetRange(0x7f, 0x9f);         // C1 controls
+      bitset.SetRange(0xE000, 0xF8FF);     // PUA
+      bitset.SetRange(0xF0000, 0x10FFFD);  // Supplementary PUA
+      bitset.SetRange(0xfdd0, 0xfdef);     // noncharacters
+      for (unsigned i = 0; i <= 0x100000; i += 0x10000) {
+        bitset.SetRange(i + 0xfffe, i + 0xffff);  // noncharacters
+      }
+      bitset.Compact();
+    } else {
+      bitset = first;
     }
   }
 }
