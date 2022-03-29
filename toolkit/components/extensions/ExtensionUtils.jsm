@@ -59,7 +59,7 @@ class ExtensionError extends DOMException {
   }
   // Custom JS classes can't survive IPC, so need to check error name.
   static [Symbol.hasInstance](e) {
-    return DOMException.isInstance(e) && e.name === "ExtensionError";
+    return e instanceof DOMException && e.name === "ExtensionError";
   }
 }
 

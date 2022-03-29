@@ -69,10 +69,8 @@ class AutoScrollChild extends JSWindowActorChild {
     // Or if we're on a scrollbar or XUL <tree>
     if (
       (mmScrollbarPosition &&
-        content.XULElement.isInstance(
-          node.closest("scrollbar,scrollcorner")
-        )) ||
-      content.XULElement.isInstance(node.closest("treechildren"))
+        node.closest("scrollbar,scrollcorner") instanceof content.XULElement) ||
+      node.closest("treechildren") instanceof content.XULElement
     ) {
       return true;
     }
@@ -81,11 +79,11 @@ class AutoScrollChild extends JSWindowActorChild {
 
   isScrollableElement(aNode) {
     let content = aNode.ownerGlobal;
-    if (content.HTMLElement.isInstance(aNode)) {
-      return !content.HTMLSelectElement.isInstance(aNode) || aNode.multiple;
+    if (aNode instanceof content.HTMLElement) {
+      return !(aNode instanceof content.HTMLSelectElement) || aNode.multiple;
     }
 
-    return content.XULElement.isInstance(aNode);
+    return aNode instanceof content.XULElement;
   }
 
   computeWindowScrollDirection(global) {
@@ -119,13 +117,13 @@ class AutoScrollChild extends JSWindowActorChild {
     // overflow property
     let scrollVert =
       node.scrollTopMax &&
-      (global.HTMLSelectElement.isInstance(node) ||
+      (node instanceof global.HTMLSelectElement ||
         scrollingAllowed.includes(overflowy));
 
     // do not allow horizontal scrolling for select elements, it leads
     // to visual artifacts and is not the expected behavior anyway
     if (
-      !global.HTMLSelectElement.isInstance(node) &&
+      !(node instanceof global.HTMLSelectElement) &&
       node.scrollLeftMin != node.scrollLeftMax &&
       scrollingAllowed.includes(overflowx)
     ) {

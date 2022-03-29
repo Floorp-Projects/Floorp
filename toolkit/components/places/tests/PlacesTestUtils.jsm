@@ -51,7 +51,7 @@ var PlacesTestUtils = Object.freeze({
       let place;
       if (
         obj instanceof Ci.nsIURI ||
-        URL.isInstance(obj) ||
+        obj instanceof URL ||
         typeof obj == "string"
       ) {
         place = { uri: obj };
@@ -67,7 +67,7 @@ var PlacesTestUtils = Object.freeze({
       info.title = "title" in place ? place.title : "test visit for " + spec;
       if (typeof place.referrer == "string") {
         place.referrer = Services.io.newURI(place.referrer);
-      } else if (place.referrer && URL.isInstance(place.referrer)) {
+      } else if (place.referrer && place.referrer instanceof URL) {
         place.referrer = Services.io.newURI(place.referrer.href);
       }
       let visitDate = place.visitDate;

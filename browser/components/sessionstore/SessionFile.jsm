@@ -276,12 +276,9 @@ var SessionFileInternal = {
           .add(Date.now() - startMs);
         break;
       } catch (ex) {
-        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+        if (ex instanceof DOMException && ex.name == "NotFoundError") {
           exists = false;
-        } else if (
-          DOMException.isInstance(ex) &&
-          ex.name == "NotAllowedError"
-        ) {
+        } else if (ex instanceof DOMException && ex.name == "NotAllowedError") {
           // The file might be inaccessible due to wrong permissions
           // or similar failures. We'll just count it as "corrupted".
           console.error("Could not read session file ", ex);

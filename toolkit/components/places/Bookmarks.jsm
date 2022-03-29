@@ -633,7 +633,7 @@ var Bookmarks = Object.freeze({
 
         let url = "";
         if (item.type == Bookmarks.TYPE_BOOKMARK) {
-          url = URL.isInstance(item.url) ? item.url.href : item.url;
+          url = item.url instanceof URL ? item.url.href : item.url;
         }
 
         notifications.push(
@@ -1844,7 +1844,7 @@ var Bookmarks = Object.freeze({
     }
 
     if (query.url) {
-      if (typeof query.url === "string" || URL.isInstance(query.url)) {
+      if (typeof query.url === "string" || query.url instanceof URL) {
         query.url = new URL(query.url).href;
       } else if (query.url instanceof Ci.nsIURI) {
         query.url = query.url.spec;

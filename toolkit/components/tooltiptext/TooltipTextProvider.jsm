@@ -39,10 +39,10 @@ TooltipTextProvider.prototype = {
     // If the element is invalid per HTML5 Forms specifications and has no title,
     // show the constraint validation error message.
     if (
-      (defView.HTMLInputElement.isInstance(tipElement) ||
-        defView.HTMLTextAreaElement.isInstance(tipElement) ||
-        defView.HTMLSelectElement.isInstance(tipElement) ||
-        defView.HTMLButtonElement.isInstance(tipElement)) &&
+      (tipElement instanceof defView.HTMLInputElement ||
+        tipElement instanceof defView.HTMLTextAreaElement ||
+        tipElement instanceof defView.HTMLSelectElement ||
+        tipElement instanceof defView.HTMLButtonElement) &&
       !tipElement.hasAttribute("title") &&
       (!tipElement.form || !tipElement.form.noValidate)
     ) {
@@ -55,7 +55,7 @@ TooltipTextProvider.prototype = {
     // the current file selection.
     if (
       !titleText &&
-      defView.HTMLInputElement.isInstance(tipElement) &&
+      tipElement instanceof defView.HTMLInputElement &&
       tipElement.type == "file" &&
       !tipElement.hasAttribute("title")
     ) {
@@ -114,29 +114,29 @@ TooltipTextProvider.prototype = {
           XULtooltiptextText = tipElement.hasAttribute("tooltiptext")
             ? tipElement.getAttribute("tooltiptext")
             : null;
-        } else if (!defView.SVGElement.isInstance(tipElement)) {
+        } else if (!(tipElement instanceof defView.SVGElement)) {
           titleText = tipElement.getAttribute("title");
         }
 
         if (
-          (defView.HTMLAnchorElement.isInstance(tipElement) ||
-            defView.HTMLAreaElement.isInstance(tipElement) ||
-            defView.HTMLLinkElement.isInstance(tipElement) ||
-            defView.SVGAElement.isInstance(tipElement)) &&
+          (tipElement instanceof defView.HTMLAnchorElement ||
+            tipElement instanceof defView.HTMLAreaElement ||
+            tipElement instanceof defView.HTMLLinkElement ||
+            tipElement instanceof defView.SVGAElement) &&
           tipElement.href
         ) {
           XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
         }
         if (
           lookingForSVGTitle &&
-          (!defView.SVGElement.isInstance(tipElement) ||
+          (!(tipElement instanceof defView.SVGElement) ||
             tipElement.parentNode.nodeType == defView.Node.DOCUMENT_NODE)
         ) {
           lookingForSVGTitle = false;
         }
         if (lookingForSVGTitle) {
           for (let childNode of tipElement.childNodes) {
-            if (defView.SVGTitleElement.isInstance(childNode)) {
+            if (childNode instanceof defView.SVGTitleElement) {
               SVGTitleText = childNode.textContent;
               break;
             }

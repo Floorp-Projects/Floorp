@@ -597,13 +597,13 @@ class SearchOneOffs {
     } else {
       let newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
       if (
-        (KeyboardEvent.isInstance(aEvent) && aEvent.altKey) ^ newTabPref &&
+        (aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref &&
         !this.window.gBrowser.selectedTab.isEmpty
       ) {
         where = "tab";
       }
       if (
-        MouseEvent.isInstance(aEvent) &&
+        aEvent instanceof MouseEvent &&
         (aEvent.button == 1 || aEvent.getModifierState("Accel"))
       ) {
         where = "tab";
@@ -903,17 +903,17 @@ class SearchOneOffs {
 
     let target = event.originalTarget;
 
-    if (KeyboardEvent.isInstance(event) && this.selectedButton) {
+    if (event instanceof KeyboardEvent && this.selectedButton) {
       return true;
     }
     if (
-      MouseEvent.isInstance(event) &&
+      event instanceof MouseEvent &&
       target.classList.contains("searchbar-engine-one-off-item")
     ) {
       return true;
     }
     if (
-      this.window.XULCommandEvent.isInstance(event) &&
+      event instanceof this.window.XULCommandEvent &&
       target.classList.contains("search-one-offs-context-open-in-new-tab")
     ) {
       return true;

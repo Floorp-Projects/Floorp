@@ -65,7 +65,7 @@ this.PersistentCache = class PersistentCache {
           data = await IOUtils.readJSON(filepath);
         } catch (error) {
           if (
-            !DOMException.isInstance(error) ||
+            !(error instanceof DOMException) ||
             error.name !== "NotFoundError"
           ) {
             Cu.reportError(

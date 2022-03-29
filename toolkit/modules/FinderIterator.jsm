@@ -758,7 +758,7 @@ FinderIterator.prototype = {
     const HTMLAnchorElement = (node.ownerDocument || node).defaultView
       .HTMLAnchorElement;
     do {
-      if (HTMLAnchorElement.isInstance(node)) {
+      if (node instanceof HTMLAnchorElement) {
         isInsideLink = node.hasAttribute("href");
         break;
       } else if (

@@ -316,7 +316,7 @@ var AttributionCode = {
     try {
       bytes = await AttributionIOUtils.read(attributionFile.path);
     } catch (ex) {
-      if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+      if (ex instanceof DOMException && ex.name == "NotFoundError") {
         log.debug(
           `getAttrDataAsync: !exists("${
             attributionFile.path

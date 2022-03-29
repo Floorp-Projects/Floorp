@@ -211,7 +211,7 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
     let doc = this.document;
     if (doc) {
       let video = doc.activeElement;
-      if (!HTMLVideoElement.isInstance(video)) {
+      if (!(video instanceof HTMLVideoElement)) {
         let listOfVideos = [...doc.querySelectorAll("video")].filter(
           video => !isNaN(video.duration)
         );
@@ -407,7 +407,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       case "UAWidgetSetupOrChange": {
         if (
           this.toggleEnabled &&
-          this.contentWindow.HTMLVideoElement.isInstance(event.target) &&
+          event.target instanceof this.contentWindow.HTMLVideoElement &&
           event.target.ownerDocument == this.document
         ) {
           this.registerVideo(event.target);
@@ -1678,7 +1678,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           // can be either a MediaStream, MediaSource or Blob. In case of future changes
           // we do not want to pause MediaStream srcObjects and we want to maintain current
           // behavior for non-MediaStream srcObjects.
-          if (video && MediaStream.isInstance(video.srcObject)) {
+          if (video && video.srcObject instanceof MediaStream) {
             break;
           }
         }

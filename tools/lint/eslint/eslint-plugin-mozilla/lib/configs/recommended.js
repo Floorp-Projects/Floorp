@@ -61,10 +61,6 @@ module.exports = {
       },
       rules: {
         "mozilla/mark-exported-symbols-as-used": "error",
-        // Bug 1703953: We don't have a good way to check a file runs in a
-        // privilieged context. Apply this for jsm files as we know those are
-        // privilieged, and then include more directories elsewhere.
-        "mozilla/use-isInstance": "error",
         // TODO: Bug 1575506 turn `builtinGlobals` on here.
         // We can enable builtinGlobals for jsms due to their scopes.
         "no-redeclare": ["error", { builtinGlobals: false }],

@@ -319,7 +319,7 @@ DOMRequestIpcHelper.prototype = {
     }
 
     Object.keys(this._requests).forEach(aKey => {
-      if (this._window.DOMRequest.isInstance(this.getRequest(aKey))) {
+      if (this.getRequest(aKey) instanceof this._window.DOMRequest) {
         aCallback(aKey);
       }
     });

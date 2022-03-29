@@ -684,7 +684,7 @@ var UrlbarUtils = {
         : UrlbarUtils.ICON.DEFAULT;
     }
     if (
-      URL.isInstance(url) &&
+      url instanceof URL &&
       UrlbarUtils.PROTOCOLS_WITH_ICONS.includes(url.protocol)
     ) {
       return "page-icon:" + url.href;
@@ -742,7 +742,7 @@ var UrlbarUtils = {
       return;
     }
 
-    if (URL.isInstance(urlOrEngine)) {
+    if (urlOrEngine instanceof URL) {
       urlOrEngine = urlOrEngine.href;
     }
 

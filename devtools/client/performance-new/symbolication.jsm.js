@@ -139,7 +139,7 @@ async function getResultFromWorker(workerURL, initialMessageToWorker) {
     worker.onerror = errorEvent => {
       gActiveWorkers.delete(worker);
       worker.terminate();
-      if (ErrorEvent.isInstance(errorEvent)) {
+      if (errorEvent instanceof ErrorEvent) {
         const { message, filename, lineno } = errorEvent;
         const error = new Error(`${message} at ${filename}:${lineno}`);
         error.name = "WorkerError";
@@ -152,10 +152,17 @@ async function getResultFromWorker(workerURL, initialMessageToWorker) {
     // Handle errors from messages that cannot be deserialized. I'm not sure
     // how to get into such a state, but having this handler seems like a good
     // idea.
-    worker.onmessageerror = () => {
+    worker.onmessageerror = errorEvent => {
       gActiveWorkers.delete(worker);
       worker.terminate();
-      reject(new Error("Error in worker"));
+      if (errorEvent instanceof ErrorEvent) {
+        const { message, filename, lineno } = errorEvent;
+        const error = new Error(`${message} at ${filename}:${lineno}`);
+        error.name = "WorkerMessageError";
+        reject(error);
+      } else {
+        reject(new Error("Error in worker"));
+      }
     };
 
     worker.postMessage(initialMessageToWorker);
