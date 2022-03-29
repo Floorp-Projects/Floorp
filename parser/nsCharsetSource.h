@@ -27,10 +27,13 @@ enum nsCharsetSource {
   kCharsetFromInitialUserForcedAutoDetection,
   // Start subdividing source for telemetry purposes
   // Deliberately no Final version of ASCII
-  kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8,
+  kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8GenericInitialWasASCII,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8ContentInitialWasASCII,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
+  kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLDInitialWasASCII,
   kCharsetFromFinalAutoDetectionFile,
   // End subdividing source for telemetry purposes
   kCharsetFromFinalUserForcedAutoDetection,
