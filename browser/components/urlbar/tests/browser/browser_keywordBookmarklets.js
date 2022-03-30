@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_task(async function() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmarklet",
