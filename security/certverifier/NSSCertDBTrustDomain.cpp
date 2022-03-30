@@ -703,16 +703,18 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   // Actively distrusted certificates will have already been blocked by
   // GetCertTrust.
 
-  // TODO: need to verify that IsRevoked isn't called for trust anchors AND
-  // that that fact is documented in mozillapkix.
-
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: Top of CheckRevocation\n"));
 
+  // None of the revocation methods in this function are consulted for CA
+  // certificates. Revocation for CAs is handled by GetCertTrust.
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    return Success;
+  }
+
   bool crliteFilterCoversCertificate = false;
   Result crliteResult = Success;
-  if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
-      mCRLiteMode != CRLiteMode::Disabled && sctExtension) {
+  if (mCRLiteMode != CRLiteMode::Disabled && sctExtension) {
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("NSSCertDBTrustDomain::CheckRevocation: checking CRLite"));
     nsTArray<uint8_t> issuerSubjectPublicKeyInfoBytes;
@@ -764,14 +766,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
     }
   }
 
-  // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
-  // Since this affects EV there is no reason why DV should be more strict
-  // so all intermediates are allowed to have OCSP responses up to one year
-  // old.
-  uint16_t maxOCSPLifetimeInDays = 10;
-  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
-    maxOCSPLifetimeInDays = 365;
-  }
+  const uint16_t maxOCSPLifetimeInDays = 10;
 
   // If we have a stapled OCSP response then the verification of that response
   // determines the result unless the OCSP response is expired. We make an
@@ -779,13 +774,8 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   // are known to serve expired responses due to bugs.
   // We keep track of the result of verifying the stapled response but don't
   // immediately return failure if the response has expired.
-  //
-  // We only set the OCSP stapling status if we're validating the end-entity
-  // certificate. Non-end-entity certificates would always be
-  // OCSP_STAPLING_NONE unless/until we implement multi-stapling.
   Result stapledOCSPResponseResult = Success;
   if (stapledOCSPResponse) {
-    MOZ_ASSERT(endEntityOrCA == EndEntityOrCA::MustBeEndEntity);
     bool expired;
     stapledOCSPResponseResult = VerifyAndMaybeCacheEncodedOCSPResponse(
         certID, time, maxOCSPLifetimeInDays, *stapledOCSPResponse,
@@ -821,7 +811,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
               ("NSSCertDBTrustDomain: stapled OCSP response: failure"));
       return stapledOCSPResponseResult;
     }
-  } else if (endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
+  } else {
     // no stapled OCSP response
     mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NONE;
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
@@ -875,13 +865,6 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   MOZ_ASSERT((!cachedResponsePresent && cachedResponseResult == Success) ||
              (cachedResponsePresent && cachedResponseResult != Success));
 
-  // If we have a fresh OneCRL Blocklist we can skip OCSP for CA certs
-  bool blocklistIsFresh;
-  nsresult nsrv = mCertStorage->IsBlocklistFresh(&blocklistIsFresh);
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
   // TODO: We still need to handle the fallback for invalid stapled responses.
   // But, if/when we disable OCSP fetching by default, it would be ambiguous
   // whether security.OCSP.enable==0 means "I want the default" or "I really
@@ -889,10 +872,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
   // Additionally, this doesn't properly handle OCSP-must-staple when OCSP
   // fetching is disabled.
   Duration shortLifetime(mCertShortLifetimeInDays * Time::ONE_DAY_IN_SECONDS);
-  if ((mOCSPFetching == NeverFetchOCSP) || (validityDuration < shortLifetime) ||
-      (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-       (mOCSPFetching == FetchOCSPForDVHardFail ||
-        mOCSPFetching == FetchOCSPForDVSoftFail || blocklistIsFresh))) {
+  if ((mOCSPFetching == NeverFetchOCSP) || (validityDuration < shortLifetime)) {
     // We're not going to be doing any fetching, so if there was a cached
     // "unknown" response, say so.
     if (cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
