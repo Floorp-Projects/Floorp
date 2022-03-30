@@ -77,7 +77,6 @@ class HistoryMetadataGroupFragment :
                 browserStore = (activity as HomeActivity).components.core.store,
                 store = historyMetadataGroupStore,
                 selectOrAddUseCase = requireComponents.useCases.tabsUseCases.selectOrAddTab,
-                metrics = requireComponents.analytics.metrics,
                 navController = findNavController(),
                 scope = lifecycleScope,
                 searchTerm = args.title

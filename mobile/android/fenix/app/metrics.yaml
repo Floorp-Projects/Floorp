@@ -3061,6 +3061,7 @@ history:
       User has tapped on an item in the "Recently visited" section on home.
     extra_keys:
       page_number:
+        type: string
         description: |
           The page number in the homescreen carousel that the recently visited
           item was on.

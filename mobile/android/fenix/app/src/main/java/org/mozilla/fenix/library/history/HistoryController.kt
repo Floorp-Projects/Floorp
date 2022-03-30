@@ -8,12 +8,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.private.NoExtras
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.navigateSafe
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 @Suppress("TooManyFunctions")
 interface HistoryController {
@@ -46,7 +46,7 @@ class DefaultHistoryController(
         when (item) {
             is History.Regular -> openToBrowser(item)
             is History.Group -> {
-                metrics.track(Event.HistorySearchTermGroupTapped)
+                GleanHistory.searchTermGroupTapped.record(NoExtras())
                 navController.navigate(
                     HistoryFragmentDirections.actionGlobalHistoryMetadataGroup(
                         title = item.title,

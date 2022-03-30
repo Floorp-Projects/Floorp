@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.metrics.Event
@@ -68,7 +69,11 @@ class RecentlyVisitedViewHolder(
                     }
                     is RecentHistoryGroup -> {
                         metrics.track(Event.HistorySearchGroupOpened)
-                        metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
+                        History.recentSearchesTapped.record(
+                            History.RecentSearchesTappedExtra(
+                                pageNumber.toString()
+                            )
+                        )
                         interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
                     }
                 }

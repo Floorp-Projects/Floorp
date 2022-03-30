@@ -271,59 +271,6 @@ class MetricControllerTest {
     }
 
     @Test
-    fun `history events should be sent to enabled service`() {
-        val controller = ReleaseMetricController(
-            listOf(marketingService1),
-            isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true },
-            mockk()
-        )
-        every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTab) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTabs) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTab) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTabs) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryItemRemoved) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryAllItemsRemoved) } returns true
-        every { marketingService1.shouldTrack(Event.HistoryRecentSearchesTapped("2")) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchTermGroupTapped) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchTermGroupOpenTab) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchTermGroupRemoveTab) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchTermGroupRemoveAll) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchIconTapped) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySearchResultTapped) } returns true
-
-        controller.start(MetricServiceType.Marketing)
-
-        controller.track(Event.HistoryOpenedInNewTab)
-        controller.track(Event.HistoryOpenedInNewTabs)
-        controller.track(Event.HistoryOpenedInPrivateTab)
-        controller.track(Event.HistoryOpenedInPrivateTabs)
-        controller.track(Event.HistoryItemRemoved)
-        controller.track(Event.HistoryAllItemsRemoved)
-        controller.track(Event.HistoryRecentSearchesTapped("2"))
-        controller.track(Event.HistorySearchTermGroupTapped)
-        controller.track(Event.HistorySearchTermGroupOpenTab)
-        controller.track(Event.HistorySearchTermGroupRemoveTab)
-        controller.track(Event.HistorySearchTermGroupRemoveAll)
-        controller.track(Event.HistorySearchIconTapped)
-        controller.track(Event.HistorySearchResultTapped)
-
-        verify { marketingService1.track(Event.HistoryOpenedInNewTab) }
-        verify { marketingService1.track(Event.HistoryOpenedInNewTabs) }
-        verify { marketingService1.track(Event.HistoryOpenedInPrivateTab) }
-        verify { marketingService1.track(Event.HistoryOpenedInPrivateTabs) }
-        verify { marketingService1.track(Event.HistoryItemRemoved) }
-        verify { marketingService1.track(Event.HistoryAllItemsRemoved) }
-        verify { marketingService1.track(Event.HistoryRecentSearchesTapped("2")) }
-        verify { marketingService1.track(Event.HistorySearchTermGroupTapped) }
-        verify { marketingService1.track(Event.HistorySearchTermGroupOpenTab) }
-        verify { marketingService1.track(Event.HistorySearchTermGroupRemoveTab) }
-        verify { marketingService1.track(Event.HistorySearchTermGroupRemoveAll) }
-        verify { marketingService1.track(Event.HistorySearchIconTapped) }
-        verify { marketingService1.track(Event.HistorySearchResultTapped) }
-    }
-
-    @Test
     fun `web extension fact should set value in SharedPreference`() {
         val enabled = true
         val settings = Settings(testContext)

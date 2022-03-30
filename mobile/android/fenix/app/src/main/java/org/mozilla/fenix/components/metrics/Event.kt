@@ -11,7 +11,6 @@ import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchTerms
@@ -30,26 +29,8 @@ sealed class Event {
     object CustomTabsClosed : Event()
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
-    object HistoryOpened : Event()
-    object HistoryItemShared : Event()
-    object HistoryItemOpened : Event()
-    object HistoryOpenedInNewTab : Event()
-    object HistoryOpenedInNewTabs : Event()
-    object HistoryOpenedInPrivateTab : Event()
-    object HistoryOpenedInPrivateTabs : Event()
-    object HistoryItemRemoved : Event()
-    object HistoryAllItemsRemoved : Event()
-    data class HistoryRecentSearchesTapped(val source: String) : Event() {
-        override val extras = mapOf(History.recentSearchesTappedKeys.pageNumber to source)
-    }
     object HistoryHighlightOpened : Event()
     object HistorySearchGroupOpened : Event()
-    object HistorySearchTermGroupTapped : Event()
-    object HistorySearchTermGroupOpenTab : Event()
-    object HistorySearchTermGroupRemoveTab : Event()
-    object HistorySearchTermGroupRemoveAll : Event()
-    object HistorySearchIconTapped : Event()
-    object HistorySearchResultTapped : Event()
     object ReaderModeAvailable : Event()
     object ReaderModeOpened : Event()
     object ReaderModeClosed : Event()

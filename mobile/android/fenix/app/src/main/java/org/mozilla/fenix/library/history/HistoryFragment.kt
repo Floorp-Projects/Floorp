@@ -35,6 +35,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
@@ -44,7 +45,6 @@ import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentHistoryBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -53,6 +53,7 @@ import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
@@ -140,7 +141,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
 
         historyProvider = DefaultPagedHistoryProvider(requireComponents.core.historyStorage)
 
-        requireComponents.analytics.metrics.track(Event.HistoryOpened)
+        GleanHistory.opened.record(NoExtras())
 
         setHasOptionsMenu(true)
     }
@@ -235,7 +236,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
         R.id.open_history_in_new_tabs_multi_select -> {
             openItemsInNewTab { selectedItem ->
-                requireComponents.analytics.metrics.track(Event.HistoryOpenedInNewTabs)
+                GleanHistory.openedItemsInNewTabs.record(NoExtras())
                 (selectedItem as? History.Regular)?.url ?: (selectedItem as? History.Metadata)?.url
             }
 
@@ -244,7 +245,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
         R.id.open_history_in_private_tabs_multi_select -> {
             openItemsInNewTab(private = true) { selectedItem ->
-                requireComponents.analytics.metrics.track(Event.HistoryOpenedInPrivateTabs)
+                GleanHistory.openedItemsInNewTabs.record(NoExtras())
                 (selectedItem as? History.Regular)?.url ?: (selectedItem as? History.Metadata)?.url
             }
 
@@ -257,7 +258,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             true
         }
         R.id.history_search -> {
-            requireComponents.analytics.metrics.track(Event.HistorySearchIconTapped)
+            GleanHistory.searchIconTapped.record(NoExtras())
             historyInteractor.onSearch()
             true
         }
@@ -310,7 +311,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     private fun openItem(item: History.Regular) {
-        requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
+        GleanHistory.openedItem.record(NoExtras())
 
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
@@ -330,7 +331,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                     historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
                     // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
                     lifecycleScope.launch(IO) {
-                        requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
+                        GleanHistory.removedAll.record(NoExtras())
                         requireComponents.core.store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
                         requireComponents.core.historyStorage.deleteEverything()
                         deleteOpenTabsEngineHistory(requireComponents.core.store)
@@ -356,7 +357,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     private fun share(data: List<ShareData>) {
-        requireComponents.analytics.metrics.track(Event.HistoryItemShared)
+        GleanHistory.shared.record(NoExtras())
         val directions = HistoryFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
@@ -377,7 +378,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                 historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
                 context?.components?.run {
                     for (item in items) {
-                        analytics.metrics.track(Event.HistoryItemRemoved)
+                        GleanHistory.removed.record(NoExtras())
 
                         when (item) {
                             is History.Regular -> core.historyStorage.deleteVisitsFor(item.url)

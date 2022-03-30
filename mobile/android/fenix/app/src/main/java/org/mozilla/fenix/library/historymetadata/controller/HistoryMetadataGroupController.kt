@@ -12,13 +12,13 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentStore
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 /**
  * An interface that handles the view manipulation of the history metadata group in the History
@@ -75,12 +75,12 @@ interface HistoryMetadataGroupController {
 /**
  * The default implementation of [HistoryMetadataGroupController].
  */
+@Suppress("LongParameterList")
 class DefaultHistoryMetadataGroupController(
     private val historyStorage: PlacesHistoryStorage,
     private val browserStore: BrowserStore,
     private val store: HistoryMetadataGroupFragmentStore,
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
-    private val metrics: MetricController,
     private val navController: NavController,
     private val scope: CoroutineScope,
     private val searchTerm: String,
@@ -89,7 +89,7 @@ class DefaultHistoryMetadataGroupController(
     override fun handleOpen(item: History.Metadata) {
         selectOrAddUseCase.invoke(item.url, item.historyMetadataKey)
         navController.navigate(R.id.browserFragment)
-        metrics.track(Event.HistorySearchTermGroupOpenTab)
+        GleanHistory.searchTermGroupOpenTab.record(NoExtras())
     }
 
     override fun handleSelect(item: History.Metadata) {
@@ -123,7 +123,7 @@ class DefaultHistoryMetadataGroupController(
             items.forEach {
                 store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
                 historyStorage.deleteVisitsFor(it.url)
-                metrics.track(Event.HistorySearchTermGroupRemoveTab)
+                GleanHistory.searchTermGroupRemoveTab.record(NoExtras())
             }
             // The method is called for both single and multiple items.
             // In case all items have been deleted, we have to disband the search group.
@@ -144,7 +144,7 @@ class DefaultHistoryMetadataGroupController(
             browserStore.dispatch(
                 HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
             )
-            metrics.track(Event.HistorySearchTermGroupRemoveAll)
+            GleanHistory.searchTermGroupRemoveAll.record(NoExtras())
         }
     }
 }

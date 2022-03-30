@@ -20,7 +20,6 @@ import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
-import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Logins
@@ -128,55 +127,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
             { CustomTab.closed.record(it) }
-        )
-        is Event.HistoryOpened -> EventWrapper<NoExtraKeys>(
-            { History.opened.record(it) }
-        )
-        is Event.HistoryItemShared -> EventWrapper<NoExtraKeys>(
-            { History.shared.record(it) }
-        )
-        is Event.HistoryItemOpened -> EventWrapper<NoExtraKeys>(
-            { History.openedItem.record(it) }
-        )
-        is Event.HistoryOpenedInNewTab -> EventWrapper<NoExtraKeys>(
-            { History.openedItemInNewTab.record(it) }
-        )
-        is Event.HistoryOpenedInNewTabs -> EventWrapper<NoExtraKeys>(
-            { History.openedItemsInNewTabs.record(it) }
-        )
-        is Event.HistoryOpenedInPrivateTab -> EventWrapper<NoExtraKeys>(
-            { History.openedItemInPrivateTab.record(it) }
-        )
-        is Event.HistoryOpenedInPrivateTabs -> EventWrapper<NoExtraKeys>(
-            { History.openedItemsInPrivateTabs.record(it) }
-        )
-        is Event.HistoryItemRemoved -> EventWrapper<NoExtraKeys>(
-            { History.removed.record(it) }
-        )
-        is Event.HistoryAllItemsRemoved -> EventWrapper<NoExtraKeys>(
-            { History.removedAll.record(it) }
-        )
-        is Event.HistoryRecentSearchesTapped -> EventWrapper(
-            { History.recentSearchesTapped.record(it) },
-            { History.recentSearchesTappedKeys.valueOf(it) }
-        )
-        is Event.HistorySearchTermGroupTapped -> EventWrapper<NoExtraKeys>(
-            { History.searchTermGroupTapped.record(it) }
-        )
-        is Event.HistorySearchTermGroupOpenTab -> EventWrapper<NoExtraKeys>(
-            { History.searchTermGroupOpenTab.record(it) }
-        )
-        is Event.HistorySearchTermGroupRemoveTab -> EventWrapper<NoExtraKeys>(
-            { History.searchTermGroupRemoveTab.record(it) }
-        )
-        is Event.HistorySearchTermGroupRemoveAll -> EventWrapper<NoExtraKeys>(
-            { History.searchTermGroupRemoveAll.record(it) }
-        )
-        is Event.HistorySearchIconTapped -> EventWrapper<NoExtraKeys>(
-            { History.searchIconTapped.record(it) }
-        )
-        is Event.HistorySearchResultTapped -> EventWrapper<NoExtraKeys>(
-            { History.searchResultTapped.record(it) }
         )
         is Event.ReaderModeAvailable -> EventWrapper<NoExtraKeys>(
             { ReaderMode.available.record(it) }

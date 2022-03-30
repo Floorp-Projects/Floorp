@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -67,56 +66,6 @@ class GleanMetricsServiceTest {
         assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
         gleanService.track(Event.OpenedTabSuggestionClicked)
         assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
-    }
-
-    @Test
-    fun `History events are correctly recorded`() {
-        assertFalse(History.openedItemInNewTab.testHasValue())
-        gleanService.track(Event.HistoryOpenedInNewTab)
-        assertTrue(History.openedItemInNewTab.testHasValue())
-
-        assertFalse(History.openedItemsInNewTabs.testHasValue())
-        gleanService.track(Event.HistoryOpenedInNewTabs)
-        assertTrue(History.openedItemsInNewTabs.testHasValue())
-
-        assertFalse(History.openedItemInPrivateTab.testHasValue())
-        gleanService.track(Event.HistoryOpenedInPrivateTab)
-        assertTrue(History.openedItemInPrivateTab.testHasValue())
-
-        assertFalse(History.openedItemsInPrivateTabs.testHasValue())
-        gleanService.track(Event.HistoryOpenedInPrivateTabs)
-        assertTrue(History.openedItemsInPrivateTabs.testHasValue())
-
-        assertFalse(History.recentSearchesTapped.testHasValue())
-        gleanService.track(Event.HistoryRecentSearchesTapped("5"))
-        assertTrue(History.recentSearchesTapped.testHasValue())
-        val events = History.recentSearchesTapped.testGetValue()
-        assertEquals(1, events[0].extra!!.size)
-        assertEquals("5", events[0].extra!!["page_number"])
-
-        assertFalse(History.searchTermGroupTapped.testHasValue())
-        gleanService.track(Event.HistorySearchTermGroupTapped)
-        assertTrue(History.searchTermGroupTapped.testHasValue())
-
-        assertFalse(History.searchTermGroupOpenTab.testHasValue())
-        gleanService.track(Event.HistorySearchTermGroupOpenTab)
-        assertTrue(History.searchTermGroupOpenTab.testHasValue())
-
-        assertFalse(History.searchTermGroupRemoveTab.testHasValue())
-        gleanService.track(Event.HistorySearchTermGroupRemoveTab)
-        assertTrue(History.searchTermGroupRemoveTab.testHasValue())
-
-        assertFalse(History.searchTermGroupRemoveAll.testHasValue())
-        gleanService.track(Event.HistorySearchTermGroupRemoveAll)
-        assertTrue(History.searchTermGroupRemoveAll.testHasValue())
-
-        assertFalse(History.searchIconTapped.testHasValue())
-        gleanService.track(Event.HistorySearchIconTapped)
-        assertTrue(History.searchIconTapped.testHasValue())
-
-        assertFalse(History.searchResultTapped.testHasValue())
-        gleanService.track(Event.HistorySearchResultTapped)
-        assertTrue(History.searchResultTapped.testHasValue())
     }
 
     @Test

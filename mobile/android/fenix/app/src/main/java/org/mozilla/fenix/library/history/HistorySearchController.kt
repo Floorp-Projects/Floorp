@@ -5,10 +5,10 @@
 package org.mozilla.fenix.library.history
 
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 
 /**
  * An interface that handles the view manipulation of the History Search, triggered by the Interactor
@@ -21,7 +21,6 @@ interface HistorySearchController {
 
 class HistorySearchDialogController(
     private val activity: HomeActivity,
-    private val metrics: MetricController,
     private val fragmentStore: HistorySearchFragmentStore,
     private val clearToolbarFocus: () -> Unit,
 ) : HistorySearchController {
@@ -35,7 +34,7 @@ class HistorySearchDialogController(
     }
 
     override fun handleUrlTapped(url: String, flags: LoadUrlFlags) {
-        metrics.track(Event.HistorySearchResultTapped)
+        History.searchResultTapped.record(NoExtras())
         clearToolbarFocus()
 
         activity.openToBrowserAndLoad(
