@@ -1450,13 +1450,13 @@ Talos test lists
    * contact: :ochameau and devtools team
    * source: `damp <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/devtools>`__
    * type: `Page load`_
-   * measuring: Developer Tools toolbox startup, shutdown, and reload performance
+   * measuring: Developer Tools toolbox performance. Split in test suites covering different DevTools areas (inspector, webconsole, other).
    * reporting: intervals in ms (lower is better)
    * see below for details
    * data: there are 36 reported subtests from DAMP which we load 25 times, resulting in 36 sets of 25 data points.
    * summarization:
       * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 24 data points; `source: test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l356>`__
-      * suite: `geometric mean`_ of the 36 subtest results.
+      * suite: No value for the suite, only individual subtests are relevant.
    * description:
     To run this locally, you'll need to pull down the `tp5 page
     set <#page-sets>`__ and run it in a local web server. See the `tp5
@@ -1528,12 +1528,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ❌
         - ❌
         - ❌
@@ -1549,12 +1569,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ✅
         - ✅
         - ❌
@@ -1570,12 +1610,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ✅
         - ✅
         - ❌
@@ -1591,12 +1651,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ❌
         - ❌
         - ❌
@@ -1612,12 +1692,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ❌
         - ❌
         - ❌
@@ -1633,12 +1733,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-other-swr-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ❌
         - ❌
         - ❌
@@ -1654,12 +1774,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-fis-e10s**
+      * - **talos-damp-inspector-fis-e10s**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-swr-fis-e10s**
+      * - **talos-damp-inspector-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-other-swr-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-damp-webconsole-swr-fis-e10s**
         - ✅
         - ✅
         - ❌
