@@ -33,29 +33,26 @@ use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
-use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
+use nsstring::{nsACString, nsCStr, nsCString, nsString};
 use rkv::backend::{BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment};
 use rkv::{StoreError, StoreOptions, Value};
 use rust_cascade::Cascade;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::fmt::Display;
 use std::fs::{create_dir_all, remove_file, File, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::mem::size_of;
-use std::os::raw::c_char;
 use std::path::{Path, PathBuf};
-use std::slice;
 use std::str;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, SystemTime};
 use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICRLiteCoverage, nsICRLiteTimestamp, nsICertInfo, nsICertStorage, nsICertStorageCallback,
     nsIFile, nsIHandleReportCallback, nsIIssuerAndSerialRevocationState, nsIMemoryReporter,
-    nsIMemoryReporterManager, nsIObserver, nsIPrefBranch, nsIRevocationState, nsISerialEventTarget,
+    nsIMemoryReporterManager, nsIRevocationState, nsISerialEventTarget,
     nsISubjectAndPubKeyRevocationState, nsISupports,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
@@ -130,7 +127,6 @@ impl MallocSizeOf for EnvAndStore {
 struct SecurityState {
     profile_path: PathBuf,
     env_and_store: Option<EnvAndStore>,
-    int_prefs: HashMap<String, u32>,
     crlite_filter: Option<Cascade>,
     /// Maps issuer spki hashes to sets of serial numbers.
     crlite_stash: Option<HashMap<Vec<u8>, HashSet<Vec<u8>>>>,
@@ -143,19 +139,18 @@ struct SecurityState {
 }
 
 impl SecurityState {
-    pub fn new(profile_path: PathBuf) -> Result<SecurityState, SecurityStateError> {
+    pub fn new(profile_path: PathBuf) -> SecurityState {
         // Since this gets called on the main thread, we don't actually want to open the DB yet.
         // We do this on-demand later, when we're probably on a certificate verification thread.
-        Ok(SecurityState {
+        SecurityState {
             profile_path,
             env_and_store: None,
-            int_prefs: HashMap::new(),
             crlite_filter: None,
             crlite_stash: None,
             crlite_coverage: None,
             crlite_enrollment: None,
             remaining_ops: 0,
-        })
+        }
     }
 
     pub fn db_needs_opening(&self) -> bool {
@@ -656,40 +651,6 @@ impl SecurityState {
         }
     }
 
-    pub fn is_data_fresh(
-        &self,
-        update_pref: &str,
-        allowed_staleness: &str,
-    ) -> Result<bool, SecurityStateError> {
-        let checked = match self.int_prefs.get(update_pref) {
-            Some(ch) => *ch,
-            None => 0,
-        };
-        let staleness_seconds = match self.int_prefs.get(allowed_staleness) {
-            Some(st) => *st,
-            None => 0,
-        };
-
-        let update = SystemTime::UNIX_EPOCH + Duration::new(checked as u64, 0);
-        let staleness = Duration::new(staleness_seconds as u64, 0);
-
-        Ok(match SystemTime::now().duration_since(update) {
-            Ok(duration) => duration <= staleness,
-            Err(_) => false,
-        })
-    }
-
-    pub fn is_blocklist_fresh(&self) -> Result<bool, SecurityStateError> {
-        self.is_data_fresh(
-            "services.settings.security.onecrl.checked",
-            "security.onecrl.maximum_staleness_in_seconds",
-        )
-    }
-
-    pub fn pref_seen(&mut self, name: &str, value: u32) {
-        self.int_prefs.insert(name.to_owned(), value);
-    }
-
     // To store certificates, we create a Cert out of each given cert, subject, and trust tuple. We
     // hash each certificate with sha-256 to obtain a unique* key for that certificate, and we store
     // the Cert in the database. We also look up or create a CertHashList for the given subject and
@@ -858,7 +819,6 @@ impl MallocSizeOf for SecurityState {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         self.profile_path.size_of(ops)
             + self.env_and_store.size_of(ops)
-            + self.int_prefs.size_of(ops)
             + self
                 .crlite_filter
                 .as_ref()
@@ -1073,15 +1033,11 @@ impl EncodedSecurityState {
     }
 }
 
-fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateError> {
-    let directory_service = match xpcom::services::get_DirectoryService() {
-        Some(ds) => ds,
-        _ => return Err(SecurityStateError::from("None")),
-    };
+fn get_path_from_directory_service(key: &str) -> Result<PathBuf, nserror::nsresult> {
+    let directory_service = xpcom::services::get_DirectoryService().ok_or(NS_ERROR_FAILURE)?;
+    let cs_key = CString::new(key).map_err(|_| NS_ERROR_FAILURE)?;
 
-    let cs_key = CString::new(key)?;
     let mut requested_dir = GetterAddrefs::<nsIFile>::new();
-
     unsafe {
         (*directory_service)
             .Get(
@@ -1090,36 +1046,16 @@ fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateEr
                 requested_dir.void_ptr(),
             )
             .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })
     }?;
 
-    let dir_path = match requested_dir.refptr() {
-        None => return Err(SecurityStateError::from("directory service failure")),
-        Some(refptr) => refptr,
-    };
-
+    let dir_path = requested_dir.refptr().ok_or(NS_ERROR_FAILURE)?;
     let mut path = nsString::new();
-
-    unsafe {
-        (*dir_path)
-            .GetPath(&mut path as &mut nsAString)
-            // For reasons that aren't clear to me, NsresultExt does not
-            // implement std::error::Error (or Debug / Display). This map_err
-            // hack is a way to get an error with a useful message.
-            .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })?;
-    }
-
+    unsafe { (*dir_path).GetPath(&mut *path).to_result() }?;
     Ok(PathBuf::from(format!("{}", path)))
 }
 
-fn get_profile_path() -> Result<PathBuf, SecurityStateError> {
-    Ok(get_path_from_directory_service("ProfD")
-        .or_else(|_| get_path_from_directory_service("TmpD"))?)
+fn get_profile_path() -> Result<PathBuf, nserror::nsresult> {
+    get_path_from_directory_service("ProfD").or_else(|_| get_path_from_directory_service("TmpD"))
 }
 
 fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError> {
@@ -1286,10 +1222,9 @@ fn do_construct_cert_storage(
     _outer: *const nsISupports,
     iid: *const xpcom::nsIID,
     result: *mut *mut xpcom::reexports::libc::c_void,
-) -> Result<(), SecurityStateError> {
+) -> Result<(), nserror::nsresult> {
     let path_buf = get_profile_path()?;
-
-    let security_state = Arc::new(RwLock::new(SecurityState::new(path_buf.clone())?));
+    let security_state = Arc::new(RwLock::new(SecurityState::new(path_buf.clone())));
     let cert_storage = CertStorage::allocate(InitCertStorage {
         security_state: security_state.clone(),
         queue: create_background_task_queue(cstr!("cert_storage"))?,
@@ -1315,61 +1250,15 @@ fn do_construct_cert_storage(
     let runnable = TaskRunnable::new("LoadCrliteStash", load_crlite_stash_task)?;
     TaskRunnable::dispatch(runnable, cert_storage.queue.coerce())?;
 
-    unsafe {
-        cert_storage
-            .QueryInterface(iid, result)
-            // As above; greasy hack because NsresultExt
-            .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })?;
-
-        if let Some(reporter) = memory_reporter.query_interface::<nsIMemoryReporter>() {
-            if let Some(reporter_manager) = xpcom::get_service::<nsIMemoryReporterManager>(cstr!(
-                "@mozilla.org/memory-reporter-manager;1"
-            )) {
-                reporter_manager.RegisterStrongReporter(&*reporter);
-            }
+    if let Some(reporter) = memory_reporter.query_interface::<nsIMemoryReporter>() {
+        if let Some(reporter_manager) = xpcom::get_service::<nsIMemoryReporterManager>(cstr!(
+            "@mozilla.org/memory-reporter-manager;1"
+        )) {
+            unsafe { reporter_manager.RegisterStrongReporter(&*reporter) };
         }
-
-        return cert_storage.setup_prefs();
-    };
-}
-
-fn read_int_pref(name: &str) -> Result<u32, SecurityStateError> {
-    let pref_service = match xpcom::services::get_PrefService() {
-        Some(ps) => ps,
-        _ => {
-            return Err(SecurityStateError::from(
-                "could not get preferences service",
-            ));
-        }
-    };
-
-    let prefs: RefPtr<nsIPrefBranch> = match (*pref_service).query_interface() {
-        Some(pb) => pb,
-        _ => return Err(SecurityStateError::from("could not QI to nsIPrefBranch")),
-    };
-    let pref_name = match CString::new(name) {
-        Ok(n) => n,
-        _ => return Err(SecurityStateError::from("could not build pref name string")),
-    };
-
-    let mut pref_value: i32 = 0;
-    // We can't use GetIntPrefWithDefault because optional_argc is not
-    // supported. No matter, we can just check for failure and ignore
-    // any NS_ERROR_UNEXPECTED result.
-    let res = unsafe { (*prefs).GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32) };
-    let pref_value = match res {
-        NS_OK => pref_value,
-        NS_ERROR_UNEXPECTED => 0,
-        _ => return Err(SecurityStateError::from("could not read pref")),
-    };
-    if pref_value < 0 {
-        Ok(0)
-    } else {
-        Ok(pref_value as u32)
     }
+
+    unsafe { cert_storage.QueryInterface(iid, result).to_result() }
 }
 
 // This is a helper for creating a task that will perform a specific action on a background thread.
@@ -1449,17 +1338,12 @@ pub extern "C" fn cert_storage_constructor(
     if !outer.is_null() {
         return NS_ERROR_NO_AGGREGATION;
     }
-
     if !is_main_thread() {
         return NS_ERROR_NOT_SAME_THREAD;
     }
-
     match do_construct_cert_storage(outer, iid, result) {
-        Ok(_) => NS_OK,
-        Err(_) => {
-            // In future: log something so we know what went wrong?
-            NS_ERROR_FAILURE
-        }
+        Ok(()) => NS_OK,
+        Err(e) => e,
     }
 }
 
@@ -1505,7 +1389,7 @@ macro_rules! get_security_state {
 }
 
 #[derive(xpcom)]
-#[xpimplements(nsICertStorage, nsIObserver)]
+#[xpimplements(nsICertStorage)]
 #[refcnt = "atomic"]
 struct InitCertStorage {
     security_state: Arc<RwLock<SecurityState>>,
@@ -1521,37 +1405,6 @@ struct InitCertStorage {
 /// the main thread.
 #[allow(non_snake_case)]
 impl CertStorage {
-    unsafe fn setup_prefs(&self) -> Result<(), SecurityStateError> {
-        let int_prefs = [
-            "services.settings.security.onecrl.checked",
-            "security.onecrl.maximum_staleness_in_seconds",
-        ];
-
-        // Fetch add observers for relevant prefs
-        let pref_service = xpcom::services::get_PrefService().unwrap();
-        let prefs: RefPtr<nsIPrefBranch> = match (*pref_service).query_interface() {
-            Some(pb) => pb,
-            _ => return Err(SecurityStateError::from("could not QI to nsIPrefBranch")),
-        };
-
-        for pref in int_prefs.iter() {
-            let pref_nscstr = &nsCStr::from(pref.to_owned()) as &nsACString;
-            let rv = (*prefs).AddObserverImpl(pref_nscstr, self.coerce::<nsIObserver>(), false);
-            match read_int_pref(pref) {
-                Ok(up) => {
-                    let mut ss = self.security_state.write()?;
-                    // This doesn't use the DB, so no need to open it first. (Also since we do this
-                    // upon initialization, it would defeat the purpose of lazily opening the DB.)
-                    ss.pref_seen(pref, up);
-                }
-                Err(_) => return Err(SecurityStateError::from("could not read pref")),
-            };
-            assert!(rv.succeeded());
-        }
-
-        Ok(())
-    }
-
     unsafe fn HasPriorData(
         &self,
         data_type: u8,
@@ -1674,18 +1527,6 @@ impl CertStorage {
             }
             _ => NS_ERROR_FAILURE,
         }
-    }
-
-    unsafe fn IsBlocklistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
-        *fresh = false;
-        let ss = try_ns!(self.security_state.read());
-        // This doesn't use the db -> don't need to make sure it's open.
-        *fresh = match ss.is_blocklist_fresh() {
-            Ok(is_fresh) => is_fresh,
-            Err(_) => false,
-        };
-
-        NS_OK
     }
 
     unsafe fn SetFullCRLiteFilter(
@@ -1880,50 +1721,6 @@ impl CertStorage {
             Ok(()) => NS_OK,
             Err(_) => NS_ERROR_FAILURE,
         }
-    }
-
-    unsafe fn Observe(
-        &self,
-        subject: *const nsISupports,
-        topic: *const c_char,
-        pref_name: *const i16,
-    ) -> nserror::nsresult {
-        match CStr::from_ptr(topic).to_str() {
-            Ok("nsPref:changed") => {
-                let prefs: RefPtr<nsIPrefBranch> = match (*subject).query_interface() {
-                    Some(pb) => pb,
-                    _ => return NS_ERROR_FAILURE,
-                };
-
-                // Convert our wstring pref_name to a cstring (via nsCString's
-                // utf16 to utf8 conversion)
-                let mut len: usize = 0;
-                while (*(pref_name.offset(len as isize))) != 0 {
-                    len += 1;
-                }
-                let name_slice = slice::from_raw_parts(pref_name as *const u16, len);
-                let mut name_string = nsCString::new();
-                name_string.assign_utf16_to_utf8(name_slice);
-
-                let pref_name = match CString::new(name_string.as_str_unchecked()) {
-                    Ok(n) => n,
-                    _ => return NS_ERROR_FAILURE,
-                };
-
-                let mut pref_value: i32 = 0;
-                let res = prefs.GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32);
-                if !res.succeeded() {
-                    return res;
-                }
-                let pref_value = if pref_value < 0 { 0 } else { pref_value as u32 };
-
-                let mut ss = try_ns!(self.security_state.write());
-                // This doesn't use the db -> don't need to make sure it's open.
-                ss.pref_seen(name_string.as_str_unchecked(), pref_value);
-            }
-            _ => (),
-        }
-        NS_OK
     }
 }
 

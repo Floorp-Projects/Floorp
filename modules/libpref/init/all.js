@@ -2180,7 +2180,6 @@ pref("security.insecure_field_warning.contextual.enabled", false);
 pref("security.insecure_field_warning.ignore_local_ip_address", true);
 
 // Remote settings preferences
-// Note: if you change this, make sure to also review security.onecrl.maximum_staleness_in_seconds
 pref("services.settings.poll_interval", 86400); // 24H
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
 pref("services.settings.default_bucket", "main");
@@ -2204,10 +2203,6 @@ pref("extensions.abuseReport.amoDetailsURL", "https://services.addons.mozilla.or
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
-// Required blocklist freshness for OneCRL OCSP bypass (default is 30 hours)
-// Note that this needs to exceed the interval at which we update OneCRL data,
-// configured in services.settings.poll_interval .
-pref("security.onecrl.maximum_staleness_in_seconds", 108000);
 pref("extensions.blocklist.detailsURL", "https://blocked.cdn.mozilla.net/");
 pref("extensions.blocklist.itemURL", "https://blocked.cdn.mozilla.net/%blockID%.html");
 pref("extensions.blocklist.addonItemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/blocked-addon/%addonID%/%addonVersion%/");

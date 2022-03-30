@@ -116,7 +116,11 @@ void CompositorBridgeChild::AfterDestroy() {
   // The only time we should not issue Send__delete__ is if the actor is already
   // destroyed, e.g. the compositor process crashed.
   if (!mActorDestroyed) {
-    Send__delete__(this);
+    // We saw this send fail quite often with "Channel closing", probably a race
+    // with the other side closing or some event scheduling order.
+    if (GetIPCChannel()->CanSend()) {
+      Send__delete__(this);
+    }
     mActorDestroyed = true;
   }
 
