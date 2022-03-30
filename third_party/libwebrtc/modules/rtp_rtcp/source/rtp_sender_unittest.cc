@@ -2822,6 +2822,46 @@ TEST_P(RtpSenderTest, IgnoresNackAfterDisablingMedia) {
     EXPECT_LT(rtp_sender()->ReSendPacket(kSeqNum), 0);
 }
 
+TEST_P(RtpSenderTest, DoesntFecProtectRetransmissions) {
+  if (!GetParam().deferred_fec) {
+    // This test make sense only for deferred fec generation.
+    return;
+  }
+
+  // Set up retranmission without RTX, so that a plain copy of the old packet is
+  // re-sent instead.
+  const int64_t kRtt = 10;
+  rtp_sender()->SetSendingMediaStatus(true);
+  rtp_sender()->SetRtxStatus(kRtxOff);
+  rtp_sender_context_->packet_history_.SetStorePacketsStatus(
+      RtpPacketHistory::StorageMode::kStoreAndCull, 10);
+  rtp_sender_context_->packet_history_.SetRtt(kRtt);
+
+  // Send a packet so it is in the packet history, make sure to mark it for
+  // FEC protection.
+  std::unique_ptr<RtpPacketToSend> packet_to_pace;
+  EXPECT_CALL(mock_paced_sender_, EnqueuePackets)
+      .WillOnce([&](std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
+        packet_to_pace = std::move(packets[0]);
+      });
+
+  SendGenericPacket();
+  packet_to_pace->set_fec_protect_packet(true);
+  rtp_sender_context_->InjectPacket(std::move(packet_to_pace),
+                                    PacedPacketInfo());
+
+  ASSERT_EQ(1u, transport_.sent_packets_.size());
+
+  // Re-send packet, the retransmitted packet should not have the FEC protection
+  // flag set.
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(Each(Pointee(
+                  Property(&RtpPacketToSend::fec_protect_packet, false)))));
+
+  time_controller_.AdvanceTime(TimeDelta::Millis(kRtt));
+  EXPECT_GT(rtp_sender()->ReSendPacket(kSeqNum), 0);
+}
+
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
                          RtpSenderTest,
                          ::testing::Values(TestConfig{false, false},

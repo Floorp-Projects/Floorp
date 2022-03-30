@@ -342,6 +342,7 @@ int32_t RTPSender::ReSendPacket(uint16_t packet_id) {
     return -1;
   }
   packet->set_packet_type(RtpPacketMediaType::kRetransmission);
+  packet->set_fec_protect_packet(false);
   std::vector<std::unique_ptr<RtpPacketToSend>> packets;
   packets.emplace_back(std::move(packet));
   paced_sender_->EnqueuePackets(std::move(packets));
