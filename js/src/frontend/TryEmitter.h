@@ -190,6 +190,10 @@ class MOZ_STACK_CLASS TryEmitter {
     return tryOpOffset_ + BytecodeOffsetDiff(JSOpLength_Try);
   }
 
+  // Jump to the finally block. After the finally block executes,
+  // fall through to the code following the finally block.
+  [[nodiscard]] bool emitJumpToFinallyWithFallthrough();
+
  public:
   TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
 
