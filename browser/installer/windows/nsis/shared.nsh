@@ -488,20 +488,23 @@ ${RemoveDefaultBrowserAgentShortcut}
   ; https://searchfox.org/mozilla-central/source/browser/installer/windows/msix/AppxManifest.xml.in.
   ; and `os.environment.launched_to_handle` and `os.environment.invoked_to_handle` telemetry in
   ; https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm.
-  ${AddAssociationIfNoneExist} ".pdf" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".oga" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".ogg" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".ogv" "FirefoxHTML$5"
-  ${AddAssociationIfNoneExist} ".pdf" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".webm" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".svg" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".webp"  "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".avif" "FirefoxHTML$5"
 
-  ; An empty string is used for the 5th param because FirefoxHTML is not a
-  ; protocol handler
+  ${AddAssociationIfNoneExist} ".pdf" "FirefoxPDF$5"
+
+  ; An empty string is used for the 5th param because FirefoxHTML- is not a
+  ; protocol handler.  Ditto for FirefoxPDF-.
   ${AddDisabledDDEHandlerValues} "FirefoxHTML$5" "$2" "$8,1" \
                                  "${AppRegName} HTML Document" ""
+
+  ${AddDisabledDDEHandlerValues} "FirefoxPDF$5" "$2" "$8,1" \
+                                 "${AppRegName} PDF Document" ""
 
   ${AddDisabledDDEHandlerValues} "FirefoxURL$5" "$2" "$8,1" "${AppRegName} URL" \
                                  "true"
@@ -582,13 +585,14 @@ ${RemoveDefaultBrowserAgentShortcut}
 
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML$2"
-  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".pdf"   "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".svg"   "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".webp"  "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".avif"  "FirefoxHTML$2"
+
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".pdf"   "FirefoxPDF$2"
 
   WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "$1"
 
@@ -976,6 +980,13 @@ ${RemoveDefaultBrowserAgentShortcut}
       ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" \
                                      "${AppRegName} HTML Document" ""
     ${EndIf}
+  ${EndIf}
+
+  ${IsHandlerForInstallDir} "FirefoxPDF-$AppUserModelID" $R9
+  ${If} "$R9" == "true"
+    ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,1" \
+                                   "${AppRegName} PDF Document" ""
+    ; We've never supported bare "FirefoxPDF".
   ${EndIf}
 
   ${IsHandlerForInstallDir} "FirefoxURL-$AppUserModelID" $R9

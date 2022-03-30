@@ -300,7 +300,8 @@ nsWindowsShellService::CheckAllProgIDsExist(bool* aResult) {
   }
   *aResult =
       CheckProgIDExists(FormatProgID(L"FirefoxURL", aumid.get()).get()) &&
-      CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get());
+      CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get()) &&
+      CheckProgIDExists(FormatProgID(L"FirefoxPDF", aumid.get()).get());
   return NS_OK;
 }
 

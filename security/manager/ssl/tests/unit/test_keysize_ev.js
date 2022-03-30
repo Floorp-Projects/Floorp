@@ -101,9 +101,7 @@ async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // in such a build.
   let intFullName = intOKName + "-" + rootOKName;
   let eeFullName = eeOKName + "-" + intOKName + "-" + rootOKName;
-  let expectedNamesForOCSP = gEVExpected
-    ? [intFullName, eeFullName]
-    : [eeFullName];
+  let expectedNamesForOCSP = [eeFullName];
   await keySizeTestForEV(
     expectedNamesForOCSP,
     rootOKCertFileName,
@@ -142,7 +140,7 @@ async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // adequate size for DV
   intFullName = intOKName + "-" + rootOKName;
   eeFullName = eeNotOKName + "-" + intOKName + "-" + rootOKName;
-  expectedNamesForOCSP = gEVExpected ? [intFullName, eeFullName] : [eeFullName];
+  expectedNamesForOCSP = [eeFullName];
   await keySizeTestForEV(
     expectedNamesForOCSP,
     rootOKCertFileName,
