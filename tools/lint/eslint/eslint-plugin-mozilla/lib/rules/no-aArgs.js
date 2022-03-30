@@ -18,6 +18,14 @@ function deHungarianize(name) {
 }
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-aArgs.html",
+    },
+    type: "layout",
+  },
+
   create(context) {
     function checkFunction(node) {
       for (var i = 0; i < node.params.length; i++) {

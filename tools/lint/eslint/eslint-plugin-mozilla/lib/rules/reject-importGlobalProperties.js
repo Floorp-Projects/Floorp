@@ -14,6 +14,10 @@ const privilegedGlobals = Object.keys(
 
 module.exports = {
   meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-importGlobalProperties.html",
+    },
     messages: {
       unexpectedCall: "Unexpected call to Cu.importGlobalProperties",
       unexpectedCallWebIdl:
@@ -21,7 +25,6 @@ module.exports = {
     },
     schema: [
       {
-        // XXX Better name?
         enum: ["everything", "allownonwebidl"],
       },
     ],

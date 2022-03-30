@@ -40,6 +40,14 @@ var sandboxGlobals = [
 ];
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/import-content-task-globals.html",
+    },
+    type: "problem",
+  },
+
   create(context) {
     return {
       "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(

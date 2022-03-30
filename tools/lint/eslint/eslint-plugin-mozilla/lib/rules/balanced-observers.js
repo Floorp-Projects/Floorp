@@ -10,6 +10,14 @@
 "use strict";
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/balanced-observers.html",
+    },
+    type: "problem",
+  },
+
   create(context) {
     var addedObservers = [];
     var removedObservers = [];

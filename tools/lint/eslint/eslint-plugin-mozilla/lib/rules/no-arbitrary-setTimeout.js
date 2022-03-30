@@ -14,10 +14,10 @@ var testTypes = new Set(["browser", "xpcshell"]);
 module.exports = {
   meta: {
     docs: {
-      description: "disallow setTimeout with non-zero values in tests",
-      category: "Best Practices",
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-arbitrary-setTimeout.html",
     },
-    schema: [],
+    type: "problem",
   },
 
   create(context) {
