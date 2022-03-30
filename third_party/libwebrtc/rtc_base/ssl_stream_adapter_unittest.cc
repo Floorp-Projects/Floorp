@@ -231,10 +231,10 @@ class SSLDummyStreamTLS : public SSLDummyStreamBase {
       : SSLDummyStreamBase(test, side, in, out) {}
 };
 
-class BufferQueueStream : public rtc::BufferQueue, public rtc::StreamInterface {
+class BufferQueueStream : public rtc::StreamInterface {
  public:
   BufferQueueStream(size_t capacity, size_t default_size)
-      : rtc::BufferQueue(capacity, default_size) {}
+      : buffer_(capacity, default_size) {}
 
   // Implementation of abstract StreamInterface methods.
 
@@ -246,9 +246,13 @@ class BufferQueueStream : public rtc::BufferQueue, public rtc::StreamInterface {
                          size_t buffer_len,
                          size_t* read,
                          int* error) override {
-    if (!ReadFront(buffer, buffer_len, read)) {
+    const bool was_writable = buffer_.is_writable();
+    if (!buffer_.ReadFront(buffer, buffer_len, read))
       return rtc::SR_BLOCK;
-    }
+
+    if (!was_writable)
+      NotifyWritableForTest();
+
     return rtc::SR_SUCCESS;
   }
 
@@ -257,9 +261,13 @@ class BufferQueueStream : public rtc::BufferQueue, public rtc::StreamInterface {
                           size_t data_len,
                           size_t* written,
                           int* error) override {
-    if (!WriteBack(data, data_len, written)) {
+    const bool was_readable = buffer_.is_readable();
+    if (!buffer_.WriteBack(data, data_len, written))
       return rtc::SR_BLOCK;
-    }
+
+    if (!was_readable)
+      NotifyReadableForTest();
+
     return rtc::SR_SUCCESS;
   }
 
@@ -267,9 +275,12 @@ class BufferQueueStream : public rtc::BufferQueue, public rtc::StreamInterface {
   void Close() override {}
 
  protected:
-  void NotifyReadableForTest() override { PostEvent(rtc::SE_READ, 0); }
+  void NotifyReadableForTest() { PostEvent(rtc::SE_READ, 0); }
 
-  void NotifyWritableForTest() override { PostEvent(rtc::SE_WRITE, 0); }
+  void NotifyWritableForTest() { PostEvent(rtc::SE_WRITE, 0); }
+
+ private:
+  rtc::BufferQueue buffer_;
 };
 
 class SSLDummyStreamDTLS : public SSLDummyStreamBase {

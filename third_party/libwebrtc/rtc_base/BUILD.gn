@@ -151,6 +151,7 @@ rtc_library("rtc_base_approved") {
     ":stringutils",
     ":thread_checker",
     ":timeutils",
+    "synchronization:sequence_checker",
   ]
 }
 
