@@ -77,7 +77,7 @@ function scrubMailtoHandlers(handlerInfo) {
 
 ("use strict");
 
-add_setup(async function() {
+add_task(async function setup() {
   // Create our dummy handlers
   let handler1 = Cc["@mozilla.org/uriloader/web-handler-app;1"].createInstance(
     Ci.nsIWebHandlerApp

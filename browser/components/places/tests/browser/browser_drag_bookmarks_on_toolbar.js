@@ -167,7 +167,7 @@ function getExpectedDataForPlacesNode(aNode) {
   return [wrappedNode];
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   var toolbar = document.getElementById("PersonalToolbar");
   var wasCollapsed = toolbar.collapsed;
 

@@ -16,7 +16,7 @@ EXPECTED_BREACH = {
 
 const SORT_PREF_NAME = "signon.management.page.sort";
 
-add_setup(async function() {
+add_task(async function setup() {
   TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 1;
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   info(`TEST_LOGIN1 added with guid=${TEST_LOGIN1.guid}`);

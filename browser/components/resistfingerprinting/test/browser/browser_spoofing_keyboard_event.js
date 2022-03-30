@@ -2147,7 +2147,7 @@ function eventConsumer(aEvent) {
   aEvent.preventDefault();
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });

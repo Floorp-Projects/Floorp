@@ -54,7 +54,7 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SimpleTest.promiseFocus(window);
 });
 

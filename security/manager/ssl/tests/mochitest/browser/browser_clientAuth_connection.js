@@ -123,7 +123,7 @@ const gClientAuthDialogs = {
   QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogs"]),
 };
 
-add_setup(async function() {
+add_task(async function setup() {
   let clientAuthDialogsCID = MockRegistrar.register(
     "@mozilla.org/nsClientAuthDialogs;1",
     gClientAuthDialogs

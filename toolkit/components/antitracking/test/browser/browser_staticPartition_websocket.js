@@ -188,7 +188,7 @@ async function runTest(partitioned) {
   await SpecialPowers.popPrefEnv();
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // This test relies on a WS connection timeout > 6 seconds.
   await SpecialPowers.pushPrefEnv({
     set: [["network.websocket.timeout.open", 20]],

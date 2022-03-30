@@ -3,7 +3,7 @@
 
 // Tests ime composition handling on searchbar.
 
-add_setup(async function() {
+add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
 
   await SearchTestUtils.installSearchExtension();

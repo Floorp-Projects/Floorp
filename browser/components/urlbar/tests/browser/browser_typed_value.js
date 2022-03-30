@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     gURLBar.handleRevert();

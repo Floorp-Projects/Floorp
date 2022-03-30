@@ -5,7 +5,7 @@
 var plaintextURL = "data:text/plain,hello+world";
 var htmlURL = "about:mozilla";
 
-add_setup(async function() {
+add_task(async function setup() {
   registerCleanupFunction(function() {
     SpecialPowers.clearUserPref("view_source.tab_size");
     SpecialPowers.clearUserPref("view_source.wrap_long_lines");

@@ -12,7 +12,7 @@ function failIfSidebarFocusedFires() {
   ok(false, "This event shouldn't have fired");
 }
 
-add_setup(function() {
+add_task(function setup() {
   CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
   registerCleanupFunction(() =>
     CustomizableUI.removeWidgetFromArea("sidebar-button")

@@ -16,7 +16,7 @@ const PREF_MAX_SEARCH_BANNER_SHOW_COUNT =
   "browser.search.separatePrivateDefault.ui.banner.max";
 const MAX_SHOW_COUNT = 5;
 
-add_setup(async function() {
+add_task(async function setup() {
   SpecialPowers.pushPrefEnv({
     set: [
       [PREF_UI_ENABLED, false],

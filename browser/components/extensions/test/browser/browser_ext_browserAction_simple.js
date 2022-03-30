@@ -86,7 +86,7 @@ async function testAction(manifest_version) {
   await waitForConsole;
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });

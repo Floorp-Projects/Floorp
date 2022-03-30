@@ -9,7 +9,7 @@ const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank")
 // This magic value of 2 means that by default, when content tries
 // to open a new window, it'll actually open in a new window instead
 // of a new tab.
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.link.open_newwindow", 2]],
   });

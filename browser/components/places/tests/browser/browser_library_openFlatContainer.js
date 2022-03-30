@@ -9,7 +9,7 @@
 
 var library;
 
-add_setup(async function() {
+add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 

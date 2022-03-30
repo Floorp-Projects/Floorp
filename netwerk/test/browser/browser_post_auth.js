@@ -22,7 +22,7 @@ const FOLDER = getRootDirectory(gTestPath).replace(
   "http://mochi.test:8888/"
 );
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1711676
     // Disable bfcache for Fission for now.

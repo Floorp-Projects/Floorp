@@ -16,7 +16,7 @@ const SUPPORT_URL = Services.urlFormatter.formatURL(
   Services.prefs.getStringPref("app.support.baseURL")
 );
 
-add_setup(async function() {
+add_task(async function setup() {
   gProvider = new MockProvider();
 });
 

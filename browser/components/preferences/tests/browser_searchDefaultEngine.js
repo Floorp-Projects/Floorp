@@ -7,7 +7,7 @@ const { SearchTestUtils } = ChromeUtils.import(
 
 SearchTestUtils.init(this);
 
-add_setup(async function() {
+add_task(async function setup() {
   await SearchTestUtils.installSearchExtension({
     name: "engine1",
     search_url: "https://example.com/engine1",

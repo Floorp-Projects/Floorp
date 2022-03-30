@@ -12,7 +12,7 @@ const LOCALE_ADDON_ID = "postponed-langpack@mochi.test";
 
 let gProvider;
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });

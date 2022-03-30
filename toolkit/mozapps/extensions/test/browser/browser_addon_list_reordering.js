@@ -66,7 +66,7 @@ function waitForTransitionEnd(...els) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Ensure prefers-reduced-motion isn't set. Some linux environments will have
   // this enabled by default.
   await SpecialPowers.pushPrefEnv({

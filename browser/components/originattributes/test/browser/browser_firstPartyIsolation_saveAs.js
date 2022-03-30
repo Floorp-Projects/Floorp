@@ -32,7 +32,7 @@ MockFilePicker.init(window);
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;
 
-add_setup(async function() {
+add_task(async function setup() {
   info("Setting the prefs.");
 
   await SpecialPowers.pushPrefEnv({

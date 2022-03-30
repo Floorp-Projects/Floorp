@@ -101,7 +101,7 @@ function openDeleteCertConfirmDialog(tabID) {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   for (let testCase of TEST_CASES) {
     let cert = null;
     if (testCase.certFilename) {

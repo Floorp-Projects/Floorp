@@ -32,7 +32,7 @@ const REMOTE_TAB = {
   ],
 };
 
-add_setup(async function() {
+add_task(async function setup() {
   sandbox = sinon.createSandbox();
 
   let originalSyncedTabsInternal = SyncedTabs._internal;

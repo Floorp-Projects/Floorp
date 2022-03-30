@@ -6,7 +6,7 @@
 const TEST_URL1 = "http://example.com/1";
 const TEST_URL2 = "http://example.com/2";
 
-add_setup(async function() {
+add_task(async function setup() {
   let oldHomepagePref = Services.prefs.getCharPref("browser.startup.homepage");
 
   await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });

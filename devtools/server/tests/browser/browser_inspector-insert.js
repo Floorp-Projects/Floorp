@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );

@@ -82,7 +82,7 @@ function assertSearchModeScalars(entry, engineOrSource, resultIndex = -1) {
   Services.telemetry.clearEvents();
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable tab-to-search onboarding results for general tests. They are

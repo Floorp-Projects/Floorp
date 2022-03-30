@@ -44,7 +44,7 @@ function promiseHelperAppDialog() {
 
 let mockHelperAppService;
 
-add_setup(async function() {
+add_task(async function setup() {
   // Replace the real helper app dialog with our own.
   mockHelperAppService = ComponentUtils._getFactory(HelperAppLauncherDialog);
   registrar.registerFactory(

@@ -61,7 +61,7 @@ async function getSites(extension, options) {
   return extension.awaitMessage("sites");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

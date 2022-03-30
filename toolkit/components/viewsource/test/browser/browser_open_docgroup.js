@@ -6,7 +6,7 @@
  * bug 1340719.
  */
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.throw_on_docgroup_mismatch.enabled", true]],
   });

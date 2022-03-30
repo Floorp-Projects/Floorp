@@ -12,7 +12,7 @@ function mockState(state) {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   let aboutLoginsTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",

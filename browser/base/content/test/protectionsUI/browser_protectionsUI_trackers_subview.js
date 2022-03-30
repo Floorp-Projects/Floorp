@@ -13,7 +13,7 @@ const TRACKING_PAGE =
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 
-add_setup(async function() {
+add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {

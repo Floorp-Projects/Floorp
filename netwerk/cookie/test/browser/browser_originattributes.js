@@ -26,7 +26,7 @@ async function openTabInUserContext(uri, userContextId) {
   return { tab, browser };
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // make sure userContext is enabled.
   await new Promise(resolve => {
     SpecialPowers.pushPrefEnv(

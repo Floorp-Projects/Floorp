@@ -113,7 +113,7 @@ async function runTest(sites, deleteDataFunc) {
   }
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.quotaManager.testing", true],

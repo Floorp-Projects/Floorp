@@ -23,7 +23,7 @@ async function waitForDialog() {
   };
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   let login = LoginTestUtils.testData.formLogin({
     origin: "https://example.com",
     formActionOrigin: "https://example.com",
