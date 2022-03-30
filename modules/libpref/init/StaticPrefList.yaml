@@ -8739,6 +8739,13 @@
   value: 5000
   mirror: always
 
+# Specifies how many times we restart RDD process after crash till we give up.
+# After first RDD restart we disable HW acceleration on Linux.
+- name: media.rdd-process.max-crashes
+  type: RelaxedAtomicInt32
+  value: 2
+  mirror: always
+
 #ifdef MOZ_FFMPEG
 - name: media.rdd-ffmpeg.enabled
   type: RelaxedAtomicBool
