@@ -372,6 +372,7 @@ add_task(async function bookmarkTagsChanged() {
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
           { name: "url", check: v => v == uri.spec },
+          { name: "title", check: v => v == "" },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -426,6 +427,7 @@ add_task(async function bookmarkTagsChanged() {
             check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER,
           },
           { name: "url", check: v => v === "" },
+          { name: "title", check: v => v == TAG },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -551,6 +553,7 @@ add_task(async function bookmarkItemRemoved_bookmark() {
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
           { name: "url", check: v => v === uri.spec },
+          { name: "title", check: v => v == "New title" },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -591,6 +594,7 @@ add_task(async function bookmarkItemRemoved_separator() {
             check: v => v === PlacesUtils.bookmarks.TYPE_SEPARATOR,
           },
           { name: "url", check: v => v === "" },
+          { name: "title", check: v => v == "" },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -631,6 +635,7 @@ add_task(async function bookmarkItemRemoved_folder() {
             check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER,
           },
           { name: "url", check: v => v === "" },
+          { name: "title", check: v => v == "Folder 1" },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -791,6 +796,7 @@ add_task(async function bookmarkItemRemoved_folder_recursive() {
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
           { name: "url", check: v => v === uri.spec },
+          { name: "title", check: v => v == BMTITLE },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -817,6 +823,7 @@ add_task(async function bookmarkItemRemoved_folder_recursive() {
             check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER,
           },
           { name: "url", check: v => v === "" },
+          { name: "title", check: v => v == title },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -843,6 +850,7 @@ add_task(async function bookmarkItemRemoved_folder_recursive() {
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
           { name: "url", check: v => v === uri.spec },
+          { name: "title", check: v => v == BMTITLE },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -869,6 +877,7 @@ add_task(async function bookmarkItemRemoved_folder_recursive() {
             check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER,
           },
           { name: "url", check: v => v === "" },
+          { name: "title", check: v => v == title },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),

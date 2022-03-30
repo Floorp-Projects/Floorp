@@ -9,10 +9,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
@@ -27,14 +23,11 @@ module.exports = {
   meta: {
     docs: {
       description: "disallow multiple document.l10n.formatValue calls",
-      category: "Best Practices",
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-formatValues.html",
     },
-    schema: [],
+    type: "problem",
   },
-
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
 
   create(context) {
     function enterBlock() {

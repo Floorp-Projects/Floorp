@@ -135,7 +135,7 @@ function findCertByCommonName(commonName) {
   return null;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   cert = findCertByCommonName("Mochitest client");
   isnot(cert, null, "Should be able to find the test client cert");
 });

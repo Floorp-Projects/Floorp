@@ -214,7 +214,7 @@ async function getImageSizeFromClipboard(browser) {
   });
 }
 
-add_task(async function common_initialize() {
+add_setup(async function common_initialize() {
   // Ensure Screenshots is initially enabled for all tests
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
   const isEnabled = addon.enabled;

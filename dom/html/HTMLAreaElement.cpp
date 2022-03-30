@@ -50,8 +50,6 @@ nsresult HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-bool HTMLAreaElement::IsLink(nsIURI** aURI) const { return IsHTMLLink(aURI); }
-
 void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
@@ -108,6 +106,9 @@ nsresult HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 void HTMLAreaElement::ToString(nsAString& aSource) { GetHref(aSource); }
 
 already_AddRefed<nsIURI> HTMLAreaElement::GetHrefURI() const {
+  if (nsCOMPtr<nsIURI> uri = GetCachedURI()) {
+    return uri.forget();
+  }
   return GetHrefURIForAnchors();
 }
 

@@ -50,6 +50,7 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] {
   background-color: transparent;
   min-width: 504px;
+  overflow: hidden;
 }
 :root[dialogroot] body {
   padding: 0;
@@ -57,8 +58,14 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer {
   overflow: visible;
 }
+:root[dialogroot] .onboardingContainer:dir(rtl) {
+  transform: unset;
+}
 :root[dialogroot] .onboardingContainer .screen {
   background-color: transparent;
+}
+:root[dialogroot] .onboardingContainer .screen:dir(rtl) {
+  transform: unset;
 }
 
 .onboardingContainer {

@@ -5,7 +5,7 @@
 
 const URL = "about:config";
 
-add_task(async function setup() {
+add_setup(async function() {
   // Make sure that the field of which we restore the state is visible on load.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.aboutConfig.showWarning", false]],

@@ -3,7 +3,7 @@
 
 const MAX_PLACEABLE_LENGTH = 2500;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.added", "=".repeat(MAX_PLACEABLE_LENGTH)],

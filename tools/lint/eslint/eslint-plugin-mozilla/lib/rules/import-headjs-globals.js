@@ -9,39 +9,41 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 var fs = require("fs");
 var helpers = require("../helpers");
 var globals = require("../globals");
 
-module.exports = function(context) {
-  function importHead(path, node) {
-    try {
-      let stats = fs.statSync(path);
-      if (!stats.isFile()) {
-        return;
-      }
-    } catch (e) {
+function importHead(context, path, node) {
+  try {
+    let stats = fs.statSync(path);
+    if (!stats.isFile()) {
       return;
     }
-
-    let newGlobals = globals.getGlobalsForFile(path);
-    helpers.addGlobals(newGlobals, context.getScope());
+  } catch (e) {
+    return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Public
-  // ---------------------------------------------------------------------------
+  let newGlobals = globals.getGlobalsForFile(path);
+  helpers.addGlobals(newGlobals, context.getScope());
+}
 
-  return {
-    Program(node) {
-      let heads = helpers.getTestHeadFiles(context);
-      for (let head of heads) {
-        importHead(head, node);
-      }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/import-headjs-globals.html",
     },
-  };
+    type: "problem",
+  },
+
+  create(context) {
+    return {
+      Program(node) {
+        let heads = helpers.getTestHeadFiles(context);
+        for (let head of heads) {
+          importHead(context, head, node);
+        }
+      },
+    };
+  },
 };

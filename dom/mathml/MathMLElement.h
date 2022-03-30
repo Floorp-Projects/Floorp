@@ -75,13 +75,12 @@ class MathMLElement final : public MathMLElementBase,
   bool GetIncrementScriptLevel() const { return mIncrementScriptLevel; }
 
   int32_t TabIndexDefault() final;
-  virtual bool IsFocusableInternal(int32_t* aTabIndex,
-                                   bool aWithMouse) override;
-  virtual bool IsLink(nsIURI** aURI) const override;
-  virtual void GetLinkTarget(nsAString& aTarget) override;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const override;
 
-  virtual void NodeInfoChanged(Document* aOldDoc) override {
+  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+  void GetLinkTarget(nsAString& aTarget) override;
+  already_AddRefed<nsIURI> GetHrefURI() const override;
+
+  void NodeInfoChanged(Document* aOldDoc) override {
     ClearHasPendingLinkUpdate();
     MathMLElementBase::NodeInfoChanged(aOldDoc);
   }

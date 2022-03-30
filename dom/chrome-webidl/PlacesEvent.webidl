@@ -224,6 +224,7 @@ dictionary PlacesBookmarkRemovedInit {
   required long long parentId;
   required unsigned short itemType;
   required DOMString url;
+  required DOMString title;
   required ByteString guid;
   required ByteString parentGuid;
   required unsigned short source;
@@ -239,6 +240,11 @@ interface PlacesBookmarkRemoved : PlacesBookmark {
    * The item's index in the folder.
    */
   readonly attribute long index;
+
+  /**
+   * The title of the the removed item.
+   */
+  readonly attribute DOMString title;
 
   /**
    * The item is a descendant of an item whose notification has been sent out.

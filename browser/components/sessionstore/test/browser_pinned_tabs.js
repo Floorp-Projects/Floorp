@@ -33,7 +33,7 @@ function promiseSessionStoreLoads(numberOfLoads) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.sessionstore.restore_on_demand", true],

@@ -1,6 +1,6 @@
 const TEST_ORIGIN = "https://example.com";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });

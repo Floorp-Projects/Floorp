@@ -112,7 +112,7 @@ async function checkGeolocation(browser, frameId, expect) {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await new Promise(r => {
     SpecialPowers.pushPrefEnv(
       {

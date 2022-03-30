@@ -7,7 +7,7 @@ function restore_prefs() {
 }
 
 let ORIGINAL_PREF_VALUE = undefined;
-add_task(async function setup() {
+add_setup(async function() {
   // It seems that this pref is given a special testing value for some reason.
   // Unset that value for this test, but save the old value
   if (Services.prefs.prefHasUserValue("dom.disable_open_during_load")) {

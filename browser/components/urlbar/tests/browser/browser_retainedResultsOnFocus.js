@@ -69,7 +69,7 @@ async function checkDoesNotOpenOnFocus(win) {
   await promiseState;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true]],
   });

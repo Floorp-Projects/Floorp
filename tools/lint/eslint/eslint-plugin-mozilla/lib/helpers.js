@@ -451,7 +451,11 @@ module.exports = {
     variable.eslintExplicitGlobal = false;
     variable.writeable = writable;
     if (node) {
-      variable.defs.push({ node, name: { name } });
+      variable.defs.push({
+        type: "Variable",
+        node,
+        name: { name, parent: node.parent },
+      });
       variable.identifiers.push(node);
     }
 

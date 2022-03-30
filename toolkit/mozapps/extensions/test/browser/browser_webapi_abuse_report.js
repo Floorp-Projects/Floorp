@@ -60,7 +60,7 @@ async function assertSubmittedReport(expectedReportProps) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await AbuseReportTestUtils.setup();
 
   await SpecialPowers.pushPrefEnv({

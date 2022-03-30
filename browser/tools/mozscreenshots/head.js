@@ -64,4 +64,4 @@ function shouldCapture() {
   return true;
 }
 
-add_task(setup);
+add_setup(setup);

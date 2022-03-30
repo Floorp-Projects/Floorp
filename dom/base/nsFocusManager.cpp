@@ -4721,6 +4721,10 @@ Element* nsFocusManager::GetRootForChildDocument(nsIContent* aContent) {
   return GetRootForFocus(window, subdoc, true, true);
 }
 
+static bool IsLink(nsIContent* aContent) {
+  return aContent->IsElement() && aContent->AsElement()->IsLink();
+}
+
 void nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
                                          nsIContent* aStartSelection,
                                          nsIContent* aEndSelection,
@@ -4743,9 +4747,7 @@ void nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
     // Keep testing while selectionContent is equal to something,
     // eventually we'll run out of ancestors
 
-    nsCOMPtr<nsIURI> uri;
-    if (testContent == currentFocus ||
-        testContent->IsLink(getter_AddRefs(uri))) {
+    if (testContent == currentFocus || IsLink(testContent)) {
       testContent.forget(aFocusedContent);
       return;
     }
@@ -4774,9 +4776,7 @@ void nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
 
     // We're looking for any focusable link that could be part of the
     // main document's selection.
-    nsCOMPtr<nsIURI> uri;
-    if (testContent == currentFocus ||
-        testContent->IsLink(getter_AddRefs(uri))) {
+    if (testContent == currentFocus || IsLink(testContent)) {
       testContent.forget(aFocusedContent);
       return;
     }

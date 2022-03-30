@@ -1035,11 +1035,6 @@ bool nsIContent::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   return false;
 }
 
-bool FragmentOrElement::IsLink(nsIURI** aURI) const {
-  *aURI = nullptr;
-  return false;
-}
-
 void nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
   ExtendedContentSlots()->mAssignedSlot = aSlot;

@@ -257,8 +257,7 @@ impl InstructionWriter {
             | Opcode::CallIgnoresRv
             | Opcode::Eval
             | Opcode::CallIter
-            | Opcode::StrictEval
-            | Opcode::FunCall => {
+            | Opcode::StrictEval => {
                 // callee, this, arguments...
                 2 + (argc as usize)
             }
@@ -496,6 +495,10 @@ impl InstructionWriter {
 
     pub fn to_string(&mut self) {
         self.emit_op(Opcode::ToString);
+    }
+
+    pub fn is_null_or_undefined(&mut self) {
+        self.emit_op(Opcode::IsNullOrUndefined);
     }
 
     pub fn global_this(&mut self) {
@@ -786,11 +789,6 @@ impl InstructionWriter {
 
     pub fn call_iter(&mut self, argc: u16) {
         self.emit_argc_op(Opcode::CallIter, argc);
-        self.write_u16(argc);
-    }
-
-    pub fn fun_call(&mut self, argc: u16) {
-        self.emit_argc_op(Opcode::FunCall, argc);
         self.write_u16(argc);
     }
 

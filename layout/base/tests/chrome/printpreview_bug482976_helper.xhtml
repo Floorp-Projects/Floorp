@@ -32,7 +32,7 @@ function printpreview() {
     onStatusChange: function(webProgress, request, status, message) { },
     onContentBlockingEvent: function(webProgress, request, event) { },
     QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIWebProgessListener) ||
+      if (iid.equals(Ci.nsIWebProgressListener) ||
           iid.equals(Ci.nsISupportsWeakReference))
             return this;
       throw Components.Exception("", Cr.NS_NOINTERFACE);

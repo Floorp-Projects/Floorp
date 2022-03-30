@@ -61,7 +61,7 @@ async function addGroupTest(shouldRebuild) {
   assertSnapshotGroup(groups[0], {
     title: "example",
     builder: "domain",
-    builderMetadata: { domain: "example.com" },
+    builderMetadata: { title: "example", domain: "example.com" },
   });
 
   let urls = await SnapshotGroups.getUrls({ id: groups[0].id });
@@ -95,7 +95,7 @@ async function modifyGroupTest(shouldRebuild) {
   assertSnapshotGroup(groups[0], {
     title: "example",
     builder: "domain",
-    builderMetadata: { domain: "example.com" },
+    builderMetadata: { title: "example", domain: "example.com" },
   });
   let urls = await SnapshotGroups.getUrls({ id: groups[0].id });
   Assert.deepEqual(

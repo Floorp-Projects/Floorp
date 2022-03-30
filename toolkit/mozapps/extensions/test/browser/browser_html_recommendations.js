@@ -14,7 +14,7 @@ const SUPPORT_URL = "http://support.allizom.org/support-dummy/";
 const SUMO_URL = SUPPORT_URL + "add-on-badges";
 const SUPPORTED_BADGES = ["recommended", "line", "verified"];
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["app.support.baseURL", SUPPORT_URL]],
   });

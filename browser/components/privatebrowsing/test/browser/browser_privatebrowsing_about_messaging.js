@@ -58,7 +58,7 @@ async function setupMSExperimentWithMessage(message) {
   return doExperimentCleanup;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   let { win } = await openAboutPrivateBrowsing();
   await BrowserTestUtils.closeWindow(win);
 });

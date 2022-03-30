@@ -93,6 +93,9 @@ static inline void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
 static inline void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv) {}
 
+static inline void profiler_record_wakeup_count(
+    const nsACString& aProcessType) {}
+
 #else  // !MOZ_GECKO_PROFILER
 
 #  include "js/ProfilingStack.h"

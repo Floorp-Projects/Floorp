@@ -950,6 +950,8 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::Bug1116812:
     case DeviceFamily::Bug1155608:
     case DeviceFamily::Bug1207665:
+      vendor = DeviceVendor::Intel;
+      break;
     case DeviceFamily::NvidiaAll:
     case DeviceFamily::NvidiaBlockD3D9Layers:
     case DeviceFamily::NvidiaRolloutWebRender:

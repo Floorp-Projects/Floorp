@@ -7,7 +7,7 @@ const COMMENTS = "Here's my test comment!";
 // Avoid timeouts, as in bug 1325530
 requestLongerTimeout(2);
 
-add_task(async function setup() {
+add_setup(async function() {
   await setupLocalCrashReportServer();
 });
 

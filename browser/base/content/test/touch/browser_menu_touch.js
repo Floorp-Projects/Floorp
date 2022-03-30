@@ -112,7 +112,7 @@ async function openAndCheckCustomizationUIMenu(target) {
 }
 
 // Ensure that we can run touch events properly for windows [10]
-add_task(async function setup() {
+add_setup(async function() {
   let isWindows = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
   await SpecialPowers.pushPrefEnv({
     set: [["apz.test.fails_with_native_injection", isWindows]],

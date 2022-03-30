@@ -239,7 +239,7 @@ async function test_upgrade_pending_uninstall_disabled_v1_to_v2() {
   is(get_list_item_count(), 0, "Should be no items in the list");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   xpi1 = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",

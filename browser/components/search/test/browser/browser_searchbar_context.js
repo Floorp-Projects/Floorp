@@ -9,7 +9,7 @@
 
 let win;
 
-add_task(async function setup() {
+add_setup(async function() {
   await gCUITestUtils.addSearchBar();
 
   win = await BrowserTestUtils.openNewBrowserWindow();

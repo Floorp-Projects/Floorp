@@ -32,7 +32,7 @@ function assertURL(result, expectedUrl, keyword, input, postData) {
 
 const TEST_URL = `${TEST_BASE_URL}print_postdata.sjs`;
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.keywords.insert({
     keyword: "get",
     url: TEST_URL + "?q=%s",

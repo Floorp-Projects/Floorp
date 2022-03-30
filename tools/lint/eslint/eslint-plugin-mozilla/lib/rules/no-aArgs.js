@@ -9,48 +9,46 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
+function isPrefixed(name) {
+  return name.length >= 2 && /^a[A-Z]/.test(name);
+}
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+function deHungarianize(name) {
+  return name.substring(1, 2).toLowerCase() + name.substring(2, name.length);
+}
 
-  function isPrefixed(name) {
-    return name.length >= 2 && /^a[A-Z]/.test(name);
-  }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-aArgs.html",
+    },
+    type: "layout",
+  },
 
-  function deHungarianize(name) {
-    return name.substring(1, 2).toLowerCase() + name.substring(2, name.length);
-  }
-
-  function checkFunction(node) {
-    for (var i = 0; i < node.params.length; i++) {
-      var param = node.params[i];
-      if (param.name && isPrefixed(param.name)) {
-        var errorObj = {
-          name: param.name,
-          suggestion: deHungarianize(param.name),
-        };
-        context.report(
-          param,
-          "Parameter '{{name}}' uses Hungarian Notation, " +
-            "consider using '{{suggestion}}' instead.",
-          errorObj
-        );
+  create(context) {
+    function checkFunction(node) {
+      for (var i = 0; i < node.params.length; i++) {
+        var param = node.params[i];
+        if (param.name && isPrefixed(param.name)) {
+          var errorObj = {
+            name: param.name,
+            suggestion: deHungarianize(param.name),
+          };
+          context.report(
+            param,
+            "Parameter '{{name}}' uses Hungarian Notation, " +
+              "consider using '{{suggestion}}' instead.",
+            errorObj
+          );
+        }
       }
     }
-  }
 
-  // ---------------------------------------------------------------------------
-  // Public
-  // ---------------------------------------------------------------------------
-
-  return {
-    FunctionDeclaration: checkFunction,
-    ArrowFunctionExpression: checkFunction,
-    FunctionExpression: checkFunction,
-  };
+    return {
+      FunctionDeclaration: checkFunction,
+      ArrowFunctionExpression: checkFunction,
+      FunctionExpression: checkFunction,
+    };
+  },
 };

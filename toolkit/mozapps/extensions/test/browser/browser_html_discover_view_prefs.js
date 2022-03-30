@@ -52,7 +52,7 @@ async function checkIfDiscoverVisible(expectVisible) {
   await close_manager(managerWindow);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.getAddons.discovery.api_url", TEST_API_URL],

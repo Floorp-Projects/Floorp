@@ -35,6 +35,7 @@ body {
   &[dialogroot] {
     background-color: transparent;
     min-width: 504px;
+    overflow: hidden;
 
     body {
       padding: 0;
@@ -43,8 +44,16 @@ body {
     .onboardingContainer {
       overflow: visible;
 
+      &:dir(rtl) {
+        transform: unset;
+      }
+
       .screen {
         background-color: transparent;
+
+        &:dir(rtl) {
+          transform: unset;
+        }
       }
     }
   }

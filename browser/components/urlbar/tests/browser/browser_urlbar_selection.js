@@ -82,7 +82,7 @@ function checkPrimarySelection(expectedVal = "") {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // On macOS, we must "warm up" the Urlbar to get the first test to pass.
   gURLBar.value = "";
   await click(gURLBar.inputField);

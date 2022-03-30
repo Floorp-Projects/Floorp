@@ -371,7 +371,7 @@ async function setupInitialStorageState(storageType) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   info("Starting ClearSiteData test");
 
   await SpecialPowers.flushPrefEnv();

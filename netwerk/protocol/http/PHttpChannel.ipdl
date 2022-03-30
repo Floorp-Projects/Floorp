@@ -37,7 +37,8 @@ parent:
   async Suspend();
   async Resume();
 
-  async Cancel(nsresult status, uint32_t requestBlockingReason);
+  async Cancel(nsresult status, uint32_t requestBlockingReason, 
+               nsCString? logString);
 
   // Reports approval/veto of redirect by child process redirect observers
   async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,

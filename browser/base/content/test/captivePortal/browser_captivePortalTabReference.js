@@ -40,7 +40,7 @@ async function checkCaptivePortalTabReference(evt, currState) {
   gBrowser.removeTab(errorTab);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["captivedetect.canonicalURL", CANONICAL_URL],

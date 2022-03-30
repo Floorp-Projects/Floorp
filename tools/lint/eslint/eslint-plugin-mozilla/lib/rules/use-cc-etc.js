@@ -8,10 +8,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 const componentsMap = {
   classes: "Cc",
   interfaces: "Ci",
@@ -19,26 +15,32 @@ const componentsMap = {
   utils: "Cu",
 };
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        node.object.type === "Identifier" &&
-        node.object.name === "Components" &&
-        node.property.type === "Identifier" &&
-        Object.getOwnPropertyNames(componentsMap).includes(node.property.name)
-      ) {
-        context.report(
-          node,
-          `Use ${componentsMap[node.property.name]} rather than Components.${
-            node.property.name
-          }`
-        );
-      }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-cc-etc.html",
     },
-  };
+    type: "suggestion",
+  },
+
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          node.object.type === "Identifier" &&
+          node.object.name === "Components" &&
+          node.property.type === "Identifier" &&
+          Object.getOwnPropertyNames(componentsMap).includes(node.property.name)
+        ) {
+          context.report(
+            node,
+            `Use ${componentsMap[node.property.name]} rather than Components.${
+              node.property.name
+            }`
+          );
+        }
+      },
+    };
+  },
 };

@@ -8,31 +8,33 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        node.property.type != "Identifier" ||
-        node.property.name != "defaultView" ||
-        node.object.type != "MemberExpression" ||
-        node.object.property.type != "Identifier" ||
-        node.object.property.name != "ownerDocument"
-      ) {
-        return;
-      }
-
-      context.report(
-        node,
-        "use .ownerGlobal instead of .ownerDocument.defaultView"
-      );
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-ownerGlobal.html",
     },
-  };
+    type: "suggestion",
+  },
+
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          node.property.type != "Identifier" ||
+          node.property.name != "defaultView" ||
+          node.object.type != "MemberExpression" ||
+          node.object.property.type != "Identifier" ||
+          node.object.property.name != "ownerDocument"
+        ) {
+          return;
+        }
+
+        context.report(
+          node,
+          "use .ownerGlobal instead of .ownerDocument.defaultView"
+        );
+      },
+    };
+  },
 };

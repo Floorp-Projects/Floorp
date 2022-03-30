@@ -17,7 +17,7 @@ let { TelemetryTestUtils } = ChromeUtils.import(
 
 let { MockFilePicker } = SpecialPowers;
 
-add_task(async function setup() {
+add_setup(async function() {
   await TestUtils.waitForCondition(() => {
     Services.telemetry.clearEvents();
     let events = Services.telemetry.snapshotEvents(
