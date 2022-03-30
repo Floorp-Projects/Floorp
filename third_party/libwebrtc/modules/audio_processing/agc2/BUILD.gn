@@ -86,16 +86,8 @@ rtc_library("biquad_filter") {
   ]
 }
 
-rtc_library("common") {
-  sources = [
-    "agc2_common.cc",
-    "agc2_common.h",
-  ]
-  deps = [
-    "../../../rtc_base:rtc_base_approved",
-    "../../../system_wrappers:field_trial",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+rtc_source_set("common") {
+  sources = [ "agc2_common.h" ]
 }
 
 rtc_library("fixed_digital") {
@@ -202,6 +194,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
     ]
   }
 
