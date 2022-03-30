@@ -300,10 +300,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
     return abort(AbortReason::Error);
   }
 
-  if (script_->jitScript()->hasTryFinally()) {
-    return abort(AbortReason::Disable, "Try-finally not supported");
-  }
-
   if (script_->failedBoundsCheck()) {
     oracle_->bailoutInfo().setFailedBoundsCheck();
   }
@@ -653,6 +649,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::ResumeKind:
       case JSOp::ThrowMsg:
       case JSOp::Try:
+      case JSOp::Finally:
       case JSOp::NewPrivateName:
         // Supported by WarpBuilder. Nothing to do.
         break;
