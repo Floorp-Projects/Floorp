@@ -120,7 +120,7 @@ bool TryEmitter::emitCatch() {
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
-  if (controlKind_ == ControlKind::Syntactic) {
+  if (shouldUpdateRval()) {
     // Clear the frame's return value that might have been set by the
     // try block:
     //
@@ -216,7 +216,7 @@ bool TryEmitter::emitFinally(
     return false;
   }
 
-  if (controlKind_ == ControlKind::Syntactic) {
+  if (shouldUpdateRval()) {
     if (!bce_->emit1(JSOp::GetRval)) {
       return false;
     }
@@ -242,7 +242,7 @@ bool TryEmitter::emitFinally(
 bool TryEmitter::emitFinallyEnd() {
   MOZ_ASSERT(state_ == State::Finally);
 
-  if (controlKind_ == ControlKind::Syntactic) {
+  if (shouldUpdateRval()) {
     if (!bce_->emit1(JSOp::SetRval)) {
       return false;
     }
@@ -344,4 +344,8 @@ bool TryEmitter::emitEnd() {
   state_ = State::End;
 #endif
   return true;
+}
+
+bool TryEmitter::shouldUpdateRval() const {
+  return controlKind_ == ControlKind::Syntactic && !bce_->sc->noScriptRval();
 }
