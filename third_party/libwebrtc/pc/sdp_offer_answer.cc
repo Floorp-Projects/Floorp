@@ -946,7 +946,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     }
     std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remove_list;
     std::vector<rtc::scoped_refptr<MediaStreamInterface>> removed_streams;
-    for (const auto& transceiver : pc_->transceivers_) {
+    for (const auto& transceiver : pc_->transceivers_.List()) {
       if (transceiver->stopped()) {
         continue;
       }
@@ -1036,7 +1036,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   }
 
   if (IsUnifiedPlan()) {
-    for (const auto& transceiver : pc_->transceivers_) {
+    for (const auto& transceiver : pc_->transceivers_.List()) {
       if (transceiver->stopped()) {
         continue;
       }
@@ -1315,7 +1315,7 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remove_list;
     std::vector<rtc::scoped_refptr<MediaStreamInterface>> added_streams;
     std::vector<rtc::scoped_refptr<MediaStreamInterface>> removed_streams;
-    for (const auto& transceiver : pc_->transceivers_) {
+    for (const auto& transceiver : pc_->transceivers_.List()) {
       const ContentInfo* content = pc_->FindMediaSectionForTransceiver(
           transceiver, remote_description());
       if (!content) {
@@ -1334,8 +1334,8 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
           // The remote description has signaled the stream IDs.
           stream_ids = media_desc->streams()[0].stream_ids();
         }
-        pc_->transceiver_stable_states_by_transceivers_[transceiver]
-            .SetRemoteStreamIdsIfUnset(transceiver->receiver()->stream_ids());
+        pc_->transceivers_.StableState(transceiver)
+            ->SetRemoteStreamIdsIfUnset(transceiver->receiver()->stream_ids());
 
         RTC_LOG(LS_INFO) << "Processing the MSIDs for MID=" << content->name
                          << " (" << GetStreamIdsString(stream_ids) << ").";
@@ -2142,7 +2142,7 @@ RTCError SdpOfferAnswerHandler::UpdateSessionState(
     RTC_DCHECK_RUN_ON(pc_->signaling_thread());
     RTC_DCHECK(type == SdpType::kAnswer);
     ChangeSignalingState(PeerConnectionInterface::kStable);
-    pc_->transceiver_stable_states_by_transceivers_.clear();
+    pc_->transceivers_.DiscardStableStates();
     pc_->have_pending_rtp_data_channel_ = false;
   }
 
@@ -2206,7 +2206,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
   std::vector<rtc::scoped_refptr<RtpReceiverInterface>> removed_receivers;
 
   for (auto&& transceivers_stable_state_pair :
-       pc_->transceiver_stable_states_by_transceivers_) {
+       pc_->transceivers_.StableStates()) {
     auto transceiver = transceivers_stable_state_pair.first;
     auto state = transceivers_stable_state_pair.second;
 
@@ -2237,13 +2237,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
       if (transceiver->internal()->reused_for_addtrack()) {
         transceiver->internal()->set_created_by_addtrack(true);
       } else {
-        int remaining_transceiver_count = 0;
-        for (auto&& t : pc_->transceivers_) {
-          if (t != transceiver) {
-            pc_->transceivers_[remaining_transceiver_count++] = t;
-          }
-        }
-        pc_->transceivers_.resize(remaining_transceiver_count);
+        pc_->transceivers_.Remove(transceiver);
       }
     }
     transceiver->internal()->sender_internal()->set_transport(nullptr);
@@ -2258,7 +2252,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
       pc_->DestroyDataChannelTransport();
       pc_->have_pending_rtp_data_channel_ = false;
     }
-    pc_->transceiver_stable_states_by_transceivers_.clear();
+    pc_->transceivers_.DiscardStableStates();
   }
   pending_local_description_.reset();
   pending_remote_description_.reset();
@@ -2412,7 +2406,7 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
 
   // 5. For each transceiver in connection's set of transceivers, perform the
   // following checks:
-  for (const auto& transceiver : pc_->transceivers_) {
+  for (const auto& transceiver : pc_->transceivers_.List()) {
     const ContentInfo* current_local_msection =
         FindTransceiverMSection(transceiver.get(), description);
 
@@ -2791,8 +2785,7 @@ SdpOfferAnswerHandler::AssociateTransceiver(
       transceiver->internal()->set_direction(
           RtpTransceiverDirection::kRecvOnly);
       if (type == SdpType::kOffer) {
-        pc_->transceiver_stable_states_by_transceivers_[transceiver]
-            .set_newly_created();
+        pc_->transceivers_.StableState(transceiver)->set_newly_created();
       }
     }
     // Check if the offer indicated simulcast but the answer rejected it.
@@ -2831,9 +2824,9 @@ SdpOfferAnswerHandler::AssociateTransceiver(
     bool state_changes = transceiver->internal()->mid() != content.name ||
                          transceiver->internal()->mline_index() != mline_index;
     if (state_changes) {
-      pc_->transceiver_stable_states_by_transceivers_[transceiver]
-          .SetMSectionIfUnset(transceiver->internal()->mid(),
-                              transceiver->internal()->mline_index());
+      pc_->transceivers_.StableState(transceiver)
+          ->SetMSectionIfUnset(transceiver->internal()->mid(),
+                               transceiver->internal()->mline_index());
     }
   }
   // Associate the found or created RtpTransceiver with the m= section by

@@ -34,6 +34,7 @@
 #include "pc/sdp_offer_answer.h"
 #include "pc/stats_collector.h"
 #include "pc/stream_collection.h"
+#include "pc/transceiver_list.h"
 #include "pc/webrtc_session_description_factory.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/operations_chain.h"
@@ -288,7 +289,7 @@ class PeerConnection : public PeerConnectionInternal,
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
   GetTransceiversInternal() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    return transceivers_;
+    return transceivers_.List();
   }
 
   sigslot::signal1<RtpDataChannel*>& SignalRtpDataChannelCreated() override {
@@ -398,37 +399,6 @@ class PeerConnection : public PeerConnectionInternal,
     // An RtpSender can have many SSRCs. The first one is used as a sort of ID
     // for communicating with the lower layers.
     uint32_t first_ssrc;
-  };
-
-  // Captures partial state to be used for rollback. Applicable only in
-  // Unified Plan.
-  class TransceiverStableState {
-   public:
-    TransceiverStableState() {}
-    void set_newly_created();
-    void SetMSectionIfUnset(absl::optional<std::string> mid,
-                            absl::optional<size_t> mline_index);
-    void SetRemoteStreamIdsIfUnset(const std::vector<std::string>& ids);
-    absl::optional<std::string> mid() const { return mid_; }
-    absl::optional<size_t> mline_index() const { return mline_index_; }
-    absl::optional<std::vector<std::string>> remote_stream_ids() const {
-      return remote_stream_ids_;
-    }
-    bool has_m_section() const { return has_m_section_; }
-    bool newly_created() const { return newly_created_; }
-
-   private:
-    absl::optional<std::string> mid_;
-    absl::optional<size_t> mline_index_;
-    absl::optional<std::vector<std::string>> remote_stream_ids_;
-    // Indicates that mid value from stable state has been captured and
-    // that rollback has to restore the transceiver. Also protects against
-    // subsequent overwrites.
-    bool has_m_section_ = false;
-    // Indicates that the transceiver was created as part of applying a
-    // description to track potential need for removing transceiver during
-    // rollback.
-    bool newly_created_ = false;
   };
 
   // Implements MessageHandler.
@@ -1135,22 +1105,10 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_GUARDED_BY(signaling_thread());  // A pointer is passed to senders_
   rtc::scoped_refptr<RTCStatsCollector> stats_collector_
       RTC_GUARDED_BY(signaling_thread());
-  // Holds changes made to transceivers during applying descriptors for
-  // potential rollback. Gets cleared once signaling state goes to stable.
-  std::map<rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>,
-           TransceiverStableState>
-      transceiver_stable_states_by_transceivers_;
   // Used when rolling back RTP data channels.
   bool have_pending_rtp_data_channel_ RTC_GUARDED_BY(signaling_thread()) =
       false;
-  // Holds remote stream ids for transceivers from stable state.
-  std::map<rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>,
-           std::vector<std::string>>
-      remote_stream_ids_by_transceivers_;
-  std::vector<
-      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
-      transceivers_;  // TODO(bugs.webrtc.org/9987): Accessed on both signaling
-                      // and network thread.
+  TransceiverList transceivers_;
 
   // MIDs will be generated using this generator which will keep track of
   // all the MIDs that have been seen over the life of the PeerConnection.
