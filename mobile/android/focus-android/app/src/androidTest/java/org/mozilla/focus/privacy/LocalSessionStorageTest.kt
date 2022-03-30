@@ -4,7 +4,6 @@
 package org.mozilla.focus.privacy
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -12,10 +11,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
-import org.mozilla.focus.ext.settings
+import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
+import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestAssetHelper.getStorageTestAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
@@ -25,6 +24,8 @@ import java.io.IOException
 @RunWith(AndroidJUnit4ClassRunner::class)
 class LocalSessionStorageTest {
     private lateinit var webServer: MockWebServer
+
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     companion object {
         const val SESSION_STORAGE_HIT = "Session storage has value"
@@ -36,25 +37,11 @@ class LocalSessionStorageTest {
 
     @Before
     fun setUp() {
-        webServer = MockWebServer()
-        try {
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("storage_start.html"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("storage_check.html"))
-            )
-            webServer.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("storage_check.html"))
-            )
-            webServer.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
+        webServer = MockWebServer().apply {
+            dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
+            start()
         }
-        TestHelper.getTargetContext.settings.shouldShowCfrForTrackingProtection = false
+        featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
     }
 
     @After
@@ -69,10 +56,9 @@ class LocalSessionStorageTest {
     @SmokeTest
     @Test
     fun testLocalAndSessionStorageIsWrittenAndRemoved() {
-        val storageStartUrl = webServer.url("/sessionStorage_start").toString()
-        val storageCheckUrl = webServer.url("/sessionStorage_check").toString()
+        val storageStartUrl = getStorageTestAsset(webServer, "storage_start.html").url
+        val storageCheckUrl = getStorageTestAsset(webServer, "storage_check.html").url
 
-        // Go to first website that saves a value in the session/local store.
         searchScreen {
         }.loadPage(storageStartUrl) {
             // Assert website is loaded and values are written.
@@ -82,15 +68,28 @@ class LocalSessionStorageTest {
         }.loadPage(storageCheckUrl) {
             verifyPageContent(SESSION_STORAGE_HIT)
             verifyPageContent(LOCAL_STORAGE_MISS)
-            // Press the "erase" button and end the session
         }.clearBrowsingData {}
-        // Go to the website again and make sure that both values are not in the session/local store
         searchScreen {
         }.loadPage(storageCheckUrl) {
-            // Session storage is empty
             verifyPageContent("Session storage empty")
-            // Local storage is empty
             verifyPageContent("Local storage empty")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun eraseCookiesTest() {
+        val storageStartUrl = getStorageTestAsset(webServer, "storage_start.html").url
+
+        searchScreen {
+        }.loadPage(storageStartUrl) {
+            verifyPageContent("No cookies set")
+            clickSetCookiesButton()
+            verifyPageContent("user=android")
+        }.clearBrowsingData {}
+        searchScreen {
+        }.loadPage(storageStartUrl) {
+            verifyPageContent("No cookies set")
         }
     }
 }

@@ -127,10 +127,20 @@ class EraseBrowsingDataTest {
             clearNotifications()
         }
 
+        // Leave Focus open, delete browsing history and check the app is still running
         searchScreen {
         }.loadPage(testPage.url) { }
+        mDevice.openNotification()
+        notificationTray {
+            verifySystemNotificationExists(getStringResource(R.string.notification_erase_text))
+            expandEraseBrowsingNotification()
+        }.clickNotificationMessage {
+            verifyEmptySearchBar()
+        }
 
-        // Switch out of Focus, pull down system bar and select delete browsing history
+        // Switch out of Focus, delete browsing history and check the app is killed
+        searchScreen {
+        }.loadPage(testPage.url) { }
         pressHomeKey()
         mDevice.openNotification()
         notificationTray {

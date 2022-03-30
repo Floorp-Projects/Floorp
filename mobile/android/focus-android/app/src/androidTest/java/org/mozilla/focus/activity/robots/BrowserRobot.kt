@@ -24,6 +24,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
+import org.mozilla.focus.helpers.TestHelper.pageLoadingTime
 import org.mozilla.focus.helpers.TestHelper.progressBar
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.waitingTimeShort
@@ -52,7 +53,7 @@ class BrowserRobot {
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(waitingTime)
+                    .waitForExists(pageLoadingTime)
             )
         }
     }
@@ -365,6 +366,12 @@ class BrowserRobot {
                 UiSelector().textContains(areCookiesEnabled)
             ).waitForExists(waitingTime)
         )
+    }
+
+    fun clickSetCookiesButton() {
+        val setCookiesButton = mDevice.findObject(UiSelector().resourceId("setCookies"))
+        setCookiesButton.waitForExists(waitingTime)
+        setCookiesButton.click()
     }
 
     class Transition {

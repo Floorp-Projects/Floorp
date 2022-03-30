@@ -52,6 +52,7 @@ object TestHelper {
     @JvmField
     var mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     const val waitingTime = DateUtils.SECOND_IN_MILLIS * 15
+    const val pageLoadingTime = DateUtils.SECOND_IN_MILLIS * 25
     const val waitingTimeShort = DateUtils.SECOND_IN_MILLIS * 5
 
     @JvmStatic

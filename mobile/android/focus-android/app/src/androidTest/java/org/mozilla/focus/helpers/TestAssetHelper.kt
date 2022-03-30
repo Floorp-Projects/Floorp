@@ -65,6 +65,12 @@ object TestAssetHelper {
         return TestAsset(url, "", "")
     }
 
+    fun getStorageTestAsset(server: MockWebServer, pageTitle: String): TestAsset {
+        val url = server.url(pageTitle).toString()
+
+        return TestAsset(url, "", "")
+    }
+
     fun getMediaTestAsset(server: MockWebServer, pageTitle: String): TestAsset {
         val url = server.url("$pageTitle.html").toString()
 
