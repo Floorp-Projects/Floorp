@@ -11,6 +11,7 @@
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/IfEmitter.h"        // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
+#include "vm/BytecodeUtil.h"           // SET_RESUMEINDEX
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
@@ -58,20 +59,50 @@ bool TryEmitter::emitTry() {
   return true;
 }
 
+bool TryEmitter::emitJumpToFinallyWithFallthrough() {
+  // The finally block expects two values on the stack: a boolean to
+  // indicate whether we're currently throwing an exception (false
+  // in this case), and either a resume index or the exception being
+  // thrown. Push the resume index for the code immediately
+  // following the finally.
+  BytecodeOffset off;
+  if (!bce_->emitN(JSOp::ResumeIndex, 3, &off)) {
+    return false;
+  }
+  if (!controlInfo_->defaultResumeIndexOffsets_.append(off)) {
+    return false;
+  }
+
+  // Push false for |throwing|.
+  if (!bce_->emit1(JSOp::False)) {
+    return false;
+  }
+
+  // Jump to the finally block.
+  if (!bce_->emitJumpNoFallthrough(JSOp::Goto, &controlInfo_->finallyJumps_)) {
+    return false;
+  }
+
+  // Reset the stack depth for the following catch or finally block.
+  uint32_t stackDepthForNextBlock = bce_->bytecodeSection().stackDepth() - 2;
+  bce_->bytecodeSection().setStackDepth(stackDepthForNextBlock);
+
+  return true;
+}
+
 bool TryEmitter::emitTryEnd() {
   MOZ_ASSERT(state_ == State::Try);
   MOZ_ASSERT(depth_ == bce_->bytecodeSection().stackDepth());
 
-  // Jump to finally, if present.
   if (hasFinally() && controlInfo_) {
-    if (!bce_->emitJumpToFinally(&controlInfo_->finallyJumps_)) {
+    if (!emitJumpToFinallyWithFallthrough()) {
       return false;
     }
-  }
-
-  // Emit jump over catch and/or finally.
-  if (!bce_->emitJump(JSOp::Goto, &catchAndFinallyJump_)) {
-    return false;
+  } else {
+    // Emit jump over catch
+    if (!bce_->emitJump(JSOp::Goto, &catchAndFinallyJump_)) {
+      return false;
+    }
   }
 
   if (!bce_->emitJumpTarget(&tryEnd_)) {
@@ -121,13 +152,7 @@ bool TryEmitter::emitCatchEnd() {
 
   // Jump to <finally>, if required.
   if (hasFinally()) {
-    if (!bce_->emitJumpToFinally(&controlInfo_->finallyJumps_)) {
-      return false;
-    }
-    MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
-
-    // Jump over the finally block.
-    if (!bce_->emitJump(JSOp::Goto, &catchAndFinallyJump_)) {
+    if (!emitJumpToFinallyWithFallthrough()) {
       return false;
     }
   }
@@ -263,9 +288,28 @@ bool TryEmitter::emitEnd() {
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
-  // Fix up the end-of-try/catch jumps to come here.
-  if (!bce_->emitJumpTargetAndPatch(catchAndFinallyJump_)) {
-    return false;
+  // Fix up ResumeIndex ops pointing to the code following the finally block.
+  if (hasFinally() && controlInfo_) {
+    MOZ_ASSERT(!catchAndFinallyJump_.offset.valid());
+
+    JumpTarget target;
+    if (!bce_->emitJumpTarget(&target)) {
+      return false;
+    }
+
+    uint32_t resumeIndex;
+    if (!bce_->allocateResumeIndex(target.offset, &resumeIndex)) {
+      return false;
+    }
+
+    for (BytecodeOffset offset : controlInfo_->defaultResumeIndexOffsets_) {
+      SET_RESUMEINDEX(bce_->bytecodeSection().code(offset), resumeIndex);
+    }
+  } else {
+    // Fix up the end-of-try/catch jumps to come here.
+    if (!bce_->emitJumpTargetAndPatch(catchAndFinallyJump_)) {
+      return false;
+    }
   }
 
   // Add the try note last, to let post-order give us the right ordering
