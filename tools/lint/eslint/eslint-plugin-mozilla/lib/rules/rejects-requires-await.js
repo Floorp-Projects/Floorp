@@ -1,5 +1,5 @@
 /**
- * @fileoverview Reject use of Cu.importGlobalProperties
+ * @fileoverview Ensure Assert.rejects is preceded by await.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +10,14 @@
 
 module.exports = {
   meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-requires-await.html",
+    },
     messages: {
       rejectRequiresAwait: "Assert.rejects needs to be preceded by await.",
     },
+    type: "problem",
   },
 
   create(context) {

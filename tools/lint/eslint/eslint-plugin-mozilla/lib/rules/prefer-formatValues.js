@@ -23,9 +23,10 @@ module.exports = {
   meta: {
     docs: {
       description: "disallow multiple document.l10n.formatValue calls",
-      category: "Best Practices",
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-formatValues.html",
     },
-    schema: [],
+    type: "problem",
   },
 
   create(context) {
