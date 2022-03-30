@@ -2204,12 +2204,6 @@
   value: true
   mirror: always
 
-# Enable clipboard readText() and writeText() by default
-- name: dom.events.asyncClipboard
-  type: bool
-  value: true
-  mirror: always
-
 # Disable clipboard.read() by default
 - name: dom.events.asyncClipboard.read
   type: bool
