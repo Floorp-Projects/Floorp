@@ -23,7 +23,7 @@ registerCleanupFunction(() => MockFilePicker.cleanup());
 
 let gTempDownloadDir;
 
-add_task(async function setup() {
+add_setup(async function() {
   // Create temp directory
   let time = new Date().getTime();
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

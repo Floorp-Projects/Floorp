@@ -15,7 +15,7 @@ function killSystemPreferences() {
   return process.exitValue;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   info("Ensure System Preferences isn't already running");
   killSystemPreferences();
 });

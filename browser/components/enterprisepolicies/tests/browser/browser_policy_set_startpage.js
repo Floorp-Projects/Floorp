@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   // browser.startup.page is set by unittest-required/user.js,
   // but we need the default value
   await SpecialPowers.pushPrefEnv({

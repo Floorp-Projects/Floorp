@@ -90,7 +90,7 @@ function generateKeyInfo(aData) {
   return keyInfo;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

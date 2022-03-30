@@ -29,7 +29,7 @@ function getShieldCounts() {
   return getShieldHistogram().snapshot().values;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await UrlClassifierTestUtils.addTestTrackers();
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 

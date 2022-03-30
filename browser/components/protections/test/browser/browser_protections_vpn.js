@@ -64,7 +64,7 @@ async function revertRegions() {
   setHomeRegion(initialHomeRegion);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.report.monitor.enabled", false],

@@ -22,7 +22,7 @@ const {
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],

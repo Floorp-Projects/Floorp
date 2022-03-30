@@ -10,7 +10,7 @@
 
 var gLibrary = null;
 
-add_task(async function setup() {
+add_setup(async function() {
   // Temporarily disable history, so we won't record pages navigation.
   await SpecialPowers.pushPrefEnv({ set: [["places.history.enabled", false]] });
 

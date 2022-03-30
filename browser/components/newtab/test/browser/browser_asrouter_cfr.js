@@ -178,7 +178,7 @@ function trigger_cfr_panel(
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Store it in order to restore to the original value
   const { _fetchLatestAddonVersion } = CFRPageActions;
   // Prevent fetching the real addon url and making a network request

@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits([{ uri: "http://example.com/" }]);
   }

@@ -644,7 +644,7 @@ add_task(async function test_updatesPrefOnAWOpen() {
   Services.prefs.clearUserPref(DID_SEE_ABOUT_WELCOME_PREF);
 });
 
-add_task(async function setup() {
+add_setup(async function() {
   const sandbox = sinon.createSandbox();
   // This needs to happen before any about:welcome page opens
   sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");

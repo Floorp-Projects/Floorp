@@ -4,7 +4,7 @@
 
 let engine;
 
-add_task(async function setup() {
+add_setup(async function() {
   engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "testEngine.xml"
   );

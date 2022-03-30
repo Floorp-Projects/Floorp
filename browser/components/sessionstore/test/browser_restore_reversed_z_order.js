@@ -10,7 +10,7 @@ let gTestURLsMap = new Map([
 ]);
 let gBrowserState;
 
-add_task(async function setup() {
+add_setup(async function() {
   let windows = [];
   let count = 0;
   for (let url of gTestURLsMap.keys()) {

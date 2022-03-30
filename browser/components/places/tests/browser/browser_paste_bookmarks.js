@@ -9,7 +9,7 @@ const TEST_URL1 = "https://example.com/otherbrowser/";
 var PlacesOrganizer;
 var ContentTree;
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
   let organizer = await promiseLibrary();
 

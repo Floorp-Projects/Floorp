@@ -82,7 +82,7 @@ function getStars(notice) {
   return notice.buttonContainer.querySelectorAll(".star-x");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   // Open a new tab to keep the window open.
   await BrowserTestUtils.openNewForegroundTab(

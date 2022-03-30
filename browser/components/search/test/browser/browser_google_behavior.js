@@ -84,7 +84,7 @@ function promiseContentSearchReady(browser) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await Services.search.init();
 });
 

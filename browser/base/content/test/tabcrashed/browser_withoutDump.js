@@ -3,7 +3,7 @@
 const PAGE =
   "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
-add_task(async function setup() {
+add_setup(async function() {
   prepareNoDump();
 });
 

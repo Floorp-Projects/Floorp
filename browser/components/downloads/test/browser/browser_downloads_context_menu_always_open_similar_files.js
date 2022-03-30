@@ -57,7 +57,7 @@ async function prepareDownloadFiles(downloadList) {
   info("Download target exists? " + download.target.exists);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.improvements_to_download_panel", true]],
   });
