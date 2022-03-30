@@ -494,7 +494,7 @@ add_task(async function test_persistent_events() {
   );
   equal(
     (await p)[0].errorMessage,
-    "Error: primed listener not re-registered",
+    "Error: primed listener startupBlocking.onEvent1 not re-registered",
     "Primed listener that was not re-registered received an error when event was triggered during startup"
   );
 
@@ -579,7 +579,7 @@ add_task(async function test_shutdown_before_background_loaded() {
 
   await Assert.rejects(
     fire.async(),
-    /Error: primed listener not re-registered/,
+    /Error: primed listener startupBlocking.onEvent1 not re-registered/,
     "fire.async after background load failure should be rejected"
   );
 
