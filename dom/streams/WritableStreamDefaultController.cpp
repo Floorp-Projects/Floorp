@@ -138,7 +138,7 @@ void SetUpWritableStreamDefaultController(
   MOZ_ASSERT(aController->Stream() == aStream);
 
   // Step 4. Set stream.[[controller]] to controller.
-  aStream->SetController(aController);
+  aStream->SetController(*aController);
 
   // Step 5. Perform ! ResetQueue(controller).
   ResetQueue(aController);

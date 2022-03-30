@@ -26,8 +26,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStreamDefaultController)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void TransformStreamDefaultController::SetStream(TransformStream* aStream) {
-  mStream = aStream;
+void TransformStreamDefaultController::SetStream(TransformStream& aStream) {
+  MOZ_ASSERT(!mStream);
+  mStream = &aStream;
 }
 
 void TransformStreamDefaultController::SetAlgorithms(
@@ -62,20 +63,123 @@ Nullable<double> TransformStreamDefaultController::GetDesiredSize() const {
   return ReadableStreamDefaultControllerGetDesiredSize(readableController);
 }
 
+// https://streams.spec.whatwg.org/#rs-default-controller-has-backpressure
+// Looks like a readable stream thing but the spec explicitly says this is for
+// TransformStream.
+static bool ReadableStreamDefaultControllerHasBackpressure(
+    ReadableStreamDefaultController* aController) {
+  // Step 1: If ! ReadableStreamDefaultControllerShouldCallPull(controller) is
+  // true, return false.
+  // Step 2: Otherwise, return true.
+  return !ReadableStreamDefaultControllerShouldCallPull(aController);
+}
+
 void TransformStreamDefaultController::Enqueue(JSContext* aCx,
                                                JS::Handle<JS::Value> aChunk,
                                                ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  // Step 1: Perform ? TransformStreamDefaultControllerEnqueue(this, chunk).
+
+  // Inlining TransformStreamDefaultControllerEnqueue here.
+  // https://streams.spec.whatwg.org/#transform-stream-default-controller-enqueue
+
+  // Step 1: Let stream be controller.[[stream]].
+  RefPtr<TransformStream> stream = mStream;
+
+  // Step 2: Let readableController be stream.[[readable]].[[controller]].
+  RefPtr<ReadableStreamDefaultController> readableController =
+      stream->Readable()->Controller()->AsDefault();
+
+  // Step 3: If !
+  // ReadableStreamDefaultControllerCanCloseOrEnqueue(readableController) is
+  // false, throw a TypeError exception.
+  if (!ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+          readableController, CloseOrEnqueue::Enqueue, aRv)) {
+    return;
+  }
+
+  // Step 4: Let enqueueResult be
+  // ReadableStreamDefaultControllerEnqueue(readableController, chunk).
+  ErrorResult rv;
+  ReadableStreamDefaultControllerEnqueue(aCx, readableController, aChunk, rv);
+
+  // Step 5: If enqueueResult is an abrupt completion,
+  if (rv.MaybeSetPendingException(aCx)) {
+    JS::Rooted<JS::Value> error(aCx);
+    if (!JS_GetPendingException(aCx, &error)) {
+      // Uncatchable exception; we should mark aRv and return.
+      aRv.StealExceptionFromJSContext(aCx);
+      return;
+    }
+    JS_ClearPendingException(aCx);
+
+    // Step 5.1: Perform ! TransformStreamErrorWritableAndUnblockWrite(stream,
+    // enqueueResult.[[Value]]).
+    TransformStreamErrorWritableAndUnblockWrite(aCx, stream, error, aRv);
+
+    // Step 5.2: Throw stream.[[readable]].[[storedError]].
+    JS::RootedValue storedError(aCx, stream->Readable()->StoredError());
+    aRv.MightThrowJSException();
+    aRv.ThrowJSException(aCx, storedError);
+    return;
+  }
+
+  // Step 6: Let backpressure be !
+  // ReadableStreamDefaultControllerHasBackpressure(readableController).
+  bool backpressure =
+      ReadableStreamDefaultControllerHasBackpressure(readableController);
+
+  // Step 7: If backpressure is not stream.[[backpressure]],
+  if (backpressure != stream->Backpressure()) {
+    // Step 7.1: Assert: backpressure is true.
+    MOZ_ASSERT(backpressure);
+
+    // Step 7.2: Perform ! TransformStreamSetBackpressure(stream, true).
+    TransformStreamSetBackpressure(stream, true, aRv);
+  }
 }
 
+// https://streams.spec.whatwg.org/#ts-default-controller-error
 void TransformStreamDefaultController::Error(JSContext* aCx,
                                              JS::Handle<JS::Value> aError,
                                              ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  // Step 1: Perform ? TransformStreamDefaultControllerError(this, e).
+
+  // Inlining TransformStreamDefaultControllerError here.
+  // https://streams.spec.whatwg.org/#transform-stream-default-controller-error
+
+  // Perform ! TransformStreamError(controller.[[stream]], e).
+  TransformStreamError(aCx, mStream, aError, aRv);
 }
 
-void TransformStreamDefaultController::Terminate(ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+// https://streams.spec.whatwg.org/#ts-default-controller-terminate
+
+void TransformStreamDefaultController::Terminate(JSContext* aCx,
+                                                 ErrorResult& aRv) {
+  // Step 1: Perform ? TransformStreamDefaultControllerTerminate(this).
+
+  // Inlining TransformStreamDefaultControllerTerminate here.
+  // https://streams.spec.whatwg.org/#transform-stream-default-controller-terminate
+
+  // Step 1: Let stream be controller.[[stream]].
+  RefPtr<TransformStream> stream = mStream;
+
+  // Step 2: Let readableController be stream.[[readable]].[[controller]].
+  RefPtr<ReadableStreamDefaultController> readableController =
+      stream->Readable()->Controller()->AsDefault();
+
+  // Step 3: Perform ! ReadableStreamDefaultControllerClose(readableController).
+  ReadableStreamDefaultControllerClose(aCx, readableController, aRv);
+
+  // Step 4: Let error be a TypeError exception indicating that the stream has
+  // been terminated.
+  ErrorResult rv;
+  rv.ThrowTypeError("Terminating the stream");
+  JS::Rooted<JS::Value> error(aCx);
+  MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &error));
+
+  // Step 5: Perform ! TransformStreamErrorWritableAndUnblockWrite(stream,
+  // error).
+  TransformStreamErrorWritableAndUnblockWrite(aCx, stream, error, aRv);
 }
 
 // https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
@@ -88,10 +192,10 @@ void SetUpTransformStreamDefaultController(
   MOZ_ASSERT(!aStream.Controller());
 
   // Step 3. Set controller.[[stream]] to stream.
-  aController.SetStream(&aStream);
+  aController.SetStream(aStream);
 
   // Step 4. Set stream.[[controller]] to controller.
-  aStream.SetController(&aController);
+  aStream.SetController(aController);
 
   // Step 5. Set controller.[[transformAlgorithm]] to transformAlgorithm.
   // Step 6. Set controller.[[flushAlgorithm]] to flushAlgorithm.
