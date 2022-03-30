@@ -61,6 +61,7 @@ add_task(async function test_add_and_query_no_snapshots() {
   assertSnapshotGroup(groups[0], {
     title: "Group",
     builder: "domain",
+    builderMetadata: { title: "Group" },
     snapshotCount: 0,
   });
 });
@@ -87,6 +88,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    builderMetadata: { title: "Test Group" },
     hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
@@ -103,6 +105,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    builderMetadata: { title: "Test Group" },
     hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
@@ -119,6 +122,7 @@ add_task(async function test_add_and_query() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
+    builderMetadata: { title: "Test Group" },
     hidden: false,
     snapshotCount: data.length,
     lastAccessed: now - 10000,
@@ -144,7 +148,7 @@ add_task(async function test_add_and_query_builderMetadata() {
     title: "Test Group",
     builder: "domain",
     hidden: false,
-    builderMetadata: { domain: "example.com" },
+    builderMetadata: { title: "Test Group", domain: "example.com" },
     snapshotCount: urls.length,
   });
 });
@@ -174,7 +178,7 @@ add_task(async function test_add_and_query_with_builder() {
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
-    builderMetadata: { domain: "example.com" },
+    builderMetadata: { title: "Test Group", domain: "example.com" },
     snapshotCount: urls.length,
   });
 });
@@ -198,6 +202,7 @@ add_task(async function test_update_metadata() {
   assertSnapshotGroup(updated_groups[0], {
     title: "Modified title",
     builder: "domain",
+    builderMetadata: { domain: "example.com", title: "Test Group" },
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 
@@ -211,6 +216,7 @@ add_task(async function test_update_metadata() {
   assertSnapshotGroup(updated_groups[0], {
     title: "Only changed title",
     builder: "domain",
+    builderMetadata: { domain: "example.com", title: "Test Group" },
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 
@@ -224,14 +230,17 @@ add_task(async function test_update_metadata() {
   assertSnapshotGroup(updated_groups[0], {
     title: "Only changed title",
     builder: "domain",
-    builderMetadata: { foo: "bar" },
+    builderMetadata: {
+      domain: "example.com",
+      title: "Test Group",
+      foo: "bar",
+    },
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 
   await SnapshotGroups.updateMetadata({
     id: groups[0].id,
     title: "Modified title",
-    builderMetadata: null,
   });
 
   updated_groups = await SnapshotGroups.query({ skipMinimum: true });
@@ -239,7 +248,22 @@ add_task(async function test_update_metadata() {
   assertSnapshotGroup(updated_groups[0], {
     title: "Modified title",
     builder: "domain",
-    builderMetadata: null,
+    builderMetadata: { domain: "example.com", title: "Test Group", foo: "bar" },
+    snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
+  });
+
+  info("Restore the original snapshot group title");
+  await SnapshotGroups.updateMetadata({
+    id: groups[0].id,
+    title: null,
+  });
+
+  updated_groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
+  assertSnapshotGroup(updated_groups[0], {
+    title: "Test Group",
+    builder: "domain",
+    builderMetadata: { domain: "example.com", title: "Test Group", foo: "bar" },
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 });
@@ -248,8 +272,9 @@ add_task(async function test_update_urls() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 snapshot group");
   assertSnapshotGroup(groups[0], {
-    title: "Modified title",
+    title: "Test Group",
     builder: "domain",
+    builderMetadata: { domain: "example.com", title: "Test Group", foo: "bar" },
     snapshotCount: [TEST_URL3, TEST_URL2, TEST_URL1].length,
   });
 
@@ -262,8 +287,9 @@ add_task(async function test_update_urls() {
   let updated_groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
-    title: "Modified title",
+    title: "Test Group",
     builder: "domain",
+    builderMetadata: { domain: "example.com", title: "Test Group", foo: "bar" },
     snapshotCount: [TEST_URL5, TEST_URL3, TEST_URL1].length,
   });
 });
@@ -303,11 +329,13 @@ add_task(async function test_add_multiple_and_query_snapshot() {
   assertSnapshotGroup(groups[0], {
     title: "Second Group",
     builder: "domain",
+    builderMetadata: { title: "Second Group" },
     snapshotCount: 1,
   });
   assertSnapshotGroup(groups[1], {
     title: "First Group",
     builder: "domain",
+    builderMetadata: { title: "First Group" },
     snapshotCount: 1,
   });
 });
@@ -324,6 +352,7 @@ add_task(async function test_add_and_query_no_url() {
   assertSnapshotGroup(newGroups[0], {
     title: "No url group",
     builder: "domain",
+    builderMetadata: { title: "No url group" },
     snapshotCount: 0,
   });
 });
