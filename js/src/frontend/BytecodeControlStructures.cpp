@@ -105,6 +105,6 @@ bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op,
 }
 
 TryFinallyControl::TryFinallyControl(BytecodeEmitter* bce, StatementKind kind)
-    : NestableControl(bce, kind), emittingSubroutine_(false) {
+    : NestableControl(bce, kind) {
   MOZ_ASSERT(is<TryFinallyControl>());
 }
