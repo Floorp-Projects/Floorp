@@ -44,7 +44,6 @@ namespace jit {
   _(IsGenClosing)                        \
   _(Resume)                              \
   /* try-finally */                      \
-  _(Finally)                             \
   _(Retsub)                              \
   /* Misc */                             \
   _(DelName)                             \
