@@ -237,7 +237,7 @@ add_task(async function test_bookmarks() {
       );
     }
 
-    function checkOnRemoved(id, parentId, index, url, type = "folder") {
+    function checkOnRemoved(id, parentId, index, title, url, type = "folder") {
       let removedData = collectedEvents.pop();
       browser.test.assertEq(
         "onRemoved",
@@ -280,6 +280,11 @@ add_task(async function test_bookmarks() {
         url,
         node.url,
         "onRemoved event received the expected node url"
+      );
+      browser.test.assertEq(
+        title,
+        node.title,
+        "onRemoved event received the expected node title"
       );
       browser.test.assertEq(
         type,
@@ -487,6 +492,7 @@ add_task(async function test_bookmarks() {
           ourId,
           bookmarkGuids.unfiledGuid,
           0,
+          "new test title",
           "http://example.com/",
           "bookmark"
         );
@@ -1264,7 +1270,12 @@ add_task(async function test_bookmarks() {
               collectedEvents.length,
               "1 expected events received"
             );
-            checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 1);
+            checkOnRemoved(
+              createdFolderId,
+              bookmarkGuids.unfiledGuid,
+              1,
+              "Mozilla Folder"
+            );
 
             return browser.bookmarks.search({}).then(searchResults => {
               browser.test.assertEq(
@@ -1340,6 +1351,7 @@ add_task(async function test_bookmarks() {
           createdSeparatorId,
           createdFolderId,
           0,
+          "",
           "data:",
           "separator"
         );
@@ -1352,7 +1364,12 @@ add_task(async function test_bookmarks() {
           collectedEvents.length,
           "1 expected events received"
         );
-        checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 3);
+        checkOnRemoved(
+          createdFolderId,
+          bookmarkGuids.unfiledGuid,
+          3,
+          "Empty Folder"
+        );
 
         return browser.test.assertRejects(
           browser.bookmarks.get(createdFolderId),
@@ -1448,6 +1465,7 @@ add_task(async function test_bookmarks() {
           createdFolderId,
           bookmarkGuids.unfiledGuid,
           3,
+          "Empty Folder",
           undefined,
           "folder"
         );

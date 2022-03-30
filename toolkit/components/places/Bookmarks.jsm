@@ -1327,6 +1327,7 @@ var Bookmarks = Object.freeze({
           new PlacesBookmarkRemoved({
             id: item._id,
             url,
+            title: item.title,
             itemType: item.type,
             parentId: item._parentId,
             index: item.index,
@@ -3275,6 +3276,7 @@ var removeFoldersContents = async function(db, folderGuids, options) {
       new PlacesBookmarkRemoved({
         id: item._id,
         url,
+        title: item.title,
         parentId: item._parentId,
         index: item.index,
         itemType: item.type,

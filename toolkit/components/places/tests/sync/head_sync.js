@@ -337,6 +337,7 @@ BookmarkObserver.prototype = {
             index: event.index,
             type: event.itemType,
             urlHref: event.url || null,
+            title: event.title,
             guid: event.guid,
             parentGuid: event.parentGuid,
             source: event.source,
