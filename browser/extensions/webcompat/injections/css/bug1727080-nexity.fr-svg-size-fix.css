@@ -4,6 +4,6 @@
  * WebCompat issue #75869 - https://webcompat.com/issues/75869
  */
 
-svg[data-v-4c956def] {
+.sub-myspace li svg {
   width: 15px;
 }
