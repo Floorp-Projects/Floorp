@@ -261,8 +261,17 @@ bool TryEmitter::emitFinallyEnd() {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Retsub)) {
-    return false;
+  if (controlInfo_ && controlInfo_->hasNonLocalJumps()) {
+    if (!bce_->emit1(JSOp::Retsub)) {
+      return false;
+    }
+  } else {
+    // If there are no non-local jumps, then the only possible jump target
+    // is the code immediately following this finally block. Instead of
+    // emitting a retsub, we can simply pop the resume index and fall through.
+    if (!bce_->emit1(JSOp::Pop)) {
+      return false;
+    }
   }
 
   if (!ifThrowing.emitEnd()) {

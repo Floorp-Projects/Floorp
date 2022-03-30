@@ -795,6 +795,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
             //      [stack] ...
             return false;
           }
+          finallyControl.setHasNonLocalJumps();
         }
         break;
       }

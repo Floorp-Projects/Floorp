@@ -140,7 +140,8 @@ inline bool NestableControl::is<LoopControl>() const {
 }
 
 class TryFinallyControl : public NestableControl {
-  bool emittingSubroutine_;
+  bool emittingSubroutine_ = false;
+  bool hasNonLocalJumps_ = false;
 
  public:
   // Offset of the last jump to this `finally`.
@@ -155,6 +156,9 @@ class TryFinallyControl : public NestableControl {
   void setEmittingSubroutine() { emittingSubroutine_ = true; }
 
   bool emittingSubroutine() const { return emittingSubroutine_; }
+
+  void setHasNonLocalJumps() { hasNonLocalJumps_ = true; }
+  bool hasNonLocalJumps() const { return hasNonLocalJumps_; }
 };
 template <>
 inline bool NestableControl::is<TryFinallyControl>() const {
