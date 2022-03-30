@@ -81,24 +81,24 @@ val focusTypography: FocusTypography
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,
-            color = PhotonColors.DarkGrey90
+            color = focusColors.onboardingSemiBoldText
         ),
         onboardingSubtitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
-            color = PhotonColors.DarkGrey90
+            color = focusColors.onboardingSemiBoldText
         ),
         onboardingDescription = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
-            color = PhotonColors.DarkGrey05
+            color = focusColors.onboardingNormalText
         ),
         onboardingButton = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
-            color = PhotonColors.White
+            color = PhotonColors.LightGrey05
         )
     )

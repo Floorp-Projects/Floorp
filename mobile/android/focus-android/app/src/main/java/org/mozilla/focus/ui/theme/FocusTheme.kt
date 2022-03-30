@@ -58,7 +58,11 @@ private fun darkColorPalette(): FocusColors = FocusColors(
     aboutPageLink = PhotonColors.Pink70,
     radioButtonSelected = PhotonColors.Pink70,
     toolbarColor = PhotonColors.White,
-    privacySecuritySettingsToolTip = PhotonColors.White
+    privacySecuritySettingsToolTip = PhotonColors.White,
+    onboardingKeyFeatureImageTint = PhotonColors.LightGrey05,
+    onboardingButtonBackground = PhotonColors.Violet50,
+    onboardingSemiBoldText = PhotonColors.LightGrey05,
+    onboardingNormalText = PhotonColors.LightGrey50,
 )
 
 private fun lightColorPalette(): FocusColors = FocusColors(
@@ -73,7 +77,11 @@ private fun lightColorPalette(): FocusColors = FocusColors(
     aboutPageLink = PhotonColors.Pink70,
     radioButtonSelected = PhotonColors.Pink70,
     toolbarColor = PhotonColors.Black,
-    privacySecuritySettingsToolTip = PhotonColors.White
+    privacySecuritySettingsToolTip = PhotonColors.White,
+    onboardingKeyFeatureImageTint = PhotonColors.DarkGrey90,
+    onboardingButtonBackground = PhotonColors.Ink20,
+    onboardingSemiBoldText = PhotonColors.DarkGrey90,
+    onboardingNormalText = PhotonColors.DarkGrey05,
 )
 
 /**

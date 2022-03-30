@@ -65,7 +65,7 @@ class OnboardingFragment : Fragment() {
         onboardingInteractor = OnboardingInteractor(requireComponents.appStore)
         return ComposeView(requireContext()).apply {
             setContent {
-                FocusTheme(darkTheme = false) {
+                FocusTheme {
                     OnboardingContent(onboardingInteractor)
                 }
             }
@@ -75,10 +75,7 @@ class OnboardingFragment : Fragment() {
     @Composable
     @Suppress("LongMethod")
     fun OnboardingContent(onboardingInteractor: OnboardingInteractor) {
-        Box(
-            modifier = Modifier
-                .background(color = focusColors.secondaryBackground)
-        ) {
+        Box {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
