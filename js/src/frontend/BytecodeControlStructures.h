@@ -146,6 +146,10 @@ class TryFinallyControl : public NestableControl {
   // Offset of the last jump to this `finally`.
   JumpList finallyJumps_;
 
+  // Bytecode offsets of any JSOp::ResumeIndex ops that should resume
+  // immediately after the finally block.
+  js::Vector<BytecodeOffset, 2, SystemAllocPolicy> defaultResumeIndexOffsets_;
+
   TryFinallyControl(BytecodeEmitter* bce, StatementKind kind);
 
   void setEmittingSubroutine() { emittingSubroutine_ = true; }
