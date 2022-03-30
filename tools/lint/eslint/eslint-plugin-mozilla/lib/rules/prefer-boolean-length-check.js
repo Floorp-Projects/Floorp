@@ -8,9 +8,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
 function funcForBooleanLength(context, node, conditionCheck) {
   let newText = "";
   const sourceCode = context.getSourceCode();
@@ -65,10 +62,6 @@ module.exports = {
     fixable: "code",
   },
   create(context) {
-    // ---------------------------------------------------------------------------
-    // Public
-    //  --------------------------------------------------------------------------
-
     const conditionStatement = [
       "IfStatement",
       "WhileStatement",

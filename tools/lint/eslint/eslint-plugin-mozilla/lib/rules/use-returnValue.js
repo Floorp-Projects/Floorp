@@ -8,35 +8,29 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
+module.exports = {
+  create(context) {
+    return {
+      ExpressionStatement(node) {
+        if (
+          !node.expression ||
+          node.expression.type != "CallExpression" ||
+          !node.expression.callee ||
+          node.expression.callee.type != "MemberExpression" ||
+          !node.expression.callee.property ||
+          node.expression.callee.property.type != "Identifier" ||
+          (node.expression.callee.property.name != "concat" &&
+            node.expression.callee.property.name != "join" &&
+            node.expression.callee.property.name != "slice")
+        ) {
+          return;
+        }
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    ExpressionStatement(node) {
-      if (
-        !node.expression ||
-        node.expression.type != "CallExpression" ||
-        !node.expression.callee ||
-        node.expression.callee.type != "MemberExpression" ||
-        !node.expression.callee.property ||
-        node.expression.callee.property.type != "Identifier" ||
-        (node.expression.callee.property.name != "concat" &&
-          node.expression.callee.property.name != "join" &&
-          node.expression.callee.property.name != "slice")
-      ) {
-        return;
-      }
-
-      context.report(
-        node,
-        `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`
-      );
-    },
-  };
+        context.report(
+          node,
+          `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`
+        );
+      },
+    };
+  },
 };

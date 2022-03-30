@@ -10,31 +10,25 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 var helpers = require("../helpers");
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  // ---------------------------------------------------------------------------
+module.exports = {
+  create(context) {
+    return {
+      Program() {
+        let testType = helpers.getTestType(context);
+        if (testType == "browser") {
+          context.markVariableAsUsed("test");
+        }
 
-  return {
-    Program() {
-      let testType = helpers.getTestType(context);
-      if (testType == "browser") {
-        context.markVariableAsUsed("test");
-      }
+        if (testType == "xpcshell") {
+          context.markVariableAsUsed("run_test");
+        }
 
-      if (testType == "xpcshell") {
-        context.markVariableAsUsed("run_test");
-      }
-
-      if (helpers.getIsSjs(context)) {
-        context.markVariableAsUsed("handleRequest");
-      }
-    },
-  };
+        if (helpers.getIsSjs(context)) {
+          context.markVariableAsUsed("handleRequest");
+        }
+      },
+    };
+  },
 };

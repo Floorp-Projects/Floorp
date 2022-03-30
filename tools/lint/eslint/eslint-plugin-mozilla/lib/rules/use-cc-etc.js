@@ -8,10 +8,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 const componentsMap = {
   classes: "Cc",
   interfaces: "Ci",
@@ -19,26 +15,24 @@ const componentsMap = {
   utils: "Cu",
 };
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        node.object.type === "Identifier" &&
-        node.object.name === "Components" &&
-        node.property.type === "Identifier" &&
-        Object.getOwnPropertyNames(componentsMap).includes(node.property.name)
-      ) {
-        context.report(
-          node,
-          `Use ${componentsMap[node.property.name]} rather than Components.${
-            node.property.name
-          }`
-        );
-      }
-    },
-  };
+module.exports = {
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          node.object.type === "Identifier" &&
+          node.object.name === "Components" &&
+          node.property.type === "Identifier" &&
+          Object.getOwnPropertyNames(componentsMap).includes(node.property.name)
+        ) {
+          context.report(
+            node,
+            `Use ${componentsMap[node.property.name]} rather than Components.${
+              node.property.name
+            }`
+          );
+        }
+      },
+    };
+  },
 };
