@@ -475,6 +475,12 @@ this.backgroundPage = class extends ExtensionAPI {
     let { extension } = this;
     extension.backgroundState = BACKGROUND_STATE.STOPPED;
 
+    // runtime.onStartup event support.  We listen for the first
+    // background startup then emit a first-run event.
+    extension.once("background-script-started", () => {
+      extension.emit("background-first-run");
+    });
+
     await this.primeBackground();
 
     ExtensionParent.browserStartupPromise.then(() => {
@@ -488,7 +494,11 @@ this.backgroundPage = class extends ExtensionAPI {
       // start the event page so they can be registered.
       if (
         extension.persistentBackground ||
-        !extension.persistentListeners?.size
+        !extension.persistentListeners?.size ||
+        // If runtime.onStartup has a listener and this is app_startup,
+        // start the extension so it will fire the event.
+        (extension.startupReason == "APP_STARTUP" &&
+          extension.persistentListeners?.get("runtime").has("onStartup"))
       ) {
         extension.emit("start-background-script");
       } else {

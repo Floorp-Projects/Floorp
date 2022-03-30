@@ -2397,7 +2397,11 @@ class EventManager {
           let fireEvent = (...args) =>
             new Promise((resolve, reject) => {
               if (!listener.primed) {
-                reject(new Error("primed listener not re-registered"));
+                reject(
+                  new Error(
+                    `primed listener ${module}.${event} not re-registered`
+                  )
+                );
                 return;
               }
               primed.pendingEvents.push({ args, resolve, reject });

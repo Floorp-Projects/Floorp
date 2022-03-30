@@ -2,7 +2,7 @@
 /* exported createHttpServer, cleanupDir, clearCache, optionalPermissionsPromptHandler, promiseConsoleOutput,
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput,
-            assertPersistentListeners */
+            assertPersistentListeners, promiseExtensionEvent */
 
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -314,3 +314,9 @@ const optionalPermissionsPromptHandler = {
     }
   },
 };
+
+function promiseExtensionEvent(wrapper, event) {
+  return new Promise(resolve => {
+    wrapper.extension.once(event, resolve);
+  });
+}
