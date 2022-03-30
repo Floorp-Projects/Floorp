@@ -159,6 +159,7 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,
     : mCookieBehavior(aCookieBehavior),
       mIsFirstPartyIsolated(aIsFirstPartyIsolated),
       mIsOnContentBlockingAllowList(false),
+      mIsOnContentBlockingAllowListUpdated(false),
       mState(aState),
       mToBeMerged(false) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -486,6 +487,13 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
     nsIChannel* aChannel) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aChannel);
+
+  // Early return if the flag was updated before.
+  if (mIsOnContentBlockingAllowListUpdated) {
+    return;
+  }
+  mIsOnContentBlockingAllowListUpdated = true;
+
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   nsCOMPtr<nsIURI> uri;
