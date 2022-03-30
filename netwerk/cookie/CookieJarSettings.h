@@ -191,6 +191,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
   bool mIsFirstPartyIsolated;
   CookiePermissionList mCookiePermissions;
   bool mIsOnContentBlockingAllowList;
+  bool mIsOnContentBlockingAllowListUpdated;
   nsString mPartitionKey;
 
   State mState;
