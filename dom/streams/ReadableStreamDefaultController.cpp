@@ -106,13 +106,11 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
          state == ReadableStream::ReaderState::Readable;
 }
 
-enum class CloseOrEnqueue { Close, Enqueue };
-
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
 // This is a variant of ReadableStreamDefaultControllerCanCloseOrEnqueue
 // that also throws when the function would return false to improve error
 // messages.
-static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
     ReadableStreamDefaultController* aController,
     CloseOrEnqueue aCloseOrEnqueue, ErrorResult& aRv) {
   // Step 1. Let state be controller.[[stream]].[[state]].
@@ -120,9 +118,9 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
 
   nsCString prefix;
   if (aCloseOrEnqueue == CloseOrEnqueue::Close) {
-    prefix = "Cannot close a readable stream that "_ns;
+    prefix = "Cannot close a stream that "_ns;
   } else {
-    prefix = "Cannot enqueue into a readable stream that "_ns;
+    prefix = "Cannot enqueue into a stream that "_ns;
   }
 
   switch (state) {
@@ -348,7 +346,7 @@ void ReadableStreamDefaultController::Error(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
-static bool ReadableStreamDefaultControllerShouldCallPull(
+bool ReadableStreamDefaultControllerShouldCallPull(
     ReadableStreamDefaultController* aController) {
   // Step 1.
   ReadableStream* stream = aController->GetStream();
