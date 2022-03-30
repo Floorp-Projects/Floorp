@@ -27,9 +27,9 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     : AdaptiveModeLevelEstimator(
           apm_data_dumper,
           AudioProcessing::Config::GainController2::LevelEstimator::kRms,
-          /*use_saturation_protector=*/true,
-          GetInitialSaturationMarginDb(),
-          GetExtraSaturationMarginOffsetDb()) {}
+          kDefaultUseSaturationProtector,
+          kDefaultInitialSaturationMarginDb,
+          kDefaultExtraSaturationMarginDb) {}
 
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     ApmDataDumper* apm_data_dumper,
@@ -39,7 +39,7 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     : AdaptiveModeLevelEstimator(apm_data_dumper,
                                  level_estimator,
                                  use_saturation_protector,
-                                 GetInitialSaturationMarginDb(),
+                                 kDefaultInitialSaturationMarginDb,
                                  extra_saturation_margin_db) {}
 
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(

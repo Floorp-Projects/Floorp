@@ -53,8 +53,9 @@ constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
 constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
 
 // Saturation Protector settings.
-float GetInitialSaturationMarginDb();
-float GetExtraSaturationMarginOffsetDb();
+constexpr bool kDefaultUseSaturationProtector = true;
+constexpr float kDefaultInitialSaturationMarginDb = 20.f;
+constexpr float kDefaultExtraSaturationMarginDb = 2.f;
 
 constexpr size_t kPeakEnveloperSuperFrameLengthMs = 400;
 static_assert(kFullBufferSizeMs % kPeakEnveloperSuperFrameLengthMs == 0,
