@@ -794,24 +794,37 @@ ParsedHeaderValueListList::ParsedHeaderValueListList(
   Tokenize(mFull.BeginReading(), mFull.Length(), ',', consumer);
 }
 
-void LogCallingScriptLocation(void* instance) {
+Maybe<nsCString> CallingScriptLocationString() {
   if (!LOG4_ENABLED()) {
-    return;
+    return Nothing();
   }
 
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (!cx) {
-    return;
+    return Nothing();
   }
 
   nsAutoCString fileNameString;
   uint32_t line = 0, col = 0;
   if (!nsJSUtils::GetCallingLocation(cx, fileNameString, &line, &col)) {
+    return Nothing();
+  }
+
+  nsCString logString = ""_ns;
+  logString.AppendPrintf("%s:%u:%u", fileNameString.get(), line, col);
+  return Some(logString);
+}
+
+void LogCallingScriptLocation(void* instance) {
+  Maybe<nsCString> logLocation = CallingScriptLocationString();
+  if (logLocation.isNothing()) {
     return;
   }
 
-  LOG(("%p called from script: %s:%u:%u", instance, fileNameString.get(), line,
-       col));
+  nsCString logString;
+  logString.AppendPrintf("%p called from script: ", instance);
+  logString.AppendPrintf("%s", logLocation->get());
+  LOG(("%s", logString.get()));
 }
 
 void LogHeaders(const char* lineStart) {

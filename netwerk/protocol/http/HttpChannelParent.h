@@ -172,7 +172,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvSuspend() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
   virtual mozilla::ipc::IPCResult RecvCancel(
-      const nsresult& status, const uint32_t& requestBlockingReason) override;
+      const nsresult& status, const uint32_t& requestBlockingReason,
+      const mozilla::Maybe<nsCString>& logString) override;
   virtual mozilla::ipc::IPCResult RecvRedirect2Verify(
       const nsresult& result, const RequestHeaderTuples& changedHeaders,
       const uint32_t& aSourceRequestBlockingReason,
