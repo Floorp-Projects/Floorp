@@ -534,8 +534,6 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
   {
     int r,_status;
     nr_ice_media_stream *str;
-       nr_ice_component *comp;
-    int invalid_comps=0;
 
     /* 1. Unfreeze all frozen pairs with the same foundation
        in this stream */
@@ -544,16 +542,6 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
         ABORT(r);
     }
 
-    /* 2. See if there is a pair in the valid list for every component */
-    comp=STAILQ_FIRST(&stream->components);
-    while(comp){
-      if(!comp->valid_pairs)
-        invalid_comps++;
-
-      comp=STAILQ_NEXT(comp,entry);
-    }
-
-    /* If there is a pair in the valid list for every component... */
     /* Now go through the check lists for the other streams */
     str=STAILQ_FIRST(&stream->pctx->peer_streams);
     while(str){
