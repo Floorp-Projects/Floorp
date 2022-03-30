@@ -46,8 +46,9 @@
         </uap3:Extension>
         <uap3:Extension Category="windows.fileTypeAssociation">
           <uap3:FileTypeAssociation Name="htm">
+            <uap:DisplayName>@MOZ_APP_DISPLAYNAME@ HTML Document</uap:DisplayName>
             <uap:SupportedFileTypes>
-              <!-- Keep synchronized with
+              <!-- Keep this (union with the `.pdf` below) synchronized with
                    https://searchfox.org/mozilla-central/source/browser/installer/windows/nsis/shared.nsh
                    and `os.environment.launched_to_handle` and `os.environment.invoked_to_handle` telemetry in
                    https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm. -->
@@ -60,6 +61,16 @@
               <uap:FileType>.xhtml</uap:FileType>
               <uap:FileType>.svg</uap:FileType>
               <uap:FileType>.webp</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:Logo>Assets\Document44x44.png</uap:Logo>
+            <uap2:SupportedVerbs>
+              <uap3:Verb Id="open" Parameters="-osint -url &quot;%1&quot;">open</uap3:Verb>
+            </uap2:SupportedVerbs>
+          </uap3:FileTypeAssociation>
+          <uap3:FileTypeAssociation Name="pdf">
+            <uap:DisplayName>@MOZ_APP_DISPLAYNAME@ PDF Document</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.pdf</uap:FileType>
             </uap:SupportedFileTypes>
             <uap:Logo>Assets\Document44x44.png</uap:Logo>
             <uap2:SupportedVerbs>

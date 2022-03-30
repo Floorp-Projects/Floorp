@@ -80,7 +80,14 @@ add_task(async function remoteEnableWithPDF() {
   const aumi = XreDirProvider.getInstallHash();
   Assert.ok(_callExternalDefaultBrowserAgentStub.called);
   Assert.deepEqual(_callExternalDefaultBrowserAgentStub.firstCall.args, [
-    { arguments: ["set-default-browser-user-choice", aumi, ".pdf"] },
+    {
+      arguments: [
+        "set-default-browser-user-choice",
+        aumi,
+        ".pdf",
+        "FirefoxPDF",
+      ],
+    },
   ]);
 
   await doCleanup();
@@ -124,7 +131,16 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
     Assert.ok(_callExternalDefaultBrowserAgentStub.called);
     Assert.deepEqual(
       _callExternalDefaultBrowserAgentStub.firstCall.args,
-      [{ arguments: ["set-default-browser-user-choice", aumi, ".pdf"] }],
+      [
+        {
+          arguments: [
+            "set-default-browser-user-choice",
+            aumi,
+            ".pdf",
+            "FirefoxPDF",
+          ],
+        },
+      ],
       `Will take default from missing association or known browser with ProgID '${progId}'`
     );
   }

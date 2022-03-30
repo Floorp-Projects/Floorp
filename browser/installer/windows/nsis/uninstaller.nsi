@@ -472,8 +472,9 @@ Section "Uninstall"
     ${un.SetAppLSPCategories}
   ${EndIf}
 
-  ${un.RegCleanAppHandler} "FirefoxURL-$AppUserModelID"
   ${un.RegCleanAppHandler} "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanAppHandler} "FirefoxPDF-$AppUserModelID"
+  ${un.RegCleanAppHandler} "FirefoxURL-$AppUserModelID"
   ${un.RegCleanProtocolHandler} "http"
   ${un.RegCleanProtocolHandler} "https"
   ${un.RegCleanProtocolHandler} "mailto"
@@ -485,11 +486,12 @@ Section "Uninstall"
   ${un.RegCleanFileHandler}  ".oga"   "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".ogg"   "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".ogv"   "FirefoxHTML-$AppUserModelID"
-  ${un.RegCleanFileHandler}  ".pdf"   "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".webm"  "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".svg"   "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".webp"  "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".avif"  "FirefoxHTML-$AppUserModelID"
+
+  ${un.RegCleanFileHandler}  ".pdf"   "FirefoxPDF-$AppUserModelID"
 
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${un.GetSecondInstallPath} "Software\Mozilla" $R9
@@ -505,7 +507,8 @@ Section "Uninstall"
   DeleteRegValue HKCU "Software\RegisteredApplications" "${AppRegName}-$AppUserModelID"
 
   ; Remove old protocol handler and StartMenuInternet keys without install path
-  ; hashes, but only if they're for this installation.
+  ; hashes, but only if they're for this installation.  We've never supported
+  ; bare FirefoxPDF.
   ReadRegStr $0 HKLM "Software\Classes\FirefoxHTML\DefaultIcon" ""
   StrCpy $0 $0 -2
   ${If} $0 == "$INSTDIR\${FileMainEXE}"

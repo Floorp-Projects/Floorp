@@ -159,6 +159,15 @@ void ReadableStreamDefaultControllerClearAlgorithms(
 Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
     ReadableStreamDefaultController* aController);
 
+enum class CloseOrEnqueue { Close, Enqueue };
+
+bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+    ReadableStreamDefaultController* aController,
+    CloseOrEnqueue aCloseOrEnqueue, ErrorResult& aRv);
+
+bool ReadableStreamDefaultControllerShouldCallPull(
+    ReadableStreamDefaultController* aController);
+
 }  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultController_h

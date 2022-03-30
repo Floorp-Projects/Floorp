@@ -453,16 +453,18 @@ Section "-Application" APP_IDX
   ; it doesn't cause problems always add them.
   ${SetUninstallKeys}
 
-  ; On install always add the FirefoxHTML and FirefoxURL keys.
-  ; An empty string is used for the 5th param because FirefoxHTML is not a
+  ; On install always add the FirefoxHTML-, FirefoxPDF-, and FirefoxURL- keys.
+  ; An empty string is used for the 5th param because FirefoxHTML- is not a
   ; protocol handler.
   ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
   StrCpy $2 "$\"$8$\" -osint -url $\"%1$\""
 
-  ; In Win8, the delegate execute handler picks up the value in FirefoxURL and
-  ; FirefoxHTML to launch the desktop browser when it needs to.
+  ; In Win8, the delegate execute handler picks up the value in FirefoxURL- and
+  ; FirefoxHTML- to launch the desktop browser when it needs to.
   ${AddDisabledDDEHandlerValues} "FirefoxHTML-$AppUserModelID" "$2" "$8,1" \
-                                 "${AppRegName} Document" ""
+                                 "${AppRegName} HTML Document" ""
+  ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,1" \
+                                 "${AppRegName} PDF Document" ""
   ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,1" \
                                  "${AppRegName} URL" "true"
 

@@ -18,7 +18,8 @@
  * @param aAumi The AUMI of the installation to set as default.
  *
  * @param aExtraFileExtensions Optional null-terminated list of extra file
- * associations to set as default, like `{ L".pdf", nullptr }`.
+ * association pairs to set as default, like `{ L".pdf", "FirefoxPDF", nullptr
+ * }`.
  *
  * @return S_OK             All associations set and checked successfully.
  *         MOZ_E_NO_PROGID  The ProgID classes had not been registered.

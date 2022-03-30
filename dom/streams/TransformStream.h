@@ -36,12 +36,15 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   void SetBackpressureChangePromise(Promise* aPromise) {
     mBackpressureChangePromise = aPromise;
   }
-  TransformStreamDefaultController* Controller() { return mController; }
-  void SetController(TransformStreamDefaultController* aController) {
-    mController = aController;
+  MOZ_KNOWN_LIVE TransformStreamDefaultController* Controller() {
+    return mController;
   }
-  ReadableStream* Readable() { return mReadable; }
-  WritableStream* Writable() { return mWritable; }
+  void SetController(TransformStreamDefaultController& aController) {
+    MOZ_ASSERT(!mController);
+    mController = &aController;
+  }
+  MOZ_KNOWN_LIVE ReadableStream* Readable() { return mReadable; }
+  MOZ_KNOWN_LIVE WritableStream* Writable() { return mWritable; }
 
  protected:
   ~TransformStream();
@@ -73,12 +76,25 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Internal slots
+  // MOZ_KNOWN_LIVE for slots that will never be reassigned
   bool mBackpressure = false;
   RefPtr<Promise> mBackpressureChangePromise;
-  RefPtr<TransformStreamDefaultController> mController;
-  RefPtr<ReadableStream> mReadable;
-  RefPtr<WritableStream> mWritable;
+  MOZ_KNOWN_LIVE RefPtr<TransformStreamDefaultController> mController;
+  MOZ_KNOWN_LIVE RefPtr<ReadableStream> mReadable;
+  MOZ_KNOWN_LIVE RefPtr<WritableStream> mWritable;
 };
+
+MOZ_CAN_RUN_SCRIPT void TransformStreamErrorWritableAndUnblockWrite(
+    JSContext* aCx, TransformStream* aStream, JS::HandleValue aError,
+    ErrorResult& aRv);
+
+MOZ_CAN_RUN_SCRIPT void TransformStreamError(JSContext* aCx,
+                                             TransformStream* aStream,
+                                             JS::HandleValue aError,
+                                             ErrorResult& aRv);
+
+void TransformStreamSetBackpressure(TransformStream* aStream,
+                                    bool aBackpressure, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 

@@ -276,9 +276,5 @@ function run_test() {
     await verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
   });
 
-  add_task(async function() {
-    ok(certList.isBlocklistFresh(), "Blocklist should be fresh.");
-  });
-
   run_next_test();
 }

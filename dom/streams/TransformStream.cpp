@@ -40,6 +40,48 @@ JSObject* TransformStream::WrapObject(JSContext* aCx,
   return TransformStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-error-writable-and-unblock-write
+void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
+                                                 TransformStream* aStream,
+                                                 JS::HandleValue aError,
+                                                 ErrorResult& aRv) {
+  // Step 1: Perform !
+  // TransformStreamDefaultControllerClearAlgorithms(stream.[[controller]]).
+  aStream->Controller()->SetAlgorithms(nullptr);
+
+  // Step 2: Perform !
+  // WritableStreamDefaultControllerErrorIfNeeded(stream.[[writable]].[[controller]],
+  // e).
+  // TODO: Remove MOZ_KnownLive (bug 1761577)
+  WritableStreamDefaultControllerErrorIfNeeded(
+      aCx, MOZ_KnownLive(aStream->Writable()->Controller()), aError, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 3: If stream.[[backpressure]] is true, perform !
+  // TransformStreamSetBackpressure(stream, false).
+  if (aStream->Backpressure()) {
+    TransformStreamSetBackpressure(aStream, false, aRv);
+  }
+}
+
+// https://streams.spec.whatwg.org/#transform-stream-error
+void TransformStreamError(JSContext* aCx, TransformStream* aStream,
+                          JS::HandleValue aError, ErrorResult& aRv) {
+  // Step 1: Perform !
+  // ReadableStreamDefaultControllerError(stream.[[readable]].[[controller]],
+  // e).
+  ReadableStreamDefaultControllerError(
+      aCx, aStream->Readable()->Controller()->AsDefault(), aError, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 2: Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, e).
+  TransformStreamErrorWritableAndUnblockWrite(aCx, aStream, aError, aRv);
+}
+
 // https://streams.spec.whatwg.org/#initialize-transform-stream
 class TransformStreamUnderlyingSinkAlgorithms final
     : public UnderlyingSinkAlgorithmsBase {
@@ -178,9 +220,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
 NS_INTERFACE_MAP_END_INHERITING(TransformStreamUnderlyingSourceAlgorithms)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
-static void TransformStreamSetBackpressure(TransformStream* aStream,
-                                           bool aBackpressure,
-                                           ErrorResult& aRv) {
+void TransformStreamSetBackpressure(TransformStream* aStream,
+                                    bool aBackpressure, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[backpressure]] is not backpressure.
   MOZ_ASSERT(aStream->Backpressure() != aBackpressure);
 
@@ -238,6 +279,11 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
 
   // Step 9. Set stream.[[backpressure]] and
   // stream.[[backpressureChangePromise]] to undefined.
+  // Note(krosylight): The spec allows setting [[backpressure]] as undefined,
+  // but I don't see why it should be. Since the spec also allows strict boolean
+  // type, and this is only to not trigger assertion inside the setter, we just
+  // set it as false.
+  mBackpressure = false;
   mBackpressureChangePromise = nullptr;
 
   // Step 10. Perform ! TransformStreamSetBackpressure(stream, true).
