@@ -37,7 +37,7 @@ async function testLinkOpensUrl({ win, tab, elementId, expectedUrl }) {
 let expectedEngineAlias;
 let expectedIconURL;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault", true],

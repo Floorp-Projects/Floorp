@@ -89,7 +89,7 @@ async function updateTopSites(condition, searchShortcuts = false) {
   }, "Waiting for top sites to be updated");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.topsites", true],

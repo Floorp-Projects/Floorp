@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(function setup() {
+add_setup(function() {
   let nsLoginInfo = Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1",
     Ci.nsILoginInfo,

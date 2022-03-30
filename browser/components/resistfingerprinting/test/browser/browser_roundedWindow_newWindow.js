@@ -8,7 +8,7 @@ const CC = Components.Constructor;
 let gMaxAvailWidth;
 let gMaxAvailHeight;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });

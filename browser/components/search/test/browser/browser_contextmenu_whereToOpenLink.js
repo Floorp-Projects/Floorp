@@ -14,7 +14,7 @@ const ENGINE_NAME = "mozSearch";
 const ENGINE_URL =
   "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs";
 
-add_task(async function setup() {
+add_setup(async function() {
   await Services.search.init();
 
   await SearchTestUtils.installSearchExtension({

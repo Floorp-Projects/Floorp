@@ -10,7 +10,7 @@
 
 const TEST_URL = "about:mozilla";
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");

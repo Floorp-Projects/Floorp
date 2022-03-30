@@ -22,7 +22,7 @@ const DISCO_URL = `http://${AMO_TEST_HOST}/discoapi`;
 // used in this test, this is set in the `setup` test task below.
 let getAddonIdFromDiscoResult;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabling the Data Upload pref may upload data.

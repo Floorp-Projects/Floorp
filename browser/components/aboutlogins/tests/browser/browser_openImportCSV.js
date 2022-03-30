@@ -257,7 +257,7 @@ class CsvImportHelper {
 
 const random = Math.round(Math.random() * 100000001);
 
-add_task(async function setup() {
+add_setup(async function() {
   registerCleanupFunction(() => {
     Services.logins.removeAllUserFacingLogins();
   });

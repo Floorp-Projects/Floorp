@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   // head.js has helpers that write to a nice unique file we can use.
   await createDownloadedFile(gTestTargetFile.path, "Hello.\n");
   ok(gTestTargetFile.exists(), "We created a test file.");

@@ -73,7 +73,7 @@ function testPermListHasEntries(expectEntries) {
   ok(!listEntryCount, "List of permissions is empty");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   registerCleanupFunction(() => {
     Services.perms.removeAll();
     Services.prefs.clearUserPref(AUTOPLAY_PREF);

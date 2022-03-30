@@ -12,7 +12,7 @@ registerCleanupFunction(async function() {
 
 let bookmarks; // Bookmarks added via insertTree.
 
-add_task(async function setup() {
+add_setup(async function() {
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [

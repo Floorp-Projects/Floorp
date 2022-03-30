@@ -8,7 +8,7 @@ function getCellText(tree, i, cellName) {
   return tree.view.getCellText(i, tree.columns.getNamedColumn(cellName));
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SearchTestUtils.installSearchExtension({
     keyword: ["testing", "customkeyword"],
     search_url: "https://example.com/engine1",

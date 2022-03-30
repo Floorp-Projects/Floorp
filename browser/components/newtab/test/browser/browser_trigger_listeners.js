@@ -2,7 +2,7 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   registerCleanupFunction(() => {
     const trigger = ASRouterTriggerListeners.get("openURL");
     trigger.uninit();

@@ -2,7 +2,7 @@
 
 const SCALAR_ABOUT_HOME = "browser.engagement.navigation.about_home";
 
-add_task(async function setup() {
+add_setup(async function() {
   // about:home uses IndexedDB. However, the test finishes too quickly and doesn't
   // allow it enougth time to save. So it throws. This disables all the uncaught
   // exception in this file and that's the reason why we split about:home tests

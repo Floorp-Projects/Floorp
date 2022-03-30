@@ -27,7 +27,7 @@ function createPromiseForFilePicker() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   tempDir = createTemporarySaveDirectory();
   MockFilePicker.displayDirectory = tempDir;
 

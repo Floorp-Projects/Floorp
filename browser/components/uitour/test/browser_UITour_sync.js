@@ -15,7 +15,7 @@ registerCleanupFunction(function() {
 
 add_task(setup_UITourTest);
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.root",
     "https://example.com"

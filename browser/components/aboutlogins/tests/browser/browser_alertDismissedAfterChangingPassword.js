@@ -24,7 +24,7 @@ let VULNERABLE_TEST_LOGIN2 = new nsLoginInfo(
   "password"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   VULNERABLE_TEST_LOGIN2 = await addLogin(VULNERABLE_TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);

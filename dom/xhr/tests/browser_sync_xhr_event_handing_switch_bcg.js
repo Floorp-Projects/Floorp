@@ -6,7 +6,7 @@ const baseURL = getRootDirectory(gTestPath).replace(
 const childURL = `${baseURL}empty.html`;
 const parentURL = `${baseURL}empty_parent.html`;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.canSuspendInBCG.enabled", true]],
   });

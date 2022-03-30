@@ -3,7 +3,7 @@
 const INSTALL_PAGE = `${BASE}/file_install_extensions.html`;
 const INSTALL_XPI = `${BASE}/browser_webext_permissions.xpi`;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],
