@@ -7,7 +7,7 @@ const TEST_URL = "about:buildconfig";
 const TEST_URI = Services.io.newURI(TEST_URL);
 
 // Setup.
-add_task(async function setup() {
+add_setup(async function() {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
 

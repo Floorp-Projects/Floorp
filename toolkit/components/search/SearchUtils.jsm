@@ -324,13 +324,7 @@ var SearchUtils = {
       name +
       disclaimer.replace(/\$appName/g, Services.appinfo.name);
 
-    let converter = Cc[
-      "@mozilla.org/intl/scriptableunicodeconverter"
-    ].createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    // Data is an array of bytes.
-    let data = converter.convertToByteArray(salt, {});
+    let data = new TextEncoder("utf-8").encode(salt);
     let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
       Ci.nsICryptoHash
     );

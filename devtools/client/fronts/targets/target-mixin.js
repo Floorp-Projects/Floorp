@@ -520,9 +520,10 @@ function TargetMixin(parentClass) {
         return;
       }
 
-      // Avoid attaching any thread actor in the browser console
-      // in order to avoid trigerring any type of breakpoint.
-      if (targetCommand.descriptorFront.createdForBrowserConsole) {
+      // Avoid attaching any thread actor in the browser console or in
+      // webextension commands in order to avoid triggering any type of
+      // breakpoint.
+      if (targetCommand.descriptorFront.doNotAttachThreadActor) {
         return;
       }
 

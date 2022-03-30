@@ -1684,7 +1684,8 @@ void MediaFormatReader::NotifyNewOutput(
            sample->mDuration.ToMicroseconds());
       decoder.mOutput.AppendElement(sample);
       decoder.mNumSamplesOutput++;
-      decoder.mNumOfConsecutiveError = 0;
+      decoder.mNumOfConsecutiveDecodingError = 0;
+      decoder.mNumOfConsecutiveRDDCrashes = 0;
     }
   LOG("Done processing new %s samples", TrackTypeToStr(aTrack));
 
@@ -2373,8 +2374,13 @@ void MediaFormatReader::Update(TrackType aTrack) {
         !decoder.mHardwareDecodingDisabled;
     bool needsNewDecoder =
         decoder.mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER ||
-        decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR ||
         firstFrameDecodingFailedWithHardware;
+    // Limit number of RDD process restarts after crash
+    if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR &&
+        decoder.mNumOfConsecutiveRDDCrashes++ <
+            decoder.mMaxConsecutiveRDDCrashes) {
+      needsNewDecoder = true;
+    }
 #ifdef XP_LINUX
     // We failed to decode on Linux with HW decoder,
     // give it another try without HW decoder.
@@ -2396,8 +2402,8 @@ void MediaFormatReader::Update(TrackType aTrack) {
       decoder.mError = Some(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                                         RESULT_DETAIL("Unable to decode")));
     }
-    if (!needsNewDecoder &&
-        ++decoder.mNumOfConsecutiveError > decoder.mMaxConsecutiveError) {
+    if (!needsNewDecoder && ++decoder.mNumOfConsecutiveDecodingError >
+                                decoder.mMaxConsecutiveDecodingError) {
       DDLOG(DDLogCategory::Log, "too_many_decode_errors", decoder.mError.ref());
       NotifyError(aTrack, decoder.mError.ref());
       return;
@@ -2407,8 +2413,9 @@ void MediaFormatReader::Update(TrackType aTrack) {
     }
     decoder.mError.reset();
 
-    LOG("%s decoded error count %d", TrackTypeToStr(aTrack),
-        decoder.mNumOfConsecutiveError);
+    LOG("%s decoded error count %d RDD crashes count %d",
+        TrackTypeToStr(aTrack), decoder.mNumOfConsecutiveDecodingError,
+        decoder.mNumOfConsecutiveRDDCrashes);
 
     if (needsNewDecoder) {
       LOG("Error: Need new decoder");

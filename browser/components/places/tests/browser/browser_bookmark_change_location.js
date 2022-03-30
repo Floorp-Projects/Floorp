@@ -12,7 +12,7 @@ const TEST_URL2 = "about:config";
 const TEST_URL3 = "about:credits";
 
 // Setup.
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.toolbars.bookmarks.visibility", "always"]],
   });

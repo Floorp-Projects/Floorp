@@ -26,27 +26,36 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/avoid-Date-timing
    eslint-plugin-mozilla/avoid-removeChild
    eslint-plugin-mozilla/balanced-listeners
+   eslint-plugin-mozilla/balanced-observers
    eslint-plugin-mozilla/consistent-if-bracing
    eslint-plugin-mozilla/import-browser-window-globals
    eslint-plugin-mozilla/import-content-task-globals
    eslint-plugin-mozilla/import-globals
    eslint-plugin-mozilla/import-globals-from
    eslint-plugin-mozilla/import-headjs-globals
+   eslint-plugin-mozilla/mark-exported-symbols-as-used
    eslint-plugin-mozilla/mark-test-function-used
    eslint-plugin-mozilla/no-aArgs
+   eslint-plugin-mozilla/no-addtask-setup
+   eslint-plugin-mozilla/no-arbitrary-setTimeout
    eslint-plugin-mozilla/no-compare-against-boolean-literals
    eslint-plugin-mozilla/no-define-cc-etc
    eslint-plugin-mozilla/no-throw-cr-literal
    eslint-plugin-mozilla/no-useless-parameters
    eslint-plugin-mozilla/no-useless-removeEventListener
    eslint-plugin-mozilla/no-useless-run-test
+   eslint-plugin-mozilla/prefer-boolean-length-check
+   eslint-plugin-mozilla/prefer-formatValues
    eslint-plugin-mozilla/reject-addtask-only
    eslint-plugin-mozilla/reject-chromeutils-import-params
    eslint-plugin-mozilla/reject-importGlobalProperties
    eslint-plugin-mozilla/reject-osfile
+   eslint-plugin-mozilla/reject-relative-requires
+   eslint-plugin-mozilla/reject-requires-await
    eslint-plugin-mozilla/reject-scriptableunicodeconverter
    eslint-plugin-mozilla/reject-some-requires
    eslint-plugin-mozilla/use-cc-etc
+   eslint-plugin-mozilla/use-chromeutils-generateqi
    eslint-plugin-mozilla/use-chromeutils-import
    eslint-plugin-mozilla/use-default-preference-values
    eslint-plugin-mozilla/use-includes-instead-of-indexOf

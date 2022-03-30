@@ -156,6 +156,7 @@ let observer = new (class extends EventEmitter {
             index: event.index,
             type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(event.itemType),
             url: getUrl(event.itemType, event.url),
+            title: event.title,
           };
 
           this.emit("removed", {

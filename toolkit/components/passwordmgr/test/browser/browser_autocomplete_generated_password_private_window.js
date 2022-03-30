@@ -4,7 +4,7 @@ const FORM_PAGE_PATH =
   "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const passwordInputSelector = "#form-basic-password";
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.telemetry.clearEvents();
   TelemetryTestUtils.assertEvents([], {
     category: "pwmgr",

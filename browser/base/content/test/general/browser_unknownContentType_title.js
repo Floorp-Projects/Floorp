@@ -16,7 +16,7 @@ function waitForNewWindow() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   let tmpDir = PathUtils.join(
     PathUtils.tempDir,
     "testsavedir" + Math.floor(Math.random() * 2 ** 32)

@@ -50,11 +50,13 @@ class SVGAElement final : public SVGAElementBase, public Link {
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual int32_t TabIndexDefault() override;
+
+  int32_t TabIndexDefault() override;
   bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
-  virtual bool IsLink(nsIURI** aURI) const override;
-  virtual void GetLinkTarget(nsAString& aTarget) override;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const override;
+
+  void GetLinkTarget(nsAString& aTarget) override;
+  already_AddRefed<nsIURI> GetHrefURI() const override;
+
   virtual EventStates IntrinsicState() const override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,

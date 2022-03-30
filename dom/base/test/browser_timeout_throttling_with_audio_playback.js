@@ -58,7 +58,7 @@ async function runTest(url) {
   BrowserTestUtils.removeTab(newTab);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.min_background_timeout_value", kMinTimeoutBackground]],
   });

@@ -48,7 +48,7 @@ function createPromiseForTransferComplete() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   info("Setting up the prefs.");
 
   await SpecialPowers.pushPrefEnv({

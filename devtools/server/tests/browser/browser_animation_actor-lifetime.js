@@ -5,7 +5,7 @@
 
 // Test for Bug 1247243
 
-add_task(async function setup() {
+add_task(async function() {
   info("Setting up inspector and animation actors.");
   const { animations, walker } = await initAnimationsFrontForUrl(
     MAIN_DOMAIN + "animation-data.html"

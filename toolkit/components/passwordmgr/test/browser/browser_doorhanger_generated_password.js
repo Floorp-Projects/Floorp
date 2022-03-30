@@ -279,7 +279,7 @@ async function submitForm(browser) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.available", true],

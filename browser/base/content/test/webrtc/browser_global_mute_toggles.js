@@ -15,7 +15,7 @@ const MUTE_TOPICS = [
   "getUserMedia:unmuteAudio",
 ];
 
-add_task(async function setup() {
+add_setup(async function() {
   let prefs = [
     [PREF_PERMISSION_FAKE, true],
     [PREF_AUDIO_LOOPBACK, ""],

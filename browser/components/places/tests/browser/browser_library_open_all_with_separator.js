@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   await PlacesUtils.bookmarks.insertTree({

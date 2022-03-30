@@ -55,7 +55,7 @@ let mockedInternal = {
   hasSyncedThisSession: false,
 };
 
-add_task(async function setup() {
+add_setup(async function() {
   const getSignedInUser = FxAccounts.config.getSignedInUser;
   FxAccounts.config.getSignedInUser = async () =>
     Promise.resolve({ uid: "uid", email: "foo@bar.com" });

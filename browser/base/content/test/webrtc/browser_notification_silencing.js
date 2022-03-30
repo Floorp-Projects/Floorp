@@ -129,7 +129,7 @@ async function testNotificationSilencing(aBrowser) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Set prefs so that permissions prompts are shown and loopback devices
   // are not used. To test the chrome we want prompts to be shown, and
   // these tests are flakey when using loopback devices (though it would

@@ -48,7 +48,7 @@ function clickSearchbarSuggestion(entryName, clickOptions = {}) {
   EventUtils.synthesizeMouseAtCenter(richlistitem, clickOptions);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await gCUITestUtils.addSearchBar();
   const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   suggestionEngine = await SearchTestUtils.promiseNewSearchEngine(url, "");

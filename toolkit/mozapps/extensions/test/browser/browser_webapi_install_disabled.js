@@ -17,7 +17,7 @@ function waitForClear() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],

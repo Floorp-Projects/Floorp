@@ -8,22 +8,14 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 module.exports = {
   meta: {
     docs: {
-      description: "disallow use of Date for timing measurements",
-      category: "Best Practices",
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/avoid-Date-timing.html",
     },
-    schema: [],
+    type: "problem",
   },
-
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
 
   create(context) {
     return {

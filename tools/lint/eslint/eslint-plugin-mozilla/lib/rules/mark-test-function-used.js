@@ -10,31 +10,33 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 var helpers = require("../helpers");
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  // ---------------------------------------------------------------------------
-
-  return {
-    Program() {
-      let testType = helpers.getTestType(context);
-      if (testType == "browser") {
-        context.markVariableAsUsed("test");
-      }
-
-      if (testType == "xpcshell") {
-        context.markVariableAsUsed("run_test");
-      }
-
-      if (helpers.getIsSjs(context)) {
-        context.markVariableAsUsed("handleRequest");
-      }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/mark-test-function-used.html",
     },
-  };
+    type: "problem",
+  },
+
+  create(context) {
+    return {
+      Program() {
+        let testType = helpers.getTestType(context);
+        if (testType == "browser") {
+          context.markVariableAsUsed("test");
+        }
+
+        if (testType == "xpcshell") {
+          context.markVariableAsUsed("run_test");
+        }
+
+        if (helpers.getIsSjs(context)) {
+          context.markVariableAsUsed("handleRequest");
+        }
+      },
+    };
+  },
 };

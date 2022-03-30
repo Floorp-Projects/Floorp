@@ -33,7 +33,7 @@ async function test_dialog_window() {
   await BrowserTestUtils.closeWindow(diagWin);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });

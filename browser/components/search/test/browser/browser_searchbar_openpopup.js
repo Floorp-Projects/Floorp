@@ -34,7 +34,7 @@ let searchIcon;
 let goButton;
 let engine;
 
-add_task(async function setup() {
+add_setup(async function() {
   searchbar = await gCUITestUtils.addSearchBar();
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");

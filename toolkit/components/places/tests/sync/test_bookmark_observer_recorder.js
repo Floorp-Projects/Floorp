@@ -441,6 +441,7 @@ add_task(async function test_apply_then_revert() {
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         urlHref: "http://example.com/d",
+        title: "D",
         guid: "bookmarkDDDD",
         parentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,

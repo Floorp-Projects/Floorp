@@ -34,7 +34,7 @@ const HTTPS_TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
   "https://test2.example.com"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_ACTIVE, true]] });
 });
 

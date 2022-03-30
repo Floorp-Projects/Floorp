@@ -16,7 +16,7 @@ const { TranslationDocument } = ChromeUtils.import(
   "resource:///modules/translation/TranslationDocument.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.prefs.setCharPref(kClientIdPref, "testClient");
   Services.prefs.setCharPref(kClientSecretPref, "testSecret");
 

@@ -9,30 +9,32 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        isIdentifier(node.object, "OS") &&
-        isIdentifier(node.property, "File")
-      ) {
-        context.report(
-          node,
-          "OS.File is deprecated. You should use IOUtils instead."
-        );
-      }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-osfile.html",
     },
-  };
+    type: "problem",
+  },
+
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          isIdentifier(node.object, "OS") &&
+          isIdentifier(node.property, "File")
+        ) {
+          context.report(
+            node,
+            "OS.File is deprecated. You should use IOUtils instead."
+          );
+        }
+      },
+    };
+  },
 };

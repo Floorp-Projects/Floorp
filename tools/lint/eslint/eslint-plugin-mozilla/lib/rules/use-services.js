@@ -11,13 +11,16 @@ const helpers = require("../helpers");
 
 let servicesInterfaceMap = helpers.servicesData;
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
 module.exports = {
   meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-services.html",
+    },
     // fixable: "code",
+    type: "suggestion",
   },
+
   create(context) {
     return {
       CallExpression(node) {

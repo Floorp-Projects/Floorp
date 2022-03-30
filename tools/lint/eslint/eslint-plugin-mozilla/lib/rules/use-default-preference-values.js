@@ -9,37 +9,42 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    TryStatement(node) {
-      let types = ["Bool", "Char", "Float", "Int"];
-      let methods = types.map(type => "get" + type + "Pref");
-      if (node.block.type != "BlockStatement" || node.block.body.length != 1) {
-        return;
-      }
-
-      let firstStm = node.block.body[0];
-      if (
-        firstStm.type != "ExpressionStatement" ||
-        firstStm.expression.type != "AssignmentExpression" ||
-        firstStm.expression.right.type != "CallExpression" ||
-        firstStm.expression.right.callee.type != "MemberExpression" ||
-        firstStm.expression.right.callee.property.type != "Identifier" ||
-        !methods.includes(firstStm.expression.right.callee.property.name)
-      ) {
-        return;
-      }
-
-      let msg = "provide a default value instead of using a try/catch block";
-      context.report(node, msg);
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-default-preference-values.html",
     },
-  };
+    type: "suggestion",
+  },
+
+  create(context) {
+    return {
+      TryStatement(node) {
+        let types = ["Bool", "Char", "Float", "Int"];
+        let methods = types.map(type => "get" + type + "Pref");
+        if (
+          node.block.type != "BlockStatement" ||
+          node.block.body.length != 1
+        ) {
+          return;
+        }
+
+        let firstStm = node.block.body[0];
+        if (
+          firstStm.type != "ExpressionStatement" ||
+          firstStm.expression.type != "AssignmentExpression" ||
+          firstStm.expression.right.type != "CallExpression" ||
+          firstStm.expression.right.callee.type != "MemberExpression" ||
+          firstStm.expression.right.callee.property.type != "Identifier" ||
+          !methods.includes(firstStm.expression.right.callee.property.name)
+        ) {
+          return;
+        }
+
+        let msg = "provide a default value instead of using a try/catch block";
+        context.report(node, msg);
+      },
+    };
+  },
 };

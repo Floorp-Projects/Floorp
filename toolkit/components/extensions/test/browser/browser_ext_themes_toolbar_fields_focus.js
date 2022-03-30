@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   // Remove the `remotecontrol` attribute since it interferes with the urlbar styling.
   document.documentElement.removeAttribute("remotecontrol");
   registerCleanupFunction(() => {

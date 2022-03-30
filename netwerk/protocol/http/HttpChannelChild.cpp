@@ -1798,7 +1798,15 @@ NS_IMETHODIMP
 HttpChannelChild::Cancel(nsresult aStatus) {
   LOG(("HttpChannelChild::Cancel [this=%p, status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aStatus)));
-  LogCallingScriptLocation(this);
+  // only logging on parent is necessary
+  Maybe<nsCString> logStack = CallingScriptLocationString();
+  Maybe<nsCString> logOnParent;
+  if (logStack.isSome()) {
+    logOnParent = Some(""_ns);
+    logOnParent->AppendPrintf(
+        "[this=%p] cancelled call in child process from script: %s", this,
+        logStack->get());
+  }
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1815,7 +1823,7 @@ HttpChannelChild::Cancel(nsresult aStatus) {
 #endif
 
     if (remoteChannelExists) {
-      SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason());
+      SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason(), logOnParent);
     } else if (MOZ_UNLIKELY(!LoadOnStartRequestCalled() ||
                             !LoadOnStopRequestCalled())) {
       Unused << AsyncAbort(mStatus);

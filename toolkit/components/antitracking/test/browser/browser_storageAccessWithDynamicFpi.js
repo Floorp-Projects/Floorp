@@ -35,7 +35,7 @@ async function cleanup() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({
     set: [

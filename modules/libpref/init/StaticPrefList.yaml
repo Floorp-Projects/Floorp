@@ -2200,12 +2200,6 @@
   value: true
   mirror: always
 
-# Enable clipboard readText() and writeText() by default
-- name: dom.events.asyncClipboard
-  type: bool
-  value: true
-  mirror: always
-
 # Disable clipboard.read() by default
 - name: dom.events.asyncClipboard.read
   type: bool
@@ -8051,6 +8045,12 @@
   value: false
   mirror: always
 
+# Whether anchor is kept selected.
+- name: layout.selectanchor
+  type: bool
+  value: false
+  mirror: always
+
 # Controls caret style and word-delete during text selection.
 # 0: Use platform default
 # 1: Caret moves and blinks as when there is no selection; word
@@ -8733,6 +8733,13 @@
 - name: media.rdd-process.startup_timeout_ms
   type: RelaxedAtomicInt32
   value: 5000
+  mirror: always
+
+# Specifies how many times we restart RDD process after crash till we give up.
+# After first RDD restart we disable HW acceleration on Linux.
+- name: media.rdd-process.max-crashes
+  type: RelaxedAtomicInt32
+  value: 2
   mirror: always
 
 #ifdef MOZ_FFMPEG

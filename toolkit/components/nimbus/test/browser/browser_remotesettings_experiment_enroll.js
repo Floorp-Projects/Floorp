@@ -18,7 +18,7 @@ const { ExperimentFakes } = ChromeUtils.import(
 
 let rsClient;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],

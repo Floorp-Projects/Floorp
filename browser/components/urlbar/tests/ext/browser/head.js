@@ -38,7 +38,7 @@ const SCRIPT_PATH = getTestFilePath(SCRIPT_BASENAME);
 let schemaSource;
 let scriptSource;
 
-add_task(async function loadSource() {
+add_setup(async function loadSource() {
   schemaSource = await (await fetch("file://" + SCHEMA_PATH)).text();
   scriptSource = await (await fetch("file://" + SCRIPT_PATH)).text();
 });

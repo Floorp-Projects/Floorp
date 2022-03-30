@@ -12,10 +12,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 var helpers = require("../helpers");
 var frameScriptEnv = require("../environments/frame-script");
 
@@ -43,42 +39,53 @@ var sandboxGlobals = [
   "todo_is",
 ];
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  // ---------------------------------------------------------------------------
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/import-content-task-globals.html",
+    },
+    type: "problem",
+  },
 
-  return {
-    "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(
-      node
-    ) {
-      for (let global in frameScriptEnv.globals) {
-        helpers.addVarToScope(
-          global,
-          context.getScope(),
-          frameScriptEnv.globals[global]
-        );
-      }
-    },
-    "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function(
-      node
-    ) {
-      let globals = [...sandboxGlobals, "SpecialPowers", "content", "docShell"];
-      for (let global of globals) {
-        helpers.addVarToScope(global, context.getScope(), false);
-      }
-    },
-    "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']": function(
-      node
-    ) {
-      let globals = [
-        ...sandboxGlobals,
-        "browsingContext",
-        "windowGlobalParent",
-      ];
-      for (let global of globals) {
-        helpers.addVarToScope(global, context.getScope(), false);
-      }
-    },
-  };
+  create(context) {
+    return {
+      "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(
+        node
+      ) {
+        for (let global in frameScriptEnv.globals) {
+          helpers.addVarToScope(
+            global,
+            context.getScope(),
+            frameScriptEnv.globals[global]
+          );
+        }
+      },
+      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function(
+        node
+      ) {
+        let globals = [
+          ...sandboxGlobals,
+          "SpecialPowers",
+          "content",
+          "docShell",
+        ];
+        for (let global of globals) {
+          helpers.addVarToScope(global, context.getScope(), false);
+        }
+      },
+      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']": function(
+        node
+      ) {
+        let globals = [
+          ...sandboxGlobals,
+          "browsingContext",
+          "windowGlobalParent",
+        ];
+        for (let global of globals) {
+          helpers.addVarToScope(global, context.getScope(), false);
+        }
+      },
+    };
+  },
 };
