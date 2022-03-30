@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
+import mozilla.components.feature.intent.ext.sanitize
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_CATEGORY
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_PACKAGE
@@ -43,7 +44,7 @@ class IntentReceiverActivity : Activity() {
         // assumes it is not. If it's null, then we make a new one and open
         // the HomeActivity.
         val intent = intent?.let { Intent(it) } ?: Intent()
-        intent.stripUnwantedFlags()
+        intent.sanitize().stripUnwantedFlags()
         processIntent(intent)
 
         components.core.engine.profiler?.addMarker(
