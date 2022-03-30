@@ -10,7 +10,7 @@ const finalURL =
 var observer;
 var visitSavedPromise;
 
-add_task(async function setup() {
+add_setup(async function() {
   visitSavedPromise = new Promise(resolve => {
     observer = {
       observe(subject, topic, data) {

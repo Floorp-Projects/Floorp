@@ -8,7 +8,7 @@ let { ResetProfile } = ChromeUtils.import(
 
 // For this test to work properly, this profile actually needs to be
 // "reset-able", which requires that it be recognized by the profile service
-add_task(async function setup() {
+add_setup(async function() {
   let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
   let profileName = profileDirectory.leafName;
   let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(

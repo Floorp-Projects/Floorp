@@ -11,7 +11,7 @@ const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
 
 AddonTestUtils.initMochitest(this);
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.install.requireBuiltInCerts", false]],
   });

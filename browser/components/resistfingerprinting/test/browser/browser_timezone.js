@@ -3,7 +3,7 @@
  *               UTC timezone after fingerprinting resistance is enabled.
  */
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });

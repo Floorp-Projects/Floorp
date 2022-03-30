@@ -20,7 +20,7 @@ let gMainSubButton;
 let gSubView;
 let gSubButton;
 
-add_task(async function setup() {
+add_setup(async function() {
   let navBar = document.getElementById("nav-bar");
   gAnchor = document.createXULElement("toolbarbutton");
   // Must be focusable in order for key presses to work.

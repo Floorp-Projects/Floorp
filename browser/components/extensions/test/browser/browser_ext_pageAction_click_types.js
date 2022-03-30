@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   // The page action button is hidden by default.
   // This tests the use of pageAction when the button is visible.
   //

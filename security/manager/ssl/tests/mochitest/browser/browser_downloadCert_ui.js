@@ -66,7 +66,7 @@ function openCertDownloadDialog(cert) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   for (let testCase of TEST_CASES) {
     testCase.cert = await readCertificate(testCase.certFilename, ",,");
     Assert.notEqual(

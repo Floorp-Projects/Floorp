@@ -13,6 +13,7 @@
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
+// eslint-disable-next-line mozilla/no-addtask-setup
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],

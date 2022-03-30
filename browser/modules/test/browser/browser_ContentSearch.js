@@ -30,7 +30,7 @@ function sendEventToContent(browser, data) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   const originalEngine = await Services.search.getDefault();
   const originalPrivateEngine = await Services.search.getDefaultPrivate();
 

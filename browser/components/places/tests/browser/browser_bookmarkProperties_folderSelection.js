@@ -7,7 +7,7 @@ let bookmarkPanel;
 let folders;
 let win;
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");

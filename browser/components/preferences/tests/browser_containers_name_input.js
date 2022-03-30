@@ -1,7 +1,7 @@
 const CONTAINERS_URL =
   "chrome://browser/content/preferences/dialogs/containers.xhtml";
 
-add_task(async function setup() {
+add_setup(async function() {
   await openPreferencesViaOpenPreferencesAPI("containers", { leaveOpen: true });
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

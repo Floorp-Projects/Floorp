@@ -121,7 +121,7 @@ function cleanup() {
   Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["network.cookie.cookieBehavior", 5]],
   });

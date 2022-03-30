@@ -3,7 +3,7 @@
 const kTestPath = getRootDirectory(gTestPath);
 const kTestURI = kTestPath + "file_assert_systemprincipal_documents.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   // We expect the assertion in function
   // CheckSystemPrincipalLoads as defined in
   // file dom/security/nsContentSecurityManager.cpp

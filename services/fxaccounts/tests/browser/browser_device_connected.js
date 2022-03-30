@@ -15,7 +15,7 @@ const DEVICES_URL = "https://example.com/devices";
 
 let expectedBody;
 
-add_task(async function setup() {
+add_setup(async function() {
   const origManageDevicesURI = FxAccounts.config.promiseManageDevicesURI;
   FxAccounts.config.promiseManageDevicesURI = () =>
     Promise.resolve(DEVICES_URL);

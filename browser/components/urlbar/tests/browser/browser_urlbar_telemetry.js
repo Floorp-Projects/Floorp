@@ -86,7 +86,7 @@ async function withNewSearchEngine(taskFn) {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SearchTestUtils.installSearchExtension({
     name: "MozSearch",
     keyword: "mozalias",

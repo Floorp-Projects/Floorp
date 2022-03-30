@@ -51,7 +51,7 @@ let login2B = new nsLoginInfo(
 
 requestLongerTimeout(2);
 
-add_task(async function setup() {
+add_setup(async function() {
   // Load recipes for this test.
   let recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.load({

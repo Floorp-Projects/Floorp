@@ -9,7 +9,7 @@ const DIRPATH = getRootDirectory(gTestPath).replace(
  */
 const TEST_BLOB_CONTENTS = `I'm a disk-backed test blob! Hooray!`;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set preferences so that opening a page with the origin "example.org"

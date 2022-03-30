@@ -26,7 +26,7 @@ let extensions = [];
 let oldDefaultEngine;
 let oldDefaultPrivateEngine;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault", true],

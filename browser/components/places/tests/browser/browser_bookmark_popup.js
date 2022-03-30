@@ -22,7 +22,7 @@ const TEST_URL = "data:text/html,<html><body></body></html>";
 
 StarUI._closePanelQuickForTesting = true;
 
-add_task(async function setup() {
+add_setup(async function() {
   bookmarkPanel.setAttribute("animate", false);
   registerCleanupFunction(() => {
     bookmarkPanel.removeAttribute("animate");
