@@ -19,11 +19,10 @@
 #include <unordered_map>
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
 #include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"        // for Monitor
-#include "mozilla/RefPtr.h"         // for RefPtr
-#include "mozilla/StaticMonitor.h"  // for StaticMonitor
-#include "mozilla/TimeStamp.h"      // for TimeStamp
-#include "mozilla/gfx/Point.h"      // for IntSize
+#include "mozilla/Monitor.h"    // for Monitor
+#include "mozilla/RefPtr.h"     // for RefPtr
+#include "mozilla/TimeStamp.h"  // for TimeStamp
+#include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/layers/CompositorController.h"
@@ -525,7 +524,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // Helper method so that we don't have to expose mApzcTreeManager to
   // ContentCompositorBridgeParent.
   void AllocateAPZCTreeManagerParent(
-      const StaticMonitorAutoLock& aProofOfLayerTreeStateLock,
+      const MonitorAutoLock& aProofOfLayerTreeStateLock,
       const LayersId& aLayersId, LayerTreeState& aLayerTreeStateToUpdate);
 
   PAPZParent* AllocPAPZParent(const LayersId& aLayersId) override;
@@ -627,13 +626,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ResumeComposition();
   void ResumeCompositionAndResize(int x, int y, int width, int height);
   void Invalidate();
-  bool IsPaused();
-
-  typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState>
-      LayerTreeMap;
-
-  static StaticMonitor sIndirectLayerTreesLock;
-  static LayerTreeMap sIndirectLayerTrees GUARDED_BY(sIndirectLayerTreesLock);
+  bool IsPaused() { return mPaused; }
 
  protected:
   void ForceComposition(wr::RenderReasons aReasons);
@@ -703,8 +696,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   CompositorOptions mOptions;
 
-  mozilla::Monitor mPauseCompositionMonitor;
-  mozilla::Monitor mResumeCompositionMonitor;
+  mozilla::Monitor mPauseCompositionMonitor MOZ_UNANNOTATED;
+  mozilla::Monitor mResumeCompositionMonitor MOZ_UNANNOTATED;
 
   uint64_t mCompositorBridgeID;
   LayersId mRootLayerTreeID;
