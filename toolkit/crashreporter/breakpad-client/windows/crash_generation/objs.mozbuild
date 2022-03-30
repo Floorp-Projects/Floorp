@@ -9,7 +9,6 @@ lobjs_crash_generation = [
     'crash_generation_client.cc',
     'crash_generation_server.cc',
     'minidump_generator.cc',
-    'temporary_stack.cc',
 ]
 
 subdir = 'toolkit/crashreporter/breakpad-client/windows/crash_generation'
