@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   let oldBlocklistValue = Services.prefs.getStringPref(
     "places.interactions.customBlocklist",
     "[]"

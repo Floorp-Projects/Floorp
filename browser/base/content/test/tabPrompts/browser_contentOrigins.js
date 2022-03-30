@@ -125,7 +125,7 @@ async function checkDialog(
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["prompts.contentPromptSubDialog", true],

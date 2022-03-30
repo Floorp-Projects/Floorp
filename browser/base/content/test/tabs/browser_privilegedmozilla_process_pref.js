@@ -17,7 +17,7 @@ const TEST_HIGH2 = "https://test1.example.org/";
 const TEST_LOW1 = "http://example.org/";
 const TEST_LOW2 = "https://example.com/";
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true],

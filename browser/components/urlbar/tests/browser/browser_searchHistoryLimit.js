@@ -15,7 +15,7 @@ const { SearchSuggestionController } = ChromeUtils.import(
 
 let gEngine;
 
-add_setup(async function() {
+add_task(async function setup() {
   await SearchTestUtils.installSearchExtension();
   gEngine = Services.search.getEngineByName("Example");
   let oldDefaultEngine = await Services.search.getDefault();

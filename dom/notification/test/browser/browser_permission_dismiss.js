@@ -93,7 +93,7 @@ function tabWithRequest(task, permission) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   Services.prefs.setBoolPref(
     "dom.webnotifications.requireuserinteraction",
     false

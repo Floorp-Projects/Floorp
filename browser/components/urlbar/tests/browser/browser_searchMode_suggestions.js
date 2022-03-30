@@ -15,7 +15,7 @@ const MAX_RESULT_COUNT = UrlbarPrefs.get("maxRichResults");
 let suggestionsEngine;
 let expectedFormHistoryResults = [];
 
-add_setup(async function() {
+add_task(async function setup() {
   suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME
   );

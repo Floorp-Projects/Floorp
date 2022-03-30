@@ -251,7 +251,7 @@ let extension1;
 let extension2;
 let currentEngineName;
 
-add_setup(async function() {
+add_task(async function setup() {
   let originalOnMessageSearch = ContentSearch._onMessageSearch;
   let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
 

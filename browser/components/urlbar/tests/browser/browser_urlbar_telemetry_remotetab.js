@@ -95,7 +95,7 @@ function assertTelemetryResults(histograms, type, index, method) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable search suggestions in the urlbar.

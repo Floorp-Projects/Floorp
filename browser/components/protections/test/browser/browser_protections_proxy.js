@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Region: "resource://gre/modules/Region.jsm",
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.report.monitor.enabled", false],

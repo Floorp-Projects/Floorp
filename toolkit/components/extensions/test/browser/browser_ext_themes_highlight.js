@@ -6,7 +6,7 @@ const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
-add_setup(async function() {
+add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
   await gFindBarPromise;
   registerCleanupFunction(() => {

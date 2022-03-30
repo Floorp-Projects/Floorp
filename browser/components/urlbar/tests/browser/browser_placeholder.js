@@ -13,7 +13,7 @@ var tabs = [];
 
 var noEngineString;
 
-add_setup(async function() {
+add_task(async function setup() {
   originalEngine = await Services.search.getDefault();
   [noEngineString, expectedString] = (
     await document.l10n.formatMessages([

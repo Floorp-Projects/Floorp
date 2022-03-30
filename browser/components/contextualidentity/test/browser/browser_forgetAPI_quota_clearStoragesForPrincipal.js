@@ -107,7 +107,7 @@ async function checkIndexedDB(browser) {
 // Test functions.
 //
 
-add_setup(async function() {
+add_task(async function setup() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],

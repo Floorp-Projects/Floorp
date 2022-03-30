@@ -6,7 +6,7 @@
 const TEST_VALUE = "example.com/\xF7?\xF7";
 const START_VALUE = "example.com/%C3%B7?%C3%B7";
 
-add_setup(async function() {
+add_task(async function setup() {
   const engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );

@@ -41,7 +41,7 @@ function openEditCertTrustDialog() {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Initially trust ca.pem for SSL but not e-mail.
   gCert = await readCertificate("ca.pem", "CT,,");
   Assert.ok(

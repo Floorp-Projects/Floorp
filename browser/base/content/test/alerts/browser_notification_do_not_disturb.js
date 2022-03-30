@@ -20,7 +20,7 @@ const PAGE =
 // to show up before we decide that it's not coming.
 const NOTIFICATION_TIMEOUT_SECS = 2000;
 
-add_setup(async function() {
+add_task(async function setup() {
   await addNotificationPermission(PAGE);
 });
 

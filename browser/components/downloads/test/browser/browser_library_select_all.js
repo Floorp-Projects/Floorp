@@ -3,7 +3,7 @@
 
 let gDownloadDir;
 
-add_setup(async function() {
+add_task(async function setup() {
   await task_resetState();
 
   if (!gDownloadDir) {

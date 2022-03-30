@@ -6,7 +6,7 @@ SELECT +=
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.selectSearch", true]],
   });

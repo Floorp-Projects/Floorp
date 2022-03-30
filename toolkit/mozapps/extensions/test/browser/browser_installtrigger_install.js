@@ -18,7 +18,7 @@ AddonTestUtils.initMochitest(this);
 
 AddonTestUtils.hookAMTelemetryEvents();
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],

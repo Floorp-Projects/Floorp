@@ -120,7 +120,7 @@ const TEST_DATA = [
   },
 ];
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // There are cases that URLBar loses focus before assertion of this test.

@@ -129,7 +129,6 @@ function WaitExpectedEvents(aListenEvents, aExpectedEvents, aEventGenerator) {
   return promise;
 }
 
-// eslint-disable-next-line mozilla/no-addtask-setup
 add_task(async function setup() {
   await SimpleTest.promiseFocus();
   await SpecialPowers.pushPrefEnv({

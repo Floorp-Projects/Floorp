@@ -69,7 +69,7 @@ async function openPermissionsDialog() {
   await sitePermissionsDialog.document.mozSubdialogReady;
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await addDefaultTestPermissions();
 });
 

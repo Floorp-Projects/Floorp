@@ -167,7 +167,7 @@ function simulateUserSelectInMenulist(menulist, value) {
   menulist.doCommand();
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   const setupPrefs = prefs => {
     let prefsBackup = {};
     for (let p of prefs) {

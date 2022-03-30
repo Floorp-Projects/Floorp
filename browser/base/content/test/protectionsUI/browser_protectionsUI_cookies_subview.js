@@ -12,7 +12,7 @@ const CONTAINER_PAGE =
 
 const TPC_PREF = "network.cookie.cookieBehavior";
 
-add_setup(async function() {
+add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {

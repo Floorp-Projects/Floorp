@@ -1,4 +1,4 @@
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });

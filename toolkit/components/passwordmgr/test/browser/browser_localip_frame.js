@@ -1,6 +1,6 @@
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   let login = LoginTestUtils.testData.formLogin({
     origin: "http://10.0.0.0",
     formActionOrigin: "https://example.org",

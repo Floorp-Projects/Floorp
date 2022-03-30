@@ -19,7 +19,7 @@ async function addServiceWorker(origin) {
   ok(true, `${origin} has a service worker`);
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.serviceWorkers.enabled", true],

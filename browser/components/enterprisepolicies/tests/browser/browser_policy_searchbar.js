@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   await setupPolicyEngineWithJson({
     policies: {
       SearchBar: "separate",
@@ -23,7 +23,7 @@ add_task(async function test_menu_shown() {
   await BrowserTestUtils.closeWindow(newWin);
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await setupPolicyEngineWithJson({
     policies: {
       SearchBar: "unified",

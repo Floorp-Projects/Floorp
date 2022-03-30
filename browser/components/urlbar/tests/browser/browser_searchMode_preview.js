@@ -11,7 +11,7 @@ const TEST_ENGINE_NAME = "Test";
 
 let win;
 
-add_setup(async function() {
+add_task(async function setup() {
   win = await BrowserTestUtils.openNewBrowserWindow();
 
   await SearchTestUtils.installSearchExtension({

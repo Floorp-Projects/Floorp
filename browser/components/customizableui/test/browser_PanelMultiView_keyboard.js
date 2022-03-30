@@ -70,7 +70,7 @@ async function expectFocusAfterKey(aKey, aFocus) {
   ok(true, aFocus.id + " focused after " + aKey + " pressed");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // This shouldn't be necessary - but it is, because we use same-process frames.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1565276 covers improving this.
   await SpecialPowers.pushPrefEnv({

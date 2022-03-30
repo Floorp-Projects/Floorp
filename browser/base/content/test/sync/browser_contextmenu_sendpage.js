@@ -27,7 +27,7 @@ const fxaDevices = [
   { id: 4, name: "Homer" }, // Incompatible target.
 ];
 
-add_setup(async function() {
+add_task(async function setup() {
   await promiseSyncReady();
   await Services.search.init();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.

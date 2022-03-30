@@ -16,7 +16,7 @@ const templatePrivate = "https://example.com/?query=";
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 
-add_setup(async function() {
+add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
 
   await SpecialPowers.pushPrefEnv({

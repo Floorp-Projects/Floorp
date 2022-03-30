@@ -3,7 +3,7 @@
 
 const PREF_STRING_NO_DEFAULT = "test.aboutconfig.a";
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_STRING_NO_DEFAULT, "some value"]],
   });

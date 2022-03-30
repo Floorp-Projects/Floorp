@@ -8,7 +8,7 @@
  * we expect them to be.
  */
 
-add_setup(async function() {
+add_task(async function setup() {
   await PlacesUtils.history.clear();
 
   registerCleanupFunction(async function() {

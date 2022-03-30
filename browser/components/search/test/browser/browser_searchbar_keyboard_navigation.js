@@ -47,7 +47,7 @@ async function checkHeader(engine) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   searchbar = await gCUITestUtils.addSearchBar();
   textbox = searchbar.textbox;
 

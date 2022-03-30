@@ -95,7 +95,7 @@ async function setupLogins(...logins) {
   return savedLogins;
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.autofillForms", false]],
   });

@@ -2,7 +2,7 @@
  * Test that doorhanger submit telemetry is sent when the user saves/updates.
  */
 
-add_setup(function() {
+add_task(function setup() {
   // This test used to rely on the initial timer of
   // TestUtils.waitForCondition. See bug 1695395.
   // The test is perma-fail on Linux asan opt without this.

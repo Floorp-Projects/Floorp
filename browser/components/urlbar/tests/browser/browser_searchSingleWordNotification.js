@@ -3,7 +3,7 @@
 
 let gDNSResolved = false;
 let gRealDNSService = gDNSService;
-add_setup(async function() {
+add_task(async function setup() {
   gDNSService = {
     asyncResolve() {
       gDNSResolved = true;

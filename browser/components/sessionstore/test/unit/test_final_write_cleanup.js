@@ -31,7 +31,7 @@ async function prepareWithLimit(back, fwd) {
   await SessionWriter.wipe();
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   registerCleanupFunction(() => SessionWriter.wipe());
 });
 

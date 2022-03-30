@@ -84,7 +84,7 @@ async function check(contentTask, options = {}) {
   }
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.navigator.permission.fake", true],

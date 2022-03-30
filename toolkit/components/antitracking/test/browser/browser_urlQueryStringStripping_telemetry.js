@@ -92,7 +92,7 @@ async function checkTelemetryProbe(probeInParent, expectedCnt, label) {
   is(cnt, expectedCnt, "There should be expected count in telemetry.");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.enabled", true],

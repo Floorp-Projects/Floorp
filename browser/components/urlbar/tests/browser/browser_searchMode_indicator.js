@@ -22,7 +22,7 @@ const TOP_SITES_URLS = [
 let suggestionsEngine;
 let defaultEngine;
 
-add_setup(async function() {
+add_task(async function setup() {
   suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME
   );

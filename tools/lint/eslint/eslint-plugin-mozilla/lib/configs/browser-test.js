@@ -62,7 +62,6 @@ module.exports = {
     "mozilla/import-content-task-globals": "error",
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",
-    "mozilla/no-addtask-setup": "error",
     "mozilla/no-arbitrary-setTimeout": "error",
   },
 };

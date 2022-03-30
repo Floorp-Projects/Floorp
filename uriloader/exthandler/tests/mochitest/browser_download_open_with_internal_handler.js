@@ -95,7 +95,7 @@ function checkTelemetry(desc, expectedAction, expectedType, expectedReason) {
   is(event[5].reason, expectedReason, desc + " telemetry reason");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
     set: [

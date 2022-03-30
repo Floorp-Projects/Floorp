@@ -8,7 +8,7 @@ const TRACKING_PAGE =
 const FP_PROTECTION_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 let fpHistogram;
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [

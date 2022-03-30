@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", 1],

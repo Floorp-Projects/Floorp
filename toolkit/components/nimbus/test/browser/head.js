@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
 });
 
-add_setup(function() {
+add_task(function setup() {
   let sandbox = sinon.createSandbox();
 
   /* We stub the functions that operate with enrollments and remote rollouts

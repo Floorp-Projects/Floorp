@@ -30,7 +30,7 @@ function assertElementsDisplayed(details, expected) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", false],
