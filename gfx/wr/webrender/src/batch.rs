@@ -1560,6 +1560,7 @@ impl BatchBuilder {
                         let brush_flags = BrushFlags::PERSPECTIVE_INTERPOLATION;
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
+                        let mut local_clip_rect = prim_info.combined_local_clip_rect;
 
                         // If we are drawing with snapping enabled, form a simple transform that just applies
                         // the scale / translation from the raster transform. Otherwise, in edge cases where the
@@ -1586,12 +1587,18 @@ impl BatchBuilder {
                             let ty = raster_rect.min.y - sy * prim_rect.min.y;
 
                             let transform = ScaleOffset::new(sx, sy, tx, ty);
+
+                            let raster_clip_rect = map_local_to_raster
+                                .map(&prim_info.combined_local_clip_rect)
+                                .unwrap();
+                            local_clip_rect = transform.unmap_rect(&raster_clip_rect);
+
                             transforms.get_custom(transform.to_transform())
                         };
 
                         let prim_header = PrimitiveHeader {
                             local_rect: prim_rect,
-                            local_clip_rect: prim_info.combined_local_clip_rect,
+                            local_clip_rect,
                             specific_prim_address: prim_cache_address,
                             transform_id,
                         };
