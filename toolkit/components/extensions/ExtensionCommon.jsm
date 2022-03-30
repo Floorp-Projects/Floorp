@@ -2408,6 +2408,8 @@ class EventManager {
             wakeup: () => extension.wakeupBackground(),
             sync: fireEvent,
             async: fireEvent,
+            // fire.async for ProxyContextParent is already not cloning.
+            raw: fireEvent,
           };
 
           try {

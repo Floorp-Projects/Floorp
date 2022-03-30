@@ -71,3 +71,9 @@ add_task(function test_storage_local_idb_bytes_in_use() {
     test_background_storage_area_no_bytes_in_use("local")
   );
 });
+
+add_task(function test_storage_onChanged_event_page() {
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]], () =>
+    test_storage_change_event_page("local")
+  );
+});
