@@ -303,7 +303,7 @@ interface mixin NavigatorAutomationInformation {
 
 // https://www.w3.org/TR/clipboard-apis/#navigator-interface
 partial interface Navigator {
-  [Pref="dom.events.asyncClipboard", SecureContext, SameObject]
+  [SecureContext, SameObject]
   readonly attribute Clipboard clipboard;
 };
 
