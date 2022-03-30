@@ -31,7 +31,7 @@ class TransformStreamDefaultController final : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStreamDefaultController)
 
-  void SetStream(TransformStream* aStream);
+  void SetStream(TransformStream& aStream);
   void SetAlgorithms(TransformerAlgorithms* aTransformerAlgorithms);
 
   explicit TransformStreamDefaultController(nsIGlobalObject* aGlobal);
@@ -46,15 +46,17 @@ class TransformStreamDefaultController final : public nsISupports,
 
   Nullable<double> GetDesiredSize() const;
 
-  void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
-  void Error(JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
-  void Terminate(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                                  ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Error(JSContext* aCx, JS::Handle<JS::Value> aError,
+                                ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Terminate(JSContext* aCx, ErrorResult& aRv);
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Internal slots
-  RefPtr<TransformStream> mStream;
+  MOZ_KNOWN_LIVE RefPtr<TransformStream> mStream;
   RefPtr<TransformerAlgorithms> mTransformerAlgorithms;
 };
 

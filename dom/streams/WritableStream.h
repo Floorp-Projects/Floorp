@@ -52,10 +52,12 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   Promise* GetCloseRequest() { return mCloseRequest; }
   void SetCloseRequest(Promise* aRequest) { mCloseRequest = aRequest; }
 
-  WritableStreamDefaultController* Controller() { return mController; }
-  void SetController(WritableStreamDefaultController* aController) {
-    MOZ_ASSERT(aController);
-    mController = aController;
+  MOZ_KNOWN_LIVE WritableStreamDefaultController* Controller() {
+    return mController;
+  }
+  void SetController(WritableStreamDefaultController& aController) {
+    MOZ_ASSERT(!mController);
+    mController = &aController;
   }
 
   Promise* GetInFlightWriteRequest() const { return mInFlightWriteRequest; }
@@ -162,7 +164,7 @@ class WritableStream : public nsISupports, public nsWrapperCache {
  private:
   bool mBackpressure = false;
   RefPtr<Promise> mCloseRequest;
-  RefPtr<WritableStreamDefaultController> mController;
+  MOZ_KNOWN_LIVE RefPtr<WritableStreamDefaultController> mController;
   RefPtr<Promise> mInFlightWriteRequest;
   RefPtr<Promise> mInFlightCloseRequest;
 
