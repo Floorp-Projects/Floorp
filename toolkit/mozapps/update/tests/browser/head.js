@@ -65,7 +65,7 @@ requestLongerTimeout(10);
 /**
  * Common tasks to perform for all tests before each one has started.
  */
-add_task(async function setupTestCommon() {
+add_setup(async function setupTestCommon() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_APP_UPDATE_BADGEWAITTIME, 1800],

@@ -296,7 +296,7 @@ function objectMatches(object, fields) {
   return ObjectUtils.deepEqual(actual, fields);
 }
 
-add_task(async function head_initialize() {
+add_setup(async function head_initialize() {
   Services.prefs.setBoolPref("extensions.experiments.enabled", true);
   Services.prefs.setBoolPref(
     "extensions.formautofill.heuristics.enabled",
@@ -338,7 +338,7 @@ add_task(async function head_initialize() {
 });
 
 let OSKeyStoreTestUtils;
-add_task(async function os_key_store_setup() {
+add_setup(async function os_key_store_setup() {
   ({ OSKeyStoreTestUtils } = ChromeUtils.import(
     "resource://testing-common/OSKeyStoreTestUtils.jsm"
   ));
