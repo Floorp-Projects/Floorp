@@ -6,7 +6,7 @@
 
 const TEST_PAGE = TEST_DOMAIN + TEST_PATH + "file_iframe_document_open.html";
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [

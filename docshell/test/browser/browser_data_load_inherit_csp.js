@@ -35,7 +35,7 @@ function verifyCSP(aTestName, aBrowser, aDataURI) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // allow top level data: URI navigations, otherwise clicking data: link fails
   await SpecialPowers.pushPrefEnv({
     set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],

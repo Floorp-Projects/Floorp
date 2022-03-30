@@ -18,7 +18,7 @@ registerCleanupFunction(async function cleanup_resetPrefs() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.available", true],

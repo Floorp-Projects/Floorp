@@ -732,7 +732,7 @@ async function testDialog(url, testFn, arg = undefined) {
   return unloadPromise;
 }
 
-add_setup(function() {
+add_task(function setup() {
   OSKeyStoreTestUtils.setup();
 });
 

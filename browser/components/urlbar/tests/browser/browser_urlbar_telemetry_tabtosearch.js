@@ -103,7 +103,7 @@ async function checkForTabToSearchResult(engineName, isOnboarding) {
   }
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
   });

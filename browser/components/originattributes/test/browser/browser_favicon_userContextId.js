@@ -328,7 +328,7 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   tabBrowser.removeAttribute("overflow");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

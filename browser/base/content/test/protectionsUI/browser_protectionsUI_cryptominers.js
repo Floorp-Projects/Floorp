@@ -8,7 +8,7 @@ const TRACKING_PAGE =
 const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
 let cmHistogram;
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [

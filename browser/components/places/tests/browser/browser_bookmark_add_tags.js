@@ -24,7 +24,7 @@ async function hideBookmarksPanel(callback) {
   await hiddenPromise;
 }
 
-add_setup(function() {
+add_task(function setup() {
   let oldTimeout = StarUI._autoCloseTimeout;
 
   bookmarkPanel.setAttribute("animate", false);

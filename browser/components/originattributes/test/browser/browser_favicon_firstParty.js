@@ -379,7 +379,7 @@ async function doTestForAllTabsFavicon(
   tabBrowser.removeAttribute("overflow");
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

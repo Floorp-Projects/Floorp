@@ -43,7 +43,7 @@ const LOG = {
 
 requestLongerTimeout(2);
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.vpn_promo.enabled", true],

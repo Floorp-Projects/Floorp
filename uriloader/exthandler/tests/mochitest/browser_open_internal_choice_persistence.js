@@ -32,7 +32,7 @@ function waitForAcceptButtonToGetEnabled(doc) {
   );
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
     set: [

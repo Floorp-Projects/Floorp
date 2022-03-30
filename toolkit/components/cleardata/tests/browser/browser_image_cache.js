@@ -111,7 +111,7 @@ function cleanup() {
   imageCache.clearCache(true);
 }
 
-add_setup(function() {
+add_task(function setup() {
   cleanup();
 });
 

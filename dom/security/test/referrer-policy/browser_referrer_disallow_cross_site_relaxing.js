@@ -186,7 +186,7 @@ const TEST_CASES = [
   },
 ];
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable mixed content blocking to be able to test downgrade scenario.

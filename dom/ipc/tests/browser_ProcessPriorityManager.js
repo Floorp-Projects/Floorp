@@ -207,7 +207,7 @@ class TabPriorityWatcher {
 
 let gTabPriorityWatcher;
 
-add_setup(async function() {
+add_task(async function setup() {
   // We need to turn on testMode for the process priority manager in
   // order to receive the observer notifications that this test relies on.
   await SpecialPowers.pushPrefEnv({

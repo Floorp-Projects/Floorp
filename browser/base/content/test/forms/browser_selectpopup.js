@@ -321,7 +321,7 @@ async function doSelectTests(contentType, content) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.select.customstyling", true]],
   });

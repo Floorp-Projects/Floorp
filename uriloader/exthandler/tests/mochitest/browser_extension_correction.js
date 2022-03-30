@@ -10,7 +10,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 let gPathsToRemove = [];
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.useDownloadDir", true]],
   });

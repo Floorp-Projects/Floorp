@@ -132,7 +132,7 @@ async function init(startPage) {
 
 /* Test functions start here. */
 
-add_setup(async function() {
+add_task(async function setup() {
   // Clear out any telemetry data that existed before this file is run.
   Services.telemetry.clearEvents();
 });

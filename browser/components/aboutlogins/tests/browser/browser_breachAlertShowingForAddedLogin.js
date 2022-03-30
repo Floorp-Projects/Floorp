@@ -14,7 +14,7 @@ EXPECTED_BREACH = {
   schema: "1541615609018",
 };
 
-add_setup(async function() {
+add_task(async function setup() {
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",

@@ -5,7 +5,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await SearchTestUtils.installSearchExtension();
 
   let engine = Services.search.getEngineByName("Example");

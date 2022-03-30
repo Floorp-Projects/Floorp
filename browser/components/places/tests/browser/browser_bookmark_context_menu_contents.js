@@ -24,7 +24,7 @@ const bookmarksInfo = [
 ];
 const TEST_URL = "about:mozilla";
 
-add_setup(async function() {
+add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");

@@ -83,7 +83,7 @@ function createPromiseForObservingChannel(aURL, aPartitionKey) {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   info("Setting MockFilePicker.");
   mockTransferRegisterer.register();
 

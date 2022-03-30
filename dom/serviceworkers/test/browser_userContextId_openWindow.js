@@ -59,7 +59,7 @@ registerCleanupFunction(() => {
   );
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   // make sure userContext, SW and notifications are enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

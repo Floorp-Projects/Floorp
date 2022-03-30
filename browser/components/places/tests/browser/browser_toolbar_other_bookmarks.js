@@ -25,7 +25,7 @@ const bookmarksInfo = [
  */
 
 // Setup.
-add_setup(async function() {
+add_task(async function setup() {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
 

@@ -8,7 +8,7 @@ var bookmarks;
 var bookmarkIds;
 var library;
 
-add_setup(async function() {
+add_task(async function setup() {
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();

@@ -77,7 +77,7 @@ function checkCacheExists(aShouldExist) {
   };
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   Services.cache2.clear();
 });
 

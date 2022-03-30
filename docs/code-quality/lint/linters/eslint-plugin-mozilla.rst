@@ -34,7 +34,6 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/import-headjs-globals
    eslint-plugin-mozilla/mark-test-function-used
    eslint-plugin-mozilla/no-aArgs
-   eslint-plugin-mozilla/no-addtask-setup
    eslint-plugin-mozilla/no-compare-against-boolean-literals
    eslint-plugin-mozilla/no-define-cc-etc
    eslint-plugin-mozilla/no-throw-cr-literal

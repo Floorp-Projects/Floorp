@@ -35,7 +35,7 @@ function mockResults() {
   };
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   let results = btoa(JSON.stringify(mockResults()));
   await SpecialPowers.pushPrefEnv({
     set: [

@@ -555,7 +555,7 @@ registerCleanupFunction(function() {
   Services.perms.removeAll();
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.external_protocol_requires_permission", true]],
   });

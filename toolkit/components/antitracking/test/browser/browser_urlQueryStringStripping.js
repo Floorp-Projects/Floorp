@@ -69,7 +69,7 @@ async function verifyQueryString(browser, expected) {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],

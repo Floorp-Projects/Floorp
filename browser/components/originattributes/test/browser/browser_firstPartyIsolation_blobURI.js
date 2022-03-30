@@ -1,4 +1,4 @@
-add_setup(async function() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
   registerCleanupFunction(function() {

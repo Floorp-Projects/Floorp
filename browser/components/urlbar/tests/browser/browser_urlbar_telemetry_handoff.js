@@ -33,7 +33,7 @@ async function waitForIdle() {
   }
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 

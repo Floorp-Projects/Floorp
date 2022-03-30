@@ -8,7 +8,7 @@ const TEST_URL = "about:about";
 let bookmarkPanel;
 let win;
 
-add_setup(async function() {
+add_task(async function setup() {
   Services.prefs.clearUserPref(LOCATION_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
 

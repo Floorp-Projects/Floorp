@@ -1,6 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
 });
 

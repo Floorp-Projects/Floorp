@@ -8,7 +8,7 @@ const URI =
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-add_setup(async function() {
+add_task(async function setup() {
   info("Setting the prefs.");
 
   // make sure userContext is enabled.

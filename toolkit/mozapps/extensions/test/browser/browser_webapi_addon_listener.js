@@ -1,6 +1,6 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_addon_listener.html`;
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });

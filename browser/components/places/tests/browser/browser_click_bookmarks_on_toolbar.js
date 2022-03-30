@@ -65,7 +65,7 @@ function waitForNewTab(url, inBackground) {
   });
 }
 
-add_setup(async function() {
+add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
   let bookmarks = await Promise.all(
     TEST_PAGES.map((url, index) => {

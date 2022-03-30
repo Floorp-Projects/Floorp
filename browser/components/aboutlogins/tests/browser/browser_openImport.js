@@ -5,7 +5,7 @@ let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-add_setup(async function() {
+add_task(async function setup() {
   await TestUtils.waitForCondition(() => {
     Services.telemetry.clearEvents();
     let events = Services.telemetry.snapshotEvents(

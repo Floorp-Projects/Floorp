@@ -33,7 +33,7 @@ function waitForThemeChange(list) {
 
 let mockProvider;
 
-add_setup(async function() {
+add_task(async function setup() {
   mockProvider = new MockProvider();
   promptService = mockPromptService();
   Services.telemetry.clearEvents();

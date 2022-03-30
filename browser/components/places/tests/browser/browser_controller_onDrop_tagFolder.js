@@ -12,7 +12,7 @@ const TAG_NAME = "testTag";
 var bookmarks;
 var bookmarkId;
 
-add_setup(async function() {
+add_task(async function setup() {
   registerCleanupFunction(async function() {
     sandbox.restore();
     await PlacesUtils.bookmarks.eraseEverything();

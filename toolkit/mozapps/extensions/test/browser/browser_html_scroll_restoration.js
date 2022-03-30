@@ -36,7 +36,7 @@ server.registerPathHandler("/discoapi", (request, response) => {
   response.write(JSON.stringify(results));
 });
 
-add_setup(async function() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.getAddons.discovery.api_url", TEST_API_URL]],
   });

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_setup(async function() {
+add_task(async function setup() {
   // make sure userContext is enabled.
   return SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],
