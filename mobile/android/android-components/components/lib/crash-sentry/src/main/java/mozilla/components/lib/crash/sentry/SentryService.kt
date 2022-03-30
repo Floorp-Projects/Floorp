@@ -5,7 +5,6 @@
 package mozilla.components.lib.crash.sentry
 
 import android.content.Context
-import android.net.Uri
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import io.sentry.Breadcrumb
@@ -121,11 +120,8 @@ class SentryService(
     @VisibleForTesting
     internal fun initSentry() {
         SentryAndroid.init(applicationContext) { options ->
-            options.dsn = Uri.parse(dsn).buildUpon()
-                .appendQueryParameter("uncaught.handler.enabled", "false")
-                .build()
-                .toString()
-
+            options.enableUncaughtExceptionHandler = false
+            options.dsn = dsn
             options.environment = environment
         }
     }
