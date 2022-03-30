@@ -1945,11 +1945,9 @@ class Element : public FragmentOrElement {
    * and that we are actually on a link.
    *
    * @param aVisitor event visitor
-   * @param aURI the uri of the link, set only if the return value is true [OUT]
    * @return true if we can handle the link event, false otherwise
    */
-  bool CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
-                                            nsIURI** aURI) const;
+  bool CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor) const;
 
   /**
    * Handle status bar updates before they can be cancelled.
@@ -1964,6 +1962,25 @@ class Element : public FragmentOrElement {
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEventForLinks(EventChainPostVisitor& aVisitor);
 
+ public:
+  /**
+   * Check if this element is a link. This matches the CSS definition of the
+   * :any-link pseudo-class.
+   */
+  bool IsLink() const {
+    return mState.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
+                                        NS_EVENT_STATE_UNVISITED);
+  }
+
+  /**
+   * Get a pointer to the full href URI (fully resolved and canonicalized, since
+   * it's an nsIURI object) for link elements.
+   *
+   * @return A pointer to the URI or null if the element is not a link, or it
+   *         has no HREF attribute, or the HREF attribute is an invalid URI.
+   */
+  virtual already_AddRefed<nsIURI> GetHrefURI() const { return nullptr; }
+
   /**
    * Get the target of this link element. Consumers should established that
    * this element is a link (probably using IsLink) before calling this
@@ -1976,6 +1993,7 @@ class Element : public FragmentOrElement {
    */
   virtual void GetLinkTarget(nsAString& aTarget);
 
+ protected:
   enum class ReparseAttributes { No, Yes };
   /**
    * Copy attributes and state to another element

@@ -176,11 +176,6 @@ void SVGAElement::UnbindFromTree(bool aNullParent) {
   SVGAElementBase::UnbindFromTree(aNullParent);
 }
 
-already_AddRefed<nsIURI> SVGAElement::GetHrefURI() const {
-  nsCOMPtr<nsIURI> hrefURI;
-  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
-}
-
 NS_IMETHODIMP_(bool)
 SVGAElement::IsAttributeMapped(const nsAtom* name) const {
   static const MappedAttributeEntry* const map[] = {sFEFloodMap,
@@ -219,7 +214,7 @@ bool SVGAElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
 
   if (GetTabIndexAttrValue().isNothing()) {
     // check whether we're actually a link
-    if (!Link::HasURI()) {
+    if (!IsLink()) {
       // Not tabbable or focusable without href (bug 17605), unless
       // forced to be via presence of nonnegative tabindex attribute
       if (aTabIndex) {
@@ -236,8 +231,8 @@ bool SVGAElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   return true;
 }
 
-bool SVGAElement::IsLink(nsIURI** aURI) const {
-  // To be a clickable XLink for styling and interaction purposes, we require:
+already_AddRefed<nsIURI> SVGAElement::GetHrefURI() const {
+  // To be a clickable XLink for interaction purposes, we require:
   //
   //   xlink:href    - must be set
   //   xlink:type    - must be unset or set to "" or set to "simple"
@@ -245,7 +240,10 @@ bool SVGAElement::IsLink(nsIURI** aURI) const {
   //   xlink:actuate - must be unset or set to "" or "onRequest"
   //
   // For any other values, we're either not a *clickable* XLink, or the end
-  // result is poorly specified. Either way, we return false.
+  // result is poorly specified. Either way, we return null.
+  //
+  // FIXME(bug 1762109): This should probably just return the href value to
+  // match styling. Blink and WebKit seem to just do that.
 
   static Element::AttrValuesArray sTypeVals[] = {nsGkAtoms::_empty,
                                                  nsGkAtoms::simple, nullptr};
@@ -270,14 +268,12 @@ bool SVGAElement::IsLink(nsIURI** aURI) const {
     nsAutoString str;
     const uint8_t idx = useBareHref ? HREF : XLINK_HREF;
     mStringAttributes[idx].GetAnimValue(str, this);
-    nsContentUtils::NewURIWithDocumentCharset(aURI, str, OwnerDoc(),
-                                              GetBaseURI());
-    // must promise out param is non-null if we return true
-    return !!*aURI;
+    nsCOMPtr<nsIURI> uri;
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), str,
+                                              OwnerDoc(), GetBaseURI());
+    return uri.forget();
   }
-
-  *aURI = nullptr;
-  return false;
+  return nullptr;
 }
 
 void SVGAElement::GetLinkTarget(nsAString& aTarget) {

@@ -2739,10 +2739,8 @@ already_AddRefed<nsINode> nsDocumentViewer::GetPopupLinkNode() {
 
   // find out if we have a link in our ancestry
   while (node) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    if (content) {
-      nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
-      if (hrefURI) {
+    if (const auto* element = Element::FromNode(*node)) {
+      if (element->IsLink()) {
         return node.forget();
       }
     }
