@@ -1,0 +1,63 @@
+<!doctype html>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src=/resources/testdriver.js></script>
+<script src=/resources/testdriver-actions.js></script>
+<script src=/resources/testdriver-vendor.js></script>
+<script>
+function abs(uri) {
+  return new URL(uri, window.location.href).href;
+}
+const CHILD_DOC = `
+<!doctype html>
+<script src="${abs("/resources/testdriver.js")}"></` + `script>
+<script src="${abs("/resources/testdriver-actions.js")}"></` + `script>
+<script src="${abs("/resources/testdriver-vendor.js")}"></` + `script>
+<script>
+  test_driver.set_test_context(opener);
+</` + `script>
+
+<a href>To link or not to link</a>
+
+<script>
+onload = async function() {
+  let link = document.querySelector("a");
+  link.focus();
+  let focused = document.activeElement == link;
+  let clicked = new Promise(resolve => {
+    link.addEventListener("click", resolve, { once: true });
+  });
+  const enterKey = '\\uE007';
+  await test_driver.send_keys(link, enterKey);
+  await clicked;
+  test_driver.message_test({ testResult: true, focused, clicked: true });
+};
+</` + `script>
+`
+
+promise_test(async function(t) {
+  await new Promise(resolve => {
+    window.onload = resolve;
+  })
+
+  let messagePromise = new Promise(resolve => {
+    addEventListener("message", function(msg) {
+      if (msg.data.testResult) {
+        resolve(msg);
+      }
+    });
+  });
+
+  let win = window.open("data:text/html," + escape(CHILD_DOC));
+
+  assert_true(true, "Window opened");
+  let message = await messagePromise;
+  assert_true(true, "message: " + JSON.stringify(message));
+
+  let { focused, clicked } = message.data;
+  assert_true(focused, "Link should be focusable");
+  assert_true(clicked, "Link should be keyboard activatable");
+
+  win.close();
+}, "Link to invalid URI should be focusable and keyboard activatable");
+</script>

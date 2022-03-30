@@ -122,7 +122,7 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
   if (GetTabIndexAttrValue().isNothing()) {
     // check whether we're actually a link
-    if (!Link::HasURI()) {
+    if (!IsLink()) {
       // Not tabbable or focusable without href (bug 17605), unless
       // forced to be via presence of nonnegative tabindex attribute
       if (aTabIndex) {
@@ -151,8 +151,6 @@ void HTMLAnchorElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 nsresult HTMLAnchorElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
-
-bool HTMLAnchorElement::IsLink(nsIURI** aURI) const { return IsHTMLLink(aURI); }
 
 void HTMLAnchorElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
@@ -190,11 +188,9 @@ void HTMLAnchorElement::ToString(nsAString& aSource) {
 }
 
 already_AddRefed<nsIURI> HTMLAnchorElement::GetHrefURI() const {
-  nsCOMPtr<nsIURI> uri = Link::GetCachedURI();
-  if (uri) {
+  if (nsCOMPtr<nsIURI> uri = GetCachedURI()) {
     return uri.forget();
   }
-
   return GetHrefURIForAnchors();
 }
 

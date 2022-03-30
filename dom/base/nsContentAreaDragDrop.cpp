@@ -364,18 +364,22 @@ already_AddRefed<nsIContent> DragDataProducer::FindParentLinkNode(
 //
 // GetAnchorURL
 //
-nsresult DragDataProducer::GetAnchorURL(nsIContent* inNode, nsAString& outURL) {
-  nsCOMPtr<nsIURI> linkURI;
-  if (!inNode || !inNode->IsLink(getter_AddRefs(linkURI))) {
-    // Not a link
-    outURL.Truncate();
+nsresult DragDataProducer::GetAnchorURL(nsIContent* aContent, nsAString& aURL) {
+  aURL.Truncate();
+  auto* element = Element::FromNodeOrNull(aContent);
+  if (!element || !element->IsLink()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> linkURI = element->GetHrefURI();
+  if (!linkURI) {
     return NS_OK;
   }
 
   nsAutoCString spec;
   nsresult rv = linkURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  CopyUTF8toUTF16(spec, outURL);
+  CopyUTF8toUTF16(spec, aURL);
   return NS_OK;
 }
 
