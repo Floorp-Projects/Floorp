@@ -1,7 +1,7 @@
 /* eslint-env mozilla/frame-script */
 
 // Enable HTTPS-Only Mode
-add_task(async function() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_only_mode", true]],
   });

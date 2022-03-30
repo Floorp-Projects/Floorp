@@ -19,7 +19,7 @@ const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
 
-add_task(async function common_initialize() {
+add_setup(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.rememberSignons", true],

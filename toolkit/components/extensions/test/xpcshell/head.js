@@ -57,7 +57,7 @@ const testEnv = {
   expectRemote: false,
 };
 
-add_task(function check_remote() {
+add_setup(function check_remote() {
   Assert.equal(
     WebExtensionPolicy.useRemoteWebExtensions,
     testEnv.expectRemote,

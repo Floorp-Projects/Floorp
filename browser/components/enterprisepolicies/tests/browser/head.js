@@ -172,7 +172,7 @@ async function check_homepage({
   await BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function policies_headjs_startWithCleanSlate() {
+add_setup(async function policies_headjs_startWithCleanSlate() {
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
     await setupPolicyEngineWithJson("");
   }

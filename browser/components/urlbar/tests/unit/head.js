@@ -52,7 +52,7 @@ AddonTestUtils.createAppInfo(
 const SUGGESTIONS_ENGINE_NAME = "Suggestions";
 const TAIL_SUGGESTIONS_ENGINE_NAME = "Tail Suggestions";
 
-add_task(async function initXPCShellDependencies() {
+add_setup(async function initXPCShellDependencies() {
   await UrlbarTestUtils.initXPCShellDependencies();
 });
 

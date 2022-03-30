@@ -956,7 +956,7 @@ var gMostRecentFirstBytePos;
 
 // Initialization functions common to all tests
 
-add_task(function test_common_initialize() {
+add_setup(function test_common_initialize() {
   // Start the HTTP server.
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));

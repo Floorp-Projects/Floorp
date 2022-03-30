@@ -47,12 +47,10 @@ const SEARCH_STRINGS = {
   UPDATE: "firefox update",
 };
 
-add_task(async function init() {
-  registerCleanupFunction(() => {
-    // We need to reset the provider's appUpdater.status between tests so that
-    // each test doesn't interfere with the next.
-    UrlbarProviderInterventions.resetAppUpdater();
-  });
+registerCleanupFunction(() => {
+  // We need to reset the provider's appUpdater.status between tests so that
+  // each test doesn't interfere with the next.
+  UrlbarProviderInterventions.resetAppUpdater();
 });
 
 /**
