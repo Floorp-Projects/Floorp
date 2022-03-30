@@ -6,7 +6,7 @@ const PREF_MODIFY_BOOLEAN = "test.aboutconfig.modify.boolean";
 const PREF_MODIFY_NUMBER = "test.aboutconfig.modify.number";
 const PREF_MODIFY_STRING = "test.aboutconfig.modify.string";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_MODIFY_BOOLEAN, true],

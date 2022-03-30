@@ -68,7 +68,7 @@ async function waitForIdle() {
 SearchTestUtils.init(this);
 UrlbarTestUtils.init(this);
 
-add_task(async function setup() {
+add_setup(async function() {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({

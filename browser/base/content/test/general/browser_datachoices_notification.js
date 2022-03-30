@@ -113,7 +113,7 @@ var checkInfobarButton = async function(aNotification) {
   await promiseNextTick();
 };
 
-add_task(async function setup() {
+add_setup(async function() {
   const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
   const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, true);
   const currentPolicyVersion = Preferences.get(PREF_CURRENT_POLICY_VERSION, 1);

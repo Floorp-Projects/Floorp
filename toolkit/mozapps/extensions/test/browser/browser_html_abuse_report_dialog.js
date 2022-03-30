@@ -5,7 +5,7 @@
 
 loadTestSubscript("head_abuse_report.js");
 
-add_task(async function setup() {
+add_setup(async function() {
   await AbuseReportTestUtils.setup();
 });
 

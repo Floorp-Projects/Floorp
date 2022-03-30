@@ -2,7 +2,7 @@
  * Test capture popup notifications when the login form uses target="_blank"
  */
 
-add_task(async function setup() {
+add_setup(async function() {
   await SimpleTest.promiseFocus(window);
 });
 

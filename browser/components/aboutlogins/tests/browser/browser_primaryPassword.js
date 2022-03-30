@@ -17,7 +17,7 @@ function waitForLoginCountToReach(browser, loginCount) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await addLogin(TEST_LOGIN1);
   registerCleanupFunction(() => {
     Services.logins.removeAllUserFacingLogins();

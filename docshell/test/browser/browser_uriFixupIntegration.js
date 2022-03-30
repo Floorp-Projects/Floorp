@@ -17,7 +17,7 @@ const kSearchEngineURL = "https://example.com/?search={searchTerms}";
 const kPrivateSearchEngineID = "browser_urifixup_search_engine_private";
 const kPrivateSearchEngineURL = "https://example.com/?private={searchTerms}";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],

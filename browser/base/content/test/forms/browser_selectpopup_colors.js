@@ -459,7 +459,7 @@ async function testSelectColors(selectID, itemCount, options) {
 // System colors may be different in content pages and chrome pages.
 let kDefaultSelectStyles = {};
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.select.customstyling", true]],
   });

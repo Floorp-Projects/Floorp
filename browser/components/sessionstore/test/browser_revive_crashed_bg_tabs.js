@@ -14,7 +14,7 @@ const PAGE_1 =
 const PAGE_2 =
   "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
-add_task(async function setup() {
+add_setup(async function() {
   await pushPrefs(
     ["dom.ipc.processCount", 1],
     ["browser.sessionstore.restore_on_demand", false]

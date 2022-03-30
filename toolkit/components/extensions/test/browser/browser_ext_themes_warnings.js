@@ -19,7 +19,7 @@ function waitForConsole(task, message) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   SimpleTest.waitForExplicitFinish();
 });
 

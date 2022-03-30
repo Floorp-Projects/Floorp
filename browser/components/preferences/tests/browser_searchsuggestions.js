@@ -5,7 +5,7 @@ const PRIVATE_PREF_NAME = "browser.search.suggest.enabled.private";
 let initialUrlbarSuggestValue;
 let initialSuggestionsInPrivateValue;
 
-add_task(async function setup() {
+add_setup(async function() {
   const originalSuggest = Services.prefs.getBoolPref(SUGGEST_PREF_NAME);
   initialUrlbarSuggestValue = Services.prefs.getBoolPref(
     URLBAR_SUGGEST_PREF_NAME

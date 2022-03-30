@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/UrlbarProviderTabToSearch.jsm",
 });
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [

@@ -26,7 +26,7 @@ function testAttrib(tabIndex, attrib, expected) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
   addTab("http://mochi.test:8888/#0");

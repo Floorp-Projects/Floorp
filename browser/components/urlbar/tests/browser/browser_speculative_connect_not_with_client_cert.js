@@ -118,7 +118,7 @@ function startServer(cert) {
 
 let server;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.autoFill", true],

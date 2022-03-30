@@ -16,7 +16,7 @@ var gTests = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );

@@ -5,7 +5,7 @@
 // This test makes sure that the geolocation prompt does not show a remember
 // control inside the private browsing mode.
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.vr.always_support_vr", true]],
   });

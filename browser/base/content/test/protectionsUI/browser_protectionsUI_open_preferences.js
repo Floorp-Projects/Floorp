@@ -40,7 +40,7 @@ async function waitAndAssertPreferencesShown(_spotlight) {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await UrlClassifierTestUtils.addTestTrackers();
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;

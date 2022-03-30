@@ -14,7 +14,7 @@ const { PromptTestUtils } = ChromeUtils.import(
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 let searchbar;
 
-add_task(async function setup() {
+add_setup(async function() {
   searchbar = await gCUITestUtils.addSearchBar();
 
   registerCleanupFunction(async function() {

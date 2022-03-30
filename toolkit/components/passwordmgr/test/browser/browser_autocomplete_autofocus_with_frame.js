@@ -1,6 +1,6 @@
 const TEST_URL_PATH = "https://example.org" + DIRECTORY_PATH;
 
-add_task(async function setup() {
+add_setup(async function() {
   let login = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",

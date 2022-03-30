@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   const NUM_VISITS = 10;
   let visits = [];

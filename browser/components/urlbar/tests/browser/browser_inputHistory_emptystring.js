@@ -56,7 +56,7 @@ async function do_test(openFn, pickMethod) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits(TEST_URL);
