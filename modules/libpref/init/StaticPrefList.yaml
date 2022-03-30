@@ -8049,6 +8049,12 @@
   value: false
   mirror: always
 
+# Whether anchor is kept selected.
+- name: layout.selectanchor
+  type: bool
+  value: false
+  mirror: always
+
 # Controls caret style and word-delete during text selection.
 # 0: Use platform default
 # 1: Caret moves and blinks as when there is no selection; word
