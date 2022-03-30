@@ -346,27 +346,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1621065 - UA overrides for bracketchallenge.ncaa.com
-     * Webcompat issue #49886 - https://webcompat.com/issues/49886
-     *
-     * The NCAA bracket challenge website mistakenly classifies
-     * any non-Chrome browser on Android as "is_old_android". As a result,
-     * a modal is shown telling them they have security flaws. We have
-     * attempted to reach out for a fix (and clarification).
-     */
-    id: "bug1621065",
-    platform: "android",
-    domain: "bracketchallenge.ncaa.com",
-    bug: "1621065",
-    config: {
-      matches: ["*://bracketchallenge.ncaa.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " Chrome";
-      },
-    },
-  },
-  {
-    /*
      * Bug 1622063 - UA override for wp1-ext.usps.gov
      * Webcompat issue #29867 - https://webcompat.com/issues/29867
      *
@@ -737,16 +716,24 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: [
         "*://*.wordpress.org/*", // Bug 1743431
         "*://bethesda.net/*", // #94607
+        "*://citoyens.telerecours.fr/*", // #101066
         "*://genehmigung.ahs-vwa.at/*", // #100063
         "*://moje.pzu.pl/*", // #99772
+        "*://mon.allianzbanque.fr/*", // #101074
+        "*://online.citi.com/*", // #101268
         "*://simperium.com/*", // #98934
         "*://wifi.sncf/*", // #100194
         "*://www.brownells.com/*", // #90806
+        "*://www.discoveryplus.in/*", // #100389
         "*://www.eurosportplayer.com/*", // #91087
+        "*://www.gismeteo.ru/*", // #101326
         "*://www.hannaandersson.com/*", // #95003
+        "*://www.imb.com.au/*", // Bug 1762209
+        "*://www.manchestereveningnews.co.uk/*", // #100923
+        "*://www.mirror.co.uk/*", // #100053
         "*://www.petalmail.com/*", // #99339
-        "*://www.sc.com/in/*", // #99700
         "*://www.screwfix.com/*", // #96959
+        "*://www.services.gov.on.ca/*", // #100926
         "*://www.smsv.com.ar/*", // #90666
       ],
       uaTransformer: originalUA => {

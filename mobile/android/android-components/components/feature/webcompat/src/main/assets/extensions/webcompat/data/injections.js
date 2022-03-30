@@ -290,21 +290,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1666771",
-    platform: "desktop",
-    domain: "zillow.com",
-    bug: "1666771",
-    contentScripts: {
-      allFrames: true,
-      matches: ["*://*.zillow.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1666771-zilow-map-overdraw.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1631811",
     platform: "all",
     domain: "datastudio.google.com",
@@ -605,6 +590,35 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1756915-efectococuyo.com-shifted-content-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1739489",
+    platform: "desktop",
+    domain: "draft.js",
+    bug: "1739489",
+    contentScripts: {
+      matches: ["*://draftjs.org/*", "*://www.facebook.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1739489-draftjs-beforeinput.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1761930",
+    platform: "all",
+    domain: "instagram.com",
+    bug: "1761930",
+    contentScripts: {
+      matches: ["*://www.instagram.com/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1761930-instagram.com-readablestream-pipeto.js",
         },
       ],
     },
