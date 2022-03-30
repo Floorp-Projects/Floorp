@@ -8,7 +8,7 @@ const { CustomizableUITestUtils } = ChromeUtils.import(
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
-add_task(async function setup() {
+add_setup(async function() {
   await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

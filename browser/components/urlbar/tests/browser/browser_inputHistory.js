@@ -53,7 +53,7 @@ async function decayInputHistory() {
   await PlacesTestUtils.promiseAsyncUpdates();
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Use new window to avoid timeout failure for autocomplete popup happens on Linux TV.
   win = await BrowserTestUtils.openNewBrowserWindow();
 

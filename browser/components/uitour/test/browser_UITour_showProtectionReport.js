@@ -8,7 +8,7 @@ var gContentAPI;
 
 add_task(setup_UITourTest);
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.database.enabled", false],

@@ -70,7 +70,7 @@ async function checkChildHistogram(id, index, expected) {
   is(histogram.values[index], expected);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   SpecialPowers.pushPrefEnv({
     set: [
       ["signon.usernameOnlyForm.enabled", true],

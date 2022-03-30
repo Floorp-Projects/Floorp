@@ -7,7 +7,7 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   await setupPolicyEngineWithJson({
     policies: {
       DisablePrivateBrowsing: true,

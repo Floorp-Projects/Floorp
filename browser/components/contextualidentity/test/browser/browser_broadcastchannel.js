@@ -68,7 +68,7 @@ async function runTestForReceiver(receiver) {
   gBrowser.removeTab(sender2.tab);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],

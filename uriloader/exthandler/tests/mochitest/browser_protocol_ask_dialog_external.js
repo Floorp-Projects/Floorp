@@ -59,7 +59,7 @@ function makeCmdLineHelper(url) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["network.protocol-handler.prompt-from-external", true]],
   });

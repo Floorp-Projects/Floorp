@@ -99,7 +99,7 @@ function constructOnePageCmdLine(aURL) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   NewTabPagePreloading.removePreloadedBrowser(window);
 
   await SpecialPowers.pushPrefEnv({

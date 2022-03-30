@@ -16,7 +16,7 @@ function promiseUpdate() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.prefs.setBoolPref("toolkit.aboutProcesses.showThreads", true);
 
   info("Setting up about:processes");

@@ -5,7 +5,7 @@
 
 const TEST_URL = "about:buildconfig";
 
-add_task(async function setup() {
+add_setup(async function() {
   // Clean before and after so we don't have anything in the folders.
   await PlacesUtils.bookmarks.eraseEverything();
 

@@ -9,7 +9,7 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
 );
 const TEST_PAGE = TEST_ROOT + "get_user_media.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   let prefs = [
     [PREF_PERMISSION_FAKE, true],
     [PREF_AUDIO_LOOPBACK, ""],

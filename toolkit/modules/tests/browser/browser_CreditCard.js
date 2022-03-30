@@ -16,7 +16,7 @@ const { OSKeyStoreTestUtils } = ChromeUtils.import(
 let oldGetters = {};
 let gFakeLoggedIn = true;
 
-add_task(function setup() {
+add_setup(function() {
   OSKeyStoreTestUtils.setup();
   oldGetters.isLoggedIn = Object.getOwnPropertyDescriptor(
     OSKeyStore,

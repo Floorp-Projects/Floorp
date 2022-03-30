@@ -34,7 +34,7 @@ function handleEventLocal(aEvent) {
 
 var NUM_DIFF_TAB_MODES = NUM_USER_CONTEXTS + 1; /** regular tab */
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set the pref to true so we know exactly how many tabs should be restoring at

@@ -14,7 +14,7 @@ const { CFRPageActions } = ChromeUtils.import(
 /**
  * Load and modify a message for the test.
  */
-add_task(async function setup() {
+add_setup(async function() {
   const initialMsgCount = ASRouter.state.messages.length;
   const heartbeatMsg = (await CFRMessageProvider.getMessages()).find(
     m => m.id === "HEARTBEAT_TACTIC_2"

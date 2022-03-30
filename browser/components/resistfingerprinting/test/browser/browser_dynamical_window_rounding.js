@@ -346,7 +346,7 @@ async function test_findbar(aWindow) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting.letterboxing", true],

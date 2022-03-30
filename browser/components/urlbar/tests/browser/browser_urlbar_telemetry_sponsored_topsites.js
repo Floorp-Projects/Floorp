@@ -26,7 +26,7 @@ function submitHandler(request, response) {
 // Spy for telemetry sender
 let spy;
 
-add_task(async function setup() {
+add_setup(async function() {
   sandbox = sinon.createSandbox();
   spy = sandbox.spy(
     PartnerLinkAttribution._pingCentre,

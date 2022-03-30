@@ -9,7 +9,7 @@ const { ASRouter } = ChromeUtils.import(
 
 let sendTriggerMessageSpy;
 
-add_task(function setup() {
+add_setup(function() {
   let sandbox = sinon.createSandbox();
   sendTriggerMessageSpy = sandbox.spy(ASRouter, "sendTriggerMessage");
 

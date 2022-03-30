@@ -1,7 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 let tempFile;
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
   tempFile = createTempFile();
   registerCleanupFunction(function() {

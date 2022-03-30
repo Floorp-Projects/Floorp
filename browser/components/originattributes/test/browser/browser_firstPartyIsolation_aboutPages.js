@@ -2,7 +2,7 @@ if (SpecialPowers.useRemoteSubframes) {
   requestLongerTimeout(2);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
   // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
   Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
