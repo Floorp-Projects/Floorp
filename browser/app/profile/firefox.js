@@ -2162,23 +2162,31 @@ pref("app.normandy.onsync_skew_sec", 600);
   pref("app.shield.optoutstudies.enabled", false);
 #endif
 
-// Multi-lingual preferences
+// Multi-lingual preferences:
+//  *.enabled - Are langpacks available for the build of Firefox?
+//  *.downloadEnabled - Langpacks are allowed to be downloaded from AMO. AMO only serves
+//      langpacks for release and beta. Unsupported releases (like Nightly) can be
+//      manually tested with the following preference:
+//      extensions.getAddons.langpacks.url: https://mock-amo-language-tools.glitch.me/?app=firefox&type=language&appversion=%VERSION%
+//  *.liveReload - Switching a langpack will change the language without a restart.
+//  *.liveReloadBidirectional - Allows switching when moving between LTR and RTL
+//      languages without a full restart.
+//  *.aboutWelcome.languageMismatchEnabled - Enables an onboarding menu in about:welcome
+//      to allow a user to change their language when there is a language mismatch between
+//      the app and browser.
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
   pref("intl.multilingual.enabled", true);
   pref("intl.multilingual.downloadEnabled", true);
+  pref("intl.multilingual.liveReload", false);
+  pref("intl.multilingual.liveReloadBidirectional", false);
+  pref("intl.multilingual.aboutWelcome.languageMismatchEnabled", false);
 #else
   pref("intl.multilingual.enabled", false);
-  // AMO only serves language packs for release and beta versions.
   pref("intl.multilingual.downloadEnabled", false);
+  pref("intl.multilingual.liveReload", false);
+  pref("intl.multilingual.liveReloadBidirectional", false);
+  pref("intl.multilingual.aboutWelcome.languageMismatchEnabled", false);
 #endif
-// With the preference enabled below, switching the browser language will do a live
-// reload rather than requiring a restart. Enable bidirectional below as well to allow
-// live reloading when switching between LTR and RTL languages.
-pref("intl.multilingual.liveReload", false);
-pref("intl.multilingual.liveReloadBidirectional", false);
-// Suggest to change the language on about:welcome when there is a mismatch with the OS.
-pref("intl.multilingual.aboutWelcome.languageMismatchEnabled", false);
-
 
 // Simulate conditions that will happen when the browser
 // is running with Fission enabled. This is meant to assist
