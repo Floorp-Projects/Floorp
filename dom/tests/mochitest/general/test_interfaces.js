@@ -759,21 +759,21 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MessagePort", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIAccess", android: false },
+  { name: "MIDIAccess", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIConnectionEvent", android: false },
+  { name: "MIDIConnectionEvent", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInputMap", android: false },
+  { name: "MIDIInputMap", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInput", android: false },
+  { name: "MIDIInput", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIMessageEvent", android: false },
+  { name: "MIDIMessageEvent", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutputMap", android: false },
+  { name: "MIDIOutputMap", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutput", android: false },
+  { name: "MIDIOutput", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIPort", android: false },
+  { name: "MIDIPort", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MimeType", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
