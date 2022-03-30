@@ -3757,8 +3757,12 @@ bool nsContentUtils::IsDraggableImage(nsIContent* aContent) {
 
 // static
 bool nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
-  nsCOMPtr<nsIURI> absURI;
-  return aContent->IsLink(getter_AddRefs(absURI));
+  const auto* element = Element::FromNode(*aContent);
+  if (!element || !element->IsLink()) {
+    return false;
+  }
+  nsCOMPtr<nsIURI> absURI = element->GetHrefURI();
+  return !!absURI;
 }
 
 // static

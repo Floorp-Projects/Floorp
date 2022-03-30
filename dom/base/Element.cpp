@@ -3031,8 +3031,12 @@ void Element::Describe(nsAString& aOutDescription, bool aShort) const {
   }
 }
 
-bool Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
-                                                   nsIURI** aURI) const {
+bool Element::CheckHandleEventForLinksPrecondition(
+    EventChainVisitor& aVisitor) const {
+  // Make sure we actually are a link
+  if (!IsLink()) {
+    return false;
+  }
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       (!aVisitor.mEvent->IsTrusted() &&
        (aVisitor.mEvent->mMessage != eMouseClick) &&
@@ -3041,9 +3045,7 @@ bool Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
   }
-
-  // Make sure we actually are a link
-  return IsLink(aURI);
+  return true;
 }
 
 void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
@@ -3060,8 +3062,15 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
   }
 
   // Make sure we meet the preconditions before continuing
-  nsCOMPtr<nsIURI> absURI;
-  if (!CheckHandleEventForLinksPrecondition(aVisitor, getter_AddRefs(absURI))) {
+  if (!CheckHandleEventForLinksPrecondition(aVisitor)) {
+    return;
+  }
+
+  // We try to handle everything we can even when the URI is invalid. Though of
+  // course we can't do stuff like updating the status bar, so return early here
+  // instead.
+  nsCOMPtr<nsIURI> absURI = GetHrefURI();
+  if (!absURI) {
     return;
   }
 
@@ -3156,11 +3165,12 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
   }
 
   // Make sure we meet the preconditions before continuing
-  nsCOMPtr<nsIURI> absURI;
-  if (!CheckHandleEventForLinksPrecondition(aVisitor, getter_AddRefs(absURI))) {
+  if (!CheckHandleEventForLinksPrecondition(aVisitor)) {
     return NS_OK;
   }
 
+  // We try to handle ~everything consistently even if the href is invalid
+  // (GetHrefURI() returns null).
   nsresult rv = NS_OK;
 
   switch (aVisitor.mEvent->mMessage) {
@@ -3191,10 +3201,12 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
         // OK, we're pretty sure we're going to load, so warm up a speculative
         // connection to be sure we have one ready when we open the channel.
         if (nsIDocShell* shell = OwnerDoc()->GetDocShell()) {
-          nsCOMPtr<nsISpeculativeConnect> sc =
-              do_QueryInterface(nsContentUtils::GetIOService());
-          nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(shell);
-          sc->SpeculativeConnect(absURI, NodePrincipal(), ir);
+          if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
+            nsCOMPtr<nsISpeculativeConnect> sc =
+                do_QueryInterface(nsContentUtils::GetIOService());
+            nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(shell);
+            sc->SpeculativeConnect(absURI, NodePrincipal(), ir);
+          }
         }
       }
     } break;
@@ -3228,13 +3240,15 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
     }
     case eLegacyDOMActivate: {
       if (aVisitor.mEvent->mOriginalTarget == this) {
-        nsAutoString target;
-        GetLinkTarget(target);
-        const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
-        MOZ_ASSERT(activeEvent);
-        nsContentUtils::TriggerLink(this, absURI, target, /* click */ true,
-                                    activeEvent->IsTrustable());
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
+          nsAutoString target;
+          GetLinkTarget(target);
+          const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
+          MOZ_ASSERT(activeEvent);
+          nsContentUtils::TriggerLink(this, absURI, target, /* click */ true,
+                                      activeEvent->IsTrustable());
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        }
       }
     } break;
 
