@@ -24,8 +24,7 @@
 	"browser_action": {
 		"default_icon":  "icons/floorp.png",
 		"default_title": "__MSG_action__",
-		"browser_style":  true,
-    "default_popup": "test.html"
+		"browser_style":  true
 	},
 
   "page_action": {
@@ -38,7 +37,7 @@
   },
 
   "background": {
-    "scripts": ["background-script.js"]
+    "scripts": ["background-script.js","update.js"]
   },
 
   "applications": {
