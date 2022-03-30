@@ -611,10 +611,10 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .mobile-downloads .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en/android.png");
 }
-:root[lang|=de] :root .ios button {
+:root[lang|=de] .ios button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/ios.svg");
 }
-:root[lang|=de] :root .android button {
+:root[lang|=de] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/android.png");
 }
 :root[lang|=es] .ios button {
@@ -623,28 +623,28 @@ body[lwt-newtab-brighttext] {
 :root[lang|=es] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/es/android.png");
 }
-:root[lang|=fr] :root .ios button {
+:root[lang|=fr] .ios button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/ios.svg");
 }
-:root[lang|=fr] :root .android button {
+:root[lang|=fr] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/android.png");
 }
-:root[lang|=pt] :root .ios button {
+:root[lang|=pt] .ios button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/ios.svg");
 }
-:root[lang|=pt] :root .android button {
+:root[lang|=pt] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/android.png");
 }
-:root[lang|=ru] :root .ios button {
+:root[lang|=ru] .ios button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/ios.svg");
 }
-:root[lang|=ru] :root .android button {
+:root[lang|=ru] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/android.png");
 }
-:root[lang|=zh] :root .ios button {
+:root[lang|=zh] .ios button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/ios.svg");
 }
-:root[lang|=zh] :root .android button {
+:root[lang|=zh] .android button {
   background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/android.png");
 }
 
