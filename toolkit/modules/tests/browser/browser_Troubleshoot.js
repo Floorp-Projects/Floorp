@@ -1172,7 +1172,7 @@ const SNAPSHOT_SCHEMA = {
           },
           required: true,
         },
-        remoteConfigs: {
+        nimbusRollouts: {
           type: "array",
           items: {
             type: "object",
