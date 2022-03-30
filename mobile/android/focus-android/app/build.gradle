@@ -227,6 +227,7 @@ dependencies {
     implementation "org.mozilla.components:feature-contextmenu:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-downloads:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-findinpage:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-intent:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-prompts:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-session:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-search:${AndroidComponents.VERSION}"

@@ -7,7 +7,8 @@ package org.mozilla.focus.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import mozilla.components.support.utils.SafeIntent
+import mozilla.components.feature.intent.ext.sanitize
+import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.utils.SupportUtils
@@ -23,7 +24,7 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = SafeIntent(intent)
+        val intent = intent.sanitize().toSafeIntent()
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {
             dispatchNormalIntent()
