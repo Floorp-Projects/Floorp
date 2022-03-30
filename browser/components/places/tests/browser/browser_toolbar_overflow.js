@@ -11,7 +11,7 @@ var gChevron = document.getElementById("PlacesChevron");
 
 const BOOKMARKS_COUNT = 250;
 
-add_task(async function setup() {
+add_setup(async function() {
   let wasCollapsed = gToolbar.collapsed;
   await PlacesUtils.bookmarks.eraseEverything();
 

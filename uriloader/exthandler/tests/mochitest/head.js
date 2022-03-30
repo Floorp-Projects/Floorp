@@ -299,7 +299,7 @@ async function setDownloadDir() {
   return tmpDir;
 }
 
-add_task(async function test_common_initialize() {
+add_setup(async function test_common_initialize() {
   gDownloadDir = await setDownloadDir();
   Services.prefs.setCharPref("browser.download.loglevel", "Debug");
   registerCleanupFunction(function() {

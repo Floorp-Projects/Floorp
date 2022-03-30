@@ -748,6 +748,16 @@
      */ \
     MACRO(ToString, to_string, NULL, 1, 1, 1, JOF_BYTE) \
     /*
+     * Test whether the value on top of the stack is `NullValue` or
+     * `UndefinedValue` and push the boolean result.
+     *
+     *   Category: Expressions
+     *   Type: Other expressions
+     *   Operands:
+     *   Stack: val => val, IsNullOrUndefined(val)
+     */ \
+    MACRO(IsNullOrUndefined, is_null_or_undefined, NULL, 1, 1, 2, JOF_BYTE) \
+    /*
      * Push the global `this` value. Not to be confused with the `globalThis`
      * property on the global.
      *
@@ -1739,9 +1749,6 @@
      * iterable") rather than `JSMSG_NOT_FUNCTION` ("x[Symbol.iterator] is not
      * a function"). The `argc` operand must be 0 for this variation.
      *
-     * `JSOp::FunCall` hints to the VM that the callee is likely
-     * `Function.prototype.call`.
-     *
      * `JSOp::CallIgnoresRv` hints to the VM that the return value is ignored.
      * This allows alternate faster implementations to be used that avoid
      * unnecesary allocations.
@@ -1757,7 +1764,6 @@
      */ \
     MACRO(Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     MACRO(CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
-    MACRO(FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     MACRO(CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     /*
      * Like `JSOp::Call`, but the arguments are provided in an array rather than

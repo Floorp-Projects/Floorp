@@ -2,7 +2,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]],
   });

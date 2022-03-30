@@ -6,6 +6,10 @@ var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "AppConstants",
@@ -27,6 +31,15 @@ ChromeUtils.defineModuleGetter(
   this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
+// Whether the content and chrome areas should always use the same color
+// scheme (unless user-overridden). Thunderbird uses this.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "BROWSER_THEME_UNIFIED_COLOR_SCHEME",
+  "browser.theme.unified-color-scheme",
+  false
 );
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
@@ -509,6 +522,9 @@ function _determineToolbarAndContentTheme(
   })();
 
   let contentTheme = (function() {
+    if (BROWSER_THEME_UNIFIED_COLOR_SCHEME) {
+      return toolbarTheme;
+    }
     if (!aTheme) {
       if (!DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME) {
         return kLight;

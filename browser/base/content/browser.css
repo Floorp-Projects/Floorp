@@ -94,6 +94,10 @@ body {
   }
 }
 
+#titlebar {
+  -moz-window-dragging: drag;
+}
+
 #toolbar-menubar[autohide="true"] {
   overflow: hidden;
 }

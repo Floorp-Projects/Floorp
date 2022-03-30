@@ -1,7 +1,7 @@
 const TEST_URL_PATH =
   "://example.org/browser/toolkit/components/passwordmgr/test/browser/";
 
-add_task(async function setup() {
+add_setup(async function() {
   let login = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
     formActionOrigin: "http://example.org",

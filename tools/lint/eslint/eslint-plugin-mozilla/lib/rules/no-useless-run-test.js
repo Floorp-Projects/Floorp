@@ -8,15 +8,16 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 module.exports = {
   meta: {
-    type: "suggestion",
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-run-test.html",
+    },
     fixable: "code",
+    type: "suggestion",
   },
+
   create(context) {
     return {
       "Program > FunctionDeclaration": function(node) {

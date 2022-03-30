@@ -8,7 +8,7 @@ const URL = ROOT + "browser_formdata_xpath_sample.html";
 /**
  * Bug 346337 - Generic form data restoration tests.
  */
-add_task(function setup() {
+add_setup(function() {
   // make sure we don't save form data at all (except for tab duplication)
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 2);
 

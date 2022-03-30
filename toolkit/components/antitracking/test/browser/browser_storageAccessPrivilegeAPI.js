@@ -93,7 +93,7 @@ function triggerSecondaryCommand() {
   triggerCommand("secondaryButton");
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.storage_access.auto_grants", true],

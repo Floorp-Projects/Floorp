@@ -5,7 +5,7 @@
 
 // Test the behavior for enter key.
 
-add_task(async function setup() {
+add_setup(async function() {
   await gCUITestUtils.addSearchBar();
 
   await SearchTestUtils.installSearchExtension();

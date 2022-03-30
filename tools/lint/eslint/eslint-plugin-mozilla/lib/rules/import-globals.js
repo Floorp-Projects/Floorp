@@ -8,8 +8,14 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/import-globals.html",
+    },
+    type: "problem",
+  },
 
-module.exports = require("../globals").getESLintGlobalParser;
+  create: require("../globals").getESLintGlobalParser,
+};

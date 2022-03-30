@@ -8,28 +8,35 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 var helpers = require("../helpers");
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  if (typeof context.options[0] !== "string") {
-    throw new Error("reject-some-requires expects a regexp");
-  }
-  const RX = new RegExp(context.options[0]);
-
-  return {
-    CallExpression(node) {
-      const path = helpers.getDevToolsRequirePath(node);
-      if (path && RX.test(path)) {
-        context.report(node, `require(${path}) is not allowed`);
-      }
+module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-some-requires.html",
     },
-  };
+    schema: [
+      {
+        type: "string",
+      },
+    ],
+    type: "problem",
+  },
+
+  create(context) {
+    if (typeof context.options[0] !== "string") {
+      throw new Error("reject-some-requires expects a regexp");
+    }
+    const RX = new RegExp(context.options[0]);
+
+    return {
+      CallExpression(node) {
+        const path = helpers.getDevToolsRequirePath(node);
+        if (path && RX.test(path)) {
+          context.report(node, `require(${path}) is not allowed`);
+        }
+      },
+    };
+  },
 };

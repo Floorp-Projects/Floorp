@@ -21,7 +21,7 @@ async function grantOptionalPermission(extension, permissions) {
 
 var someOtherTab, testTab;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });

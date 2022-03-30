@@ -5,7 +5,7 @@ const usernameInputSelector = "#form-basic-username";
 const FORM_URL =
   "https://example.com/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });

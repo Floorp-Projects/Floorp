@@ -20,7 +20,7 @@ const TELEMETRY_OBJECT = "nimbus_experiment";
 const EXPERIMENT_TYPE = "nimbus";
 const EVENT_FILTER = { category: TELEMETRY_CATEGORY };
 
-add_task(async function setup() {
+add_setup(async function() {
   let sandbox = sinon.createSandbox();
   // stub the `observe` method to make sure the Experiment Manager
   // pref listener doesn't trigger and cause side effects

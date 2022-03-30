@@ -106,7 +106,7 @@ TestHangReport.prototype = {
 // on dev edition we add a button for js debugging of hung scripts.
 let buttonCount = AppConstants.MOZ_DEV_EDITION ? 2 : 1;
 
-add_task(async function setup() {
+add_setup(async function() {
   // Create a fake WebExtensionPolicy that we can use for
   // the add-on hang notification.
   const uuidGen = Services.uuid;

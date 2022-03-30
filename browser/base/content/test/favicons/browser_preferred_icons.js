@@ -28,7 +28,7 @@ function createLinks(linkInfos) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   const URL = ROOT + "discovery.html";
   let iconPromise = waitIcon("http://mochi.test:8888/favicon.ico");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);

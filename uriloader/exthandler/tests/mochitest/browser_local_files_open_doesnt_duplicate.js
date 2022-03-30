@@ -9,7 +9,7 @@ const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 );
 let mimeInfo = mimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({ set: [["pdfjs.disabled", true]] });
 
   let oldAsk = mimeInfo.alwaysAskBeforeHandling;

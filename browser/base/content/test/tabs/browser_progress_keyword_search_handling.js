@@ -11,7 +11,7 @@ SearchTestUtils.init(this);
 
 const kButton = document.getElementById("reload-button");
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.fixup.dns_first_for_single_words", true]],
   });

@@ -588,8 +588,12 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
   }
 
   // Check if we have actually found a link.
-  nsCOMPtr<nsIURI> uri;
-  if (!elem->IsLink(getter_AddRefs(uri))) {
+  if (!elem->IsLink()) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri = elem->GetHrefURI();
+  if (!uri) {
     return;
   }
 

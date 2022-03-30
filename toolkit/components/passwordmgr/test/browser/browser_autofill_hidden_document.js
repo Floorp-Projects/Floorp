@@ -48,7 +48,7 @@ function observePrimaryPasswordDialog(window, result) {
     });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");

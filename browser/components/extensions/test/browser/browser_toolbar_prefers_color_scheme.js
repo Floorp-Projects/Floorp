@@ -238,3 +238,29 @@ add_task(async function color_scheme_override() {
     },
   });
 });
+
+add_task(async function unified_theme() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.unified-color-scheme", true]],
+  });
+
+  await testTheme("Dark toolbar color", kDark, kDark, {
+    theme: {
+      colors: {
+        toolbar: "rgb(20, 17, 26)",
+        toolbar_text: "rgb(251, 29, 78)",
+      },
+    },
+  });
+
+  await testTheme("Light toolbar color", kLight, kLight, {
+    theme: {
+      colors: {
+        toolbar: "white",
+        toolbar_text: "black",
+      },
+    },
+  });
+
+  await SpecialPowers.popPrefEnv();
+});

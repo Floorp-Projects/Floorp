@@ -14,7 +14,7 @@
 const TRACKING_PAGE =
   "http://example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.trackingprotection.enabled", true],

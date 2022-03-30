@@ -119,17 +119,6 @@ class Link : public nsISupports {
  protected:
   virtual ~Link();
 
-  /**
-   * Return true if the link has associated URI.
-   */
-  bool HasURI() const {
-    if (HasCachedURI()) {
-      return true;
-    }
-
-    return !!GetURI();
-  }
-
   nsIURI* GetCachedURI() const { return mCachedURI; }
   bool HasCachedURI() const { return !!mCachedURI; }
 

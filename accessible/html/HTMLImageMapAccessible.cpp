@@ -51,7 +51,9 @@ already_AddRefed<nsIURI> HTMLImageMapAccessible::AnchorURIAt(
   if (!area) return nullptr;
 
   nsIContent* linkContent = area->GetContent();
-  return linkContent ? linkContent->GetHrefURI() : nullptr;
+  return linkContent && linkContent->IsElement()
+             ? linkContent->AsElement()->GetHrefURI()
+             : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

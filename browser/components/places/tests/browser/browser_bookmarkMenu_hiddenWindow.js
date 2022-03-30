@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://example.com/",

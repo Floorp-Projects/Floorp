@@ -9,7 +9,7 @@
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.altClickSave", true],

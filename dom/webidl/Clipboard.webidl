@@ -12,7 +12,7 @@
 
 typedef sequence<ClipboardItem> ClipboardItems;
 
-[SecureContext, Exposed=Window, Pref="dom.events.asyncClipboard"]
+[SecureContext, Exposed=Window]
 interface Clipboard : EventTarget {
   [Pref="dom.events.asyncClipboard.read", Throws, NeedsSubjectPrincipal]
   Promise<ClipboardItems> read();

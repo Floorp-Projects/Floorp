@@ -978,9 +978,9 @@ fn remove_local_items(
     let mut observer_statement = db.prepare(format!(
         "WITH
          ops(guid, level) AS (VALUES {})
-         INSERT INTO itemsRemoved(itemId, parentId, position, type, placeId,
-                                  guid, parentGuid, level)
-         SELECT b.id, b.parent, b.position, b.type, b.fk,
+         INSERT INTO itemsRemoved(itemId, parentId, position, type, title,
+                                  placeId, guid, parentGuid, level)
+         SELECT b.id, b.parent, b.position, b.type, b.title, b.fk,
                 b.guid, p.guid, n.level
          FROM ops n
          JOIN moz_bookmarks b ON b.guid = n.guid

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   await setupPolicyEngineWithJson({
     policies: {
       SearchBar: "separate",
@@ -23,15 +23,12 @@ add_task(async function test_menu_shown() {
   await BrowserTestUtils.closeWindow(newWin);
 });
 
-add_task(async function setup() {
+add_task(async function test_menu_shown() {
   await setupPolicyEngineWithJson({
     policies: {
       SearchBar: "unified",
     },
   });
-});
-
-add_task(async function test_menu_shown() {
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement, null, "Search bar has no placement");

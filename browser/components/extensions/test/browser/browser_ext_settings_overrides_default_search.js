@@ -33,7 +33,7 @@ async function restoreDefaultEngine() {
   await Services.search.setDefault(engine);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   let searchExtensions = getChromeDir(getResolvedURI(gTestPath));
   searchExtensions.append("search-engines");
 

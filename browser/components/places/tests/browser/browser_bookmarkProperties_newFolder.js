@@ -7,7 +7,7 @@ StarUI._createPanelIfNeeded();
 const bookmarkPanel = document.getElementById("editBookmarkPanel");
 let folders;
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   bookmarkPanel.setAttribute("animate", false);

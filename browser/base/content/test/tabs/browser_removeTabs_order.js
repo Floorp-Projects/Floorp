@@ -5,7 +5,7 @@
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-add_task(async function setup() {
+add_task(async function() {
   let tab1 = await addTab();
   let tab2 = await addTab();
   let tab3 = await addTab();

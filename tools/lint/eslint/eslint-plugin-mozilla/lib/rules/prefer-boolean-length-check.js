@@ -8,9 +8,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
 function funcForBooleanLength(context, node, conditionCheck) {
   let newText = "";
   const sourceCode = context.getSourceCode();
@@ -61,14 +58,15 @@ function funcForBooleanLength(context, node, conditionCheck) {
 
 module.exports = {
   meta: {
-    type: "suggestion",
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-boolean-length-check.html",
+    },
     fixable: "code",
+    type: "suggestion",
   },
-  create(context) {
-    // ---------------------------------------------------------------------------
-    // Public
-    //  --------------------------------------------------------------------------
 
+  create(context) {
     const conditionStatement = [
       "IfStatement",
       "WhileStatement",

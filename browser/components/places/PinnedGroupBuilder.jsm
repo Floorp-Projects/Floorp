@@ -155,7 +155,6 @@ const PinnedGroupBuilder = new (class PinnedGroupBuilder {
    */
   #generateEmptyGroup() {
     return {
-      title: "",
       builder: "pinned",
       builderMetadata: {
         fluentTitle: { id: "snapshot-group-pinned-header" },

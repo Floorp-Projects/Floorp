@@ -552,12 +552,14 @@ GeckoMediaPluginServiceParent::PathRunnable::Run() {
   return NS_OK;
 }
 
-void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities() {
+void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
+    ContentParent* aContentProcess) {
   if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
+    nsCOMPtr<nsIRunnable> task = NewRunnableMethod<ContentParent*>(
         "GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities",
         this,
-        &GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities);
+        &GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities,
+        aContentProcess);
     mMainThread->Dispatch(task.forget());
     return;
   }
@@ -593,6 +595,12 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities() {
       caps.AppendElement(std::move(x));
     }
   }
+
+  if (aContentProcess) {
+    Unused << aContentProcess->SendGMPsChanged(caps);
+    return;
+  }
+
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     Unused << cp->SendGMPsChanged(caps);
   }

@@ -44,6 +44,7 @@ module.exports = {
     "mark-exported-symbols-as-used": require("../lib/rules/mark-exported-symbols-as-used"),
     "mark-test-function-used": require("../lib/rules/mark-test-function-used"),
     "no-aArgs": require("../lib/rules/no-aArgs"),
+    "no-addtask-setup": require("../lib/rules/no-addtask-setup"),
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),

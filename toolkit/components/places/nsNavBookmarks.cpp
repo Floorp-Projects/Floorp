@@ -588,6 +588,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
   if (bookmark.type == TYPE_BOOKMARK) {
     bookmarkRef->mUrl.Assign(NS_ConvertUTF8toUTF16(bookmark.url));
   }
+  bookmarkRef->mTitle.Assign(NS_ConvertUTF8toUTF16(bookmark.title));
   bookmarkRef->mGuid.Assign(bookmark.guid);
   bookmarkRef->mParentGuid.Assign(bookmark.parentGuid);
   bookmarkRef->mSource = aSource;
@@ -754,6 +755,15 @@ nsresult nsNavBookmarks::GetDescendantChildren(
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      bool isNull;
+      rv = stmt->GetIsNull(nsNavHistory::kGetInfoIndex_Title, &isNull);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!isNull) {
+        rv =
+            stmt->GetUTF8String(nsNavHistory::kGetInfoIndex_Title, child.title);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       // Append item to children's array.
       aFolderChildrenArray.AppendElement(child);
     }
@@ -907,6 +917,7 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
     bookmark->mParentId = child.parentId;
     bookmark->mIndex = child.position;
     bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(child.url));
+    bookmark->mTitle.Assign(NS_ConvertUTF8toUTF16(child.title));
     bookmark->mGuid.Assign(child.guid);
     bookmark->mParentGuid.Assign(child.parentGuid);
     bookmark->mSource = aSource;

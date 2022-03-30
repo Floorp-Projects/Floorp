@@ -64,7 +64,7 @@ async function waitForAndAssertPrefState(pref, expectedValue, message) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   const defaultPrefs = Services.prefs.getDefaultBranch("");
   const previousDefaultCB = defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF);
 

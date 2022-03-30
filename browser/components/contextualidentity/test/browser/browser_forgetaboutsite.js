@@ -390,7 +390,7 @@ async function test_storage_cleared() {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],

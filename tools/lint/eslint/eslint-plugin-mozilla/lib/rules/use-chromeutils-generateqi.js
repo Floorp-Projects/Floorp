@@ -9,10 +9,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
@@ -53,7 +49,12 @@ function funcToGenerateQI(context, node) {
 
 module.exports = {
   meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-generateqi.html",
+    },
     fixable: "code",
+    type: "suggestion",
   },
 
   create(context) {

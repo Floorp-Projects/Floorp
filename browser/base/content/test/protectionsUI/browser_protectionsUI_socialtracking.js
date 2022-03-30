@@ -9,7 +9,7 @@ const TRACKING_PAGE =
 const ST_PROTECTION_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const ST_BLOCK_COOKIES_PREF = "privacy.socialtracking.block_cookies.enabled";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [ST_BLOCK_COOKIES_PREF, true],

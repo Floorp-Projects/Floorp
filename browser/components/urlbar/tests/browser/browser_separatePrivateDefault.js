@@ -13,7 +13,7 @@ const serverInfo = {
   port: 20709, // Must be identical to what is in searchSuggestionEngine2.xml
 };
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],

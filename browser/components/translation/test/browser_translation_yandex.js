@@ -25,7 +25,7 @@ const { Translation } = ChromeUtils.import(
   "resource:///modules/translation/TranslationParent.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [kEnginePref, "Yandex"],

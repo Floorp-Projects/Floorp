@@ -167,11 +167,6 @@ class CharacterData : public nsIContent {
 
   bool IsNodeOfType(uint32_t aFlags) const override { return false; }
 
-  bool IsLink(nsIURI** aURI) const final {
-    *aURI = nullptr;
-    return false;
-  }
-
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override {
     RefPtr<CharacterData> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);

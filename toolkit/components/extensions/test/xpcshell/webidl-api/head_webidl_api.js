@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
 });
 
-add_task(function checkExtensionsWebIDLEnabled() {
+add_setup(function checkExtensionsWebIDLEnabled() {
   equal(
     AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED,
     true,

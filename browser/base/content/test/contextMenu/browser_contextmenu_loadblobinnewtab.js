@@ -135,7 +135,7 @@ async function openInNewTabAndReturnContent(selector) {
   return blobDataFromContent;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.partition.bloburl_per_agent_cluster", false]],
   });

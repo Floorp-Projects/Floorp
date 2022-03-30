@@ -11,7 +11,7 @@
 const TEST_URIS = ["https://example1.com/", "https://example2.com/"];
 let library;
 
-add_task(async function setup() {
+add_setup(async function() {
   await PlacesTestUtils.addVisits(TEST_URIS);
 
   library = await promiseLibrary("History");

@@ -188,7 +188,7 @@ async function ensureWarning(tab) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.webrtc.sharedTabWarning", true]],
   });
