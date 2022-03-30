@@ -9,6 +9,14 @@
 "use strict";
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-returnValue.html",
+    },
+    type: "problem",
+  },
+
   create(context) {
     return {
       ExpressionStatement(node) {

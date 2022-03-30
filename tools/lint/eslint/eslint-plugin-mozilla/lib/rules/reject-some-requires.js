@@ -11,6 +11,19 @@
 var helpers = require("../helpers");
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-some-requires.html",
+    },
+    schema: [
+      {
+        type: "string",
+      },
+    ],
+    type: "problem",
+  },
+
   create(context) {
     if (typeof context.options[0] !== "string") {
       throw new Error("reject-some-requires expects a regexp");

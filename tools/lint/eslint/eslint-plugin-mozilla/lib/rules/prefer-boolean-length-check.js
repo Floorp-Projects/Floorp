@@ -58,9 +58,14 @@ function funcForBooleanLength(context, node, conditionCheck) {
 
 module.exports = {
   meta: {
-    type: "suggestion",
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-boolean-length-check.html",
+    },
     fixable: "code",
+    type: "suggestion",
   },
+
   create(context) {
     const conditionStatement = [
       "IfStatement",

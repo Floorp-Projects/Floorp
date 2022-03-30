@@ -14,6 +14,14 @@ var helpers = require("../helpers");
 var browserWindowEnv = require("../environments/browser-window");
 
 module.exports = {
+  meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/import-browser-window-globals.html",
+    },
+    type: "problem",
+  },
+
   create(context) {
     return {
       Program(node) {
