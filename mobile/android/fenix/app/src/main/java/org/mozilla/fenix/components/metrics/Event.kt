@@ -399,13 +399,6 @@ sealed class Event {
             get() = mapOf(Autoplay.settingChangedKeys.autoplaySetting to setting.toString().lowercase(Locale.ROOT))
     }
 
-    data class TabViewSettingChanged(val type: Type) : Event() {
-        enum class Type { LIST, GRID }
-
-        override val extras: Map<Events.tabViewChangedKeys, String>?
-            get() = mapOf(Events.tabViewChangedKeys.type to type.toString().lowercase(Locale.ROOT))
-    }
-
     data class SearchTermGroupCount(val count: Int) : Event() {
         override val extras: Map<SearchTerms.numberOfSearchTermGroupKeys, String>
             get() = hashMapOf(SearchTerms.numberOfSearchTermGroupKeys.count to count.toString())

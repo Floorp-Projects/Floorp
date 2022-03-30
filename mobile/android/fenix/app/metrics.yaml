@@ -429,6 +429,7 @@ events:
         description: |
           A string containing the name of the tab view the user tapped.
           These items include: list or grid.
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/19956
     data_reviews:
