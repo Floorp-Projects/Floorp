@@ -8,41 +8,35 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    CallExpression(node) {
-      if (
-        node.callee.object &&
-        node.callee.object.callee &&
-        ["add_task", "decorate_task"].includes(
-          node.callee.object.callee.name
-        ) &&
-        node.callee.property &&
-        node.callee.property.name == "only"
-      ) {
-        context.report({
-          node,
-          message: `add_task(...).only() not allowed - add an exception if this is intentional`,
-          suggest: [
-            {
-              desc: "Remove only() call from task",
-              fix: fixer =>
-                fixer.replaceTextRange(
-                  [node.callee.object.range[1], node.range[1]],
-                  ""
-                ),
-            },
-          ],
-        });
-      }
-    },
-  };
+module.exports = {
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (
+          node.callee.object &&
+          node.callee.object.callee &&
+          ["add_task", "decorate_task"].includes(
+            node.callee.object.callee.name
+          ) &&
+          node.callee.property &&
+          node.callee.property.name == "only"
+        ) {
+          context.report({
+            node,
+            message: `add_task(...).only() not allowed - add an exception if this is intentional`,
+            suggest: [
+              {
+                desc: "Remove only() call from task",
+                fix: fixer =>
+                  fixer.replaceTextRange(
+                    [node.callee.object.range[1], node.range[1]],
+                    ""
+                  ),
+              },
+            ],
+          });
+        }
+      },
+    };
+  },
 };

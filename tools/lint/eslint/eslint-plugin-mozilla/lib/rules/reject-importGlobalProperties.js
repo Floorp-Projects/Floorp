@@ -12,10 +12,6 @@ const privilegedGlobals = Object.keys(
   require("../environments/privileged.js").globals
 );
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 module.exports = {
   meta: {
     messages: {

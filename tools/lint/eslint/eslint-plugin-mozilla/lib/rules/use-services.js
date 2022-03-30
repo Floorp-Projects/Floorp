@@ -11,9 +11,6 @@ const helpers = require("../helpers");
 
 let servicesInterfaceMap = helpers.servicesData;
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
 module.exports = {
   meta: {
     // fixable: "code",

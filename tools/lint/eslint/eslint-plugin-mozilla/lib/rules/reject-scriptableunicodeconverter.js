@@ -9,30 +9,24 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        isIdentifier(node.object, "Ci") &&
-        isIdentifier(node.property, "nsIScriptableUnicodeConverter")
-      ) {
-        context.report(
-          node,
-          "Ci.nsIScriptableUnicodeConverter is deprecated. You should use TextEncoder or TextDecoder instead."
-        );
-      }
-    },
-  };
+module.exports = {
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          isIdentifier(node.object, "Ci") &&
+          isIdentifier(node.property, "nsIScriptableUnicodeConverter")
+        ) {
+          context.report(
+            node,
+            "Ci.nsIScriptableUnicodeConverter is deprecated. You should use TextEncoder or TextDecoder instead."
+          );
+        }
+      },
+    };
+  },
 };
