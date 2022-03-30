@@ -132,10 +132,8 @@ function add_one_ev_test() {
 // with session resumption. The certificate should again be EV in debug builds.
 function add_resume_ev_test() {
   const SERVER_PORT = 8888;
-  let expectedRequestPaths = gEVExpected
-    ? ["ev-test-intermediate", "ev-test"]
-    : ["ev-test"];
-  let responseTypes = gEVExpected ? ["good", "good"] : ["good"];
+  let expectedRequestPaths = ["ev-test"];
+  let responseTypes = ["good"];
   // Since we cache OCSP responses, we only ever actually serve one set.
   let ocspResponder;
   // If we don't wrap this in an `add_test`, the OCSP responder will be running

@@ -118,9 +118,7 @@ function asyncTestEV(
 function ensureVerifiesAsEV(testcase) {
   let cert = constructCertFromFile(`test_ev_certs/${testcase}-ee.pem`);
   addCertFromFile(certdb, `test_ev_certs/${testcase}-int.pem`, ",,");
-  let expectedOCSPRequestPaths = gEVExpected
-    ? [`${testcase}-int`, `${testcase}-ee`]
-    : [`${testcase}-ee`];
+  let expectedOCSPRequestPaths = [`${testcase}-ee`];
   return asyncTestEV(
     cert,
     PRErrorCodeSuccess,
@@ -190,19 +188,11 @@ function ensureVerifiesAsEVWithFLAG_LOCAL_ONLY(testcase) {
   return verifyWithFlags_LOCAL_ONLY_and_MUST_BE_EV(testcase, true);
 }
 
-function ensureOneCRLSkipsOCSPForIntermediates(testcase) {
+function verifyWithOCSPResponseType(testcase, response, expectEV) {
   let cert = constructCertFromFile(`test_ev_certs/${testcase}-ee.pem`);
   addCertFromFile(certdb, `test_ev_certs/${testcase}-int.pem`, ",,");
-  return asyncTestEV(cert, PRErrorCodeSuccess, gEVExpected, [`${testcase}-ee`]);
-}
-
-function verifyWithDifferentOCSPResponseTypes(testcase, responses, expectEV) {
-  let cert = constructCertFromFile(`test_ev_certs/${testcase}-ee.pem`);
-  addCertFromFile(certdb, `test_ev_certs/${testcase}-int.pem`, ",,");
-  let expectedOCSPRequestPaths = gEVExpected
-    ? [`${testcase}-int`, `${testcase}-ee`]
-    : [`${testcase}-ee`];
-  let ocspResponseTypes = gEVExpected ? responses : responses.slice(1);
+  let expectedOCSPRequestPaths = [`${testcase}-ee`];
+  let ocspResponseTypes = [response];
   return asyncTestEV(
     cert,
     PRErrorCodeSuccess,
@@ -212,28 +202,12 @@ function verifyWithDifferentOCSPResponseTypes(testcase, responses, expectEV) {
   );
 }
 
-function ensureVerifiesAsEVWithOldIntermediateOCSPResponse(testcase) {
-  return verifyWithDifferentOCSPResponseTypes(
-    testcase,
-    ["longvalidityalmostold", "good"],
-    true
-  );
-}
-
 function ensureVerifiesAsDVWithOldEndEntityOCSPResponse(testcase) {
-  return verifyWithDifferentOCSPResponseTypes(
-    testcase,
-    ["good", "longvalidityalmostold"],
-    false
-  );
+  return verifyWithOCSPResponseType(testcase, "longvalidityalmostold", false);
 }
 
 function ensureVerifiesAsDVWithVeryOldEndEntityOCSPResponse(testcase) {
-  return verifyWithDifferentOCSPResponseTypes(
-    testcase,
-    ["good", "ancientstillvalid"],
-    false
-  );
+  return verifyWithOCSPResponseType(testcase, "ancientstillvalid", false);
 }
 
 // These should all verify as EV.
@@ -256,11 +230,8 @@ add_task(async function plainExpectSuccessEVTests() {
 add_task(async function expectDVFallbackTests() {
   await ensureVerifiesAsDV("anyPolicy-ee-path");
   await ensureVerifiesAsDV("non-ev-root-path");
-  await ensureVerifiesAsDV(
-    "no-ocsp-ee-path",
-    gEVExpected ? ["no-ocsp-ee-path-int"] : []
-  );
-  await ensureVerifiesAsDV("no-ocsp-int-path");
+  await ensureVerifiesAsDV("no-ocsp-ee-path", []);
+  await ensureVerifiesAsEV("no-ocsp-int-path");
   // In this case, the end-entity has the test OID and the intermediate has the
   // CA/B Forum OID. Since the CA/B Forum OID is not treated the same as the
   // anyPolicy OID, this will not verify as EV.
@@ -305,100 +276,6 @@ add_task(async function localOnlyMustBeEVTests() {
   await ensureNoOCSPMeansNoEV("test-oid-path");
 });
 
-// Under certain conditions, OneCRL allows us to skip OCSP requests for
-// intermediates.
-add_task(async function oneCRLTests() {
-  clearOCSPCache();
-
-  // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
-  Services.prefs.setIntPref(
-    "security.onecrl.maximum_staleness_in_seconds",
-    108000
-  );
-  // set the blocklist-background-update-timer value to the recent past
-  Services.prefs.setIntPref(
-    "services.settings.security.onecrl.checked",
-    Math.floor(Date.now() / 1000) - 1
-  );
-  Services.prefs.setIntPref(
-    "app.update.lastUpdateTime.blocklist-background-update-timer",
-    Math.floor(Date.now() / 1000) - 1
-  );
-
-  await ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
-  await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
-  await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
-
-  clearOCSPCache();
-  // disable OneCRL OCSP Skipping (no staleness allowed)
-  Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 0);
-  await ensureVerifiesAsEV("anyPolicy-int-path");
-  // Because the intermediate in this case is missing an OCSP URI, it will not
-  // validate as EV, but it should fall back to DV.
-  await ensureVerifiesAsDV("no-ocsp-int-path");
-  await ensureVerifiesAsEV("test-oid-path");
-
-  clearOCSPCache();
-  // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
-  Services.prefs.setIntPref(
-    "security.onecrl.maximum_staleness_in_seconds",
-    108000
-  );
-  // set the blocklist-background-update-timer value to the more distant past
-  Services.prefs.setIntPref(
-    "services.settings.security.onecrl.checked",
-    Math.floor(Date.now() / 1000) - 108080
-  );
-  Services.prefs.setIntPref(
-    "app.update.lastUpdateTime.blocklist-background-update-timer",
-    Math.floor(Date.now() / 1000) - 108080
-  );
-  await ensureVerifiesAsEV("anyPolicy-int-path");
-  await ensureVerifiesAsDV("no-ocsp-int-path");
-  await ensureVerifiesAsEV("test-oid-path");
-
-  clearOCSPCache();
-  // test the OCSP behavior when services.settings.security.onecrl.checked is in the
-  // distant past and blacklist-background-update-timer is recent
-  // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
-  Services.prefs.setIntPref(
-    "security.onecrl.maximum_staleness_in_seconds",
-    108000
-  );
-  // set the blocklist-background-update-timer value to the recent past
-  // (services.settings.security.onecrl.checked defaults to 0)
-  Services.prefs.setIntPref(
-    "app.update.lastUpdateTime.blocklist-background-update-timer",
-    Math.floor(Date.now() / 1000) - 1
-  );
-
-  await ensureVerifiesAsEV("anyPolicy-int-path");
-  await ensureVerifiesAsDV("no-ocsp-int-path");
-  await ensureVerifiesAsEV("test-oid-path");
-
-  clearOCSPCache();
-  // test the OCSP behavior when services.settings.security.onecrl.checked is recent
-  // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
-  Services.prefs.setIntPref(
-    "security.onecrl.maximum_staleness_in_seconds",
-    108000
-  );
-  // now set services.settings.security.onecrl.checked to a recent value
-  Services.prefs.setIntPref(
-    "services.settings.security.onecrl.checked",
-    Math.floor(Date.now() / 1000) - 1
-  );
-  await ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
-  await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
-  await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
-
-  Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
-  Services.prefs.clearUserPref("services.settings.security.onecrl.checked");
-  Services.prefs.clearUserPref(
-    "app.update.lastUpdateTime.blocklist-background-update-timer"
-  );
-});
-
 // Prime the OCSP cache and then ensure that we can validate certificates as EV
 // without hitting the network. There's two cases here: one where we simply
 // validate like normal and then check that the network was never accessed and
@@ -421,9 +298,6 @@ add_task(async function ocspCachingTests() {
 // fallback).
 add_task(async function oldOCSPResponseTests() {
   clearOCSPCache();
-
-  await ensureVerifiesAsEVWithOldIntermediateOCSPResponse("anyPolicy-int-path");
-  await ensureVerifiesAsEVWithOldIntermediateOCSPResponse("test-oid-path");
 
   clearOCSPCache();
   await ensureVerifiesAsDVWithOldEndEntityOCSPResponse("anyPolicy-int-path");
