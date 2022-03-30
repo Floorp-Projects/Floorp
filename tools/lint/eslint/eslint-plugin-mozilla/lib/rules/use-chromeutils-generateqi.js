@@ -9,10 +9,6 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
-
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }

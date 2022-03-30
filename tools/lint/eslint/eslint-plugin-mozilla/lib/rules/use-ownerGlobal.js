@@ -8,31 +8,25 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
+module.exports = {
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          node.property.type != "Identifier" ||
+          node.property.name != "defaultView" ||
+          node.object.type != "MemberExpression" ||
+          node.object.property.type != "Identifier" ||
+          node.object.property.name != "ownerDocument"
+        ) {
+          return;
+        }
 
-module.exports = function(context) {
-  // ---------------------------------------------------------------------------
-  // Public
-  //  --------------------------------------------------------------------------
-
-  return {
-    MemberExpression(node) {
-      if (
-        node.property.type != "Identifier" ||
-        node.property.name != "defaultView" ||
-        node.object.type != "MemberExpression" ||
-        node.object.property.type != "Identifier" ||
-        node.object.property.name != "ownerDocument"
-      ) {
-        return;
-      }
-
-      context.report(
-        node,
-        "use .ownerGlobal instead of .ownerDocument.defaultView"
-      );
-    },
-  };
+        context.report(
+          node,
+          "use .ownerGlobal instead of .ownerDocument.defaultView"
+        );
+      },
+    };
+  },
 };
