@@ -19,5 +19,5 @@ origin:
   license: "ISC"
 
   # update.sh will update this value
-  release: "5a2a20c6055d26e0a30fae8f1cf6f6cb975c5c97 (2022-03-22 14:15:59 +1300)"
+  release: "d97fea4c9015b5d79e11ad68e9cdac610c27ca07 (2022-03-24 17:53:27 -0700)"
 
