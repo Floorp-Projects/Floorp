@@ -11,7 +11,6 @@
 #include "modules/audio_processing/agc2/saturation_protector.h"
 
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/numerics/safe_compare.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
@@ -23,14 +22,31 @@ constexpr float kMinLevelDbfs = -90.f;
 constexpr float kMinMarginDb = 12.f;
 constexpr float kMaxMarginDb = 25.f;
 
+using saturation_protector_impl::RingBuffer;
+
 }  // namespace
 
-void SaturationProtector::RingBuffer::Reset() {
+bool RingBuffer::operator==(const RingBuffer& b) const {
+  RTC_DCHECK_LE(size_, buffer_.size());
+  RTC_DCHECK_LE(b.size_, b.buffer_.size());
+  if (size_ != b.size_) {
+    return false;
+  }
+  for (int i = 0, i0 = FrontIndex(), i1 = b.FrontIndex(); i < size_;
+       ++i, ++i0, ++i1) {
+    if (buffer_[i0 % buffer_.size()] != b.buffer_[i1 % b.buffer_.size()]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void RingBuffer::Reset() {
   next_ = 0;
   size_ = 0;
 }
 
-void SaturationProtector::RingBuffer::PushBack(float v) {
+void RingBuffer::PushBack(float v) {
   RTC_DCHECK_GE(next_, 0);
   RTC_DCHECK_GE(size_, 0);
   RTC_DCHECK_LT(next_, buffer_.size());
@@ -44,71 +60,62 @@ void SaturationProtector::RingBuffer::PushBack(float v) {
   }
 }
 
-absl::optional<float> SaturationProtector::RingBuffer::Front() const {
+absl::optional<float> RingBuffer::Front() const {
   if (size_ == 0) {
     return absl::nullopt;
   }
-  RTC_DCHECK_LT(next_, buffer_.size());
-  return buffer_[rtc::SafeEq(size_, buffer_.size()) ? next_ : 0];
+  RTC_DCHECK_LT(FrontIndex(), buffer_.size());
+  return buffer_[FrontIndex()];
 }
 
-SaturationProtector::SaturationProtector(ApmDataDumper* apm_data_dumper)
-    : SaturationProtector(apm_data_dumper, GetInitialSaturationMarginDb()) {}
-
-SaturationProtector::SaturationProtector(ApmDataDumper* apm_data_dumper,
-                                         float initial_saturation_margin_db)
-    : apm_data_dumper_(apm_data_dumper),
-      initial_saturation_margin_db_(initial_saturation_margin_db) {
-  Reset();
+bool SaturationProtectorState::operator==(
+    const SaturationProtectorState& b) const {
+  return margin_db == b.margin_db && peak_delay_buffer == b.peak_delay_buffer &&
+         max_peaks_dbfs == b.max_peaks_dbfs &&
+         time_since_push_ms == b.time_since_push_ms;
 }
 
-void SaturationProtector::Reset() {
-  margin_db_ = initial_saturation_margin_db_;
-  peak_delay_buffer_.Reset();
-  max_peaks_dbfs_ = kMinLevelDbfs;
-  time_since_push_ms_ = 0;
+void ResetSaturationProtectorState(float initial_margin_db,
+                                   SaturationProtectorState& state) {
+  state.margin_db = initial_margin_db;
+  state.peak_delay_buffer.Reset();
+  state.max_peaks_dbfs = kMinLevelDbfs;
+  state.time_since_push_ms = 0;
 }
 
-void SaturationProtector::UpdateMargin(float speech_peak_dbfs,
-                                       float speech_level_dbfs) {
+void UpdateSaturationProtectorState(float speech_peak_dbfs,
+                                    float speech_level_dbfs,
+                                    SaturationProtectorState& state) {
   // Get the max peak over `kPeakEnveloperSuperFrameLengthMs` ms.
-  max_peaks_dbfs_ = std::max(max_peaks_dbfs_, speech_peak_dbfs);
-  time_since_push_ms_ += kFrameDurationMs;
-  if (time_since_push_ms_ >
-      static_cast<int>(kPeakEnveloperSuperFrameLengthMs)) {
-    // Push `max_peaks_dbfs_` back into the ring buffer.
-    peak_delay_buffer_.PushBack(max_peaks_dbfs_);
+  state.max_peaks_dbfs = std::max(state.max_peaks_dbfs, speech_peak_dbfs);
+  state.time_since_push_ms += kFrameDurationMs;
+  if (rtc::SafeGt(state.time_since_push_ms, kPeakEnveloperSuperFrameLengthMs)) {
+    // Push `max_peaks_dbfs` back into the ring buffer.
+    state.peak_delay_buffer.PushBack(state.max_peaks_dbfs);
     // Reset.
-    max_peaks_dbfs_ = kMinLevelDbfs;
-    time_since_push_ms_ = 0;
+    state.max_peaks_dbfs = kMinLevelDbfs;
+    state.time_since_push_ms = 0;
   }
 
   // Update margin by comparing the estimated speech level and the delayed max
   // speech peak power.
   // TODO(alessiob): Check with aleloi@ why we use a delay and how to tune it.
-  const float difference_db = GetDelayedPeakDbfs() - speech_level_dbfs;
-  if (margin_db_ < difference_db) {
-    margin_db_ = margin_db_ * kSaturationProtectorAttackConstant +
-                 difference_db * (1.f - kSaturationProtectorAttackConstant);
+  const float delayed_peak_dbfs =
+      state.peak_delay_buffer.Front().value_or(state.max_peaks_dbfs);
+  const float difference_db = delayed_peak_dbfs - speech_level_dbfs;
+  if (difference_db > state.margin_db) {
+    // Attack.
+    state.margin_db =
+        state.margin_db * kSaturationProtectorAttackConstant +
+        difference_db * (1.f - kSaturationProtectorAttackConstant);
   } else {
-    margin_db_ = margin_db_ * kSaturationProtectorDecayConstant +
-                 difference_db * (1.f - kSaturationProtectorDecayConstant);
+    // Decay.
+    state.margin_db = state.margin_db * kSaturationProtectorDecayConstant +
+                      difference_db * (1.f - kSaturationProtectorDecayConstant);
   }
 
-  margin_db_ = rtc::SafeClamp<float>(margin_db_, kMinMarginDb, kMaxMarginDb);
-}
-
-float SaturationProtector::GetDelayedPeakDbfs() const {
-  return peak_delay_buffer_.Front().value_or(max_peaks_dbfs_);
-}
-
-void SaturationProtector::DebugDumpEstimate() const {
-  if (apm_data_dumper_) {
-    apm_data_dumper_->DumpRaw(
-        "agc2_adaptive_saturation_protector_delayed_peak_dbfs",
-        GetDelayedPeakDbfs());
-    apm_data_dumper_->DumpRaw("agc2_adaptive_saturation_margin_db", margin_db_);
-  }
+  state.margin_db =
+      rtc::SafeClamp<float>(state.margin_db, kMinMarginDb, kMaxMarginDb);
 }
 
 }  // namespace webrtc
