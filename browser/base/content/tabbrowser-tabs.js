@@ -61,13 +61,9 @@
       );
       this._hiddenSoundPlayingTabs = new Set();
 
-      // Normal tab title is used also in the permanent private browsing mode.
-      let strId =
-        PrivateBrowsingUtils.isWindowPrivate(window) &&
-        !Services.prefs.getBoolPref("browser.privatebrowsing.autostart")
-          ? "emptyPrivateTabTitle"
-          : "emptyTabTitle";
-      this.emptyTabTitle = gTabBrowserBundle.GetStringFromName("tabs." + strId);
+      this.emptyTabTitle = gTabBrowserBundle.GetStringFromName(
+        this.getTabTitleMessageId()
+      );
 
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
@@ -100,6 +96,7 @@
 
       this.boundObserve = (...args) => this.observe(...args);
       Services.prefs.addObserver("privacy.userContext", this.boundObserve);
+      Services.obs.addObserver(this.boundObserve, "intl:app-locales-changed");
       this.observe(null, "nsPref:changed", "privacy.userContext.enabled");
 
       XPCOMUtils.defineLazyPreferenceGetter(
@@ -999,6 +996,14 @@
       event.stopPropagation();
     }
 
+    getTabTitleMessageId() {
+      // Normal tab title is used also in the permanent private browsing mode.
+      return PrivateBrowsingUtils.isWindowPrivate(window) &&
+        !Services.prefs.getBoolPref("browser.privatebrowsing.autostart")
+        ? "tabs.emptyPrivateTabTitle"
+        : "tabs.emptyTabTitle";
+    }
+
     get tabbox() {
       return document.getElementById("tabbrowser-tabbox");
     }
@@ -1170,6 +1175,19 @@
             }
           }
 
+          break;
+
+        case "intl:app-locales-changed":
+          document.l10n.ready.then(() => {
+            // The cached emptyTabTitle needs updating, create a new string bundle
+            // here to ensure the latest locale string is used.
+            const bundle = Services.strings.createBundle(
+              "chrome://browser/locale/tabbrowser.properties"
+            );
+            this.emptyTabTitle = bundle.GetStringFromName(
+              this.getTabTitleMessageId()
+            );
+          });
           break;
       }
     }
@@ -2144,6 +2162,10 @@
     destroy() {
       if (this.boundObserve) {
         Services.prefs.removeObserver("privacy.userContext", this.boundObserve);
+        Services.obs.removeObserver(
+          this.boundObserve,
+          "intl:app-locales-changed"
+        );
       }
 
       CustomizableUI.removeListener(this);
