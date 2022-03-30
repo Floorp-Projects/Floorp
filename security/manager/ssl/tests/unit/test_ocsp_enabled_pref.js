@@ -71,11 +71,7 @@ async function testOn() {
   // If a successful OCSP response is fetched, then an EV chain should verify
   // successfully and get EV status as well.
   clearOCSPCache();
-  let ocspResponder = getOCSPResponder(
-    gEVExpected
-      ? ["test-oid-path-int", "test-oid-path-ee"]
-      : ["test-oid-path-ee"]
-  );
+  let ocspResponder = getOCSPResponder(["test-oid-path-ee"]);
   await checkEVStatus(
     gCertDB,
     certFromFile("test-oid-path-ee"),
@@ -106,7 +102,7 @@ async function testEVOnly() {
   // successfully and get EV status as well.
   clearOCSPCache();
   let ocspResponder = gEVExpected
-    ? getOCSPResponder(["test-oid-path-int", "test-oid-path-ee"])
+    ? getOCSPResponder(["test-oid-path-ee"])
     : getFailingOCSPResponder();
   await checkEVStatus(
     gCertDB,

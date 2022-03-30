@@ -149,15 +149,6 @@ interface nsICertStorage : nsISupports {
                            in Array<octet> subject,
                            in Array<octet> pubkey);
 
-   /**
-    * Check that the blocklist data is current. Specifically, that the current
-    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
-    * after the last blocklist update (as stored in the
-    * services.blocklist.onecrl.checked pref)
-    */
-  [must_use]
-  boolean isBlocklistFresh();
-
   /**
    * Given the contents of a new CRLite filter, a list containing
    * `base64(sha256(subject DN || subject SPKI))` for each enrolled issuer, and
