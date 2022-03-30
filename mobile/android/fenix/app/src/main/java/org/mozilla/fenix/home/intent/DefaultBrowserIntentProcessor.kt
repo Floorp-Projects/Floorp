@@ -6,9 +6,9 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker.Companion.isDefaultBrowserNotificationIntent
@@ -21,13 +21,12 @@ import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker.Companion.i
  */
 class DefaultBrowserIntentProcessor(
     private val activity: HomeActivity,
-    private val metrics: MetricController
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return if (isDefaultBrowserNotificationIntent(intent)) {
             activity.openSetDefaultBrowserOption()
-            metrics.track(Event.DefaultBrowserNotifTapped)
+            Events.defaultBrowserNotifTapped.record(NoExtras())
             true
         } else {
             false

@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
@@ -145,17 +144,6 @@ class GleanMetricsServiceTest {
         assertEquals("open_addon_setting", events[0].name)
         assertEquals(1, events[0].extra!!.size)
         assertEquals("123", events[0].extra!!["addon_id"])
-    }
-
-    @Test
-    fun `default browser events are correctly recorded`() {
-        assertFalse(Events.defaultBrowserChanged.testHasValue())
-        gleanService.track(Event.ChangedToDefaultBrowser)
-        assertTrue(Events.defaultBrowserChanged.testHasValue())
-
-        assertFalse(Events.defaultBrowserNotifTapped.testHasValue())
-        gleanService.track(Event.DefaultBrowserNotifTapped)
-        assertTrue(Events.defaultBrowserNotifTapped.testHasValue())
     }
 
     @Test

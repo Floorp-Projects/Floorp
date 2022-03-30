@@ -122,8 +122,6 @@ sealed class Event {
     object AddonsOpenInSettings : Event()
     object VoiceSearchTapped : Event()
     object SearchWidgetInstalled : Event()
-    object ChangedToDefaultBrowser : Event()
-    object DefaultBrowserNotifTapped : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()

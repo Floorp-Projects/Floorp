@@ -122,12 +122,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ToolbarMenuShown -> EventWrapper<NoExtraKeys>(
             { Events.toolbarMenuVisible.record(it) }
         )
-        is Event.ChangedToDefaultBrowser -> EventWrapper<NoExtraKeys>(
-            { Events.defaultBrowserChanged.record(it) }
-        )
-        is Event.DefaultBrowserNotifTapped -> EventWrapper<NoExtraKeys>(
-            { Events.defaultBrowserNotifTapped.record(it) }
-        )
+
         is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
             { CustomTab.menu.record(it) }
         )
@@ -139,10 +134,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.NormalAndPrivateUriOpened -> EventWrapper<NoExtraKeys>(
             { Events.normalAndPrivateUriCount.add(1) }
-        )
-        is Event.PreferenceToggled -> EventWrapper(
-            { Events.preferenceToggled.record(it) },
-            { Events.preferenceToggledKeys.valueOf(it) }
         )
         is Event.HistoryOpened -> EventWrapper<NoExtraKeys>(
             { History.opened.record(it) }
@@ -234,11 +225,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.NotificationMediaPause -> EventWrapper<NoExtraKeys>(
             { MediaNotification.pause.record(it) }
-        )
-
-        is Event.OpenedLink -> EventWrapper(
-            { Events.openedLink.record(it) },
-            { Events.openedLinkKeys.valueOf(it) }
         )
         is Event.OpenLogins -> EventWrapper<NoExtraKeys>(
             { Logins.openLogins.record(it) }
@@ -459,11 +445,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HomeScreenCustomizedHomeClicked -> EventWrapper<NoExtraKeys>(
             { HomeScreen.customizeHomeClicked.record(it) }
         )
-        is Event.TabViewSettingChanged -> EventWrapper(
-            { Events.tabViewChanged.record(it) },
-            { Events.tabViewChangedKeys.valueOf(it) }
-        )
-
         is Event.BrowserToolbarHomeButtonClicked -> EventWrapper<NoExtraKeys>(
             { Events.browserToolbarHomeTapped.record(it) }
         )
