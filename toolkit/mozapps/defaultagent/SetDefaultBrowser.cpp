@@ -214,6 +214,12 @@ HRESULT SetDefaultBrowserUserChoice(
     return MOZ_E_NO_PROGID;
   }
 
+  auto pdfProgID = FormatProgID(L"FirefoxPDF", aAumi);
+  if (!CheckProgIDExists(pdfProgID.get())) {
+    LOG_ERROR_MESSAGE(L"ProgID %s not found", pdfProgID.get());
+    return MOZ_E_NO_PROGID;
+  }
+
   if (!CheckBrowserUserChoiceHashes()) {
     LOG_ERROR_MESSAGE(L"UserChoice Hash mismatch");
     return MOZ_E_HASH_CHECK;
