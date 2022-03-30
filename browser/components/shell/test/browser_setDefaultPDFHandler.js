@@ -85,7 +85,7 @@ add_task(async function remoteEnableWithPDF() {
         "set-default-browser-user-choice",
         aumi,
         ".pdf",
-        "FirefoxHTML",
+        "FirefoxPDF",
       ],
     },
   ]);
@@ -137,7 +137,7 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
             "set-default-browser-user-choice",
             aumi,
             ".pdf",
-            "FirefoxHTML",
+            "FirefoxPDF",
           ],
         },
       ],

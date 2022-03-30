@@ -272,7 +272,7 @@ let ShellServiceInternal = {
       if (NimbusFeatures.shellService.getVariable("setDefaultPDFHandler")) {
         if (this._shouldSetDefaultPDFHandler()) {
           log.info("Setting Firefox as default PDF handler");
-          exeArgs.push(".pdf", "FirefoxHTML");
+          exeArgs.push(".pdf", "FirefoxPDF");
         } else {
           log.info("Not setting Firefox as default PDF handler");
         }
