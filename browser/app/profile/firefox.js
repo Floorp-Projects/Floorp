@@ -1902,13 +1902,6 @@ pref("browser.vpn_promo.enabled", true);
 pref("browser.contentblocking.report.vpn_regions", "as,at,be,ca,ch,de,es,fi,fr,gb,gg,ie,im,io,it,je,mp,my,nl,nz,pr,se,sg,uk,um,us,vg,vi"
 );
 
-// Avoid advertising Focus in certain regions.  Comma separated string of two letter
-// ISO 3166-1 country codes.
-pref("browser.promo.focus.disallowed_regions", "cn");
-
-// Default to enabling focus promos to be shown where allowed.
-pref("browser.promo.focus.enabled", true);
-
 // Comma separated string of mozilla vpn supported platforms.
 pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
 pref("browser.contentblocking.report.hide_vpn_banner", false);
