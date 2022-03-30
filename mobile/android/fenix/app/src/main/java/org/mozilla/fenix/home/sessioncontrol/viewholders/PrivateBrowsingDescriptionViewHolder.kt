@@ -25,11 +25,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * View holder for a private browsing description.
@@ -72,7 +72,6 @@ fun PrivateBrowsingDescription(
     onLearnMoreClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val color = PhotonColors.LightGrey05 // Equivalent to fx_mobile_private_text_color_primary.
 
     Column(
         modifier = Modifier.padding(horizontal = 4.dp)
@@ -83,7 +82,7 @@ fun PrivateBrowsingDescription(
                 stringResource(R.string.app_name)
             ),
             modifier = Modifier.padding(top = 4.dp),
-            color = color,
+            color = FirefoxTheme.colors.textPrimary,
             fontSize = 14.sp,
             lineHeight = 20.sp
         )
@@ -104,7 +103,7 @@ fun PrivateBrowsingDescription(
                 text = stringResource(R.string.private_browsing_common_myths),
                 modifier = Modifier.padding(top = 10.dp),
                 style = TextStyle(
-                    color = color,
+                    color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     textDecoration = TextDecoration.Underline,
                     textDirection = TextDirection.Content
@@ -117,7 +116,7 @@ fun PrivateBrowsingDescription(
 @Composable
 @Preview
 private fun PrivateBrowsingDescriptionPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         PrivateBrowsingDescription(
             onLearnMoreClick = {}
         )

@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Default layout for a tab composable title.
@@ -42,7 +43,7 @@ fun TabTitle(
 @Composable
 @Preview
 private fun TabTitlePreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabTitle(
                 "Awesome tab title",

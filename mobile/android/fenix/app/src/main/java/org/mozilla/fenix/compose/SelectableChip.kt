@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Default layout of a selectable chip.
@@ -67,7 +68,7 @@ fun SelectableChip(
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 private fun SelectableChipDarkThemePreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,7 +84,7 @@ private fun SelectableChipDarkThemePreview() {
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 private fun SelectableChipLightThemePreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

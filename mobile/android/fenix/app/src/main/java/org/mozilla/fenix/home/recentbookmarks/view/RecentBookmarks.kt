@@ -47,6 +47,7 @@ import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * A list of recent bookmarks.
@@ -218,7 +219,7 @@ private fun RecentBookmarksMenu(
 @Composable
 @Preview
 private fun RecentBookmarksPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         RecentBookmarks(
             bookmarks = listOf(
                 RecentBookmark(

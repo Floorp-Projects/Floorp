@@ -30,6 +30,7 @@ import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
 
@@ -89,7 +90,7 @@ class PocketStoriesViewHolder(
 @Composable
 @Preview
 fun PocketStoriesViewHolderPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Column {
             SectionHeader(
                 text = stringResource(string.pocket_stories_header_1),

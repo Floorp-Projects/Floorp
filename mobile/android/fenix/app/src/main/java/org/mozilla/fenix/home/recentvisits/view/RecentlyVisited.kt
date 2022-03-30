@@ -53,6 +53,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 // Number of recently visited items per column.
 private const val VISITS_PER_COLUMN = 3
@@ -369,7 +370,7 @@ private val LazyListState.atLeastHalfVisibleItems
 @Composable
 @Preview
 private fun RecentlyVisitedPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         RecentlyVisited(
             recentVisits = listOf(
                 RecentHistoryGroup(title = "running shoes"),

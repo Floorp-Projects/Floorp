@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperManager
 import java.util.Locale
@@ -301,7 +302,7 @@ private fun WallpaperLogoSwitch(
 @Preview
 @Composable
 private fun WallpaperThumbnailsPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         val context = LocalContext.current
         val wallpaperManager = context.components.wallpaperManager
 
@@ -323,7 +324,9 @@ private fun WallpaperThumbnailsPreview() {
 @Preview
 @Composable
 private fun WallpaperSnackbarPreview() {
-    FirefoxTheme {
-        WallpaperSnackbar(onViewWallpaper = {})
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+        WallpaperSnackbar(
+            onViewWallpaper = {}
+        )
     }
 }

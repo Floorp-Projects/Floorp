@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Homepage header.
@@ -65,7 +66,7 @@ fun HomeSectionHeader(
 @Composable
 @Preview
 private fun HomeSectionsHeaderPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         HomeSectionHeader(
             headerText = stringResource(R.string.recent_bookmarks_title),
             description = stringResource(R.string.recently_saved_show_all_content_description_2),

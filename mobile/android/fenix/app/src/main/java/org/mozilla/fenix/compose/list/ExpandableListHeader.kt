@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Expandable header for sections of lists
@@ -90,7 +91,7 @@ fun ExpandableListHeader(
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextOnlyHeaderPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             ExpandableListHeader(headerText = "Section title")
         }
@@ -100,7 +101,7 @@ private fun TextOnlyHeaderPreview() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun CollapsibleHeaderPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             ExpandableListHeader(
                 headerText = "Collapsible section title",
@@ -116,7 +117,7 @@ private fun CollapsibleHeaderPreview() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun HeaderWithClickableIconPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             ExpandableListHeader(headerText = "Section title") {
                 Box(
@@ -139,7 +140,7 @@ private fun HeaderWithClickableIconPreview() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun CollapsibleHeaderWithClickableIconPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             ExpandableListHeader(
                 headerText = "Section title",

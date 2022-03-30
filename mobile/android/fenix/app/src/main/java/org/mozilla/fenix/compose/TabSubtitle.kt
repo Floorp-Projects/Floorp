@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Default layout for a tab composable caption.
@@ -43,7 +44,7 @@ fun TabSubtitle(
 @Composable
 @Preview
 private fun TabSubtitlePreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabSubtitle(
                 "Awesome tab subtitle",

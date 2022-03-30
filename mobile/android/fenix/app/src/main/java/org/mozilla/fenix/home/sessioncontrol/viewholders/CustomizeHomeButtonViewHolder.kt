@@ -28,6 +28,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.CustomizeHomeIteractor
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 class CustomizeHomeButtonViewHolder(
     composeView: ComposeView,
@@ -86,7 +87,9 @@ fun CustomizeHomeButton(
 @Composable
 @Preview
 fun CustomizeHomeButtonPreview() {
-    FirefoxTheme {
-        CustomizeHomeButton(onButtonClick = {})
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+        CustomizeHomeButton(
+            onButtonClick = {}
+        )
     }
 }

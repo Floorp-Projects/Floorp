@@ -48,6 +48,7 @@ import org.mozilla.fenix.compose.TabSubtitle
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.TabTitle
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import kotlin.math.roundToInt
 
 private const val URI_PARAM_UTM_KEY = "utm_source"
@@ -239,7 +240,7 @@ fun PoweredByPocketHeader(
 @Composable
 @Preview
 private fun PocketStoriesComposablesPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             Column {
                 PocketStories(
@@ -259,7 +260,9 @@ private fun PocketStoriesComposablesPreview() {
                 )
                 Spacer(Modifier.height(10.dp))
 
-                PoweredByPocketHeader({})
+                PoweredByPocketHeader(
+                    onLearnMoreClicked = {}
+                )
             }
         }
     }

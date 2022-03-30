@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * [RecyclerView.ViewHolder] for displaying the Pocket feature header.
@@ -45,7 +46,7 @@ class PocketRecommendationsHeaderViewHolder(
             Spacer(Modifier.height(24.dp))
 
             PoweredByPocketHeader(
-                interactor::onLearnMoreClicked,
+                onLearnMoreClicked = interactor::onLearnMoreClicked,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -59,7 +60,9 @@ class PocketRecommendationsHeaderViewHolder(
 @Composable
 @Preview
 fun PocketRecommendationsFooterViewHolderPreview() {
-    FirefoxTheme {
-        PoweredByPocketHeader({})
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+        PoweredByPocketHeader(
+            onLearnMoreClicked = {}
+        )
     }
 }
