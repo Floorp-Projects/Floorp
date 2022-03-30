@@ -40,12 +40,13 @@ shift
 
 # enable debugging
 # https://developer.android.com/ndk/guides/wrap-script#debugging_when_using_wrapsh
+# note that wrap.sh is not supported before android 8.1 (API 27)
 if [ "$os_version" -eq "27" ]; then
   args=("-Xrunjdwp:transport=dt_android_adb,suspend=n,server=y" -Xcompiler-option --debuggable)
 elif [ "$os_version" -eq "28" ]; then
   args=(-XjdwpProvider:adbconnection "-XjdwpOptions:suspend=n,server=y" -Xcompiler-option --debuggable)
 else
-  args=(-XjdwpProvider:adbconnection)
+  args=(-XjdwpProvider:adbconnection "-XjdwpOptions:suspend=n,server=y")
 fi
 
 exec "$cmd" "${args[@]}" "$@"
