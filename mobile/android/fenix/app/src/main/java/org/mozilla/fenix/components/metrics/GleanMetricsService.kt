@@ -34,7 +34,6 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentTabs
-import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
@@ -221,42 +220,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.HistorySearchResultTapped -> EventWrapper<NoExtraKeys>(
             { History.searchResultTapped.record(it) }
-        )
-        is Event.RecentlyClosedTabsOpened -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.opened.record(it) }
-        )
-        is Event.RecentlyClosedTabsClosed -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.closed.record(it) }
-        )
-        is Event.RecentlyClosedTabsShowFullHistory -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.showFullHistory.record(it) }
-        )
-        is Event.RecentlyClosedTabsOpenTab -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.openTab.record(it) }
-        )
-        is Event.RecentlyClosedTabsDeleteTab -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.deleteTab.record(it) }
-        )
-        is Event.RecentlyClosedTabsMenuClose -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.menuClose.record(it) }
-        )
-        is Event.RecentlyClosedTabsMenuShare -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.menuShare.record(it) }
-        )
-        is Event.RecentlyClosedTabsMenuDelete -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.menuDelete.record(it) }
-        )
-        is Event.RecentlyClosedTabsMenuOpenInNormalTab -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.menuOpenInNormalTab.record(it) }
-        )
-        is Event.RecentlyClosedTabsMenuOpenInPrivateTab -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.menuOpenInPrivateTab.record(it) }
-        )
-        is Event.RecentlyClosedTabsEnterMultiselect -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.enterMultiselect.record(it) }
-        )
-        is Event.RecentlyClosedTabsExitMultiselect -> EventWrapper<NoExtraKeys>(
-            { RecentlyClosedTabs.exitMultiselect.record(it) }
         )
         is Event.ReaderModeAvailable -> EventWrapper<NoExtraKeys>(
             { ReaderMode.available.record(it) }

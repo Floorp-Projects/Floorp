@@ -21,13 +21,13 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.FragmentRecentlyClosedTabsBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
@@ -43,8 +43,6 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
 
     private lateinit var recentlyClosedInteractor: RecentlyClosedFragmentInteractor
     private lateinit var recentlyClosedController: RecentlyClosedController
-
-    private lateinit var metrics: MetricController
 
     override fun onResume() {
         super.onResume()
@@ -69,7 +67,7 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
         return when (item.itemId) {
             R.id.close_history -> {
                 close()
-                metrics.track(Event.RecentlyClosedTabsMenuClose)
+                RecentlyClosedTabs.menuClose.record(NoExtras())
                 true
             }
             R.id.share_history_multi_select -> {
@@ -95,9 +93,7 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        metrics = requireComponents.analytics.metrics.also {
-            it.track(Event.RecentlyClosedTabsOpened)
-        }
+        RecentlyClosedTabs.opened.record(NoExtras())
     }
 
     override fun onCreateView(
@@ -120,7 +116,6 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
             recentlyClosedStore = recentlyClosedFragmentStore,
             activity = activity as HomeActivity,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
-            metrics = metrics,
             recentlyClosedTabsStorage = requireComponents.core.recentlyClosedTabsStorage.value,
             lifecycleScope = lifecycleScope,
             openToBrowser = ::openItem

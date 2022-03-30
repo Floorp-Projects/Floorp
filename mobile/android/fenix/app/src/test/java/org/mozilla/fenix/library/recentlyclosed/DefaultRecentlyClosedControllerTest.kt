@@ -8,7 +8,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import io.mockk.mockk
 import io.mockk.coEvery
-import io.mockk.verifyAll
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.verify
@@ -25,14 +24,19 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.recentlyclosed.RecentlyClosedTabsStorage
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.optionsEq
@@ -46,6 +50,9 @@ class DefaultRecentlyClosedControllerTest {
     private val recentlyClosedStore: RecentlyClosedFragmentStore = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setUp() {
@@ -93,6 +100,7 @@ class DefaultRecentlyClosedControllerTest {
                 actualBrowsingModes.add(mode)
             }
         )
+        assertFalse(RecentlyClosedTabs.menuOpenInNormalTab.testHasValue())
 
         controller.handleOpen(tabs.toSet(), BrowsingMode.Normal)
 
@@ -101,7 +109,8 @@ class DefaultRecentlyClosedControllerTest {
         assertEquals(tabs[1].url, tabUrls[1])
         assertEquals(BrowsingMode.Normal, actualBrowsingModes[0])
         assertEquals(BrowsingMode.Normal, actualBrowsingModes[1])
-        verifyAll { metrics.track(Event.RecentlyClosedTabsMenuOpenInNormalTab) }
+        assertTrue(RecentlyClosedTabs.menuOpenInNormalTab.testHasValue())
+        assertNull(RecentlyClosedTabs.menuOpenInNormalTab.testGetValue().last().extra)
         clearMocks(metrics)
 
         tabUrls.clear()
@@ -114,18 +123,23 @@ class DefaultRecentlyClosedControllerTest {
         assertEquals(tabs[1].url, tabUrls[1])
         assertEquals(BrowsingMode.Private, actualBrowsingModes[0])
         assertEquals(BrowsingMode.Private, actualBrowsingModes[1])
-        verifyAll { metrics.track(Event.RecentlyClosedTabsMenuOpenInPrivateTab) }
+        assertTrue(RecentlyClosedTabs.menuOpenInPrivateTab.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.menuOpenInPrivateTab.testGetValue().size)
+        assertNull(RecentlyClosedTabs.menuOpenInPrivateTab.testGetValue().single().extra)
     }
 
     @Test
     fun `handle selecting first tab`() {
         val selectedTab = createFakeTab()
         every { recentlyClosedStore.state.selectedTabs } returns emptySet()
+        assertFalse(RecentlyClosedTabs.enterMultiselect.testHasValue())
 
         createController().handleSelect(selectedTab)
 
         verify { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Select(selectedTab)) }
-        verify { metrics.track(Event.RecentlyClosedTabsEnterMultiselect) }
+        assertTrue(RecentlyClosedTabs.enterMultiselect.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.enterMultiselect.testGetValue().size)
+        assertNull(RecentlyClosedTabs.enterMultiselect.testGetValue().single().extra)
     }
 
     @Test
@@ -136,18 +150,21 @@ class DefaultRecentlyClosedControllerTest {
         createController().handleSelect(selectedTab)
 
         verify { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Select(selectedTab)) }
-        verify(exactly = 0) { metrics.track(Event.RecentlyClosedTabsEnterMultiselect) }
+        assertFalse(RecentlyClosedTabs.enterMultiselect.testHasValue())
     }
 
     @Test
     fun `handle deselect last tab`() {
         val deselectedTab = createFakeTab()
         every { recentlyClosedStore.state.selectedTabs } returns setOf(deselectedTab)
+        assertFalse(RecentlyClosedTabs.exitMultiselect.testHasValue())
 
         createController().handleDeselect(deselectedTab)
 
         verify { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Deselect(deselectedTab)) }
-        verify { metrics.track(Event.RecentlyClosedTabsExitMultiselect) }
+        assertTrue(RecentlyClosedTabs.exitMultiselect.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.exitMultiselect.testGetValue().size)
+        assertNull(RecentlyClosedTabs.exitMultiselect.testGetValue().single().extra)
     }
 
     @Test
@@ -158,24 +175,28 @@ class DefaultRecentlyClosedControllerTest {
         createController().handleDeselect(deselectedTab)
 
         verify { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Deselect(deselectedTab)) }
-        verify(exactly = 0) { metrics.track(Event.RecentlyClosedTabsExitMultiselect) }
+        assertFalse(RecentlyClosedTabs.exitMultiselect.testHasValue())
     }
 
     @Test
     fun handleDelete() {
         val item: TabState = mockk(relaxed = true)
+        assertFalse(RecentlyClosedTabs.deleteTab.testHasValue())
 
         createController().handleDelete(item)
 
         verify {
             browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(item))
         }
-        verify { metrics.track(Event.RecentlyClosedTabsDeleteTab) }
+        assertTrue(RecentlyClosedTabs.deleteTab.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.deleteTab.testGetValue().size)
+        assertNull(RecentlyClosedTabs.deleteTab.testGetValue().single().extra)
     }
 
     @Test
     fun `delete multiple tabs`() {
         val tabs = createFakeTabList(2)
+        assertFalse(RecentlyClosedTabs.menuDelete.testHasValue())
 
         createController().handleDelete(tabs.toSet())
 
@@ -183,11 +204,14 @@ class DefaultRecentlyClosedControllerTest {
             browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tabs[0]))
             browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tabs[1]))
         }
-        verify { metrics.track(Event.RecentlyClosedTabsMenuDelete) }
+        assertTrue(RecentlyClosedTabs.menuDelete.testHasValue())
+        assertNull(RecentlyClosedTabs.menuDelete.testGetValue().last().extra)
     }
 
     @Test
     fun handleNavigateToHistory() {
+        assertFalse(RecentlyClosedTabs.showFullHistory.testHasValue())
+
         createController().handleNavigateToHistory()
 
         verify {
@@ -198,12 +222,15 @@ class DefaultRecentlyClosedControllerTest {
                 optionsEq(NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build())
             )
         }
-        verify { metrics.track(Event.RecentlyClosedTabsShowFullHistory) }
+        assertTrue(RecentlyClosedTabs.showFullHistory.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.showFullHistory.testGetValue().size)
+        assertNull(RecentlyClosedTabs.showFullHistory.testGetValue().single().extra)
     }
 
     @Test
     fun `share multiple tabs`() {
         val tabs = createFakeTabList(2)
+        assertFalse(RecentlyClosedTabs.menuShare.testHasValue())
 
         createController().handleShare(tabs.toSet())
 
@@ -216,37 +243,48 @@ class DefaultRecentlyClosedControllerTest {
                 directionsEq(RecentlyClosedFragmentDirections.actionGlobalShareFragment(data))
             )
         }
-        verify { metrics.track(Event.RecentlyClosedTabsMenuShare) }
+        assertTrue(RecentlyClosedTabs.menuShare.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.menuShare.testGetValue().size)
+        assertNull(RecentlyClosedTabs.menuShare.testGetValue().single().extra)
     }
 
     @Test
     fun handleRestore() = runBlocking {
         val item: TabState = mockk(relaxed = true)
+        assertFalse(RecentlyClosedTabs.openTab.testHasValue())
 
         createController(scope = this).handleRestore(item)
 
         coVerify { tabsUseCases.restore.invoke(eq(item), any(), true) }
-        verify { metrics.track(Event.RecentlyClosedTabsOpenTab) }
+        assertTrue(RecentlyClosedTabs.openTab.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.openTab.testGetValue().size)
+        assertNull(RecentlyClosedTabs.openTab.testGetValue().single().extra)
     }
 
     @Test
     fun `exist multi-select mode when back is pressed`() {
         every { recentlyClosedStore.state.selectedTabs } returns createFakeTabList(3).toSet()
+        assertFalse(RecentlyClosedTabs.exitMultiselect.testHasValue())
 
         createController().handleBackPressed()
 
         verify { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll) }
-        verifyAll { metrics.track(Event.RecentlyClosedTabsExitMultiselect) }
+        assertTrue(RecentlyClosedTabs.exitMultiselect.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.exitMultiselect.testGetValue().size)
+        assertNull(RecentlyClosedTabs.exitMultiselect.testGetValue().single().extra)
     }
 
     @Test
     fun `report closing the fragment when back is pressed`() {
         every { recentlyClosedStore.state.selectedTabs } returns emptySet()
+        assertFalse(RecentlyClosedTabs.closed.testHasValue())
 
         createController().handleBackPressed()
 
         verify(exactly = 0) { recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll) }
-        verifyAll { metrics.track(Event.RecentlyClosedTabsClosed) }
+        assertTrue(RecentlyClosedTabs.closed.testHasValue())
+        assertEquals(1, RecentlyClosedTabs.closed.testGetValue().size)
+        assertNull(RecentlyClosedTabs.closed.testGetValue().single().extra)
     }
 
     private fun createController(
@@ -260,7 +298,6 @@ class DefaultRecentlyClosedControllerTest {
             RecentlyClosedTabsStorage(testContext, mockk(), mockk()),
             tabsUseCases,
             activity,
-            metrics,
             scope,
             openToBrowser
         )
