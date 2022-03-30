@@ -69,6 +69,7 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -943,7 +944,7 @@ class HomeFragment : Fragment() {
                     }
                     HomeMenu.Item.WhatsNew -> {
                         WhatsNew.userViewedWhatsNew(context)
-                        context.metrics.track(Event.WhatsNewTapped)
+                        Events.whatsNewTapped.record(NoExtras())
                         (activity as HomeActivity).openToBrowserAndLoad(
                             searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
                             newTab = true,

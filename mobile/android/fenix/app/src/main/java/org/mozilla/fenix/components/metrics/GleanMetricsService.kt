@@ -190,9 +190,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ReaderModeAppearanceOpened -> EventWrapper<NoExtraKeys>(
             { ReaderMode.appearance.record(it) }
         )
-        is Event.WhatsNewTapped -> EventWrapper<NoExtraKeys>(
-            { Events.whatsNewTapped.record(it) }
-        )
         is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPlay.record(it) }
         )

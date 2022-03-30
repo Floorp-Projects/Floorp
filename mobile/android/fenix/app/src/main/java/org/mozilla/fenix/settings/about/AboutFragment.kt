@@ -14,15 +14,15 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.databinding.FragmentAboutBinding
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
@@ -202,7 +202,7 @@ class AboutFragment : Fragment(), AboutPageListener {
                 when (item.type) {
                     WHATS_NEW -> {
                         WhatsNew.userViewedWhatsNew(requireContext())
-                        requireComponents.analytics.metrics.track(Event.WhatsNewTapped)
+                        Events.whatsNewTapped.record(NoExtras())
                     }
                     SUPPORT, PRIVACY_NOTICE, LICENSING_INFO, RIGHTS -> {} // no telemetry needed
                 }
