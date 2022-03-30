@@ -1776,10 +1776,10 @@ async function initializeTempMirrorEntities(db) {
     BEGIN
       /* Record an item removed notification for the tag entry. */
       INSERT INTO itemsRemoved(itemId, parentId, position, type, placeId, guid,
-                               parentGuid, isUntagging)
+                               parentGuid, title, isUntagging)
       VALUES(OLD.tagEntryId, OLD.tagFolderId, OLD.tagEntryPosition,
              OLD.tagEntryType, OLD.placeId, OLD.tagEntryGuid,
-             OLD.tagFolderGuid, 1);
+             OLD.tagFolderGuid, OLD.tag, 1);
 
       DELETE FROM moz_bookmarks WHERE id = OLD.tagEntryId;
 
@@ -1907,6 +1907,7 @@ async function initializeTempMirrorEntities(db) {
     parentId INTEGER NOT NULL,
     position INTEGER NOT NULL,
     type INTEGER NOT NULL,
+    title TEXT NOT NULL,
     placeId INTEGER,
     parentGuid TEXT NOT NULL,
     /* We record the original level of the removed item in the tree so that we
@@ -2099,7 +2100,7 @@ class BookmarkObserverRecorder {
     await this.db.execute(
       `SELECT v.itemId AS id, v.parentId, v.parentGuid, v.position, v.type,
               (SELECT h.url FROM moz_places h WHERE h.id = v.placeId) AS url,
-              v.guid, v.isUntagging
+              v.title, v.guid, v.isUntagging
        FROM itemsRemoved v
        ${this.orderBy("v.level", "v.parentId", "v.position")}`,
       null,
@@ -2114,6 +2115,7 @@ class BookmarkObserverRecorder {
           position: row.getResultByName("position"),
           type: row.getResultByName("type"),
           urlHref: row.getResultByName("url"),
+          title: row.getResultByName("title"),
           guid: row.getResultByName("guid"),
           parentGuid: row.getResultByName("parentGuid"),
           isUntagging: row.getResultByName("isUntagging"),
@@ -2387,6 +2389,7 @@ class BookmarkObserverRecorder {
         parentId: info.parentId,
         index: info.position,
         url: info.urlHref || "",
+        title: info.title,
         guid: info.guid,
         parentGuid: info.parentGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,

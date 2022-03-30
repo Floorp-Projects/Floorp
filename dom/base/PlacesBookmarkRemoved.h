@@ -24,6 +24,7 @@ class PlacesBookmarkRemoved final : public PlacesBookmark {
     event->mParentId = aInitDict.mParentId;
     event->mIndex = aInitDict.mIndex;
     event->mUrl = aInitDict.mUrl;
+    event->mTitle = aInitDict.mTitle;
     event->mGuid = aInitDict.mGuid;
     event->mParentGuid = aInitDict.mParentGuid;
     event->mSource = aInitDict.mSource;
@@ -42,9 +43,11 @@ class PlacesBookmarkRemoved final : public PlacesBookmark {
   }
 
   int32_t Index() { return mIndex; }
+  void GetTitle(nsString& aTitle) { aTitle = mTitle; }
   bool IsDescendantRemoval() { return mIsDescendantRemoval; }
 
   int32_t mIndex;
+  nsString mTitle;
   bool mIsDescendantRemoval;
 
  private:
