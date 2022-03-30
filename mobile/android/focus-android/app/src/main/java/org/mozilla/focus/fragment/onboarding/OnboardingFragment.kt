@@ -42,6 +42,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
+import org.mozilla.focus.ui.theme.focusDimensions
 import org.mozilla.focus.ui.theme.focusTypography
 
 class OnboardingFragment : Fragment() {
@@ -76,33 +77,61 @@ class OnboardingFragment : Fragment() {
     @Suppress("LongMethod")
     fun OnboardingContent(onboardingInteractor: OnboardingInteractor) {
         Box {
-            Column(
+            ConstraintLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
                     .background(color = focusColors.background)
-                    .padding(top = 72.dp, start = 24.dp, end = 24.dp, bottom = 52.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(top = 72.dp, start = 24.dp, end = 24.dp, bottom = 52.dp)
             ) {
+                val (logo, onboardingTitle, onboardingDescription, features, startBrowsing) = createRefs()
                 Image(
                     painter = painterResource(R.drawable.onboarding_logo),
                     contentDescription = getString(R.string.app_name),
-                    modifier = Modifier.size(60.dp, 60.dp)
+                    modifier = Modifier
+                        .size(60.dp, 60.dp)
+                        .constrainAs(logo) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
                 )
                 Text(
-                    text = stringResource(id = R.string.onboarding_title, stringResource(id = R.string.app_name)),
+                    text = stringResource(
+                        id = R.string.onboarding_title,
+                        stringResource(id = R.string.app_name)
+                    ),
                     style = focusTypography.onboardingTitle,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)
+                    modifier = Modifier
+                        .padding(top = 16.dp, bottom = 20.dp)
+                        .constrainAs(onboardingTitle) {
+                            top.linkTo(logo.bottom)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
                 )
                 Text(
                     text = stringResource(id = R.string.onboarding_description),
                     style = focusTypography.onboardingDescription,
-                    modifier = Modifier.padding(bottom = 20.dp)
+                    modifier = Modifier
+                        .padding(bottom = 20.dp)
+                        .constrainAs(onboardingDescription) {
+                            top.linkTo(onboardingTitle.bottom)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
                 )
                 Column(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
-                    modifier = Modifier.padding(bottom = 36.dp)
+                    modifier = Modifier
+                        .padding(bottom = focusDimensions.onboardingFeaturesPaddingBottom)
+                        .constrainAs(features) {
+                            top.linkTo(onboardingDescription.bottom)
+                            start.linkTo(onboardingDescription.start)
+                            end.linkTo(parent.end)
+                            width = Dimension.fillToConstraints
+                        }
                 ) {
                     KeyFeatureCard(
                         iconId = R.drawable.mozac_ic_private_browsing,
@@ -129,8 +158,13 @@ class OnboardingFragment : Fragment() {
                         )
                     },
                     modifier = Modifier
-                        .width(232.dp)
-                        .height(36.dp),
+                        .width(focusDimensions.onboardingStartBrowsingWidth)
+                        .height(focusDimensions.onboardingStartBrowsingHeight)
+                        .constrainAs(startBrowsing) {
+                            top.linkTo(features.bottom)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        },
                     colors = ButtonDefaults.buttonColors(backgroundColor = focusColors.onboardingButtonBackground)
                 ) {
                     Text(
@@ -165,17 +199,18 @@ class OnboardingFragment : Fragment() {
                         start.linkTo(image.end, margin = 16.dp)
                         bottom.linkTo(image.bottom)
                     },
-                style = focusTypography.onboardingSubtitle
+                style = focusTypography.onboardingFeatureTitle
             )
             Text(
-                text = stringResource(id = descriptionId, getString(R.string.onboarding_short_app_name)),
-                modifier = Modifier.constrainAs(description) {
+                text = stringResource(
+                    id = descriptionId,
+                    getString(R.string.onboarding_short_app_name)
+                ),
+                modifier = Modifier.width(focusDimensions.onboardingFeatureDescriptionWidth).constrainAs(description) {
                     top.linkTo(title.bottom)
                     start.linkTo(title.start)
-                    end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
                 },
-                style = focusTypography.onboardingDescription
+                style = focusTypography.onboardingFeatureDescription
             )
         }
     }

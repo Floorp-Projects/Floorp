@@ -33,8 +33,9 @@ data class FocusTypography(
     val dialogTitle: TextStyle,
     val dialogInput: TextStyle,
     val onboardingTitle: TextStyle,
-    val onboardingSubtitle: TextStyle,
     val onboardingDescription: TextStyle,
+    val onboardingFeatureTitle: TextStyle,
+    val onboardingFeatureDescription: TextStyle,
     val onboardingButton: TextStyle
 ) {
     val h1: TextStyle get() = materialTypography.h1
@@ -80,16 +81,22 @@ val focusTypography: FocusTypography
         onboardingTitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
+            fontSize = focusDimensions.onboardingTitle,
             color = focusColors.onboardingSemiBoldText
         ),
-        onboardingSubtitle = TextStyle(
+        onboardingDescription = TextStyle(
+            fontFamily = metropolis,
+            fontWeight = FontWeight.Normal,
+            fontSize = focusDimensions.onboardingDescription,
+            color = focusColors.onboardingNormalText
+        ),
+        onboardingFeatureTitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             color = focusColors.onboardingSemiBoldText
         ),
-        onboardingDescription = TextStyle(
+        onboardingFeatureDescription = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
