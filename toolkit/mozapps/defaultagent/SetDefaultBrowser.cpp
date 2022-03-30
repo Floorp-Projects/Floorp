@@ -253,15 +253,22 @@ HRESULT SetDefaultBrowserUserChoice(
   }
 
   const wchar_t* const* extraFileExtension = aExtraFileExtensions;
-  while (ok && extraFileExtension && *extraFileExtension) {
-    if (!SetUserChoice(*extraFileExtension, sid.get(), htmlProgID.get())) {
+  const wchar_t* const* extraProgIDRoot = aExtraFileExtensions + 1;
+  while (ok && extraFileExtension && *extraFileExtension && extraProgIDRoot &&
+         *extraProgIDRoot) {
+    // Formatting the ProgID here prevents using this helper to target arbitrary
+    // ProgIDs.
+    auto extraProgID = FormatProgID(*extraProgIDRoot, aAumi);
+
+    if (!SetUserChoice(*extraFileExtension, sid.get(), extraProgID.get())) {
       ok = false;
-    } else if (!VerifyUserDefault(*extraFileExtension, htmlProgID.get())) {
+    } else if (!VerifyUserDefault(*extraFileExtension, extraProgID.get())) {
       defaultRejected = true;
       ok = false;
     }
 
-    extraFileExtension++;
+    extraFileExtension += 2;
+    extraProgIDRoot += 2;
   }
 
   // Notify shell to refresh icons
