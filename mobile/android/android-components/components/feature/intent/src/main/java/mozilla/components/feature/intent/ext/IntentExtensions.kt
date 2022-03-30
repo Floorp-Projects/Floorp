@@ -5,6 +5,7 @@
 package mozilla.components.feature.intent.ext
 
 import android.content.Intent
+import android.os.BadParcelableException
 import mozilla.components.support.utils.SafeIntent
 
 const val EXTRA_SESSION_ID = "activeSessionId"
@@ -37,4 +38,26 @@ fun SafeIntent.getSessionId(): String? = getStringExtra(EXTRA_SESSION_ID)
  */
 fun Intent.putSessionId(sessionId: String?): Intent {
     return putExtra(EXTRA_SESSION_ID, sessionId)
+}
+
+/**
+ * Sanitizes the intent.  If the intent cannot be unparcelled, all extras are removed.
+ * https://developer.android.com/guide/components/activities/parcelables-and-bundles
+ *
+ * @return Returns the sanitized Intent object.
+ */
+@Suppress("TooGenericExceptionCaught")
+fun Intent.sanitize(): Intent {
+    try {
+        this.getBooleanExtra("TriggerUnparcel", false)
+        return this
+    } catch (e: BadParcelableException) {
+        return this.replaceExtras(null)
+    } catch (e: RuntimeException) {
+        if (e.cause is ClassNotFoundException) {
+            return this.replaceExtras(null)
+        }
+
+        throw e
+    }
 }
