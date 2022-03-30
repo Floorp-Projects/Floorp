@@ -69,7 +69,7 @@ function clearTelemetry() {
   Services.telemetry.getHistogramById("REFERRER_POLICY_COUNT").clear();
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Clear Telemetry probes before testing.
   clearTelemetry();
 });

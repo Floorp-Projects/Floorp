@@ -76,7 +76,7 @@ async function mock_dropbox() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Create mock Dropbox download folder for cloudstorage API
   // Set prefs required to display second radio option
   // 'Save to Dropbox' under Downloads

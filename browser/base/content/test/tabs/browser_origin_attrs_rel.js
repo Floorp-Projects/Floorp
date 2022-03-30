@@ -49,7 +49,7 @@ function handleEventLocal(aEvent) {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],

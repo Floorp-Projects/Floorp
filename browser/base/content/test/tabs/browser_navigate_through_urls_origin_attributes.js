@@ -33,7 +33,7 @@ var gPrevRemoteTypeRegularTab;
 var gPrevRemoteTypeContainerTab;
 var gPrevRemoteTypePrivateTab;
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],

@@ -6,7 +6,7 @@ const BASE_URI =
   "http://mochi.test:8888/browser/browser/components/" +
   "contextualidentity/test/browser/empty_file.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],
   });

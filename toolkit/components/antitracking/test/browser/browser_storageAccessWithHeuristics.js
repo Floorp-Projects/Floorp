@@ -17,7 +17,7 @@ function waitStoragePermission() {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();

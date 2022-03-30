@@ -65,6 +65,7 @@ async function startAndStopServiceWorker() {
   });
 }
 
+// eslint-disable-next-line mozilla/no-addtask-setup
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [

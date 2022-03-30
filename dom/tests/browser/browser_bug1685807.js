@@ -12,7 +12,7 @@ const EMPTY_URI =
 const TEST_URI =
   "https://test1.example.com/browser/dom/tests/browser/file_bug1685807.html";
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.window.name.update.enabled", true]],
   });

@@ -186,7 +186,7 @@ async function verifyStorageAccessPermission(aExpects) {
   }
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", BEHAVIOR_REJECT_TRACKER],

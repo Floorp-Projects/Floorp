@@ -197,7 +197,7 @@ function waitForIgnoredReports(reportIDs) {
   return Promise.all(promises);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
   // not overwrite / clear pending crash reports for the poor

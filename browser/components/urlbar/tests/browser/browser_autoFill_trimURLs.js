@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function() {
   const PREF_TRIMURL = "browser.urlbar.trimURLs";
   const PREF_AUTOFILL = "browser.urlbar.autoFill";
 

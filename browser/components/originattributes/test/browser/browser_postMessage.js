@@ -7,7 +7,7 @@ const FPD_TWO = "http://example.org";
 
 const TEST_BASE = "/browser/browser/components/originattributes/test/browser/";
 
-add_task(async function setup() {
+add_setup(async function() {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

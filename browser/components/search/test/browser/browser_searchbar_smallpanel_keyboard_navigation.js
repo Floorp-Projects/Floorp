@@ -23,7 +23,7 @@ let searchbar;
 let textbox;
 let searchIcon;
 
-add_task(async function setup() {
+add_setup(async function() {
   searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

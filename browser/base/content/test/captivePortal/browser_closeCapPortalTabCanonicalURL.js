@@ -35,7 +35,7 @@ function unlockHandler(request, response) {
   response.setHeader("Location", CANONICAL_SUCCESS_URL);
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   // Set up a mock server for handling captive portal redirect.
   server = new HttpServer();
   server.registerPathHandler("/success", redirectHandler);

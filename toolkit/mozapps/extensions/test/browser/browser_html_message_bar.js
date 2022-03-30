@@ -32,7 +32,7 @@ function createMessageBar(messageBarStack, { attrs, children, onclose } = {}) {
   return messageBar;
 }
 
-add_task(async function setup() {
+add_setup(async function() {
   htmlAboutAddonsWindow = await loadInitialView("extension");
   registerCleanupFunction(() => closeView(htmlAboutAddonsWindow));
 });

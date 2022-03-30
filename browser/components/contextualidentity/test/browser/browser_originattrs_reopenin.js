@@ -34,7 +34,7 @@ function handleEventLocal(aEvent) {
   }
 }
 const NUM_PAGES_OPEN_FOR_EACH_TEST_CASE = 5;
-add_task(async function setup() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],

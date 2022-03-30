@@ -39,7 +39,7 @@ async function waitForProfileAndCloseTab() {
 var button;
 var dropmarker;
 
-add_task(async function setup() {
+add_setup(async function() {
   info(
     "Add the profiler button to the toolbar and ensure capturing a profile loads a local url."
   );

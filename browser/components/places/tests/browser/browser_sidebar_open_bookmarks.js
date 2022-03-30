@@ -7,7 +7,7 @@ const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 
 var gBms;
 
-add_task(async function setup() {
+add_setup(async function() {
   gBms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [
