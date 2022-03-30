@@ -890,6 +890,7 @@ nsIReferrerInfo::ReferrerPolicyIDL ReferrerPolicyToReferrerPolicyIDL(
 ReferrerInfo::ReferrerInfo()
     : mOriginalReferrer(nullptr),
       mPolicy(ReferrerPolicy::_empty),
+      mOriginalPolicy(ReferrerPolicy::_empty),
       mSendReferrer(true),
       mInitialized(false),
       mOverridePolicyByDefault(false) {}
@@ -907,6 +908,7 @@ ReferrerInfo::ReferrerInfo(nsIURI* aOriginalReferrer,
                            const Maybe<nsCString>& aComputedReferrer)
     : mOriginalReferrer(aOriginalReferrer),
       mPolicy(aPolicy),
+      mOriginalPolicy(aPolicy),
       mSendReferrer(aSendReferrer),
       mInitialized(true),
       mOverridePolicyByDefault(false),
@@ -915,6 +917,7 @@ ReferrerInfo::ReferrerInfo(nsIURI* aOriginalReferrer,
 ReferrerInfo::ReferrerInfo(const ReferrerInfo& rhs)
     : mOriginalReferrer(rhs.mOriginalReferrer),
       mPolicy(rhs.mPolicy),
+      mOriginalPolicy(rhs.mOriginalPolicy),
       mSendReferrer(rhs.mSendReferrer),
       mInitialized(rhs.mInitialized),
       mOverridePolicyByDefault(rhs.mOverridePolicyByDefault),
@@ -929,6 +932,7 @@ already_AddRefed<ReferrerInfo> ReferrerInfo::CloneWithNewPolicy(
     ReferrerPolicyEnum aPolicy) const {
   RefPtr<ReferrerInfo> copy(new ReferrerInfo(*this));
   copy->mPolicy = aPolicy;
+  copy->mOriginalPolicy = aPolicy;
   return copy.forget();
 }
 
@@ -1056,6 +1060,7 @@ ReferrerInfo::Init(nsIReferrerInfo::ReferrerPolicyIDL aReferrerPolicy,
   };
 
   mPolicy = ReferrerPolicyIDLToReferrerPolicy(aReferrerPolicy);
+  mOriginalPolicy = mPolicy;
   mSendReferrer = aSendReferrer;
   mOriginalReferrer = aOriginalReferrer;
   mInitialized = true;
@@ -1070,6 +1075,7 @@ ReferrerInfo::InitWithDocument(const Document* aDocument) {
   };
 
   mPolicy = aDocument->GetReferrerPolicy();
+  mOriginalPolicy = mPolicy;
   mSendReferrer = true;
   mOriginalReferrer = aDocument->GetDocumentURIAsReferrer();
   mInitialized = true;
@@ -1127,6 +1133,7 @@ ReferrerInfo::InitWithElement(const Element* aElement) {
     mPolicy = aElement->OwnerDoc()->GetReferrerPolicy();
   }
 
+  mOriginalPolicy = mPolicy;
   mSendReferrer = !HasRelNoReferrer(*aElement);
   mOriginalReferrer = aElement->OwnerDoc()->GetDocumentURIAsReferrer();
 
@@ -1428,6 +1435,14 @@ ReferrerInfo::Read(nsIObjectInputStream* aStream) {
   mPolicy = ReferrerPolicyIDLToReferrerPolicy(
       static_cast<nsIReferrerInfo::ReferrerPolicyIDL>(policy));
 
+  uint32_t originalPolicy;
+  rv = aStream->Read32(&originalPolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mOriginalPolicy = ReferrerPolicyIDLToReferrerPolicy(
+      static_cast<nsIReferrerInfo::ReferrerPolicyIDL>(originalPolicy));
+
   rv = aStream->ReadBoolean(&mSendReferrer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1483,6 +1498,11 @@ ReferrerInfo::Write(nsIObjectOutputStream* aStream) {
   }
 
   rv = aStream->Write32(ReferrerPolicyToReferrerPolicyIDL(mPolicy));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aStream->Write32(ReferrerPolicyToReferrerPolicyIDL(mOriginalPolicy));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

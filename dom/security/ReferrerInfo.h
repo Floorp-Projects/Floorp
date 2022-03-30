@@ -443,6 +443,12 @@ class ReferrerInfo : public nsIReferrerInfo {
 
   ReferrerPolicyEnum mPolicy;
 
+  // The referrer policy that has been set originally for the channel. Note that
+  // the policy may have been overridden by the default referrer policy, so we
+  // need to keep track of this if we need to recover the original referrer
+  // policy.
+  ReferrerPolicyEnum mOriginalPolicy;
+
   // Indicates if the referrer should be sent or not even when it's available
   // (default is true).
   bool mSendReferrer;
