@@ -56,7 +56,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-add_task(async function head_setup() {
+add_setup(async function head_setup() {
   // Initialize logging. This will sometimes be reset by a pref reset,
   // so it's also called as part of SyncTestingInfrastructure().
   syncTestLogging();
