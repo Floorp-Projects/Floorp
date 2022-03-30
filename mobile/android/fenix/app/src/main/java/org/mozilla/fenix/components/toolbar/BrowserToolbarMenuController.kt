@@ -28,6 +28,7 @@ import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -404,41 +405,62 @@ class DefaultBrowserToolbarMenuController(
 
     @Suppress("ComplexMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
-        val eventItem = when (item) {
-            is ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
-            is ToolbarMenu.Item.InstallPwaToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
-            is ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
-            is ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
+        when (item) {
+            is ToolbarMenu.Item.OpenInFenix ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("open_in_fenix"))
+            is ToolbarMenu.Item.InstallPwaToHomeScreen ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("add_to_homescreen"))
+            is ToolbarMenu.Item.Quit ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("quit"))
+            is ToolbarMenu.Item.OpenInApp ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("open_in_app"))
             is ToolbarMenu.Item.CustomizeReaderView ->
-                Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
-            is ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
-            is ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
-            is ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
-            is ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP
-            is ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
-            is ToolbarMenu.Item.Settings -> Event.BrowserMenuItemTapped.Item.SETTINGS
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("reader_mode_appearance"))
+            is ToolbarMenu.Item.Back ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("back"))
+            is ToolbarMenu.Item.Forward ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("forward"))
+            is ToolbarMenu.Item.Reload ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("reload"))
+            is ToolbarMenu.Item.Stop ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("stop"))
+            is ToolbarMenu.Item.Share ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("share"))
+            is ToolbarMenu.Item.Settings ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("settings"))
             is ToolbarMenu.Item.RequestDesktop ->
                 if (item.isChecked) {
-                    Event.BrowserMenuItemTapped.Item.DESKTOP_VIEW_ON
+                    Events.browserMenuAction.record(Events.BrowserMenuActionExtra("desktop_view_on"))
                 } else {
-                    Event.BrowserMenuItemTapped.Item.DESKTOP_VIEW_OFF
+                    Events.browserMenuAction.record(Events.BrowserMenuActionExtra("desktop_view_off"))
                 }
-            is ToolbarMenu.Item.FindInPage -> Event.BrowserMenuItemTapped.Item.FIND_IN_PAGE
-            is ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
-            is ToolbarMenu.Item.AddToTopSites -> Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES
-            is ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
-            is ToolbarMenu.Item.SyncAccount -> Event.BrowserMenuItemTapped.Item.SYNC_ACCOUNT
-            is ToolbarMenu.Item.Bookmark -> Event.BrowserMenuItemTapped.Item.BOOKMARK
-            is ToolbarMenu.Item.AddonsManager -> Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER
-            is ToolbarMenu.Item.Bookmarks -> Event.BrowserMenuItemTapped.Item.BOOKMARKS
-            is ToolbarMenu.Item.History -> Event.BrowserMenuItemTapped.Item.HISTORY
-            is ToolbarMenu.Item.Downloads -> Event.BrowserMenuItemTapped.Item.DOWNLOADS
-            is ToolbarMenu.Item.NewTab -> Event.BrowserMenuItemTapped.Item.NEW_TAB
-            is ToolbarMenu.Item.SetDefaultBrowser -> Event.BrowserMenuItemTapped.Item.SET_DEFAULT_BROWSER
-            is ToolbarMenu.Item.RemoveFromTopSites -> Event.BrowserMenuItemTapped.Item.REMOVE_FROM_TOP_SITES
+            is ToolbarMenu.Item.FindInPage ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("find_in_page"))
+            is ToolbarMenu.Item.SaveToCollection ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("save_to_collection"))
+            is ToolbarMenu.Item.AddToTopSites ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("add_to_top_sites"))
+            is ToolbarMenu.Item.AddToHomeScreen ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("add_to_homescreen"))
+            is ToolbarMenu.Item.SyncAccount ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("sync_account"))
+            is ToolbarMenu.Item.Bookmark ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("bookmark"))
+            is ToolbarMenu.Item.AddonsManager ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("addons_manager"))
+            is ToolbarMenu.Item.Bookmarks ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("bookmarks"))
+            is ToolbarMenu.Item.History ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("history"))
+            is ToolbarMenu.Item.Downloads ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("downloads"))
+            is ToolbarMenu.Item.NewTab ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("new_tab"))
+            is ToolbarMenu.Item.SetDefaultBrowser ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("set_default_browser"))
+            is ToolbarMenu.Item.RemoveFromTopSites ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("remove_from_top_sites"))
         }
-
-        metrics.track(Event.BrowserMenuItemTapped(eventItem))
     }
 
     companion object {

@@ -393,19 +393,6 @@ sealed class Event {
 
     data class AddonInstalled(val addonId: String) : Event()
 
-    data class BrowserMenuItemTapped(val item: Item) : Event() {
-        enum class Item {
-            SETTINGS, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
-            NEW_PRIVATE_TAB, SHARE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX,
-            SAVE_TO_COLLECTION, ADD_TO_TOP_SITES, REMOVE_FROM_TOP_SITES, ADD_TO_HOMESCREEN, QUIT, READER_MODE_ON,
-            READER_MODE_OFF, OPEN_IN_APP, BOOKMARK, READER_MODE_APPEARANCE, ADDONS_MANAGER,
-            BOOKMARKS, HISTORY, SYNC_TABS, DOWNLOADS, SET_DEFAULT_BROWSER, SYNC_ACCOUNT
-        }
-
-        override val extras: Map<Events.browserMenuActionKeys, String>?
-            get() = mapOf(Events.browserMenuActionKeys.item to item.toString().lowercase(Locale.ROOT))
-    }
-
     object AutoPlaySettingVisited : Event()
 
     data class AutoPlaySettingChanged(val setting: AutoplaySetting) : Event() {

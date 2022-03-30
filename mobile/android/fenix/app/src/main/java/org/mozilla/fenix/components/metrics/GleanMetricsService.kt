@@ -115,10 +115,7 @@ private val Event.wrapper: EventWrapper<*>?
             { ContextMenu.itemTapped.record(it) },
             { ContextMenu.itemTappedKeys.valueOf(it) }
         )
-        is Event.BrowserMenuItemTapped -> EventWrapper(
-            { Events.browserMenuAction.record(it) },
-            { Events.browserMenuActionKeys.valueOf(it) }
-        )
+
         is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
             { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
         )

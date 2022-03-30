@@ -145,6 +145,7 @@ events:
           reader_mode_off, reader_mode_on, reload, remove_from_top_sites,
           save_to_collection, set_default_browser, settings, share, stop,
           sync_account, and sync_tabs.
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
       - https://github.com/mozilla-mobile/fenix/issues/19923
