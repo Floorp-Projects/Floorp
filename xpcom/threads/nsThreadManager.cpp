@@ -191,6 +191,7 @@ BackgroundEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
 
 void BackgroundEventTarget::BeginShutdown(
     nsTArray<RefPtr<ShutdownPromise>>& promises) {
+  MutexAutoLock lock(mMutex);
   for (auto& queue : mTaskQueues) {
     promises.AppendElement(queue->BeginShutdown());
   }
