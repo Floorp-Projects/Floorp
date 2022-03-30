@@ -192,13 +192,22 @@ class ExceptionBailoutInfo {
   size_t frameNo_;
   jsbytecode* resumePC_;
   size_t numExprSlots_;
+  bool isFinally_ = false;
+  RootedValue finallyException_;
 
  public:
-  ExceptionBailoutInfo(size_t frameNo, jsbytecode* resumePC,
+  ExceptionBailoutInfo(JSContext* cx, size_t frameNo, jsbytecode* resumePC,
                        size_t numExprSlots)
-      : frameNo_(frameNo), resumePC_(resumePC), numExprSlots_(numExprSlots) {}
+      : frameNo_(frameNo),
+        resumePC_(resumePC),
+        numExprSlots_(numExprSlots),
+        finallyException_(cx) {}
 
-  ExceptionBailoutInfo() : frameNo_(0), resumePC_(nullptr), numExprSlots_(0) {}
+  explicit ExceptionBailoutInfo(JSContext* cx)
+      : frameNo_(0),
+        resumePC_(nullptr),
+        numExprSlots_(0),
+        finallyException_(cx) {}
 
   bool catchingException() const { return !!resumePC_; }
   bool propagatingIonExceptionForDebugMode() const { return !resumePC_; }
@@ -214,6 +223,17 @@ class ExceptionBailoutInfo {
   size_t numExprSlots() const {
     MOZ_ASSERT(catchingException());
     return numExprSlots_;
+  }
+
+  bool isFinally() const { return isFinally_; }
+  void setFinallyException(JS::Value& exception) {
+    MOZ_ASSERT(!isFinally());
+    isFinally_ = true;
+    finallyException_ = exception;
+  }
+  HandleValue finallyException() const {
+    MOZ_ASSERT(isFinally());
+    return finallyException_;
   }
 };
 
