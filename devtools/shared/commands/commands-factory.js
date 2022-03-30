@@ -48,6 +48,7 @@ exports.CommandsFactory = {
     }
 
     const descriptor = await client.mainRoot.getTab({ tab, isWebExtension });
+    descriptor.doNotAttachThreadActor = isWebExtension;
     const commands = await createCommandsDictionary(descriptor);
     return commands;
   },
@@ -183,8 +184,7 @@ exports.CommandsFactory = {
 
     const descriptor = await client.mainRoot.getMainProcess();
 
-    // Hack something in order to help TargetMixinFront to distinguish the BrowserConsole
-    descriptor.createdForBrowserConsole = true;
+    descriptor.doNotAttachThreadActor = true;
 
     // Force fetching the first top level target right away.
     await descriptor.getTarget();
