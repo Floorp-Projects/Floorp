@@ -214,7 +214,7 @@ tasks:
                                 ACTION_CALLBACK: '${action.cb_name}'
 
                   cache:
-                      "${trustDomain}-level-${repository.level}-checkouts-sparse-v2": /builds/worker/checkouts
+                      "${trustDomain}-level-${repository.level}-checkouts-sparse-v3": /builds/worker/checkouts
 
                   features:
                       taskclusterProxy: true
