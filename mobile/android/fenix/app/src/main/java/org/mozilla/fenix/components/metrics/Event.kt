@@ -32,7 +32,6 @@ sealed class Event {
     object CustomTabsClosed : Event()
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
-    object NormalAndPrivateUriOpened : Event()
     object HistoryOpened : Event()
     object HistoryItemShared : Event()
     object HistoryItemOpened : Event()

@@ -30,6 +30,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -183,23 +184,30 @@ class TelemetryMiddlewareTest {
     @Test
     fun `GIVEN a normal page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org")
+        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
+        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
+        assertTrue(Events.normalAndPrivateUriCount.testHasValue())
+        val count = Events.normalAndPrivateUriCount.testGetValue()
+        assertEquals(1, count)
     }
 
     @Test
     fun `GIVEN a private page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org", private = true)
+        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
+        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
+        val count = Events.normalAndPrivateUriCount.testGetValue()
+        assertEquals(1, count)
     }
 
     @Test

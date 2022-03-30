@@ -20,6 +20,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
@@ -51,7 +52,7 @@ class TelemetryMiddleware(
                 context.state.findTab(action.sessionId)?.let { tab ->
                     // Record UriOpened event when a non-private page finishes loading
                     if (tab.content.loading && !action.loading) {
-                        metrics.track(Event.NormalAndPrivateUriOpened)
+                        Events.normalAndPrivateUriCount.add()
                     }
                 }
             }
