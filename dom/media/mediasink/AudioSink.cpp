@@ -255,6 +255,7 @@ uint32_t AudioSink::PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
 
 bool AudioSink::Ended() const {
   // Return true when error encountered so AudioStream can start draining.
+  // Both atomic so we don't need locking
   return mProcessedQueueFinished || mErrored;
 }
 

@@ -103,7 +103,11 @@ class AudioClock {
   // The history of frames sent to the audio engine in each DataCallback.
   // Only accessed from non-audio threads on macOS, accessed on both threads and
   // protected by the AudioStream monitor on other platforms.
-  const UniquePtr<FrameHistory> mFrameHistory;
+  const UniquePtr<FrameHistory> mFrameHistory
+#  ifndef XP_MACOSX
+  GUARDED_BY(mMutex)
+#  endif
+    ;
 #  ifdef XP_MACOSX
   // Enqueued on the audio thread, dequeued from the other thread. The maximum
   // size of this queue has been chosen empirically.
@@ -113,6 +117,8 @@ class AudioClock {
   // fallback path. The size of this array has been chosen empirically. Only
   // ever accessed on the audio thread.
   AutoTArray<CallbackInfo, 5> mAudioThreadCallbackInfo;
+#  else
+  Mutex mMutex{"AudioClock"};
 #  endif
 };
 
@@ -271,10 +277,10 @@ class AudioStream final {
     return CubebUtils::PreferredSampleRate();
   }
 
-  uint32_t GetOutChannels() { return mOutChannels; }
+  uint32_t GetOutChannels() const { return mOutChannels; }
 
-  // Set playback rate as a multiple of the intrinsic playback rate. This is to
-  // be called only with aPlaybackRate > 0.0.
+  // Set playback rate as a multiple of the intrinsic playback rate. This is
+  // to be called only with aPlaybackRate > 0.0.
   nsresult SetPlaybackRate(double aPlaybackRate);
   // Switch between resampling (if false) and time stretching (if true,
   // default).
@@ -319,25 +325,28 @@ class AudioStream final {
 
   // Return true if audio frames are valid (correct sampling rate and valid
   // channel count) otherwise false.
-  bool IsValidAudioFormat(Chunk* aChunk);
+  bool IsValidAudioFormat(Chunk* aChunk) REQUIRES(mMonitor);
 
   template <typename Function, typename... Args>
-  int InvokeCubeb(Function aFunction, Args&&... aArgs);
+  int InvokeCubeb(Function aFunction, Args&&... aArgs) REQUIRES(mMonitor);
   bool CheckThreadIdChanged();
   void AssertIsOnAudioThread() const;
 
   soundtouch::SoundTouch* mTimeStretcher;
 
-  // The monitor is held to protect all access to member variables below.
-  Monitor mMonitor MOZ_UNANNOTATED;
-
-  const uint32_t mOutChannels;
-  const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
   AudioClock mAudioClock;
 
   WavDumper mDumpFile;
 
-  // Owning reference to a cubeb_stream.
+  const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
+
+  // The monitor is held to protect all access to member variables below.
+  Monitor mMonitor MOZ_UNANNOTATED;
+
+  const uint32_t mOutChannels;
+
+  // Owning reference to a cubeb_stream.  Set in Init(), cleared in Shutdown, so
+  // no lock is needed to access.
   UniquePtr<cubeb_stream, CubebDestroyPolicy> mCubebStream;
 
   enum StreamState {
@@ -349,8 +358,10 @@ class AudioStream final {
     SHUTDOWN      // Shutdown has been called
   };
 
-  StreamState mState;
+  std::atomic<StreamState> mState;
 
+  // DataSource::PopFrames can never be called concurrently.
+  // DataSource::IsEnded uses only atomics.
   DataSource& mDataSource;
 
   // The device info of the current sink. If null
@@ -361,7 +372,7 @@ class AudioStream final {
   std::atomic<ProfilerThreadId> mAudioThreadId;
   const bool mSandboxed = false;
 
-  MozPromiseHolder<MediaSink::EndedPromise> mEndedPromise;
+  MozPromiseHolder<MediaSink::EndedPromise> mEndedPromise GUARDED_BY(mMonitor);
   std::atomic<bool> mPlaybackComplete;
   // Both written on the MDSM thread, read on the audio thread.
   std::atomic<float> mPlaybackRate;
