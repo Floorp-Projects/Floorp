@@ -106,7 +106,7 @@ class CheckerboardEvent final {
    */
   void LogInfo(RendertraceProperty aProperty, const TimeStamp& aTimestamp,
                const CSSRect& aRect, const std::string& aExtraInfo,
-               const MonitorAutoLock& aProofOfLock) REQUIRES(mRendertraceLock);
+               const MonitorAutoLock& aProofOfLock);
 
   /**
    * Helper struct that holds a single rendertrace property value.
@@ -198,19 +198,18 @@ class CheckerboardEvent final {
    * Monitor that needs to be acquired before touching mBufferedProperties
    * or mRendertraceInfo.
    */
-  mutable Monitor mRendertraceLock;
+  mutable Monitor mRendertraceLock MOZ_UNANNOTATED;
   /**
    * A circular buffer to store some properties. This is used before the
    * checkerboarding actually starts, so that we have some data on what
    * was happening before the checkerboarding started.
    */
-  PropertyBuffer mBufferedProperties[sRendertracePropertyCount] GUARDED_BY(
-      mRendertraceLock);
+  PropertyBuffer mBufferedProperties[sRendertracePropertyCount];
   /**
    * The rendertrace info buffer that gives us info on what was happening
    * during the checkerboard event.
    */
-  std::ostringstream mRendertraceInfo GUARDED_BY(mRendertraceLock);
+  std::ostringstream mRendertraceInfo;
 };
 
 }  // namespace layers
