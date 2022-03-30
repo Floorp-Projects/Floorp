@@ -138,10 +138,10 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
                          uint32_t aOutputChannels,
                          AudioConfig::ChannelLayout::ChannelMap aChannelMap)
     : mTimeStretcher(nullptr),
+      mAudioClock(aInRate),
+      mChannelMap(aChannelMap),
       mMonitor("AudioStream"),
       mOutChannels(aOutputChannels),
-      mChannelMap(aChannelMap),
-      mAudioClock(aInRate),
       mState(INITIALIZED),
       mDataSource(aSource),
       mAudioThreadId(ProfilerThreadId{}),
@@ -151,7 +151,7 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
       mPreservesPitch(true) {}
 
 AudioStream::~AudioStream() {
-  LOG("deleted, state %d", mState);
+  LOG("deleted, state %d", mState.load());
   MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
              "Should've called Shutdown() before deleting an AudioStream");
 }
@@ -236,7 +236,7 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
-nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) {
+nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) NO_THREAD_SAFETY_ANALYSIS {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 
@@ -300,18 +300,14 @@ void AudioStream::SetVolume(double aVolume) {
   TRACE("AudioStream::SetVolume");
   MOZ_ASSERT(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
-  {
-    MonitorAutoLock mon(mMonitor);
-    MOZ_ASSERT(mState != SHUTDOWN, "Don't set volume after shutdown.");
-    if (mState == ERRORED) {
-      return;
-    }
+  MOZ_ASSERT(mState != SHUTDOWN, "Don't set volume after shutdown.");
+  if (mState == ERRORED) {
+    return;
   }
 
-  if (cubeb_stream_set_volume(
-          mCubebStream.get(),
-          static_cast<float>(aVolume * CubebUtils::GetVolumeScale())) !=
-      CUBEB_OK) {
+  MonitorAutoLock mon(mMonitor);
+  if (InvokeCubeb(cubeb_stream_set_volume,
+                  aVolume * CubebUtils::GetVolumeScale()) != CUBEB_OK) {
     LOGE("Could not change volume on cubeb stream.");
   }
 }
@@ -326,8 +322,8 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
     return;
   }
 
-  if (cubeb_stream_set_name(mCubebStream.get(), aRawStreamName.get()) !=
-      CUBEB_OK) {
+  MonitorAutoLock mon(mMonitor);
+  if (InvokeCubeb(cubeb_stream_set_name, aRawStreamName.get()) != CUBEB_OK) {
     LOGE("Could not set cubeb stream name.");
   }
 }
@@ -335,18 +331,21 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
 Result<already_AddRefed<MediaSink::EndedPromise>, nsresult>
 AudioStream::Start() {
   TRACE("AudioStream::Start");
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
 
-  // As cubeb might call audio stream's state callback very soon after we start
-  // cubeb, we have to create the promise beforehand in order to handle the
-  // case where we immediately get `drained`.
-  RefPtr<MediaSink::EndedPromise> promise = mEndedPromise.Ensure(__func__);
-  mPlaybackComplete = false;
+  RefPtr<MediaSink::EndedPromise> promise;
+  {
+    MonitorAutoLock mon(mMonitor);
+    // As cubeb might call audio stream's state callback very soon after we
+    // start cubeb, we have to create the promise beforehand in order to handle
+    // the case where we immediately get `drained`.
+    promise = mEndedPromise.Ensure(__func__);
+    mPlaybackComplete = false;
 
-  if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
-    mState = ERRORED;
+    if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
+      mState = ERRORED;
+    }
   }
 
   LOG("started, state %s", mState == STARTED   ? "STARTED"
@@ -360,7 +359,6 @@ AudioStream::Start() {
 
 void AudioStream::Pause() {
   TRACE("AudioStream::Pause");
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STOPPED, "Already Pause()ed.");
   MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
@@ -370,6 +368,7 @@ void AudioStream::Pause() {
     return;
   }
 
+  MonitorAutoLock mon(mMonitor);
   if (InvokeCubeb(cubeb_stream_stop) != CUBEB_OK) {
     mState = ERRORED;
   } else if (mState != DRAINED && mState != ERRORED) {
@@ -381,7 +380,6 @@ void AudioStream::Pause() {
 
 void AudioStream::Resume() {
   TRACE("AudioStream::Resume");
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STARTED, "Already Start()ed.");
   MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
@@ -391,6 +389,7 @@ void AudioStream::Resume() {
     return;
   }
 
+  MonitorAutoLock mon(mMonitor);
   if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
     mState = ERRORED;
   } else if (mState != DRAINED && mState != ERRORED) {
@@ -402,16 +401,17 @@ void AudioStream::Resume() {
 
 void AudioStream::Shutdown() {
   TRACE("AudioStream::Shutdown");
-  MonitorAutoLock mon(mMonitor);
-  LOG("Shutdown, state %d", mState);
+  LOG("Shutdown, state %d", mState.load());
 
+  MonitorAutoLock mon(mMonitor);
   if (mCubebStream) {
-    MonitorAutoUnlock mon(mMonitor);
     // Force stop to put the cubeb stream in a stable state before deletion.
-    cubeb_stream_stop(mCubebStream.get());
+    InvokeCubeb(cubeb_stream_stop);
     // Must not try to shut down cubeb from within the lock!  wasapi may still
     // call our callback after Pause()/stop()!?! Bug 996162
-    mCubebStream.reset();
+    cubeb_stream* cubeb = mCubebStream.release();
+    MonitorAutoUnlock unlock(mMonitor);
+    cubeb_stream_destroy(cubeb);
   }
 
   // After `cubeb_stream_stop` has been called, there is no audio thread
@@ -655,16 +655,17 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
 }
 
 void AudioStream::StateCallback(cubeb_state aState) {
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No state callback after shutdown");
-  LOG("StateCallback, mState=%d cubeb_state=%d", mState, aState);
+  LOG("StateCallback, mState=%d cubeb_state=%d", mState.load(), aState);
+
+  MonitorAutoLock mon(mMonitor);
   if (aState == CUBEB_STATE_DRAINED) {
     LOG("Drained");
     mState = DRAINED;
     mPlaybackComplete = true;
     mEndedPromise.ResolveIfExists(true, __func__);
   } else if (aState == CUBEB_STATE_ERROR) {
-    LOGE("StateCallback() state %d cubeb error", mState);
+    LOGE("StateCallback() state %d cubeb error", mState.load());
     mState = ERRORED;
     mPlaybackComplete = true;
     mEndedPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
@@ -679,6 +680,7 @@ AudioClock::AudioClock(uint32_t aInRate)
       mPreservesPitch(true),
       mFrameHistory(new FrameHistory()) {}
 
+// Audio thread only
 void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
                                     bool aAudioThreadChanged) {
 #ifdef XP_MACOSX
@@ -703,6 +705,7 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
     mAudioThreadCallbackInfo.AppendElement(info);
   }
 #else
+  MutexAutoLock lock(mMutex);
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
 #endif
 }
@@ -720,6 +723,8 @@ int64_t AudioClock::GetPosition(int64_t frames) {
   while (mCallbackInfoQueue.Dequeue(&info, 1)) {
     mFrameHistory->Append(info.mServiced, info.mUnderrun, info.mOutputRate);
   }
+#else
+  MutexAutoLock lock(mMutex);
 #endif
   return mFrameHistory->GetPosition(frames);
 }
