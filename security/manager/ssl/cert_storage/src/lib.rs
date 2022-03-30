@@ -33,7 +33,7 @@ use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
-use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
+use nsstring::{nsACString, nsCStr, nsCString, nsString};
 use rkv::backend::{BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment};
 use rkv::{StoreError, StoreOptions, Value};
 use rust_cascade::Cascade;
@@ -139,10 +139,10 @@ struct SecurityState {
 }
 
 impl SecurityState {
-    pub fn new(profile_path: PathBuf) -> Result<SecurityState, SecurityStateError> {
+    pub fn new(profile_path: PathBuf) -> SecurityState {
         // Since this gets called on the main thread, we don't actually want to open the DB yet.
         // We do this on-demand later, when we're probably on a certificate verification thread.
-        Ok(SecurityState {
+        SecurityState {
             profile_path,
             env_and_store: None,
             crlite_filter: None,
@@ -150,7 +150,7 @@ impl SecurityState {
             crlite_coverage: None,
             crlite_enrollment: None,
             remaining_ops: 0,
-        })
+        }
     }
 
     pub fn db_needs_opening(&self) -> bool {
@@ -1033,15 +1033,11 @@ impl EncodedSecurityState {
     }
 }
 
-fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateError> {
-    let directory_service = match xpcom::services::get_DirectoryService() {
-        Some(ds) => ds,
-        _ => return Err(SecurityStateError::from("None")),
-    };
+fn get_path_from_directory_service(key: &str) -> Result<PathBuf, nserror::nsresult> {
+    let directory_service = xpcom::services::get_DirectoryService().ok_or(NS_ERROR_FAILURE)?;
+    let cs_key = CString::new(key).map_err(|_| NS_ERROR_FAILURE)?;
 
-    let cs_key = CString::new(key)?;
     let mut requested_dir = GetterAddrefs::<nsIFile>::new();
-
     unsafe {
         (*directory_service)
             .Get(
@@ -1050,36 +1046,16 @@ fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateEr
                 requested_dir.void_ptr(),
             )
             .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })
     }?;
 
-    let dir_path = match requested_dir.refptr() {
-        None => return Err(SecurityStateError::from("directory service failure")),
-        Some(refptr) => refptr,
-    };
-
+    let dir_path = requested_dir.refptr().ok_or(NS_ERROR_FAILURE)?;
     let mut path = nsString::new();
-
-    unsafe {
-        (*dir_path)
-            .GetPath(&mut path as &mut nsAString)
-            // For reasons that aren't clear to me, NsresultExt does not
-            // implement std::error::Error (or Debug / Display). This map_err
-            // hack is a way to get an error with a useful message.
-            .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })?;
-    }
-
+    unsafe { (*dir_path).GetPath(&mut *path).to_result() }?;
     Ok(PathBuf::from(format!("{}", path)))
 }
 
-fn get_profile_path() -> Result<PathBuf, SecurityStateError> {
-    Ok(get_path_from_directory_service("ProfD")
-        .or_else(|_| get_path_from_directory_service("TmpD"))?)
+fn get_profile_path() -> Result<PathBuf, nserror::nsresult> {
+    get_path_from_directory_service("ProfD").or_else(|_| get_path_from_directory_service("TmpD"))
 }
 
 fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError> {
@@ -1246,10 +1222,9 @@ fn do_construct_cert_storage(
     _outer: *const nsISupports,
     iid: *const xpcom::nsIID,
     result: *mut *mut xpcom::reexports::libc::c_void,
-) -> Result<(), SecurityStateError> {
+) -> Result<(), nserror::nsresult> {
     let path_buf = get_profile_path()?;
-
-    let security_state = Arc::new(RwLock::new(SecurityState::new(path_buf.clone())?));
+    let security_state = Arc::new(RwLock::new(SecurityState::new(path_buf.clone())));
     let cert_storage = CertStorage::allocate(InitCertStorage {
         security_state: security_state.clone(),
         queue: create_background_task_queue(cstr!("cert_storage"))?,
@@ -1275,24 +1250,15 @@ fn do_construct_cert_storage(
     let runnable = TaskRunnable::new("LoadCrliteStash", load_crlite_stash_task)?;
     TaskRunnable::dispatch(runnable, cert_storage.queue.coerce())?;
 
-    unsafe {
-        cert_storage
-            .QueryInterface(iid, result)
-            // As above; greasy hack because NsresultExt
-            .to_result()
-            .map_err(|res| SecurityStateError {
-                message: (*res.error_name()).as_str_unchecked().to_owned(),
-            })?;
-
-        if let Some(reporter) = memory_reporter.query_interface::<nsIMemoryReporter>() {
-            if let Some(reporter_manager) = xpcom::get_service::<nsIMemoryReporterManager>(cstr!(
-                "@mozilla.org/memory-reporter-manager;1"
-            )) {
-                reporter_manager.RegisterStrongReporter(&*reporter);
-            }
+    if let Some(reporter) = memory_reporter.query_interface::<nsIMemoryReporter>() {
+        if let Some(reporter_manager) = xpcom::get_service::<nsIMemoryReporterManager>(cstr!(
+            "@mozilla.org/memory-reporter-manager;1"
+        )) {
+            unsafe { reporter_manager.RegisterStrongReporter(&*reporter) };
         }
     }
-    Ok(())
+
+    unsafe { cert_storage.QueryInterface(iid, result).to_result() }
 }
 
 // This is a helper for creating a task that will perform a specific action on a background thread.
@@ -1372,17 +1338,12 @@ pub extern "C" fn cert_storage_constructor(
     if !outer.is_null() {
         return NS_ERROR_NO_AGGREGATION;
     }
-
     if !is_main_thread() {
         return NS_ERROR_NOT_SAME_THREAD;
     }
-
     match do_construct_cert_storage(outer, iid, result) {
-        Ok(_) => NS_OK,
-        Err(_) => {
-            // In future: log something so we know what went wrong?
-            NS_ERROR_FAILURE
-        }
+        Ok(()) => NS_OK,
+        Err(e) => e,
     }
 }
 
