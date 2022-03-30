@@ -35,6 +35,7 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
@@ -113,6 +114,10 @@ internal class ReleaseMetricController(
         }
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.SAVE -> {
             LoginDialog.saved.record(NoExtras())
+        }
+
+        Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
+            Events.toolbarMenuVisible.record(NoExtras())
         }
         else -> {
             this.toEvent()?.also {
@@ -204,9 +209,6 @@ internal class ReleaseMetricController(
             }
         }
 
-        Component.BROWSER_TOOLBAR == component && ToolbarFacts.Items.MENU == item -> {
-            metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened } ?: Event.ToolbarMenuShown
-        }
         Component.BROWSER_MENU == component && BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM == item -> {
             metadata?.get("id")?.let { Event.AddonsOpenInToolbarMenu(it.toString()) }
         }

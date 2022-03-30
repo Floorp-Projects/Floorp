@@ -119,9 +119,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
             { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
         )
-        is Event.ToolbarMenuShown -> EventWrapper<NoExtraKeys>(
-            { Events.toolbarMenuVisible.record(it) }
-        )
 
         is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
             { CustomTab.menu.record(it) }
