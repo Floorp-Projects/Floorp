@@ -23,7 +23,7 @@ object TestAssetHelper {
     fun getGenericTabAsset(server: MockWebServer, pageNum: Int): TestAsset {
         val url = server.url("tab$pageNum.html").toString()
         val content = "Tab $pageNum"
-        val title = ""
+        val title = "tab$pageNum"
 
         return TestAsset(url, content, title)
     }
