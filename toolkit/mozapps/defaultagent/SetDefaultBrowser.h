@@ -18,7 +18,7 @@
  * @param aAumi The AUMI of the installation to set as default.
  *
  * @param aExtraFileExtensions Optional null-terminated list of extra file
- * association pairs to set as default, like `{ L".pdf", "FirefoxHTML", nullptr
+ * association pairs to set as default, like `{ L".pdf", "FirefoxPDF", nullptr
  * }`.
  *
  * @return S_OK             All associations set and checked successfully.
