@@ -20,10 +20,6 @@ Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
 // Set minimum idle timeout for testing
 Services.prefs.setIntPref("extensions.background.idle.timeout", 0);
 
-function promiseExtensionEvent(extension, event) {
-  return new Promise(resolve => extension.extension.once(event, resolve));
-}
-
 add_setup(async () => {
   await AddonTestUtils.promiseStartupManager();
 });
