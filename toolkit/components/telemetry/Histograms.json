@@ -14473,6 +14473,42 @@
     "bug_numbers": [1238433, 1570634, 1752207, 1755363],
     "description": "Ratio of dropped frames per total decoded frames scaled by 10,000 between starting and stopping a video"
   },
+  "VIDEO_DROPPED_DECODED_FRAMES_PROPORTION_EXPONENTIAL" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1761994],
+    "description": "Ratio of decoder dropped frames per total decoded frames scaled by 10,000 between starting and stopping a video"
+  },
+  "VIDEO_DROPPED_SINK_FRAMES_PROPORTION_EXPONENTIAL" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1761994],
+    "description": "Ratio of sink dropped frames per total decoded frames scaled by 10,000 between starting and stopping a video"
+  },
+  "VIDEO_DROPPED_COMPOSITOR_FRAMES_PROPORTION_EXPONENTIAL" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1761994],
+    "description": "Ratio of compositor dropped frames per total decoded frames scaled by 10,000 between starting and stopping a video"
+  },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec"],
