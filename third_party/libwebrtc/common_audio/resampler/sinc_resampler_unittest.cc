@@ -23,7 +23,6 @@
 #include <tuple>
 
 #include "common_audio/resampler/sinusoidal_linear_chirp_source.h"
-#include "rtc_base/stringize_macros.h"
 #include "rtc_base/system/arch.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/cpu_features_wrapper.h"
@@ -196,9 +195,11 @@ TEST(SincResamplerTest, ConvolveBenchmark) {
   }
   double total_time_optimized_unaligned_us =
       (rtc::TimeNanos() - start) / rtc::kNumNanosecsPerMicrosec;
-  printf(STRINGIZE(convolve_proc_) "(unaligned) took %.2fms; which is %.2fx "
-         "faster than Convolve_C.\n", total_time_optimized_unaligned_us / 1000,
-         total_time_c_us / total_time_optimized_unaligned_us);
+  printf(
+      "convolve_proc_(unaligned) took %.2fms; which is %.2fx "
+      "faster than Convolve_C.\n",
+      total_time_optimized_unaligned_us / 1000,
+      total_time_c_us / total_time_optimized_unaligned_us);
 
   // Benchmark with aligned input pointer.
   start = rtc::TimeNanos();
@@ -209,12 +210,13 @@ TEST(SincResamplerTest, ConvolveBenchmark) {
   }
   double total_time_optimized_aligned_us =
       (rtc::TimeNanos() - start) / rtc::kNumNanosecsPerMicrosec;
-  printf(STRINGIZE(convolve_proc_) " (aligned) took %.2fms; which is %.2fx "
-         "faster than Convolve_C and %.2fx faster than "
-         STRINGIZE(convolve_proc_) " (unaligned).\n",
-         total_time_optimized_aligned_us / 1000,
-         total_time_c_us / total_time_optimized_aligned_us,
-         total_time_optimized_unaligned_us / total_time_optimized_aligned_us);
+  printf(
+      "convolve_proc_ (aligned) took %.2fms; which is %.2fx "
+      "faster than Convolve_C and %.2fx faster than "
+      "convolve_proc_ (unaligned).\n",
+      total_time_optimized_aligned_us / 1000,
+      total_time_c_us / total_time_optimized_aligned_us,
+      total_time_optimized_unaligned_us / total_time_optimized_aligned_us);
 }
 
 typedef std::tuple<int, int, double, double> SincResamplerTestData;
