@@ -778,7 +778,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
         is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null
-        else -> null
     }
 
 /**

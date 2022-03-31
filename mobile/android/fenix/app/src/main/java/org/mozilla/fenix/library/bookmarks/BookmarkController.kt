@@ -21,7 +21,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -44,14 +43,27 @@ interface BookmarkController {
     fun handleCopyUrl(item: BookmarkNode)
     fun handleBookmarkSharing(item: BookmarkNode)
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
-    fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event)
+
+    /**
+     * Handle bookmark nodes deletion
+     * @param nodes The set of nodes to be deleted.
+     * @param removeType Type of removal.
+     */
+    fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, removeType: BookmarkRemoveType)
     fun handleBookmarkFolderDeletion(nodes: Set<BookmarkNode>)
     fun handleRequestSync()
     fun handleBackPressed()
     fun handleSearch()
 }
 
-@Suppress("TooManyFunctions")
+/**
+ * Type of bookmark nodes deleted.
+ */
+enum class BookmarkRemoveType {
+    SINGLE, MULTIPLE, FOLDER
+}
+
+@Suppress("TooManyFunctions", "LongParameterList")
 class DefaultBookmarkController(
     private val activity: HomeActivity,
     private val navController: NavController,
@@ -62,7 +74,7 @@ class DefaultBookmarkController(
     private val tabsUseCases: TabsUseCases?,
     private val loadBookmarkNode: suspend (String) -> BookmarkNode?,
     private val showSnackbar: (String) -> Unit,
-    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
+    private val deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
     private val invokePendingDeletion: () -> Unit,
     private val showTabTray: () -> Unit
@@ -146,8 +158,8 @@ class DefaultBookmarkController(
         showTabTray()
     }
 
-    override fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event) {
-        deleteBookmarkNodes(nodes, eventType)
+    override fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, removeType: BookmarkRemoveType) {
+        deleteBookmarkNodes(nodes, removeType)
     }
 
     override fun handleBookmarkFolderDeletion(nodes: Set<BookmarkNode>) {

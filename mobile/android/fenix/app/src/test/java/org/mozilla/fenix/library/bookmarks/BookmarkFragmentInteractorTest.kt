@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -174,7 +173,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onDelete(setOf(item))
 
         verify {
-            bookmarkController.handleBookmarkDeletion(setOf(item), Event.RemoveBookmark)
+            bookmarkController.handleBookmarkDeletion(setOf(item), BookmarkRemoveType.SINGLE)
         }
     }
 
@@ -197,7 +196,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onDelete(setOf(item, subfolder))
 
         verify {
-            bookmarkController.handleBookmarkDeletion(setOf(item, subfolder), Event.RemoveBookmarks)
+            bookmarkController.handleBookmarkDeletion(setOf(item, subfolder), BookmarkRemoveType.MULTIPLE)
         }
     }
 

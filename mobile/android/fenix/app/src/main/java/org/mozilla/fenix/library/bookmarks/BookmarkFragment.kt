@@ -43,7 +43,6 @@ import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentBookmarkBinding
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
@@ -306,7 +305,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         }
     }
 
-    private fun deleteMulti(selected: Set<BookmarkNode>, eventType: Event = Event.RemoveBookmarks) {
+    private fun deleteMulti(selected: Set<BookmarkNode>, eventType: BookmarkRemoveType = BookmarkRemoveType.MULTIPLE) {
         selected.iterator().forEach {
             if (it.type == BookmarkNodeType.FOLDER) {
                 showRemoveFolderDialog(selected)
@@ -318,18 +317,17 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         pendingBookmarkDeletionJob = getDeleteOperation(eventType)
 
         val message = when (eventType) {
-            is Event.RemoveBookmarks -> {
+            BookmarkRemoveType.MULTIPLE -> {
                 getRemoveBookmarksSnackBarMessage(selected, containsFolders = false)
             }
-            is Event.RemoveBookmarkFolder,
-            is Event.RemoveBookmark -> {
+            BookmarkRemoveType.FOLDER,
+            BookmarkRemoveType.SINGLE -> {
                 val bookmarkNode = selected.first()
                 getString(
                     R.string.bookmark_deletion_snackbar_message,
                     bookmarkNode.url?.toShortUrl(requireContext().components.publicSuffixList) ?: bookmarkNode.title
                 )
             }
-            else -> throw IllegalStateException("Illegal event type in onDeleteSome")
         }
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
@@ -386,7 +384,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
                     updatePendingBookmarksToDelete(selected)
-                    pendingBookmarkDeletionJob = getDeleteOperation(Event.RemoveBookmarkFolder)
+                    pendingBookmarkDeletionJob = getDeleteOperation(BookmarkRemoveType.FOLDER)
                     dialog.dismiss()
                     val snackbarMessage = getRemoveBookmarksSnackBarMessage(selected, containsFolders = true)
                     // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
@@ -397,7 +395,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                         {
                             undoPendingDeletion(selected)
                         },
-                        operation = getDeleteOperation(Event.RemoveBookmarkFolder)
+                        operation = getDeleteOperation(BookmarkRemoveType.FOLDER)
                     )
                 }
                 create()
@@ -418,20 +416,17 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         refreshBookmarks()
     }
 
-    private fun getDeleteOperation(event: Event): (suspend () -> Unit) {
+    private fun getDeleteOperation(event: BookmarkRemoveType): (suspend () -> Unit) {
         return {
             deleteSelectedBookmarks(pendingBookmarksToDelete)
             pendingBookmarkDeletionJob = null
             when (event) {
-                is Event.RemoveBookmarkFolder ->
+                BookmarkRemoveType.FOLDER ->
                     BookmarksManagement.folderRemove.record(NoExtras())
-                is Event.RemoveBookmarks ->
+                BookmarkRemoveType.MULTIPLE ->
                     BookmarksManagement.multiRemoved.record(NoExtras())
-                is Event.RemoveBookmark ->
+                BookmarkRemoveType.SINGLE ->
                     BookmarksManagement.removed.record(NoExtras())
-                else -> {
-                    throw IllegalArgumentException("Illegal event type in getDeleteOperation")
-                }
             }
             refreshBookmarks()
         }

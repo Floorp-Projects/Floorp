@@ -9,7 +9,6 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Do
 
@@ -89,11 +88,11 @@ class BookmarkFragmentInteractor(
         }
         val eventType = when (nodes.singleOrNull()?.type) {
             BookmarkNodeType.ITEM,
-            BookmarkNodeType.SEPARATOR -> Event.RemoveBookmark
-            BookmarkNodeType.FOLDER -> Event.RemoveBookmarkFolder
-            null -> Event.RemoveBookmarks
+            BookmarkNodeType.SEPARATOR -> BookmarkRemoveType.SINGLE
+            BookmarkNodeType.FOLDER -> BookmarkRemoveType.FOLDER
+            null -> BookmarkRemoveType.MULTIPLE
         }
-        if (eventType == Event.RemoveBookmarkFolder) {
+        if (eventType == BookmarkRemoveType.FOLDER) {
             bookmarksController.handleBookmarkFolderDeletion(nodes)
         } else {
             bookmarksController.handleBookmarkDeletion(nodes, eventType)

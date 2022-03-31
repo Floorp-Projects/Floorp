@@ -38,7 +38,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Services
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 
@@ -396,12 +395,12 @@ class BookmarkControllerTest {
     fun `handleBookmarkDeletion for an item should properly call a passed in delegate`() {
         var deleteBookmarkNodesInvoked = false
         createController(
-            deleteBookmarkNodes = { nodes, event ->
+            deleteBookmarkNodes = { nodes, removeEvent ->
                 assertEquals(setOf(item), nodes)
-                assertEquals(Event.RemoveBookmark, event)
+                assertEquals(BookmarkRemoveType.SINGLE, removeEvent)
                 deleteBookmarkNodesInvoked = true
             }
-        ).handleBookmarkDeletion(setOf(item), Event.RemoveBookmark)
+        ).handleBookmarkDeletion(setOf(item), BookmarkRemoveType.SINGLE)
 
         assertTrue(deleteBookmarkNodesInvoked)
     }
@@ -410,12 +409,12 @@ class BookmarkControllerTest {
     fun `handleBookmarkDeletion for multiple bookmarks should properly call a passed in delegate`() {
         var deleteBookmarkNodesInvoked = false
         createController(
-            deleteBookmarkNodes = { nodes, event ->
+            deleteBookmarkNodes = { nodes, removeEvent ->
                 assertEquals(setOf(item, subfolder), nodes)
-                assertEquals(Event.RemoveBookmarks, event)
+                assertEquals(BookmarkRemoveType.MULTIPLE, removeEvent)
                 deleteBookmarkNodesInvoked = true
             }
-        ).handleBookmarkDeletion(setOf(item, subfolder), Event.RemoveBookmarks)
+        ).handleBookmarkDeletion(setOf(item, subfolder), BookmarkRemoveType.MULTIPLE)
 
         assertTrue(deleteBookmarkNodesInvoked)
     }
@@ -481,7 +480,7 @@ class BookmarkControllerTest {
     private fun createController(
         loadBookmarkNode: suspend (String) -> BookmarkNode? = { _ -> null },
         showSnackbar: (String) -> Unit = { _ -> },
-        deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = { _, _ -> },
+        deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit = { _, _ -> },
         deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = { _ -> },
         invokePendingDeletion: () -> Unit = { },
         showTabTray: () -> Unit = { }
