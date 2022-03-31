@@ -368,10 +368,6 @@ private val Event.wrapper: EventWrapper<*>?
             { ProgressiveWebApp.installTap.record(it) }
         )
 
-        is Event.SyncedTabOpened -> EventWrapper<NoExtraKeys>(
-            { Events.syncedTabOpened.record(it) }
-        )
-
         is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
         )

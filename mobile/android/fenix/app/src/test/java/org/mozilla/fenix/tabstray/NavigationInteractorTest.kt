@@ -14,7 +14,6 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -43,7 +42,6 @@ import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.browser.state.state.createTab as createStateTab
@@ -228,6 +226,7 @@ class NavigationInteractorTest {
     fun `onSyncedTabsClicked sets metrics and opens browser`() {
         val tab = mockk<SyncTab>()
         val entry = mockk<TabEntry>()
+        assertFalse(Events.syncedTabOpened.testHasValue())
 
         every { tab.active() }.answers { entry }
         every { entry.url }.answers { "https://mozilla.org" }
@@ -240,9 +239,9 @@ class NavigationInteractorTest {
         ).onSyncedTabClicked(tab)
 
         assertTrue(dismissTabTrayInvoked)
-        verifyOrder {
-            metrics.track(Event.SyncedTabOpened)
+        assertTrue(Events.syncedTabOpened.testHasValue())
 
+        verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,

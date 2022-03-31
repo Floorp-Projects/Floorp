@@ -126,8 +126,6 @@ sealed class Event {
 
     object TabSettingsOpened : Event()
 
-    object SyncedTabOpened : Event()
-
     object HaveOpenTabs : Event()
     object HaveNoOpenTabs : Event()
 
