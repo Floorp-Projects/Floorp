@@ -89,28 +89,32 @@ const DEFAULT_TOGGLE_STYLES = {
  * Picture-in-Picture for that <video>, and resolves with the
  * Picture-in-Picture window once it is ready to be used.
  *
+ * If triggerFn is not specified, then open using the
+ * MozTogglePictureInPicture event.
+ *
  * @param {Element,BrowsingContext} browser The <xul:browser> or
  * BrowsingContext hosting the <video>
  *
  * @param {String} videoID The ID of the video to trigger
  * Picture-in-Picture on.
  *
- * @param {boolean} withCommand True to trigger via the View:PictureInPicture command
+ * @param {boolean} triggerFn Use the given function to open the pip window,
+ *                  which runs in the parent process.
  *
  * @return Promise
  * @resolves With the Picture-in-Picture window when ready.
  */
-async function triggerPictureInPicture(browser, videoID, withCommand) {
+async function triggerPictureInPicture(browser, videoID, triggerFn) {
   let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
 
   let videoReady = null;
-  if (withCommand) {
+  if (triggerFn) {
     await SpecialPowers.spawn(browser, [videoID], async videoID => {
       let video = content.document.getElementById(videoID);
       video.focus();
     });
 
-    document.getElementById("View:PictureInPicture").doCommand();
+    triggerFn();
 
     videoReady = SpecialPowers.spawn(browser, [videoID], async videoID => {
       let video = content.document.getElementById(videoID);
