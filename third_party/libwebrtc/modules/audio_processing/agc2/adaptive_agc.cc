@@ -44,7 +44,9 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
           config.adaptive_digital.level_estimator,
           config.adaptive_digital.use_saturation_protector,
           config.adaptive_digital.extra_saturation_margin_db),
-      gain_applier_(apm_data_dumper),
+      gain_applier_(apm_data_dumper,
+                    config.adaptive_digital
+                        .gain_applier_adjacent_speech_frames_threshold),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(apm_data_dumper) {
   RTC_DCHECK(apm_data_dumper);
