@@ -9,7 +9,7 @@
 #include "base/command_line.h"
 #include "base/process_util.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/Omnijar.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"

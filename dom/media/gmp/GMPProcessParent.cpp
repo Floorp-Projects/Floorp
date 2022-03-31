@@ -19,7 +19,7 @@
 #include <string>
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-#  include "mozilla/dom/ContentChild.h"
+#  include "mozilla/Omnijar.h"
 #  include "mozilla/Preferences.h"
 #  include "mozilla/Sandbox.h"
 #  include "mozilla/SandboxSettings.h"
