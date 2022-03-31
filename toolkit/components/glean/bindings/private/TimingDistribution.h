@@ -10,6 +10,7 @@
 #include "mozilla/glean/bindings/DistributionData.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "mozilla/TimeStamp.h"
 #include "nsIGleanMetrics.h"
 #include "nsTArray.h"
 
@@ -40,6 +41,22 @@ class TimingDistributionMetric {
    *            concurrent timing of events associated with different ids.
    */
   void StopAndAccumulate(const TimerId&& aId) const;
+
+  /*
+   * Adds a duration sample to a timing distribution metric.
+   *
+   * Adds a count to the corresponding bucket in the timing distribution.
+   * Prefer Start() and StopAndAccumulate() where possible.
+   * Users of this API are responsible for ensuring the timing source used
+   * to calculate the TimeDuration is monotonic and consistent accross
+   * platforms.
+   *
+   * NOTE: Negative durations are not handled and will saturate to INT64_MAX
+   *       nanoseconds.
+   *
+   * @param aDuration The duration of the sample to add to the distribution.
+   */
+  void AccumulateRawDuration(const TimeDuration& aDuration) const;
 
   /*
    * Aborts a previous `Start` call. No error is recorded if no `Start` was
