@@ -94,7 +94,7 @@ fn Bench_Rust<H: std::hash::BuildHasher>(
         for j in 0..params.num_inserts {
             assert!(hs.remove(&vals[j]));
         }
-        assert!(hs.len() == 0);
+        assert!(hs.is_empty());
     } else {
         assert!(hs.len() == params.num_inserts);
     }
