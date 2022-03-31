@@ -37,7 +37,9 @@ class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar {
   }
 
   nsresult TestReadData() { return ReadData(); }
-  nsresult TestWriteData() { return WriteData(mData); }
+  nsresult TestWriteData() NO_THREAD_SAFETY_ANALYSIS {
+    return WriteData(mData);
+  }
   void TestDeleteData() { DeleteData(); }
 
   void TestRegisterServiceWorker(const ServiceWorkerRegistrationData& aData) {
