@@ -178,12 +178,16 @@ const MultiStageAboutWelcome = props => {
   }, screens.map((screen, order) => {
     const isFirstCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[0].order;
     const isLastCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[centeredScreens.length - 1].order;
+    /* If first screen is corner positioned, don't include it in the count for the steps indicator. This assumes corner positioning will only be used on the first screen. */
+
+    const totalNumberOfScreens = screens[0].content.position === "corner" ? screens.length - 1 : screens.length;
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(WelcomeScreen, {
       key: screen.id + order,
       id: screen.id,
-      totalNumberOfScreens: screens.length,
+      totalNumberOfScreens: totalNumberOfScreens,
       isFirstCenteredScreen: isFirstCenteredScreen,
       isLastCenteredScreen: isLastCenteredScreen,
+      startsWithCorner: screens[0].content.position === "corner",
       order: order,
       content: screen.content,
       navigate: handleTransition,
@@ -322,7 +326,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       id: this.props.id,
       order: this.props.order,
       activeTheme: this.props.activeTheme,
-      totalNumberOfScreens: this.props.totalNumberOfScreens - 1,
+      totalNumberOfScreens: this.props.totalNumberOfScreens,
       appAndSystemLocaleInfo: this.props.appAndSystemLocaleInfo,
       negotiatedLanguage: this.props.negotiatedLanguage,
       langPackInstallPhase: this.props.langPackInstallPhase,
@@ -330,6 +334,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       messageId: this.props.messageId,
       isFirstCenteredScreen: this.props.isFirstCenteredScreen,
       isLastCenteredScreen: this.props.isLastCenteredScreen,
+      startsWithCorner: this.props.startsWithCorner,
       autoAdvance: this.props.autoAdvance
     });
   }
@@ -591,6 +596,7 @@ const MultiStageProtonScreen = props => {
     handleAction: props.handleAction,
     isFirstCenteredScreen: props.isFirstCenteredScreen,
     isLastCenteredScreen: props.isLastCenteredScreen,
+    startsWithCorner: props.startsWithCorner,
     autoAdvance: props.autoAdvance,
     isRtamo: props.isRtamo,
     addonName: props.addonName,
@@ -686,7 +692,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     } = this.props;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoAdvance || isCornerPosition || total === 0;
+    const hideStepsIndicator = autoAdvance || isCornerPosition || isFirstCenteredScreen && isLastCenteredScreen;
     const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
 
@@ -768,7 +774,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         total
       })
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.StepsIndicator, {
-      order: this.props.order - 1,
+      order: this.props.startsWithCorner ? this.props.order - 1 : this.props.order,
       totalNumberOfScreens: total
     })))));
   }
