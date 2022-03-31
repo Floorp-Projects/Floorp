@@ -25,8 +25,6 @@
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 
-#include <cstdint>
-
 namespace mozilla::dom {
 
 // BodyStreamHolder
@@ -317,8 +315,8 @@ void BodyStream::requestData(JSContext* aCx, JS::HandleObject aStream,
 void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
                                             ReadableStream* aStream,
                                             JS::Handle<JSObject*> aChunk,
-                                            uint32_t aLength,
-                                            uint32_t* aByteWritten) {
+                                            size_t aLength,
+                                            size_t* aByteWritten) {
 #else
 // This is passed the buffer directly: It is the responsibility of the
 // caller to ensure the buffer handling is GC Safe.
@@ -554,35 +552,21 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
                                                 ReadableStream* aStream,
                                                 uint64_t aAvailableData,
                                                 ErrorResult& aRv) {
-  // To avoid OOMing up on huge amounts of available data on a 32 bit system,
-  // as well as potentially overflowing the stack, let's limit our maximum chunk
-  // size to 256MB
-  uint32_t ableToRead =
-      std::min(static_cast<uint64_t>(256 * 1024 * 1024), aAvailableData);
-
   // Create Chunk
   aRv.MightThrowJSException();
-  JS::RootedObject chunk(aCx, JS_NewUint8Array(aCx, ableToRead));
+  JS::RootedObject chunk(aCx, JS_NewUint8Array(aCx, aAvailableData));
   if (!chunk) {
     aRv.StealExceptionFromJSContext(aCx);
     return;
   }
 
+  size_t bytesWritten = 0;
+  size_t unusedData = 0;
   {
-    uint32_t bytesWritten = 0;
+    WriteIntoReadRequestBuffer(aCx, aStream, chunk, aAvailableData,
+                               &bytesWritten);
 
-    WriteIntoReadRequestBuffer(aCx, aStream, chunk, ableToRead, &bytesWritten);
-
-    // If bytesWritten is zero, then the stream has been closed; return
-    // rather than enqueueing a chunk filled with zeros.
-    if (bytesWritten == 0) {
-      return;
-    }
-
-    // If we don't read every byte we've allocated in the Uint8Array
-    // we risk enqueing a chunk that is padded with trailing zeros,
-    // corrupting future processing of the chunks:
-    MOZ_DIAGNOSTIC_ASSERT((ableToRead - bytesWritten) == 0);
+    unusedData = aAvailableData - bytesWritten;
   }
 
   MOZ_ASSERT(aStream->Controller()->IsByte());
@@ -593,6 +577,9 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
   if (aRv.Failed()) {
     return;
   }
+
+  // Explicit cast to avoid narrowing warning.
+  byteStreamController->SetQueueTotalSize((double)unusedData);
 }
 #endif
 
