@@ -5,7 +5,6 @@
 #![cfg(feature = "with_gecko")]
 
 use nsstring::nsACString;
-use std::time::Duration;
 use thin_vec::ThinVec;
 
 #[no_mangle]
@@ -20,16 +19,6 @@ pub extern "C" fn fog_timing_distribution_stop_and_accumulate(id: u32, timing_id
         id,
         metric,
         metric.stop_and_accumulate(timing_id)
-    );
-}
-
-#[no_mangle]
-pub extern "C" fn fog_timing_distribution_accumulate_raw_nanos(id: u32, sample: u64) {
-    with_metric!(
-        TIMING_DISTRIBUTION_MAP,
-        id,
-        metric,
-        metric.accumulate_raw_duration(Duration::from_nanos(sample))
     );
 }
 
