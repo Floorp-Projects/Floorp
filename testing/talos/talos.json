@@ -24,7 +24,23 @@
         },
         "damp": {
             "tests": ["damp"],
-            "pagesets_name": "tp5n.zip"
+            "pagesets_name": "tp5n.zip",
+            "extra_prefs": ["talos.damp.suite=all"]
+        },
+        "damp-inspector": {
+            "tests": ["damp"],
+            "pagesets_name": "tp5n.zip",
+            "extra_prefs": ["talos.damp.suite=inspector"]
+        },
+        "damp-webconsole": {
+            "tests": ["damp"],
+            "pagesets_name": "tp5n.zip",
+            "extra_prefs": ["talos.damp.suite=webconsole"]
+        },
+        "damp-other": {
+            "tests": ["damp"],
+            "pagesets_name": "tp5n.zip",
+            "extra_prefs": ["talos.damp.suite=other"]
         },
         "tabswitch": {
             "tests": ["tabswitch"],
