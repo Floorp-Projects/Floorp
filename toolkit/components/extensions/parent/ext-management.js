@@ -93,7 +93,6 @@ const getExtensionInfoForAddon = (extension, addon) => {
   return extInfo;
 };
 
-const listenerMap = new WeakMap();
 // Some management APIs are intentionally limited.
 const allowedTypes = ["theme", "extension"];
 
@@ -107,14 +106,36 @@ function checkAllowedAddon(addon) {
   return allowedTypes.includes(addon.type);
 }
 
-class AddonListener extends ExtensionCommon.EventEmitter {
-  constructor() {
-    super();
-    AddonManager.addAddonListener(this);
+class ManagementAddonListener extends ExtensionCommon.EventEmitter {
+  eventNames = ["onEnabled", "onDisabled", "onInstalled", "onUninstalled"];
+
+  hasAnyListeners() {
+    for (let event of this.eventNames) {
+      if (this.has(event)) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  release() {
-    AddonManager.removeAddonListener(this);
+  on(event, listener) {
+    if (!this.eventNames.includes(event)) {
+      throw new Error("unsupported event");
+    }
+    if (!this.hasAnyListeners()) {
+      AddonManager.addAddonListener(this);
+    }
+    super.on(event, listener);
+  }
+
+  off(event, listener) {
+    if (!this.eventNames.includes(event)) {
+      throw new Error("unsupported event");
+    }
+    super.off(event, listener);
+    if (!this.hasAnyListeners()) {
+      AddonManager.removeAddonListener(this);
+    }
   }
 
   getExtensionInfo(addon) {
@@ -151,30 +172,41 @@ class AddonListener extends ExtensionCommon.EventEmitter {
   }
 }
 
-let addonListener;
+this.management = class extends ExtensionAPIPersistent {
+  addonListener = new ManagementAddonListener();
 
-const getManagementListener = (extension, context) => {
-  if (!listenerMap.has(extension)) {
-    if (!addonListener) {
-      addonListener = new AddonListener();
-    }
-    listenerMap.set(extension, {});
-    context.callOnClose({
-      close: () => {
-        listenerMap.delete(extension);
-        if (listenerMap.length === 0) {
-          addonListener.release();
-          addonListener = null;
-        }
-      },
-    });
+  onShutdown() {
+    AddonManager.removeAddonListener(this.addonListener);
   }
-  return addonListener;
-};
 
-this.management = class extends ExtensionAPI {
+  eventRegistrar(eventName) {
+    return ({ fire }) => {
+      let listener = (event, data) => {
+        fire.async(data);
+      };
+
+      this.addonListener.on(eventName, listener);
+      return {
+        unregister: () => {
+          this.addonListener.off(eventName, listener);
+        },
+        convert(_fire, context) {
+          fire = _fire;
+        },
+      };
+    };
+  }
+
+  PERSISTENT_EVENTS = {
+    onDisabled: this.eventRegistrar("onDisabled"),
+    onEnabled: this.eventRegistrar("onEnabled"),
+    onInstalled: this.eventRegistrar("onInstalled"),
+    onUninstalled: this.eventRegistrar("onUninstalled"),
+  };
+
   getAPI(context) {
     let { extension } = context;
+
     return {
       management: {
         async get(id) {
@@ -293,83 +325,30 @@ this.management = class extends ExtensionAPI {
 
         onDisabled: new EventManager({
           context,
-          name: "management.onDisabled",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.async(data);
-            };
-
-            getManagementListener(extension, context).on(
-              "onDisabled",
-              listener
-            );
-            return () => {
-              getManagementListener(extension, context).off(
-                "onDisabled",
-                listener
-              );
-            };
-          },
+          module: "management",
+          event: "onDisabled",
+          extensionApi: this,
         }).api(),
 
         onEnabled: new EventManager({
           context,
-          name: "management.onEnabled",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.async(data);
-            };
-
-            getManagementListener(extension, context).on("onEnabled", listener);
-            return () => {
-              getManagementListener(extension, context).off(
-                "onEnabled",
-                listener
-              );
-            };
-          },
+          module: "management",
+          event: "onEnabled",
+          extensionApi: this,
         }).api(),
 
         onInstalled: new EventManager({
           context,
-          name: "management.onInstalled",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.async(data);
-            };
-
-            getManagementListener(extension, context).on(
-              "onInstalled",
-              listener
-            );
-            return () => {
-              getManagementListener(extension, context).off(
-                "onInstalled",
-                listener
-              );
-            };
-          },
+          module: "management",
+          event: "onInstalled",
+          extensionApi: this,
         }).api(),
 
         onUninstalled: new EventManager({
           context,
-          name: "management.onUninstalled",
-          register: fire => {
-            let listener = (event, data) => {
-              fire.async(data);
-            };
-
-            getManagementListener(extension, context).on(
-              "onUninstalled",
-              listener
-            );
-            return () => {
-              getManagementListener(extension, context).off(
-                "onUninstalled",
-                listener
-              );
-            };
-          },
+          module: "management",
+          event: "onUninstalled",
+          extensionApi: this,
         }).api(),
       },
     };
