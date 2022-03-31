@@ -761,7 +761,7 @@ def test_xhtml_with_entity(ext):
 
 
 def test_no_parse():
-    s = create("foo/bar.xml", u"\uFFFF".encode("utf-8"))
+    s = create("foo/bar.xml", "\uFFFF".encode("utf-8"))
 
     assert not s.name_is_non_test
     assert not s.name_is_manual
@@ -817,14 +817,14 @@ test()"""
 
     assert item_type == "testharness"
 
-    assert [item.url for item in items] == [u'/_fake_base/html/test.any.html',
-                                            u'/_fake_base/html/test.any.html?wss',
-                                            u'/_fake_base/html/test.any.serviceworker.html',
-                                            u'/_fake_base/html/test.any.serviceworker.html?wss',
-                                            u'/_fake_base/html/test.any.sharedworker.html',
-                                            u'/_fake_base/html/test.any.sharedworker.html?wss',
-                                            u'/_fake_base/html/test.any.worker.html',
-                                            u'/_fake_base/html/test.any.worker.html?wss']
+    assert [item.url for item in items] == ['/_fake_base/html/test.any.html',
+                                            '/_fake_base/html/test.any.html?wss',
+                                            '/_fake_base/html/test.any.serviceworker.html',
+                                            '/_fake_base/html/test.any.serviceworker.html?wss',
+                                            '/_fake_base/html/test.any.sharedworker.html',
+                                            '/_fake_base/html/test.any.sharedworker.html?wss',
+                                            '/_fake_base/html/test.any.worker.html',
+                                            '/_fake_base/html/test.any.worker.html?wss']
 
     assert items[0].url_base == "/_fake_base/"
 

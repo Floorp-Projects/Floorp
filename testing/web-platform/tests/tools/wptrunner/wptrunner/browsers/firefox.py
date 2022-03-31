@@ -358,7 +358,7 @@ class PreloadInstanceManager(FirefoxInstanceManager):
     def __init__(self, *args, **kwargs):
         """FirefoxInstanceManager that keeps once Firefox instance preloaded
         to allow rapid resumption after an instance shuts down."""
-        super(PreloadInstanceManager, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.pending = None
 
     def get(self):
@@ -591,7 +591,7 @@ class ProfileCreator:
 
         profiles = os.path.join(self.prefs_root, 'profiles.json')
         if os.path.isfile(profiles):
-            with open(profiles, 'r') as fh:
+            with open(profiles) as fh:
                 for name in json.load(fh)['web-platform-tests']:
                     if self.browser_channel in (None, 'nightly'):
                         pref_paths.append(os.path.join(self.prefs_root, name, 'user.js'))
@@ -812,7 +812,7 @@ class FirefoxBrowser(Browser):
                                              stackwalk_binary=self.stackwalk_binary,
                                              process=process,
                                              test=test))
-        except IOError:
+        except OSError:
             self.logger.warning("Looking for crash dump files failed")
             return False
 

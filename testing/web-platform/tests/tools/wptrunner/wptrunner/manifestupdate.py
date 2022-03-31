@@ -59,7 +59,7 @@ def data_cls_getter(output_node, visited_node):
         raise ValueError
 
 
-class UpdateProperties(object):
+class UpdateProperties:
     def __init__(self, manifest, **kwargs):
         self._manifest = manifest
         self._classes = kwargs
@@ -329,7 +329,7 @@ def build_unconditional_tree(_, run_info_properties, results):
     return root
 
 
-class PropertyUpdate(object):
+class PropertyUpdate:
     property_name = None  # type: ClassVar[str]
     cls_default_value = None  # type: ClassVar[Any]
     value_type = None  # type: ClassVar[type]
@@ -527,8 +527,8 @@ class PropertyUpdate(object):
             for item in dependent_props.values():
                 update_properties |= set(item)
             for condition in current_conditions:
-                if ((not condition.variables.issubset(update_properties) and
-                     not run_info_by_condition[condition])):
+                if (not condition.variables.issubset(update_properties) and
+                    not run_info_by_condition[condition]):
                     conditions.append((condition.condition_node,
                                        self.from_ini_value(condition.value)))
 
@@ -950,7 +950,7 @@ def get_manifest(metadata_root, test_path, url_base, run_info_properties, update
         with open(manifest_path, "rb") as f:
             rv = compile(f, test_path, url_base,
                          run_info_properties, update_intermittent, remove_intermittent)
-    except IOError:
+    except OSError:
         return None
     return rv
 
