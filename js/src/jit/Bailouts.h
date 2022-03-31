@@ -17,6 +17,7 @@
 #include "jit/IonTypes.h"  // js::jit::Bailout{Id,Kind}, js::jit::SnapshotOffset
 #include "jit/Registers.h"  // js::jit::MachineState
 #include "js/TypeDecls.h"   // jsbytecode
+#include "vm/JSContext.h"   // JSContext
 
 namespace js {
 
@@ -194,6 +195,7 @@ class ExceptionBailoutInfo {
   size_t numExprSlots_;
   bool isFinally_ = false;
   RootedValue finallyException_;
+  bool forcedReturn_;
 
  public:
   ExceptionBailoutInfo(JSContext* cx, size_t frameNo, jsbytecode* resumePC,
@@ -201,13 +203,15 @@ class ExceptionBailoutInfo {
       : frameNo_(frameNo),
         resumePC_(resumePC),
         numExprSlots_(numExprSlots),
-        finallyException_(cx) {}
+        finallyException_(cx),
+        forcedReturn_(cx->isPropagatingForcedReturn()) {}
 
   explicit ExceptionBailoutInfo(JSContext* cx)
       : frameNo_(0),
         resumePC_(nullptr),
         numExprSlots_(0),
-        finallyException_(cx) {}
+        finallyException_(cx),
+        forcedReturn_(cx->isPropagatingForcedReturn()) {}
 
   bool catchingException() const { return !!resumePC_; }
   bool propagatingIonExceptionForDebugMode() const { return !resumePC_; }
@@ -235,6 +239,8 @@ class ExceptionBailoutInfo {
     MOZ_ASSERT(isFinally());
     return finallyException_;
   }
+
+  bool forcedReturn() const { return forcedReturn_; }
 };
 
 // Called from the exception handler to enter a catch or finally block.
