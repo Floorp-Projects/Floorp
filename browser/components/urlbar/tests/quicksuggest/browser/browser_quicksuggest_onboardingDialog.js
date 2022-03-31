@@ -907,8 +907,12 @@ add_task(async function variation_A() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-1",
       "main-title": "firefox-suggest-onboarding-main-title-1",
       "main-description": "firefox-suggest-onboarding-main-description-1",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -924,8 +928,12 @@ add_task(async function variation_B() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
       "main-title": "firefox-suggest-onboarding-main-title-2",
       "main-description": "firefox-suggest-onboarding-main-description-2",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -944,8 +952,12 @@ add_task(async function variation_C() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-3",
       "main-title": "firefox-suggest-onboarding-main-title-3",
       "main-description": "firefox-suggest-onboarding-main-description-3",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -961,8 +973,12 @@ add_task(async function variation_D() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
       "main-title": "firefox-suggest-onboarding-main-title-4",
       "main-description": "firefox-suggest-onboarding-main-description-4",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -981,8 +997,12 @@ add_task(async function variation_E() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
       "main-title": "firefox-suggest-onboarding-main-title-5",
       "main-description": "firefox-suggest-onboarding-main-description-5",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -998,8 +1018,12 @@ add_task(async function variation_F() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
       "main-title": "firefox-suggest-onboarding-main-title-6",
       "main-description": "firefox-suggest-onboarding-main-description-6",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -1018,8 +1042,12 @@ add_task(async function variation_G() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-7",
       "main-title": "firefox-suggest-onboarding-main-title-7",
       "main-description": "firefox-suggest-onboarding-main-description-7",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -1038,10 +1066,187 @@ add_task(async function variation_H() {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
       "main-title": "firefox-suggest-onboarding-main-title-8",
       "main-description": "firefox-suggest-onboarding-main-description-8",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
+    },
+  });
+});
+
+// Test the variation 100-a.
+add_task(async function variation_100_A_introduction() {
+  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "online",
+      quickSuggestOnboardingDialogVariation: "100-A",
+    },
+    callback: async () => {
+      info("Calling showOnboardingDialog");
+      const { win, maybeShowPromise } = await showOnboardingDialog();
+
+      info("Check whether the introduction page is shown");
+      const introductionSection = win.document.getElementById(
+        "introduction-section"
+      );
+      const mainSection = win.document.getElementById("main-section");
+      Assert.ok(BrowserTestUtils.is_visible(introductionSection));
+      Assert.ok(BrowserTestUtils.is_hidden(mainSection));
+
+      info("Check whether the description on the introduction page is shown");
+      const descriptionSection = introductionSection.querySelector(
+        ".description-section"
+      );
+      Assert.ok(BrowserTestUtils.is_visible(descriptionSection));
+
+      info("Check the l10n messages");
+      assertL10N(
+        {
+          onboardingNext:
+            "firefox-suggest-onboarding-introduction-next-button-3",
+          "introduction-title": "firefox-suggest-onboarding-main-title-9",
+        },
+        win
+      );
+
+      info("Check the logo");
+      const introductionLogoImage = win.getComputedStyle(
+        win.document.querySelector("#introduction-section .logo")
+      ).backgroundImage;
+      Assert.equal(
+        introductionLogoImage,
+        'url("chrome://branding/content/about-logo.svg")'
+      );
+
+      info("Check the first focus");
+      Assert.equal(win.document.activeElement.id, "onboardingNext");
+
+      if (gCanTabMoveFocus) {
+        info("Check the focus order");
+        assertFocusOrder(
+          [
+            "onboardingLearnMoreOnIntroduction",
+            "onboardingClose",
+            "onboardingNext",
+          ],
+          win
+        );
+      }
+
+      info("Check the learn more link");
+      const learnMoreLink = win.document.getElementById(
+        "onboardingLearnMoreOnIntroduction"
+      );
+      Assert.ok(BrowserTestUtils.is_visible(learnMoreLink));
+
+      info("Click on learn more link");
+      const loadPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        QuickSuggestTestUtils.LEARN_MORE_URL
+      ).then(tab => {
+        info("Saw new tab");
+        return tab;
+      });
+      learnMoreLink.click();
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+
+      info("Waiting for new tab");
+      let tab = await loadPromise;
+      Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
+      Assert.equal(
+        gBrowser.currentURI.spec,
+        QuickSuggestTestUtils.LEARN_MORE_URL,
+        "Current tab is the support page"
+      );
+      BrowserTestUtils.removeTab(tab);
+
+      info("Check the user's choice");
+      Assert.equal(
+        UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
+        "learn_more_2"
+      );
+    },
+  });
+});
+
+add_task(async function variation_100_A_main() {
+  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "online",
+      quickSuggestOnboardingDialogVariation: "100-A",
+    },
+    callback: async () => {
+      info("Calling showOnboardingDialog");
+      const { win, maybeShowPromise } = await showOnboardingDialog({
+        skipIntroduction: true,
+      });
+
+      info("Check the l10n messages");
+      assertL10N(
+        {
+          "main-title": "firefox-suggest-onboarding-main-title-9",
+          "main-description": "firefox-suggest-onboarding-main-description-9",
+          "main-accept-option-label":
+            "firefox-suggest-onboarding-main-accept-option-label-2",
+          "main-accept-option-description":
+            "firefox-suggest-onboarding-main-accept-option-description-3",
+          "main-reject-option-label":
+            "firefox-suggest-onboarding-main-reject-option-label-2",
+          "main-reject-option-description":
+            "firefox-suggest-onboarding-main-reject-option-description-3",
+        },
+        win
+      );
+
+      info("Check the logo");
+      const mainLogoImage = win.getComputedStyle(
+        win.document.querySelector("#main-section .logo")
+      ).backgroundImage;
+      Assert.equal(
+        mainLogoImage,
+        'url("chrome://branding/content/about-logo.svg")'
+      );
+
+      info("Check the learn more link");
+      Assert.ok(
+        win.document.querySelector("#main-description #onboardingLearnMore")
+      );
+      Assert.ok(
+        !win.document.querySelector(
+          "#main-accept-option-label #onboardingLearnMore"
+        )
+      );
+
+      if (gCanTabMoveFocus) {
+        info("Check the focus order");
+        assertFocusOrder(
+          [
+            "onboardingLearnMore",
+            "onboardingAccept",
+            "onboardingReject",
+            "onboardingSkipLink",
+            "onboardingLearnMore",
+          ],
+          win
+        );
+      }
+
+      EventUtils.synthesizeKey("KEY_Escape");
+      await maybeShowPromise;
     },
   });
 });
@@ -1109,10 +1314,10 @@ add_task(async function variation_100_B() {
         )
       );
 
-      info("Check the first focus");
-      Assert.equal(win.document.activeElement.id, "onboardingLearnMore");
-
       if (gCanTabMoveFocus) {
+        info("Check the first focus");
+        Assert.equal(win.document.activeElement.id, "onboardingLearnMore");
+
         info("Check the focus order");
         assertFocusOrder(
           [
