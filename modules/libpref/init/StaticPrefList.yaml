@@ -9989,7 +9989,7 @@
 # 'origin-when-cross-origin'.
 - name: network.http.referer.disallowCrossSiteRelaxingDefault
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether we ignore less restricted referrer policies for top navigations.
