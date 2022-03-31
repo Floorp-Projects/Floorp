@@ -18,11 +18,12 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import java.lang.ref.WeakReference
 import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.databinding.BrowserToolbarPopupWindowBinding
 
 object ToolbarPopupWindow {
@@ -77,7 +78,7 @@ object ToolbarPopupWindow {
                         .setText(context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
                         .show()
                 }
-                context.components.analytics.metrics.track(Event.CopyUrlUsed)
+                Events.copyUrlTapped.record(NoExtras())
             }
         }
 

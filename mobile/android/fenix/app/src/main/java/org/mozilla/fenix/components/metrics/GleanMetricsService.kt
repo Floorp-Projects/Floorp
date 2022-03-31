@@ -367,9 +367,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ProgressiveWebAppInstallAsShortcut -> EventWrapper<NoExtraKeys>(
             { ProgressiveWebApp.installTap.record(it) }
         )
-        is Event.CopyUrlUsed -> EventWrapper<NoExtraKeys>(
-            { Events.copyUrlTapped.record(it) }
-        )
 
         is Event.SyncedTabOpened -> EventWrapper<NoExtraKeys>(
             { Events.syncedTabOpened.record(it) }
