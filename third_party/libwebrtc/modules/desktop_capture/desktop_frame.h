@@ -29,7 +29,7 @@ const float kStandardDPI = 96.0f;
 // DesktopFrame represents a video frame captured from the screen.
 class RTC_EXPORT DesktopFrame {
  public:
-  // DesktopFrame objects always hold RGBA data.
+  // DesktopFrame objects always hold BGRA data.
   static const int kBytesPerPixel = 4;
 
   virtual ~DesktopFrame();
