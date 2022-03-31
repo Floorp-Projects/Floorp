@@ -295,6 +295,10 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     ReportResult("dropped_packets_size", peer_name,
                  stats.stats->DroppedPacketsSizeCounter(), "sizeInBytes");
   }
+  if (!stats.stats->SentPacketsQueueWaitTimeUs().IsEmpty()) {
+    ReportResult("sent_packets_queue_wait_time_us", peer_name,
+                 stats.stats->SentPacketsQueueWaitTimeUs(), "unitless");
+  }
 
   log << "Send statistic:\n"
       << "  packets: " << stats.stats->PacketsSent()
