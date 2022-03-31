@@ -908,22 +908,26 @@ class Tab extends TabBase {
 
     let entries = tabData.state ? tabData.state.entries : tabData.entries;
     let lastTabIndex = tabData.state ? tabData.state.index : tabData.index;
-    // We need to take lastTabIndex - 1 because the index in the tab data is
-    // 1-based rather than 0-based.
-    let entry = entries[lastTabIndex - 1];
 
-    // tabData is a representation of a tab, as stored in the session data,
-    // and given that is not a real nativeTab, we only need to check if the extension
-    // has the "tabs" or host permission (because tabData represents a closed tab,
-    // and so we already know that it can't be the activeTab).
-    if (
-      extension.hasPermission("tabs") ||
-      extension.allowedOrigins.matches(entry.url)
-    ) {
-      result.url = entry.url;
-      result.title = entry.title;
-      if (tabData.image) {
-        result.favIconUrl = tabData.image;
+    // Tab may have empty history.
+    if (entries.length) {
+      // We need to take lastTabIndex - 1 because the index in the tab data is
+      // 1-based rather than 0-based.
+      let entry = entries[lastTabIndex - 1];
+
+      // tabData is a representation of a tab, as stored in the session data,
+      // and given that is not a real nativeTab, we only need to check if the extension
+      // has the "tabs" or host permission (because tabData represents a closed tab,
+      // and so we already know that it can't be the activeTab).
+      if (
+        extension.hasPermission("tabs") ||
+        extension.allowedOrigins.matches(entry.url)
+      ) {
+        result.url = entry.url;
+        result.title = entry.title;
+        if (tabData.image) {
+          result.favIconUrl = tabData.image;
+        }
       }
     }
 
