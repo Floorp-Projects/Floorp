@@ -15,7 +15,7 @@ def resolve_content(response):
     return b"".join(item for item in response.iter_content(read_file=True))
 
 
-class Pipeline(object):
+class Pipeline:
     pipes = {}
 
     def __init__(self, pipe_string):
@@ -38,7 +38,7 @@ class Pipeline(object):
         return response
 
 
-class PipeTokenizer(object):
+class PipeTokenizer:
     def __init__(self):
         #This whole class can likely be replaced by some regexps
         self.state = None
@@ -105,7 +105,7 @@ class PipeTokenizer(object):
         return escapes.get(char, char)
 
 
-class pipe(object):
+class pipe:
     def __init__(self, *arg_converters):
         self.arg_converters = arg_converters
         self.max_args = len(self.arg_converters)
@@ -133,7 +133,7 @@ class pipe(object):
         return f
 
 
-class opt(object):
+class opt:
     def __init__(self, f):
         self.f = f
 
@@ -253,8 +253,7 @@ def trickle(request, response, delays):
                 if i != len(delays) - 1:
                     continue
                 while offset[0] < len(content):
-                    for item in add_content(delays[-(value + 1):-1], True):
-                        yield item
+                    yield from add_content(delays[-(value + 1):-1], True)
 
         if not repeat and offset[0] < len(content):
             yield content[offset[0]:]
@@ -280,7 +279,7 @@ def slice(request, response, start, end=None):
     return response
 
 
-class ReplacementTokenizer(object):
+class ReplacementTokenizer:
     def arguments(self, token):
         unwrapped = token[1:-1].decode('utf8')
         return ("arguments", re.split(r",\s*", unwrapped) if unwrapped else [])
@@ -310,7 +309,7 @@ class ReplacementTokenizer(object):
                           (br"\([^)]*\)", arguments)])
 
 
-class FirstWrapper(object):
+class FirstWrapper:
     def __init__(self, params):
         self.params = params
 
@@ -390,7 +389,7 @@ def sub(request, response, escape_type="html"):
     response.content = new_content
     return response
 
-class SubFunctions(object):
+class SubFunctions:
     @staticmethod
     def uuid(request):
         return str(uuid.uuid4())
@@ -414,7 +413,7 @@ class SubFunctions(object):
         try:
             with open(absolute_path, "rb") as f:
                 hash_obj.update(f.read())
-        except IOError:
+        except OSError:
             # In this context, an unhandled IOError will be interpreted by the
             # server as an indication that the template file is non-existent.
             # Although the generic "Exception" is less precise, it avoids

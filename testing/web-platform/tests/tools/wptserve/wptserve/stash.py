@@ -54,7 +54,7 @@ StashManager.register("Queue",
                       proxytype=QueueProxy)
 
 
-class StashServer(object):
+class StashServer:
     def __init__(self, address=None, authkey=None, mp_context=None):
         self.address = address
         self.authkey = authkey
@@ -102,7 +102,7 @@ def start_server(address=None, authkey=None, mp_context=None):
     return (manager, address, manager._authkey)
 
 
-class LockWrapper(object):
+class LockWrapper:
     def __init__(self, lock):
         self.lock = lock
 
@@ -122,7 +122,7 @@ class LockWrapper(object):
 #TODO: Consider expiring values after some fixed time for long-running
 #servers
 
-class Stash(object):
+class Stash:
     """Key-value store for persisting data across HTTP/S and WS/S requests.
 
     This data store is specifically designed for persisting data across server

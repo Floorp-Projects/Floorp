@@ -117,7 +117,7 @@ class TestWrapperHandlerUsingServer(TestUsingServer):
             os.remove(filename)
 
     def setUp(self):
-        super(TestWrapperHandlerUsingServer, self).setUp()
+        super().setUp()
 
         for filename, content in self.dummy_files.items():
             filepath = os.path.join(doc_root, filename)
@@ -141,7 +141,7 @@ class TestWrapperHandlerUsingServer(TestUsingServer):
             self.assertEqual(fp.read(), resp.read())
 
     def tearDown(self):
-        super(TestWrapperHandlerUsingServer, self).tearDown()
+        super().tearDown()
 
         for filename, _ in self.dummy_files.items():
             filepath = os.path.join(doc_root, filename)

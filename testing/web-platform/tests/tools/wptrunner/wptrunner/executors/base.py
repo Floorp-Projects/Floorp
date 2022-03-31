@@ -59,7 +59,7 @@ def strip_server(url):
     return urlunsplit(url_parts)
 
 
-class TestharnessResultConverter(object):
+class TestharnessResultConverter:
     harness_codes = {0: "OK",
                      1: "ERROR",
                      2: "TIMEOUT",
@@ -167,7 +167,7 @@ class ExecutorException(Exception):
         self.message = message
 
 
-class TimedRunner(object):
+class TimedRunner:
     def __init__(self, logger, func, protocol, url, timeout, extra_timeout):
         self.func = func
         self.logger = logger
@@ -228,7 +228,7 @@ class TimedRunner(object):
         raise NotImplementedError
 
 
-class TestExecutor(object):
+class TestExecutor:
     """Abstract Base class for object that actually executes the tests in a
     specific browser. Typically there will be a different TestExecutor
     subclass for each test type and method of executing tests.
@@ -374,7 +374,7 @@ class PrintRefTestExecutor(TestExecutor):
     is_print = True
 
 
-class RefTestImplementation(object):
+class RefTestImplementation:
     def __init__(self, executor):
         self.timeout_multiplier = executor.timeout_multiplier
         self.executor = executor
@@ -646,7 +646,7 @@ class WdspecExecutor(TestExecutor):
                                 timeout=timeout)
 
 
-class WdspecRun(object):
+class WdspecRun:
     def __init__(self, func, path, timeout):
         self.func = func
         self.result = (None, None)
@@ -673,7 +673,7 @@ class WdspecRun(object):
     def _run(self):
         try:
             self.result = True, self.func(self.path, self.timeout)
-        except (socket.timeout, IOError):
+        except (socket.timeout, OSError):
             self.result = False, ("CRASH", None)
         except Exception as e:
             message = getattr(e, "message")
@@ -685,7 +685,7 @@ class WdspecRun(object):
             self.result_flag.set()
 
 
-class CallbackHandler(object):
+class CallbackHandler:
     """Handle callbacks from testdriver-using tests.
 
     The default implementation here makes sense for things that are roughly like
@@ -748,7 +748,7 @@ class CallbackHandler(object):
         self.protocol.testdriver.send_message(cmd_id, message_type, status, message=message)
 
 
-class ActionContext(object):
+class ActionContext:
     def __init__(self, logger, protocol, context):
         self.logger = logger
         self.protocol = protocol
