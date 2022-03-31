@@ -130,6 +130,10 @@ class SdpOfferAnswerHandler {
   bool HasNewIceCredentials();
   bool IceRestartPending(const std::string& content_name) const;
   void UpdateNegotiationNeeded();
+  void SetHavePendingRtpDataChannel() {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    have_pending_rtp_data_channel_ = true;
+  }
 
   // Returns the media section in the given session description that is
   // associated with the RtpTransceiver. Returns null if none found or this
@@ -361,6 +365,10 @@ class SdpOfferAnswerHandler {
   // opposed to streamless tracks with "a=msid:-").
   rtc::scoped_refptr<MediaStreamInterface> missing_msid_default_stream_
       RTC_GUARDED_BY(signaling_thread());
+
+  // Used when rolling back RTP data channels.
+  bool have_pending_rtp_data_channel_ RTC_GUARDED_BY(signaling_thread()) =
+      false;
 
   rtc::WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());

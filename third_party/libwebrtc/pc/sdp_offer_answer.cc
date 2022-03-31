@@ -2271,11 +2271,10 @@ RTCError SdpOfferAnswerHandler::UpdateSessionState(
                              ? PeerConnectionInterface::kHaveLocalPrAnswer
                              : PeerConnectionInterface::kHaveRemotePrAnswer);
   } else {
-    RTC_DCHECK_RUN_ON(pc_->signaling_thread());
     RTC_DCHECK(type == SdpType::kAnswer);
     ChangeSignalingState(PeerConnectionInterface::kStable);
     pc_->transceivers_.DiscardStableStates();
-    pc_->have_pending_rtp_data_channel_ = false;
+    have_pending_rtp_data_channel_ = false;
   }
 
   // Update internal objects according to the session description's media
@@ -2378,14 +2377,11 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     transceiver->internal()->set_mline_index(state.mline_index());
   }
   pc_->transport_controller_->RollbackTransports();
-  {
-    RTC_DCHECK_RUN_ON(pc_->signaling_thread());
-    if (pc_->have_pending_rtp_data_channel_) {
-      pc_->DestroyDataChannelTransport();
-      pc_->have_pending_rtp_data_channel_ = false;
-    }
-    pc_->transceivers_.DiscardStableStates();
+  if (have_pending_rtp_data_channel_) {
+    pc_->DestroyDataChannelTransport();
+    have_pending_rtp_data_channel_ = false;
   }
+  pc_->transceivers_.DiscardStableStates();
   pending_local_description_.reset();
   pending_remote_description_.reset();
   ChangeSignalingState(PeerConnectionInterface::kStable);
@@ -2416,7 +2412,6 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
 }
 
 bool SdpOfferAnswerHandler::IsUnifiedPlan() const {
-  RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   return pc_->IsUnifiedPlan();
 }
 
@@ -3030,8 +3025,8 @@ RTCError SdpOfferAnswerHandler::UpdateDataChannel(
     RTC_LOG(LS_INFO) << "Rejected data channel, mid=" << content.mid();
     pc_->DestroyDataChannelTransport();
   } else {
-    if (!pc_->data_channel_controller_.rtp_data_channel() &&
-        !pc_->data_channel_controller_.data_channel_transport()) {
+    if (!pc_->data_channel_controller()->rtp_data_channel() &&
+        !pc_->data_channel_controller()->data_channel_transport()) {
       RTC_LOG(LS_INFO) << "Creating data channel, mid=" << content.mid();
       if (!pc_->CreateDataChannel(content.name)) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
@@ -3041,7 +3036,7 @@ RTCError SdpOfferAnswerHandler::UpdateDataChannel(
     if (source == cricket::CS_REMOTE) {
       const MediaContentDescription* data_desc = content.media_description();
       if (data_desc && cricket::IsRtpProtocol(data_desc->protocol())) {
-        pc_->data_channel_controller_.UpdateRemoteRtpDataChannels(
+        pc_->data_channel_controller()->UpdateRemoteRtpDataChannels(
             GetActiveStreams(data_desc));
       }
     }
