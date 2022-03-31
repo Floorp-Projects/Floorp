@@ -164,7 +164,6 @@ rtc_source_set("macromagic") {
     "arraysize.h",
     "constructor_magic.h",
     "format_macros.h",
-    "stringize_macros.h",
     "thread_annotations.h",
   ]
   deps = [ "system:arch" ]
@@ -1264,7 +1263,6 @@ if (rtc_include_tests) {
       "string_encode_unittest.cc",
       "string_to_number_unittest.cc",
       "string_utils_unittest.cc",
-      "stringize_macros_unittest.cc",
       "strings/string_builder_unittest.cc",
       "strings/string_format_unittest.cc",
       "swap_queue_unittest.cc",
