@@ -60,14 +60,13 @@ class RuntimeService final : public nsIObserver {
     mozilla::TimeStamp mExpirationTime;
   };
 
-  mozilla::Mutex mMutex;
+  mozilla::Mutex mMutex MOZ_UNANNOTATED;
 
   // Protected by mMutex.
-  nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap
-      GUARDED_BY(mMutex);
+  nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap;
 
   // Protected by mMutex.
-  nsTArray<IdleThreadInfo> mIdleThreadArray GUARDED_BY(mMutex);
+  nsTArray<IdleThreadInfo> mIdleThreadArray;
 
   // *Not* protected by mMutex.
   nsClassHashtable<nsPtrHashKey<const nsPIDOMWindowInner>,
@@ -195,8 +194,7 @@ class RuntimeService final : public nsIObserver {
 
   void Cleanup();
 
-  void AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers)
-      REQUIRES(mMutex);
+  void AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
   nsTArray<WorkerPrivate*> GetWorkersForWindow(
       const nsPIDOMWindowInner& aWindow) const;
