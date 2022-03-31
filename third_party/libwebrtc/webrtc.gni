@@ -258,7 +258,11 @@ declare_args() {
 
   # Set this to true to enable the avx2 support in webrtc.
   # TODO: Make sure that AVX2 works also for non-clang compilers.
-  rtc_enable_avx2 = is_clang
+  if (is_clang == true) {
+    rtc_enable_avx2 = true
+  } else {
+    rtc_enable_avx2 = false
+  }
 
   # Include tests in standalone checkout.
   rtc_include_tests = !build_with_chromium && !build_with_mozilla
