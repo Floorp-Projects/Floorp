@@ -33,39 +33,8 @@ describe("Multistage AboutWelcome MobileDownloads module", () => {
         },
         email: {
           link_text: "Email yourself a link",
-          link: {
-            action: {
-              data: {
-                args: "https:/test.com",
-                where: "tabshifted",
-              },
-              type: "OPEN_URL",
-              navigate: true,
-            },
-          },
         },
-        marketplace_buttons: {
-          ios_link: {
-            action: {
-              data: {
-                args: "http://test.com",
-                where: "tabshifted",
-              },
-              type: "OPEN_URL",
-              navigate: true,
-            },
-          },
-          android_link: {
-            action: {
-              data: {
-                args: "http://test.com",
-                where: "tabshifted",
-              },
-              type: "OPEN_URL",
-              navigate: true,
-            },
-          },
-        },
+        marketplace_buttons: ["ios", "android"],
       },
       handleAction: () => {
         window.AWFinish();

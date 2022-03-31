@@ -274,14 +274,14 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     });
   }
 
-  async handleAction(event, target) {
+  async handleAction(event) {
     let {
       props
     } = this;
     let {
       value
     } = event.currentTarget;
-    let targetContent = target || props.content[value] || props.content.tiles || props.content.languageSwitcher;
+    let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
 
     if (!(targetContent && targetContent.action)) {
       return;
@@ -982,27 +982,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const MarketplaceButtons = props => {
-  const {
-    ios_link: iosLink,
-    android_link: androidLink
-  } = props.links;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
     className: "mobile-download-buttons"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-    className: "android"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    "data-l10n-id": "spotlight-android-marketplace-button",
-    onClick: e => {
-      props.handleAction(e, androidLink);
-    }
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
+  }, props.buttons.includes("ios") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
     className: "ios"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     "data-l10n-id": "spotlight-ios-marketplace-button",
-    onClick: e => {
-      props.handleAction(e, iosLink);
-    }
-  })));
+    value: "ios",
+    onClick: props.handleAction
+  })) : null, props.buttons.includes("android") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
+    className: "android"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    "data-l10n-id": "spotlight-android-marketplace-button",
+    value: "android",
+    onClick: props.handleAction
+  })) : null);
 };
 const MobileDownloads = props => {
   var _QRCode$image_overrid;
@@ -1022,11 +1016,10 @@ const MobileDownloads = props => {
     text: props.data.email.link_text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     className: "email-link",
-    onClick: e => {
-      props.handleAction(e, props.data.email.link);
-    }
+    value: "email_link",
+    onClick: props.handleAction
   }))) : null, props.data.marketplace_buttons ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(MarketplaceButtons, {
-    links: props.data.marketplace_buttons,
+    buttons: props.data.marketplace_buttons,
     handleAction: props.handleAction
   }) : null);
 };

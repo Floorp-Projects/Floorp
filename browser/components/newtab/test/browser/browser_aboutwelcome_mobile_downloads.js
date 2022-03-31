@@ -16,7 +16,7 @@ const BASE_CONTENT = {
             string_id: "spotlight-focus-promo-email-link",
           },
         },
-        marketplace_buttons: {},
+        marketplace_buttons: ["ios", "android"],
       },
     },
   },
