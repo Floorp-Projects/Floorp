@@ -30,13 +30,9 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakablePositions(dbg, "index.html", 53, [
-    { line: 16, columns: [6, 14] },
-    { line: 17, columns: [] },
-    { line: 21, columns: [6, 14] },
-    { line: 23, columns: [] },
-    { line: 28, columns: [] },
-    { line: 34, columns: [] },
+  await assertBreakablePositions(dbg, "index.html", 20, [
+    { line: 17, columns: [6, 14] },
+    { line: 18, columns: [] },
   ]);
 
   info("Assert breakable lines of the first original source file, original.js");
@@ -83,9 +79,9 @@ add_task(async function testBreakableLinesOverReloads() {
   ]);
 
   info("Assert breakable lines of the second html page load");
-  await assertBreakablePositions(dbg, "index.html", 28, [
-    { line: 22, columns: [6, 14] },
-    { line: 24, columns: [] },
+  await assertBreakablePositions(dbg, "index.html", 22, [
+    { line: 16, columns: [6, 14] },
+    { line: 18, columns: [] },
   ]);
 
   info("Assert breakable lines of the second orignal file");
@@ -110,8 +106,11 @@ async function assertBreakablePositions(
   breakablePositions
 ) {
   await selectSource(dbg, file);
+  const editorLines = dbg.win.document.querySelectorAll(
+    ".CodeMirror-lines .CodeMirror-code > div"
+  );
   is(
-    getCM(dbg).lineCount(),
+    editorLines.length,
     numberOfLines,
     `We show the expected number of lines in CodeMirror for ${file}`
   );
