@@ -36,6 +36,7 @@ export const MultiStageProtonScreen = props => {
       handleAction={props.handleAction}
       isFirstCenteredScreen={props.isFirstCenteredScreen}
       isLastCenteredScreen={props.isLastCenteredScreen}
+      startsWithCorner={props.startsWithCorner}
       autoAdvance={props.autoAdvance}
       isRtamo={props.isRtamo}
       addonName={props.addonName}
@@ -159,7 +160,10 @@ export class ProtonScreen extends React.PureComponent {
     } = this.props;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoAdvance || isCornerPosition || total === 0;
+    const hideStepsIndicator =
+      autoAdvance ||
+      isCornerPosition ||
+      (isFirstCenteredScreen && isLastCenteredScreen);
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";
@@ -279,8 +283,13 @@ export class ProtonScreen extends React.PureComponent {
                 {/* These empty elements are here to help trigger the nav for screen readers. */}
                 <br />
                 <p />
+                {/* If total doesn't include starting corner screen, reduce the screen order by 1 */}
                 <StepsIndicator
-                  order={this.props.order - 1}
+                  order={
+                    this.props.startsWithCorner
+                      ? this.props.order - 1
+                      : this.props.order
+                  }
                   totalNumberOfScreens={total}
                 />
               </nav>
