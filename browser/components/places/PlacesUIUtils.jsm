@@ -1072,19 +1072,19 @@ var PlacesUIUtils = {
    *        Where to open the URL.
    * @param {object} aView
    *        The associated view of the node being opened.
-   * @param {boolean} private
+   * @param {boolean} aPrivate
    *        True if the window being opened is private.
    */
-  openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView, private) {
+  openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView, aPrivate) {
     let window = aView.ownerWindow;
-    this._openNodeIn(aNode, aWhere, window, { private });
+    this._openNodeIn(aNode, aWhere, window, aPrivate);
   },
 
   _openNodeIn: function PUIU__openNodeIn(
     aNode,
     aWhere,
     aWindow,
-    { private = false, userContextId = 0 } = {}
+    aPrivate = false
   ) {
     if (
       aNode &&
@@ -1106,8 +1106,7 @@ var PlacesUIUtils = {
         allowPopups: isJavaScriptURL,
         inBackground: this.loadBookmarksInBackground,
         allowInheritPrincipal: isJavaScriptURL,
-        private,
-        userContextId,
+        private: aPrivate,
       });
     }
   },
@@ -1537,12 +1536,6 @@ var PlacesUIUtils = {
       document.getElementById("placesContext_open:newprivatewindow").hidden =
         PrivateBrowsingUtils.isWindowPrivate(window) ||
         !PrivateBrowsingUtils.enabled;
-      document.getElementById(
-        "placesContext_open:newcontainertab"
-      ).hidden = !Services.prefs.getBoolPref(
-        "privacy.userContext.enabled",
-        false
-      );
     }
 
     event.target.ownerGlobal.updateCommands("places");
@@ -1586,28 +1579,6 @@ var PlacesUIUtils = {
     if (menupopup.id == "placesContext") {
       PlacesUIUtils.lastContextMenuTriggerNode = null;
     }
-  },
-
-  createContainerTabMenu(event) {
-    let window = event.target.ownerGlobal;
-    return window.createUserContextMenu(event, { isContextMenu: true });
-  },
-
-  openInContainerTab(event) {
-    let userContextId = parseInt(
-      event.target.getAttribute("data-usercontextid")
-    );
-    let triggerNode = this.lastContextMenuTriggerNode;
-    let isManaged = !!triggerNode.closest("#managed-bookmarks");
-    if (isManaged) {
-      let window = triggerNode.ownerGlobal;
-      window.openTrustedLinkIn(triggerNode.link, "tab", { userContextId });
-      return;
-    }
-    let view = this.getViewForNode(triggerNode);
-    this._openNodeIn(view.selectedNode, "tab", view.ownerWindow, {
-      userContextId,
-    });
   },
 
   openSelectionInTabs(event) {
