@@ -903,5 +903,15 @@ void SimulcastTestFixtureImpl::TestDecodeWidthHeightSet() {
   EXPECT_EQ(0, decoder_->Decode(encoded_frame[2], false, 0));
 }
 
+void SimulcastTestFixtureImpl::
+    TestEncoderInfoForDefaultTemporalLayerProfileHasFpsAllocation() {
+  VideoEncoder::EncoderInfo encoder_info = encoder_->GetEncoderInfo();
+  EXPECT_EQ(encoder_info.fps_allocation[0].size(),
+            static_cast<size_t>(kDefaultTemporalLayerProfile[0]));
+  EXPECT_EQ(encoder_info.fps_allocation[1].size(),
+            static_cast<size_t>(kDefaultTemporalLayerProfile[1]));
+  EXPECT_EQ(encoder_info.fps_allocation[2].size(),
+            static_cast<size_t>(kDefaultTemporalLayerProfile[2]));
+}
 }  // namespace test
 }  // namespace webrtc
