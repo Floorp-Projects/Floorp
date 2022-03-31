@@ -13,6 +13,7 @@
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
@@ -23,14 +24,10 @@ using LevelEstimatorType =
 
 // Combines a level estimation with the saturation protector margins.
 float ComputeLevelEstimateDbfs(float level_estimate_dbfs,
-                               bool use_saturation_protector,
                                float saturation_margin_db,
                                float extra_saturation_margin_db) {
   return rtc::SafeClamp<float>(
-      level_estimate_dbfs +
-          (use_saturation_protector
-               ? (saturation_margin_db + extra_saturation_margin_db)
-               : 0.f),
+      level_estimate_dbfs + saturation_margin_db + extra_saturation_margin_db,
       -90.f, 30.f);
 }
 
@@ -68,7 +65,6 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
           apm_data_dumper,
           AudioProcessing::Config::GainController2::LevelEstimator::kRms,
           kDefaultAdjacentSpeechFramesThreshold,
-          kDefaultUseSaturationProtector,
           kDefaultInitialSaturationMarginDb,
           kDefaultExtraSaturationMarginDb) {}
 
@@ -80,25 +76,25 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     : AdaptiveModeLevelEstimator(apm_data_dumper,
                                  level_estimator,
                                  kDefaultAdjacentSpeechFramesThreshold,
-                                 use_saturation_protector,
                                  kDefaultInitialSaturationMarginDb,
-                                 extra_saturation_margin_db) {}
+                                 extra_saturation_margin_db) {
+  if (!use_saturation_protector) {
+    RTC_LOG(LS_WARNING) << "The saturation protector cannot be disabled.";
+  }
+}
 
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     ApmDataDumper* apm_data_dumper,
     AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
     int adjacent_speech_frames_threshold,
-    bool use_saturation_protector,
     float initial_saturation_margin_db,
     float extra_saturation_margin_db)
     : apm_data_dumper_(apm_data_dumper),
       level_estimator_type_(level_estimator),
       adjacent_speech_frames_threshold_(adjacent_speech_frames_threshold),
-      use_saturation_protector_(use_saturation_protector),
       initial_saturation_margin_db_(initial_saturation_margin_db),
       extra_saturation_margin_db_(extra_saturation_margin_db),
       level_dbfs_(ComputeLevelEstimateDbfs(kInitialSpeechLevelEstimateDbfs,
-                                           use_saturation_protector_,
                                            initial_saturation_margin_db_,
                                            extra_saturation_margin_db_)) {
   RTC_DCHECK(apm_data_dumper_);
@@ -157,16 +153,13 @@ void AdaptiveModeLevelEstimator::Update(
 
   const float level_dbfs = preliminary_state_.level_dbfs.GetRatio();
 
-  if (use_saturation_protector_) {
-    UpdateSaturationProtectorState(vad_level.peak_dbfs, level_dbfs,
-                                   preliminary_state_.saturation_protector);
-  }
+  UpdateSaturationProtectorState(vad_level.peak_dbfs, level_dbfs,
+                                 preliminary_state_.saturation_protector);
 
   if (num_adjacent_speech_frames_ >= adjacent_speech_frames_threshold_) {
     // `preliminary_state_` is now reliable. Update the last level estimation.
     level_dbfs_ = ComputeLevelEstimateDbfs(
-        level_dbfs, use_saturation_protector_,
-        preliminary_state_.saturation_protector.margin_db,
+        level_dbfs, preliminary_state_.saturation_protector.margin_db,
         extra_saturation_margin_db_);
   }
 }
@@ -190,9 +183,9 @@ bool AdaptiveModeLevelEstimator::IsConfident() const {
 void AdaptiveModeLevelEstimator::Reset() {
   ResetLevelEstimatorState(preliminary_state_);
   ResetLevelEstimatorState(reliable_state_);
-  level_dbfs_ = ComputeLevelEstimateDbfs(
-      kInitialSpeechLevelEstimateDbfs, use_saturation_protector_,
-      initial_saturation_margin_db_, extra_saturation_margin_db_);
+  level_dbfs_ = ComputeLevelEstimateDbfs(kInitialSpeechLevelEstimateDbfs,
+                                         initial_saturation_margin_db_,
+                                         extra_saturation_margin_db_);
   num_adjacent_speech_frames_ = 0;
 }
 

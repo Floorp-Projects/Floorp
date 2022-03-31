@@ -50,7 +50,6 @@ struct TestLevelEstimator {
             &data_dumper,
             AudioProcessing::Config::GainController2::LevelEstimator::kRms,
             /*min_consecutive_speech_frames=*/1,
-            /*use_saturation_protector=*/true,
             kInitialSaturationMarginDb,
             kExtraSaturationMarginDb)) {}
   ApmDataDumper data_dumper;
@@ -192,7 +191,6 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator,
 
 struct TestConfig {
   int min_consecutive_speech_frames;
-  bool use_saturation_protector;
   float initial_saturation_margin_db;
   float extra_saturation_margin_db;
 };
@@ -206,8 +204,8 @@ TEST_P(AdaptiveModeLevelEstimatorTest, DoNotAdaptToShortSpeechSegments) {
   AdaptiveModeLevelEstimator level_estimator(
       &apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator::kRms,
-      params.min_consecutive_speech_frames, params.use_saturation_protector,
-      params.initial_saturation_margin_db, params.extra_saturation_margin_db);
+      params.min_consecutive_speech_frames, params.initial_saturation_margin_db,
+      params.extra_saturation_margin_db);
   const float initial_level = level_estimator.level_dbfs();
   ASSERT_LT(initial_level, kVadDataSpeech.rms_dbfs);
   for (int i = 0; i < params.min_consecutive_speech_frames - 1; ++i) {
@@ -225,8 +223,8 @@ TEST_P(AdaptiveModeLevelEstimatorTest, AdaptToEnoughSpeechSegments) {
   AdaptiveModeLevelEstimator level_estimator(
       &apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator::kRms,
-      params.min_consecutive_speech_frames, params.use_saturation_protector,
-      params.initial_saturation_margin_db, params.extra_saturation_margin_db);
+      params.min_consecutive_speech_frames, params.initial_saturation_margin_db,
+      params.extra_saturation_margin_db);
   const float initial_level = level_estimator.level_dbfs();
   ASSERT_LT(initial_level, kVadDataSpeech.rms_dbfs);
   for (int i = 0; i < params.min_consecutive_speech_frames; ++i) {
@@ -237,10 +235,8 @@ TEST_P(AdaptiveModeLevelEstimatorTest, AdaptToEnoughSpeechSegments) {
 
 INSTANTIATE_TEST_SUITE_P(AutomaticGainController2,
                          AdaptiveModeLevelEstimatorTest,
-                         ::testing::Values(TestConfig{1, false, 0.f, 0.f},
-                                           TestConfig{1, true, 0.f, 0.f},
-                                           TestConfig{9, false, 0.f, 0.f},
-                                           TestConfig{9, true, 0.f, 0.f}));
+                         ::testing::Values(TestConfig{1, 0.f, 0.f},
+                                           TestConfig{9, 0.f, 0.f}));
 
 }  // namespace
 }  // namespace webrtc

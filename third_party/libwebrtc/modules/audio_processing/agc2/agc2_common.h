@@ -54,7 +54,6 @@ constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
 constexpr int kDefaultAdjacentSpeechFramesThreshold = 1;
 
 // Saturation Protector settings.
-constexpr bool kDefaultUseSaturationProtector = true;
 constexpr float kDefaultInitialSaturationMarginDb = 20.f;
 constexpr float kDefaultExtraSaturationMarginDb = 2.f;
 
