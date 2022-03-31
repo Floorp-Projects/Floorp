@@ -540,16 +540,16 @@ def test_testdriver_vendor_path():
         check_errors(errors)
 
         if kind == "python":
-            expected = set([("PARSE-FAILED", "Unable to parse file", filename, 1)])
+            expected = {("PARSE-FAILED", "Unable to parse file", filename, 1)}
         elif kind in ["web-lax", "web-strict"]:
-            expected = set([
+            expected = {
                 ("MISSING-TESTDRIVER-VENDOR", "Missing `<script src='/resources/testdriver-vendor.js'>`", filename, None),
                 ("TESTDRIVER-VENDOR-PATH", "testdriver-vendor.js script seen with incorrect path", filename, None),
                 ("TESTDRIVER-VENDOR-PATH", "testdriver-vendor.js script seen with incorrect path", filename, None),
                 ("TESTDRIVER-VENDOR-PATH", "testdriver-vendor.js script seen with incorrect path", filename, None),
                 ("TESTDRIVER-VENDOR-PATH", "testdriver-vendor.js script seen with incorrect path", filename, None),
                 ("TESTDRIVER-VENDOR-PATH", "testdriver-vendor.js script seen with incorrect path", filename, None)
-            ])
+            }
         else:
             expected = set()
 

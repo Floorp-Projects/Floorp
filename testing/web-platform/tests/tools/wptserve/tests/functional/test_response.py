@@ -94,7 +94,7 @@ class TestResponse(TestUsingServer):
         resp = self.request(route[1])
         assert resp.getcode() == 200
         assert resp.read() == resp_content
-        assert sorted([x.lower() for x in resp.info().keys()]) == sorted(['test-header', 'date', 'server', 'content-length'])
+        assert sorted(x.lower() for x in resp.info().keys()) == sorted(['test-header', 'date', 'server', 'content-length'])
 
     def test_write_content_no_status_no_required_headers(self):
         resp_content = b"TEST"

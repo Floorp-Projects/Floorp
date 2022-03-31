@@ -12,7 +12,7 @@ from .utils import HTTPException, isomorphic_encode, isomorphic_decode
 missing = object()
 
 
-class Server(object):
+class Server:
     """Data about the server environment
 
     .. attribute:: config
@@ -39,7 +39,7 @@ class Server(object):
         return self._stash
 
 
-class InputFile(object):
+class InputFile:
     max_buffer_size = 1024*1024
 
     def __init__(self, rfile, length):
@@ -157,7 +157,7 @@ class InputFile(object):
         return self
 
 
-class Request(object):
+class Request:
     """Object representing a HTTP request.
 
     .. attribute:: doc_root
@@ -365,7 +365,7 @@ class H2Request(Request):
     def __init__(self, request_handler):
         self.h2_stream_id = request_handler.h2_stream_id
         self.frames = []
-        super(H2Request, self).__init__(request_handler)
+        super().__init__(request_handler)
 
 
 class RequestHeaders(dict):
@@ -444,7 +444,7 @@ class RequestHeaders(dict):
             yield self[item]
 
 
-class CookieValue(object):
+class CookieValue:
     """Representation of cookies.
 
     Note that cookies are considered read-only and the string value
@@ -630,7 +630,7 @@ class BinaryCookieParser(BaseCookie):
         """
         assert isinstance(rawdata, bytes)
         # BaseCookie.load expects a native string
-        super(BinaryCookieParser, self).load(isomorphic_decode(rawdata))
+        super().load(isomorphic_decode(rawdata))
 
 
 class Cookies(MultiDict):
@@ -645,7 +645,7 @@ class Cookies(MultiDict):
         return self.last(key)
 
 
-class Authentication(object):
+class Authentication:
     """Object for dealing with HTTP Authentication
 
     .. attribute:: username

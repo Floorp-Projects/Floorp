@@ -81,7 +81,7 @@ class BrowserError(Exception):
     pass
 
 
-class Browser(object):
+class Browser:
     """Abstract class serving as the basis for Browser implementations.
 
     The Browser is used in the TestRunnerManager to start and stop the browser
@@ -160,7 +160,7 @@ class Browser(object):
 
 class NullBrowser(Browser):
     def __init__(self, logger, **kwargs):
-        super(NullBrowser, self).__init__(logger)
+        super().__init__(logger)
 
     def start(self, **kwargs):
         """No-op browser to use in scenarios where the TestRunnerManager shouldn't
@@ -343,7 +343,7 @@ class WebDriverBrowser(Browser):
             self._proc.run()
         except OSError as e:
             if e.errno == errno.ENOENT:
-                raise IOError(
+                raise OSError(
                     "WebDriver executable not found: %s" % self.webdriver_binary)
             raise
         self._output_handler.after_process_start(self._proc.pid)

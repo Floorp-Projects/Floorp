@@ -53,7 +53,7 @@ def _path_norm(path):
     return path
 
 
-class Ruleset(object):
+class Ruleset:
     def __init__(self, rules):
         self.include = []
         self.exclude = []
