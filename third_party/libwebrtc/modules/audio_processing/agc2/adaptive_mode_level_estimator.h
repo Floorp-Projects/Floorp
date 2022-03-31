@@ -29,14 +29,6 @@ class AdaptiveModeLevelEstimator {
   AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
   AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
       delete;
-  // Deprecated ctor. `use_saturation_protector` is ignored and the saturation
-  // protector will be used regardless of what is passed.
-  AdaptiveModeLevelEstimator(
-      ApmDataDumper* apm_data_dumper,
-      AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
-      bool use_saturation_protector,
-      float extra_saturation_margin_db);
-  // TODO(crbug.com/webrtc/7494): Replace ctor above with the one below.
   AdaptiveModeLevelEstimator(
       ApmDataDumper* apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator level_estimator,

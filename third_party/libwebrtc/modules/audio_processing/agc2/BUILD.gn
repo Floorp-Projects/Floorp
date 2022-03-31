@@ -65,6 +65,7 @@ rtc_library("adaptive_digital") {
     "../../../api:array_view",
     "../../../common_audio",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_compare",
     "../../../rtc_base:safe_minmax",
