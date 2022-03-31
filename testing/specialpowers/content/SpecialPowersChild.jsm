@@ -2016,10 +2016,6 @@ class SpecialPowersChild extends JSWindowActorChild {
       terminateBackground() {
         return sp.sendQuery("SPExtensionTerminateBackground", { id });
       },
-
-      wakeupBackground() {
-        return sp.sendQuery("SPExtensionWakeupBackground", { id });
-      },
     };
 
     this.sendAsyncMessage("SPLoadExtension", { ext, id });
