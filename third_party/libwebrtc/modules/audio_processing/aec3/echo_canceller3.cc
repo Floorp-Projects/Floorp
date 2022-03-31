@@ -213,12 +213,6 @@ void CopyBufferIntoFrame(const AudioBuffer& buffer,
 EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
   EchoCanceller3Config adjusted_cfg = config;
 
-  if (field_trial::IsEnabled("WebRTC-Aec3AntiHowlingMinimizationKillSwitch")) {
-    adjusted_cfg.suppressor.high_bands_suppression
-        .anti_howling_activation_threshold = 25.f;
-    adjusted_cfg.suppressor.high_bands_suppression.anti_howling_gain = 0.01f;
-  }
-
   if (field_trial::IsEnabled("WebRTC-Aec3UseShortConfigChangeDuration")) {
     adjusted_cfg.filter.config_change_duration_blocks = 10;
   }
