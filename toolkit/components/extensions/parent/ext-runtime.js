@@ -20,75 +20,101 @@ XPCOMUtils.defineLazyPreferenceGetter(
   5000
 );
 
-this.runtime = class extends ExtensionAPI {
+this.runtime = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onInstalled({ fire }) {
+      let { extension } = this;
+      let temporary = !!extension.addonData.temporarilyInstalled;
+
+      let listener = () => {
+        switch (extension.startupReason) {
+          case "APP_STARTUP":
+            if (AddonManagerPrivate.browserUpdated) {
+              fire.sync({ reason: "browser_update", temporary });
+            }
+            break;
+          case "ADDON_INSTALL":
+            fire.sync({ reason: "install", temporary });
+            break;
+          case "ADDON_UPGRADE":
+            fire.sync({
+              reason: "update",
+              previousVersion: extension.addonData.oldVersion,
+              temporary,
+            });
+            break;
+        }
+      };
+      extension.on("background-first-run", listener);
+      return {
+        unregister() {
+          extension.off("background-first-run", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onUpdateAvailable({ fire }) {
+      let { extension } = this;
+      let instanceID = extension.addonData.instanceID;
+      AddonManager.addUpgradeListener(instanceID, upgrade => {
+        extension.upgrade = upgrade;
+        let details = {
+          version: upgrade.version,
+        };
+        fire.sync(details);
+      });
+      return {
+        unregister() {
+          AddonManager.removeUpgradeListener(instanceID);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     let { extension } = context;
     return {
       runtime: {
+        // onStartup is special-cased in ext-backgroundPages to cause
+        // an immediate startup.  We do not prime onStartup.
         onStartup: new EventManager({
           context,
-          name: "runtime.onStartup",
+          module: "runtime",
+          event: "onStartup",
           register: fire => {
             if (context.incognito || extension.startupReason != "APP_STARTUP") {
               // This event should not fire if we are operating in a private profile.
               return () => {};
             }
-            let listener = () => fire.sync();
-            extension.on("background-script-started", listener);
+            let listener = () => {
+              return fire.sync();
+            };
+
+            extension.on("background-first-run", listener);
+
             return () => {
-              extension.off("background-script-started", listener);
+              extension.off("background-first-run", listener);
             };
           },
         }).api(),
 
         onInstalled: new EventManager({
           context,
-          name: "runtime.onInstalled",
-          register: fire => {
-            let temporary = !!extension.addonData.temporarilyInstalled;
-
-            let listener = () => {
-              switch (extension.startupReason) {
-                case "APP_STARTUP":
-                  if (AddonManagerPrivate.browserUpdated) {
-                    fire.sync({ reason: "browser_update", temporary });
-                  }
-                  break;
-                case "ADDON_INSTALL":
-                  fire.sync({ reason: "install", temporary });
-                  break;
-                case "ADDON_UPGRADE":
-                  fire.sync({
-                    reason: "update",
-                    previousVersion: extension.addonData.oldVersion,
-                    temporary,
-                  });
-                  break;
-              }
-            };
-            extension.on("background-script-started", listener);
-            return () => {
-              extension.off("background-script-started", listener);
-            };
-          },
+          module: "runtime",
+          event: "onInstalled",
+          extensionApi: this,
         }).api(),
 
         onUpdateAvailable: new EventManager({
           context,
-          name: "runtime.onUpdateAvailable",
-          register: fire => {
-            let instanceID = extension.addonData.instanceID;
-            AddonManager.addUpgradeListener(instanceID, upgrade => {
-              extension.upgrade = upgrade;
-              let details = {
-                version: upgrade.version,
-              };
-              fire.sync(details);
-            });
-            return () => {
-              AddonManager.removeUpgradeListener(instanceID);
-            };
-          },
+          module: "runtime",
+          event: "onUpdateAvailable",
+          extensionApi: this,
         }).api(),
 
         onSuspend: new EventManager({

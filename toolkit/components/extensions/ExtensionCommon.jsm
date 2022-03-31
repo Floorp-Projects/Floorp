@@ -2397,7 +2397,11 @@ class EventManager {
           let fireEvent = (...args) =>
             new Promise((resolve, reject) => {
               if (!listener.primed) {
-                reject(new Error("primed listener not re-registered"));
+                reject(
+                  new Error(
+                    `primed listener ${module}.${event} not re-registered`
+                  )
+                );
                 return;
               }
               primed.pendingEvents.push({ args, resolve, reject });
@@ -2408,6 +2412,8 @@ class EventManager {
             wakeup: () => extension.wakeupBackground(),
             sync: fireEvent,
             async: fireEvent,
+            // fire.async for ProxyContextParent is already not cloning.
+            raw: fireEvent,
           };
 
           try {

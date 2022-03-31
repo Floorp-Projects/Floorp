@@ -129,6 +129,7 @@ firefox-suggest-onboarding-introduction-close-button =
 
 firefox-suggest-onboarding-introduction-next-button-1 = Find out how
 firefox-suggest-onboarding-introduction-next-button-2 = Find out more
+firefox-suggest-onboarding-introduction-next-button-3 = Show me how
 
 ## Used as title on the main pane. The text can be formatted to span
 ## multiple lines as needed (line breaks are significant).
@@ -153,6 +154,8 @@ firefox-suggest-onboarding-main-title-7 =
 firefox-suggest-onboarding-main-title-8 =
   Finding the best of the web should be
   simpler and more secure.
+firefox-suggest-onboarding-main-title-9 =
+  Find the best of the web, faster
 
 ##
 
@@ -164,18 +167,25 @@ firefox-suggest-onboarding-main-description-5 = Allowing { -vendor-short-name } 
 firefox-suggest-onboarding-main-description-6 = Allowing { -vendor-short-name } to process your search queries will help us create more relevant search suggestions. We’re building { -firefox-suggest-brand-name } to help you get where you’re going on the Internet while keeping your privacy in mind.
 firefox-suggest-onboarding-main-description-7 = Allowing { -vendor-short-name } to process your search queries helps us create more relevant search suggestions.
 firefox-suggest-onboarding-main-description-8 = Allowing { -vendor-short-name } to process your search queries helps us provide more relevant search suggestions. We don’t use this data to profile you on the web.
+firefox-suggest-onboarding-main-description-9 =
+  We’re building a better search experience. When you allow { -vendor-short-name } to process your search queries, we can create more relevant search suggestions for you.
+  <a data-l10n-name="learn-more-link">Learn more</a>
 
 firefox-suggest-onboarding-main-privacy-first = No user profiling. Privacy-first, always.
 
 firefox-suggest-onboarding-main-accept-option-label = Allow. <a data-l10n-name="learn-more-link">Learn more</a>
+firefox-suggest-onboarding-main-accept-option-label-2 = Enable
 
 firefox-suggest-onboarding-main-accept-option-description-1 = Help improve the { -firefox-suggest-brand-name } feature with more relevant suggestions. Your search queries will be processed.
 firefox-suggest-onboarding-main-accept-option-description-2 = Recommended for people who support improving the { -firefox-suggest-brand-name } feature.  Your search queries will be processed.
+firefox-suggest-onboarding-main-accept-option-description-3 = Help improve the { -firefox-suggest-brand-name } experience. Your search queries will be processed.
 
 firefox-suggest-onboarding-main-reject-option-label = Don’t allow.
+firefox-suggest-onboarding-main-reject-option-label-2 = Keep disabled
 
 firefox-suggest-onboarding-main-reject-option-description-1 = Keep the default { -firefox-suggest-brand-name } experience with the strictest data-sharing controls.
 firefox-suggest-onboarding-main-reject-option-description-2 = Recommended for people who prefer the strictest data-sharing controls. Keep the default experience.
+firefox-suggest-onboarding-main-reject-option-description-3 = Leave the default { -firefox-suggest-brand-name } experience with the strictest data-sharing controls.
 
 firefox-suggest-onboarding-main-submit-button = Save preferences
 firefox-suggest-onboarding-main-skip-link = Not now

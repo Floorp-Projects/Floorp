@@ -38,9 +38,17 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.enabled
       description: Gate for the best match feature. If false, the best match preferences UI and best match suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn best match suggestions on or off.
+    experimentType:
+      type: string
+      description: The type of the experiment (or rollout). If "best-match", then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If "modal", the event will be recorded when the user first triggers to show the onbording dialog. If empty, the event will be recorded when the user first triggers any type of Suggest suggestion.
+      enum:
+        - best-match
+        - modal
+        - ""
     isBestMatchExperiment:
       type: boolean
-      description: Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If false, the event will be recorded when the user first triggers any type of Suggest suggestion.
+      description: >-
+        Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). Deprecated, please use `experimentType: "best-match"` instead.
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants
@@ -78,7 +86,7 @@ urlbar:
     quickSuggestOnboardingDialogVariation:
       type: string
       description: >-
-        Specify the messages/UI variation for QuickSuggest onboarding dialog. This should be a single letter from A to H inclusive. This value is case insensitive.
+        Specify the messages/UI variation for QuickSuggest onboarding dialog. This value is case insensitive.
     quickSuggestRemoteSettingsEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled

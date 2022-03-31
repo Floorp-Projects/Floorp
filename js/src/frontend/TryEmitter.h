@@ -69,7 +69,8 @@ class MOZ_STACK_CLASS TryEmitter {
   // return value.  For syntactic try-catch-finally, the bytecode marked with
   // "*" are emitted to clear return value with `undefined` before the catch
   // block and the finally block, and also to save/restore the return value
-  // before/after the finally block.
+  // before/after the finally block. Note that these instructions are not
+  // emitted for noScriptRval scripts that don't track the return value.
   //
   //     JSOp::Try offsetOf(jumpToEnd)
   //
@@ -189,6 +190,14 @@ class MOZ_STACK_CLASS TryEmitter {
   BytecodeOffset offsetAfterTryOp() const {
     return tryOpOffset_ + BytecodeOffsetDiff(JSOpLength_Try);
   }
+
+  // Returns true if catch and finally blocks should handle the frame's
+  // return value.
+  bool shouldUpdateRval() const;
+
+  // Jump to the finally block. After the finally block executes,
+  // fall through to the code following the finally block.
+  [[nodiscard]] bool emitJumpToFinallyWithFallthrough();
 
  public:
   TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);

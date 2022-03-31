@@ -15,8 +15,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-1",
       "main-title": "firefox-suggest-onboarding-main-title-1",
       "main-description": "firefox-suggest-onboarding-main-description-1",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -27,8 +31,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
       "main-title": "firefox-suggest-onboarding-main-title-2",
       "main-description": "firefox-suggest-onboarding-main-description-2",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -40,8 +48,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-3",
       "main-title": "firefox-suggest-onboarding-main-title-3",
       "main-description": "firefox-suggest-onboarding-main-description-3",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
@@ -52,8 +64,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
       "main-title": "firefox-suggest-onboarding-main-title-4",
       "main-description": "firefox-suggest-onboarding-main-description-4",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -65,8 +81,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
       "main-title": "firefox-suggest-onboarding-main-title-5",
       "main-description": "firefox-suggest-onboarding-main-description-5",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -77,8 +97,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
       "main-title": "firefox-suggest-onboarding-main-title-6",
       "main-description": "firefox-suggest-onboarding-main-description-6",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -90,8 +114,12 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-7",
       "main-title": "firefox-suggest-onboarding-main-title-7",
       "main-description": "firefox-suggest-onboarding-main-description-7",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-2",
     },
@@ -103,11 +131,51 @@ const VARIATION_MAP = {
       "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
       "main-title": "firefox-suggest-onboarding-main-title-8",
       "main-description": "firefox-suggest-onboarding-main-description-8",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label",
       "main-accept-option-description":
         "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label",
       "main-reject-option-description":
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
+  },
+  "100-a": {
+    introductionLayout: "layout-100",
+    mainPrivacyFirst: true,
+    logoType: "firefox",
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-3",
+      "introduction-title": "firefox-suggest-onboarding-main-title-9",
+      "main-title": "firefox-suggest-onboarding-main-title-9",
+      "main-description": "firefox-suggest-onboarding-main-description-9",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label-2",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-3",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-3",
+    },
+  },
+  "100-b": {
+    mainPrivacyFirst: true,
+    logoType: "firefox",
+    l10nUpdates: {
+      "main-title": "firefox-suggest-onboarding-main-title-9",
+      "main-description": "firefox-suggest-onboarding-main-description-9",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label-2",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-3",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-3",
+    },
+    skipIntroduction: true,
   },
 };
 
@@ -130,14 +198,14 @@ window._quicksuggestOnboardingReady = new Promise(r => {
 document.addEventListener("DOMContentLoaded", async () => {
   await document.l10n.ready;
 
-  const variation = VARIATION_MAP[window.arguments[0].variationType];
-  if (variation) {
-    document.l10n.pauseObserving();
-    try {
-      await applyVariation(variation);
-    } finally {
-      document.l10n.resumeObserving();
-    }
+  const variation =
+    VARIATION_MAP[window.arguments[0].variationType] || VARIATION_MAP.a;
+
+  document.l10n.pauseObserving();
+  try {
+    await applyVariation(variation);
+  } finally {
+    document.l10n.resumeObserving();
   }
 
   addSubmitListener(document.getElementById("onboardingClose"), () => {
@@ -145,20 +213,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.close();
   });
   addSubmitListener(document.getElementById("onboardingNext"), () => {
-    window.arguments[0].visitedMain = true;
-    document.getElementById("introduction-section").classList.add("inactive");
-    document.getElementById("main-section").classList.add("active");
-    document.body.setAttribute("aria-labelledby", "main-title");
-    let ariaDescribedBy = "main-description";
-    if (variation?.mainPrivacyFirst) {
-      ariaDescribedBy += " main-privacy-first";
-    }
-    document.body.setAttribute("aria-describedby", ariaDescribedBy);
+    gotoMain(variation);
   });
   addSubmitListener(document.getElementById("onboardingLearnMore"), () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_2;
     window.close();
   });
+  addSubmitListener(
+    document.getElementById("onboardingLearnMoreOnIntroduction"),
+    () => {
+      window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_1;
+      window.close();
+    }
+  );
   addSubmitListener(document.getElementById("onboardingSkipLink"), () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW_2;
     window.close();
@@ -208,6 +275,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   resolveOnboardingReady();
 });
 
+function gotoMain(variation) {
+  window.arguments[0].visitedMain = true;
+
+  document.getElementById("introduction-section").classList.add("inactive");
+  document.getElementById("main-section").classList.add("active");
+
+  document.body.setAttribute("aria-labelledby", "main-title");
+  let ariaDescribedBy = "main-description";
+  if (variation.mainPrivacyFirst) {
+    ariaDescribedBy += " main-privacy-first";
+  }
+  document.body.setAttribute("aria-describedby", ariaDescribedBy);
+}
+
 async function applyVariation(variation) {
   if (variation.logoType) {
     for (const logo of document.querySelectorAll(".logo")) {
@@ -228,6 +309,17 @@ async function applyVariation(variation) {
       translatedElements.push(element);
     }
     await document.l10n.translateElements(translatedElements);
+  }
+
+  if (variation.skipIntroduction) {
+    document.body.classList.add("skip-introduction");
+    gotoMain(variation);
+  }
+
+  if (variation.introductionLayout) {
+    document
+      .getElementById("introduction-section")
+      .classList.add(variation.introductionLayout);
   }
 }
 

@@ -739,7 +739,7 @@ class QSTestUtils {
 
     Services.telemetry.clearEvents();
     NimbusFeatures.urlbar._didSendExposureEvent = false;
-    UrlbarProviderQuickSuggest._recordedExposureEvent = false;
+    UrlbarQuickSuggest._recordedExposureEvent = false;
   }
 
   /**
@@ -753,7 +753,7 @@ class QSTestUtils {
    */
   async assertExposureEvent(expectedRecorded) {
     this.Assert.equal(
-      UrlbarProviderQuickSuggest._recordedExposureEvent,
+      UrlbarQuickSuggest._recordedExposureEvent,
       expectedRecorded,
       "_recordedExposureEvent is correct"
     );
