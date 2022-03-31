@@ -12937,7 +12937,7 @@
 # Whether we use overlay scrollbars on GTK.
 - name: widget.gtk.overlay-scrollbars.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether we honor the scrollbar colors from the gtk theme.
@@ -13102,9 +13102,9 @@
 
 # Whether overlay scrollbars respect the system settings.
 # Note that these can be overridden by the ui.useOverlayScrollbars pref.
-- name: widget.windows.overlay_scrollbars.enabled
+- name: widget.windows.overlay-scrollbars.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled

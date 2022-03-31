@@ -732,7 +732,7 @@ body {
 
     @at-root:root {
 
-      &[lang|='de'] & {
+      &[lang|='de'] {
 
         .ios button {
           background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/ios.svg');
@@ -754,7 +754,7 @@ body {
         }
       }
 
-      &[lang|='fr'] & {
+      &[lang|='fr'] {
 
         .ios button {
           background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/ios.svg');
@@ -765,7 +765,7 @@ body {
         }
       }
 
-      &[lang|='pt'] & {
+      &[lang|='pt'] {
 
         .ios button {
           background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/ios.svg');
@@ -776,7 +776,7 @@ body {
         }
       }
 
-      &[lang|='ru'] & {
+      &[lang|='ru'] {
 
         .ios button {
           background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/ios.svg');
@@ -787,7 +787,7 @@ body {
         }
       }
 
-      &[lang|='zh'] & {
+      &[lang|='zh'] {
 
         .ios button {
           background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/ios.svg');

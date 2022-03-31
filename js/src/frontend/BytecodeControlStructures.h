@@ -140,17 +140,25 @@ inline bool NestableControl::is<LoopControl>() const {
 }
 
 class TryFinallyControl : public NestableControl {
-  bool emittingSubroutine_;
+  bool emittingSubroutine_ = false;
+  bool hasNonLocalJumps_ = false;
 
  public:
   // Offset of the last jump to this `finally`.
   JumpList finallyJumps_;
+
+  // Bytecode offsets of any JSOp::ResumeIndex ops that should resume
+  // immediately after the finally block.
+  js::Vector<BytecodeOffset, 2, SystemAllocPolicy> defaultResumeIndexOffsets_;
 
   TryFinallyControl(BytecodeEmitter* bce, StatementKind kind);
 
   void setEmittingSubroutine() { emittingSubroutine_ = true; }
 
   bool emittingSubroutine() const { return emittingSubroutine_; }
+
+  void setHasNonLocalJumps() { hasNonLocalJumps_ = true; }
+  bool hasNonLocalJumps() const { return hasNonLocalJumps_; }
 };
 template <>
 inline bool NestableControl::is<TryFinallyControl>() const {

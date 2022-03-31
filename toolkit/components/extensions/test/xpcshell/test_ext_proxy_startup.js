@@ -33,12 +33,6 @@ server.registerPathHandler("/", (request, response) => {
   response.write("ok");
 });
 
-function promiseExtensionEvent(wrapper, event) {
-  return new Promise(resolve => {
-    wrapper.extension.once(event, resolve);
-  });
-}
-
 function trackEvents(wrapper) {
   let events = new Map();
   for (let event of ["background-script-event", "start-background-script"]) {

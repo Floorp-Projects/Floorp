@@ -360,7 +360,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       }
     }
 
-    if (StaticPrefs::media_wmf_no_copy_nv12_textures() &&
+    if (StaticPrefs::media_wmf_no_copy_nv12_textures() && mKnowsCompositor &&
         mKnowsCompositor->UsingHardwareWebRender() && mDXVA2Manager &&
         mDXVA2Manager->IsD3D11() && XRE_IsGPUProcess()) {
       mNoCopyNV12Texture = true;
