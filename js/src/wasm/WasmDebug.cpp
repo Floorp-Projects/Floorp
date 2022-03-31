@@ -41,7 +41,8 @@ DebugState::DebugState(const Code& code, const Module& module)
       module_(&module),
       enterFrameTrapsEnabled_(false),
       enterAndLeaveFrameTrapsCounter_(0) {
-  MOZ_ASSERT(code.metadata().debugEnabled);
+  MOZ_RELEASE_ASSERT(code.metadata().debugEnabled);
+  MOZ_RELEASE_ASSERT(code.hasTier(Tier::Debug));
 }
 
 void DebugState::trace(JSTracer* trc) {
