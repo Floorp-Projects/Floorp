@@ -1170,10 +1170,16 @@ add_task(async function variation_100_A_introduction() {
       );
       BrowserTestUtils.removeTab(tab);
 
-      info("Check the user's choice");
+      info("Check the user's choice and the telemetry");
       Assert.equal(
         UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
-        "learn_more_2"
+        "learn_more_1"
+      );
+      Assert.equal(
+        TelemetryEnvironment.currentEnvironment.settings.userPrefs[
+          "browser.urlbar.quicksuggest.onboardingDialogChoice"
+        ],
+        "learn_more_1"
       );
     },
   });

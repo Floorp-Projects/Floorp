@@ -3125,7 +3125,7 @@ contextservices.quicksuggest:
       - adw@mozilla.com
     expiry_version: never
   opt_in_dialog:
-    objects: ["accept_2", "reject_2", "learn_more_2", "close_1", "not_now_2", "dismiss_1", "dismiss_2"]
+    objects: ["accept_2", "reject_2", "learn_more_1", "learn_more_2", "close_1", "not_now_2", "dismiss_1", "dismiss_2"]
     release_channel_collection: opt-out
     products:
       - "firefox"
@@ -3134,15 +3134,17 @@ contextservices.quicksuggest:
       This is recorded when the user responds to the Firefox Suggest opt-in
       onboarding dialog. 'accept_2' is recorded when the user accepts the dialog
       and opts in, 'reject_2' is recorded when the user rejects the dialog and
-      opts out, 'learn_more_2' is recorded when the user clicks "Learn more"
-      (the user remains opted out), 'close_1' is recorded when the user clicks
-      close button on introduction section (the user remains opted out),
-      'not_now_2' is recorded when the user clicks "Not now" link on main section
-      (the user remains opted out), 'dismiss_1' recorded when the user dismisses
-      the dialog on introduction section (the user remains opted out),
-      'dismiss_2' recorded when the user dismisses the dialog on main (the user
-      remains opted out),
-    bug_numbers: [1723860, 1745026]
+      opts out, 'learn_more_1' is recorded when the user clicks "Learn more"
+      on the introduction section (the user remains opted out), 'learn_more_2' is
+      recorded when the user clicks "Learn more" on the main section (the user
+      remains opted out), 'close_1' is recorded when the user clicks close button
+      on the introduction section (the user remains opted out), 'not_now_2' is
+      recorded when the user clicks "Not now" link on main section (the user
+      remains opted out), 'dismiss_1' recorded when the user dismisses the dialog
+      on the introduction section (the user remains opted out), 'dismiss_2'
+      recorded when the user dismisses the dialog on main (the user remains opted
+      out),
+    bug_numbers: [1723860, 1745026, 1761171]
     notification_emails:
       - fx-search@mozilla.com
       - adw@mozilla.com

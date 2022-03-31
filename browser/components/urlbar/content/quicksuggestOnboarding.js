@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   addSubmitListener(
     document.getElementById("onboardingLearnMoreOnIntroduction"),
     () => {
-      window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_2;
+      window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_1;
       window.close();
     }
   );
