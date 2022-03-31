@@ -98,7 +98,6 @@ let checkContextMenu = async (cbfunc, optionItems, doc = document) => {
 add_task(async function test_bookmark_contextmenu_contents() {
   let optionItems = [
     "placesContext_open:newtab",
-    "placesContext_open:newcontainertab",
     "placesContext_open:newwindow",
     "placesContext_open:newprivatewindow",
     "placesContext_show_bookmark:info",
@@ -380,7 +379,6 @@ add_task(async function test_sidebar_multiple_folders_contextmenu_contents() {
 add_task(async function test_sidebar_bookmark_contextmenu_contents() {
   let optionItems = [
     "placesContext_open:newtab",
-    "placesContext_open:newcontainertab",
     "placesContext_open:newwindow",
     "placesContext_open:newprivatewindow",
     "placesContext_show_bookmark:info",
@@ -418,7 +416,6 @@ add_task(async function test_sidebar_bookmark_contextmenu_contents() {
 add_task(async function test_sidebar_bookmark_search_contextmenu_contents() {
   let optionItems = [
     "placesContext_open:newtab",
-    "placesContext_open:newcontainertab",
     "placesContext_open:newwindow",
     "placesContext_open:newprivatewindow",
     "placesContext_showInFolder",
@@ -461,7 +458,6 @@ add_task(async function test_library_bookmark_contextmenu_contents() {
   let optionItems = [
     "placesContext_open",
     "placesContext_open:newtab",
-    "placesContext_open:newcontainertab",
     "placesContext_open:newwindow",
     "placesContext_open:newprivatewindow",
     "placesContext_deleteBookmark",
@@ -496,7 +492,6 @@ add_task(async function test_library_bookmark_search_contextmenu_contents() {
   let optionItems = [
     "placesContext_open",
     "placesContext_open:newtab",
-    "placesContext_open:newcontainertab",
     "placesContext_open:newwindow",
     "placesContext_open:newprivatewindow",
     "placesContext_showInFolder",
