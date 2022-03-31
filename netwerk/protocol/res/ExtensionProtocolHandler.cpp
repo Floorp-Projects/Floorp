@@ -8,7 +8,6 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/ExtensionPolicyService.h"
@@ -17,6 +16,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/Omnijar.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
 
