@@ -1747,6 +1747,11 @@ class SchemaAPIManager extends EventEmitter {
    */
   _checkGetAPI(name, extension, scope = null) {
     let module = this.getModule(name);
+    if (!module) {
+      // A module may not exist for a particular manifest version, but
+      // we allow keys in the manifest.  An example is pageAction.
+      return false;
+    }
 
     if (
       module.permissions &&
