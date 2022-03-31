@@ -45,7 +45,6 @@
 #include "rtc_base/system/arch.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
-#include "system_wrappers/include/cpu_features_wrapper.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
 
@@ -349,19 +348,6 @@ bool ReadChunk(FILE* file,
   return true;
 }
 
-// Returns the reference file name that matches the current CPU
-// architecture/optimizations.
-std::string GetReferenceFilename() {
-#if defined(WEBRTC_AUDIOPROC_FIXED_PROFILE)
-  return test::ResourcePath("audio_processing/output_data_fixed", "pb");
-#elif defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
-  if (GetCPUInfo(kAVX2) != 0) {
-    return test::ResourcePath("audio_processing/output_data_float_avx2", "pb");
-  }
-  return test::ResourcePath("audio_processing/output_data_float", "pb");
-#endif
-}
-
 class ApmTest : public ::testing::Test {
  protected:
   ApmTest();
@@ -429,7 +415,13 @@ class ApmTest : public ::testing::Test {
 
 ApmTest::ApmTest()
     : output_path_(test::OutputPath()),
-      ref_filename_(GetReferenceFilename()),
+#if defined(WEBRTC_AUDIOPROC_FIXED_PROFILE)
+      ref_filename_(
+          test::ResourcePath("audio_processing/output_data_fixed", "pb")),
+#elif defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
+      ref_filename_(
+          test::ResourcePath("audio_processing/output_data_float", "pb")),
+#endif
       output_sample_rate_hz_(0),
       num_output_channels_(0),
       far_file_(NULL),
@@ -1783,7 +1775,7 @@ TEST_F(ApmTest, Process) {
                   max_output_average - kMaxOutputAverageOffset,
                   kMaxOutputAverageNear);
 #if defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
-      const double kFloatNear = 0.002;
+      const double kFloatNear = 0.0005;
       EXPECT_NEAR(test->rms_dbfs_average(), rms_dbfs_average, kFloatNear);
 #endif
     } else {
