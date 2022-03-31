@@ -372,10 +372,6 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.syncedTabOpened.record(it) }
         )
 
-        is Event.RecentlyClosedTabsOpenedOld -> EventWrapper<NoExtraKeys>(
-            { Events.recentlyClosedTabsOpened.record(it) }
-        )
-
         is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
         )

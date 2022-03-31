@@ -15,9 +15,10 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.telemetry.glean.private.NoExtras
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
@@ -145,7 +146,7 @@ class DefaultNavigationInteractor(
         navController.navigate(
             TabsTrayFragmentDirections.actionGlobalRecentlyClosed()
         )
-        metrics.track(Event.RecentlyClosedTabsOpenedOld)
+        Events.recentlyClosedTabsOpened.record(NoExtras())
     }
 
     override fun onShareTabs(tabs: Collection<TabSessionState>) {

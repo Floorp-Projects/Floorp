@@ -36,6 +36,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
@@ -117,8 +118,12 @@ class NavigationInteractorTest {
 
     @Test
     fun `onOpenRecentlyClosedClicked calls navigation on DefaultNavigationInteractor`() {
+        assertFalse(Events.recentlyClosedTabsOpened.testHasValue())
+
         createInteractor().onOpenRecentlyClosedClicked()
+
         verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalRecentlyClosed()) }
+        assertTrue(Events.recentlyClosedTabsOpened.testHasValue())
     }
 
     @Test
