@@ -452,5 +452,31 @@ add_task(
     // 4) Timespan
     // ( Can't overflow time without finding a way to get TimeStamp to think
     // we're 2^32 milliseconds later without waiting a month )
+
+    // 5) TimingDistribution
+    // ( Can't overflow time with start() and stopAndAccumulate() without
+    // waiting for ages. But we _do_ have a test-only raw API...)
+    // The max sample for timing_distribution is 600000000000.
+    // The type for timing_distribution samples is i64.
+    // This means when we explore the edges of GIFFT's limits, we're well past
+    // Glean's limits. All we can get out of Glean is errors.
+    // (Which is good for data, difficult for tests.)
+    // But GIFFT should properly saturate in Telemetry at i32::max,
+    // so we shall test that.
+    Glean.testOnlyIpc.aTimingDist.testAccumulateRawMillis(Math.pow(2, 31) + 1);
+    Glean.testOnlyIpc.aTimingDist.testAccumulateRawMillis(Math.pow(2, 32) + 1);
+    Assert.throws(
+      () => Glean.testOnlyIpc.aTimingDist.testGetValue(),
+      /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+      "Can't get the value when you're error'd"
+    );
+    let snapshot = Telemetry.getHistogramById(
+      "TELEMETRY_TEST_EXPONENTIAL"
+    ).snapshot();
+    Assert.equal(
+      snapshot.values["2147483646"],
+      2,
+      "samples > i32::max should end up in the top bucket"
+    );
   }
 );
