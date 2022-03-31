@@ -53,7 +53,11 @@ class AdaptiveModeLevelEstimator {
 
  private:
   // Part of the level estimator state used for check-pointing and restore ops.
-  struct State {
+  struct LevelEstimatorState {
+    bool operator==(const LevelEstimatorState& s) const;
+    inline bool operator!=(const LevelEstimatorState& s) const {
+      return !(*this == s);
+    }
     struct Ratio {
       float numerator;
       float denominator;
@@ -64,8 +68,9 @@ class AdaptiveModeLevelEstimator {
     SaturationProtectorState saturation_protector;
   };
 
-  void ResetState(State& state);
-  void DebugDumpEstimate();
+  void ResetLevelEstimatorState(LevelEstimatorState& state) const;
+
+  void DumpDebugData() const;
 
   ApmDataDumper* const apm_data_dumper_;
 
@@ -75,7 +80,7 @@ class AdaptiveModeLevelEstimator {
   const float initial_saturation_margin_db_;
   const float extra_saturation_margin_db_;
   // TODO(crbug.com/webrtc/7494): Add temporary state.
-  State state_;
+  LevelEstimatorState state_;
   float level_dbfs_;
 };
 
