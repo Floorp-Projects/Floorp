@@ -447,13 +447,6 @@ PlacesController.prototype = {
       return false;
     }
 
-    if (
-      aMenuItem.hasAttribute("hide-if-usercontext-disabled") &&
-      !Services.prefs.getBoolPref("privacy.userContext.enabled", false)
-    ) {
-      return false;
-    }
-
     let selectiontype =
       aMenuItem.getAttribute("selection-type") || "single|multiple";
 
