@@ -19,7 +19,13 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakableLines(dbg, "index.html", 28, [[23, 24]]);
+  await assertBreakableLines(dbg, "index.html", 49, [
+    [28, 29],
+    [32],
+    [34],
+    [39],
+    [45],
+  ]);
 
   info("Assert breakable lines of the first original source file, original.js");
   // The length of original.js is longer than the test file
