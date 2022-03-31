@@ -20,6 +20,13 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 
+#if defined(WEBRTC_WIN)
+#include "modules/desktop_capture/win/window_capturer_win_wgc.h"
+#include "rtc_base/win/windows_version.h"
+
+const bool kUseWinWgcCapturer = false;
+#endif  // defined(WEBRTC_WIN)
+
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
@@ -54,6 +61,14 @@ bool DesktopCapturer::IsOccluded(const DesktopVector& pos) {
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(WEBRTC_WIN)
+  // TODO(bugs.webrtc.org/11760): Add a WebRTC field trial (or similar
+  // mechanism) check here that leads to use of the WGC capturer once it is
+  // fully implemented.
+  if (kUseWinWgcCapturer &&
+      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
+    return WindowCapturerWinWgc::CreateRawWindowCapturer(options);
+  }
+
   if (options.allow_cropping_window_capturer()) {
     return CroppingWindowCapturer::CreateCapturer(options);
   }
