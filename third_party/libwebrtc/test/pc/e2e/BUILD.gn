@@ -307,6 +307,7 @@ if (!build_with_chromium) {
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api/video:video_frame",
         "../../../pc:peerconnection",
+        "../../../pc:video_track_source",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:variant" ]
     }
