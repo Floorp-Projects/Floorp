@@ -71,22 +71,6 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
 AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
     ApmDataDumper* apm_data_dumper,
     AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
-    bool use_saturation_protector,
-    float extra_saturation_margin_db)
-    : AdaptiveModeLevelEstimator(
-          apm_data_dumper,
-          level_estimator,
-          kDefaultLevelEstimatorAdjacentSpeechFramesThreshold,
-          kDefaultInitialSaturationMarginDb,
-          extra_saturation_margin_db) {
-  if (!use_saturation_protector) {
-    RTC_LOG(LS_WARNING) << "The saturation protector cannot be disabled.";
-  }
-}
-
-AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
-    ApmDataDumper* apm_data_dumper,
-    AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
     int adjacent_speech_frames_threshold,
     float initial_saturation_margin_db,
     float extra_saturation_margin_db)

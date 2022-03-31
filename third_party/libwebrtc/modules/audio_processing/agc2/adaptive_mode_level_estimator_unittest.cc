@@ -49,7 +49,7 @@ struct TestLevelEstimator {
         estimator(std::make_unique<AdaptiveModeLevelEstimator>(
             &data_dumper,
             AudioProcessing::Config::GainController2::LevelEstimator::kRms,
-            /*min_consecutive_speech_frames=*/1,
+            /*adjacent_speech_frames_threshold=*/1,
             kInitialSaturationMarginDb,
             kExtraSaturationMarginDb)) {}
   ApmDataDumper data_dumper;

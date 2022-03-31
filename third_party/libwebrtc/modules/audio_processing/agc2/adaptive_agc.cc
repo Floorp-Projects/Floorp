@@ -14,6 +14,7 @@
 #include "modules/audio_processing/agc2/vad_with_level.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
@@ -42,14 +43,20 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
     : speech_level_estimator_(
           apm_data_dumper,
           config.adaptive_digital.level_estimator,
-          config.adaptive_digital.use_saturation_protector,
+          config.adaptive_digital
+              .level_estimator_adjacent_speech_frames_threshold,
+          config.adaptive_digital.initial_saturation_margin_db,
           config.adaptive_digital.extra_saturation_margin_db),
+      vad_(config.adaptive_digital.vad_probability_attack),
       gain_applier_(apm_data_dumper,
                     config.adaptive_digital
                         .gain_applier_adjacent_speech_frames_threshold),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(apm_data_dumper) {
   RTC_DCHECK(apm_data_dumper);
+  if (!config.adaptive_digital.use_saturation_protector) {
+    RTC_LOG(LS_WARNING) << "The saturation protector cannot be disabled.";
+  }
 }
 
 AdaptiveAgc::~AdaptiveAgc() = default;
