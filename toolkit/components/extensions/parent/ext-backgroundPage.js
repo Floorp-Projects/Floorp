@@ -93,7 +93,6 @@ class BackgroundPage extends HiddenExtensionPage {
 
   async build() {
     const { extension } = this;
-
     ExtensionTelemetry.backgroundPageLoad.stopwatchStart(extension, this);
 
     let context;
@@ -114,46 +113,14 @@ class BackgroundPage extends HiddenExtensionPage {
       });
 
       context = await contextPromise;
+      ExtensionTelemetry.backgroundPageLoad.stopwatchFinish(extension, this);
     } catch (e) {
       // Extension was down before the background page has loaded.
-      Cu.reportError(e);
       ExtensionTelemetry.backgroundPageLoad.stopwatchCancel(extension, this);
-      if (extension.persistentListeners) {
-        EventManager.clearPrimedListeners(this.extension, false);
-      }
-      extension.emit("background-script-aborted");
-      return;
+      throw e;
     }
 
-    ExtensionTelemetry.backgroundPageLoad.stopwatchFinish(extension, this);
-
-    if (context) {
-      // Wait until all event listeners registered by the script so far
-      // to be handled. We then set listenerPromises to null, which indicates
-      // to addListener that the background script has finished loading.
-      await Promise.all(context.listenerPromises);
-      context.listenerPromises = null;
-
-      notifyBackgroundScriptStatus(extension.id, true);
-      context.callOnClose({
-        close() {
-          notifyBackgroundScriptStatus(extension.id, false);
-        },
-      });
-    }
-
-    if (extension.persistentListeners) {
-      // |this.extension| may be null if the extension was shut down.
-      // In that case, we still want to clear the primed listeners,
-      // but not update the persistent listeners in the startupData.
-      EventManager.clearPrimedListeners(extension, !!this.extension);
-    }
-
-    // TODO(Bug ToBeFiled): in some corner case we may end up emitting
-    // background-script-started even if context was not defined,
-    // at a first glance it seems this should emit "background-script-aborted"
-    // instead when that is the case.
-    extension.emit("background-script-started");
+    return context;
   }
 
   shutdown() {
@@ -193,68 +160,28 @@ class BackgroundWorker {
 
   async build() {
     const { extension } = this;
-
     let context;
-    try {
-      const contextPromise = new Promise(resolve => {
-        let unwatch = watchExtensionWorkerContextLoaded(
-          { extension, viewType: "background_worker" },
-          context => {
-            unwatch();
-            this.validateWorkerInfoForContext(context);
-            resolve(context);
-          }
-        );
-      });
-
-      // TODO(Bug 17228327): follow up to spawn the active worker for a previously installed
-      // background service worker.
-      await serviceWorkerManager.registerForAddonPrincipal(
-        this.extension.principal
+    const contextPromise = new Promise(resolve => {
+      let unwatch = watchExtensionWorkerContextLoaded(
+        { extension, viewType: "background_worker" },
+        context => {
+          unwatch();
+          this.validateWorkerInfoForContext(context);
+          resolve(context);
+        }
       );
+    });
 
-      context = await contextPromise;
+    // TODO(Bug 17228327): follow up to spawn the active worker for a previously installed
+    // background service worker.
+    await serviceWorkerManager.registerForAddonPrincipal(
+      this.extension.principal
+    );
 
-      await this.waitForActiveWorker();
-    } catch (e) {
-      // Extension may be shutting down before the background worker has registered or
-      // loaded.
-      Cu.reportError(e);
+    context = await contextPromise;
 
-      if (extension.persistentListeners) {
-        EventManager.clearPrimedListeners(this.extension, false);
-      }
-
-      extension.emit("background-script-aborted");
-      return;
-    }
-
-    if (context) {
-      // Wait until all event listeners registered by the script so far
-      // to be handled.
-      await Promise.all(context.listenerPromises);
-      context.listenerPromises = null;
-
-      notifyBackgroundScriptStatus(extension.id, true);
-      context.callOnClose({
-        close() {
-          notifyBackgroundScriptStatus(extension.id, false);
-        },
-      });
-    }
-
-    if (extension.persistentListeners) {
-      // |this.extension| may be null if the extension was shut down.
-      // In that case, we still want to clear the primed listeners,
-      // but not update the persistent listeners in the startupData.
-      EventManager.clearPrimedListeners(extension, !!this.extension);
-    }
-
-    // TODO(Bug ToBeFiled): in some corner case we may end up emitting
-    // background-script-started even if context was not defined,
-    // at a first glance it seems this should emit "background-script-aborted"
-    // instead when that is the case.
-    extension.emit("background-script-started");
+    await this.waitForActiveWorker();
+    return context;
   }
 
   shutdown(isAppShutdown) {
@@ -325,7 +252,55 @@ this.backgroundPage = class extends ExtensionAPI {
       : BackgroundPage;
 
     this.bgInstance = new BackgroundClass(extension, manifest.background);
-    return this.bgInstance.build();
+    let context;
+    try {
+      context = await this.bgInstance.build();
+      // Top level execution already happened, RUNNING is
+      // a touch after the fact.
+      if (context && this.extension) {
+        extension.backgroundState = BACKGROUND_STATE.RUNNING;
+      }
+    } catch (e) {
+      Cu.reportError(e);
+      if (extension.persistentListeners) {
+        // Clear the primed listeners, but leave them persisted.
+        EventManager.clearPrimedListeners(extension, false);
+      }
+      extension.backgroundState = BACKGROUND_STATE.STOPPED;
+      extension.emit("background-script-aborted");
+      return;
+    }
+
+    if (context) {
+      // Wait until all event listeners registered by the script so far
+      // to be handled. We then set listenerPromises to null, which indicates
+      // to addListener that the background script has finished loading.
+      await Promise.all(context.listenerPromises);
+      context.listenerPromises = null;
+    }
+
+    if (extension.persistentListeners) {
+      // |this.extension| may be null if the extension was shut down.
+      // In that case, we still want to clear the primed listeners,
+      // but not update the persistent listeners in the startupData.
+      EventManager.clearPrimedListeners(extension, !!this.extension);
+    }
+
+    if (!context || !this.extension) {
+      extension.backgroundState = BACKGROUND_STATE.STOPPED;
+      extension.emit("background-script-aborted");
+      return;
+    }
+    if (!context.unloaded) {
+      notifyBackgroundScriptStatus(extension.id, true);
+      context.callOnClose({
+        close() {
+          notifyBackgroundScriptStatus(extension.id, false);
+        },
+      });
+    }
+
+    extension.emit("background-script-started");
   }
 
   observe(subject, topic, data) {
@@ -368,15 +343,10 @@ this.backgroundPage = class extends ExtensionAPI {
 
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
-      let done = event => {
+      let done = () => {
         extension.off("background-script-started", done);
         extension.off("background-script-aborted", done);
         extension.off("shutdown", done);
-        if (event == "background-script-started" && this.bgInstance) {
-          extension.backgroundState = BACKGROUND_STATE.RUNNING;
-        } else {
-          extension.backgroundState = BACKGROUND_STATE.STOPPED;
-        }
         resolve();
       };
       extension.on("background-script-started", done);
@@ -505,6 +475,12 @@ this.backgroundPage = class extends ExtensionAPI {
     let { extension } = this;
     extension.backgroundState = BACKGROUND_STATE.STOPPED;
 
+    // runtime.onStartup event support.  We listen for the first
+    // background startup then emit a first-run event.
+    extension.once("background-script-started", () => {
+      extension.emit("background-first-run");
+    });
+
     await this.primeBackground();
 
     ExtensionParent.browserStartupPromise.then(() => {
@@ -518,7 +494,11 @@ this.backgroundPage = class extends ExtensionAPI {
       // start the event page so they can be registered.
       if (
         extension.persistentBackground ||
-        !extension.persistentListeners?.size
+        !extension.persistentListeners?.size ||
+        // If runtime.onStartup has a listener and this is app_startup,
+        // start the extension so it will fire the event.
+        (extension.startupReason == "APP_STARTUP" &&
+          extension.persistentListeners?.get("runtime").has("onStartup"))
       ) {
         extension.emit("start-background-script");
       } else {

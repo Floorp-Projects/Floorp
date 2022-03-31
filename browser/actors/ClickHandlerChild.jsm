@@ -184,9 +184,9 @@ class ClickHandlerChild extends JSWindowActorChild {
       // actions here to avoid leaking clipboard content unexpectedly.
       // Note that whether the link will work actually or not does not matter
       // because in this case, user does not intent to paste clipboard content.
-      if (event.button === 1) {
-        event.preventMultipleActions();
-      }
+      // We also need to do this to prevent multiple tabs opening if there are
+      // nested link elements.
+      event.preventMultipleActions();
 
       this.sendAsyncMessage("Content:Click", json);
     }

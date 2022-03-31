@@ -31,11 +31,14 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   mozilla::PodZero(infos_.begin(), infos_.length());
   infos_[0].init(/*stackDepth=*/0);
 
-  // Because WarpBuilder can compile try-blocks but doesn't compile the
-  // catch-body, we need some special machinery to prevent OSR into Warp code in
-  // the following cases:
+  // WarpBuilder can compile try blocks, but doesn't support handling
+  // exceptions. If exception unwinding would resume in a catch or finally
+  // block, we instead bail out to the baseline interpreter. Finally blocks can
+  // still be reached by normal means, but the catch block is unreachable and is
+  // not compiled. We therefore need some special machinery to prevent OSR into
+  // Warp code in the following cases:
   //
-  // (1) Loops in catch/finally blocks:
+  // (1) Loops in catch blocks:
   //
   //       try {
   //         ..
@@ -43,7 +46,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   //         while (..) {} // Can't OSR here.
   //       }
   //
-  // (2) Loops only reachable via a catch/finally block:
+  // (2) Loops only reachable via a catch block:
   //
   //       for (;;) {
   //         try {
@@ -55,8 +58,8 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
   //       while (..) {} // Loop is only reachable via the catch-block.
   //
   // To deal with both of these cases, we track whether the current op is
-  // 'normally reachable' (reachable without going through a catch/finally
-  // block). Forward jumps propagate this flag to their jump targets (see
+  // 'normally reachable' (reachable without exception handling).
+  // Forward jumps propagate this flag to their jump targets (see
   // BytecodeInfo::jumpTargetNormallyReachable) and when the analysis reaches a
   // jump target it updates its normallyReachable flag based on the target's
   // flag.
@@ -279,10 +282,6 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
       case JSOp::FunWithProto:
       case JSOp::GlobalOrEvalDeclInstantiation:
         result.usesEnvironmentChain = true;
-        break;
-
-      case JSOp::Finally:
-        result.hasTryFinally = true;
         break;
 
       default:

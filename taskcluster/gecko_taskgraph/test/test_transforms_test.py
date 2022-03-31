@@ -42,6 +42,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             "foo": {
                 "description": "foo variant",
                 "suffix": "foo",
+                "component": "foo bar",
                 "merge": {
                     "mozharness": {
                         "extra-options": [
@@ -53,6 +54,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             "bar": {
                 "description": "bar variant",
                 "suffix": "bar",
+                "component": "foo bar",
                 "when": {
                     "$eval": "task['test-platform'][:5] == 'linux'",
                 },

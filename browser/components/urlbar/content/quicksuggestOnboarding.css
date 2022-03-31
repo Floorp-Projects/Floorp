@@ -10,6 +10,7 @@
 :root {
   --introduction-magglass-logo-height: 128px;
   --introduction-firefox-logo-height: 72px;
+  --introduction-image-height: 224px;
   --main-magglass-logo-height: 64px;
   --main-firefox-logo-height: 50px;
   --x-large-margin: 40px;
@@ -23,6 +24,7 @@
 }
 
 body.compact {
+  --introduction-image-height: 183px;
   --main-magglass-logo-height: 48px;
   --main-firefox-logo-height: 32px;
   --x-large-margin: 20px;
@@ -80,6 +82,27 @@ a {
   border: none;
 }
 
+.description-section {
+  /* The effective visual margin between the description and first option should
+     be --large-margin-const. Each child in the description has a bottom margin
+     of --small-margin, so subtract it from --large-margin-const. */
+  margin-block: 0 calc(var(--large-margin-const) - var(--small-margin));
+}
+
+.description {
+  font-size: 1.1em;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-block: 0 var(--small-margin);
+  white-space: pre-line;
+}
+
+.privacy-first {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-block: 0 var(--small-margin);
+}
+
 .pager > span {
   display: inline-block;
   border-radius: 3px;
@@ -114,6 +137,28 @@ a {
   margin-block-end: var(--x-large-margin);
 }
 
+#introduction-image {
+  height: var(--introduction-image-height);
+  background-image: url("suggest-example.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-block: var(--large-margin);
+}
+
+/* fx100 layout */
+#introduction-section.layout-100 .logo {
+  height: var(--main-firefox-logo-height);
+}
+
+#introduction-section.layout-100 .title {
+  margin-block: 0 var(--small-margin);
+}
+
+#introduction-section:not(.layout-100) .description-section {
+  display: none;
+}
+
 #onboardingClose {
   position: absolute;
   top: 0;
@@ -146,26 +191,6 @@ a {
 }
 
 #main-section .title {
-  margin-block: 0 var(--small-margin);
-}
-
-#main-section .description-section {
-  /* The effective visual margin between the description and first option should
-     be --large-margin-const. Each child in the description has a bottom margin
-     of --small-margin, so subtract it from --large-margin-const. */
-  margin-block: 0 calc(var(--large-margin-const) - var(--small-margin));
-}
-
-#main-section .description {
-  font-size: 1.1em;
-  font-weight: 400;
-  line-height: 1.6;
-  margin-block: 0 var(--small-margin);
-}
-
-#main-section .privacy-first {
-  font-size: 1.1em;
-  font-weight: 700;
   margin-block: 0 var(--small-margin);
 }
 
@@ -268,4 +293,19 @@ button {
     pointer-events: initial;
     opacity: 1;
   }
+}
+
+/* Show main only without transition */
+body.skip-introduction #introduction-section.inactive {
+  animation: none;
+  display: none;
+}
+
+body.skip-introduction #main-section.active {
+  animation: none;
+  pointer-events: initial;
+}
+
+body.skip-introduction .pager {
+  display: none;
 }

@@ -276,22 +276,6 @@ class ExtensionWrapper {
     return this.extension.terminateBackground();
   }
 
-  /*
-   * This method marks the extension unloading without actually calling
-   * shutdown, since shutting down a MockExtension causes it to be uninstalled.
-   *
-   * Normally you shouldn't need to use this unless you need to test something
-   * that requires a restart, such as updates.
-   */
-  markUnloaded() {
-    if (this.state != "running") {
-      throw new Error("Extension not running");
-    }
-    this.state = "unloaded";
-
-    return Promise.resolve();
-  }
-
   sendMessage(...args) {
     this.extension.testMessage(...args);
   }

@@ -255,6 +255,7 @@ void AppDateTimeFormat::Shutdown() {
 /*static*/
 void AppDateTimeFormat::ClearLocaleCache() {
   MOZ_ASSERT(NS_IsMainThread());
+  DeleteCache();
   delete sLocale;
   sLocale = nullptr;
 }

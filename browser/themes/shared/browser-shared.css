@@ -52,7 +52,6 @@
   --buttons-destructive-active-bgcolor: #810220;
   --buttons-destructive-color: #fbfbfe;
 
-  --checkbox-border-color: var(--input-border-color);
   --checkbox-unchecked-bgcolor: var(--button-bgcolor);
   --checkbox-unchecked-hover-bgcolor: var(--button-hover-bgcolor);
   --checkbox-unchecked-active-bgcolor: var(--button-active-bgcolor);
@@ -86,6 +85,10 @@
   --lwt-brighttext-url-color: #00ddff;
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
+}
+
+:root:-moz-lwtheme {
+  --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
 }
 
 @media (prefers-contrast) {

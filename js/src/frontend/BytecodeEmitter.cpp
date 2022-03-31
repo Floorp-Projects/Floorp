@@ -783,10 +783,15 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
         TryFinallyControl& finallyControl = control->as<TryFinallyControl>();
         if (finallyControl.emittingSubroutine()) {
           /*
-           * There's a [resume-index-or-exception, throwing] pair and the
-           * possible return value on the stack that we need to pop.
+           * There's a [resume-index-or-exception, throwing] pair on
+           * the stack that we need to pop. If the script is not a
+           * noScriptRval script, we also need to pop the cached rval.
            */
-          npops += 3;
+          if (bce_->sc->noScriptRval()) {
+            npops += 2;
+          } else {
+            npops += 3;
+          }
         } else {
           if (!flushPops(bce_)) {
             return false;
@@ -795,6 +800,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
             //      [stack] ...
             return false;
           }
+          finallyControl.setHasNonLocalJumps();
         }
         break;
       }

@@ -2,7 +2,7 @@ AMRemoteSettings Overview
 =========================
 
 ``AMRemoteSettings`` is a singleton that is responsible for fetching data from a RemoteSettings collection named
-``"main/addon-manager-settings"`` to remotely control a set of Add-ons related preferences (hardcoded inside
+``"main/addons-manager-settings"`` to remotely control a set of Add-ons related preferences (hardcoded inside
 the AMRemoteSettings definition part of a given Firefox release).
 
 ``AMRemoteSettings`` will process the collection data when the RemoteSettings ``"sync"`` event is fired and on
@@ -19,21 +19,21 @@ on the next browser startup or on the next time the ``"sync"`` event is fired ag
 
   * Firefox Add-ons features in the process of being deprecated and then fully removed in a future Firefox release
 
-  * or controlled settings that are never removed from the ``"main/addon-manager-settings"`` collection.
+  * or controlled settings that are never removed from the ``"main/addons-manager-settings"`` collection.
 
-  In general before changing controlled settings in the ``"main/addon-manager-settings"`` collection it is advisable to:
+  In general before changing controlled settings in the ``"main/addons-manager-settings"`` collection it is advisable to:
 
   * make sure to default value for the related about:config preferences has been changed in mozilla-central first,
     and to let it ride the release train and get some backing time on release;
 
-  * only after that consider changing the value controlled by ``"main/addon-manager-settings"`` collection,
+  * only after that consider changing the value controlled by ``"main/addons-manager-settings"`` collection,
     to set the same value on older Firefox releases where the previous default value was set.
 
 The ``AMRemoteSettings`` singleton queries RemoteSettings and processes all the entries got from the
-``"main/addon-manager-settings"`` collection, besides entries that may be filtered out by RemoteSettings based on
+``"main/addons-manager-settings"`` collection, besides entries that may be filtered out by RemoteSettings based on
 the ``"filter_expression"`` property (See https://remote-settings.readthedocs.io/en/latest/target-filters.html#how).
 
-Each of the entries created in the ``"main/addon-manager-settings"`` collection and is expected to match the JSONSchema
+Each of the entries created in the ``"main/addons-manager-settings"`` collection and is expected to match the JSONSchema
 described in the :ref:`JSON Schema section below<JSON Schema>`.
 
 For each entry found in the collection, only the properties that are explicitly included in the
@@ -116,7 +116,7 @@ How to define new remotely controlled settings
   documentation page provides some useful pointers:
   * https://firefox-source-docs.mozilla.org/services/settings/index.html#unit-tests
 
-* Refer to the RemoteSettings docs for more details about managing the JSONSchema for the ``"main/addon-manager-settings"``
+* Refer to the RemoteSettings docs for more details about managing the JSONSchema for the ``"main/addons-manager-settings"``
   collection and how to test it interactively in a Firefox instance:
   * https://remote-settings.readthedocs.io/en/latest/getting-started.html
   * https://firefox-source-docs.mozilla.org/services/settings/index.html#create-new-remote-settings

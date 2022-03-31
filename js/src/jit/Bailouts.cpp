@@ -203,11 +203,14 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
                                   const InlineFrameIterator& frame,
                                   ResumeFromException* rfe,
                                   const ExceptionBailoutInfo& excInfo) {
-  // We can be propagating debug mode exceptions without there being an
+  // If we are resuming in a finally block, the exception has already
+  // been captured.
+  // We can also be propagating debug mode exceptions without there being an
   // actual exception pending. For instance, when we return false from an
   // operation callback like a timeout handler.
-  MOZ_ASSERT_IF(!excInfo.propagatingIonExceptionForDebugMode(),
-                cx->isExceptionPending());
+  MOZ_ASSERT_IF(
+      !cx->isExceptionPending(),
+      excInfo.isFinally() || excInfo.propagatingIonExceptionForDebugMode());
 
   JS::AutoSaveExceptionState savedExc(cx);
 
@@ -235,6 +238,8 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
     if (excInfo.propagatingIonExceptionForDebugMode()) {
       bailoutInfo->bailoutKind =
           mozilla::Some(BailoutKind::IonExceptionDebugMode);
+    } else if (excInfo.isFinally()) {
+      bailoutInfo->bailoutKind = mozilla::Some(BailoutKind::Finally);
     }
 
     rfe->kind = ResumeFromException::RESUME_BAILOUT;

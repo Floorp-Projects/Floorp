@@ -20,33 +20,7 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
-nsPrintSettings::nsPrintSettings()
-    : mScaling(1.0),
-      mPrintBGColors(false),
-      mPrintBGImages(false),
-      mIsCancelled(false),
-      mSaveOnCancel(true),
-      mPrintSilent(false),
-      mShrinkToFit(true),
-      mShowMarginGuides(false),
-      mHonorPageRuleMargins(true),
-      mIsPrintSelectionRBEnabled(false),
-      mPrintSelectionOnly(false),
-      mPrintPageDelay(50),
-      mPaperWidth(8.5),
-      mPaperHeight(11.0),
-      mPaperSizeUnit(kPaperSizeInches),
-      mPrintReversed(false),
-      mPrintInColor(true),
-      mOrientation(kPortraitOrientation),
-      mResolution(0),
-      mDuplex(0),
-      mNumCopies(1),
-      mNumPagesPerSheet(1),
-      mPrintToFile(false),
-      mOutputFormat(kOutputFormatNative),
-      mIsInitedFromPrinter(false),
-      mIsInitedFromPrefs(false) {
+nsPrintSettings::nsPrintSettings() {
   /* member initializers and constructor code */
   int32_t marginWidth = NS_INCHES_TO_INT_TWIPS(DEFAULT_MARGIN_WIDTH);
   mMargin.SizeTo(marginWidth, marginWidth, marginWidth, marginWidth);
@@ -219,13 +193,25 @@ NS_IMETHODIMP nsPrintSettings::SetNumPagesPerSheet(int32_t aNumPagesPerSheet) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPrintToFile(bool* aPrintToFile) {
-  NS_ENSURE_ARG_POINTER(aPrintToFile);
-  *aPrintToFile = mPrintToFile;
+NS_IMETHODIMP nsPrintSettings::GetOutputDestination(
+    OutputDestinationType* aDestination) {
+  *aDestination = mOutputDestination;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetPrintToFile(bool aPrintToFile) {
-  mPrintToFile = aPrintToFile;
+
+NS_IMETHODIMP nsPrintSettings::SetOutputDestination(
+    OutputDestinationType aDestination) {
+  mOutputDestination = aDestination;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::SetOutputStream(nsIOutputStream* aStream) {
+  mOutputStream = aStream;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::GetOutputStream(nsIOutputStream** aStream) {
+  NS_IF_ADDREF(*aStream = mOutputStream.get());
   return NS_OK;
 }
 
@@ -946,7 +932,8 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mNumCopies = rhs.mNumCopies;
   mNumPagesPerSheet = rhs.mNumPagesPerSheet;
   mPrinter = rhs.mPrinter;
-  mPrintToFile = rhs.mPrintToFile;
+  mOutputDestination = rhs.mOutputDestination;
+  mOutputStream = rhs.mOutputStream;
   mToFileName = rhs.mToFileName;
   mOutputFormat = rhs.mOutputFormat;
   mIsInitedFromPrinter = rhs.mIsInitedFromPrinter;

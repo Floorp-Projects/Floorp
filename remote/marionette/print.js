@@ -70,7 +70,7 @@ function getPrintSettings(settings, filePath) {
   printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
   printSettings.printerName = "marionette";
   printSettings.printSilent = true;
-  printSettings.printToFile = true;
+  printSettings.outputDestination = Ci.nsIPrintSettings.kOutputDestinationFile;
   printSettings.toFileName = filePath;
 
   // Setting the paperSizeUnit to kPaperSizeMillimeters doesn't work on mac
