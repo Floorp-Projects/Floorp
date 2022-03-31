@@ -13,7 +13,6 @@
 
 #include <stddef.h>
 
-#include "absl/types/optional.h"
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/agc2/saturation_protector.h"
 #include "modules/audio_processing/agc2/vad_with_level.h"
@@ -46,7 +45,7 @@ class AdaptiveModeLevelEstimator {
   // Updates the level estimation.
   void Update(const VadLevelAnalyzer::Result& vad_data);
   // Returns the estimated speech plus noise level.
-  float GetLevelDbfs() const;
+  float level_dbfs() const { return level_dbfs_; }
   // Returns true if the estimator is confident on its current estimate.
   bool IsConfident() const;
 
@@ -77,7 +76,7 @@ class AdaptiveModeLevelEstimator {
   const float extra_saturation_margin_db_;
   // TODO(crbug.com/webrtc/7494): Add temporary state.
   State state_;
-  absl::optional<float> last_level_dbfs_;
+  float level_dbfs_;
 };
 
 }  // namespace webrtc

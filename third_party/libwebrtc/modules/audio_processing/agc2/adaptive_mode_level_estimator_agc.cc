@@ -49,7 +49,7 @@ bool AdaptiveModeLevelEstimatorAgc::GetRmsErrorDb(int* error) {
     return false;
   }
   *error =
-      std::floor(target_level_dbfs() - level_estimator_.GetLevelDbfs() + 0.5f);
+      std::floor(target_level_dbfs() - level_estimator_.level_dbfs() + 0.5f);
   time_in_ms_since_last_estimate_ = 0;
   return true;
 }
