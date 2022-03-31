@@ -873,8 +873,11 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
   long out_frames =
       cubeb_resampler_fill(stm->resampler.get(), input_buffer,
                            &input_frames_count, dest, output_frames_needed);
-  /* TODO: Report out_frames < 0 as an error via the API. */
-  XASSERT(out_frames >= 0);
+  if (out_frames < 0) {
+    ALOGV("Callback refill error: %d", out_frames);
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    return out_frames;
+  }
 
   float volume = 1.0;
   {
@@ -1190,6 +1193,7 @@ refill_callback_duplex(cubeb_stream * stm)
         static_cast<long>(stm->total_output_frames) - stm->total_input_frames,
         static_cast<float>(stm->total_output_frames) / stm->total_input_frames);
 
+  long got;
   if (stm->has_dummy_output) {
     ALOGV(
         "Duplex callback (dummy output): input frames: %Iu, output frames: %Iu",
@@ -1197,13 +1201,15 @@ refill_callback_duplex(cubeb_stream * stm)
 
     // We don't want to expose the dummy output to the callback so don't pass
     // the output buffer (it will be released later with silence in it)
-    refill(stm, stm->linear_input_buffer->data(), input_frames, nullptr, 0);
+    got =
+        refill(stm, stm->linear_input_buffer->data(), input_frames, nullptr, 0);
+
   } else {
     ALOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
           input_frames, output_frames);
 
-    refill(stm, stm->linear_input_buffer->data(), input_frames, output_buffer,
-           output_frames);
+    got = refill(stm, stm->linear_input_buffer->data(), input_frames,
+                 output_buffer, output_frames);
   }
 
   stm->linear_input_buffer->clear();
@@ -1217,6 +1223,9 @@ refill_callback_duplex(cubeb_stream * stm)
   }
   if (FAILED(hr)) {
     LOG("failed to release buffer: %lx", hr);
+    return false;
+  }
+  if (got < 0) {
     return false;
   }
   return true;
@@ -1245,8 +1254,9 @@ refill_callback_input(cubeb_stream * stm)
 
   long read =
       refill(stm, stm->linear_input_buffer->data(), input_frames, nullptr, 0);
-
-  XASSERT(read >= 0);
+  if (read < 0) {
+    return false;
+  }
 
   stm->linear_input_buffer->clear();
 
@@ -1276,8 +1286,9 @@ refill_callback_output(cubeb_stream * stm)
 
   ALOGV("Output callback: output frames requested: %Iu, got %ld", output_frames,
         got);
-
-  XASSERT(got >= 0);
+  if (got < 0) {
+    return false;
+  }
   XASSERT(size_t(got) == output_frames || stm->draining);
 
   hr = stm->render_client->ReleaseBuffer(got, 0);

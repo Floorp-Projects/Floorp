@@ -5,23 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-#  'test_duplex.cpp', # DISABLED: See bug 1314514.
-#  'test_record.cpp', # DISABLED: See bug 1314514.
-#  'test_overload_callback.cpp', # DISABLED: Times out in automation.
-  'test_tone.cpp',
-  'test_utils.cpp'
+#  '../test/test_duplex.cpp', # DISABLED: See bug 1314514.
+#  '../test/test_record.cpp', # DISABLED: See bug 1314514.
+#  '../test/test_overload_callback.cpp', # DISABLED: Times out in automation.
+  '../test/test_tone.cpp',
+  '../test/test_utils.cpp'
 ]
 
 if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
   UNIFIED_SOURCES += [
-    'test_resampler.cpp',
+    '../test/test_resampler.cpp',
   ]
 
 if CONFIG['OS_TARGET'] != 'Android':
   UNIFIED_SOURCES += [
-    'test_audio.cpp',
-    'test_latency.cpp',
-    'test_sanity.cpp'
+    '../test/test_audio.cpp',
+    '../test/test_latency.cpp',
+    '../test/test_sanity.cpp'
   ]
 
 LOCAL_INCLUDES += [
