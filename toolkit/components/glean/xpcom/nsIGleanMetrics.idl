@@ -147,6 +147,17 @@ interface nsIGleanTimingDistribution : nsISupports
    */
   [implicit_jscontext]
 	jsval testGetValue([optional] in ACString aPingName);
+
+  /**
+   * **Test-only API**
+   *
+   * Accumulates a raw numeric sample of milliseconds.
+   *
+   * Test-only until we find a use-case and decent JS Time Duration type.
+   *
+   * @param aSample The sample, in milliseconds, to add.
+   */
+  void testAccumulateRawMillis(in uint64_t aSample);
 };
 
 [scriptable, uuid(eea5ed46-16ba-46cd-bb1f-504581987fe1)]

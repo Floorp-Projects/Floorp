@@ -173,4 +173,10 @@ GleanTimingDistribution::TestGetValue(const nsACString& aPingName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GleanTimingDistribution::TestAccumulateRawMillis(uint64_t aSample) {
+  mTimingDist.AccumulateRawDuration(TimeDuration::FromMilliseconds(aSample));
+  return NS_OK;
+}
+
 }  // namespace mozilla::glean
