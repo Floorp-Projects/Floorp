@@ -243,6 +243,7 @@
               },
               "onclick": {
                 "type": "function",
+                "max_manifest_version": 2,
                 "optional": true,
                 "description": "A function that will be called back when the menu item is clicked. Event pages cannot use this; instead, they should register a listener for $(ref:contextMenus.onClicked).",
                 "parameters": [
@@ -374,6 +375,7 @@
               },
               "onclick": {
                 "type": "function",
+                "max_manifest_version": 2,
                 "optional": "omit-key-if-missing",
                 "parameters": [
                   {
