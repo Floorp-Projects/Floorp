@@ -85,6 +85,7 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
 }
 }  // namespace
 
+// TODO(crbug.com/webrtc/7494): Remove ctor and the constant used below.
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper)
     : AdaptiveDigitalGainApplier(

@@ -347,6 +347,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         LevelEstimator level_estimator = kRms;
         bool use_saturation_protector = true;
         float extra_saturation_margin_db = 2.f;
+        int gain_applier_adjacent_speech_frames_threshold = 1;
       } adaptive_digital;
     } gain_controller2;
 
