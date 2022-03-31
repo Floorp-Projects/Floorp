@@ -109,6 +109,23 @@ const VARIATION_MAP = {
         "firefox-suggest-onboarding-main-reject-option-description-1",
     },
   },
+  "100-b": {
+    mainPrivacyFirst: true,
+    logoType: "firefox",
+    l10nUpdates: {
+      "main-title": "firefox-suggest-onboarding-main-title-9",
+      "main-description": "firefox-suggest-onboarding-main-description-9",
+      "main-accept-option-label":
+        "firefox-suggest-onboarding-main-accept-option-label-2",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-3",
+      "main-reject-option-label":
+        "firefox-suggest-onboarding-main-reject-option-label-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-3",
+    },
+    skipIntroduction: true,
+  },
 };
 
 // If the window height is smaller than this value when the dialog opens, then
@@ -130,14 +147,14 @@ window._quicksuggestOnboardingReady = new Promise(r => {
 document.addEventListener("DOMContentLoaded", async () => {
   await document.l10n.ready;
 
-  const variation = VARIATION_MAP[window.arguments[0].variationType];
-  if (variation) {
-    document.l10n.pauseObserving();
-    try {
-      await applyVariation(variation);
-    } finally {
-      document.l10n.resumeObserving();
-    }
+  const variation =
+    VARIATION_MAP[window.arguments[0].variationType] || VARIATION_MAP.a;
+
+  document.l10n.pauseObserving();
+  try {
+    await applyVariation(variation);
+  } finally {
+    document.l10n.resumeObserving();
   }
 
   addSubmitListener(document.getElementById("onboardingClose"), () => {
@@ -145,15 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.close();
   });
   addSubmitListener(document.getElementById("onboardingNext"), () => {
-    window.arguments[0].visitedMain = true;
-    document.getElementById("introduction-section").classList.add("inactive");
-    document.getElementById("main-section").classList.add("active");
-    document.body.setAttribute("aria-labelledby", "main-title");
-    let ariaDescribedBy = "main-description";
-    if (variation?.mainPrivacyFirst) {
-      ariaDescribedBy += " main-privacy-first";
-    }
-    document.body.setAttribute("aria-describedby", ariaDescribedBy);
+    gotoMain(variation);
   });
   addSubmitListener(document.getElementById("onboardingLearnMore"), () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_2;
@@ -208,6 +217,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   resolveOnboardingReady();
 });
 
+function gotoMain(variation) {
+  window.arguments[0].visitedMain = true;
+
+  document.getElementById("introduction-section").classList.add("inactive");
+  document.getElementById("main-section").classList.add("active");
+
+  document.body.setAttribute("aria-labelledby", "main-title");
+  let ariaDescribedBy = "main-description";
+  if (variation.mainPrivacyFirst) {
+    ariaDescribedBy += " main-privacy-first";
+  }
+  document.body.setAttribute("aria-describedby", ariaDescribedBy);
+}
+
 async function applyVariation(variation) {
   if (variation.logoType) {
     for (const logo of document.querySelectorAll(".logo")) {
@@ -228,6 +251,11 @@ async function applyVariation(variation) {
       translatedElements.push(element);
     }
     await document.l10n.translateElements(translatedElements);
+  }
+
+  if (variation.skipIntroduction) {
+    document.body.classList.add("skip-introduction");
+    gotoMain(variation);
   }
 }
 

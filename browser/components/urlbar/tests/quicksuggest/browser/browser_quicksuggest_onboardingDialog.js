@@ -502,11 +502,10 @@ add_task(async function focus_order_on_introduction() {
   info("Check the first focus");
   Assert.equal(win.document.activeElement.id, "onboardingNext");
 
-  const order = ["onboardingClose", "onboardingNext", "onboardingClose"];
-  for (const next of order) {
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(win.document.activeElement.id, next);
-  }
+  assertFocusOrder(
+    ["onboardingClose", "onboardingNext", "onboardingClose"],
+    win
+  );
 
   EventUtils.synthesizeKey("KEY_Escape");
 
@@ -528,18 +527,16 @@ add_task(async function focus_order_on_main() {
     skipIntroduction: true,
   });
 
-  const order = [
-    "onboardingAccept",
-    "onboardingLearnMore",
-    "onboardingReject",
-    "onboardingSkipLink",
-    "onboardingAccept",
-  ];
-
-  for (const next of order) {
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(win.document.activeElement.id, next);
-  }
+  assertFocusOrder(
+    [
+      "onboardingAccept",
+      "onboardingLearnMore",
+      "onboardingReject",
+      "onboardingSkipLink",
+      "onboardingAccept",
+    ],
+    win
+  );
 
   EventUtils.synthesizeKey("KEY_Escape");
 
@@ -566,17 +563,15 @@ add_task(async function focus_order_with_accept_option() {
   Assert.equal(win.document.activeElement.id, "onboardingAccept");
   EventUtils.synthesizeKey(" ");
 
-  const order = [
-    "onboardingLearnMore",
-    "onboardingSubmit",
-    "onboardingSkipLink",
-    "onboardingAccept",
-  ];
-
-  for (const next of order) {
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(win.document.activeElement.id, next);
-  }
+  assertFocusOrder(
+    [
+      "onboardingLearnMore",
+      "onboardingSubmit",
+      "onboardingSkipLink",
+      "onboardingAccept",
+    ],
+    win
+  );
 
   EventUtils.synthesizeKey("KEY_Escape");
 
@@ -603,17 +598,15 @@ add_task(async function focus_order_with_reject_option() {
   Assert.equal(win.document.activeElement.id, "onboardingReject");
   EventUtils.synthesizeKey(" ");
 
-  const order = [
-    "onboardingSubmit",
-    "onboardingSkipLink",
-    "onboardingLearnMore",
-    "onboardingReject",
-  ];
-
-  for (const next of order) {
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(win.document.activeElement.id, next);
-  }
+  assertFocusOrder(
+    [
+      "onboardingSubmit",
+      "onboardingSkipLink",
+      "onboardingLearnMore",
+      "onboardingReject",
+    ],
+    win
+  );
 
   EventUtils.synthesizeKey("KEY_Escape");
 
@@ -1053,6 +1046,91 @@ add_task(async function variation_H() {
   });
 });
 
+// Test the variation 100-b.
+add_task(async function variation_100_B() {
+  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "online",
+      quickSuggestOnboardingDialogVariation: "100-B",
+    },
+    callback: async () => {
+      info("Calling showOnboardingDialog");
+      const { win, maybeShowPromise } = await showOnboardingDialog();
+
+      info("Check whether the main page is shown from the beginning");
+      const introductionSection = win.document.getElementById(
+        "introduction-section"
+      );
+      const mainSection = win.document.getElementById("main-section");
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          BrowserTestUtils.is_hidden(introductionSection) &&
+          BrowserTestUtils.is_visible(mainSection),
+        "Wait until the main page is ready"
+      );
+
+      info("Check the l10n messages");
+      assertL10N(
+        {
+          "main-title": "firefox-suggest-onboarding-main-title-9",
+          "main-description": "firefox-suggest-onboarding-main-description-9",
+          "main-accept-option-label":
+            "firefox-suggest-onboarding-main-accept-option-label-2",
+          "main-accept-option-description":
+            "firefox-suggest-onboarding-main-accept-option-description-3",
+          "main-reject-option-label":
+            "firefox-suggest-onboarding-main-reject-option-label-2",
+          "main-reject-option-description":
+            "firefox-suggest-onboarding-main-reject-option-description-3",
+        },
+        win
+      );
+
+      info("Check the logo");
+      const mainLogoImage = win.getComputedStyle(
+        win.document.querySelector("#main-section .logo")
+      ).backgroundImage;
+      Assert.equal(
+        mainLogoImage,
+        'url("chrome://branding/content/about-logo.svg")'
+      );
+
+      info("Check the learn more link");
+      Assert.ok(
+        win.document.querySelector("#main-description #onboardingLearnMore")
+      );
+      Assert.ok(
+        !win.document.querySelector(
+          "#main-accept-option-label #onboardingLearnMore"
+        )
+      );
+
+      info("Check the first focus");
+      Assert.equal(win.document.activeElement.id, "onboardingLearnMore");
+
+      if (gCanTabMoveFocus) {
+        info("Check the focus order");
+        assertFocusOrder(
+          [
+            "onboardingAccept",
+            "onboardingReject",
+            "onboardingSkipLink",
+            "onboardingLearnMore",
+          ],
+          win
+        );
+      }
+
+      EventUtils.synthesizeKey("KEY_Escape");
+      await maybeShowPromise;
+    },
+  });
+});
+
 async function doDialogTest({
   onboardingDialogChoice,
   telemetryEvents,
@@ -1273,10 +1351,7 @@ async function doVariationTest({
       }
 
       info("Check the l10n attribute");
-      for (const [id, l10n] of Object.entries(expectedL10N)) {
-        const element = win.document.getElementById(id);
-        Assert.equal(element.getAttribute("data-l10n-id"), l10n);
-      }
+      assertL10N(expectedL10N, win);
 
       // Trigger the transition by pressing Enter on the Next button.
       EventUtils.synthesizeKey("KEY_Enter");
@@ -1310,6 +1385,20 @@ async function doVariationTest({
       );
     },
   });
+}
+
+function assertFocusOrder(order, win) {
+  for (const next of order) {
+    EventUtils.synthesizeKey("KEY_Tab");
+    Assert.equal(win.document.activeElement.id, next);
+  }
+}
+
+function assertL10N(expectedL10N, win) {
+  for (const [id, l10n] of Object.entries(expectedL10N)) {
+    const element = win.document.getElementById(id);
+    Assert.equal(element.getAttribute("data-l10n-id"), l10n);
+  }
 }
 
 /**
