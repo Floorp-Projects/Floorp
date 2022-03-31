@@ -413,6 +413,7 @@ class Message extends Component {
           this.messageNode = node;
         },
         "data-message-id": messageId,
+        "data-indent": indent || 0,
         "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
       },
       timestampEl,
