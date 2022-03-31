@@ -6149,4 +6149,94 @@ TEST_F(VideoStreamEncoderTest, ConfiguresVp9SvcAtOddResolutions) {
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest, EncoderResetAccordingToParameterChange) {
+  const float downscale_factors[] = {4.0, 2.0, 1.0};
+  const int number_layers =
+      sizeof(downscale_factors) / sizeof(downscale_factors[0]);
+  VideoEncoderConfig config;
+  test::FillEncoderConfiguration(kVideoCodecVP8, number_layers, &config);
+  for (int i = 0; i < number_layers; ++i) {
+    config.simulcast_layers[i].scale_resolution_down_by = downscale_factors[i];
+    config.simulcast_layers[i].active = true;
+  }
+  config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps), 0, 0, 0);
+
+  // First initialization.
+  // Encoder should be initialized. Next frame should be key frame.
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  sink_.SetNumExpectedLayers(number_layers);
+  int64_t timestamp_ms = kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(CreateFrame(timestamp_ms, 1280, 720));
+  WaitForEncodedFrame(timestamp_ms);
+  EXPECT_EQ(1, fake_encoder_.GetNumEncoderInitializations());
+  EXPECT_THAT(fake_encoder_.LastFrameTypes(),
+              ::testing::ElementsAreArray({VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey}));
+
+  // Disable top layer.
+  // Encoder shouldn't be re-initialized. Next frame should be delta frame.
+  config.simulcast_layers[number_layers - 1].active = false;
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  sink_.SetNumExpectedLayers(number_layers - 1);
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(CreateFrame(timestamp_ms, 1280, 720));
+  WaitForEncodedFrame(timestamp_ms);
+  EXPECT_EQ(1, fake_encoder_.GetNumEncoderInitializations());
+  EXPECT_THAT(fake_encoder_.LastFrameTypes(),
+              ::testing::ElementsAreArray({VideoFrameType::kVideoFrameDelta,
+                                           VideoFrameType::kVideoFrameDelta,
+                                           VideoFrameType::kVideoFrameDelta}));
+
+  // Re-enable top layer.
+  // Encoder should be re-initialized. Next frame should be key frame.
+  config.simulcast_layers[number_layers - 1].active = true;
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  sink_.SetNumExpectedLayers(number_layers);
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(CreateFrame(timestamp_ms, 1280, 720));
+  WaitForEncodedFrame(timestamp_ms);
+  EXPECT_EQ(2, fake_encoder_.GetNumEncoderInitializations());
+  EXPECT_THAT(fake_encoder_.LastFrameTypes(),
+              ::testing::ElementsAreArray({VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey}));
+
+  // Top layer max rate change.
+  // Encoder shouldn't be re-initialized. Next frame should be delta frame.
+  config.simulcast_layers[number_layers - 1].max_bitrate_bps -= 100;
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  sink_.SetNumExpectedLayers(number_layers);
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(CreateFrame(timestamp_ms, 1280, 720));
+  WaitForEncodedFrame(timestamp_ms);
+  EXPECT_EQ(2, fake_encoder_.GetNumEncoderInitializations());
+  EXPECT_THAT(fake_encoder_.LastFrameTypes(),
+              ::testing::ElementsAreArray({VideoFrameType::kVideoFrameDelta,
+                                           VideoFrameType::kVideoFrameDelta,
+                                           VideoFrameType::kVideoFrameDelta}));
+
+  // Top layer resolution change.
+  // Encoder should be re-initialized. Next frame should be key frame.
+  config.simulcast_layers[number_layers - 1].scale_resolution_down_by += 0.1;
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+  sink_.SetNumExpectedLayers(number_layers);
+  timestamp_ms += kFrameIntervalMs;
+  video_source_.IncomingCapturedFrame(CreateFrame(timestamp_ms, 1280, 720));
+  WaitForEncodedFrame(timestamp_ms);
+  EXPECT_EQ(3, fake_encoder_.GetNumEncoderInitializations());
+  EXPECT_THAT(fake_encoder_.LastFrameTypes(),
+              ::testing::ElementsAreArray({VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey,
+                                           VideoFrameType::kVideoFrameKey}));
+  video_stream_encoder_->Stop();
+}
+
 }  // namespace webrtc

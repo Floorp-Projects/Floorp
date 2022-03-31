@@ -115,19 +115,37 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
   }
 
   for (unsigned char i = 0; i < new_send_codec.numberOfSimulcastStreams; ++i) {
-    if (new_send_codec.simulcastStream[i].width !=
+    if (!new_send_codec.simulcastStream[i].active) {
+      // No need to reset when stream is inactive.
+      continue;
+    }
+
+    if (!prev_send_codec.simulcastStream[i].active ||
+        new_send_codec.simulcastStream[i].width !=
             prev_send_codec.simulcastStream[i].width ||
         new_send_codec.simulcastStream[i].height !=
             prev_send_codec.simulcastStream[i].height ||
-        new_send_codec.simulcastStream[i].maxFramerate !=
-            prev_send_codec.simulcastStream[i].maxFramerate ||
         new_send_codec.simulcastStream[i].numberOfTemporalLayers !=
             prev_send_codec.simulcastStream[i].numberOfTemporalLayers ||
         new_send_codec.simulcastStream[i].qpMax !=
-            prev_send_codec.simulcastStream[i].qpMax ||
-        new_send_codec.simulcastStream[i].active !=
-            prev_send_codec.simulcastStream[i].active) {
+            prev_send_codec.simulcastStream[i].qpMax) {
       return true;
+    }
+  }
+
+  if (new_send_codec.codecType == kVideoCodecVP9) {
+    size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
+    for (unsigned char i = 0; i < num_spatial_layers; ++i) {
+      if (new_send_codec.spatialLayers[i].width !=
+              prev_send_codec.spatialLayers[i].width ||
+          new_send_codec.spatialLayers[i].height !=
+              prev_send_codec.spatialLayers[i].height ||
+          new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
+              prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
+          new_send_codec.spatialLayers[i].qpMax !=
+              prev_send_codec.spatialLayers[i].qpMax) {
+        return true;
+      }
     }
   }
   return false;
@@ -756,7 +774,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   // start bitrate or max framerate has changed.
   if (!encoder_reset_required) {
     encoder_reset_required = RequiresEncoderReset(
-        codec, send_codec_, was_encode_called_since_last_initialization_);
+        send_codec_, codec, was_encode_called_since_last_initialization_);
   }
   send_codec_ = codec;
 
@@ -787,6 +805,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
       encoder_->RegisterEncodeCompleteCallback(this);
       frame_encode_metadata_writer_.OnEncoderInit(send_codec_,
                                                   HasInternalSource());
+      next_frame_types_.clear();
+      next_frame_types_.resize(
+          std::max(static_cast<int>(codec.numberOfSimulcastStreams), 1),
+          VideoFrameType::kVideoFrameKey);
     }
 
     frame_encode_metadata_writer_.Reset();
@@ -798,10 +820,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   OnEncoderSettingsChanged();
 
   if (success) {
-    next_frame_types_.clear();
-    next_frame_types_.resize(
-        std::max(static_cast<int>(codec.numberOfSimulcastStreams), 1),
-        VideoFrameType::kVideoFrameKey);
     RTC_LOG(LS_VERBOSE) << " max bitrate " << codec.maxBitrate
                         << " start bitrate " << codec.startBitrate
                         << " max frame rate " << codec.maxFramerate
