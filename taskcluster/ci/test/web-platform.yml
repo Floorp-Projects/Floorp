@@ -296,11 +296,18 @@ web-platform-tests-wdspec:
             fission: default
             default:
                 by-test-platform:
-                    android.*: 3
+                    android.*: 2
                     default: default
     fetches:
         toolchain:
             by-test-platform:
+                android-em-7.*:
+                    - android-system-image-x86_64-linux
+                    - android-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-geckodriver
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
                 linux.*64.*:
                     - linux64-geckodriver
                     - linux64-minidump-stackwalk
