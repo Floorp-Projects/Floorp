@@ -332,6 +332,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 // Variables with fallback prefs do not need to be defined here because their
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
+  experimentType: "",
   isBestMatchExperiment: false,
 };
 
