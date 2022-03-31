@@ -92,6 +92,7 @@ rtc_library("audio") {
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/synchronization:sequence_checker",
+    "../rtc_base/system:no_unique_address",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",

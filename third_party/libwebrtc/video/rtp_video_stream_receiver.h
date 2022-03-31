@@ -46,6 +46,7 @@
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
 #include "video/buffered_frame_decryptor.h"
@@ -325,7 +326,7 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
   ReceiveStatistics* const rtp_receive_statistics_;
   std::unique_ptr<UlpfecReceiver> ulpfec_receiver_;
 
-  SequenceChecker worker_task_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_task_checker_;
   bool receiving_ RTC_GUARDED_BY(worker_task_checker_);
   int64_t last_packet_log_ms_ RTC_GUARDED_BY(worker_task_checker_);
 

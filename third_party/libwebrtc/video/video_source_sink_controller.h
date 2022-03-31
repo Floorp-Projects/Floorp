@@ -19,6 +19,7 @@
 #include "api/video/video_source_interface.h"
 #include "call/adaptation/video_source_restrictions.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -62,7 +63,7 @@ class VideoSourceSinkController {
   // Used to ensure that this class is called on threads/sequences that it and
   // downstream implementations were designed for.
   // In practice, this represent's libjingle's worker thread.
-  SequenceChecker sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
 
   rtc::VideoSinkInterface<VideoFrame>* const sink_;
   rtc::VideoSourceInterface<VideoFrame>* source_

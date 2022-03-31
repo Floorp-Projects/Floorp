@@ -31,6 +31,7 @@ rtc_library("control_handler") {
     "../../../rtc_base:checks",
     "../../../rtc_base:safe_minmax",
     "../../../rtc_base/synchronization:sequence_checker",
+    "../../../rtc_base/system:no_unique_address",
     "../../../system_wrappers:field_trial",
     "../../pacing",
   ]
