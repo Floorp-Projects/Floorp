@@ -283,7 +283,6 @@ class AecState {
   size_t blocks_with_active_render_ = 0;
   bool capture_signal_saturation_ = false;
   FilterAnalyzer filter_analyzer_;
-  absl::optional<DelayEstimate> external_delay_;
   EchoAudibility echo_audibility_;
   ReverbModelEstimator reverb_model_estimator_;
   ReverbModel avg_render_reverb_;
