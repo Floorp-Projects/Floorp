@@ -24,22 +24,27 @@ constexpr auto kNotPresent = DecodeTargetIndication::kNotPresent;
 constexpr auto kSwitch = DecodeTargetIndication::kSwitch;
 constexpr auto kRequired = DecodeTargetIndication::kRequired;
 
-constexpr DecodeTargetIndication kDtis[5][3] = {
-    {kSwitch, kSwitch, kSwitch},          // Key, S0
-    {kNotPresent, kSwitch, kSwitch},      // Key, S1
-    {kNotPresent, kNotPresent, kSwitch},  // Key and Delta, S2
-    {kSwitch, kRequired, kRequired},      // Delta, S0
-    {kNotPresent, kSwitch, kRequired},    // Delta, S1
+constexpr DecodeTargetIndication kKeyFrameDtis[3][3] = {
+    {kSwitch, kSwitch, kSwitch},          // S0
+    {kNotPresent, kSwitch, kSwitch},      // S1
+    {kNotPresent, kNotPresent, kSwitch},  // S2
+};
+constexpr DecodeTargetIndication kDeltaFrameDtis[3][3] = {
+    {kSwitch, kRequired, kRequired},      // S0
+    {kNotPresent, kSwitch, kRequired},    // S1
+    {kNotPresent, kNotPresent, kSwitch},  // S2
 };
 
 }  // namespace
+
+constexpr int ScalabilityStructureL3T1::kNumSpatialLayers;
 
 ScalabilityStructureL3T1::~ScalabilityStructureL3T1() = default;
 
 ScalableVideoController::StreamLayersConfig
 ScalabilityStructureL3T1::StreamConfig() const {
   StreamLayersConfig result;
-  result.num_spatial_layers = 3;
+  result.num_spatial_layers = kNumSpatialLayers;
   result.num_temporal_layers = 1;
   result.scaling_factor_num[0] = 1;
   result.scaling_factor_den[0] = 4;
@@ -50,8 +55,8 @@ ScalabilityStructureL3T1::StreamConfig() const {
 
 FrameDependencyStructure ScalabilityStructureL3T1::DependencyStructure() const {
   FrameDependencyStructure structure;
-  structure.num_decode_targets = 3;
-  structure.num_chains = 3;
+  structure.num_decode_targets = kNumSpatialLayers;
+  structure.num_chains = kNumSpatialLayers;
   structure.decode_target_protected_by_chain = {0, 1, 2};
   auto& templates = structure.templates;
   templates.resize(6);
@@ -66,47 +71,79 @@ FrameDependencyStructure ScalabilityStructureL3T1::DependencyStructure() const {
 
 std::vector<ScalableVideoController::LayerFrameConfig>
 ScalabilityStructureL3T1::NextFrameConfig(bool restart) {
-  std::vector<LayerFrameConfig> config(3);
+  std::vector<LayerFrameConfig> configs;
+  configs.reserve(kNumSpatialLayers);
 
   // Buffer i keeps latest frame for spatial layer i
-  if (restart || keyframe_) {
-    config[0].Id(0).S(0).Keyframe().Update(0);
-    config[1].Id(1).S(1).Update(1).Reference(0);
-    config[2].Id(2).S(2).Update(2).Reference(1);
-    keyframe_ = false;
-  } else {
-    config[0].Id(3).S(0).ReferenceAndUpdate(0);
-    config[1].Id(4).S(1).ReferenceAndUpdate(1).Reference(0);
-    config[2].Id(2).S(2).ReferenceAndUpdate(2).Reference(1);
+  if (next_pattern_ == kKeyFrame || restart) {
+    for (int sid = 0; sid < kNumSpatialLayers; ++sid) {
+      use_temporal_dependency_[sid] = false;
+    }
+    next_pattern_ = kKeyFrame;
   }
-  return config;
+
+  absl::optional<int> spatial_dependency_buffer_id;
+  for (int sid = 0; sid < kNumSpatialLayers; ++sid) {
+    if (!active_decode_targets_[sid]) {
+      // Next frame from the spatial layer `sid` shouldn't depend on potentially
+      // very old previous frame from the spatial layer `sid`.
+      use_temporal_dependency_[sid] = false;
+      continue;
+    }
+    configs.emplace_back();
+    ScalableVideoController::LayerFrameConfig& config = configs.back().S(sid);
+    config.Id(next_pattern_);
+
+    if (spatial_dependency_buffer_id) {
+      config.Reference(*spatial_dependency_buffer_id);
+    } else if (next_pattern_ == kKeyFrame) {
+      config.Keyframe();
+    }
+
+    if (use_temporal_dependency_[sid]) {
+      config.ReferenceAndUpdate(sid);
+    } else {
+      // TODO(bugs.webrtc.org/11999): Propagate chain restart on delta frame to
+      // ChainDiffCalculator
+      config.Update(sid);
+    }
+    spatial_dependency_buffer_id = sid;
+    use_temporal_dependency_[sid] = true;
+  }
+  next_pattern_ = kDeltaFrame;
+  return configs;
 }
 
 absl::optional<GenericFrameInfo> ScalabilityStructureL3T1::OnEncodeDone(
     LayerFrameConfig config) {
   absl::optional<GenericFrameInfo> frame_info;
-  if (config.IsKeyframe() && config.Id() != 0) {
-    // Encoder generated a key frame without asking to.
-    if (config.SpatialId() > 0) {
-      RTC_LOG(LS_WARNING) << "Unexpected spatial id " << config.SpatialId()
-                          << " for key frame.";
-    }
-    config = LayerFrameConfig().Id(0).S(0).Keyframe().Update(0);
-  }
+  const auto& dtis = (config.IsKeyframe() || config.Id() == kKeyFrame)
+                         ? kKeyFrameDtis
+                         : kDeltaFrameDtis;
 
-  if (config.Id() < 0 || config.Id() >= int{ABSL_ARRAYSIZE(kDtis)}) {
-    RTC_LOG(LS_ERROR) << "Unexpected config id " << config.Id();
+  if (config.SpatialId() < 0 ||
+      config.SpatialId() >= int{ABSL_ARRAYSIZE(dtis)}) {
+    RTC_LOG(LS_ERROR) << "Unexpected layer frame config id " << config.Id()
+                      << ", spatial id: " << config.SpatialId();
     return frame_info;
   }
   frame_info.emplace();
   frame_info->spatial_id = config.SpatialId();
   frame_info->temporal_id = config.TemporalId();
   frame_info->encoder_buffers = config.Buffers();
-  frame_info->decode_target_indications.assign(std::begin(kDtis[config.Id()]),
-                                               std::end(kDtis[config.Id()]));
+  frame_info->decode_target_indications.assign(
+      std::begin(dtis[config.SpatialId()]), std::end(dtis[config.SpatialId()]));
   frame_info->part_of_chain = {config.SpatialId() == 0, config.SpatialId() <= 1,
                                true};
+  frame_info->active_decode_targets = active_decode_targets_;
   return frame_info;
+}
+
+void ScalabilityStructureL3T1::OnRatesUpdated(
+    const VideoBitrateAllocation& bitrates) {
+  for (int sid = 0; sid < kNumSpatialLayers; ++sid) {
+    active_decode_targets_.set(sid, bitrates.GetBitrate(sid, 0) > 0);
+  }
 }
 
 }  // namespace webrtc
