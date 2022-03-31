@@ -256,6 +256,7 @@ if (false) {
       "../rtc_base:logging",
       "../rtc_base:rtc_numerics",
       "../rtc_base/synchronization:mutex",
+      "../test:fileutils",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     if (rtc_enable_protobuf) {

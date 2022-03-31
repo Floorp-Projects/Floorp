@@ -19,6 +19,7 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "test/testsupport/file_utils.h"
 #include "test/testsupport/perf_test_histogram_writer.h"
 
 namespace webrtc {
@@ -221,6 +222,7 @@ void PrintPlottableResults(const std::vector<std::string>& desired_graphs) {
 
 bool WritePerfResults(const std::string& output_path) {
   std::string results = GetPerfResults();
+  CreateDir(DirName(output_path));
   FILE* output = fopen(output_path.c_str(), "wb");
   if (output == NULL) {
     printf("Failed to write to %s.\n", output_path.c_str());
