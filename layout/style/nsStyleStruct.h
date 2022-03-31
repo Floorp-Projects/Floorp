@@ -1179,8 +1179,6 @@ struct StyleAnimation {
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
-  typedef mozilla::StyleGeometryBox StyleGeometryBox;
-
   explicit nsStyleDisplay(const mozilla::dom::Document&);
   nsStyleDisplay(const nsStyleDisplay& aOther);
   ~nsStyleDisplay();
@@ -1214,7 +1212,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint32_t mAnimationIterationCountCount;
   uint32_t mAnimationTimelineCount;
 
-  mozilla::StyleWillChange mWillChange;
   mozilla::StyleDisplay mDisplay;
   mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
                                            //         position:absolute/fixed
@@ -1223,6 +1220,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                            //         mDisplay
   mozilla::StyleContain mContain;
   mozilla::StyleContentVisibility mContentVisibility;
+  mozilla::StyleContainerType mContainerType;
 
  private:
   mozilla::StyleAppearance mAppearance;
@@ -1253,16 +1251,19 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOverflowAnchor mOverflowAnchor;
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
   mozilla::StyleScrollSnapType mScrollSnapType;
-  uint32_t mLineClamp;
-
-  mozilla::StyleTransform mTransform;
-  mozilla::StyleRotate mRotate;
-  mozilla::StyleTranslate mTranslate;
-  mozilla::StyleScale mScale;
 
   mozilla::StyleBackfaceVisibility mBackfaceVisibility;
   mozilla::StyleTransformStyle mTransformStyle;
-  StyleGeometryBox mTransformBox;
+  mozilla::StyleGeometryBox mTransformBox;
+
+  mozilla::StyleTransform mTransform;
+  mozilla::StyleRotate mRotate;
+
+  mozilla::StyleTranslate mTranslate;
+  mozilla::StyleScale mScale;
+
+  mozilla::StyleContainerName mContainerName;
+  mozilla::StyleWillChange mWillChange;
 
   mozilla::StyleOffsetPath mOffsetPath;
   mozilla::LengthPercentage mOffsetDistance;
@@ -1274,6 +1275,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::Position mPerspectiveOrigin;
 
   mozilla::StyleVerticalAlign mVerticalAlign;
+
+  uint32_t mLineClamp;
+
+  // The threshold used for extracting a shape from shape-outside: <image>.
+  float mShapeImageThreshold = 0.0f;
+
+  // The margin around a shape-outside: <image>.
+  mozilla::NonNegativeLengthPercentage mShapeMargin;
+
+  mozilla::StyleShapeOutside mShapeOutside;
 
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
@@ -1326,14 +1337,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
   }
-
-  // The threshold used for extracting a shape from shape-outside: <image>.
-  float mShapeImageThreshold = 0.0f;
-
-  // The margin around a shape-outside: <image>.
-  mozilla::NonNegativeLengthPercentage mShapeMargin;
-
-  mozilla::StyleShapeOutside mShapeOutside;
 
   bool HasAppearance() const {
     return EffectiveAppearance() != mozilla::StyleAppearance::None;
