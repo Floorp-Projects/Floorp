@@ -491,6 +491,9 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
+  absl::optional<vpx_img_fmt_t> previous_img_fmt =
+      raw_ ? absl::make_optional<vpx_img_fmt_t>(raw_->fmt) : absl::nullopt;
+
   int ret_val = Release();
   if (ret_val < 0) {
     return ret_val;
@@ -531,7 +534,7 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
   unsigned int bits_for_storage = 8;
   switch (profile_) {
     case VP9Profile::kProfile0:
-      img_fmt = VPX_IMG_FMT_I420;
+      img_fmt = previous_img_fmt.value_or(VPX_IMG_FMT_I420);
       bits_for_storage = 8;
       config_->g_bit_depth = VPX_BITS_8;
       config_->g_profile = 0;
