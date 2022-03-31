@@ -155,3 +155,62 @@ add_task(async function test_sessions_get_recently_closed_navigated() {
   await extension.awaitFinish();
   await extension.unload();
 });
+
+add_task(
+  async function test_sessions_get_recently_closed_empty_history_in_closed_window() {
+    function background() {
+      browser.sessions
+        .getRecentlyClosed({ maxResults: 1 })
+        .then(recentlyClosed => {
+          let win = recentlyClosed[0].window;
+          browser.test.assertEq(
+            3,
+            win.tabs.length,
+            "The closed window has 3 tabs."
+          );
+          browser.test.assertEq(
+            "about:blank",
+            win.tabs[0].url,
+            "The first tab is about:blank."
+          );
+          browser.test.assertFalse(
+            "url" in win.tabs[1],
+            "The second tab with empty.xpi has no url field due to empty history."
+          );
+          browser.test.assertEq(
+            "http://example.com/",
+            win.tabs[2].url,
+            "The third tab is example.com."
+          );
+          browser.test.notifyPass("getRecentlyClosed with empty history");
+        });
+    }
+
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        permissions: ["sessions", "tabs"],
+      },
+      background,
+    });
+
+    // Test with a window with empty history.
+    let xpi =
+      "http://example.com/browser/browser/components/extensions/test/browser/empty.xpi";
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    await BrowserTestUtils.openNewForegroundTab({
+      gBrowser: newWin.gBrowser,
+      url: xpi,
+      // A tab with broken xpi file doesn't finish loading.
+      waitForLoad: false,
+    });
+    await BrowserTestUtils.openNewForegroundTab({
+      gBrowser: newWin.gBrowser,
+      url: "http://example.com/",
+    });
+    await BrowserTestUtils.closeWindow(newWin);
+
+    await extension.startup();
+    await extension.awaitFinish();
+    await extension.unload();
+  }
+);
