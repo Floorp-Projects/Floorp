@@ -123,7 +123,7 @@ class BrowserFragment :
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
-    private lateinit var trackingProtectionPanel: TrackingProtectionPanel
+    private var trackingProtectionPanel: TrackingProtectionPanel? = null
     private var tabsPopup: TabsPopup? = null
 
     /**
@@ -628,6 +628,7 @@ class BrowserFragment :
     override fun onStop() {
         super.onStop()
         tabsPopup?.dismiss()
+        trackingProtectionPanel?.hide()
     }
 
     override fun onHomePressed() = pictureInPictureFeature?.onHomePressed() ?: false
@@ -820,8 +821,7 @@ class BrowserFragment :
                 reloadCurrentTab()
             },
             showConnectionInfo = ::showConnectionInfo
-        )
-        trackingProtectionPanel.show()
+        ).also { currentEtp -> currentEtp.show() }
     }
 
     private fun reloadCurrentTab() {
@@ -834,9 +834,9 @@ class BrowserFragment :
             tabTitle = tab.content.title,
             tabUrl = tab.content.url,
             isConnectionSecure = tab.content.securityInfo.secure,
-            goBack = { trackingProtectionPanel.show() }
+            goBack = { trackingProtectionPanel?.show() }
         )
-        trackingProtectionPanel.hide()
+        trackingProtectionPanel?.hide()
         connectionInfoPanel.show()
     }
 
