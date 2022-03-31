@@ -276,10 +276,6 @@ class ExtensionWrapper {
     return this.extension.terminateBackground();
   }
 
-  wakeupBackground() {
-    return this.extension.wakeupBackground();
-  }
-
   sendMessage(...args) {
     this.extension.testMessage(...args);
   }
