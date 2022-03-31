@@ -22,6 +22,16 @@ namespace {
 constexpr float kInitialSaturationMarginDb = 20.f;
 constexpr float kExtraSaturationMarginDb = 2.f;
 
+static_assert(kInitialSpeechLevelEstimateDbfs < 0.f, "");
+constexpr float kVadLevelRms = kInitialSpeechLevelEstimateDbfs / 2.f;
+constexpr float kVadLevelPeak = kInitialSpeechLevelEstimateDbfs / 3.f;
+
+constexpr VadLevelAnalyzer::Result kVadDataSpeech{/*speech_probability=*/1.f,
+                                                  kVadLevelRms, kVadLevelPeak};
+constexpr VadLevelAnalyzer::Result kVadDataNonSpeech{
+    /*speech_probability=*/kVadConfidenceThreshold / 2.f, kVadLevelRms,
+    kVadLevelPeak};
+
 constexpr float kMinSpeechProbability = 0.f;
 constexpr float kMaxSpeechProbability = 1.f;
 
@@ -39,6 +49,7 @@ struct TestLevelEstimator {
         estimator(std::make_unique<AdaptiveModeLevelEstimator>(
             &data_dumper,
             AudioProcessing::Config::GainController2::LevelEstimator::kRms,
+            /*min_consecutive_speech_frames=*/1,
             /*use_saturation_protector=*/true,
             kInitialSaturationMarginDb,
             kExtraSaturationMarginDb)) {}
@@ -116,6 +127,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator, TimeToAdapt) {
   // adapt.
   constexpr float kDifferentSpeechRmsDbfs = -10.f;
   // It should at most differ by 25% after one half 'window size' interval.
+  // TODO(crbug.com/webrtc/7494): Add constexpr for repeated expressions.
   const float kMaxDifferenceDb =
       0.25f * std::abs(kDifferentSpeechRmsDbfs - kInitialSpeechRmsDbfs);
   RunOnConstantLevel(
@@ -177,6 +189,58 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator,
                       kExtraSaturationMarginDb)),
             kMaxDifferenceDb);
 }
+
+struct TestConfig {
+  int min_consecutive_speech_frames;
+  bool use_saturation_protector;
+  float initial_saturation_margin_db;
+  float extra_saturation_margin_db;
+};
+
+class AdaptiveModeLevelEstimatorTest
+    : public ::testing::TestWithParam<TestConfig> {};
+
+TEST_P(AdaptiveModeLevelEstimatorTest, DoNotAdaptToShortSpeechSegments) {
+  const auto params = GetParam();
+  ApmDataDumper apm_data_dumper(0);
+  AdaptiveModeLevelEstimator level_estimator(
+      &apm_data_dumper,
+      AudioProcessing::Config::GainController2::LevelEstimator::kRms,
+      params.min_consecutive_speech_frames, params.use_saturation_protector,
+      params.initial_saturation_margin_db, params.extra_saturation_margin_db);
+  const float initial_level = level_estimator.level_dbfs();
+  ASSERT_LT(initial_level, kVadDataSpeech.rms_dbfs);
+  for (int i = 0; i < params.min_consecutive_speech_frames - 1; ++i) {
+    SCOPED_TRACE(i);
+    level_estimator.Update(kVadDataSpeech);
+    EXPECT_EQ(initial_level, level_estimator.level_dbfs());
+  }
+  level_estimator.Update(kVadDataNonSpeech);
+  EXPECT_EQ(initial_level, level_estimator.level_dbfs());
+}
+
+TEST_P(AdaptiveModeLevelEstimatorTest, AdaptToEnoughSpeechSegments) {
+  const auto params = GetParam();
+  ApmDataDumper apm_data_dumper(0);
+  AdaptiveModeLevelEstimator level_estimator(
+      &apm_data_dumper,
+      AudioProcessing::Config::GainController2::LevelEstimator::kRms,
+      params.min_consecutive_speech_frames, params.use_saturation_protector,
+      params.initial_saturation_margin_db, params.extra_saturation_margin_db);
+  const float initial_level = level_estimator.level_dbfs();
+  ASSERT_LT(initial_level, kVadDataSpeech.rms_dbfs);
+  for (int i = 0; i < params.min_consecutive_speech_frames; ++i) {
+    level_estimator.Update(kVadDataSpeech);
+  }
+  EXPECT_LT(initial_level, level_estimator.level_dbfs());
+}
+
+INSTANTIATE_TEST_SUITE_P(AutomaticGainController2,
+                         AdaptiveModeLevelEstimatorTest,
+                         ::testing::Values(TestConfig{1, false, 0.f, 0.f},
+                                           TestConfig{1, true, 0.f, 0.f},
+                                           TestConfig{9, false, 0.f, 0.f},
+                                           TestConfig{9, true, 0.f, 0.f}));
 
 }  // namespace
 }  // namespace webrtc

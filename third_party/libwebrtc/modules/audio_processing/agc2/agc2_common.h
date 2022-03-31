@@ -51,6 +51,7 @@ constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
 
 // Robust VAD probability and speech decisions.
 constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
+constexpr int kDefaultAdjacentSpeechFramesThreshold = 1;
 
 // Saturation Protector settings.
 constexpr bool kDefaultUseSaturationProtector = true;
