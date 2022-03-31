@@ -341,9 +341,9 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-UseEarlyLossDetection"),
           "Disabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      use_deferred_fec_(
-          absl::StartsWith(field_trials_.Lookup("WebRTC-DeferredFecGeneration"),
-                           "Enabled")),
+      use_deferred_fec_(!absl::StartsWith(
+          field_trials_.Lookup("WebRTC-DeferredFecGeneration"),
+          "Disabled")),
       active_(false),
       module_process_thread_(nullptr),
       suspended_ssrcs_(std::move(suspended_ssrcs)),
