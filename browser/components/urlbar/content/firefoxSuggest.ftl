@@ -129,6 +129,7 @@ firefox-suggest-onboarding-introduction-close-button =
 
 firefox-suggest-onboarding-introduction-next-button-1 = Find out how
 firefox-suggest-onboarding-introduction-next-button-2 = Find out more
+firefox-suggest-onboarding-introduction-next-button-3 = Show me how
 
 ## Used as title on the main pane. The text can be formatted to span
 ## multiple lines as needed (line breaks are significant).
