@@ -554,10 +554,11 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
                                                 ReadableStream* aStream,
                                                 uint64_t aAvailableData,
                                                 ErrorResult& aRv) {
-  // Because nsIInputStream can only read UINT32_MAX bytes in one go, limit
-  // ourselves to that for chunk size.
+  // To avoid OOMing up on huge amounts of available data on a 32 bit system,
+  // as well as potentially overflowing the stack, let's limit our maximum chunk
+  // size to 256MB
   uint32_t ableToRead =
-      std::min(static_cast<uint64_t>(UINT32_MAX), aAvailableData);
+      std::min(static_cast<uint64_t>(256 * 1024 * 1024), aAvailableData);
 
   // Create Chunk
   aRv.MightThrowJSException();
