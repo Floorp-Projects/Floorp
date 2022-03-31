@@ -200,7 +200,7 @@ class DrawTargetD2D1 : public DrawTarget {
 
   // Must be called with all clips popped and an identity matrix set.
   already_AddRefed<ID2D1Image> GetImageForLayerContent(
-      bool aShouldPreserveContent = true);
+      const IntRect* aBounds = nullptr, bool aShouldPreserveContent = true);
 
   ID2D1Image* CurrentTarget() {
     if (CurrentLayer().mCurrentList) {
