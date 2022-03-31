@@ -498,14 +498,12 @@ async function testOpenInDebugger(
 ) {
   info(`Finding message for open-in-debugger test; text is "${text}"`);
   const messageNode = await waitFor(() => findMessage(hud, text));
-  const frameLinkNode = messageNode.querySelector(
-    ".message-location .frame-link"
-  );
-  ok(frameLinkNode, "The message does have a location link");
+  const locationNode = messageNode.querySelector(".message-location");
+  ok(locationNode, "The message does have a location link");
   await checkClickOnNode(
     hud,
     toolbox,
-    frameLinkNode,
+    locationNode,
     expectUrl,
     expectLine,
     expectColumn,
