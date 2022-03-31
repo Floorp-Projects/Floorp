@@ -216,6 +216,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return catchingException() && excInfo_->isFinally();
   }
 
+  bool forcedReturn() const { return excInfo_ && excInfo_->forcedReturn(); }
+
   // Returns true if we're bailing out in place for debug mode
   bool propagatingIonExceptionForDebugMode() const {
     return excInfo_ && excInfo_->propagatingIonExceptionForDebugMode();
@@ -881,8 +883,7 @@ bool BaselineStackBuilder::buildExpressionStack() {
       // possible nothing was pushed before we threw. We can't drop
       // iterators, however, so read them out. They will be closed by
       // HandleExceptionBaseline.
-      MOZ_ASSERT(cx_->realm()->isDebuggee() ||
-                 cx_->isPropagatingForcedReturn());
+      MOZ_ASSERT(cx_->realm()->isDebuggee() || forcedReturn());
       if (iter_.moreFrames() || hasLiveStackValueAtDepth(i)) {
         v = iter_.read();
       } else {
