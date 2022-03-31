@@ -30,10 +30,8 @@ async function testViewSource(hud, toolbox, text) {
     () => findMessage(hud, text),
     `couldn't find message containing "${text}"`
   );
-  const frameLinkNode = messageNode.querySelector(
-    ".message-location .frame-link"
-  );
-  ok(frameLinkNode, "The message does have a location link");
+  const messageLocationNode = messageNode.querySelector(".message-location");
+  ok(messageLocationNode, "The message does have a location link");
 
   const onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
@@ -51,9 +49,9 @@ async function testViewSource(hud, toolbox, text) {
   await onStyleEditorReady(panel);
 
   info("style editor window focused");
-  const href = frameLinkNode.getAttribute("data-url");
-  const line = frameLinkNode.getAttribute("data-line");
-  const column = frameLinkNode.getAttribute("data-column");
+  const href = messageLocationNode.getAttribute("data-url");
+  const line = messageLocationNode.getAttribute("data-line");
+  const column = messageLocationNode.getAttribute("data-column");
   ok(line, "found source line");
 
   const editor = getEditorForHref(panel.UI, href);
