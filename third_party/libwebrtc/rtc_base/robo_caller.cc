@@ -16,16 +16,25 @@ namespace robo_caller_impl {
 RoboCallerReceivers::RoboCallerReceivers() = default;
 RoboCallerReceivers::~RoboCallerReceivers() = default;
 
-void RoboCallerReceivers::AddReceiverImpl(UntypedFunction* f) {
-  receivers_.push_back(std::move(*f));
-}
-
 void RoboCallerReceivers::Foreach(
     rtc::FunctionView<void(UntypedFunction&)> fv) {
   for (auto& r : receivers_) {
     fv(r);
   }
 }
+
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<1>);
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<2>);
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<3>);
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<4>);
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::NontrivialUntypedFunctionArgs);
+template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::FunctionPointerUntypedFunctionArgs);
 
 }  // namespace robo_caller_impl
 }  // namespace webrtc

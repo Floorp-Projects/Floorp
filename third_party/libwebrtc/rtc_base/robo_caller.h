@@ -16,6 +16,7 @@
 
 #include "api/function_view.h"
 #include "rtc_base/system/assume.h"
+#include "rtc_base/system/inline.h"
 #include "rtc_base/untyped_function.h"
 
 namespace webrtc {
@@ -30,19 +31,29 @@ class RoboCallerReceivers {
   RoboCallerReceivers& operator=(RoboCallerReceivers&&) = delete;
   ~RoboCallerReceivers();
 
-  void AddReceiver(UntypedFunction&& f) {
-    AddReceiverImpl(&f);
-    // Assume that f was moved from and is now trivially destructible.
-    // This helps the compiler optimize away the destructor call.
-    RTC_ASSUME(f.IsTriviallyDestructible());
+  template <typename UntypedFunctionArgsT>
+  RTC_NO_INLINE void AddReceiver(UntypedFunctionArgsT args) {
+    receivers_.push_back(UntypedFunction::Create(args));
   }
 
   void Foreach(rtc::FunctionView<void(UntypedFunction&)> fv);
 
  private:
-  void AddReceiverImpl(UntypedFunction* f);
   std::vector<UntypedFunction> receivers_;
 };
+
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<1>);
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<2>);
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<3>);
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::TrivialUntypedFunctionArgs<4>);
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::NontrivialUntypedFunctionArgs);
+extern template void RoboCallerReceivers::AddReceiver(
+    UntypedFunction::FunctionPointerUntypedFunctionArgs);
 
 }  // namespace robo_caller_impl
 
@@ -71,7 +82,7 @@ class RoboCaller {
   template <typename F>
   void AddReceiver(F&& f) {
     receivers_.AddReceiver(
-        UntypedFunction::Create<void(ArgT...)>(std::forward<F>(f)));
+        UntypedFunction::PrepareArgs<void(ArgT...)>(std::forward<F>(f)));
   }
 
   // Calls all receivers with the given arguments.
