@@ -257,13 +257,6 @@ sealed class Event {
             get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
     }
 
-    data class OpenedLink(val mode: Mode) : Event() {
-        enum class Mode { NORMAL, PRIVATE }
-
-        override val extras: Map<Events.openedLinkKeys, String>?
-            get() = hashMapOf(Events.openedLinkKeys.mode to mode.name)
-    }
-
     data class SaveLoginsSettingChanged(val setting: Setting) : Event() {
         enum class Setting { NEVER_SAVE, ASK_TO_SAVE }
 
