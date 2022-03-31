@@ -335,10 +335,15 @@
   display: none;
 }
 
-.message-location .frame-link-source-inner {
+.message-location .frame-link-source {
+  font-style: normal !important;
   /* Enforce LTR direction for the file name - fixes bug 1290056 */
   direction: ltr;
   unicode-bidi: embed;
+}
+
+.message-location .frame-link-source:visited {
+  color: currentColor;
 }
 
 .message-flex-body {

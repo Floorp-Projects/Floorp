@@ -234,7 +234,6 @@ function checkFrameString({
 
   const $func = $(".frame-link-function-display-name");
   const $source = $(".frame-link-source");
-  const $sourceInner = $(".frame-link-source-inner");
   const $locationPrefix = $(".frame-link-prefix");
   const $filename = $(".frame-link-filename");
   const $line = $(".frame-link-line");
@@ -250,7 +249,7 @@ function checkFrameString({
     column ? `${column}` : null,
     "Expected `data-column` found"
   );
-  is($sourceInner.getAttribute("title"), tooltip, "Correct tooltip");
+  is($source.getAttribute("title"), tooltip, "Correct tooltip");
   is($source.tagName, shouldLink ? "A" : "SPAN", "Correct linkable status");
   if (shouldLink) {
     is($source.getAttribute("href"), source, "Correct source");

@@ -249,20 +249,18 @@ class Frame extends Component {
       tooltipMessage = l10n.getFormatStr("frame.viewsourceindebugger", tooltip);
     }
 
-    const sourceInnerEl = dom.span(
-      {
-        key: "source-inner",
-        className: "frame-link-source-inner",
-        title: isLinkable ? tooltipMessage : tooltip,
-      },
-      sourceElements
-    );
+    const sourceElConfig = {
+      key: "source",
+      className: "frame-link-source",
+      title: isLinkable ? tooltipMessage : tooltip,
+    };
 
     // If source is not a URL (self-hosted, eval, etc.), don't make
     // it an anchor link, as we can't link to it.
     if (isLinkable) {
       sourceEl = dom.a(
         {
+          ...sourceElConfig,
           onClick: e => {
             e.preventDefault();
             e.stopPropagation();
@@ -270,19 +268,12 @@ class Frame extends Component {
             onClick(generatedLocation);
           },
           href: source,
-          className: "frame-link-source",
           draggable: false,
         },
-        sourceInnerEl
+        sourceElements
       );
     } else {
-      sourceEl = dom.span(
-        {
-          key: "source",
-          className: "frame-link-source",
-        },
-        sourceInnerEl
-      );
+      sourceEl = dom.span(sourceElConfig, sourceElements);
     }
     elements.push(sourceEl);
 
