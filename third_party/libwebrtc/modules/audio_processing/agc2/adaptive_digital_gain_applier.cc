@@ -87,13 +87,23 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
 
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper)
+    : AdaptiveDigitalGainApplier(
+          apm_data_dumper,
+          kDefaultDigitalGainApplierAdjacentSpeechFramesThreshold) {}
+
+AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
+    ApmDataDumper* apm_data_dumper,
+    int adjacent_speech_frames_threshold)
     : apm_data_dumper_(apm_data_dumper),
       gain_applier_(
           /*hard_clip_samples=*/false,
           /*initial_gain_factor=*/DbToRatio(kInitialAdaptiveDigitalGainDb)),
+      adjacent_speech_frames_threshold_(adjacent_speech_frames_threshold),
       calls_since_last_gain_log_(0),
-      gain_increase_allowed_(true),
-      last_gain_db_(kInitialAdaptiveDigitalGainDb) {}
+      frames_to_gain_increase_allowed_(adjacent_speech_frames_threshold_),
+      last_gain_db_(kInitialAdaptiveDigitalGainDb) {
+  RTC_DCHECK_GE(frames_to_gain_increase_allowed_, 1);
+}
 
 void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
                                          AudioFrameView<float> frame) {
@@ -116,12 +126,17 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
                        info.input_noise_level_dbfs, apm_data_dumper_),
       last_gain_db_, info.limiter_envelope_dbfs, info.estimate_is_confident);
 
-  // Forbid increasing the gain when there is no speech.
-  gain_increase_allowed_ =
-      info.vad_result.speech_probability > kVadConfidenceThreshold;
+  // Forbid increasing the gain until enough adjacent speech frames are
+  // observed.
+  if (info.vad_result.speech_probability < kVadConfidenceThreshold) {
+    frames_to_gain_increase_allowed_ = adjacent_speech_frames_threshold_;
+  } else if (frames_to_gain_increase_allowed_ > 0) {
+    frames_to_gain_increase_allowed_--;
+  }
 
   const float gain_change_this_frame_db = ComputeGainChangeThisFrameDb(
-      target_gain_db, last_gain_db_, gain_increase_allowed_);
+      target_gain_db, last_gain_db_,
+      /*gain_increase_allowed=*/frames_to_gain_increase_allowed_ == 0);
 
   apm_data_dumper_->DumpRaw("agc2_want_to_change_by_db",
                             target_gain_db - last_gain_db_);
