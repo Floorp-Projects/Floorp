@@ -12880,12 +12880,58 @@ if (IsCSSPropertyPrefEnabled("layout.css.hyphenate-character.enabled")) {
 
 if (IsCSSPropertyPrefEnabled("layout.css.content-visibility.enabled")) {
   gCSSProperties["content-visibility"] = {
-    domProp: "content-visibility",
+    domProp: "contentVisibility",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["visible"],
     other_values: ["auto", "invisible"],
     invalid_values: ["partially-visible", "auto auto", "visible invisible"],
+  };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
+  gCSSProperties["container-type"] = {
+    domProp: "containerType",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: [
+      "style",
+      "inline-size",
+      "block-size",
+      "size",
+      "style inline-size",
+      "block-size style",
+      "size style",
+    ],
+    invalid_values: [
+      "none style",
+      "none inline-size",
+      "inline-size none",
+      "style none",
+      "style style",
+      "inline-size style inline-size",
+      "inline-size block-size",
+      "size inline-size",
+      "size block-size",
+    ],
+  };
+  gCSSProperties["container-name"] = {
+    domProp: "containerName",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["foo bar", "foo", "baz bazz", "foo foo"],
+    invalid_values: ["foo unset", "none bar", "foo initial", "initial foo"],
+  };
+  gCSSProperties["container"] = {
+    domProp: "container",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: ["container-type", "container-name"],
+    initial_values: ["none"],
+    other_values: ["size", "size / foo bar", "inline-size style / foo"],
+    invalid_values: ["foo / size", "foo bar / size"],
   };
 }
 

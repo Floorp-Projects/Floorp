@@ -2186,11 +2186,11 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mAnimationPlayStateCount(1),
       mAnimationIterationCountCount(1),
       mAnimationTimelineCount(1),
-      mWillChange{{}, {0}},
       mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mContentVisibility(StyleContentVisibility::Visible),
+      mContainerType(StyleContainerType::NONE),
       mAppearance(StyleAppearance::None),
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
@@ -2217,13 +2217,13 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
                        StyleScrollSnapAlignKeyword::None},
       mScrollSnapType{StyleScrollSnapAxis::Both,
                       StyleScrollSnapStrictness::None},
-      mLineClamp(0),
-      mRotate(StyleRotate::None()),
-      mTranslate(StyleTranslate::None()),
-      mScale(StyleScale::None()),
       mBackfaceVisibility(StyleBackfaceVisibility::Visible),
       mTransformStyle(StyleTransformStyle::Flat),
       mTransformBox(StyleGeometryBox::BorderBox),
+      mRotate(StyleRotate::None()),
+      mTranslate(StyleTranslate::None()),
+      mScale(StyleScale::None()),
+      mWillChange{{}, {0}},
       mOffsetPath(StyleOffsetPath::None()),
       mOffsetDistance(LengthPercentage::Zero()),
       mOffsetRotate{true, StyleAngle{0.0}},
@@ -2235,6 +2235,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
+      mLineClamp(0),
       mShapeMargin(LengthPercentage::Zero()),
       mShapeOutside(StyleShapeOutside::None()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
@@ -2259,11 +2260,11 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
       mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
       mAnimationTimelineCount(aSource.mAnimationTimelineCount),
-      mWillChange(aSource.mWillChange),
       mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContain(aSource.mContain),
       mContentVisibility(aSource.mContentVisibility),
+      mContainerType(aSource.mContainerType),
       mAppearance(aSource.mAppearance),
       mDefaultAppearance(aSource.mDefaultAppearance),
       mPosition(aSource.mPosition),
@@ -2288,14 +2289,15 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOverflowAnchor(aSource.mOverflowAnchor),
       mScrollSnapAlign(aSource.mScrollSnapAlign),
       mScrollSnapType(aSource.mScrollSnapType),
-      mLineClamp(aSource.mLineClamp),
+      mBackfaceVisibility(aSource.mBackfaceVisibility),
+      mTransformStyle(aSource.mTransformStyle),
+      mTransformBox(aSource.mTransformBox),
       mTransform(aSource.mTransform),
       mRotate(aSource.mRotate),
       mTranslate(aSource.mTranslate),
       mScale(aSource.mScale),
-      mBackfaceVisibility(aSource.mBackfaceVisibility),
-      mTransformStyle(aSource.mTransformStyle),
-      mTransformBox(aSource.mTransformBox),
+      mContainerName(aSource.mContainerName),
+      mWillChange(aSource.mWillChange),
       mOffsetPath(aSource.mOffsetPath),
       mOffsetDistance(aSource.mOffsetDistance),
       mOffsetRotate(aSource.mOffsetRotate),
@@ -2304,6 +2306,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
       mVerticalAlign(aSource.mVerticalAlign),
+      mLineClamp(aSource.mLineClamp),
       mShapeImageThreshold(aSource.mShapeImageThreshold),
       mShapeMargin(aSource.mShapeMargin),
       mShapeOutside(aSource.mShapeOutside) {
@@ -2406,6 +2409,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // values such as 'none'.) We need to reframe since we want to use
     // nsTextControlFrame instead of nsNumberControlFrame if the author
     // specifies 'textfield'.
+    // TODO: Now that we have -moz-default appearance we should do this only if
+    // `mDefaultAppearance` is or was `number-input`.
     return nsChangeHint_ReconstructFrame;
   }
 
@@ -2656,6 +2661,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // But we still need to return nsChangeHint_NeutralChange for these
   // properties, since some data did change in the style struct.
 
+  // TODO(emilio): Figure out change hints for container-type/name.
   if (!hint && (mTransitions != aNewData.mTransitions ||
                 mTransitionTimingFunctionCount !=
                     aNewData.mTransitionTimingFunctionCount ||
@@ -2675,7 +2681,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                     aNewData.mAnimationIterationCountCount ||
                 mAnimationTimelineCount != aNewData.mAnimationTimelineCount ||
                 mWillChange != aNewData.mWillChange ||
-                mOverflowAnchor != aNewData.mOverflowAnchor)) {
+                mOverflowAnchor != aNewData.mOverflowAnchor ||
+                mContainerName != aNewData.mContainerName ||
+                mContainerType != aNewData.mContainerType)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
