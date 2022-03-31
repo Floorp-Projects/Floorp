@@ -35,9 +35,18 @@ class ScalabilityStructureL3T1 : public ScalableVideoController {
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
   absl::optional<GenericFrameInfo> OnEncodeDone(
       LayerFrameConfig config) override;
+  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
 
  private:
-  bool keyframe_ = true;
+  enum FramePattern {
+    kKeyFrame,
+    kDeltaFrame,
+  };
+  static constexpr int kNumSpatialLayers = 3;
+
+  FramePattern next_pattern_ = kKeyFrame;
+  bool use_temporal_dependency_[kNumSpatialLayers] = {false, false, false};
+  std::bitset<32> active_decode_targets_ = 0b111;
 };
 
 }  // namespace webrtc
