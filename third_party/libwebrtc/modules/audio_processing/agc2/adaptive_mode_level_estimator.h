@@ -29,7 +29,8 @@ class AdaptiveModeLevelEstimator {
   AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
   AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
       delete;
-  // Deprecated ctor.
+  // Deprecated ctor. `use_saturation_protector` is ignored and the saturation
+  // protector will be used regardless of what is passed.
   AdaptiveModeLevelEstimator(
       ApmDataDumper* apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
@@ -40,7 +41,6 @@ class AdaptiveModeLevelEstimator {
       ApmDataDumper* apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
       int adjacent_speech_frames_threshold,
-      bool use_saturation_protector,
       float initial_saturation_margin_db,
       float extra_saturation_margin_db);
 
@@ -65,7 +65,7 @@ class AdaptiveModeLevelEstimator {
       float denominator;
       float GetRatio() const;
     };
-    // TODO(crbug.com/webrtc/7494): Remove if saturation protector always used.
+    // TODO(crbug.com/webrtc/7494): Remove time_to_full_buffer_ms if redundant.
     int time_to_full_buffer_ms;
     Ratio level_dbfs;
     SaturationProtectorState saturation_protector;
@@ -81,7 +81,6 @@ class AdaptiveModeLevelEstimator {
   const AudioProcessing::Config::GainController2::LevelEstimator
       level_estimator_type_;
   const int adjacent_speech_frames_threshold_;
-  const bool use_saturation_protector_;
   const float initial_saturation_margin_db_;
   const float extra_saturation_margin_db_;
   LevelEstimatorState preliminary_state_;
