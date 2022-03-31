@@ -33,13 +33,33 @@ struct PreferenceSheet {
     } mLightColors, mDarkColors;
 
     const Colors& ColorsFor(ColorScheme aScheme) const {
-      return aScheme == ColorScheme::Light ? mLightColors : mDarkColors;
+      return mMustUseLightColorSet || aScheme == ColorScheme::Light
+                 ? mLightColors
+                 : mDarkColors;
     }
 
     bool mIsChrome = false;
     bool mUseAccessibilityTheme = false;
-
     bool mUseDocumentColors = true;
+    bool mUsePrefColors = false;
+    bool mUseStandins = false;
+    bool mMustUseLightColorSet = false;
+
+    // Sometimes we can force a color scheme on a document, or honor the
+    // preferred color-scheme in more cases, depending on whether we're forcing
+    // colors or not.
+    enum class ColorSchemeChoice : uint8_t {
+      // We're not forcing colors, use standard algorithm based on specified
+      // style and meta tags and so on.
+      Standard,
+      // We can honor whatever the preferred color-scheme for the document is
+      // (the preferred color-scheme of the user, since we're forcing colors).
+      UserPreferred,
+      Light,
+      Dark,
+    };
+
+    ColorSchemeChoice mColorSchemeChoice = ColorSchemeChoice::Standard;
 
     // Whether the non-native theme should use real system colors for widgets.
     bool NonNativeThemeShouldBeHighContrast() const;
