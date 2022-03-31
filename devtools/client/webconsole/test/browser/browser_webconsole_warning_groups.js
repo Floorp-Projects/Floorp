@@ -52,7 +52,7 @@ add_task(async function testContentBlockingMessage() {
     "The message has the expected style"
   );
   is(
-    node.querySelector(".indent").getAttribute("data-indent"),
+    node.getAttribute("data-indent"),
     "0",
     "The message has the expected indent"
   );
