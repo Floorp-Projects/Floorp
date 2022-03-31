@@ -121,7 +121,6 @@ if (rtc_include_tests) {
     "../resources/audio_processing/agc/agc_with_circular_buffer.dat",
     "../resources/audio_processing/output_data_fixed.pb",
     "../resources/audio_processing/output_data_float.pb",
-    "../resources/audio_processing/output_data_float_avx2.pb",
     "../resources/audio_processing/output_data_mac.pb",
     "../resources/audio_processing/transient/ajm-macbook-1-spke16m.pcm",
     "../resources/audio_processing/transient/audio16kHz.pcm",
