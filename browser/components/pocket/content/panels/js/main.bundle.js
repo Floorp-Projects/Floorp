@@ -690,10 +690,156 @@ var SignupOverlay = function (options) {
 };
 
 /* harmony default export */ const signup_overlay = (SignupOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/TagPicker/TagPicker.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function TagPicker(props) {
+  const [tags, setTags] = (0,react.useState)(props.tags);
+  const [duplicateTag, setDuplicateTag] = (0,react.useState)(null);
+  const [inputValue, setInputValue] = (0,react.useState)("");
+  const [usedTags, setUsedTags] = (0,react.useState)([]); // Status be success, waiting, or error.
+
+  const [{
+    tagInputStatus,
+    tagInputErrorMessage
+  }, setTagInputStatus] = (0,react.useState)({
+    tagInputStatus: "",
+    tagInputErrorMessage: ""
+  });
+  const inputToSubmit = inputValue.trim();
+  const tagsToSubmit = [...tags, ...(inputToSubmit ? [inputToSubmit] : [])];
+
+  let handleKeyDown = e => {
+    const enterKey = e.keyCode === 13;
+    const commaKey = e.keyCode === 188;
+    const tabKey = inputValue && e.keyCode === 9; // Submit tags on enter with no input.
+    // Enter tag on comma, tab, or enter with input.
+    // Tab to next element with no input.
+
+    if (commaKey || enterKey || tabKey) {
+      e.preventDefault();
+
+      if (inputValue) {
+        addTag();
+      } else if (enterKey) {
+        submitTags();
+      }
+    }
+  };
+
+  let addTag = () => {
+    let newDuplicateTag = tags.find(item => item === inputToSubmit);
+
+    if (!inputToSubmit?.length) {
+      return;
+    }
+
+    setInputValue(``); // Clear out input
+
+    if (!newDuplicateTag) {
+      setTags(tagsToSubmit);
+    } else {
+      setDuplicateTag(newDuplicateTag);
+      setTimeout(() => {
+        setDuplicateTag(null);
+      }, 1000);
+    }
+  };
+
+  let removeTag = index => {
+    let updatedTags = tags.slice(0); // Shallow copied array
+
+    updatedTags.splice(index, 1);
+    setTags(updatedTags);
+  };
+
+  let submitTags = () => {
+    if (!props.itemUrl || !tagsToSubmit?.length) {
+      return;
+    }
+
+    setTagInputStatus({
+      tagInputStatus: "waiting",
+      tagInputErrorMessage: ""
+    });
+    messages.sendMessage("PKT_addTags", {
+      url: props.itemUrl,
+      tags: tagsToSubmit
+    }, function (resp) {
+      const {
+        data
+      } = resp;
+
+      if (data.status === "success") {
+        setTagInputStatus({
+          tagInputStatus: "success",
+          tagInputErrorMessage: ""
+        });
+      } else if (data.status === "error") {
+        setTagInputStatus({
+          tagInputStatus: "error",
+          tagInputErrorMessage: data.error.message
+        });
+      }
+    });
+  };
+
+  (0,react.useEffect)(() => {
+    messages.sendMessage("PKT_getTags", {}, resp => setUsedTags(resp?.data?.tags));
+  }, []);
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker"
+  }, !tagInputStatus && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
+    className: "header_small",
+    "data-l10n-id": "pocket-panel-signup-add-tags"
+  }), /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker_tags"
+  }, tags.map((tag, i) => /*#__PURE__*/react.createElement("div", {
+    className: `stp_tag_picker_tag${duplicateTag === tag ? ` stp_tag_picker_tag_duplicate` : ``}`
+  }, tag, /*#__PURE__*/react.createElement("button", {
+    onClick: () => removeTag(i),
+    className: `stp_tag_picker_tag_remove`
+  }, "X"))), /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker_input_wrapper"
+  }, /*#__PURE__*/react.createElement("input", {
+    className: "stp_tag_picker_input",
+    type: "text",
+    list: "tag-list",
+    value: inputValue,
+    onChange: e => setInputValue(e.target.value),
+    onKeyDown: e => handleKeyDown(e),
+    maxlength: "25"
+  }), /*#__PURE__*/react.createElement("datalist", {
+    id: "tag-list"
+  }, usedTags.map(item => /*#__PURE__*/react.createElement("option", {
+    key: item,
+    value: item
+  }))), /*#__PURE__*/react.createElement("button", {
+    className: "stp_tag_picker_button",
+    disabled: !tagsToSubmit?.length,
+    "data-l10n-id": "pocket-panel-saved-save-tags",
+    onClick: () => submitTags()
+  })))), tagInputStatus === "waiting" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-saved-processing-tags"
+  }), tagInputStatus === "success" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-saved-tags-saved"
+  }), tagInputStatus === "error" && /*#__PURE__*/react.createElement("h3", {
+    className: "header_small"
+  }, tagInputErrorMessage));
+}
+
+/* harmony default export */ const TagPicker_TagPicker = (TagPicker);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Saved/Saved.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -712,7 +858,8 @@ function Saved(props) {
   const [{
     savedStatus,
     savedErrorId,
-    itemId
+    itemId,
+    itemUrl
   }, setSavedStatusState] = (0,react.useState)({
     savedStatus: "loading"
   }); // removedStatus can be removed, removing, or error.
@@ -779,7 +926,8 @@ function Saved(props) {
 
       setSavedStatusState({
         savedStatus: "success",
-        itemId: data.item.item_id,
+        itemId: data.item?.item_id,
+        itemUrl: data.item?.given_url,
         savedErrorId: ""
       });
     });
@@ -840,9 +988,9 @@ function Saved(props) {
   }))), savedStory && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
     articles: [savedStory],
     savedArticle: true
-  }), /*#__PURE__*/react.createElement("h3", {
-    className: "header_small",
-    "data-l10n-id": "pocket-panel-cta-add-tags"
+  }), /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
+    tags: [],
+    itemUrl: itemUrl
   }), similarRecs?.length && locale?.startsWith("en") && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("h3", {
     className: "header_medium"
   }, "Similar Stories"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
@@ -1462,69 +1610,6 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/components/TagPicker/TagPicker.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function TagPicker(props) {
-  const [tags, setTags] = (0,react.useState)(props.tags);
-  const [duplicateTag, setDuplicateTag] = (0,react.useState)(null);
-
-  let handleKeyDown = e => {
-    // Enter tag on comma or enter keypress
-    if (e.keyCode === 188 || e.keyCode === 13) {
-      let tag = e.target.value.trim();
-      e.preventDefault();
-      e.target.value = ``; // Clear out input
-
-      addTag(tag);
-    }
-  };
-
-  let addTag = tag => {
-    let newDuplicateTag = tags.find(item => item === tag);
-
-    if (!tag.length) {
-      return;
-    }
-
-    if (!newDuplicateTag) {
-      setTags([...tags, tag]);
-    } else {
-      setDuplicateTag(newDuplicateTag);
-      setTimeout(() => {
-        setDuplicateTag(null);
-      }, 1000);
-    }
-  };
-
-  let removeTag = index => {
-    let updatedTags = tags.slice(0); // Shallow copied array
-
-    updatedTags.splice(index, 1);
-    setTags(updatedTags);
-  };
-
-  return /*#__PURE__*/react.createElement("div", {
-    className: "stp_tag_picker"
-  }, /*#__PURE__*/react.createElement("p", null, "Add Tags:"), /*#__PURE__*/react.createElement("div", {
-    className: "stp_tag_picker_tags"
-  }, tags.map((tag, i) => /*#__PURE__*/react.createElement("div", {
-    className: `stp_tag_picker_tag${duplicateTag === tag ? ` stp_tag_picker_tag_duplicate` : ``}`
-  }, tag, /*#__PURE__*/react.createElement("button", {
-    onClick: () => removeTag(i),
-    className: `stp_tag_picker_tag_remove`
-  }, "X"))), /*#__PURE__*/react.createElement("input", {
-    className: "stp_tag_picker_input",
-    type: "text",
-    onKeyDown: e => handleKeyDown(e),
-    maxlength: "25"
-  })));
-}
-
-/* harmony default export */ const TagPicker_TagPicker = (TagPicker);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
 
 
