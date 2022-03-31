@@ -78,7 +78,7 @@ urlbar:
     quickSuggestOnboardingDialogVariation:
       type: string
       description: >-
-        Specify the messages/UI variation for QuickSuggest onboarding dialog. This should be a single letter from A to H inclusive. This value is case insensitive.
+        Specify the messages/UI variation for QuickSuggest onboarding dialog. This value is case insensitive.
     quickSuggestRemoteSettingsEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled
