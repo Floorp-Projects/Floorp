@@ -131,6 +131,15 @@ class SdpOfferAnswerHandler {
   bool IceRestartPending(const std::string& content_name) const;
   void UpdateNegotiationNeeded();
 
+  // Returns the media section in the given session description that is
+  // associated with the RtpTransceiver. Returns null if none found or this
+  // RtpTransceiver is not associated. Logic varies depending on the
+  // SdpSemantics specified in the configuration.
+  const cricket::ContentInfo* FindMediaSectionForTransceiver(
+      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
+          transceiver,
+      const SessionDescriptionInterface* sdesc) const;
+
  private:
   class ImplicitCreateSessionDescriptionObserver;
   friend class ImplicitCreateSessionDescriptionObserver;
@@ -252,6 +261,55 @@ class SdpOfferAnswerHandler {
   RTCError UpdateDataChannel(cricket::ContentSource source,
                              const cricket::ContentInfo& content,
                              const cricket::ContentGroup* bundle_group)
+      RTC_RUN_ON(signaling_thread());
+  // Check if a call to SetLocalDescription is acceptable with a session
+  // description of the given type.
+  bool ExpectSetLocalDescription(SdpType type);
+  // Check if a call to SetRemoteDescription is acceptable with a session
+  // description of the given type.
+  bool ExpectSetRemoteDescription(SdpType type);
+
+  // The offer/answer machinery assumes the media section MID is present and
+  // unique. To support legacy end points that do not supply a=mid lines, this
+  // method will modify the session description to add MIDs generated according
+  // to the SDP semantics.
+  void FillInMissingRemoteMids(cricket::SessionDescription* remote_description);
+
+  // Returns an RtpTransciever, if available, that can be used to receive the
+  // given media type according to JSEP rules.
+  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
+  FindAvailableTransceiverToReceive(cricket::MediaType media_type) const;
+
+  // Returns a MediaSessionOptions struct with options decided by |options|,
+  // the local MediaStreams and DataChannels.
+  void GetOptionsForOffer(const PeerConnectionInterface::RTCOfferAnswerOptions&
+                              offer_answer_options,
+                          cricket::MediaSessionOptions* session_options);
+  void GetOptionsForPlanBOffer(
+      const PeerConnectionInterface::RTCOfferAnswerOptions&
+          offer_answer_options,
+      cricket::MediaSessionOptions* session_options)
+      RTC_RUN_ON(signaling_thread());
+  void GetOptionsForUnifiedPlanOffer(
+      const PeerConnectionInterface::RTCOfferAnswerOptions&
+          offer_answer_options,
+      cricket::MediaSessionOptions* session_options)
+      RTC_RUN_ON(signaling_thread());
+
+  // Returns a MediaSessionOptions struct with options decided by
+  // |constraints|, the local MediaStreams and DataChannels.
+  void GetOptionsForAnswer(const PeerConnectionInterface::RTCOfferAnswerOptions&
+                               offer_answer_options,
+                           cricket::MediaSessionOptions* session_options);
+  void GetOptionsForPlanBAnswer(
+      const PeerConnectionInterface::RTCOfferAnswerOptions&
+          offer_answer_options,
+      cricket::MediaSessionOptions* session_options)
+      RTC_RUN_ON(signaling_thread());
+  void GetOptionsForUnifiedPlanAnswer(
+      const PeerConnectionInterface::RTCOfferAnswerOptions&
+          offer_answer_options,
+      cricket::MediaSessionOptions* session_options)
       RTC_RUN_ON(signaling_thread());
 
   // ===================================================================
