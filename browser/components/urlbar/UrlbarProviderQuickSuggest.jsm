@@ -297,8 +297,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     this._addedResultInLastQuery = true;
 
-    // The user triggered a suggestion. Per spec, the Nimbus exposure event
-    // should be recorded now, subject to the following logic:
+    // The user triggered a suggestion. Depending on the experiment the user is
+    // enrolled in (if any), we may need to record the Nimbus exposure event.
     //
     // If the user is in a best match experiment:
     //   Record if the suggestion is itself a best match and either of the
@@ -307,32 +307,21 @@ class ProviderQuickSuggest extends UrlbarProvider {
     //     branch), and the user has not disabled best match
     //   * The best match feature is disabled (i.e., the user is in the control
     //     branch)
-    // Else:
+    // Else if the user is not in a modal experiment:
     //   Record the event
     if (
-      !UrlbarPrefs.get("isBestMatchExperiment") ||
-      (isSuggestionBestMatch &&
-        (!UrlbarPrefs.get("bestMatchEnabled") ||
-          UrlbarPrefs.get("suggest.bestmatch")))
+      UrlbarPrefs.get("isBestMatchExperiment") ||
+      UrlbarPrefs.get("experimentType") === "best-match"
     ) {
-      this._ensureExposureEventRecorded();
-    }
-  }
-
-  /**
-   * Records the Nimbus exposure event if it hasn't already been recorded during
-   * the app session. This method actually queues the recording on idle because
-   * it's potentially an expensive operation.
-   */
-  _ensureExposureEventRecorded() {
-    // `recordExposureEvent()` makes sure only one event is recorded per app
-    // session even if it's called many times, but since it may be expensive, we
-    // also keep `_recordedExposureEvent`.
-    if (!this._recordedExposureEvent) {
-      this._recordedExposureEvent = true;
-      Services.tm.idleDispatchToMainThread(() =>
-        NimbusFeatures.urlbar.recordExposureEvent({ once: true })
-      );
+      if (
+        isSuggestionBestMatch &&
+        (!UrlbarPrefs.get("bestMatchEnabled") ||
+          UrlbarPrefs.get("suggest.bestmatch"))
+      ) {
+        UrlbarQuickSuggest.ensureExposureEventRecorded();
+      }
+    } else if (UrlbarPrefs.get("experimentType") !== "modal") {
+      UrlbarQuickSuggest.ensureExposureEventRecorded();
     }
   }
 

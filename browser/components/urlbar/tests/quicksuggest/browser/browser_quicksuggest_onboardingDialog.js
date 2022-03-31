@@ -1342,6 +1342,47 @@ add_task(async function variation_100_B() {
   });
 });
 
+add_task(async function nimbusExposureEvent() {
+  const testData = [
+    {
+      experimentType: "modal",
+      expectedRecorded: true,
+    },
+    {
+      experimentType: "best-match",
+      expectedRecorded: false,
+    },
+    {
+      expectedRecorded: false,
+    },
+  ];
+
+  for (const { experimentType, expectedRecorded } of testData) {
+    info(`Nimbus exposure event test for type:[${experimentType}]`);
+    UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+    await QuickSuggestTestUtils.clearExposureEvent();
+
+    await QuickSuggestTestUtils.withExperiment({
+      valueOverrides: {
+        quickSuggestScenario: "online",
+        experimentType,
+      },
+      callback: async () => {
+        info("Calling showOnboardingDialog");
+        const { maybeShowPromise } = await showOnboardingDialog();
+        EventUtils.synthesizeKey("KEY_Escape");
+        await maybeShowPromise;
+
+        info("Check the event");
+        await QuickSuggestTestUtils.assertExposureEvent(expectedRecorded);
+      },
+    });
+  }
+});
+
 async function doDialogTest({
   onboardingDialogChoice,
   telemetryEvents,

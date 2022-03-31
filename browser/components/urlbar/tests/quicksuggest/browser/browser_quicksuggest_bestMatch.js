@@ -234,6 +234,13 @@ add_task(async function nimbusExposure_featureEnabled() {
   await doNimbusExposureTest({
     bestMatchEnabled: true,
     bestMatchExpected: true,
+    isBestMatchExperiment: true,
+    exposureEventExpected: true,
+  });
+  await doNimbusExposureTest({
+    bestMatchEnabled: true,
+    bestMatchExpected: true,
+    experimentType: "best-match",
     exposureEventExpected: true,
   });
 });
@@ -245,11 +252,20 @@ add_task(async function nimbusExposure_featureEnabled_userDisabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.bestmatch", false]],
   });
+
   await doNimbusExposureTest({
     bestMatchEnabled: true,
     bestMatchExpected: false,
+    isBestMatchExperiment: true,
     exposureEventExpected: false,
   });
+  await doNimbusExposureTest({
+    bestMatchEnabled: true,
+    bestMatchExpected: false,
+    experimentType: "best-match",
+    exposureEventExpected: false,
+  });
+
   await SpecialPowers.popPrefEnv();
 });
 
@@ -260,7 +276,36 @@ add_task(async function nimbusExposure_featureDisabled() {
   await doNimbusExposureTest({
     bestMatchEnabled: false,
     bestMatchExpected: false,
+    isBestMatchExperiment: true,
     exposureEventExpected: true,
+  });
+  await doNimbusExposureTest({
+    bestMatchEnabled: false,
+    bestMatchExpected: false,
+    experimentType: "best-match",
+    exposureEventExpected: true,
+  });
+});
+
+add_task(async function nimbusExposure_notBestMatchExperimentType() {
+  await doNimbusExposureTest({
+    bestMatchEnabled: false,
+    bestMatchExpected: false,
+    skipFirstSearch: true,
+    experimentType: "",
+    exposureEventExpected: true,
+  });
+  await doNimbusExposureTest({
+    bestMatchEnabled: false,
+    bestMatchExpected: false,
+    skipFirstSearch: true,
+    exposureEventExpected: true,
+  });
+  await doNimbusExposureTest({
+    bestMatchEnabled: false,
+    bestMatchExpected: false,
+    experimentType: "modal",
+    exposureEventExpected: false,
   });
 });
 
@@ -278,6 +323,9 @@ add_task(async function nimbusExposure_featureDisabled() {
 async function doNimbusExposureTest({
   bestMatchEnabled,
   bestMatchExpected,
+  experimentType,
+  isBestMatchExperiment,
+  skipFirstSearch,
   exposureEventExpected,
 }) {
   await SpecialPowers.pushPrefEnv({
@@ -287,7 +335,8 @@ async function doNimbusExposureTest({
   await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
       bestMatchEnabled,
-      isBestMatchExperiment: true,
+      experimentType,
+      isBestMatchExperiment,
     },
     callback: async () => {
       // No exposure event should be recorded after only enrolling.
@@ -295,18 +344,21 @@ async function doNimbusExposureTest({
 
       // Do a search that doesn't trigger a best match. No exposure event should
       // be recorded.
-      info("Doing first search");
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: NON_BEST_MATCH_SUGGESTION.keywords[0],
-        fireInputEvent: true,
-      });
-      await QuickSuggestTestUtils.assertIsQuickSuggest({
-        window,
-        url: NON_BEST_MATCH_SUGGESTION.url,
-      });
-      await UrlbarTestUtils.promisePopupClose(window);
-      await QuickSuggestTestUtils.assertExposureEvent(false);
+      if (!skipFirstSearch) {
+        info("Doing first search");
+        await UrlbarTestUtils.promiseAutocompleteResultPopup({
+          window,
+          value: NON_BEST_MATCH_SUGGESTION.keywords[0],
+          fireInputEvent: true,
+        });
+        await QuickSuggestTestUtils.assertIsQuickSuggest({
+          window,
+          url: NON_BEST_MATCH_SUGGESTION.url,
+        });
+        await UrlbarTestUtils.promisePopupClose(window);
+
+        await QuickSuggestTestUtils.assertExposureEvent(false);
+      }
 
       // Do a search that triggers (or would have triggered) a best match. The
       // exposure event should be recorded.
