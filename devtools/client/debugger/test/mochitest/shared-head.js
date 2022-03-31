@@ -2002,6 +2002,7 @@ async function expandSourceTree(dbg) {
   );
   for (const rootNode of rootNodes) {
     await expandAllSourceNodes(dbg, rootNode);
+    await wait(250);
   }
 }
 
@@ -2018,51 +2019,21 @@ async function waitForSourcesInSourceTree(
   { noExpand = false } = {}
 ) {
   info(`waiting for ${sources.length} files in the source tree`);
-  function getDisplayedSources() {
+  await waitFor(async () => {
+    if (!noExpand) {
+      await expandSourceTree(dbg);
+    }
     // Replace some non visible space characters that prevents Array.includes from working correctly
-    return [...findAllElements(dbg, "sourceTreeFiles")].map(e => {
-      return e.textContent.trim().replace(/^[\s\u200b]*/g, "");
-    });
-  }
-  try {
-    // Use custom timeout and retry count for waitFor as the test method is slow to resolve
-    // and default value makes the timeout unecessarily long
-    await waitFor(
-      async () => {
-        if (!noExpand) {
-          await expandSourceTree(dbg);
-        }
-        const displayedSources = getDisplayedSources();
-        return (
-          displayedSources.length == sources.length &&
-          sources.every(source => displayedSources.includes(source))
-        );
-      },
-      null,
-      100,
-      50
-    );
-  } catch (e) {
-    // Craft a custom error message to help understand what's wrong with the Source Tree content
-    const displayedSources = getDisplayedSources();
-    let msg = "Invalid Source Tree Content.\n";
-    const missingElements = [];
-    for (const source of sources) {
-      const idx = displayedSources.indexOf(source);
-      if (idx != -1) {
-        displayedSources.splice(idx, 1);
-      } else {
-        missingElements.push(source);
+    const displayedSources = [...findAllElements(dbg, "sourceTreeFiles")].map(
+      e => {
+        return e.textContent.trim().replace(/^[\s\u200b]*/g, "");
       }
-    }
-    if (missingElements.length > 0) {
-      msg += "Missing elements: " + missingElements.join(", ") + "\n";
-    }
-    if (displayedSources.length > 0) {
-      msg += "Unexpected elements: " + displayedSources.join(", ");
-    }
-    throw new Error(msg);
-  }
+    );
+    return (
+      displayedSources.length == sources.length &&
+      sources.every(source => displayedSources.includes(source))
+    );
+  });
 }
 
 async function waitForNodeToGainFocus(dbg, index) {
@@ -2329,22 +2300,6 @@ function createVersionizedHttpTestServer(testFolderName) {
     }
     if (request.path == "/" || request.path == "/index.html") {
       response.setHeader("Content-Type", "text/html");
-    }
-    // If a query string is passed, lookup with a matching file, if available
-    // The '?' is replaced by '.'
-    if (request.queryString) {
-      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
-      try {
-        const content = await fetch(url);
-        // Log this only if the request succeed
-        info(`[test-http-server] serving: ${url}`);
-        const text = await content.text();
-        response.write(text);
-        response.finish();
-        return;
-      } catch (e) {
-        // Ignore any error and proceed without the query string
-      }
     }
     const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}`;
     info(`[test-http-server] serving: ${url}`);
