@@ -70,12 +70,12 @@ async def test_level(bidi_session,
 
 
 @pytest.mark.asyncio
-async def test_timestamp(bidi_session, current_session, wait_for_event):
+async def test_timestamp(bidi_session, current_session, current_time, wait_for_event):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
 
-    time_start = math.floor(time.time() * 1000)
+    time_start = current_time()
 
     # TODO: To be replaced with the BiDi implementation of execute_async_script.
     current_session.execute_async_script("""
@@ -88,7 +88,7 @@ async def test_timestamp(bidi_session, current_session, wait_for_event):
 
     event_data = await on_entry_added
 
-    time_end = math.ceil(time.time() * 1000)
+    time_end = current_time()
 
     assert_console_entry(event_data, text="foo", time_start=time_start, time_end=time_end)
 
