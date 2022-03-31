@@ -3,8 +3,9 @@
 Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
 Services.prefs.setIntPref("extensions.background.idle.timeout", 0);
 
-function getExtension(background) {
+function getExtension(background, useAddonManager) {
   return ExtensionTestUtils.loadExtension({
+    useAddonManager,
     manifest: {
       browser_action: {},
       permissions: ["menus"],
@@ -13,6 +14,41 @@ function getExtension(background) {
     background,
   });
 }
+
+add_task(async function test_menu_create_id() {
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.monitorConsole(resolve, [
+      // Callback exists, lastError is checked, so we should not see this logged.
+      {
+        message: /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
+        forbid: true,
+      },
+    ]);
+  });
+
+  function background() {
+    // Event pages require ID
+    browser.menus.create(
+      { contexts: ["browser_action"], title: "parent" },
+      () => {
+        browser.test.assertEq(
+          "menus.create requires an id for non-persistent background scripts.",
+          browser.runtime.lastError?.message,
+          "lastError message for missing id"
+        );
+        browser.test.sendMessage("done");
+      }
+    );
+  }
+  const extension = getExtension(background);
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
+});
 
 add_task(async function test_menu_onclick() {
   async function background() {
@@ -166,4 +202,66 @@ add_task(async function test_actions_context_menu() {
   is(ext.backgroundState, "stopped", "background is not running");
 
   await extension.unload();
+});
+
+add_task(async function test_menu_create_id_reuse() {
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.monitorConsole(resolve, [
+      // Callback exists, lastError is checked, so we should not see this logged.
+      {
+        message: /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
+        forbid: true,
+      },
+    ]);
+  });
+
+  function background() {
+    browser.menus.create(
+      {
+        contexts: ["browser_action"],
+        title: "click A",
+        id: "test-click",
+      },
+      () => {
+        browser.test.sendMessage("create", browser.runtime.lastError?.message);
+      }
+    );
+    browser.test.onMessage.addListener(msg => {
+      browser.test.assertEq("add-again", msg, "expected msg");
+      browser.menus.create(
+        {
+          contexts: ["browser_action"],
+          title: "click A",
+          id: "test-click",
+        },
+        () => {
+          browser.test.assertEq(
+            "The menu id test-click already exists in menus.create.",
+            browser.runtime.lastError?.message,
+            "lastError message for missing id"
+          );
+          browser.test.sendMessage("done");
+        }
+      );
+    });
+  }
+  const extension = getExtension(background, "temporary");
+  await extension.startup();
+  let lastError = await extension.awaitMessage("create");
+  Assert.equal(lastError, undefined, "no error creating menu");
+  extension.sendMessage("add-again");
+  await extension.awaitMessage("done");
+  await extension.terminateBackground();
+  await extension.wakeupBackground();
+  lastError = await extension.awaitMessage("create");
+  Assert.equal(
+    lastError,
+    "The menu id test-click already exists in menus.create.",
+    "lastError using duplicate ID"
+  );
+  await extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
 });
