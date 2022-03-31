@@ -4651,12 +4651,6 @@ static bool IsEditingHost(const nsIFrame* aFrame) {
   return element && element->IsEditableRoot();
 }
 
-static bool IsTopmostModalDialog(const nsIFrame* aFrame) {
-  auto* element = Element::FromNodeOrNull(aFrame->GetContent());
-  return element &&
-         element->State().HasState(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
-}
-
 static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
   if (aFrame->IsGeneratedContentFrame()) {
     return StyleUserSelect::None;
@@ -4681,14 +4675,10 @@ static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
     return style;
   }
 
-  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame) ||
-      IsTopmostModalDialog(aFrame)) {
+  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame)) {
     // We don't implement 'contain' itself, but we make 'text' behave as
     // 'contain' for contenteditable and <input> / <textarea> elements anyway so
     // this is ok.
-    //
-    // Topmost modal dialogs need to behave like `text` too, because they're
-    // supposed to be selectable even if their ancestors are inert.
     return StyleUserSelect::Text;
   }
 
