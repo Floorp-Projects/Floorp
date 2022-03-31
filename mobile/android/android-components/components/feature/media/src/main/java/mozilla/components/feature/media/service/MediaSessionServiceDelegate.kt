@@ -4,8 +4,10 @@
 
 package mozilla.components.feature.media.service
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioManager
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -37,6 +39,14 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
+private class BecomingNoisyReceiver(private val controller: MediaSession.Controller?) : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent) {
+        if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
+            controller?.pause()
+        }
+    }
+}
+
 /**
  * Delegate handling callbacks from an [AbstractMediaSessionService].
  *
@@ -59,6 +69,9 @@ internal class MediaSessionServiceDelegate(
     private var scope: CoroutineScope? = null
     private var controller: MediaSession.Controller? = null
     private var notificationScope: CoroutineScope? = null
+
+    private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    private var noisyAudioStreamReceiver: BecomingNoisyReceiver? = null
 
     @VisibleForTesting
     internal var isForegroundService: Boolean = false
@@ -117,11 +130,17 @@ internal class MediaSessionServiceDelegate(
 
         when (state.mediaSessionState?.playbackState) {
             MediaSession.PlaybackState.PLAYING -> {
+                noisyAudioStreamReceiver = BecomingNoisyReceiver(state.mediaSessionState?.controller)
                 audioFocus.request(state.id)
+                context.registerReceiver(noisyAudioStreamReceiver, intentFilter)
                 emitStatePlayFact()
                 startForegroundNotificationIfNeeded()
             }
             MediaSession.PlaybackState.PAUSED -> {
+                noisyAudioStreamReceiver?.let {
+                    context.unregisterReceiver(noisyAudioStreamReceiver)
+                    noisyAudioStreamReceiver = null
+                }
                 emitStatePauseFact()
                 stopForeground()
             }
