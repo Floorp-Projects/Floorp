@@ -189,12 +189,151 @@ const allProperties = new Set([
 ]);
 const restricted = new Set(["url", "favIconUrl", "title"]);
 
-class TabsUpdateFilterEventManager extends EventManager {
-  constructor(context) {
-    let { extension } = context;
-    let { tabManager } = extension;
+this.tabs = class extends ExtensionAPIPersistent {
+  static onUpdate(id, manifest) {
+    if (!manifest.permissions || !manifest.permissions.includes("tabHide")) {
+      showHiddenTabs(id);
+    }
+  }
 
-    let register = (fire, filterProps) => {
+  static onDisable(id) {
+    showHiddenTabs(id);
+    tabHidePopup.clearConfirmation(id);
+  }
+
+  static onUninstall(id) {
+    tabHidePopup.clearConfirmation(id);
+  }
+
+  tabEventRegistrar({ event, listener }) {
+    let { extension } = this;
+    let { tabManager } = extension;
+    return ({ fire }) => {
+      let listener2 = (eventName, eventData, ...args) => {
+        if (!tabManager.canAccessTab(eventData.nativeTab)) {
+          return;
+        }
+
+        listener(fire, eventData, ...args);
+      };
+
+      tabTracker.on(event, listener2);
+      return {
+        unregister() {
+          tabTracker.off(event, listener2);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    };
+  }
+
+  PERSISTENT_EVENTS = {
+    onActivated: this.tabEventRegistrar({
+      event: "tab-activated",
+      listener: (fire, event) => {
+        let { extension } = this;
+        let { tabId, windowId, previousTabId, previousTabIsPrivate } = event;
+        if (previousTabIsPrivate && !extension.privateBrowsingAllowed) {
+          previousTabId = undefined;
+        }
+        fire.async({ tabId, previousTabId, windowId });
+      },
+    }),
+    onAttached: this.tabEventRegistrar({
+      event: "tab-attached",
+      listener: (fire, event) => {
+        fire.async(event.tabId, {
+          newWindowId: event.newWindowId,
+          newPosition: event.newPosition,
+        });
+      },
+    }),
+    onCreated: this.tabEventRegistrar({
+      event: "tab-created",
+      listener: (fire, event) => {
+        let { tabManager } = this.extension;
+        fire.async(tabManager.convert(event.nativeTab, event.currentTabSize));
+      },
+    }),
+    onDetached: this.tabEventRegistrar({
+      event: "tab-detached",
+      listener: (fire, event) => {
+        fire.async(event.tabId, {
+          oldWindowId: event.oldWindowId,
+          oldPosition: event.oldPosition,
+        });
+      },
+    }),
+    onRemoved: this.tabEventRegistrar({
+      event: "tab-removed",
+      listener: (fire, event) => {
+        fire.async(event.tabId, {
+          windowId: event.windowId,
+          isWindowClosing: event.isWindowClosing,
+        });
+      },
+    }),
+    onMoved({ fire }) {
+      let { tabManager } = this.extension;
+      let moveListener = event => {
+        let nativeTab = event.originalTarget;
+        if (tabManager.canAccessTab(nativeTab)) {
+          fire.async(tabTracker.getId(nativeTab), {
+            windowId: windowTracker.getId(nativeTab.ownerGlobal),
+            fromIndex: event.detail,
+            toIndex: nativeTab._tPos,
+          });
+        }
+      };
+
+      windowTracker.addListener("TabMove", moveListener);
+      return {
+        unregister() {
+          windowTracker.removeListener("TabMove", moveListener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+
+    onHighlighted({ fire, context }) {
+      let { windowManager } = this.extension;
+      let highlightListener = (eventName, event) => {
+        // TODO see if we can avoid "context" here
+        let window = windowTracker.getWindow(event.windowId, context, false);
+        if (!window) {
+          return;
+        }
+        let windowWrapper = windowManager.getWrapper(window);
+        if (!windowWrapper) {
+          return;
+        }
+        let tabIds = Array.from(
+          windowWrapper.getHighlightedTabs(),
+          tab => tab.id
+        );
+        fire.async({ tabIds: tabIds, windowId: event.windowId });
+      };
+
+      tabTracker.on("tabs-highlighted", highlightListener);
+      return {
+        unregister() {
+          tabTracker.off("tabs-highlighted", highlightListener);
+        },
+        convert(_fire, _context) {
+          fire = _fire;
+          context = _context;
+        },
+      };
+    },
+
+    onUpdated({ fire, context }, params) {
+      let { extension } = this;
+      let { tabManager } = extension;
+      let [filterProps] = params;
       let filter = { ...filterProps };
       if (filter.urls) {
         filter.urls = new MatchPatternSet(filter.urls, {
@@ -281,7 +420,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         if (event.originalTarget.initializingTab) {
           return;
         }
-        if (!context.canAccessWindow(event.originalTarget.ownerGlobal)) {
+        if (!extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
           return;
         }
         let needed = [];
@@ -350,7 +489,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         let { gBrowser } = browser.ownerGlobal;
         let tabElem = gBrowser.getTabForBrowser(browser);
         if (tabElem) {
-          if (!context.canAccessWindow(tabElem.ownerGlobal)) {
+          if (!extension.canAccessWindow(tabElem.ownerGlobal)) {
             return;
           }
 
@@ -370,7 +509,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         let { gBrowser } = message.target.ownerGlobal;
         let nativeTab = gBrowser.getTabForBrowser(message.target);
 
-        if (nativeTab && context.canAccessWindow(nativeTab.ownerGlobal)) {
+        if (nativeTab && extension.canAccessWindow(nativeTab.ownerGlobal)) {
           let tab = tabManager.getWrapper(nativeTab);
           fireForTab(tab, { isArticle: message.data.isArticle }, nativeTab);
         }
@@ -404,67 +543,29 @@ class TabsUpdateFilterEventManager extends EventManager {
         tabTracker.on("tab-isarticle", isArticleChangeListener);
       }
 
-      return () => {
-        for (let [name, listener] of listeners) {
-          windowTracker.removeListener(name, listener);
-        }
+      return {
+        unregister() {
+          for (let [name, listener] of listeners) {
+            windowTracker.removeListener(name, listener);
+          }
 
-        if (filter.properties.has("isArticle")) {
-          tabTracker.off("tab-isarticle", isArticleChangeListener);
-        }
+          if (filter.properties.has("isArticle")) {
+            tabTracker.off("tab-isarticle", isArticleChangeListener);
+          }
+        },
+        convert(_fire, _context) {
+          fire = _fire;
+          context = _context;
+        },
       };
-    };
-
-    super({
-      context,
-      name: "tabs.onUpdated",
-      register,
-    });
-  }
-}
-
-function TabEventManager({ context, name, event, listener }) {
-  let register = fire => {
-    let listener2 = (eventName, eventData, ...args) => {
-      let { extension } = context;
-      let { tabManager } = extension;
-
-      if (!tabManager.canAccessTab(eventData.nativeTab)) {
-        return;
-      }
-
-      listener(fire, eventData, ...args);
-    };
-
-    tabTracker.on(event, listener2);
-    return () => {
-      tabTracker.off(event, listener2);
-    };
+    },
   };
-
-  return new EventManager({ context, name, register }).api();
-}
-
-this.tabs = class extends ExtensionAPI {
-  static onUpdate(id, manifest) {
-    if (!manifest.permissions || !manifest.permissions.includes("tabHide")) {
-      showHiddenTabs(id);
-    }
-  }
-
-  static onDisable(id) {
-    showHiddenTabs(id);
-    tabHidePopup.clearConfirmation(id);
-  }
-
-  static onUninstall(id) {
-    tabHidePopup.clearConfirmation(id);
-  }
 
   getAPI(context) {
     let { extension } = context;
-
     let { tabManager, windowManager } = extension;
+    let extensionApi = this;
+    let module = "tabs";
 
     function getTabOrActive(tabId) {
       let tab =
@@ -510,103 +611,49 @@ this.tabs = class extends ExtensionAPI {
       return tab;
     }
 
-    let self = {
+    let tabsApi = {
       tabs: {
-        onActivated: TabEventManager({
+        onActivated: new EventManager({
           context,
-          name: "tabs.onActivated",
-          event: "tab-activated",
-          listener: (fire, event) => {
-            let {
-              tabId,
-              windowId,
-              previousTabId,
-              previousTabIsPrivate,
-            } = event;
-            if (previousTabIsPrivate && !context.privateBrowsingAllowed) {
-              previousTabId = undefined;
-            }
-            fire.async({ tabId, previousTabId, windowId });
-          },
-        }),
+          module,
+          event: "onActivated",
+          extensionApi,
+        }).api(),
 
-        onCreated: TabEventManager({
+        onCreated: new EventManager({
           context,
-          name: "tabs.onCreated",
-          event: "tab-created",
-          listener: (fire, event) => {
-            fire.async(
-              tabManager.convert(event.nativeTab, event.currentTabSize)
-            );
-          },
-        }),
+          module,
+          event: "onCreated",
+          extensionApi,
+        }).api(),
 
         onHighlighted: new EventManager({
           context,
-          name: "tabs.onHighlighted",
-          register: fire => {
-            let highlightListener = (eventName, event) => {
-              let window = windowTracker.getWindow(
-                event.windowId,
-                context,
-                false
-              );
-              if (!window) {
-                return;
-              }
-              let windowWrapper = windowManager.getWrapper(window);
-              if (!windowWrapper) {
-                return;
-              }
-              let tabIds = Array.from(
-                windowWrapper.getHighlightedTabs(),
-                tab => tab.id
-              );
-              fire.async({ tabIds: tabIds, windowId: event.windowId });
-            };
-
-            tabTracker.on("tabs-highlighted", highlightListener);
-            return () => {
-              tabTracker.off("tabs-highlighted", highlightListener);
-            };
-          },
+          module,
+          event: "onHighlighted",
+          extensionApi,
         }).api(),
 
-        onAttached: TabEventManager({
+        onAttached: new EventManager({
           context,
-          name: "tabs.onAttached",
-          event: "tab-attached",
-          listener: (fire, event) => {
-            fire.async(event.tabId, {
-              newWindowId: event.newWindowId,
-              newPosition: event.newPosition,
-            });
-          },
-        }),
+          module,
+          event: "onAttached",
+          extensionApi,
+        }).api(),
 
-        onDetached: TabEventManager({
+        onDetached: new EventManager({
           context,
-          name: "tabs.onDetached",
-          event: "tab-detached",
-          listener: (fire, event) => {
-            fire.async(event.tabId, {
-              oldWindowId: event.oldWindowId,
-              oldPosition: event.oldPosition,
-            });
-          },
-        }),
+          module,
+          event: "onDetached",
+          extensionApi,
+        }).api(),
 
-        onRemoved: TabEventManager({
+        onRemoved: new EventManager({
           context,
-          name: "tabs.onRemoved",
-          event: "tab-removed",
-          listener: (fire, event) => {
-            fire.async(event.tabId, {
-              windowId: event.windowId,
-              isWindowClosing: event.isWindowClosing,
-            });
-          },
-        }),
+          module,
+          event: "onRemoved",
+          extensionApi,
+        }).api(),
 
         onReplaced: new EventManager({
           context,
@@ -618,27 +665,17 @@ this.tabs = class extends ExtensionAPI {
 
         onMoved: new EventManager({
           context,
-          name: "tabs.onMoved",
-          register: fire => {
-            let moveListener = event => {
-              let nativeTab = event.originalTarget;
-              if (tabManager.canAccessTab(nativeTab)) {
-                fire.async(tabTracker.getId(nativeTab), {
-                  windowId: windowTracker.getId(nativeTab.ownerGlobal),
-                  fromIndex: event.detail,
-                  toIndex: nativeTab._tPos,
-                });
-              }
-            };
-
-            windowTracker.addListener("TabMove", moveListener);
-            return () => {
-              windowTracker.removeListener("TabMove", moveListener);
-            };
-          },
+          module,
+          event: "onMoved",
+          extensionApi,
         }).api(),
 
-        onUpdated: new TabsUpdateFilterEventManager(context).api(),
+        onUpdated: new EventManager({
+          context,
+          module,
+          event: "onUpdated",
+          extensionApi,
+        }).api(),
 
         create(createProperties) {
           return new Promise((resolve, reject) => {
@@ -1261,7 +1298,7 @@ this.tabs = class extends ExtensionAPI {
                   tabId,
                   oldZoomFactor,
                   newZoomFactor,
-                  zoomSettings: self.tabs._getZoomSettings(tabId),
+                  zoomSettings: tabsApi.tabs._getZoomSettings(tabId),
                 });
               }
             };
@@ -1585,6 +1622,6 @@ this.tabs = class extends ExtensionAPI {
         },
       },
     };
-    return self;
+    return tabsApi;
   }
 };
