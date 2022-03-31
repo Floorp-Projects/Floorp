@@ -89,8 +89,10 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
   }
 
   void ConnectTransportControllerSignals() {
-    transport_controller_->SignalIceConnectionState.connect(
-        this, &JsepTransportControllerTest::OnConnectionState);
+    transport_controller_->SignalIceConnectionState.AddReceiver(
+        [this](cricket::IceConnectionState s) {
+          JsepTransportControllerTest::OnConnectionState(s);
+        });
     transport_controller_->SignalStandardizedIceConnectionState.connect(
         this, &JsepTransportControllerTest::OnStandardizedIceConnectionState);
     transport_controller_->SignalConnectionState.connect(
