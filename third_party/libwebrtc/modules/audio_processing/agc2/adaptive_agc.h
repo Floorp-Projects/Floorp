@@ -26,6 +26,7 @@ class ApmDataDumper;
 class AdaptiveAgc {
  public:
   explicit AdaptiveAgc(ApmDataDumper* apm_data_dumper);
+  // TODO(crbug.com/webrtc/7494): Remove ctor above.
   AdaptiveAgc(ApmDataDumper* apm_data_dumper,
               const AudioProcessing::Config::GainController2& config);
   ~AdaptiveAgc();

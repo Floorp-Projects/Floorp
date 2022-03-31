@@ -26,9 +26,6 @@ constexpr size_t kMaximalNumberOfSamplesPerChannel = 480;
 constexpr float kAttackFilterConstant = 0.f;
 
 // Adaptive digital gain applier settings below.
-constexpr float kMaxGainChangePerSecondDb = 3.f;
-constexpr float kMaxGainChangePerFrameDb =
-    kMaxGainChangePerSecondDb * kFrameDurationMs / 1000.f;
 constexpr float kHeadroomDbfs = 1.f;
 constexpr float kMaxGainDb = 30.f;
 constexpr float kInitialAdaptiveDigitalGainDb = 8.f;
@@ -51,7 +48,6 @@ constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
 
 // Robust VAD probability and speech decisions.
 constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
-constexpr int kDefaultDigitalGainApplierAdjacentSpeechFramesThreshold = 1;
 constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 1;
 
 // Saturation Protector settings.
