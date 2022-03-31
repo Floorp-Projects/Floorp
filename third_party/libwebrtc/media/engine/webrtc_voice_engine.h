@@ -25,10 +25,15 @@
 #include "call/call.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
+#include "modules/async_audio_processing/async_audio_processing.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_checker.h"
+
+namespace webrtc {
+class AudioFrameProcessor;
+}
 
 namespace cricket {
 
@@ -50,6 +55,7 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
       rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
+      webrtc::AudioFrameProcessor* audio_frame_processor,
       const webrtc::WebRtcKeyValueConfig& trials);
 
   WebRtcVoiceEngine() = delete;
@@ -116,6 +122,8 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer_;
   // The audio processing module.
   rtc::scoped_refptr<webrtc::AudioProcessing> apm_;
+  // Asynchronous audio processing.
+  webrtc::AudioFrameProcessor* const audio_frame_processor_;
   // The primary instance of WebRtc VoiceEngine.
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   std::vector<AudioCodec> send_codecs_;

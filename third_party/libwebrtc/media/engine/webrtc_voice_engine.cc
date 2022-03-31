@@ -12,12 +12,14 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "api/audio/audio_frame_processor.h"
 #include "api/audio_codecs/audio_codec_pair_id.h"
 #include "api/call/audio_sink.h"
 #include "api/transport/webrtc_key_value_config.h"
@@ -27,6 +29,7 @@
 #include "media/engine/adm_helpers.h"
 #include "media/engine/payload_type_mapper.h"
 #include "media/engine/webrtc_media_engine.h"
+#include "modules/async_audio_processing/async_audio_processing.h"
 #include "modules/audio_device/audio_device_impl.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
@@ -241,6 +244,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
     rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
+    webrtc::AudioFrameProcessor* audio_frame_processor,
     const webrtc::WebRtcKeyValueConfig& trials)
     : task_queue_factory_(task_queue_factory),
       adm_(adm),
@@ -248,6 +252,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
       decoder_factory_(decoder_factory),
       audio_mixer_(audio_mixer),
       apm_(audio_processing),
+      audio_frame_processor_(audio_frame_processor),
       audio_red_for_opus_trial_enabled_(
           IsEnabled(trials, "WebRTC-Audio-Red-For-Opus")),
       minimized_remsampling_on_mobile_trial_enabled_(
@@ -317,6 +322,10 @@ void WebRtcVoiceEngine::Init() {
     }
     config.audio_processing = apm_;
     config.audio_device_module = adm_;
+    if (audio_frame_processor_)
+      config.async_audio_processing_factory =
+          new rtc::RefCountedObject<webrtc::AsyncAudioProcessing::Factory>(
+              *audio_frame_processor_, *task_queue_factory_);
     audio_state_ = webrtc::AudioState::Create(config);
   }
 

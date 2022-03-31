@@ -53,7 +53,7 @@ bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
 
   // AudioTransportImpl depends on audio mixer and audio processing instances.
   audio_transport_ = std::make_unique<AudioTransportImpl>(
-      audio_mixer_.get(), audio_processing_.get());
+      audio_mixer_.get(), audio_processing_.get(), nullptr);
 
   // Initialize ADM.
   if (audio_device_module_->Init() != 0) {

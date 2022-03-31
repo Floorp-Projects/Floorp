@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "api/audio/audio_frame_processor.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
@@ -46,6 +47,7 @@ struct MediaEngineDependencies {
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory;
   rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer;
   rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing;
+  webrtc::AudioFrameProcessor* audio_frame_processor = nullptr;
 
   std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory;
