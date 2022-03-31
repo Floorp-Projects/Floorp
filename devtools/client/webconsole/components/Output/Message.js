@@ -375,20 +375,18 @@ class Message extends Component {
     }
 
     // Configure the location.
-    const location = dom.span(
-      { className: "message-location devtools-monospace" },
-      frame
-        ? FrameView({
-            frame,
-            onClick: onFrameClick,
-            showEmptyPathAsHost: true,
-            sourceMapURLService: serviceContainer
-              ? serviceContainer.sourceMapURLService
-              : undefined,
-            messageSource: source,
-          })
-        : null
-    );
+    const location = frame
+      ? FrameView({
+          className: "message-location devtools-monospace",
+          frame,
+          onClick: onFrameClick,
+          showEmptyPathAsHost: true,
+          sourceMapURLService: serviceContainer
+            ? serviceContainer.sourceMapURLService
+            : undefined,
+          messageSource: source,
+        })
+      : null;
 
     let learnMore;
     if (exceptionDocURL) {
