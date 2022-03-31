@@ -35,6 +35,10 @@ class AdaptiveDigitalGainApplier {
   };
 
   explicit AdaptiveDigitalGainApplier(ApmDataDumper* apm_data_dumper);
+  // Ctor. `adjacent_speech_frames_threshold` indicates how many speech frames
+  // are required before a gain increase is allowed.
+  AdaptiveDigitalGainApplier(ApmDataDumper* apm_data_dumper,
+                             int adjacent_speech_frames_threshold);
   AdaptiveDigitalGainApplier(const AdaptiveDigitalGainApplier&) = delete;
   AdaptiveDigitalGainApplier& operator=(const AdaptiveDigitalGainApplier&) =
       delete;
@@ -46,8 +50,10 @@ class AdaptiveDigitalGainApplier {
   ApmDataDumper* const apm_data_dumper_;
   GainApplier gain_applier_;
 
+  const int adjacent_speech_frames_threshold_;
+
   int calls_since_last_gain_log_;
-  bool gain_increase_allowed_;
+  int frames_to_gain_increase_allowed_;
   float last_gain_db_;
 };
 
