@@ -8,23 +8,23 @@
 
 add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
-  const extension = await installAndStartExtension();
+  const extension = await installAndStartContentScriptExtension();
 
-  let dbg = await initDebugger("doc-content-script-sources.html");
-  await clickElement(dbg, "sourceDirectoryLabel", 2);
-
-  await selectContentScriptSources(dbg);
+  let dbg = await initDebugger(
+    "doc-content-script-sources.html",
+    "content_script.js"
+  );
+  await selectSource(dbg, "content_script.js");
   await closeTab(dbg, "content_script.js");
 
   // Destroy the toolbox and repeat the test in a new toolbox
   // and ensures that the content script is still listed.
   await dbg.toolbox.destroy();
+
   const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
   dbg = createDebuggerContext(toolbox);
-
-  await clickElement(dbg, "sourceDirectoryLabel", 2);
-
-  await selectContentScriptSources(dbg);
+  await waitForSources(dbg, "content_script.js");
+  await selectSource(dbg, "content_script.js");
 
   await addBreakpoint(dbg, "content_script.js", 2);
 
@@ -50,45 +50,3 @@ add_task(async function() {
 
   await extension.unload();
 });
-
-async function selectContentScriptSources(dbg) {
-  await waitForSources(dbg, "content_script.js");
-
-  // Select a source.
-  await selectSource(dbg, "content_script.js");
-
-  ok(
-    findElementWithSelector(dbg, ".sources-list .focused"),
-    "Source is focused"
-  );
-}
-
-async function installAndStartExtension() {
-  function contentScript() {
-    console.log("content script loads");
-
-    // This listener prevents the source from being garbage collected
-    // and be missing from the scripts returned by `dbg.findScripts()`
-    // in `ThreadActor._discoverSources`.
-    window.onload = () => {};
-  }
-
-  const extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      content_scripts: [
-        {
-          js: ["content_script.js"],
-          matches: ["https://example.com/*"],
-          run_at: "document_start",
-        },
-      ],
-    },
-    files: {
-      "content_script.js": contentScript,
-    },
-  });
-
-  await extension.startup();
-
-  return extension;
-}
