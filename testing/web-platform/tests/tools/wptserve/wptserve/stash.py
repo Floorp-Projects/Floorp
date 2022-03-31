@@ -5,13 +5,17 @@ import threading
 import queue
 import uuid
 
-from multiprocessing.managers import AcquirerProxy, BaseManager, BaseProxy, DictProxy, public_methods
+from multiprocessing.managers import BaseManager, BaseProxy
+# We also depend on some undocumented parts of multiprocessing.managers which
+# don't have any type annotations.
+from multiprocessing.managers import AcquirerProxy, DictProxy, public_methods  # type: ignore
+from typing import Dict
 
 from .utils import isomorphic_encode
 
 
 class StashManager(BaseManager):
-    shared_data = {}
+    shared_data: Dict[str, object] = {}
     lock = threading.Lock()
 
 
@@ -46,7 +50,7 @@ for method in QueueProxy._exposed_:
         _impl.__name__ = method
         return _impl
 
-    setattr(QueueProxy, method, impl_fn(method))
+    setattr(QueueProxy, method, impl_fn(method))  # type: ignore
 
 
 StashManager.register("Queue",
