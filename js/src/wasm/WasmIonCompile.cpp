@@ -1726,8 +1726,8 @@ class FunctionCompiler {
 
   MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
                               MIRType type) {
-    uint32_t globalDataOffset =
-        wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
+    uint32_t globalDataOffset = wasm::Instance::offsetOfGlobalArea() +
+                                table.globalDataOffset + fieldOffset;
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_, globalDataOffset, type,
                                    AliasSet::Load(AliasSet::WasmTableMeta));
     curBlock_->add(load);
@@ -1735,7 +1735,8 @@ class FunctionCompiler {
   }
 
   MDefinition* loadTableLength(const TableDesc& table) {
-    return loadTableField(table, offsetof(TableInstanceData, length), MIRType::Int32);
+    return loadTableField(table, offsetof(TableInstanceData, length),
+                          MIRType::Int32);
   }
 
   MDefinition* loadTableElements(const TableDesc& table) {
@@ -4836,12 +4837,8 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
   return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
-static bool EmitMemCopyInlineM32(FunctionCompiler& f, MDefinition* dst,
-                                 MDefinition* src, MDefinition* len) {
-  MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
-
-  MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32);
-  uint32_t length = len->toConstant()->toInt32();
+static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
+                              MDefinition* src, uint32_t length) {
   MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryCopyLength);
 
   // Compute the number of copies of each width we will need to do
@@ -4986,13 +4983,15 @@ static bool EmitMemCopy(FunctionCompiler& f) {
     return true;
   }
 
-  if (f.isMem32()) {
-    if (len->isConstant() && len->type() == MIRType::Int32 &&
-        len->toConstant()->toInt32() != 0 &&
-        uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryCopyLength) {
-      return EmitMemCopyInlineM32(f, dst, src, len);
+  if (len->isConstant()) {
+    uint64_t length = f.isMem32() ? len->toConstant()->toInt32()
+                                  : len->toConstant()->toInt64();
+    static_assert(MaxInlineMemoryCopyLength <= UINT32_MAX);
+    if (length != 0 && length <= MaxInlineMemoryCopyLength) {
+      return EmitMemCopyInline(f, dst, src, uint32_t(length));
     }
   }
+
   return EmitMemCopyCall(f, dst, src, len);
 }
 
@@ -5113,16 +5112,10 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
   return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
 
-static bool EmitMemFillInlineM32(FunctionCompiler& f, MDefinition* start,
-                                 MDefinition* val, MDefinition* len) {
-  MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
-
-  MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32 &&
-             val->isConstant() && val->type() == MIRType::Int32);
-
-  uint32_t length = len->toConstant()->toInt32();
-  uint32_t value = val->toConstant()->toInt32();
+static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
+                              MDefinition* val, uint32_t length) {
   MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryFillLength);
+  uint32_t value = val->toConstant()->toInt32();
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
@@ -5218,14 +5211,15 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return true;
   }
 
-  if (f.isMem32()) {
-    if (len->isConstant() && len->type() == MIRType::Int32 &&
-        len->toConstant()->toInt32() != 0 &&
-        uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryFillLength &&
-        val->isConstant() && val->type() == MIRType::Int32) {
-      return EmitMemFillInlineM32(f, start, val, len);
+  if (len->isConstant() && val->isConstant()) {
+    uint64_t length = f.isMem32() ? len->toConstant()->toInt32()
+                                  : len->toConstant()->toInt64();
+    static_assert(MaxInlineMemoryFillLength <= UINT32_MAX);
+    if (length != 0 && length <= MaxInlineMemoryFillLength) {
+      return EmitMemFillInline(f, start, val, uint32_t(length));
     }
   }
+
   return EmitMemFillCall(f, start, val, len);
 }
 
