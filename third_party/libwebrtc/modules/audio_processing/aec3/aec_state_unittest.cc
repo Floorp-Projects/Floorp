@@ -92,7 +92,7 @@ void RunNormalUsageTest(size_t num_render_channels,
     subtractor_output[ch].ComputeMetrics(y[ch]);
   }
   state.HandleEchoPathChange(EchoPathVariability(
-      false, EchoPathVariability::DelayAdjustment::kBufferReadjustment, false));
+      false, EchoPathVariability::DelayAdjustment::kNewDetectedDelay, false));
   state.Update(delay_estimate, converged_filter_frequency_response,
                impulse_response, *render_delay_buffer->GetRenderBuffer(),
                E2_refined, Y2, subtractor_output);
