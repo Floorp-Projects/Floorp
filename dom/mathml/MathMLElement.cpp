@@ -880,42 +880,6 @@ already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {
   // The REC says: "When user agents encounter MathML elements with both href
   // and xlink:href attributes, the href attribute should take precedence."
   const nsAttrValue* href = mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None);
-  if (!href && !StaticPrefs::mathml_xlink_disabled()) {
-    // To be a clickable XLink for styling and interaction purposes, we require:
-    //
-    //   xlink:href    - must be set
-    //   xlink:type    - must be unset or set to "" or set to "simple"
-    //   xlink:show    - must be unset or set to "", "new" or "replace"
-    //   xlink:actuate - must be unset or set to "" or "onRequest"
-    //
-    // For any other values, we're either not a *clickable* XLink, or the end
-    // result is poorly specified. Either way, we return false.
-
-    static Element::AttrValuesArray sTypeVals[] = {nsGkAtoms::_empty,
-                                                   nsGkAtoms::simple, nullptr};
-
-    static Element::AttrValuesArray sShowVals[] = {
-        nsGkAtoms::_empty, nsGkAtoms::_new, nsGkAtoms::replace, nullptr};
-
-    static Element::AttrValuesArray sActuateVals[] = {
-        nsGkAtoms::_empty, nsGkAtoms::onRequest, nullptr};
-
-    // Optimization: check for href first for early return
-    href = mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
-    if (href &&
-        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::type, sTypeVals,
-                        eCaseMatters) != Element::ATTR_VALUE_NO_MATCH &&
-        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show, sShowVals,
-                        eCaseMatters) != Element::ATTR_VALUE_NO_MATCH &&
-        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate, sActuateVals,
-                        eCaseMatters) != Element::ATTR_VALUE_NO_MATCH) {
-      OwnerDoc()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
-    } else {
-      href = nullptr;
-    }
-  }
-
   if (!href) {
     return nullptr;
   }
@@ -926,44 +890,6 @@ already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(hrefURI), hrefStr,
                                             OwnerDoc(), GetBaseURI());
   return hrefURI.forget();
-}
-
-void MathMLElement::GetLinkTarget(nsAString& aTarget) {
-  if (StaticPrefs::mathml_xlink_disabled()) {
-    MathMLElementBase::GetLinkTarget(aTarget);
-    return;
-  }
-
-  const nsAttrValue* target =
-      mAttrs.GetAttr(nsGkAtoms::target, kNameSpaceID_XLink);
-  if (target) {
-    OwnerDoc()->WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
-    target->ToString(aTarget);
-  }
-
-  if (aTarget.IsEmpty()) {
-    static Element::AttrValuesArray sShowVals[] = {nsGkAtoms::_new,
-                                                   nsGkAtoms::replace, nullptr};
-
-    bool hasDeprecatedShowAttribute = true;
-    switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show, sShowVals,
-                            eCaseMatters)) {
-      case ATTR_MISSING:
-        hasDeprecatedShowAttribute = false;
-        break;
-      case 0:
-        aTarget.AssignLiteral("_blank");
-        return;
-      case 1:
-        return;
-    }
-    if (hasDeprecatedShowAttribute) {
-      OwnerDoc()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
-    }
-    OwnerDoc()->GetBaseTarget(aTarget);
-  }
 }
 
 bool MathMLElement::IsEventAttributeNameInternal(nsAtom* aName) {
@@ -995,15 +921,7 @@ nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   // We will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
-  if (aName == nsGkAtoms::href && (aNameSpaceID == kNameSpaceID_None ||
-                                   (!StaticPrefs::mathml_xlink_disabled() &&
-                                    aNameSpaceID == kNameSpaceID_XLink))) {
-    if (aValue && aNameSpaceID == kNameSpaceID_XLink) {
-      OwnerDoc()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedXLinkAttribute);
-    }
-    // Note: When unsetting href, there may still be another href since there
-    // are 2 possible namespaces.
+  if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_None) {
     Link::ResetLinkState(aNotify, aValue || Link::ElementHasHref());
   }
 
