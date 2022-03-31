@@ -397,6 +397,8 @@ class LookAndFeel {
                                               : ColorScheme::Light;
   }
 
+  static bool IsDarkColor(nscolor);
+
   enum class ChromeColorSchemeSetting { Light, Dark, System };
   static ChromeColorSchemeSetting ColorSchemeSettingForChrome();
   static ColorScheme ThemeDerivedColorSchemeForContent();
