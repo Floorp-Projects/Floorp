@@ -53,7 +53,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator,
   VadLevelAnalyzer::Result vad_level{kMaxSpeechProbability, /*rms_dbfs=*/-20.f,
                                      /*peak_dbfs=*/-10.f};
   level_estimator.estimator->Update(vad_level);
-  static_cast<void>(level_estimator.estimator->GetLevelDbfs());
+  static_cast<void>(level_estimator.estimator->level_dbfs());
 }
 
 TEST(AutomaticGainController2AdaptiveModeLevelEstimator, LevelShouldStabilize) {
@@ -68,7 +68,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator, LevelShouldStabilize) {
                      *level_estimator.estimator);
 
   EXPECT_NEAR(
-      level_estimator.estimator->GetLevelDbfs() - kExtraSaturationMarginDb,
+      level_estimator.estimator->level_dbfs() - kExtraSaturationMarginDb,
       kSpeechPeakDbfs, 0.1f);
 }
 
@@ -95,7 +95,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator,
 
   // Level should not have changed.
   EXPECT_NEAR(
-      level_estimator.estimator->GetLevelDbfs() - kExtraSaturationMarginDb,
+      level_estimator.estimator->level_dbfs() - kExtraSaturationMarginDb,
       kSpeechRmsDbfs, 0.1f);
 }
 
@@ -126,7 +126,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator, TimeToAdapt) {
           /*peak_dbfs=*/kDifferentSpeechRmsDbfs},
       *level_estimator.estimator);
   EXPECT_GT(std::abs(kDifferentSpeechRmsDbfs -
-                     level_estimator.estimator->GetLevelDbfs()),
+                     level_estimator.estimator->level_dbfs()),
             kMaxDifferenceDb);
 
   // Run for some more time. Afterwards, we should have adapted.
@@ -138,7 +138,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator, TimeToAdapt) {
           /*peak_dbfs=*/kDifferentSpeechRmsDbfs},
       *level_estimator.estimator);
   EXPECT_NEAR(
-      level_estimator.estimator->GetLevelDbfs() - kExtraSaturationMarginDb,
+      level_estimator.estimator->level_dbfs() - kExtraSaturationMarginDb,
       kDifferentSpeechRmsDbfs, kMaxDifferenceDb * 0.5f);
 }
 
@@ -173,7 +173,7 @@ TEST(AutomaticGainController2AdaptiveModeLevelEstimator,
   const float kMaxDifferenceDb =
       0.1f * std::abs(kDifferentSpeechRmsDbfs - kInitialSpeechRmsDbfs);
   EXPECT_LT(std::abs(kDifferentSpeechRmsDbfs -
-                     (level_estimator.estimator->GetLevelDbfs() -
+                     (level_estimator.estimator->level_dbfs() -
                       kExtraSaturationMarginDb)),
             kMaxDifferenceDb);
 }

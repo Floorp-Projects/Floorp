@@ -16,6 +16,38 @@
 #include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
+namespace {
+
+using LevelEstimatorType =
+    AudioProcessing::Config::GainController2::LevelEstimator;
+
+// Combines a level estimation with the saturation protector margins.
+float ComputeLevelEstimateDbfs(float level_estimate_dbfs,
+                               bool use_saturation_protector,
+                               float saturation_margin_db,
+                               float extra_saturation_margin_db) {
+  return rtc::SafeClamp<float>(
+      level_estimate_dbfs +
+          (use_saturation_protector
+               ? (saturation_margin_db + extra_saturation_margin_db)
+               : 0.f),
+      -90.f, 30.f);
+}
+
+// Returns the level of given type from `vad_level`.
+float GetLevel(const VadLevelAnalyzer::Result& vad_level,
+               LevelEstimatorType type) {
+  switch (type) {
+    case LevelEstimatorType::kRms:
+      return vad_level.rms_dbfs;
+      break;
+    case LevelEstimatorType::kPeak:
+      return vad_level.peak_dbfs;
+      break;
+  }
+}
+
+}  // namespace
 
 float AdaptiveModeLevelEstimator::State::Ratio::GetRatio() const {
   RTC_DCHECK_NE(denominator, 0.f);
@@ -53,7 +85,10 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
       use_saturation_protector_(use_saturation_protector),
       initial_saturation_margin_db_(initial_saturation_margin_db),
       extra_saturation_margin_db_(extra_saturation_margin_db),
-      last_level_dbfs_(absl::nullopt) {
+      level_dbfs_(ComputeLevelEstimateDbfs(kInitialSpeechLevelEstimateDbfs,
+                                           use_saturation_protector_,
+                                           initial_saturation_margin_db_,
+                                           extra_saturation_margin_db_)) {
   Reset();
 }
 
@@ -78,47 +113,28 @@ void AdaptiveModeLevelEstimator::Update(
     state_.time_to_full_buffer_ms -= kFrameDurationMs;
   }
 
-  // Read level estimation.
-  float level_dbfs = 0.f;
-  using LevelEstimatorType =
-      AudioProcessing::Config::GainController2::LevelEstimator;
-  switch (level_estimator_type_) {
-    case LevelEstimatorType::kRms:
-      level_dbfs = vad_level.rms_dbfs;
-      break;
-    case LevelEstimatorType::kPeak:
-      level_dbfs = vad_level.peak_dbfs;
-      break;
-  }
-
   // Update level estimation (average level weighted by speech probability).
   RTC_DCHECK_GT(vad_level.speech_probability, 0.f);
   const float leak_factor = buffer_is_full ? kFullBufferLeakFactor : 1.f;
-  state_.level_dbfs.numerator = state_.level_dbfs.numerator * leak_factor +
-                                level_dbfs * vad_level.speech_probability;
+  state_.level_dbfs.numerator =
+      state_.level_dbfs.numerator * leak_factor +
+      GetLevel(vad_level, level_estimator_type_) * vad_level.speech_probability;
   state_.level_dbfs.denominator = state_.level_dbfs.denominator * leak_factor +
                                   vad_level.speech_probability;
 
-  // Cache level estimation.
-  last_level_dbfs_ = state_.level_dbfs.GetRatio();
+  const float level_dbfs = state_.level_dbfs.GetRatio();
 
   if (use_saturation_protector_) {
-    UpdateSaturationProtectorState(
-        /*speech_peak_dbfs=*/vad_level.peak_dbfs,
-        /*speech_level_dbfs=*/last_level_dbfs_.value(),
-        state_.saturation_protector);
+    UpdateSaturationProtectorState(vad_level.peak_dbfs, level_dbfs,
+                                   state_.saturation_protector);
   }
+
+  // Cache level estimation.
+  level_dbfs_ = ComputeLevelEstimateDbfs(level_dbfs, use_saturation_protector_,
+                                         state_.saturation_protector.margin_db,
+                                         extra_saturation_margin_db_);
 
   DebugDumpEstimate();
-}
-
-float AdaptiveModeLevelEstimator::GetLevelDbfs() const {
-  float level_dbfs = last_level_dbfs_.value_or(kInitialSpeechLevelEstimateDbfs);
-  if (use_saturation_protector_) {
-    level_dbfs += state_.saturation_protector.margin_db;
-    level_dbfs += extra_saturation_margin_db_;
-  }
-  return rtc::SafeClamp<float>(level_dbfs, -90.f, 30.f);
 }
 
 bool AdaptiveModeLevelEstimator::IsConfident() const {
@@ -128,7 +144,9 @@ bool AdaptiveModeLevelEstimator::IsConfident() const {
 
 void AdaptiveModeLevelEstimator::Reset() {
   ResetState(state_);
-  last_level_dbfs_ = absl::nullopt;
+  level_dbfs_ = ComputeLevelEstimateDbfs(
+      kInitialSpeechLevelEstimateDbfs, use_saturation_protector_,
+      initial_saturation_margin_db_, extra_saturation_margin_db_);
 }
 
 void AdaptiveModeLevelEstimator::ResetState(State& state) {
@@ -141,8 +159,7 @@ void AdaptiveModeLevelEstimator::ResetState(State& state) {
 
 void AdaptiveModeLevelEstimator::DebugDumpEstimate() {
   if (apm_data_dumper_) {
-    apm_data_dumper_->DumpRaw("agc2_adaptive_level_estimate_dbfs",
-                              GetLevelDbfs());
+    apm_data_dumper_->DumpRaw("agc2_adaptive_level_estimate_dbfs", level_dbfs_);
     apm_data_dumper_->DumpRaw("agc2_adaptive_saturation_margin_db",
                               state_.saturation_protector.margin_db);
   }
