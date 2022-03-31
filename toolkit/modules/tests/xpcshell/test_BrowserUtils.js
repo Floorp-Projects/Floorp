@@ -19,6 +19,10 @@ const { updateAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );
 
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+
 // Helper to run tests for specific regions
 function setupRegions(home, current) {
   Region._setHomeRegion(home || "");
@@ -28,6 +32,29 @@ function setupRegions(home, current) {
 function setLanguage(language) {
   Services.locale.availableLocales = [language];
   Services.locale.requestedLocales = [language];
+}
+
+/**
+ * Calls to this need to revert these changes by undoing them at the end of the test,
+ * using:
+ *
+ *  await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
+ */
+async function setupEnterprisePolicy() {
+  // set app info name as it's needed to set a policy and is not defined by default
+  // in xpcshell tests
+  updateAppInfo({
+    name: "XPCShell",
+  });
+
+  // set up an arbitrary enterprise policy
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      EnableTrackingProtection: {
+        Value: true,
+      },
+    },
+  });
 }
 
 add_task(async function test_shouldShowVPNPromo() {
@@ -77,21 +104,12 @@ add_task(async function test_shouldShowVPNPromo() {
     // Services.policies isn't shipped on Android
     // Don't show VPN if there's an active enterprise policy
     setupRegions(allowedRegion, allowedRegion);
-    // set app info name as it's needed to set a policy and is not defined by default in xpcshell tests
-    updateAppInfo({
-      name: "XPCShell",
-    });
-    // set up an arbitrary enterprise policy
-    await EnterprisePolicyTesting.setupPolicyEngineWithJson({
-      policies: {
-        EnableTrackingProtection: {
-          Value: true,
-        },
-      },
-    });
+    await setupEnterprisePolicy();
+
     Assert.ok(!BrowserUtils.shouldShowVPNPromo());
 
-    await EnterprisePolicyTesting.setupPolicyEngineWithJson(""); // revert changes to policies
+    // revert policy changes made earlier
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
   }
 });
 
@@ -135,4 +153,36 @@ add_task(async function test_sendToDeviceEmailsSupported() {
   // Return false if language is ar
   setLanguage(disallowedLanguage);
   Assert.ok(!BrowserUtils.sendToDeviceEmailsSupported());
+});
+
+add_task(async function test_shouldShowFocusPromo() {
+  const allowedRegion = "US";
+  const disallowedRegion = "CN";
+
+  // Show promo when neither region is disallowed
+  setupRegions(allowedRegion, allowedRegion);
+  Assert.ok(BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.FOCUS));
+
+  // Don't show when home region is disallowed
+  setupRegions(disallowedRegion);
+  Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.FOCUS));
+
+  setupRegions(allowedRegion, allowedRegion);
+
+  // Don't show when there is an enterprise policy active
+  if (AppConstants.platform !== "android") {
+    // Services.policies isn't shipped on Android
+    await setupEnterprisePolicy();
+
+    Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.FOCUS));
+
+    // revert policy changes made earlier
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
+  }
+
+  // Don't show when promo disabled by pref
+  Preferences.set("browser.promo.focus.enabled", false);
+  Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.FOCUS));
+
+  Preferences.resetBranch("browser.promo.focus");
 });
