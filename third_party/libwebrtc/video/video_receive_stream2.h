@@ -25,6 +25,7 @@
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/video_receiver2.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "system_wrappers/include/clock.h"
@@ -177,8 +178,8 @@ class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
 
   void UpdateHistograms();
 
-  SequenceChecker worker_sequence_checker_;
-  SequenceChecker module_process_sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker module_process_sequence_checker_;
 
   TaskQueueFactory* const task_queue_factory_;
 

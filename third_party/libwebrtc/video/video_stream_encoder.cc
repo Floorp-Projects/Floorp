@@ -41,6 +41,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
@@ -274,7 +275,7 @@ class VideoStreamEncoder::DegradationPreferenceManager
     }
   }
 
-  SequenceChecker sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
   DegradationPreference degradation_preference_
       RTC_GUARDED_BY(&sequence_checker_);
   bool is_screenshare_ RTC_GUARDED_BY(&sequence_checker_);
