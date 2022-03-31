@@ -12,6 +12,7 @@
 #define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_MODE_LEVEL_ESTIMATOR_H_
 
 #include <stddef.h>
+#include <type_traits>
 
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/agc2/saturation_protector.h"
@@ -38,6 +39,7 @@ class AdaptiveModeLevelEstimator {
   AdaptiveModeLevelEstimator(
       ApmDataDumper* apm_data_dumper,
       AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
+      int adjacent_speech_frames_threshold,
       bool use_saturation_protector,
       float initial_saturation_margin_db,
       float extra_saturation_margin_db);
@@ -63,10 +65,12 @@ class AdaptiveModeLevelEstimator {
       float denominator;
       float GetRatio() const;
     };
+    // TODO(crbug.com/webrtc/7494): Remove if saturation protector always used.
     int time_to_full_buffer_ms;
     Ratio level_dbfs;
     SaturationProtectorState saturation_protector;
   };
+  static_assert(std::is_trivially_copyable<LevelEstimatorState>::value, "");
 
   void ResetLevelEstimatorState(LevelEstimatorState& state) const;
 
@@ -76,12 +80,14 @@ class AdaptiveModeLevelEstimator {
 
   const AudioProcessing::Config::GainController2::LevelEstimator
       level_estimator_type_;
+  const int adjacent_speech_frames_threshold_;
   const bool use_saturation_protector_;
   const float initial_saturation_margin_db_;
   const float extra_saturation_margin_db_;
-  // TODO(crbug.com/webrtc/7494): Add temporary state.
-  LevelEstimatorState state_;
+  LevelEstimatorState preliminary_state_;
+  LevelEstimatorState reliable_state_;
   float level_dbfs_;
+  int num_adjacent_speech_frames_;
 };
 
 }  // namespace webrtc
