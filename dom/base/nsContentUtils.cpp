@@ -2320,6 +2320,16 @@ bool nsContentUtils::ShouldResistFingerprinting(
 }
 
 /* static */
+bool nsContentUtils::UseStandinsForNativeColors() {
+  return ShouldResistFingerprinting(
+             "we want to have consistent colors across the browser if RFP is "
+             "enabled, so we check the global preference"
+             "not excluding chrome browsers or webpages, so we call the legacy "
+             "RFP function to prevent that") ||
+         StaticPrefs::ui_use_standins_for_native_colors();
+}
+
+/* static */
 void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
     int32_t aChromeWidth, int32_t aChromeHeight, int32_t aScreenWidth,
     int32_t aScreenHeight, int32_t aInputWidth, int32_t aInputHeight,
