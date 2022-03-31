@@ -1,7 +1,10 @@
 import socket
-
+from typing import Dict, List, TypeVar
 
 from .logger import get_logger
+
+KT = TypeVar('KT')
+VT = TypeVar('VT')
 
 
 def isomorphic_decode(s):
@@ -39,7 +42,7 @@ def isomorphic_encode(s):
     raise TypeError("Unexpected value (expecting string-like): %r" % s)
 
 
-def invert_dict(dict):
+def invert_dict(dict: Dict[KT, List[VT]]) -> Dict[VT, KT]:
     rv = {}
     for key, values in dict.items():
         for value in values:

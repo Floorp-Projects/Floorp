@@ -273,7 +273,7 @@ class FileHandler:
         return f.read(byte_range.upper - byte_range.lower)
 
 
-file_handler = FileHandler()
+file_handler = FileHandler()  # type: ignore
 
 
 class PythonScriptHandler:
@@ -347,7 +347,7 @@ class PythonScriptHandler:
         return self._load_file(request, None, func)
 
 
-python_script_handler = PythonScriptHandler()
+python_script_handler = PythonScriptHandler()  # type: ignore
 
 
 class FunctionHandler:
@@ -426,7 +426,7 @@ class AsIsHandler:
             raise HTTPException(404)
 
 
-as_is_handler = AsIsHandler()
+as_is_handler = AsIsHandler()  # type: ignore
 
 
 class BasicAuthHandler:
@@ -456,7 +456,7 @@ class BasicAuthHandler:
             return self.handler(request, response)
 
 
-basic_auth_handler = BasicAuthHandler(file_handler, None, None)
+basic_auth_handler = BasicAuthHandler(file_handler, None, None)  # type: ignore
 
 
 class ErrorHandler:

@@ -11,6 +11,7 @@ import traceback
 import uuid
 from collections import OrderedDict
 from queue import Empty, Queue
+from typing import Dict
 
 from h2.config import H2Configuration
 from h2.connection import H2Connection
@@ -646,7 +647,7 @@ class H2ConnectionGuard:
         self.lock.release()
 
 
-class H2Headers(dict):
+class H2Headers(Dict[bytes, bytes]):
     def __init__(self, headers):
         self.raw_headers = OrderedDict()
         for key, val in headers:

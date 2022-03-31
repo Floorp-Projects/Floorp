@@ -4,10 +4,14 @@ import tempfile
 
 from http.cookies import BaseCookie
 from io import BytesIO
+from typing import Dict, List, TypeVar
 from urllib.parse import parse_qsl, urlsplit
 
 from . import stash
 from .utils import HTTPException, isomorphic_encode, isomorphic_decode
+
+KT = TypeVar('KT')
+VT = TypeVar('VT')
 
 missing = object()
 
@@ -368,7 +372,7 @@ class H2Request(Request):
         super().__init__(request_handler)
 
 
-class RequestHeaders(dict):
+class RequestHeaders(Dict[bytes, List[bytes]]):
     """Read-only dictionary-like API for accessing request headers.
 
     Unlike BaseHTTPRequestHandler.headers, this class always returns all
@@ -516,7 +520,7 @@ class CookieValue:
         return self.value == other
 
 
-class MultiDict(dict):
+class MultiDict(Dict[KT, VT]):
     """Dictionary type that holds multiple values for each key"""
     # TODO: this should perhaps also order the keys
     def __init__(self):
@@ -607,7 +611,7 @@ class MultiDict(dict):
         return self
 
 
-class BinaryCookieParser(BaseCookie):
+class BinaryCookieParser(BaseCookie):  # type: ignore
     """A subclass of BaseCookie that returns values in binary strings
 
     This is not intended to store the cookies; use Cookies instead.
@@ -633,7 +637,7 @@ class BinaryCookieParser(BaseCookie):
         super().load(isomorphic_decode(rawdata))
 
 
-class Cookies(MultiDict):
+class Cookies(MultiDict[bytes, CookieValue]):
     """MultiDict specialised for Cookie values
 
     Keys are binary strings and values are CookieValue objects.
