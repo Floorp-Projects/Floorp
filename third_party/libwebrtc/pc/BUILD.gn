@@ -112,6 +112,7 @@ rtc_library("rtc_pc_base") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:deprecation",
+    "../rtc_base:robo_caller",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:stringutils",
     "../rtc_base/synchronization:mutex",
