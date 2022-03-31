@@ -47,6 +47,7 @@ const ONBOARDING_CHOICE = {
   CLOSE_1: "close_1",
   DISMISS_1: "dismiss_1",
   DISMISS_2: "dismiss_2",
+  LEARN_MORE_1: "learn_more_1",
   LEARN_MORE_2: "learn_more_2",
   NOT_NOW_2: "not_now_2",
   REJECT_2: "reject_2",
@@ -267,6 +268,7 @@ class Suggestions {
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
     switch (params.choice) {
+      case ONBOARDING_CHOICE.LEARN_MORE_1:
       case ONBOARDING_CHOICE.LEARN_MORE_2:
         win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
           fromChrome: true,
