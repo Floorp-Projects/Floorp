@@ -123,6 +123,7 @@ class ContextMenusClickPropHandler {
 
 this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
+    let { extension } = context;
     let onClickedProp = new ContextMenusClickPropHandler(context);
     let pendingMenuEvent;
 
@@ -131,7 +132,7 @@ this.menusInternal = class extends ExtensionAPI {
         create(createProperties, callback) {
           let caller = context.getCaller();
 
-          if (createProperties.id === null) {
+          if (extension.persistentBackground && createProperties.id === null) {
             createProperties.id = ++gNextMenuItemID;
           }
           let { onclick } = createProperties;
