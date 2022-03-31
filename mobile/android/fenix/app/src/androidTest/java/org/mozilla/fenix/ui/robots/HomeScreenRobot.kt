@@ -399,21 +399,21 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
-        fun expandCollection(
-            title: String,
-            interact: CollectionRobot.() -> Unit
-        ): CollectionRobot.Transition {
-            // Depending on the screen dimensions collections might report as visible on screen
-            // but actually have the bottom toolbar above so interactions with collections might fail.
-            // As a quick solution we'll try scrolling to the element below collection on the homescreen
-            // so that they are displayed above in their entirety.
-            scrollToElementByText(appContext.getString(R.string.pocket_stories_header_1))
-
-            collectionTitle(title).click()
-
-            CollectionRobot().interact()
-            return CollectionRobot.Transition()
-        }
+        // fun expandCollection(
+        //     title: String,
+        //     interact: CollectionRobot.() -> Unit
+        // ): CollectionRobot.Transition {
+        //     // Depending on the screen dimensions collections might report as visible on screen
+        //     // but actually have the bottom toolbar above so interactions with collections might fail.
+        //     // As a quick solution we'll try scrolling to the element below collection on the homescreen
+        //     // so that they are displayed above in their entirety.
+        //     scrollToElementByText(appContext.getString(R.string.pocket_stories_header_1))
+        //
+        //     collectionTitle(title).click()
+        //
+        //     CollectionRobot().interact()
+        //     return CollectionRobot.Transition()
+        // }
 
         fun openRecentlyVisitedSearchGroupHistoryList(
             title: String,
@@ -669,9 +669,6 @@ private fun assertPrivateSessionMessage() =
                 )
         ).waitForExists(waitingTime)
     )
-
-private fun collectionTitle(title: String) =
-    onView(allOf(withId(R.id.collection_title), withText(title)))
 
 private fun assertExistingTopSitesList() =
     onView(allOf(withId(R.id.top_sites_list)))

@@ -11,16 +11,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
-import org.mozilla.fenix.ui.robots.browserScreen
-import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.robots.tabDrawer
 
 /**
  *  Tests for verifying basic functionality of tab collections
@@ -81,10 +76,10 @@ class CollectionTest {
         }.openSaveToCollection {
         }.selectExistingCollection(firstCollectionName) {
             verifySnackBarText("Tab saved!")
-        }.goToHomescreen {
-        }.expandCollection(firstCollectionName) {
-            verifyTabSavedInCollection(firstWebPage.title)
-            verifyTabSavedInCollection(secondWebPage.title)
+            // }.goToHomescreen {
+            // }.expandCollection(firstCollectionName) {
+            //     verifyTabSavedInCollection(firstWebPage.title)
+            //     verifyTabSavedInCollection(secondWebPage.title)
         }
     }
 
@@ -104,115 +99,115 @@ class CollectionTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
         }.goToHomescreen {
-        }.expandCollection(firstCollectionName) {
-            clickCollectionThreeDotButton()
-            selectAddTabToCollection()
-            verifyTabsSelectedCounterText(1)
-            saveTabsSelectedForCollection()
-            verifySnackBarText("Tab saved!")
-            verifyTabSavedInCollection(secondWebPage.title)
+            // }.expandCollection(firstCollectionName) {
+            //     clickCollectionThreeDotButton()
+            //     selectAddTabToCollection()
+            //     verifyTabsSelectedCounterText(1)
+            //     saveTabsSelectedForCollection()
+            //     verifySnackBarText("Tab saved!")
+            //     verifyTabSavedInCollection(secondWebPage.title)
         }
     }
 
-    @Test
-    fun renameCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
+    // @Test
+    // fun renameCollectionTest() {
+    //     val webPage = getGenericAsset(mockWebServer, 1)
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(webPage.url) {
+    //     }.openTabDrawer {
+    //         createCollection(webPage.title, firstCollectionName)
+    //         verifySnackBarText("Collection saved!")
+    //     }.closeTabDrawer {
+    //     }.goToHomescreen {
+    //     }.expandCollection(firstCollectionName) {
+    //         clickCollectionThreeDotButton()
+    //         selectRenameCollection()
+    //     }.typeCollectionNameAndSave("renamed_collection") {}
+    //
+    //     homeScreen {
+    //         verifyCollectionIsDisplayed("renamed_collection")
+    //     }
+    // }
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openTabDrawer {
-            createCollection(webPage.title, firstCollectionName)
-            verifySnackBarText("Collection saved!")
-        }.closeTabDrawer {
-        }.goToHomescreen {
-        }.expandCollection(firstCollectionName) {
-            clickCollectionThreeDotButton()
-            selectRenameCollection()
-        }.typeCollectionNameAndSave("renamed_collection") {}
+    // @Test
+    // fun createSecondCollectionTest() {
+    //     val webPage = getGenericAsset(mockWebServer, 1)
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(webPage.url) {
+    //     }.openTabDrawer {
+    //         createCollection(webPage.title, firstCollectionName)
+    //         verifySnackBarText("Collection saved!")
+    //         createCollection(webPage.title, secondCollectionName, false)
+    //         verifySnackBarText("Collection saved!")
+    //     }.closeTabDrawer {
+    //     }.goToHomescreen {}
+    //
+    //     homeScreen {
+    //         verifyCollectionIsDisplayed(firstCollectionName)
+    //         verifyCollectionIsDisplayed(secondCollectionName)
+    //     }
+    // }
 
-        homeScreen {
-            verifyCollectionIsDisplayed("renamed_collection")
-        }
-    }
+//     @Test
+//     fun removeTabFromCollectionTest() {
+//         val webPage = getGenericAsset(mockWebServer, 1)
+//
+//         navigationToolbar {
+//         }.enterURLAndEnterToBrowser(webPage.url) {
+//         }.openTabDrawer {
+//             createCollection(webPage.title, firstCollectionName)
+//             verifySnackBarText("Collection saved!")
+//             closeTab()
+//         }
+//
+//         homeScreen {
+//         }.expandCollection(firstCollectionName) {
+//             removeTabFromCollection(webPage.title)
+//             verifyTabSavedInCollection(webPage.title, false)
+//         }
+//         // To add this step when https://github.com/mozilla-mobile/fenix/issues/13177 is fixed
+// //        homeScreen {
+// //            verifyCollectionIsDisplayed(firstCollectionName, false)
+// //        }
+//     }
 
-    @Test
-    fun createSecondCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openTabDrawer {
-            createCollection(webPage.title, firstCollectionName)
-            verifySnackBarText("Collection saved!")
-            createCollection(webPage.title, secondCollectionName, false)
-            verifySnackBarText("Collection saved!")
-        }.closeTabDrawer {
-        }.goToHomescreen {}
-
-        homeScreen {
-            verifyCollectionIsDisplayed(firstCollectionName)
-            verifyCollectionIsDisplayed(secondCollectionName)
-        }
-    }
-
-    @Test
-    fun removeTabFromCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openTabDrawer {
-            createCollection(webPage.title, firstCollectionName)
-            verifySnackBarText("Collection saved!")
-            closeTab()
-        }
-
-        homeScreen {
-        }.expandCollection(firstCollectionName) {
-            removeTabFromCollection(webPage.title)
-            verifyTabSavedInCollection(webPage.title, false)
-        }
-        // To add this step when https://github.com/mozilla-mobile/fenix/issues/13177 is fixed
+    // @Test
+    // fun swipeToRemoveTabFromCollectionTest() {
+    //     val firstWebPage = getGenericAsset(mockWebServer, 1)
+    //     val secondWebPage = getGenericAsset(mockWebServer, 2)
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(firstWebPage.url) {
+    //     }.openTabDrawer {
+    //         createCollection(firstWebPage.title, firstCollectionName)
+    //         verifySnackBarText("Collection saved!")
+    //         closeTab()
+    //     }
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(secondWebPage.url) {
+    //     }.openThreeDotMenu {
+    //     }.openSaveToCollection {
+    //     }.selectExistingCollection(firstCollectionName) {
+    //     }.openTabDrawer {
+    //         closeTab()
+    //     }
+    //
+    //     homeScreen {
+    //     }.expandCollection(firstCollectionName) {
+    //         swipeToBottom()
+    //         swipeCollectionItemLeft(firstWebPage.title)
+    //         verifyTabSavedInCollection(firstWebPage.title, false)
+    //         swipeCollectionItemRight(secondWebPage.title)
+    //         verifyTabSavedInCollection(secondWebPage.title, false)
+    //     }
+    // To add this step when https://github.com/mozilla-mobile/fenix/issues/13177 is fixed
 //        homeScreen {
 //            verifyCollectionIsDisplayed(firstCollectionName, false)
 //        }
-    }
-
-    @Test
-    fun swipeToRemoveTabFromCollectionTest() {
-        val firstWebPage = getGenericAsset(mockWebServer, 1)
-        val secondWebPage = getGenericAsset(mockWebServer, 2)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer {
-            createCollection(firstWebPage.title, firstCollectionName)
-            verifySnackBarText("Collection saved!")
-            closeTab()
-        }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(secondWebPage.url) {
-        }.openThreeDotMenu {
-        }.openSaveToCollection {
-        }.selectExistingCollection(firstCollectionName) {
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.expandCollection(firstCollectionName) {
-            swipeToBottom()
-            swipeCollectionItemLeft(firstWebPage.title)
-            verifyTabSavedInCollection(firstWebPage.title, false)
-            swipeCollectionItemRight(secondWebPage.title)
-            verifyTabSavedInCollection(secondWebPage.title, false)
-        }
-        // To add this step when https://github.com/mozilla-mobile/fenix/issues/13177 is fixed
-//        homeScreen {
-//            verifyCollectionIsDisplayed(firstCollectionName, false)
-//        }
-    }
+//     }
 
     @Test
     fun selectTabOnLongTapTest() {
@@ -235,69 +230,69 @@ class CollectionTest {
             verifySnackBarText("Tabs saved!")
         }
 
-        tabDrawer {
-        }.closeTabDrawer {
-        }.goToHomescreen {
-        }.expandCollection(firstCollectionName) {
-            verifyTabSavedInCollection(firstWebPage.title)
-            verifyTabSavedInCollection(secondWebPage.title)
-        }
+        // tabDrawer {
+        // }.closeTabDrawer {
+        // }.goToHomescreen {
+        // }.expandCollection(firstCollectionName) {
+        //     verifyTabSavedInCollection(firstWebPage.title)
+        //     verifyTabSavedInCollection(secondWebPage.title)
+        // }
     }
 
-    @Test
-    fun navigateBackInCollectionFlowTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
+    // @Test
+    // fun navigateBackInCollectionFlowTest() {
+    //     val webPage = getGenericAsset(mockWebServer, 1)
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(webPage.url) {
+    //     }.openTabDrawer {
+    //         createCollection(webPage.title, firstCollectionName)
+    //         verifySnackBarText("Collection saved!")
+    //     }.closeTabDrawer {
+    //     }.openThreeDotMenu {
+    //     }.openSaveToCollection {
+    //         verifySelectCollectionScreen()
+    //         goBackInCollectionFlow()
+    //     }
+    //
+    //     browserScreen {
+    //     }.openThreeDotMenu {
+    //     }.openSaveToCollection {
+    //         verifySelectCollectionScreen()
+    //         clickAddNewCollection()
+    //         verifyCollectionNameTextField()
+    //         goBackInCollectionFlow()
+    //         verifySelectCollectionScreen()
+    //         goBackInCollectionFlow()
+    //     }
+    //     // verify the browser layout is visible
+    //     browserScreen {
+    //         verifyMenuButton()
+    //     }
+    // }
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openTabDrawer {
-            createCollection(webPage.title, firstCollectionName)
-            verifySnackBarText("Collection saved!")
-        }.closeTabDrawer {
-        }.openThreeDotMenu {
-        }.openSaveToCollection {
-            verifySelectCollectionScreen()
-            goBackInCollectionFlow()
-        }
-
-        browserScreen {
-        }.openThreeDotMenu {
-        }.openSaveToCollection {
-            verifySelectCollectionScreen()
-            clickAddNewCollection()
-            verifyCollectionNameTextField()
-            goBackInCollectionFlow()
-            verifySelectCollectionScreen()
-            goBackInCollectionFlow()
-        }
-        // verify the browser layout is visible
-        browserScreen {
-            verifyMenuButton()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun undoDeleteCollectionTest() {
-        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openTabDrawer {
-            createCollection(webPage.title, firstCollectionName)
-            snackBarButtonClick("VIEW")
-        }
-
-        homeScreen {
-        }.expandCollection(firstCollectionName) {
-            clickCollectionThreeDotButton()
-            selectDeleteCollection()
-        }
-
-        homeScreen {
-            verifySnackBarText("Collection deleted")
-            clickUndoCollectionDeletion("UNDO")
-            verifyCollectionIsDisplayed(firstCollectionName, true)
-        }
-    }
+    // @SmokeTest
+    // @Test
+    // fun undoDeleteCollectionTest() {
+    //     val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+    //
+    //     navigationToolbar {
+    //     }.enterURLAndEnterToBrowser(webPage.url) {
+    //     }.openTabDrawer {
+    //         createCollection(webPage.title, firstCollectionName)
+    //         snackBarButtonClick("VIEW")
+    //     }
+    //
+    //     homeScreen {
+    //     }.expandCollection(firstCollectionName) {
+    //         clickCollectionThreeDotButton()
+    //         selectDeleteCollection()
+    //     }
+    //
+    //     homeScreen {
+    //         verifySnackBarText("Collection deleted")
+    //         clickUndoCollectionDeletion("UNDO")
+    //         verifyCollectionIsDisplayed(firstCollectionName, true)
+    //     }
+    // }
 }

@@ -98,33 +98,33 @@ class CollectionRobot {
             )
     }
 
-    fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
-        shareCollectionButton()
-            .check(
-                if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-                else matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE))
-            )
-    }
+    // fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
+    //     shareCollectionButton()
+    //         .check(
+    //             if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+    //             else matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE))
+    //         )
+    // }
 
-    fun verifyCollectionMenuIsVisible(visible: Boolean) {
-        collectionThreeDotButton()
-            .check(
-                if (visible) matches(
-                    withEffectiveVisibility(
-                        ViewMatchers.Visibility.VISIBLE
-                    )
-                )
-                else matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE))
-            )
-    }
+    // fun verifyCollectionMenuIsVisible(visible: Boolean) {
+    //     collectionThreeDotButton()
+    //         .check(
+    //             if (visible) matches(
+    //                 withEffectiveVisibility(
+    //                     ViewMatchers.Visibility.VISIBLE
+    //                 )
+    //             )
+    //             else matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE))
+    //         )
+    // }
 
-    fun clickCollectionThreeDotButton() {
-        collectionThreeDotButton().click()
-        mDevice.waitNotNull(
-            Until.findObject(By.text("Delete collection")),
-            waitingTime
-        )
-    }
+    // fun clickCollectionThreeDotButton() {
+    //     collectionThreeDotButton().click()
+    //     mDevice.waitNotNull(
+    //         Until.findObject(By.text("Delete collection")),
+    //         waitingTime
+    //     )
+    // }
 
     fun selectOpenTabs() {
         onView(withText("Open tabs")).click()
@@ -251,12 +251,12 @@ class CollectionRobot {
             return BrowserRobot.Transition()
         }
 
-        fun clickShareCollectionButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
-            shareCollectionButton().click()
-
-            ShareOverlayRobot().interact()
-            return ShareOverlayRobot.Transition()
-        }
+        // fun clickShareCollectionButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+        //     shareCollectionButton().click()
+        //
+        //     ShareOverlayRobot().interact()
+        //     return ShareOverlayRobot.Transition()
+        // }
     }
 }
 
@@ -265,13 +265,13 @@ fun collectionRobot(interact: CollectionRobot.() -> Unit): CollectionRobot.Trans
     return CollectionRobot.Transition()
 }
 
-private fun collectionThreeDotButton() =
-    onView(withId(R.id.collection_overflow_button))
+// private fun collectionThreeDotButton() =
+//     onView(withId(R.id.collection_overflow_button))
 
 private fun collectionItem(title: String) =
     onView(allOf(withId(R.id.label), withText(title)))
 
-private fun shareCollectionButton() = onView(withId(R.id.collection_share_button))
+// private fun shareCollectionButton() = onView(withId(R.id.collection_share_button))
 
 private fun removeTabFromCollectionButton(title: String) =
     onView(
