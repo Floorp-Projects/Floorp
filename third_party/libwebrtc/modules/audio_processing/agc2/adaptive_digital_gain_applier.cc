@@ -74,35 +74,33 @@ float LimitGainByLowConfidence(float target_gain,
 // Return the gain difference in db to 'last_gain_db'.
 float ComputeGainChangeThisFrameDb(float target_gain_db,
                                    float last_gain_db,
-                                   bool gain_increase_allowed) {
+                                   bool gain_increase_allowed,
+                                   float max_gain_change_db) {
   float target_gain_difference_db = target_gain_db - last_gain_db;
   if (!gain_increase_allowed) {
     target_gain_difference_db = std::min(target_gain_difference_db, 0.f);
   }
-
-  return rtc::SafeClamp(target_gain_difference_db, -kMaxGainChangePerFrameDb,
-                        kMaxGainChangePerFrameDb);
+  return rtc::SafeClamp(target_gain_difference_db, -max_gain_change_db,
+                        max_gain_change_db);
 }
-}  // namespace
 
-// TODO(crbug.com/webrtc/7494): Remove ctor and the constant used below.
-AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
-    ApmDataDumper* apm_data_dumper)
-    : AdaptiveDigitalGainApplier(
-          apm_data_dumper,
-          kDefaultDigitalGainApplierAdjacentSpeechFramesThreshold) {}
+}  // namespace
 
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper,
-    int adjacent_speech_frames_threshold)
+    int adjacent_speech_frames_threshold,
+    float max_gain_change_db_per_second)
     : apm_data_dumper_(apm_data_dumper),
       gain_applier_(
           /*hard_clip_samples=*/false,
           /*initial_gain_factor=*/DbToRatio(kInitialAdaptiveDigitalGainDb)),
       adjacent_speech_frames_threshold_(adjacent_speech_frames_threshold),
+      max_gain_change_db_per_10ms_(max_gain_change_db_per_second *
+                                   kFrameDurationMs / 1000.f),
       calls_since_last_gain_log_(0),
       frames_to_gain_increase_allowed_(adjacent_speech_frames_threshold_),
       last_gain_db_(kInitialAdaptiveDigitalGainDb) {
+  RTC_DCHECK_GT(max_gain_change_db_per_second, 0.f);
   RTC_DCHECK_GE(frames_to_gain_increase_allowed_, 1);
 }
 
@@ -110,7 +108,11 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
                                          AudioFrameView<float> frame) {
   RTC_DCHECK_GE(info.input_level_dbfs, -150.f);
   RTC_DCHECK_GE(frame.num_channels(), 1);
-  RTC_DCHECK_GE(frame.samples_per_channel(), 1);
+  RTC_DCHECK(
+      frame.samples_per_channel() == 80 || frame.samples_per_channel() == 160 ||
+      frame.samples_per_channel() == 320 || frame.samples_per_channel() == 480)
+      << "`frame` does not look like a 10 ms frame for an APM supported sample "
+         "rate";
 
   // Log every second.
   calls_since_last_gain_log_++;
@@ -137,7 +139,8 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
 
   const float gain_change_this_frame_db = ComputeGainChangeThisFrameDb(
       target_gain_db, last_gain_db_,
-      /*gain_increase_allowed=*/frames_to_gain_increase_allowed_ == 0);
+      /*gain_increase_allowed=*/frames_to_gain_increase_allowed_ == 0,
+      max_gain_change_db_per_10ms_);
 
   apm_data_dumper_->DumpRaw("agc2_want_to_change_by_db",
                             target_gain_db - last_gain_db_);

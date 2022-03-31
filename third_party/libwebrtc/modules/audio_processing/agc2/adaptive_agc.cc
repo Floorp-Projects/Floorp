@@ -28,11 +28,16 @@ void DumpDebugData(const AdaptiveDigitalGainApplier::FrameInfo& info,
   dumper.DumpRaw("agc2_last_limiter_audio_level", info.limiter_envelope_dbfs);
 }
 
+constexpr int kGainApplierAdjacentSpeechFramesThreshold = 1;
+constexpr float kMaxGainChangePerSecondDb = 3.f;
+
 }  // namespace
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
     : speech_level_estimator_(apm_data_dumper),
-      gain_applier_(apm_data_dumper),
+      gain_applier_(apm_data_dumper,
+                    kGainApplierAdjacentSpeechFramesThreshold,
+                    kMaxGainChangePerSecondDb),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(apm_data_dumper) {
   RTC_DCHECK(apm_data_dumper);
@@ -48,9 +53,10 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
           config.adaptive_digital.initial_saturation_margin_db,
           config.adaptive_digital.extra_saturation_margin_db),
       vad_(config.adaptive_digital.vad_probability_attack),
-      gain_applier_(apm_data_dumper,
-                    config.adaptive_digital
-                        .gain_applier_adjacent_speech_frames_threshold),
+      gain_applier_(
+          apm_data_dumper,
+          config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold,
+          config.adaptive_digital.max_gain_change_db_per_second),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(apm_data_dumper) {
   RTC_DCHECK(apm_data_dumper);
