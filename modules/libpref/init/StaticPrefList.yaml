@@ -7276,6 +7276,13 @@
   mirror: always
   rust: true
 
+# Whether Container Queries are enabled
+- name: layout.css.container-queries.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether Constructable Stylesheets are enabled in script.
 - name: layout.css.constructable-stylesheets.enabled
   type: bool
