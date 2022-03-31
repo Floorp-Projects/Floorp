@@ -489,7 +489,7 @@ jobs:
     parallel: 7 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-11'
   steps:
   - task: UsePythonVersion@0
     inputs:
