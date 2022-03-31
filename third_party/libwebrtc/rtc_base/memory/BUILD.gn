@@ -20,12 +20,15 @@ rtc_library("aligned_malloc") {
   deps = [ "..:checks" ]
 }
 
+# Test only utility.
+# TODO: Tag with `testonly = true` once all depending targets are correctly
+# tagged.
 rtc_library("fifo_buffer") {
   visibility = [
-    "../../p2p:rtc_p2p",
+    ":unittests",
     "..:rtc_base_tests_utils",
     "..:rtc_base_unittests",
-    ":unittests",
+    "../../p2p:rtc_p2p",  # This needs to be fixed.
   ]
   sources = [
     "fifo_buffer.cc",
@@ -34,6 +37,8 @@ rtc_library("fifo_buffer") {
   deps = [
     "..:rtc_base",
     "../synchronization:mutex",
+    "../task_utils:pending_task_safety_flag",
+    "../task_utils:to_queued_task",
   ]
 }
 
