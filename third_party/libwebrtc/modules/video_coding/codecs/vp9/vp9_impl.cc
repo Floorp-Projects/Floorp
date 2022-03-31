@@ -398,6 +398,8 @@ bool VP9EncoderImpl::SetSvcRates(
   first_active_layer_ = 0;
   bool seen_active_layer = false;
   bool expect_no_more_active_layers = false;
+  int highest_active_width = 0;
+  int highest_active_height = 0;
   for (int i = 0; i < num_spatial_layers_; ++i) {
     if (config_->ss_target_bitrate[i] > 0) {
       RTC_DCHECK(!expect_no_more_active_layers) << "Only middle layer is "
@@ -407,6 +409,12 @@ bool VP9EncoderImpl::SetSvcRates(
       }
       num_active_spatial_layers_ = i + 1;
       seen_active_layer = true;
+      highest_active_width =
+          (svc_params_.scaling_factor_num[i] * config_->g_w) /
+          svc_params_.scaling_factor_den[i];
+      highest_active_height =
+          (svc_params_.scaling_factor_num[i] * config_->g_h) /
+          svc_params_.scaling_factor_den[i];
     } else {
       expect_no_more_active_layers = seen_active_layer;
     }
@@ -422,6 +430,7 @@ bool VP9EncoderImpl::SetSvcRates(
   }
 
   current_bitrate_allocation_ = bitrate_allocation;
+  cpu_speed_ = GetCpuSpeed(highest_active_width, highest_active_height);
   config_changed_ = true;
   return true;
 }
@@ -967,6 +976,7 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
     if (vpx_codec_enc_config_set(encoder_, config_)) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
+    vpx_codec_control(encoder_, VP8E_SET_CPUUSED, cpu_speed_);
     config_changed_ = false;
   }
 
