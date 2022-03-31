@@ -104,7 +104,9 @@ bool RedPayloadSplitter::SplitRed(PacketList* packet_list) {
         payload_length -= kRedHeaderLength;
       }
       // Store in new list of packets.
-      new_headers.push_back(new_header);
+      if (new_header.payload_length > 0) {
+        new_headers.push_back(new_header);
+      }
     }
 
     if (new_headers.size() <= kMaxRedBlocks) {
