@@ -345,11 +345,11 @@ The event's objects are the following:
 :accept_2:
   The user accepted the dialog and opted in.
 :close_1:
-  The user clicked close button or something similar link on introduction
+  The user clicked close button or something similar link on the introduction
   section. The user remains opted out in this case.
 :dismiss_1:
   The user dismissed the dialog by pressing the Escape key or some unknown way
-  on introduction section. The user remains opted out in this case.
+  on the introduction section. The user remains opted out in this case.
 :dismiss_2:
   The user dismissed the dialog by pressing the Escape key or some unknown way
   on main section. The user remains opted out in this case.
@@ -364,8 +364,12 @@ The event's objects are the following:
 :learn_more:
   The user clicked "Learn more". The user remains opted out in this case. This
   object was removed in Firefox 96.0.2.
+:learn_more_1:
+  The user clicked "Learn more" on the introduction section. The user remains
+  opted out in this case.
 :learn_more_2:
-  The user clicked "Learn more". The user remains opted out in this case.
+  The user clicked "Learn more" on the main section. The user remains opted out
+  in this case.
 :not_now:
   The dialog was dismissed in some way without opting in. This object was
   removed in Firefox 94.0.
@@ -397,9 +401,16 @@ Changelog
     ``close_1``, ``not_now_2``, ``dismiss_1`` and ``dismiss_2``.
     [Bug 1745026_]
 
+  Firefox 100.0
+    Objects changed to: ``accept_2``, ``reject_2``, ``learn_more_1``,
+    ``learn_more_2``, ``close_1``, ``not_now_2``, ``dismiss_1`` and
+    ``dismiss_2``.
+    [Bug 1761171_]
+
 .. _1723860: https://bugzilla.mozilla.org/show_bug.cgi?id=1723860
 .. _1733687: https://bugzilla.mozilla.org/show_bug.cgi?id=1733687
 .. _1745026: https://bugzilla.mozilla.org/show_bug.cgi?id=1745026
+.. _1761171: https://bugzilla.mozilla.org/show_bug.cgi?id=1761171
 
 contextservices.quicksuggest.sponsored_toggled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -452,11 +463,11 @@ string-valued pref with the following possible values:
 :accept_2:
   The user accepted the dialog and opted in.
 :close_1:
-  The user clicked close button or something similar link on introduction
+  The user clicked close button or something similar link on the introduction
   section. The user remains opted out in this case.
 :dismiss_1:
   The user dismissed the dialog by pressing the Escape key or some unknown way
-  on introduction section. The user remains opted out in this case.
+  on the introduction section. The user remains opted out in this case.
 :dismiss_2:
   The user dismissed the dialog by pressing the Escape key or some unknown way
   on main section. The user remains opted out in this case.
@@ -471,8 +482,12 @@ string-valued pref with the following possible values:
 :learn_more:
   The user clicked "Learn more". The user remains opted out in this case. This
   object was removed in Firefox 96.0.2.
+:learn_more_1:
+  The user clicked "Learn more" on the introduction section. The user remains
+  opted out in this case.
 :learn_more_2:
-  The user clicked "Learn more". The user remains opted out in this case.
+  The user clicked "Learn more" on the main section. The user remains opted out
+  in this case.
 :not_now_2:
   The user clicked "Not now" link on main section. The user remains opted out in
   this case.
@@ -495,8 +510,12 @@ Changelog
     ``dismissed_escape_key``, ``dismissed_other``, ``learn_more``,
     ``not_now_link``, ``settings``. [Bug 1745026_]
 
+  Firefox 100.0
+    Added ``learn_more_1``. [Bug 1761171_]
+
 .. _1734447: https://bugzilla.mozilla.org/show_bug.cgi?id=1734447
 .. _1745026: https://bugzilla.mozilla.org/show_bug.cgi?id=1745026
+.. _1761171: https://bugzilla.mozilla.org/show_bug.cgi?id=1761171
 
 browser.urlbar.quicksuggest.dataCollection.enabled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
