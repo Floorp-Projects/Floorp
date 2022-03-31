@@ -91,6 +91,7 @@ internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
  * need to be requested. Once the request is completed, [onPermissionsResult] needs to be invoked.
  * @property onShouldShowRequestPermissionRationale a callback that allows the feature to query
  * the ActivityCompat.shouldShowRequestPermissionRationale or the Fragment.shouldShowRequestPermissionRationale values.
+ * @property shouldShowDoNotAskAgainCheckBox optional Visibility for Do not ask again Checkbox
  **/
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
@@ -104,7 +105,8 @@ class SitePermissionsFeature(
     private val dialogConfig: DialogConfig? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
     val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean,
-    private val store: BrowserStore
+    private val store: BrowserStore,
+    private val shouldShowDoNotAskAgainCheckBox: Boolean = true,
 ) : LifecycleAwareFeature, PermissionsFeature {
     @VisibleForTesting
     internal val selectOrAddUseCase by lazy {
@@ -714,7 +716,7 @@ class SitePermissionsFeature(
                 permissionRequest,
                 R.string.mozac_feature_sitepermissions_camera_and_microphone,
                 R.drawable.mozac_ic_microphone,
-                showDoNotAskAgainCheckBox = true,
+                showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                 shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                     ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
             )
@@ -736,7 +738,7 @@ class SitePermissionsFeature(
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_location_title,
                     R.drawable.mozac_ic_location,
-                    showDoNotAskAgainCheckBox = true,
+                    showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
                 )
@@ -760,7 +762,7 @@ class SitePermissionsFeature(
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_microfone_title,
                     R.drawable.mozac_ic_microphone,
-                    showDoNotAskAgainCheckBox = true,
+                    showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
                 )
@@ -772,7 +774,7 @@ class SitePermissionsFeature(
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_camera_title,
                     R.drawable.mozac_ic_video,
-                    showDoNotAskAgainCheckBox = true,
+                    showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
                 )

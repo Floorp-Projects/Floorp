@@ -50,7 +50,10 @@ permalink: /changelog/
 
 * **lib-crash-sentry**
   * 🌟️️ Add `sendCaughtExceptions` config flag to `SentryService`, allowing consumers to disable submitting caught exceptions. By default it's enabled, maintaining prior behaviour. Useful in projects with high volumes of caught exceptions and multiple release channels.
-
+  
+* **site-permission-feature**
+  * 🆕 New Add to SitePermissionsFeature a property to set visibility for NotAskAgainCheckBox
+  
 # 99.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v98.0.0...v99.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/146?closed=1)
