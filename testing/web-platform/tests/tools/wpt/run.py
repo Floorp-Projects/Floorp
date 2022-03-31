@@ -3,7 +3,7 @@ import os
 import platform
 import sys
 from distutils.spawn import find_executable
-from typing import ClassVar, Type
+from typing import ClassVar, Tuple, Type
 
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
@@ -328,8 +328,8 @@ class FirefoxAndroid(BrowserSetup):
 
 class Chrome(BrowserSetup):
     name = "chrome"
-    browser_cls = browser.Chrome
-    experimental_channels = ("dev", "canary", "nightly")
+    browser_cls = browser.Chrome  # type: ClassVar[Type[browser.ChromeChromiumBase]]
+    experimental_channels = ("dev", "canary", "nightly")  # type: ClassVar[Tuple[str, ...]]
 
     def setup_kwargs(self, kwargs):
         browser_channel = kwargs["browser_channel"]
@@ -338,7 +338,7 @@ class Chrome(BrowserSetup):
             if binary:
                 kwargs["binary"] = binary
             else:
-                raise WptrunError("Unable to locate Chrome binary")
+                raise WptrunError(f"Unable to locate {self.name.capitalize()} binary")
 
         if kwargs["mojojs_path"]:
             kwargs["enable_mojojs"] = True
@@ -360,7 +360,7 @@ class Chrome(BrowserSetup):
         if kwargs["webdriver_binary"] is None:
             webdriver_binary = None
             if not kwargs["install_webdriver"]:
-                webdriver_binary = self.browser.find_webdriver()
+                webdriver_binary = self.browser.find_webdriver(self.venv.bin_path)
                 if webdriver_binary and not self.browser.webdriver_supports_browser(
                         webdriver_binary, kwargs["binary"], browser_channel):
                     webdriver_binary = None
@@ -393,6 +393,12 @@ class Chrome(BrowserSetup):
             # We are on Taskcluster, where our Docker container does not have
             # enough capabilities to run Chrome with sandboxing. (gh-20133)
             kwargs["binary_args"].append("--no-sandbox")
+
+
+class Chromium(Chrome):
+    name = "chromium"
+    browser_cls = browser.Chromium  # type: ClassVar[Type[browser.ChromeChromiumBase]]
+    experimental_channels = ("nightly",)
 
 
 class ChromeAndroidBase(BrowserSetup):
@@ -705,6 +711,7 @@ product_setup = {
     "chrome": Chrome,
     "chrome_android": ChromeAndroid,
     "chrome_ios": ChromeiOS,
+    "chromium": Chromium,
     "edgechromium": EdgeChromium,
     "edge": Edge,
     "edge_webdriver": EdgeWebDriver,
