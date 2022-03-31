@@ -9,6 +9,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/IHistory.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -53,9 +54,17 @@ Link::~Link() {
 }
 
 bool Link::ElementHasHref() const {
-  return mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
-         (!mElement->IsHTMLElement() &&
-          mElement->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href));
+  if (mElement->HasAttr(nsGkAtoms::href)) {
+    return true;
+  }
+  if (const auto* svg = SVGAElement::FromNode(*mElement)) {
+    // This can be a HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) check once
+    // SMIL is fixed to actually mutate DOM attributes rather than faking it.
+    return svg->HasHref();
+  }
+  MOZ_ASSERT(!mElement->IsSVGElement(),
+             "What other SVG element inherits from Link?");
+  return false;
 }
 
 void Link::VisitedQueryFinished(bool aVisited) {

@@ -8371,12 +8371,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether to disable support for XLink on MathML elements.
-- name: mathml.xlink.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable support for stretching operators with STIXGeneral fonts.
 # macos still has the deprecated STIXGeneral font pre-installed.
 - name: mathml.stixgeneral_operator_stretching.disabled
