@@ -18,7 +18,7 @@ def check_connect_method(request):
         raise HandshakeException('Method is not CONNECT: %r' % request.method)
 
 
-class WsH2Handshaker(HandshakerBase):
+class WsH2Handshaker(HandshakerBase):  # type: ignore
     def __init__(self, request, dispatcher):
         """Bootstrapping handshake processor for the WebSocket protocol with HTTP/2 (RFC 8441).
 
