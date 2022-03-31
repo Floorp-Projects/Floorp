@@ -258,8 +258,10 @@ events:
           pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history,
           pref_key_show_voice_search,
           and pref_key_show_search_suggestions_in_private.
+        type: string
       enabled:
         description: "Whether or not the preference is *now* enabled"
+        type: boolean
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/975
       - https://github.com/mozilla-mobile/fenix/issues/5094

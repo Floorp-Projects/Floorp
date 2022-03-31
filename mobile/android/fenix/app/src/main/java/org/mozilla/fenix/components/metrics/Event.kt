@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import android.content.Context
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
@@ -17,7 +16,6 @@ import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.name
 import java.util.Locale
 
@@ -211,40 +209,6 @@ sealed class Event {
 
     data class TopSiteContileClick(val position: Int, val source: Source) : Event() {
         enum class Source { NEWTAB }
-    }
-
-    data class PreferenceToggled(
-        val preferenceKey: String,
-        val enabled: Boolean,
-        val context: Context
-    ) : Event() {
-        private val booleanPreferenceTelemetryAllowList = listOf(
-            context.getString(R.string.pref_key_show_search_suggestions),
-            context.getString(R.string.pref_key_remote_debugging),
-            context.getString(R.string.pref_key_telemetry),
-            context.getString(R.string.pref_key_tracking_protection),
-            context.getString(R.string.pref_key_search_bookmarks),
-            context.getString(R.string.pref_key_search_browsing_history),
-            context.getString(R.string.pref_key_show_clipboard_suggestions),
-            context.getString(R.string.pref_key_show_search_engine_shortcuts),
-            context.getString(R.string.pref_key_open_links_in_a_private_tab),
-            context.getString(R.string.pref_key_sync_logins),
-            context.getString(R.string.pref_key_sync_bookmarks),
-            context.getString(R.string.pref_key_sync_history),
-            context.getString(R.string.pref_key_show_voice_search),
-            context.getString(R.string.pref_key_show_search_suggestions_in_private)
-        )
-
-        override val extras: Map<Events.preferenceToggledKeys, String>?
-            get() = mapOf(
-                Events.preferenceToggledKeys.preferenceKey to preferenceKey,
-                Events.preferenceToggledKeys.enabled to enabled.toString()
-            )
-
-        init {
-            // If the event is not in the allow list, we don't want to track it
-            require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
-        }
     }
 
     data class AddonsOpenInToolbarMenu(val addonId: String) : Event() {

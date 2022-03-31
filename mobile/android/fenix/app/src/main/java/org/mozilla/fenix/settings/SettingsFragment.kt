@@ -37,6 +37,7 @@ import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -118,20 +119,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireComponents.backgroundServices.accountManager.accountProfile()
         )
 
+        val booleanPreferenceTelemetryAllowList = listOf(
+            requireContext().getString(R.string.pref_key_show_search_suggestions),
+            requireContext().getString(R.string.pref_key_remote_debugging),
+            requireContext().getString(R.string.pref_key_telemetry),
+            requireContext().getString(R.string.pref_key_tracking_protection),
+            requireContext().getString(R.string.pref_key_search_bookmarks),
+            requireContext().getString(R.string.pref_key_search_browsing_history),
+            requireContext().getString(R.string.pref_key_show_clipboard_suggestions),
+            requireContext().getString(R.string.pref_key_show_search_engine_shortcuts),
+            requireContext().getString(R.string.pref_key_open_links_in_a_private_tab),
+            requireContext().getString(R.string.pref_key_sync_logins),
+            requireContext().getString(R.string.pref_key_sync_bookmarks),
+            requireContext().getString(R.string.pref_key_sync_history),
+            requireContext().getString(R.string.pref_key_show_voice_search),
+            requireContext().getString(R.string.pref_key_show_search_suggestions_in_private)
+        )
+
         preferenceManager.sharedPreferences
             .registerOnSharedPreferenceChangeListener(this) { sharedPreferences, key ->
                 try {
-                    context?.let { context ->
-                        context.components.analytics.metrics.track(
-                            Event.PreferenceToggled(
-                                key,
-                                sharedPreferences.getBoolean(key, false),
-                                context
-                            )
-                        )
+                    if (key in booleanPreferenceTelemetryAllowList) {
+                        val enabled = sharedPreferences.getBoolean(key, false)
+                        Events.preferenceToggled.record(Events.PreferenceToggledExtra(enabled, key))
                     }
-                } catch (e: IllegalArgumentException) {
-                    // The event is not tracked
                 } catch (e: ClassCastException) {
                     // The setting is not a boolean, not tracked
                 }
