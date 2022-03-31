@@ -72,16 +72,12 @@ struct ImportValues {
 // operations: instantiation, tiered compilation, serialization. A Module can be
 // instantiated any number of times to produce new Instance objects. A Module
 // can have a single tier-2 task initiated to augment a Module's code with a
-// higher tier. A Module can  have its optimized code serialized at any point
+// higher tier. A Module can have its optimized code serialized at any point
 // where the LinkData is also available, which is primarily (1) at the end of
 // module generation, (2) at the end of tier-2 compilation.
 //
-// Fully linked-and-instantiated code (represented by Code and its owned
-// ModuleSegment) can be shared between instances, provided none of those
-// instances are being debugged. If patchable code is needed then each instance
-// must have its own Code. Module eagerly creates a new Code and gives it to the
-// first instance; it then instantiates new Code objects from a copy of the
-// unlinked code that it keeps around for that purpose.
+// Fully linked-and-instantiated code (represented by SharedCode and its owned
+// ModuleSegment) can be shared between instances.
 
 class Module : public JS::WasmModule {
   const SharedCode code_;
@@ -194,8 +190,7 @@ class Module : public JS::WasmModule {
   void serialize(const LinkData& linkData, uint8_t* begin, size_t size) const;
   void serialize(const LinkData& linkData,
                  JS::OptimizedEncodingListener& listener) const;
-  static RefPtr<Module> deserialize(const uint8_t* begin, size_t size,
-                                    Metadata* maybeMetadata = nullptr);
+  static RefPtr<Module> deserialize(const uint8_t* begin, size_t size);
   bool loggingDeserialized() const { return loggingDeserialized_; }
 
   // JS API and JS::WasmModule implementation:
