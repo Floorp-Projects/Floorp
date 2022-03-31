@@ -442,9 +442,20 @@ Damp.prototype = {
       // Filter tests via `./mach --subtests filter` command line argument
       let filter = Services.prefs.getCharPref("talos.subtests", "");
 
-      let tests = DAMP_TESTS.filter(test => !test.disabled).filter(test =>
-        test.name.includes(filter)
-      );
+      const suite = Services.prefs.getCharPref("talos.damp.suite", "");
+      let testSuite;
+      if (suite === "all") {
+        testSuite = Object.values(DAMP_TESTS).flat();
+      } else {
+        testSuite = DAMP_TESTS[suite];
+        if (!testSuite) {
+          this.error(`Unable to find any test suite matching '${suite}'`);
+        }
+      }
+
+      let tests = testSuite
+        .filter(test => !test.disabled)
+        .filter(test => test.name.includes(filter));
 
       if (tests.length === 0) {
         this.error(`Unable to find any test matching '${filter}'`);

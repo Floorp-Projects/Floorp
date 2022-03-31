@@ -98,10 +98,10 @@ talos-chrome-profiling:
             - --suite=chromez
             - --gecko-profile
 
-talos-damp:
-    description: Talos devtools (damp)
-    try-name: damp
-    treeherder-symbol: T(damp)
+talos-damp-inspector:
+    description: Talos devtools inspector (damp-inspector)
+    try-name: damp-inspector
+    treeherder-symbol: T(damp-inspector)
     max-run-time: 5400
     variants:
         - fission
@@ -121,12 +121,62 @@ talos-damp:
                     default: [mozilla-beta, trunk]
     mozharness:
         extra-options:
-            - --suite=damp
+            - --suite=damp-inspector
 
-talos-damp-profiling:
-    description: Talos devtools (damp) with gecko profiling
-    try-name: damp-prof
-    treeherder-symbol: T-Prof(damp)
+talos-damp-webconsole:
+    description: Talos devtools webconsole (damp-webconsole)
+    try-name: damp-webconsole
+    treeherder-symbol: T(damp-webconsole)
+    max-run-time: 5400
+    variants:
+        - fission
+        - webrender-sw+fission
+    run-without-variant: false
+    run-on-projects:
+        by-variant:
+            webrender-sw+fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            default:
+                by-test-platform:
+                    windows.*-32-shippable.*/.*: []
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: [mozilla-beta, trunk]
+    mozharness:
+        extra-options:
+            - --suite=damp-webconsole
+
+talos-damp-other:
+    description: Talos devtools other (damp-other)
+    try-name: damp-other
+    treeherder-symbol: T(damp-other)
+    max-run-time: 5400
+    variants:
+        - fission
+        - webrender-sw+fission
+    run-without-variant: false
+    run-on-projects:
+        by-variant:
+            webrender-sw+fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            default:
+                by-test-platform:
+                    windows.*-32-shippable.*/.*: []
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: [mozilla-beta, trunk]
+    mozharness:
+        extra-options:
+            - --suite=damp-other
+
+talos-damp-inspector-profiling:
+    description: Talos devtools inspector (damp-inspector) with gecko profiling
+    try-name: damp-inspector-prof
+    treeherder-symbol: T-Prof(damp-inspector)
     tier: 2
     max-run-time: 5400
     variants: [fission]
@@ -134,7 +184,35 @@ talos-damp-profiling:
     run-on-projects: []
     mozharness:
         extra-options:
-            - --suite=damp
+            - --suite=damp-inspector
+            - --gecko-profile
+
+talos-damp-webconsole-profiling:
+    description: Talos devtools webconsole (damp-webconsole) with gecko profiling
+    try-name: damp-webconsole-prof
+    treeherder-symbol: T-Prof(damp-webconsole)
+    tier: 2
+    max-run-time: 5400
+    variants: [fission]
+    run-without-variant: false
+    run-on-projects: []
+    mozharness:
+        extra-options:
+            - --suite=damp-webconsole
+            - --gecko-profile
+
+talos-damp-other-profiling:
+    description: Talos devtools other (damp-other) with gecko profiling
+    try-name: damp-other-prof
+    treeherder-symbol: T-Prof(damp-other)
+    tier: 2
+    max-run-time: 5400
+    variants: [fission]
+    run-without-variant: false
+    run-on-projects: []
+    mozharness:
+        extra-options:
+            - --suite=damp-other
             - --gecko-profile
 
 talos-dromaeojs:
