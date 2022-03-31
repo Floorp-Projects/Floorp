@@ -5604,6 +5604,33 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
 }
 
 TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       StopTransceiverStopsAndRemovesTransceivers) {
+  RTCConfiguration config;
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(config, config));
+  ConnectFakeSignaling();
+  auto audio_transceiver_or_error =
+      caller()->pc()->AddTransceiver(caller()->CreateLocalAudioTrack());
+  ASSERT_TRUE(audio_transceiver_or_error.ok());
+  auto caller_transceiver = audio_transceiver_or_error.MoveValue();
+
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  caller_transceiver->StopStandard();
+
+  auto callee_transceiver = callee()->pc()->GetTransceivers()[0];
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  EXPECT_EQ(0U, caller()->pc()->GetTransceivers().size());
+  EXPECT_EQ(0U, callee()->pc()->GetTransceivers().size());
+  EXPECT_EQ(0U, caller()->pc()->GetSenders().size());
+  EXPECT_EQ(0U, callee()->pc()->GetSenders().size());
+  EXPECT_EQ(0U, caller()->pc()->GetReceivers().size());
+  EXPECT_EQ(0U, callee()->pc()->GetReceivers().size());
+  EXPECT_TRUE(caller_transceiver->stopped());
+  EXPECT_TRUE(callee_transceiver->stopped());
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
        StopTransceiverEndsIncomingAudioTrack) {
   RTCConfiguration config;
   ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(config, config));
