@@ -1488,6 +1488,38 @@ public class PeerConnectionEndToEndTest {
     factory.dispose();
   }
 
+  @Test
+  @SmallTest
+  public void testRollback() throws Exception {
+    PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+    PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+    config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+
+    ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
+    PeerConnection pc = factory.createPeerConnection(config, offeringExpectations);
+
+    SdpObserverLatch sdpLatch = new SdpObserverLatch();
+    pc.createOffer(sdpLatch, new MediaConstraints());
+    assertTrue(sdpLatch.await());
+    SessionDescription offer = sdpLatch.getSdp();
+
+    sdpLatch = new SdpObserverLatch();
+    offeringExpectations.expectSignalingChange(SignalingState.HAVE_LOCAL_OFFER);
+    pc.setLocalDescription(sdpLatch, offer);
+    assertTrue(sdpLatch.await());
+
+    SessionDescription rollback = new SessionDescription(SessionDescription.Type.ROLLBACK, "");
+    sdpLatch = new SdpObserverLatch();
+    offeringExpectations.expectSignalingChange(SignalingState.STABLE);
+    // TODO(bugs.webrtc.org/11970): determine if triggering ONN (twice even) is correct.
+    offeringExpectations.expectRenegotiationNeeded();
+    offeringExpectations.expectRenegotiationNeeded();
+    pc.setLocalDescription(sdpLatch, rollback);
+    assertTrue(sdpLatch.await());
+
+    assertTrue(offeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
+  }
+
   private static void negotiate(PeerConnection offeringPC,
       ObserverExpectations offeringExpectations, PeerConnection answeringPC,
       ObserverExpectations answeringExpectations) {
