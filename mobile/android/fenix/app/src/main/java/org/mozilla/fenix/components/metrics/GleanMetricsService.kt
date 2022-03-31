@@ -436,10 +436,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HomeScreenCustomizedHomeClicked -> EventWrapper<NoExtraKeys>(
             { HomeScreen.customizeHomeClicked.record(it) }
         )
-        is Event.BrowserToolbarHomeButtonClicked -> EventWrapper<NoExtraKeys>(
-            { Events.browserToolbarHomeTapped.record(it) }
-        )
-
         is Event.StartOnHomeEnterHomeScreen -> EventWrapper<NoExtraKeys>(
             { StartOnHome.enterHomeScreen.record(it) }
         )

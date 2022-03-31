@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.GleanMetrics.Events
@@ -172,8 +173,7 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleHomeButtonClick() {
-        metrics.track(Event.BrowserToolbarHomeButtonClicked)
-
+        Events.browserToolbarHomeTapped.record(NoExtras())
         browserAnimator.captureEngineViewAndDrawStatically {
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalHome()

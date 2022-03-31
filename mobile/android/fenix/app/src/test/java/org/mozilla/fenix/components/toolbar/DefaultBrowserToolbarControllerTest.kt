@@ -47,7 +47,6 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.SimpleBrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -351,11 +350,13 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleHomeButtonClick() {
+        assertFalse(Events.browserToolbarHomeTapped.testHasValue())
+
         val controller = createController()
         controller.handleHomeButtonClick()
 
         verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome()) }
-        verify { metrics.track(Event.BrowserToolbarHomeButtonClicked) }
+        assertTrue(Events.browserToolbarHomeTapped.testHasValue())
     }
 
     private fun createController(

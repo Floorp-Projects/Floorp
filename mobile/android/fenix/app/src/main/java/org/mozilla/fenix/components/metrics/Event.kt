@@ -156,9 +156,6 @@ sealed class Event {
     object HomeScreenViewCount : Event()
     object HomeScreenCustomizedHomeClicked : Event()
 
-    // Browser Toolbar
-    object BrowserToolbarHomeButtonClicked : Event()
-
     // Start on Home
     object StartOnHomeEnterHomeScreen : Event()
     object StartOnHomeOpenTabsTray : Event()
