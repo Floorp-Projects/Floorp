@@ -24,6 +24,8 @@ Getting attention: If a reviewer doesn't respond within a week, or so of the rev
   * Join developers on `Mozilla's Matrix server <https://chat.mozilla.org>`_, and ask if anyone knows why a review may be delayed. Please link to the bug too.
   * If the review is still not addressed, mail the reviewer directly, asking if/when they'll have time to review the patch, or might otherwise be able to review it.
 
+For simple documentation changes, reviews are not required.
+
 For more information about the review process, see the :ref:`Code Review FAQ`.
 
 Review groups
