@@ -19,6 +19,21 @@ const testServer = createVersionizedHttpTestServer(
 );
 const TEST_URL = testServer.urlFor("index.html");
 
+const INTEGRATION_TEST_PAGE_SOURCES = [
+  "index.html",
+  "script.js",
+  "test-functions.js",
+  "query.js?x=1",
+  "query.js?x=2",
+  "bundle.js",
+  "original.js",
+  "replaced-bundle.js",
+  "removed-original.js",
+  "named-eval.js",
+  "bootstrap 3b1a221408fdde86aa49",
+  "bootstrap 6fda1f7ea9ecbc1a2d5b",
+];
+
 /**
  * This test opens the SourceTree manually via click events on the nested source,
  * and then adds a source dynamically and asserts it is visible.
@@ -231,6 +246,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     TEST_URL,
     "index.html",
     "script.js",
+    "test-functions.js",
     "query.js?x=1",
     "query.js?x=2",
     "bundle.js",
@@ -240,23 +256,17 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     "named-eval.js"
   );
 
-  await waitForSourcesInSourceTree(dbg, [
-    "index.html",
-    "script.js",
-    "query.js?x=1",
-    "query.js?x=2",
-    "bundle.js",
-    "original.js",
-    "replaced-bundle.js",
-    "removed-original.js",
-    "named-eval.js",
-    "bootstrap 6fda1f7ea9ecbc1a2d5b",
-    "bootstrap 450f2ed5071212525ef7",
-  ]);
+  await waitForSourcesInSourceTree(dbg, INTEGRATION_TEST_PAGE_SOURCES);
 
   info("Assert the content of the named eval");
   await selectSource(dbg, "named-eval.js");
   assertTextContentOnLine(dbg, 3, `console.log("named-eval");`);
+
+  info("Assert that nameless eval don't show up in the source tree");
+  invokeInTab("breakInEval");
+  await waitForPaused(dbg);
+  await waitForSourcesInSourceTree(dbg, INTEGRATION_TEST_PAGE_SOURCES);
+  await resume(dbg);
 
   info("Assert the content of sources with query string");
   await selectSource(dbg, "query.js?x=1");
@@ -287,8 +297,62 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   pressKey(dbg, "quickOpen");
   type(dbg, "query.js?x");
 
-  const resultItems = await waitForAllElements(dbg, "resultItems");
-  ok(resultItems[0].innerText.includes("query.js?x=1"));
+  // There can be intermediate updates in the results,
+  // so wait for the final expected value
+  await waitFor(async () => {
+    const resultItem = findElement(dbg, "resultItems");
+    if (!resultItem) {
+      return false;
+    }
+    return resultItem.innerText.includes("query.js?x=1");
+  }, "Results include the source with the query string");
+});
+
+/**
+ * Verify that Web Extension content scripts appear only when
+ * devtools.chrome.enabled is set to true and that they get
+ * automatically re-selected on page reload.
+ */
+add_task(async function testSourceTreeWithWebExtensionContentScript() {
+  const extension = await installAndStartContentScriptExtension();
+
+  info("Without the chrome preference, the content script doesn't show up");
+  await pushPref("devtools.chrome.enabled", false);
+  let dbg = await initDebugger("doc-content-script-sources.html");
+  // Let some time for unexpected source to appear
+  await wait(1000);
+  // Bug 1761975 - While the content script doesn't show up,
+  // the internals of WebExtension codebase appear in the debugger...
+  await waitForSourcesInSourceTree(dbg, ["ExtensionContent.jsm"]);
+  await dbg.toolbox.closeToolbox();
+
+  info("With the chrome preference, the content script shows up");
+  await pushPref("devtools.chrome.enabled", true);
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
+  dbg = createDebuggerContext(toolbox);
+  await waitForSourcesInSourceTree(dbg, [
+    "content_script.js",
+    "ExtensionContent.jsm",
+  ]);
+  await selectSource(dbg, "content_script.js");
+  ok(
+    findElementWithSelector(dbg, ".sources-list .focused"),
+    "Source is focused"
+  );
+  for (let i = 1; i < 3; i++) {
+    info(
+      `Reloading tab (${i} time), the content script should always be reselected`
+    );
+    gBrowser.reloadTab(gBrowser.selectedTab);
+    await waitForSelectedSource(dbg, "content_script.js");
+    ok(
+      findElementWithSelector(dbg, ".sources-list .focused"),
+      "Source is focused"
+    );
+  }
+  await dbg.toolbox.closeToolbox();
+
+  await extension.unload();
 });
 
 /**
