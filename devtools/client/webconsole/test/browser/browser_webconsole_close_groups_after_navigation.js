@@ -26,7 +26,7 @@ async function reloadBrowserAndCheckIndent(hud) {
   const { node } = await onMessage;
 
   is(
-    node.querySelector(".indent").getAttribute("data-indent"),
+    node.getAttribute("data-indent"),
     "0",
     "The message has the expected indent"
   );
