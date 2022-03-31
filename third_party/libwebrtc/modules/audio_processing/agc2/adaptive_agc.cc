@@ -16,6 +16,18 @@
 #include "rtc_base/checks.h"
 
 namespace webrtc {
+namespace {
+
+void DumpDebugData(const AdaptiveDigitalGainApplier::FrameInfo& info,
+                   ApmDataDumper& dumper) {
+  dumper.DumpRaw("agc2_vad_probability", info.vad_result.speech_probability);
+  dumper.DumpRaw("agc2_vad_rms_dbfs", info.vad_result.rms_dbfs);
+  dumper.DumpRaw("agc2_vad_peak_dbfs", info.vad_result.peak_dbfs);
+  dumper.DumpRaw("agc2_noise_estimate_dbfs", info.input_noise_level_dbfs);
+  dumper.DumpRaw("agc2_last_limiter_audio_level", info.limiter_envelope_dbfs);
+}
+
+}  // namespace
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
     : speech_level_estimator_(apm_data_dumper),
@@ -40,37 +52,17 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
 
 AdaptiveAgc::~AdaptiveAgc() = default;
 
-void AdaptiveAgc::Process(AudioFrameView<float> float_frame,
-                          float last_audio_level) {
-  auto signal_with_levels = SignalWithLevels(float_frame);
-  signal_with_levels.vad_result = vad_.AnalyzeFrame(float_frame);
-  apm_data_dumper_->DumpRaw("agc2_vad_probability",
-                            signal_with_levels.vad_result.speech_probability);
-  apm_data_dumper_->DumpRaw("agc2_vad_rms_dbfs",
-                            signal_with_levels.vad_result.rms_dbfs);
-  apm_data_dumper_->DumpRaw("agc2_vad_peak_dbfs",
-                            signal_with_levels.vad_result.peak_dbfs);
-
-  speech_level_estimator_.Update(signal_with_levels.vad_result);
-
-  signal_with_levels.input_level_dbfs = speech_level_estimator_.level_dbfs();
-
-  signal_with_levels.input_noise_level_dbfs =
-      noise_level_estimator_.Analyze(float_frame);
-
-  apm_data_dumper_->DumpRaw("agc2_noise_estimate_dbfs",
-                            signal_with_levels.input_noise_level_dbfs);
-
-  signal_with_levels.limiter_audio_level_dbfs =
-      last_audio_level > 0 ? FloatS16ToDbfs(last_audio_level) : -90.f;
-  apm_data_dumper_->DumpRaw("agc2_last_limiter_audio_level",
-                            signal_with_levels.limiter_audio_level_dbfs);
-
-  signal_with_levels.estimate_is_confident =
-      speech_level_estimator_.IsConfident();
-
-  // The gain applier applies the gain.
-  gain_applier_.Process(signal_with_levels);
+void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
+  AdaptiveDigitalGainApplier::FrameInfo info;
+  info.vad_result = vad_.AnalyzeFrame(frame);
+  speech_level_estimator_.Update(info.vad_result);
+  info.input_level_dbfs = speech_level_estimator_.level_dbfs();
+  info.input_noise_level_dbfs = noise_level_estimator_.Analyze(frame);
+  info.limiter_envelope_dbfs =
+      limiter_envelope > 0 ? FloatS16ToDbfs(limiter_envelope) : -90.f;
+  info.estimate_is_confident = speech_level_estimator_.IsConfident();
+  DumpDebugData(info, *apm_data_dumper_);
+  gain_applier_.Process(info, frame);
 }
 
 void AdaptiveAgc::Reset() {

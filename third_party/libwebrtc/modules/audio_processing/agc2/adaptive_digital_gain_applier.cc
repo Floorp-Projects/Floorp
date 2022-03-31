@@ -85,43 +85,40 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
 }
 }  // namespace
 
-SignalWithLevels::SignalWithLevels(AudioFrameView<float> float_frame)
-    : float_frame(float_frame) {}
-SignalWithLevels::SignalWithLevels(const SignalWithLevels&) = default;
-
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper)
-    : gain_applier_(false, DbToRatio(last_gain_db_)),
-      apm_data_dumper_(apm_data_dumper) {}
+    : apm_data_dumper_(apm_data_dumper),
+      gain_applier_(
+          /*hard_clip_samples=*/false,
+          /*initial_gain_factor=*/DbToRatio(kInitialAdaptiveDigitalGainDb)),
+      calls_since_last_gain_log_(0),
+      gain_increase_allowed_(true),
+      last_gain_db_(kInitialAdaptiveDigitalGainDb) {}
 
-void AdaptiveDigitalGainApplier::Process(SignalWithLevels signal_with_levels) {
+void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
+                                         AudioFrameView<float> frame) {
+  RTC_DCHECK_GE(info.input_level_dbfs, -150.f);
+  RTC_DCHECK_GE(frame.num_channels(), 1);
+  RTC_DCHECK_GE(frame.samples_per_channel(), 1);
+
+  // Log every second.
   calls_since_last_gain_log_++;
   if (calls_since_last_gain_log_ == 100) {
     calls_since_last_gain_log_ = 0;
     RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.DigitalGainApplied",
                                 last_gain_db_, 0, kMaxGainDb, kMaxGainDb + 1);
     RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.EstimatedNoiseLevel",
-                                -signal_with_levels.input_noise_level_dbfs, 0,
-                                100, 101);
+                                -info.input_noise_level_dbfs, 0, 100, 101);
   }
 
-  signal_with_levels.input_level_dbfs =
-      std::min(signal_with_levels.input_level_dbfs, 0.f);
-
-  RTC_DCHECK_GE(signal_with_levels.input_level_dbfs, -150.f);
-  RTC_DCHECK_GE(signal_with_levels.float_frame.num_channels(), 1);
-  RTC_DCHECK_GE(signal_with_levels.float_frame.samples_per_channel(), 1);
-
   const float target_gain_db = LimitGainByLowConfidence(
-      LimitGainByNoise(ComputeGainDb(signal_with_levels.input_level_dbfs),
-                       signal_with_levels.input_noise_level_dbfs,
-                       apm_data_dumper_),
-      last_gain_db_, signal_with_levels.limiter_audio_level_dbfs,
-      signal_with_levels.estimate_is_confident);
+      LimitGainByNoise(ComputeGainDb(std::min(info.input_level_dbfs, 0.f)),
+                       info.input_noise_level_dbfs, apm_data_dumper_),
+      last_gain_db_, info.limiter_envelope_dbfs, info.estimate_is_confident);
 
   // Forbid increasing the gain when there is no speech.
-  gain_increase_allowed_ = signal_with_levels.vad_result.speech_probability >
-                           kVadConfidenceThreshold;
+  gain_increase_allowed_ =
+      info.vad_result.speech_probability > kVadConfidenceThreshold;
 
   const float gain_change_this_frame_db = ComputeGainChangeThisFrameDb(
       target_gain_db, last_gain_db_, gain_increase_allowed_);
@@ -137,7 +134,7 @@ void AdaptiveDigitalGainApplier::Process(SignalWithLevels signal_with_levels) {
     gain_applier_.SetGainFactor(
         DbToRatio(last_gain_db_ + gain_change_this_frame_db));
   }
-  gain_applier_.ApplyGain(signal_with_levels.float_frame);
+  gain_applier_.ApplyGain(frame);
 
   // Remember that the gain has changed for the next iteration.
   last_gain_db_ = last_gain_db_ + gain_change_this_frame_db;
