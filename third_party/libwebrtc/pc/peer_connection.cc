@@ -3925,7 +3925,7 @@ bool PeerConnection::CreateDataChannel(const std::string& mid) {
           this, &PeerConnection::OnSentPacket_w);
       data_channel_controller_.rtp_data_channel()->SetRtpTransport(
           rtp_transport);
-      have_pending_rtp_data_channel_ = true;
+      sdp_handler_.SetHavePendingRtpDataChannel();
       return true;
   }
   return false;

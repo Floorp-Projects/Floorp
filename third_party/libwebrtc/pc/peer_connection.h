@@ -683,7 +683,8 @@ class PeerConnection : public PeerConnectionInternal,
   // to the user. If this is false, Plan B semantics are assumed.
   // TODO(bugs.webrtc.org/8530): Flip the default to be Unified Plan once
   // sufficient time has passed.
-  bool IsUnifiedPlan() const RTC_RUN_ON(signaling_thread()) {
+  bool IsUnifiedPlan() const {
+    RTC_DCHECK_RUN_ON(signaling_thread());
     return configuration_.sdp_semantics == SdpSemantics::kUnifiedPlan;
   }
 
@@ -1048,9 +1049,6 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_GUARDED_BY(signaling_thread());  // A pointer is passed to senders_
   rtc::scoped_refptr<RTCStatsCollector> stats_collector_
       RTC_GUARDED_BY(signaling_thread());
-  // Used when rolling back RTP data channels.
-  bool have_pending_rtp_data_channel_ RTC_GUARDED_BY(signaling_thread()) =
-      false;
   TransceiverList transceivers_;
 
   // MIDs will be generated using this generator which will keep track of
