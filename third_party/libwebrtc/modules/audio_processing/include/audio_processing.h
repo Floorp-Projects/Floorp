@@ -353,6 +353,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         float extra_saturation_margin_db = 2.f;
         int gain_applier_adjacent_speech_frames_threshold = 1;
         float max_gain_change_db_per_second = 3.f;
+        float max_output_noise_level_dbfs = -50.f;
       } adaptive_digital;
     } gain_controller2;
 

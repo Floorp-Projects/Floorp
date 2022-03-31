@@ -44,12 +44,16 @@ float ComputeGainDb(float input_level_dbfs) {
   return 0.f;
 }
 
-// We require 'gain + noise_level <= kMaxNoiseLevelDbfs'.
+// Returns `target_gain` if the output noise level is below
+// `max_output_noise_level_dbfs`; otherwise returns a capped gain so that the
+// output noise level equals `max_output_noise_level_dbfs`.
 float LimitGainByNoise(float target_gain,
                        float input_noise_level_dbfs,
-                       ApmDataDumper* apm_data_dumper) {
-  const float noise_headroom_db = kMaxNoiseLevelDbfs - input_noise_level_dbfs;
-  apm_data_dumper->DumpRaw("agc2_noise_headroom_db", noise_headroom_db);
+                       float max_output_noise_level_dbfs,
+                       ApmDataDumper& apm_data_dumper) {
+  const float noise_headroom_db =
+      max_output_noise_level_dbfs - input_noise_level_dbfs;
+  apm_data_dumper.DumpRaw("agc2_noise_headroom_db", noise_headroom_db);
   return std::min(target_gain, std::max(noise_headroom_db, 0.f));
 }
 
@@ -89,7 +93,8 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper,
     int adjacent_speech_frames_threshold,
-    float max_gain_change_db_per_second)
+    float max_gain_change_db_per_second,
+    float max_output_noise_level_dbfs)
     : apm_data_dumper_(apm_data_dumper),
       gain_applier_(
           /*hard_clip_samples=*/false,
@@ -97,11 +102,14 @@ AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
       adjacent_speech_frames_threshold_(adjacent_speech_frames_threshold),
       max_gain_change_db_per_10ms_(max_gain_change_db_per_second *
                                    kFrameDurationMs / 1000.f),
+      max_output_noise_level_dbfs_(max_output_noise_level_dbfs),
       calls_since_last_gain_log_(0),
       frames_to_gain_increase_allowed_(adjacent_speech_frames_threshold_),
       last_gain_db_(kInitialAdaptiveDigitalGainDb) {
   RTC_DCHECK_GT(max_gain_change_db_per_second, 0.f);
   RTC_DCHECK_GE(frames_to_gain_increase_allowed_, 1);
+  RTC_DCHECK_GE(max_output_noise_level_dbfs_, -90.f);
+  RTC_DCHECK_LE(max_output_noise_level_dbfs_, 0.f);
 }
 
 void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
@@ -126,7 +134,8 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
 
   const float target_gain_db = LimitGainByLowConfidence(
       LimitGainByNoise(ComputeGainDb(std::min(info.input_level_dbfs, 0.f)),
-                       info.input_noise_level_dbfs, apm_data_dumper_),
+                       info.input_noise_level_dbfs,
+                       max_output_noise_level_dbfs_, *apm_data_dumper_),
       last_gain_db_, info.limiter_envelope_dbfs, info.estimate_is_confident);
 
   // Forbid increasing the gain until enough adjacent speech frames are

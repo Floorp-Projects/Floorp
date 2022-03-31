@@ -34,12 +34,15 @@ class AdaptiveDigitalGainApplier {
     bool estimate_is_confident;
   };
 
+  // Ctor.
   // `adjacent_speech_frames_threshold` indicates how many speech frames are
   // required before a gain increase is allowed. `max_gain_change_db_per_second`
   // limits the adaptation speed (uniformly operated across frames).
+  // `max_output_noise_level_dbfs` limits the output noise level.
   AdaptiveDigitalGainApplier(ApmDataDumper* apm_data_dumper,
                              int adjacent_speech_frames_threshold,
-                             float max_gain_change_db_per_second);
+                             float max_gain_change_db_per_second,
+                             float max_output_noise_level_dbfs);
   AdaptiveDigitalGainApplier(const AdaptiveDigitalGainApplier&) = delete;
   AdaptiveDigitalGainApplier& operator=(const AdaptiveDigitalGainApplier&) =
       delete;
@@ -54,6 +57,7 @@ class AdaptiveDigitalGainApplier {
 
   const int adjacent_speech_frames_threshold_;
   const float max_gain_change_db_per_10ms_;
+  const float max_output_noise_level_dbfs_;
 
   int calls_since_last_gain_log_;
   int frames_to_gain_increase_allowed_;

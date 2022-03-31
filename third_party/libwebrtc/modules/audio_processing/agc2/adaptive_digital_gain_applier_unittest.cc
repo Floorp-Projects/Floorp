@@ -36,14 +36,18 @@ constexpr VadLevelAnalyzer::Result kVadSpeech{1.f, -20.f, 0.f};
 constexpr float kMaxGainChangePerSecondDb = 3.f;
 constexpr float kMaxGainChangePerFrameDb =
     kMaxGainChangePerSecondDb * kFrameDurationMs / 1000.f;
+constexpr float kMaxOutputNoiseLevelDbfs = -50.f;
 
 // Helper to instance `AdaptiveDigitalGainApplier`.
 struct GainApplierHelper {
   GainApplierHelper()
+      : GainApplierHelper(/*adjacent_speech_frames_threshold=*/1) {}
+  explicit GainApplierHelper(int adjacent_speech_frames_threshold)
       : apm_data_dumper(0),
         gain_applier(&apm_data_dumper,
-                     /*adjacent_speech_frames_threshold=*/1,
-                     kMaxGainChangePerSecondDb) {}
+                     adjacent_speech_frames_threshold,
+                     kMaxGainChangePerSecondDb,
+                     kMaxOutputNoiseLevelDbfs) {}
   ApmDataDumper apm_data_dumper;
   AdaptiveDigitalGainApplier gain_applier;
 };
@@ -185,7 +189,8 @@ TEST(AutomaticGainController2AdaptiveGainApplier, NoiseLimitsGain) {
       kInitialAdaptiveDigitalGainDb / kMaxGainChangePerFrameDb;
   constexpr int num_frames = 50;
 
-  ASSERT_GT(kWithNoiseDbfs, kMaxNoiseLevelDbfs) << "kWithNoiseDbfs is too low";
+  ASSERT_GT(kWithNoiseDbfs, kMaxOutputNoiseLevelDbfs)
+      << "kWithNoiseDbfs is too low";
 
   for (int i = 0; i < num_initial_frames + num_frames; ++i) {
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms48kHz, 1.f);
@@ -223,7 +228,8 @@ TEST(AutomaticGainController2GainApplier, AudioLevelLimitsGain) {
       kInitialAdaptiveDigitalGainDb / kMaxGainChangePerFrameDb;
   constexpr int num_frames = 50;
 
-  ASSERT_GT(kWithNoiseDbfs, kMaxNoiseLevelDbfs) << "kWithNoiseDbfs is too low";
+  ASSERT_GT(kWithNoiseDbfs, kMaxOutputNoiseLevelDbfs)
+      << "kWithNoiseDbfs is too low";
 
   for (int i = 0; i < num_initial_frames + num_frames; ++i) {
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms48kHz, 1.f);
@@ -252,10 +258,8 @@ class AdaptiveDigitalGainApplierTest : public ::testing::TestWithParam<int> {
 TEST_P(AdaptiveDigitalGainApplierTest,
        DoNotIncreaseGainWithTooFewSpeechFrames) {
   const int adjacent_speech_frames_threshold = AdjacentSpeechFramesThreshold();
-  ApmDataDumper apm_data_dumper(0);
-  AdaptiveDigitalGainApplier gain_applier(&apm_data_dumper,
-                                          adjacent_speech_frames_threshold,
-                                          kMaxGainChangePerFrameDb);
+  GainApplierHelper helper(adjacent_speech_frames_threshold);
+
   AdaptiveDigitalGainApplier::FrameInfo info = kFrameInfo;
   info.input_level_dbfs = -25.0;
 
@@ -263,7 +267,7 @@ TEST_P(AdaptiveDigitalGainApplierTest,
   for (int i = 0; i < adjacent_speech_frames_threshold; ++i) {
     SCOPED_TRACE(i);
     VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.f);
-    gain_applier.Process(info, audio.float_frame_view());
+    helper.gain_applier.Process(info, audio.float_frame_view());
     const float gain = audio.float_frame_view().channel(0)[0];
     if (i > 0) {
       EXPECT_EQ(prev_gain, gain);  // No gain increase.
@@ -274,23 +278,21 @@ TEST_P(AdaptiveDigitalGainApplierTest,
 
 TEST_P(AdaptiveDigitalGainApplierTest, IncreaseGainWithEnoughSpeechFrames) {
   const int adjacent_speech_frames_threshold = AdjacentSpeechFramesThreshold();
-  ApmDataDumper apm_data_dumper(0);
-  AdaptiveDigitalGainApplier gain_applier(&apm_data_dumper,
-                                          adjacent_speech_frames_threshold,
-                                          kMaxGainChangePerFrameDb);
+  GainApplierHelper helper(adjacent_speech_frames_threshold);
+
   AdaptiveDigitalGainApplier::FrameInfo info = kFrameInfo;
   info.input_level_dbfs = -25.0;
 
   float prev_gain = 0.f;
   for (int i = 0; i < adjacent_speech_frames_threshold; ++i) {
     VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.f);
-    gain_applier.Process(info, audio.float_frame_view());
+    helper.gain_applier.Process(info, audio.float_frame_view());
     prev_gain = audio.float_frame_view().channel(0)[0];
   }
 
   // Process one more speech frame.
   VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.f);
-  gain_applier.Process(info, audio.float_frame_view());
+  helper.gain_applier.Process(info, audio.float_frame_view());
 
   // The gain has increased.
   EXPECT_GT(audio.float_frame_view().channel(0)[0], prev_gain);

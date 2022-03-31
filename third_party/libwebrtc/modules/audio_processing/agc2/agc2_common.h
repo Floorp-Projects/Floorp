@@ -32,9 +32,6 @@ constexpr float kInitialAdaptiveDigitalGainDb = 8.f;
 // At what limiter levels should we start decreasing the adaptive digital gain.
 constexpr float kLimiterThresholdForAgcGainDbfs = -kHeadroomDbfs;
 
-// This parameter must be tuned together with the noise estimator.
-constexpr float kMaxNoiseLevelDbfs = -50.f;
-
 // This is the threshold for speech. Speech frames are used for updating the
 // speech level, measuring the amount of speech, and decide when to allow target
 // gain reduction.
