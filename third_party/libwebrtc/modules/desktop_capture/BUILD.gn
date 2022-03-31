@@ -468,8 +468,6 @@ rtc_library("desktop_capture_generic") {
       "win/window_capture_utils.h",
       "win/window_capturer_win_gdi.cc",
       "win/window_capturer_win_gdi.h",
-      "win/window_capturer_win_wgc.cc",
-      "win/window_capturer_win_wgc.h",
       "window_capturer_win.cc",
       "window_finder_win.cc",
       "window_finder_win.h",
@@ -535,6 +533,17 @@ rtc_library("desktop_capture_generic") {
         include_dirs += [ "/third_party/pipewire" ]
       }
     }
+  }
+
+  if (rtc_enable_win_wgc) {
+    sources += [
+      "win/wgc_capture_session.cc",
+      "win/wgc_capture_session.h",
+      "win/window_capturer_win_wgc.cc",
+      "win/window_capturer_win_wgc.h",
+    ]
+
+    defines += [ "RTC_ENABLE_WIN_WGC" ]
   }
 }
 
