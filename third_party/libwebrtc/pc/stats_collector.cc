@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "pc/channel.h"
-#include "pc/peer_connection.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/third_party/base64/base64.h"
 #include "system_wrappers/include/field_trial.h"
