@@ -3,8 +3,13 @@
 <!doctype html>
 
 <html>
+  <!-- A simple script -->
   <script src="script.js"></script>
+
+  <!-- A bundle/generated source that contains an updated version of original.js -->
   <script src="bundle.js"></script>
+
+  <!-- Another bundle/generated source that contains new-original.js which replaced the content of removed-original.js -->
   <script src="replaced-bundle.js"></script>
   <head>
     <meta charset="utf-8"/>
@@ -12,6 +17,7 @@
   </head>
 
   <body>
+    <!-- A simple inline script, that helps to cover breakable lines/columns -->
     <script>
       console.log('breakable-line');
       // Comment

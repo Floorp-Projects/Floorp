@@ -7,6 +7,13 @@
 /**
  * This first test will focus on original.js file whose content changes
  * which affects the related generated file: bundle.js
+ *
+ * In the first reload, v2/original.js will only change with new lines being added
+ * before the line where we set a breakpoint. So that the breakpoint, if not
+ * automatically shifted, will now be against an empty line.
+ *
+ * In the second reload, v3/original.js will be trimmed, so that the line
+ * where we set a breakpoint against, has been removed.
  */
 
 "use strict";
