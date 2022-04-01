@@ -2386,13 +2386,15 @@ void MediaFormatReader::Update(TrackType aTrack) {
     // give it another try without HW decoder.
     if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_DECODE_ERR &&
         decoder.mDecoder->IsHardwareAccelerated(error)) {
-      LOG("Error: decode error, disable HW acceleration");
+      LOG("Error: %s decode error, disable HW acceleration",
+          TrackTypeToStr(aTrack));
       needsNewDecoder = true;
       decoder.mHardwareDecodingDisabled = true;
     }
     // RDD process crashed on Linux, give it another try without HW decoder.
     if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR) {
-      LOG("Error: remote decoder crashed, disable HW acceleration");
+      LOG("Error: %s remote decoder crashed, disable HW acceleration",
+          TrackTypeToStr(aTrack));
       decoder.mHardwareDecodingDisabled = true;
     }
 #endif
@@ -2418,7 +2420,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
         decoder.mNumOfConsecutiveRDDCrashes);
 
     if (needsNewDecoder) {
-      LOG("Error: Need new decoder");
+      LOG("Error: %s needs a new decoder", TrackTypeToStr(aTrack));
       ShutdownDecoder(aTrack);
     }
     if (decoder.mFirstFrameTime) {
