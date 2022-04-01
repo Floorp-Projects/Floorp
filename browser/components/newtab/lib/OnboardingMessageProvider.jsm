@@ -49,6 +49,7 @@ const ONBOARDING_MESSAGES = () => [
       infoTitle: "",
       infoTitleEnabled: false,
       promoEnabled: true,
+      promoType: "FOCUS",
       promoHeader: "fluent:about-private-browsing-focus-promo-header",
       promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
       promoLinkText: "fluent:about-private-browsing-focus-promo-cta",

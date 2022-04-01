@@ -1432,8 +1432,22 @@ class _ASRouter {
     }
     // Update storage
     this._storage.set("groupImpressions", newGroupImpressions);
+    // The groups parameter below can be removed once this method has test coverage
     return this.setState(({ groups }) => ({
       groupImpressions: newGroupImpressions,
+    }));
+  }
+
+  // Until this method has test coverage, it should only be used for testing
+  _resetMessageState() {
+    const newMessageImpressions = {};
+    for (let { id } of this.state.messages) {
+      newMessageImpressions[id] = [];
+    }
+    // Update storage
+    this._storage.set("messageImpressions", newMessageImpressions);
+    return this.setState(() => ({
+      messageImpressions: newMessageImpressions,
     }));
   }
 

@@ -640,6 +640,7 @@ const MESSAGES = () => [
     template: "pb_newtab",
     content: {
       promoEnabled: true,
+      promoType: "VPN",
       infoEnabled: true,
       infoIcon: "",
       infoTitle: "",

@@ -60,6 +60,22 @@ async function openAboutPrivateBrowsing() {
   return { win, tab };
 }
 
+/**
+ * Wrapper for openAboutPrivateBrowsing that returns after render is complete
+ */
+async function openTabAndWaitForRender() {
+  let { win, tab } = await openAboutPrivateBrowsing();
+  await SpecialPowers.spawn(tab, [], async function() {
+    // Wait for render to complete
+    await ContentTaskUtils.waitForCondition(() =>
+      content.document.documentElement.hasAttribute(
+        "PrivateBrowsingRenderComplete"
+      )
+    );
+  });
+  return { win, tab };
+}
+
 function newDirectory() {
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir = tmpDir.clone();
