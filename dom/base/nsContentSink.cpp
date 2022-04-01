@@ -250,7 +250,7 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 void nsContentSink::DoProcessLinkHeader() {
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
-  auto linkHeaders = ParseLinkHeader(value);
+  auto linkHeaders = net::ParseLinkHeader(value);
   for (const auto& linkHeader : linkHeaders) {
     ProcessLinkFromHeader(linkHeader);
   }
@@ -297,7 +297,7 @@ bool nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor) {
   return same;
 }
 
-nsresult nsContentSink::ProcessLinkFromHeader(const LinkHeader& aHeader) {
+nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader) {
   uint32_t linkTypes = LinkStyle::ParseLinkTypes(aHeader.mRel);
 
   // The link relation may apply to a different resource, specified

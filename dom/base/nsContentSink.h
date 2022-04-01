@@ -16,7 +16,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsNetUtil.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -46,6 +45,10 @@ namespace dom {
 class Document;
 class ScriptLoader;
 }  // namespace dom
+
+namespace net {
+struct LinkHeader;
+};
 }  // namespace mozilla
 
 #ifdef DEBUG
@@ -122,7 +125,7 @@ class nsContentSink : public nsICSSLoaderObserver,
                 nsIChannel* aChannel);
 
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-  nsresult ProcessLinkFromHeader(const LinkHeader& aHeader);
+  nsresult ProcessLinkFromHeader(const mozilla::net::LinkHeader& aHeader);
 
   virtual nsresult ProcessStyleLinkFromHeader(
       const nsAString& aHref, bool aAlternate, const nsAString& aTitle,
