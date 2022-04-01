@@ -24,6 +24,12 @@ const bookmarksInfo = [
 ];
 const TEST_URL = "about:mozilla";
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "userContextEnabled",
+  "privacy.userContext.enabled"
+);
+
 add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -113,6 +119,12 @@ add_task(async function test_bookmark_contextmenu_contents() {
     "toggle_PersonalToolbar",
     "show-other-bookmarks_PersonalToolbar",
   ];
+  if (!userContextEnabled) {
+    optionItems.splice(
+      optionItems.indexOf("placesContext_open:newcontainertab"),
+      1
+    );
+  }
 
   await checkContextMenu(async function() {
     let toolbarBookmark = await PlacesUtils.bookmarks.insert({
@@ -392,6 +404,12 @@ add_task(async function test_sidebar_bookmark_contextmenu_contents() {
     "placesContext_new:folder",
     "placesContext_new:separator",
   ];
+  if (!userContextEnabled) {
+    optionItems.splice(
+      optionItems.indexOf("placesContext_open:newcontainertab"),
+      1
+    );
+  }
 
   await withSidebarTree("bookmarks", async tree => {
     await checkContextMenu(
@@ -427,6 +445,12 @@ add_task(async function test_sidebar_bookmark_search_contextmenu_contents() {
     "placesContext_cut",
     "placesContext_copy",
   ];
+  if (!userContextEnabled) {
+    optionItems.splice(
+      optionItems.indexOf("placesContext_open:newcontainertab"),
+      1
+    );
+  }
 
   await withSidebarTree("bookmarks", async tree => {
     await checkContextMenu(
@@ -472,6 +496,12 @@ add_task(async function test_library_bookmark_contextmenu_contents() {
     "placesContext_new:folder",
     "placesContext_new:separator",
   ];
+  if (!userContextEnabled) {
+    optionItems.splice(
+      optionItems.indexOf("placesContext_open:newcontainertab"),
+      1
+    );
+  }
 
   await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
     await checkContextMenu(
@@ -504,6 +534,12 @@ add_task(async function test_library_bookmark_search_contextmenu_contents() {
     "placesContext_cut",
     "placesContext_copy",
   ];
+  if (!userContextEnabled) {
+    optionItems.splice(
+      optionItems.indexOf("placesContext_open:newcontainertab"),
+      1
+    );
+  }
 
   await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
     await checkContextMenu(
