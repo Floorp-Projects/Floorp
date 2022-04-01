@@ -13,6 +13,7 @@
 
 namespace mozilla {
 namespace a11y {
+class TableCellAccessibleBase;
 
 /**
  * XPCOM wrapper around TableAccessibleCell class.
@@ -39,13 +40,7 @@ class xpcAccessibleTableCell : public xpcAccessibleHyperText,
   virtual ~xpcAccessibleTableCell() {}
 
  private:
-  TableCellAccessible* Intl() {
-    if (LocalAccessible* acc = mIntl->AsLocal()) {
-      return acc->AsTableCell();
-    }
-
-    return nullptr;
-  }
+  TableCellAccessibleBase* Intl() { return mIntl->AsTableCellBase(); }
 
   xpcAccessibleTableCell(const xpcAccessibleTableCell&) = delete;
   xpcAccessibleTableCell& operator=(const xpcAccessibleTableCell&) = delete;
