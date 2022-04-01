@@ -451,7 +451,7 @@ uint32_t TimeoutManager::GetTimeoutId(Timeout::Reason aReason) {
       return ++mIdleCallbackTimeoutCounter;
     case Timeout::Reason::eTimeoutOrInterval:
       return ++mTimeoutIdCounter;
-    case Timeout::Reason::eAbortSignalTimeout:
+    default:
       return std::numeric_limits<uint32_t>::max();  // no cancellation support
   }
 }
