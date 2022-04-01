@@ -69,7 +69,7 @@ class SwitchContextTest {
     @Test
     @Ignore("Failing. See https://github.com/mozilla-mobile/focus-android/issues/6486")
     fun notificationOpenButtonTest() {
-        val testPage = TestAssetHelper.getPlainPageAsset(webServer)
+        val testPage = TestAssetHelper.getGenericAsset(webServer)
 
         searchScreen {
         }.loadPage(testPage.url) { }
@@ -100,7 +100,7 @@ class SwitchContextTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
         val intent = context.packageManager
             .getLaunchIntentForPackage(SETTINGS_APP)
-        val testPage = TestAssetHelper.getPlainPageAsset(webServer)
+        val testPage = TestAssetHelper.getGenericAsset(webServer)
 
         // Open a webpage
         searchScreen {

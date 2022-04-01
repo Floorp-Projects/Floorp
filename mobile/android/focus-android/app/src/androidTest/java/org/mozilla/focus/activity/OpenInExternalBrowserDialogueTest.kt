@@ -15,7 +15,7 @@ import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.StringsHelper.GOOGLE_CHROME
-import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -48,7 +48,7 @@ class OpenInExternalBrowserDialogueTest {
     @SmokeTest
     @Test
     fun openPageInExternalAppTest() {
-        val pageUrl = getPlainPageAsset(webServer).url
+        val pageUrl = getGenericAsset(webServer).url
 
         searchScreen {
         }.loadPage(pageUrl) {

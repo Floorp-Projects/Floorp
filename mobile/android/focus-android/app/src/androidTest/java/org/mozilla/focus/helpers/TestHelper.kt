@@ -4,6 +4,7 @@
 package org.mozilla.focus.helpers
 
 import android.app.PendingIntent
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -145,6 +146,21 @@ object TestHelper {
     // verifies localized strings in different UIs
     fun verifyTranslatedTextExists(text: String) =
         assertTrue(mDevice.findObject(UiSelector().text(text)).waitForExists(waitingTime))
+
+    fun openAppFromExternalLink(url: String) {
+        val intent = Intent().apply {
+            action = Intent.ACTION_VIEW
+            data = Uri.parse(url)
+            `package` = packageName
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            getTargetContext.startActivity(intent)
+        } catch (ex: ActivityNotFoundException) {
+            intent.setPackage(null)
+            getTargetContext.startActivity(intent)
+        }
+    }
 
     // wait for web area to be visible
     @JvmStatic

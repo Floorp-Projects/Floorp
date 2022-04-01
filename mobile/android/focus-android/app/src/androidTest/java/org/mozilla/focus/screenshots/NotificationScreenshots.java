@@ -54,7 +54,7 @@ public class NotificationScreenshots extends ScreenshotTest {
         webServer = new MockWebServer();
 
         // Test page
-        webServer.enqueue(new MockResponse().setBody(TestHelper.readTestAsset("plain_test.html")));
+        webServer.enqueue(new MockResponse().setBody(TestHelper.readTestAsset("genericPage.html")));
     }
 
     @After

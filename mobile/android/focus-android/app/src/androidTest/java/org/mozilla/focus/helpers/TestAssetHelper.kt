@@ -28,10 +28,10 @@ object TestAssetHelper {
         return TestAsset(url, content, title)
     }
 
-    fun getPlainPageAsset(server: MockWebServer): TestAsset {
-        val url = server.url("plain_test.html").toString()
+    fun getGenericAsset(server: MockWebServer): TestAsset {
+        val url = server.url("genericPage.html").toString()
         val content = "focus test page"
-        val title = "Plain text page"
+        val title = "GenericPage"
 
         return TestAsset(url, content, title)
     }

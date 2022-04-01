@@ -95,11 +95,18 @@ class BrowserRobot {
     }
 
     fun openLinkInNewTab() {
+        mDevice.findObject(
+            UiSelector().textContains("Open link in private tab")
+        ).waitForExists(waitingTime)
         openLinkInPrivateTab.perform(click())
     }
 
     fun verifyNumberOfTabsOpened(tabsCount: Int) {
-        tabsCounter.check(matches(withContentDescription("$tabsCount open tabs. Tap to switch tabs.")))
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().description("$tabsCount open tabs. Tap to switch tabs.")
+            ).waitForExists(waitingTime)
+        )
     }
 
     fun verifyTabsCounterNotShown() {

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
-import androidx.test.core.app.launchActivity
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.browser.state.selector.privateTabs
@@ -11,23 +10,22 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.robots.customTab
+import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
-import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
-import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.clickSnackBarActionButton
 import org.mozilla.focus.helpers.TestHelper.getStringResource
+import org.mozilla.focus.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -69,7 +67,6 @@ class MultitaskingTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/focus-android/issues/6709")
     @SmokeTest
     @Test
     fun testVisitingMultipleSites() {
@@ -77,7 +74,7 @@ class MultitaskingTest {
         val tab2 = getGenericTabAsset(webServer, 2)
         val tab3 = getGenericTabAsset(webServer, 3)
         val eraseBrowsingSnackBarText = getStringResource(R.string.feedback_erase2)
-        val customTabPage = getPlainPageAsset(webServer)
+        val customTabPage = getGenericAsset(webServer)
 
         // Load website: Erase button visible, Tabs button not
         searchScreen {
@@ -94,13 +91,8 @@ class MultitaskingTest {
             verifyNumberOfTabsOpened(3)
         }
 
-        launchActivity<IntentReceiverActivity>(TestHelper.createCustomTabIntent(customTabPage.url))
-
-        customTab {
-            progressBar.waitUntilGone(TestHelper.waitingTime)
-            verifyPageURL(customTabPage.url)
-            openCustomTabMenu()
-        }.clickOpenInFocusButton() {
+        openAppFromExternalLink(customTabPage.url)
+        browserScreen {
             verifyNumberOfTabsOpened(4)
         }.openTabsTray {
             verifyTabsOrder(tab1.title, tab3.title, tab2.title, customTabPage.title)
@@ -112,7 +104,6 @@ class MultitaskingTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/focus-android/issues/6708")
     @SmokeTest
     @Test
     fun closeTabButtonTest() {

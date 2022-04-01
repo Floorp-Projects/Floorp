@@ -16,8 +16,7 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
-import org.mozilla.focus.helpers.TestAssetHelper
-import org.mozilla.focus.helpers.TestAssetHelper.getPlainPageAsset
+import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
@@ -51,14 +50,15 @@ class ShortcutsTest {
     @Test
     fun renameShortcutTest() {
         val webPage = object {
-            val url = getPlainPageAsset(webServer).url
-            val title = getPlainPageAsset(webServer).title
+            val url = getGenericAsset(webServer).url
+            val title = getGenericAsset(webServer).title
+            val content = getGenericAsset(webServer).content
             val newTitle = "TestShortcut"
         }
 
         searchScreen {
         }.loadPage(webPage.url) {
-            verifyPageContent(webPage.title)
+            verifyPageContent(webPage.content)
         }.openMainMenu {
             clickAddToShortcuts()
         }
@@ -75,11 +75,11 @@ class ShortcutsTest {
     @SmokeTest
     @Test
     fun searchBarShowsPageShortcutsTest() {
-        val webPage = TestAssetHelper.getPlainPageAsset(webServer)
+        val webPage = getGenericAsset(webServer)
 
         searchScreen {
         }.loadPage(webPage.url) {
-            verifyPageContent(webPage.title)
+            verifyPageContent(webPage.content)
         }.openMainMenu {
             clickAddToShortcuts()
         }
