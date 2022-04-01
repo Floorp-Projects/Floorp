@@ -323,7 +323,9 @@ class TaskGraphGenerator:
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
         self.verify_attributes(all_tasks)
         self.verify_run_using()
-        yield verifications("full_task_set", full_task_set, graph_config, parameters)
+        yield self.verify_graph(
+            "full_task_set", full_task_set, graph_config, parameters
+        )
 
         logger.info("Generating full task graph")
         edges = set()
@@ -336,7 +338,7 @@ class TaskGraphGenerator:
             "Full task graph contains %d tasks and %d dependencies"
             % (len(full_task_set.graph.nodes), len(edges))
         )
-        yield verifications(
+        yield self.verify_graph(
             "full_task_graph", full_task_graph, graph_config, parameters
         )
 
@@ -355,7 +357,7 @@ class TaskGraphGenerator:
                 % (fltr.__name__, old_len - len(target_tasks), len(target_tasks))
             )
 
-        yield verifications(
+        yield self.verify_graph(
             "target_task_set", target_task_set, graph_config, parameters
         )
 
@@ -384,7 +386,7 @@ class TaskGraphGenerator:
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes}, target_graph
         )
-        yield verifications(
+        yield self.verify_graph(
             "target_task_graph", target_task_graph, graph_config, parameters
         )
 
@@ -411,7 +413,7 @@ class TaskGraphGenerator:
             strategy_override=strategies,
         )
 
-        yield verifications(
+        yield self.verify_graph(
             "optimized_task_graph", optimized_task_graph, graph_config, parameters
         )
 
@@ -424,7 +426,7 @@ class TaskGraphGenerator:
         )
 
         yield "label_to_taskid", label_to_taskid
-        yield verifications(
+        yield self.verify_graph(
             "morphed_task_graph", morphed_task_graph, graph_config, parameters
         )
 
@@ -436,6 +438,10 @@ class TaskGraphGenerator:
                 raise AttributeError(f"No such run result {name}")
             self._run_results[k] = v
         return self._run_results[name]
+
+    def verify_graph(self, name, graph, graph_config, parameters):
+        verifications(name, graph, graph_config, parameters)
+        return name, graph
 
     def verify_parameters(self, parameters):
         if not parameters.strict:
