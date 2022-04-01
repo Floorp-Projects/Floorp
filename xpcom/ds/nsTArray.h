@@ -1008,6 +1008,7 @@ class nsTArray_Impl
   typedef typename base_type::size_type size_type;
   typedef typename base_type::index_type index_type;
   typedef E elem_type;
+  typedef E value_type;
   typedef nsTArray_Impl<E, Alloc> self_type;
   typedef nsTArrayElementTraits<E> elem_traits;
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
@@ -2718,6 +2719,7 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   using typename base_type::elem_type;
   using typename base_type::index_type;
   using typename base_type::size_type;
+  using typename base_type::value_type;
 
   nsTArray() {}
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
@@ -3016,6 +3018,7 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
   typedef nsTArray<E> base_type;
   typedef typename base_type::Header Header;
   typedef typename base_type::elem_type elem_type;
+  typedef typename base_type::value_type value_type;
 
   AutoTArray() : mAlign() { Init(); }
 
