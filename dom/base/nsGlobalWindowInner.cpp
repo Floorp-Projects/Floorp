@@ -6330,9 +6330,8 @@ static const char* GetTimeoutReasonString(Timeout* aTimeout) {
       return "setTimeout handler";
     case Timeout::Reason::eIdleCallbackTimeout:
       return "setIdleCallback handler (timed out)";
-    default:
-      MOZ_CRASH("Unexpected enum value");
-      return "";
+    case Timeout::Reason::eAbortSignalTimeout:
+      return "AbortSignal timeout";
   }
 }
 

@@ -28,6 +28,7 @@
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/FlippedOnce.h"
+#include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -317,9 +318,10 @@ class WorkerPrivate final
                                    const nsTArray<nsString>& aParams);
 
   int32_t SetTimeout(JSContext* aCx, TimeoutHandler* aHandler, int32_t aTimeout,
-                     bool aIsInterval, ErrorResult& aRv);
+                     bool aIsInterval, Timeout::Reason aReason,
+                     ErrorResult& aRv);
 
-  void ClearTimeout(int32_t aId);
+  void ClearTimeout(int32_t aId, Timeout::Reason aReason);
 
   MOZ_CAN_RUN_SCRIPT bool RunExpiredTimeouts(JSContext* aCx);
 
