@@ -1,6 +1,6 @@
 import pytest
 
-from . import get_host, request
+from support.network import get_host, http_request
 
 
 @pytest.mark.parametrize(
@@ -52,7 +52,7 @@ from . import get_host, request
 )
 def test_host_header(configuration, hostname, port_type, status):
     host = get_host(port_type, hostname, configuration["port"])
-    response = request(configuration["host"], configuration["port"], host=host)
+    response = http_request(configuration["host"], configuration["port"], host=host)
 
     assert response.status == status
 
@@ -69,5 +69,5 @@ def test_host_header(configuration, hostname, port_type, status):
 def test_origin_header(configuration, origin, add_port, status):
     if add_port:
         origin = f"{origin}:{configuration['port']}"
-    response = request(configuration["host"], configuration["port"], origin=origin)
+    response = http_request(configuration["host"], configuration["port"], origin=origin)
     assert response.status == status
