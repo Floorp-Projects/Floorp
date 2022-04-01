@@ -438,18 +438,17 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
   }
 
   nsAttrValue asAttr;
-  HTMLLinkElement::ParseAsValue(aAs, asAttr);
+  mozilla::net::ParseAsValue(aAs, asAttr);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
   nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
 
-  auto policyType = HTMLLinkElement::AsValueToContentPolicy(asAttr);
+  auto policyType = mozilla::net::AsValueToContentPolicy(asAttr);
   if (policyType == nsIContentPolicy::TYPE_INVALID ||
-      !HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, aMedia,
-                                          mDocument)) {
+      !mozilla::net::CheckPreloadAttrs(asAttr, mimeType, aMedia, mDocument)) {
     // Ignore preload wrong or empty attributes.
-    HTMLLinkElement::WarnIgnoredPreload(*mDocument, *uri);
+    mozilla::net::WarnIgnoredPreload(*mDocument, *uri);
     return;
   }
 
