@@ -12,19 +12,6 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-async function openTabAndWaitForRender() {
-  let { win, tab } = await openAboutPrivateBrowsing();
-  await SpecialPowers.spawn(tab, [], async function() {
-    // Wait for render to complete
-    await ContentTaskUtils.waitForCondition(() =>
-      content.document.documentElement.hasAttribute(
-        "PrivateBrowsingRenderComplete"
-      )
-    );
-  });
-  return { win, tab };
-}
-
 async function setupMSExperimentWithMessage(message) {
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "pbNewtab",
