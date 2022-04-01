@@ -32,11 +32,13 @@ const DEFAULT_WELCOME_CONTENT = {
         title: {
           string_id: "onboarding-welcome-header",
         },
-        subtitle:
-          "It’s our 100th release! Thanks for helping us build a better, healthier internet.",
+        subtitle: {
+          string_id: "fx100-thank-you-subtitle",
+        },
         hero_text: {
           string_id: "fx100-thank-you-hero-text",
           color: "#321C64",
+          zap: true,
         },
         help_text: {
           string_id: "mr1-onboarding-welcome-image-caption",
