@@ -368,7 +368,8 @@ function wrapWithIFrame(doc, options = {}) {
     } else {
       srcURL.searchParams.append(
         "html",
-        `<html>
+        `<!doctype html>
+        <html>
           <head>
             <meta charset="utf-8"/>
             <title>Accessibility Fission Test</title>
@@ -387,7 +388,8 @@ function wrapWithIFrame(doc, options = {}) {
         `<body ${attrsToString(iframeDocBodyAttrs)}>`
       );
     } else {
-      doc = `<body ${attrsToString(iframeDocBodyAttrs)}>${doc}</body>`;
+      doc = `<!doctype html>
+      <body ${attrsToString(iframeDocBodyAttrs)}>${doc}</body>`;
     }
 
     src = `data:${mimeType};charset=utf-8,${encodeURIComponent(doc)}`;
@@ -424,7 +426,8 @@ function snippetToURL(doc, options = {}) {
   }
 
   const encodedDoc = encodeURIComponent(
-    `<html>
+    `<!doctype html>
+    <html>
       <head>
         <meta charset="utf-8"/>
         <title>Accessibility Test</title>
