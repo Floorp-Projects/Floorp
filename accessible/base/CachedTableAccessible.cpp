@@ -6,8 +6,11 @@
 
 #include "CachedTableAccessible.h"
 
+#include "AccIterator.h"
+#include "DocAccessibleParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAccUtils.h"
 #include "nsIAccessiblePivot.h"
 #include "Pivot.h"
@@ -40,6 +43,31 @@ class TablePartRule : public PivotRule {
     return nsIAccessibleTraversalRule::FILTER_IGNORE |
            nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }
+};
+
+// Iterates through headers explicitly associated with a remote table cell via
+// the headers DOM attribute. These are cached as Accessible ids.
+class RemoteExplicitHeadersIterator : public AccIterable {
+ public:
+  RemoteExplicitHeadersIterator(const nsTArray<uint64_t>& aHeaders,
+                                Accessible* aDoc)
+      : mHeaders(aHeaders), mDoc(aDoc), mIndex(0) {}
+
+  virtual Accessible* Next() override {
+    while (mIndex < mHeaders.Length()) {
+      uint64_t id = mHeaders[mIndex++];
+      Accessible* acc = nsAccUtils::GetAccessibleByID(mDoc, id);
+      if (acc) {
+        return acc;
+      }
+    }
+    return nullptr;
+  }
+
+ private:
+  const nsTArray<uint64_t>& mHeaders;
+  Accessible* mDoc;
+  uint32_t mIndex;
 };
 
 // The Accessible* keys should only be used for lookup. They should not be
@@ -298,11 +326,46 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
   return 1;
 }
 
+UniquePtr<AccIterable> CachedTableCellAccessible::GetExplicitHeadersIterator() {
+  if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
+    if (remoteAcc->mCachedFields) {
+      if (auto headers =
+              remoteAcc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
+                  nsGkAtoms::headers)) {
+        return MakeUnique<RemoteExplicitHeadersIterator>(*headers,
+                                                         remoteAcc->Document());
+      }
+    }
+  } else if (LocalAccessible* localAcc = mAcc->AsLocal()) {
+    return MakeUnique<IDRefsIterator>(
+        localAcc->Document(), localAcc->GetContent(), nsGkAtoms::headers);
+  }
+  return nullptr;
+}
+
 void CachedTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
-  // XXX Support explicitly associated headers.
   auto* table = static_cast<CachedTableAccessible*>(Table());
   if (!table) {
     return;
+  }
+  if (auto iter = GetExplicitHeadersIterator()) {
+    while (Accessible* header = iter->Next()) {
+      role headerRole = header->Role();
+      if (headerRole == roles::COLUMNHEADER) {
+        aCells->AppendElement(header);
+      } else if (headerRole != roles::ROWHEADER) {
+        // Treat this cell as a column header only if it's in the same column.
+        if (auto cellIdx = table->mAccToCellIdx.Lookup(header)) {
+          CachedTableCellAccessible& cell = table->mCells[*cellIdx];
+          if (cell.ColIdx() == ColIdx()) {
+            aCells->AppendElement(header);
+          }
+        }
+      }
+    }
+    if (!aCells->IsEmpty()) {
+      return;
+    }
   }
   Accessible* doc = nsAccUtils::DocumentFor(table->AsAccessible());
   // Each cell stores its previous implicit column header, effectively forming a
@@ -319,10 +382,28 @@ void CachedTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
 }
 
 void CachedTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
-  // XXX Support explicitly associated headers.
-  TableAccessibleBase* table = Table();
+  auto* table = static_cast<CachedTableAccessible*>(Table());
   if (!table) {
     return;
+  }
+  if (auto iter = GetExplicitHeadersIterator()) {
+    while (Accessible* header = iter->Next()) {
+      role headerRole = header->Role();
+      if (headerRole == roles::ROWHEADER) {
+        aCells->AppendElement(header);
+      } else if (headerRole != roles::COLUMNHEADER) {
+        // Treat this cell as a row header only if it's in the same row.
+        if (auto cellIdx = table->mAccToCellIdx.Lookup(header)) {
+          CachedTableCellAccessible& cell = table->mCells[*cellIdx];
+          if (cell.RowIdx() == RowIdx()) {
+            aCells->AppendElement(header);
+          }
+        }
+      }
+    }
+    if (!aCells->IsEmpty()) {
+      return;
+    }
   }
   // We don't cache implicit row headers because there are usually not that many
   // cells per row. Get all the row headers on the row before this cell.
