@@ -52,6 +52,18 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<CheckBoxPreference>(R.string.pref_key_enable_contile).apply {
             isVisible = FeatureFlags.contileFeature
             isChecked = context.settings().showContileFeature
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    CustomizeHome.preferenceToggled.record(
+                        CustomizeHome.PreferenceToggledExtra(
+                            newValue as Boolean,
+                            "contile"
+                        )
+                    )
+
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_recent_tabs).apply {
