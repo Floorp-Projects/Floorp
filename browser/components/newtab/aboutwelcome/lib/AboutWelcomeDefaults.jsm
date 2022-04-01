@@ -30,8 +30,10 @@ const DEFAULT_WELCOME_CONTENT = {
         position: "corner",
         logo: {},
         title: {
-          string_id: "mr1-onboarding-pin-header",
+          string_id: "onboarding-welcome-header",
         },
+        subtitle:
+          "It’s our 100th release! Thanks for helping us build a better, healthier internet.",
         hero_text: {
           string_id: "mr1-welcome-screen-hero-text",
         },
