@@ -963,7 +963,10 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       // We only want to show the PiP icon in this experiment scenario
       let pipExpanded = shadowRoot.querySelector(".pip-expanded");
       pipExpanded.style.display = "none";
-      let pipIcon = shadowRoot.querySelector(".pip-icon");
+      let pipSmall = shadowRoot.querySelector(".pip-small");
+      pipSmall.style.opacity = "1";
+
+      let pipIcon = shadowRoot.querySelectorAll(".pip-icon")[1];
       pipIcon.style.display = "block";
     }
 
