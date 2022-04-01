@@ -54,7 +54,11 @@ class NotificationManager(private val context: Context) {
         // In the future, experiment with displaying multiple tabs from the same device as as Notification Groups.
         // For now, a single notification per tab received will suffice.
         logger.debug("Showing ${tabs.size} tab(s) received from deviceID=${device?.id}")
-        tabs.forEach { tab ->
+
+        // We should not be displaying tabs with certain invalid schemes
+        val filteredTabs = tabs.filter { isValidTabSchema(it) }
+        logger.debug("${filteredTabs.size} tab(s) after filtering for unsupported schemes")
+        filteredTabs.forEach { tab ->
             val showReceivedTabsIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.url))
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -128,4 +132,11 @@ class NotificationManager(private val context: Context) {
         }
         return this
     }
+}
+
+internal fun isValidTabSchema(tab: TabData): Boolean {
+    // We don't sync certain schemas, about|resource|chrome|file|blob|moz-extension
+    // See https://searchfox.org/mozilla-central/rev/7d379061bd56251df911728686c378c5820513d8/modules/libpref/init/all.js#4356
+    val filteredSchemas = arrayOf("about:", "resource:", "chrome:", "file:", "blob:", "moz-extension:")
+    return filteredSchemas.none({ tab.url.startsWith(it) })
 }
