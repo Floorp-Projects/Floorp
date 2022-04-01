@@ -128,7 +128,7 @@ let RemotePageAccessManager = {
       RPMSendQuery: [
         "ShouldShowSearch",
         "ShouldShowSearchBanner",
-        "ShouldShowVPNPromo",
+        "ShouldShowPromo",
         "SpecialMessageActionDispatch",
       ],
       RPMAddMessageListener: ["*"],
