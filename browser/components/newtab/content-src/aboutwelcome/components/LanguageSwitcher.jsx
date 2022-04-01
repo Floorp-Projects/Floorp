@@ -36,23 +36,16 @@ export function useLanguageSwitcher(
       }
 
       (async () => {
-        const langPack = await window.AWNegotiateLangPackForLanguageMismatch(
+        const {
+          langPack,
+          langPackDisplayName,
+        } = await window.AWNegotiateLangPackForLanguageMismatch(
           appAndSystemLocaleInfo
         );
         if (langPack) {
-          // Convert the BCP 47 identifiers into the proper display names.
-          // e.g. "fr-CA" -> "Canadian French".
-          const appDN = new Intl.DisplayNames(
-            appAndSystemLocaleInfo.appLocaleRaw,
-            { type: "language" }
-          );
-          const langPackDN = new Intl.DisplayNames(langPack.target_locale, {
-            type: "language",
-          });
-
           setNegotiatedLanguage({
-            langPackDisplayName: langPackDN.of(langPack.target_locale),
-            appDisplayName: appDN.of(appAndSystemLocaleInfo.appLocaleRaw),
+            langPackDisplayName,
+            appDisplayName: appAndSystemLocaleInfo.displayNames.appLanguage,
             langPack,
             requestSystemLocales: [
               langPack.target_locale,
