@@ -14,7 +14,7 @@
 
 namespace mozilla {
 namespace a11y {
-class TableCellAccessible;
+class TableCellAccessibleBase;
 
 class ia2AccessibleTableCell : public IAccessibleTableCell,
                                public ia2AccessibleHypertext {
@@ -62,7 +62,7 @@ class ia2AccessibleTableCell : public IAccessibleTableCell,
   using ia2AccessibleHypertext::ia2AccessibleHypertext;
 
  private:
-  TableCellAccessible* CellAcc();
+  TableCellAccessibleBase* CellAcc();
 };
 
 }  // namespace a11y
