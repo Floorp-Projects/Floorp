@@ -95,7 +95,7 @@ const CHROME_FLAGS_MAP = [
     "close=0",
   ],
   [Ci.nsIWebBrowserChrome.CHROME_WINDOW_LOWERED, "alwayslowered"],
-  [Ci.nsIWebBrowserChrome.HROME_WINDOW_RAISED, "alwaysraised"],
+  [Ci.nsIWebBrowserChrome.CHROME_WINDOW_RAISED, "alwaysraised"],
   // "chrome" and "suppressanimation" are always set.
   //[Ci.nsIWebBrowserChrome.CHROME_SUPPRESS_ANIMATION, "suppressanimation"],
   [Ci.nsIWebBrowserChrome.CHROME_ALWAYS_ON_TOP, "alwaysontop"],

@@ -39,6 +39,14 @@ function testFeatures(win, test) {
 
 add_task(async function testRestoredWindowFeatures() {
   const DUMMY_PAGE = "browser/base/content/test/tabs/dummy_page.html";
+  const ALL_BARPROPS = {
+    locationbar: true,
+    menubar: true,
+    personalbar: true,
+    scrollbars: true,
+    statusbar: true,
+    toolbar: true,
+  };
   const TESTS = [
     {
       url: "http://example.com/browser/" + DUMMY_PAGE,
@@ -67,16 +75,27 @@ add_task(async function testRestoredWindowFeatures() {
       chrome: true,
       url: "http://example.com/browser/" + DUMMY_PAGE,
       features: "chrome,all,dialog=no",
-      barprops: {
-        locationbar: true,
-        menubar: true,
-        personalbar: true,
-        scrollbars: true,
-        statusbar: true,
-        toolbar: true,
-      },
+      barprops: ALL_BARPROPS,
       chromeFlags: Ci.nsIWebBrowserChrome.CHROME_ALL,
       unsetFlags: Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG,
+    },
+    {
+      chrome: true,
+      url: "http://example.com/browser/" + DUMMY_PAGE,
+      features: "chrome,all,dialog=no,alwayslowered,centerscreen",
+      barprops: ALL_BARPROPS,
+      chromeFlags:
+        Ci.nsIWebBrowserChrome.CHROME_WINDOW_LOWERED |
+        Ci.nsIWebBrowserChrome.CHROME_CENTER_SCREEN,
+    },
+    {
+      chrome: true,
+      url: "http://example.com/browser/" + DUMMY_PAGE,
+      features: "chrome,all,dialog=no,alwaysraised,dependent",
+      barprops: ALL_BARPROPS,
+      chromeFlags:
+        Ci.nsIWebBrowserChrome.CHROME_WINDOW_RAISED |
+        Ci.nsIWebBrowserChrome.CHROME_DEPENDENT,
     },
   ];
   const TEST_URL_CHROME = "chrome://mochitests/content/browser/" + DUMMY_PAGE;
