@@ -493,8 +493,8 @@ template <typename ArrayType>
 static auto MakeMoveOnlyArray() {
   ArrayType moveOnlyArray;
   for (size_t i = 0; i < kMoveOnlyTestArrayLength; ++i) {
-    EXPECT_TRUE(
-        moveOnlyArray.AppendElement(typename ArrayType::elem_type(), fallible));
+    EXPECT_TRUE(moveOnlyArray.AppendElement(typename ArrayType::value_type(),
+                                            fallible));
   }
   return moveOnlyArray;
 }

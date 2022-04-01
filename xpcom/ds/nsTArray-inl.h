@@ -88,7 +88,7 @@ bool nsTArray_base<Alloc, RelocationStrategy>::UsesAutoArrayBuffer() const {
 
   // This is nuts.  If we were sane, we'd pass aElemAlign as a parameter to
   // this function.  Unfortunately this function is called in nsTArray_base's
-  // destructor, at which point we don't know elem_type's alignment.
+  // destructor, at which point we don't know value_type's alignment.
   //
   // We'll fall on our face and return true when we should say false if
   //
@@ -113,7 +113,7 @@ bool nsTArray_base<Alloc, RelocationStrategy>::UsesAutoArrayBuffer() const {
   //
   // Note that this means that we can't store elements with alignment 16 in an
   // nsTArray, because GetAutoArrayBuffer(16) could lie outside the memory
-  // owned by this AutoTArray.  We statically assert that elem_type's
+  // owned by this AutoTArray.  We statically assert that value_type's
   // alignment is 8 bytes or less in AutoTArray.
 
   static_assert(sizeof(nsTArrayHeader) > 4, "see comment above");
