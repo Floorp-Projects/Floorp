@@ -23,13 +23,20 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
  * Attempts to find an appropriate langpack for a given language. The async function
  * is infallible, but may not return a langpack.
  *
- * @returns {LangPack | null}
+ * @returns {{
+ *   langPack: LangPack | null,
+ *   langPackDisplayName: string | null
+ * }}
  */
 async function negotiateLangPackForLanguageMismatch() {
   const localeInfo = getAppAndSystemLocaleInfo();
+  const nullResult = {
+    langPack: null,
+    langPackDisplayName: null,
+  };
   if (!localeInfo.systemLocale) {
     // The system locale info was not valid.
-    return null;
+    return nullResult;
   }
 
   /**
@@ -39,14 +46,14 @@ async function negotiateLangPackForLanguageMismatch() {
    */
   const availableLangpacks = await mockable.getAvailableLangpacks();
   if (!availableLangpacks) {
-    return null;
+    return nullResult;
   }
 
   /**
    * Figure out a langpack to recommend.
    * @type {LangPack | null}
    */
-  return (
+  const langPack =
     // First look for a langpack that matches the baseName.
     // e.g. system "fr-FR" matches langpack "fr-FR"
     //      system "en-GB" matches langpack "en-GB".
@@ -65,8 +72,20 @@ async function negotiateLangPackForLanguageMismatch() {
     availableLangpacks.find(({ target_locale }) =>
       target_locale.startsWith(`${localeInfo.systemLocale.language}-`)
     ) ||
-    null
-  );
+    null;
+
+  if (!langPack) {
+    return nullResult;
+  }
+
+  return {
+    langPack,
+    langPackDisplayName: Services.intl.getLocaleDisplayNames(
+      undefined,
+      [langPack.target_locale],
+      { preferNative: true }
+    )[0],
+  };
 }
 
 // If a langpack is being installed, allow blocking on that.
@@ -278,10 +297,6 @@ function getAppAndSystemLocaleInfo() {
     }
   }
 
-  const displayNames = new Services.intl.DisplayNames(appLocaleRaw, {
-    type: "language",
-  });
-
   // Live reloading with bidi switching may not be supported.
   let canLiveReload = null;
   if (systemLocale && appLocale) {
@@ -295,7 +310,6 @@ function getAppAndSystemLocaleInfo() {
     );
     canLiveReload = systemDirection === appDirection || supportsBidiSwitching;
   }
-
   return {
     // Return the Intl.Locale in a serializable form.
     systemLocaleRaw,
@@ -308,9 +322,17 @@ function getAppAndSystemLocaleInfo() {
     // These can be used as Fluent message args.
     displayNames: {
       systemLanguage: systemLocale
-        ? displayNames.of(systemLocale.baseName)
+        ? Services.intl.getLocaleDisplayNames(
+            undefined,
+            [systemLocale.baseName],
+            { preferNative: true }
+          )[0]
         : null,
-      appLanguage: appLocale ? displayNames.of(appLocale.baseName) : null,
+      appLanguage: appLocale
+        ? Services.intl.getLocaleDisplayNames(undefined, [appLocale.baseName], {
+            preferNative: true,
+          })[0]
+        : null,
     },
   };
 }
