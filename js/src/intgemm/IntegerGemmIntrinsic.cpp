@@ -10,13 +10,13 @@
 #include "mozilla/CheckedInt.h"
 #include <intgemm.h>
 
-#include <utility>
-
+#include "js/ErrorReport.h"
 #include "js/HeapAPI.h"
-#include "vm/JSContext.h"
+#include "vm/ArrayBufferObject.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmLog.h"
-#include "vm/ArrayBufferObject-inl.h"
+
+struct JSContext;
 
 static constexpr uint32_t ARRAY_ALIGNMENT = 64;
 static constexpr uint32_t ROWS_A_MULTIPLIER = 1;
