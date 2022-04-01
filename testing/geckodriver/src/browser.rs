@@ -13,7 +13,6 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time;
-use url::{Host, Url};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
 /// A running Gecko instance.
@@ -71,8 +70,6 @@ impl LocalBrowser {
     pub(crate) fn new(
         options: FirefoxOptions,
         marionette_port: u16,
-        allow_hosts: Vec<Host>,
-        allow_origins: Vec<Url>,
         jsdebugger: bool,
     ) -> WebDriverResult<LocalBrowser> {
         let binary = options.binary.ok_or_else(|| {
@@ -100,8 +97,6 @@ impl LocalBrowser {
                 profile,
                 is_custom_profile,
                 options.prefs,
-                allow_hosts,
-                allow_origins,
                 jsdebugger,
             )
             .map_err(|e| {
@@ -239,8 +234,6 @@ impl RemoteBrowser {
         options: FirefoxOptions,
         marionette_port: u16,
         websocket_port: Option<u16>,
-        allow_hosts: Vec<Host>,
-        allow_origins: Vec<Url>,
     ) -> WebDriverResult<RemoteBrowser> {
         let android_options = options.android.unwrap();
 
@@ -263,8 +256,6 @@ impl RemoteBrowser {
             &mut profile,
             is_custom_profile,
             options.prefs,
-            allow_hosts,
-            allow_origins,
             false,
         )
         .map_err(|e| {
@@ -303,8 +294,6 @@ fn set_prefs(
     profile: &mut Profile,
     custom_profile: bool,
     extra_prefs: Vec<(String, Pref)>,
-    allow_hosts: Vec<Host>,
-    allow_origins: Vec<Url>,
     js_debugger: bool,
 ) -> WebDriverResult<Option<PrefsBackup>> {
     let prefs = profile.user_prefs().map_err(|_| {
@@ -337,28 +326,6 @@ fn set_prefs(
 
     prefs.insert("marionette.port", Pref::new(port));
     prefs.insert("remote.log.level", logging::max_level().into());
-
-    // Origins and host names to allow for WebDriver BiDi
-    prefs.insert(
-        "remote.hosts.allowed",
-        Pref::new(
-            allow_hosts
-                .iter()
-                .map(|host| host.to_string())
-                .collect::<Vec<String>>()
-                .join(","),
-        ),
-    );
-    prefs.insert(
-        "remote.origins.allowed",
-        Pref::new(
-            allow_origins
-                .iter()
-                .map(|origin| origin.to_string())
-                .collect::<Vec<String>>()
-                .join(","),
-        ),
-    );
 
     prefs.write().map_err(|e| {
         WebDriverError::new(
@@ -432,7 +399,7 @@ mod tests {
     #[test]
     fn test_remote_log_level() {
         let mut profile = Profile::new().unwrap();
-        set_prefs(2828, &mut profile, false, vec![], vec![], vec![], false).ok();
+        set_prefs(2828, &mut profile, false, vec![], false).ok();
         let user_prefs = profile.user_prefs().unwrap();
 
         let pref = user_prefs.get("remote.log.level").unwrap();
@@ -475,8 +442,7 @@ mod tests {
             _ => panic!("Expected ProfileType::Path"),
         };
 
-        set_prefs(2828, &mut profile, true, opts.prefs, vec![], vec![], false)
-            .expect("set preferences");
+        set_prefs(2828, &mut profile, true, opts.prefs, false).expect("set preferences");
 
         let prefs_set = profile.user_prefs().expect("valid user preferences");
         println!("{:#?}", prefs_set.prefs);
@@ -516,7 +482,7 @@ mod tests {
             .read_to_string(&mut initial_prefs_data)
             .unwrap();
 
-        let backup = set_prefs(2828, &mut profile, true, vec![], vec![], vec![], false)
+        let backup = set_prefs(2828, &mut profile, true, vec![], false)
             .unwrap()
             .unwrap();
         let user_prefs = profile.user_prefs().unwrap();
