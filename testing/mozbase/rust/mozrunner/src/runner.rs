@@ -290,12 +290,7 @@ impl Runner for FirefoxRunner {
                 Arg::Foreground => seen_foreground = true,
                 Arg::NoRemote => seen_no_remote = true,
                 Arg::Profile | Arg::NamedProfile | Arg::ProfileManager => seen_profile = true,
-                Arg::Marionette
-                | Arg::None
-                | Arg::Other(_)
-                | Arg::RemoteAllowHosts
-                | Arg::RemoteAllowOrigins
-                | Arg::RemoteDebuggingPort => {}
+                Arg::Other(_) | Arg::None => {}
             }
         }
         // -foreground is only supported on Mac, and shouldn't be passed
