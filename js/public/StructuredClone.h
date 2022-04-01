@@ -741,6 +741,8 @@ JS_PUBLIC_API bool JS_WriteBytes(JSStructuredCloneWriter* w, const void* p,
 JS_PUBLIC_API bool JS_WriteString(JSStructuredCloneWriter* w,
                                   JS::HandleString str);
 
+JS_PUBLIC_API bool JS_WriteDouble(JSStructuredCloneWriter* w, double v);
+
 JS_PUBLIC_API bool JS_WriteTypedArray(JSStructuredCloneWriter* w,
                                       JS::HandleValue v);
 
