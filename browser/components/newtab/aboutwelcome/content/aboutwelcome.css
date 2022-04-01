@@ -876,12 +876,12 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer [pos=corner] .section-main .main-content {
   background: transparent;
   box-shadow: none;
-  display: block;
+  display: flex;
   position: absolute;
-  height: 350px;
-  width: 295px;
-  bottom: -60px;
-  inset-inline-end: 80px;
+  height: auto;
+  width: 350px;
+  bottom: 0;
+  inset-inline-end: 30px;
   transition: var(--transition);
 }
 .onboardingContainer [pos=corner] .section-main .brand-logo {
@@ -897,6 +897,9 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer [pos=corner] .section-main .welcome-text {
   transition-delay: 1.2s;
+}
+.onboardingContainer [pos=corner] .section-main .welcome-text h2 {
+  margin: 10px 6px;
 }
 .onboardingContainer [pos=corner] .solid-L {
   width: 1300px;
