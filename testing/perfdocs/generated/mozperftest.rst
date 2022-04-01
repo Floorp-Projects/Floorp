@@ -211,5 +211,15 @@ perftest_perfstats.js
 
 This test launches browsertime with the perfStats option (will collect low-overhead timings, see Bug 1553254). The test currently runs a short user journey. A selection of popular sites are visited, first as cold pageloads, and then as warm.
 
+perftest_WPT_init_file.js
+=========================
+
+:owner: Performance Testing Team
+:name: webpagetest
+
+**Run webpagetest performance pageload test against Alexa top 50 websites**
+
+This mozperftest gets webpagetest to run pageload tests against the 50 most popular websites and provide data. The full list of data returned from webpagetest: firstContentfulPaint, timeToContentfulPaint, visualComplete90, firstPaint, visualComplete99, visualComplete, SpeedIndex, bytesIn,bytesOut,TTFB,fullyLoadedCPUms, fullyLoadedCPUpct, domElements, domContentLoadedEventStart, domContentLoadedEventEnd, loadEventStart, loadEventEnd
+
 
 If you have any questions, please see this `wiki page <https://wiki.mozilla.org/TestEngineering/Performance#Where_to_find_us>`_.
