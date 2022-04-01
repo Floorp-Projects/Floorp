@@ -230,6 +230,23 @@ struct DrawSurfaceOptions {
 };
 
 /**
+ * ShadowOptions supplies options necessary for describing the appearance of a
+ * a shadow in draw calls that use shadowing.
+ */
+struct ShadowOptions {
+  explicit ShadowOptions(const DeviceColor& aColor = DeviceColor(0.0f, 0.0f,
+                                                                 0.0f),
+                         const Point& aOffset = Point(), Float aSigma = 0.0f)
+      : mColor(aColor), mOffset(aOffset), mSigma(aSigma) {}
+
+  DeviceColor mColor; /**< Color of the drawn shadow. */
+  Point mOffset;      /**< Offset of the shadow. */
+  Float mSigma;       /**< Sigma used for the Gaussian filter kernel. */
+
+  int32_t BlurRadius() const;
+};
+
+/**
  * This class is used to store gradient stops, it can only be used with a
  * matching DrawTarget. Not adhering to this condition will make a draw call
  * fail.
@@ -872,6 +889,14 @@ class Path : public external::AtomicRefCounted<Path> {
   virtual Rect GetStrokedBounds(const StrokeOptions& aStrokeOptions,
                                 const Matrix& aTransform = Matrix()) const = 0;
 
+  /** Gets conservative bounds for the path, optionally stroked or transformed.
+   * This function will prioritize speed of computation over tightness of the
+   * computed bounds if the backend supports the distinction.
+   */
+  virtual Rect GetFastBounds(
+      const Matrix& aTransform = Matrix(),
+      const StrokeOptions* aStrokeOptions = nullptr) const;
+
   /** Take the contents of this path and stream it to another sink, this works
    * regardless of the backend that might be used for the destination sink.
    */
@@ -1282,16 +1307,28 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    *
    * @param aSurface Source surface to draw.
    * @param aDest Destination point that this drawing operation should draw to.
-   * @param aColor Color of the drawn shadow
-   * @param aOffset Offset of the shadow
-   * @param aSigma Sigma used for the guassian filter kernel
+   * @param aShadow Description of shadow to be drawn.
    * @param aOperator Composition operator used
    */
   virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
                                      const Point& aDest,
-                                     const DeviceColor& aColor,
-                                     const Point& aOffset, Float aSigma,
+                                     const ShadowOptions& aShadow,
                                      CompositionOp aOperator) = 0;
+
+  /**
+   * Draws a shadow for the specified path, which may be optionally stroked.
+   *
+   * @param aPath The path to use for the shadow geometry.
+   * @param aPattern The pattern to use for filling the path.
+   * @param aShadow Description of shadow to be drawn.
+   * @param aOptions General drawing options to apply to drawing the path.
+   * @param aStrokeOptions Stroking parameters that control stroking of path
+   * geometry, if supplied.
+   */
+  virtual void DrawShadow(const Path* aPath, const Pattern& aPattern,
+                          const ShadowOptions& aShadow,
+                          const DrawOptions& aOptions = DrawOptions(),
+                          const StrokeOptions* aStrokeOptions = nullptr);
 
   /**
    * Clear a rectangle on the draw target to transparent black. This will

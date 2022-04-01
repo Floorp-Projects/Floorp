@@ -131,8 +131,10 @@ already_AddRefed<SourceSurface> gfxAlphaBoxBlur::DoBlur(
       return nullptr;
     }
     blurDT->DrawSurfaceWithShadow(
-        blurMask, Point(0, 0), DeviceColor::MaskOpaqueWhite(), Point(0, 0),
-        AlphaBoxBlur::CalculateBlurSigma(mBlur.GetBlurRadius().width),
+        blurMask, Point(0, 0),
+        ShadowOptions(
+            DeviceColor::MaskOpaqueWhite(), Point(0, 0),
+            AlphaBoxBlur::CalculateBlurSigma(mBlur.GetBlurRadius().width)),
         CompositionOp::OP_OVER);
     blurMask = blurDT->Snapshot();
   }
