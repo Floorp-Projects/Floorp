@@ -112,7 +112,7 @@ var pktPanelMessaging = {
 function TelemetryLink(props) {
   function onClick(event) {
     if (props.onClick) {
-      onClick(event);
+      props.onClick(event);
     } else {
       event.preventDefault();
       messages.sendMessage("PKT_openTabWithUrl", {
