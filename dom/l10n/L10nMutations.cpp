@@ -216,9 +216,12 @@ void L10nMutations::FlushPendingTranslations() {
 
   RefPtr<Promise> promise = mDOMLocalization->TranslateElements(elements, rv);
 
-  RefPtr<PromiseNativeHandler> l10nMutationFinalizationHandler =
-      new L10nMutationFinalizationHandler(mDOMLocalization->GetParentObject());
-  promise->AppendNativeHandler(l10nMutationFinalizationHandler);
+  if (promise) {
+    RefPtr<PromiseNativeHandler> l10nMutationFinalizationHandler =
+        new L10nMutationFinalizationHandler(
+            mDOMLocalization->GetParentObject());
+    promise->AppendNativeHandler(l10nMutationFinalizationHandler);
+  }
 }
 
 void L10nMutations::Disconnect() {
