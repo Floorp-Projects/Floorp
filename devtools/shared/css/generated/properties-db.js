@@ -2994,6 +2994,8 @@ exports.CSS_PROPERTIES = {
       "transform-origin",
       "contain",
       "content-visibility",
+      "container-type",
+      "container-name",
       "appearance",
       "-moz-orient",
       "will-change",
@@ -11595,6 +11597,10 @@ exports.PREFERENCES = [
     "layout.css.aspect-ratio.enabled"
   ],
   [
+    "container-type",
+    "layout.css.container-queries.enabled"
+  ],
+  [
     "content-visibility",
     "layout.css.content-visibility.enabled"
   ],
@@ -11695,6 +11701,10 @@ exports.PREFERENCES = [
     "layout.css.color-scheme.enabled"
   ],
   [
+    "container-name",
+    "layout.css.container-queries.enabled"
+  ],
+  [
     "d",
     "layout.css.d-property.enabled"
   ],
@@ -11753,6 +11763,10 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior",
     "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "container",
+    "layout.css.container-queries.enabled"
   ],
   [
     "offset",

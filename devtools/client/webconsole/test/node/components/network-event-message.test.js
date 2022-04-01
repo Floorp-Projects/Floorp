@@ -79,14 +79,14 @@ describe("NetworkEventMessage component:", () => {
           serviceContainer,
         })
       );
-      let indentEl = wrapper.find(".indent");
+      expect(wrapper.prop("data-indent")).toBe(`${indent}`);
+      const indentEl = wrapper.find(".indent");
       expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
-      expect(indentEl.prop("data-indent")).toBe(`${indent}`);
 
       wrapper = render(NetworkEventMessage({ message, serviceContainer }));
-      indentEl = wrapper.find(".indent");
-      expect(indentEl.prop("style").width).toBe(`0`);
-      expect(indentEl.prop("data-indent")).toBe(`0`);
+      expect(wrapper.prop("data-indent")).toBe(`0`);
+      // there's no indent element where the indent is 0
+      expect(wrapper.find(".indent").length).toBe(0);
     });
   });
 

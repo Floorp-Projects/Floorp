@@ -474,6 +474,12 @@ class Talos(
             self.fatal("Talos json config not found, cannot verify suite")
         return suite_name
 
+    def query_suite_extra_prefs(self):
+        if self.query_talos_json_config() and self.suite is not None:
+            return self.talos_json_config["suites"][self.suite].get("extra_prefs", [])
+
+        return []
+
     def validate_suite(self):
         """Ensure suite name is a valid talos suite."""
         if self.query_talos_json_config() and self.suite is not None:
@@ -523,10 +529,15 @@ class Talos(
             options += self.config["talos_extra_options"]
         if self.config.get("code_coverage", False):
             options.extend(["--code-coverage"])
+
+        # Add extra_prefs defined by individual test suites in talos.json
+        extra_prefs = self.query_suite_extra_prefs()
+        # Add extra_prefs from the configuration
         if self.config["extra_prefs"]:
-            options.extend(
-                ["--setpref={}".format(p) for p in self.config["extra_prefs"]]
-            )
+            extra_prefs.extend(self.config["extra_prefs"])
+
+        options.extend(["--setpref={}".format(p) for p in extra_prefs])
+
         # disabling fission can come from the --disable-fission cmd line argument; or in CI
         # it comes from a taskcluster transform which adds a --setpref for fission.autostart
         if (not self.config["fission"]) or "fission.autostart=false" in self.config[

@@ -1077,14 +1077,14 @@ var PlacesUIUtils = {
    */
   openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView, aPrivate) {
     let window = aView.ownerWindow;
-    this._openNodeIn(aNode, aWhere, window, aPrivate);
+    this._openNodeIn(aNode, aWhere, window, { aPrivate });
   },
 
   _openNodeIn: function PUIU__openNodeIn(
     aNode,
     aWhere,
     aWindow,
-    aPrivate = false
+    { aPrivate = false, userContextId = 0 } = {}
   ) {
     if (
       aNode &&
@@ -1107,6 +1107,7 @@ var PlacesUIUtils = {
         inBackground: this.loadBookmarksInBackground,
         allowInheritPrincipal: isJavaScriptURL,
         private: aPrivate,
+        userContextId,
       });
     }
   },
@@ -1536,6 +1537,12 @@ var PlacesUIUtils = {
       document.getElementById("placesContext_open:newprivatewindow").hidden =
         PrivateBrowsingUtils.isWindowPrivate(window) ||
         !PrivateBrowsingUtils.enabled;
+      document.getElementById(
+        "placesContext_open:newcontainertab"
+      ).hidden = !Services.prefs.getBoolPref(
+        "privacy.userContext.enabled",
+        false
+      );
     }
 
     event.target.ownerGlobal.updateCommands("places");
@@ -1579,6 +1586,28 @@ var PlacesUIUtils = {
     if (menupopup.id == "placesContext") {
       PlacesUIUtils.lastContextMenuTriggerNode = null;
     }
+  },
+
+  createContainerTabMenu(event) {
+    let window = event.target.ownerGlobal;
+    return window.createUserContextMenu(event, { isContextMenu: true });
+  },
+
+  openInContainerTab(event) {
+    let userContextId = parseInt(
+      event.target.getAttribute("data-usercontextid")
+    );
+    let triggerNode = this.lastContextMenuTriggerNode;
+    let isManaged = !!triggerNode.closest("#managed-bookmarks");
+    if (isManaged) {
+      let window = triggerNode.ownerGlobal;
+      window.openTrustedLinkIn(triggerNode.link, "tab", { userContextId });
+      return;
+    }
+    let view = this.getViewForNode(triggerNode);
+    this._openNodeIn(view.selectedNode, "tab", view.ownerWindow, {
+      userContextId,
+    });
   },
 
   openSelectionInTabs(event) {

@@ -174,7 +174,9 @@ This results in a few notable differences.
 
 `counter`, `labeled_counter`, and `rate` metrics are stored as 32-bit signed values.
 `quantity` metrics are stored as 64-bit signed values.
-All of these Glean numeric metric types saturate at their maximum representable value.
+`timing_distribution` samples can be 64-bit signed values.
+All of these Glean numeric metric types saturate at their maximum representable value,
+or according to the Limits section of the Glean metric type documentation.
 
 Scalars of kind `uint` are stored as 32-bit unsigned values.
 They will overflow if they exceed the value $2^{32} - 1$.
@@ -198,3 +200,7 @@ and keeps the Telemetry mirror's value closer to that of the Glean metric.
 If the number of milliseconds between calls to a
 `timespan` metric's `start()` and `stop()` methods exceeds $2^{32} - 1$,
 the value passed to the metric's Telemetry mirror will be clamped to $2^{32} - 1$.
+
+The same happens for samples in `timing_distribution` metrics:
+values passed to the Telemetry mirror histogram will saturate at $2^{32} - 1$
+until they get past $2^{64}$ when they'll overflow.

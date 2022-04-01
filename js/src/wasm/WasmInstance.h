@@ -56,9 +56,7 @@ struct TagDesc;
 // direct reference to its source Module which allows a Module to be destroyed
 // while it still has live Instances.
 //
-// The instance's code may be shared among multiple instances provided none of
-// those instances are being debugged. Instances that are being debugged own
-// their code.
+// The instance's code may be shared among multiple instances.
 //
 // An Instance is also known as a 'TlsData'. They used to be separate objects,
 // but have now been unified. Extant references to 'TlsData' will be cleaned

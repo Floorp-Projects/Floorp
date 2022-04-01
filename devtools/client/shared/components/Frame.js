@@ -43,6 +43,8 @@ function savedFrameToLocation(frame) {
 class Frame extends Component {
   static get propTypes() {
     return {
+      // Optional className that will be put into the element.
+      className: PropTypes.string,
       // SavedFrame, or an object containing all the required properties.
       frame: PropTypes.shape({
         functionDisplayName: PropTypes.string,
@@ -129,6 +131,7 @@ class Frame extends Component {
       showEmptyPathAsHost,
       showFullSourceUrl,
       messageSource,
+      className,
     } = this.props;
     const { originalLocation } = this.state;
 
@@ -173,7 +176,7 @@ class Frame extends Component {
 
     const attributes = {
       "data-url": long,
-      className: "frame-link",
+      className: "frame-link" + (className ? ` ${className}` : ""),
     };
 
     if (showFunctionName) {
@@ -249,20 +252,18 @@ class Frame extends Component {
       tooltipMessage = l10n.getFormatStr("frame.viewsourceindebugger", tooltip);
     }
 
-    const sourceInnerEl = dom.span(
-      {
-        key: "source-inner",
-        className: "frame-link-source-inner",
-        title: isLinkable ? tooltipMessage : tooltip,
-      },
-      sourceElements
-    );
+    const sourceElConfig = {
+      key: "source",
+      className: "frame-link-source",
+      title: isLinkable ? tooltipMessage : tooltip,
+    };
 
     // If source is not a URL (self-hosted, eval, etc.), don't make
     // it an anchor link, as we can't link to it.
     if (isLinkable) {
       sourceEl = dom.a(
         {
+          ...sourceElConfig,
           onClick: e => {
             e.preventDefault();
             e.stopPropagation();
@@ -270,19 +271,12 @@ class Frame extends Component {
             onClick(generatedLocation);
           },
           href: source,
-          className: "frame-link-source",
           draggable: false,
         },
-        sourceInnerEl
+        sourceElements
       );
     } else {
-      sourceEl = dom.span(
-        {
-          key: "source",
-          className: "frame-link-source",
-        },
-        sourceInnerEl
-      );
+      sourceEl = dom.span(sourceElConfig, sourceElements);
     }
     elements.push(sourceEl);
 

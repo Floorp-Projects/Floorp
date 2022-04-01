@@ -330,6 +330,7 @@ static const char* gExactCallbackPrefs[] = {
     "layout.css.dpi",
     "privacy.resistFingerprinting",
     "privacy.trackingprotection.enabled",
+    "ui.use_standins_for_native_colors",
     nullptr,
 };
 

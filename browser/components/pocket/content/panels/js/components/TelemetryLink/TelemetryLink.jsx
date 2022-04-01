@@ -8,7 +8,7 @@ import panelMessaging from "../../messages";
 function TelemetryLink(props) {
   function onClick(event) {
     if (props.onClick) {
-      onClick(event);
+      props.onClick(event);
     } else {
       event.preventDefault();
       panelMessaging.sendMessage("PKT_openTabWithUrl", {

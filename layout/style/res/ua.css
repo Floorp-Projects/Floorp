@@ -403,6 +403,8 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
   position: fixed;
   top: 0; left: 0;
   right: 0; bottom: 0;
+  /* This prevents undesired interactions with the selection code. */
+  user-select: none;
 }
 
 *|*:-moz-full-screen:not(:root)::backdrop {

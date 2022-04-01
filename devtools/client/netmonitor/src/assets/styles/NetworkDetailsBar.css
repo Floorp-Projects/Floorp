@@ -456,21 +456,14 @@
   direction: ltr;
 }
 
-.network-monitor .stack-trace .frame-link-source,
-.network-monitor .message-location .frame-link-source {
+.network-monitor .stack-trace .frame-link-source {
   /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
+  unicode-bidi: embed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: end;
-}
-
-.network-monitor .stack-trace .frame-link-source-inner,
-.network-monitor .message-location .frame-link-source-inner {
-  /* Enforce LTR direction for the file name - fixes bug 1290056 */
-  direction: ltr;
-  unicode-bidi: embed;
 }
 
 .network-monitor .stack-trace .frame-link-function-display-name {

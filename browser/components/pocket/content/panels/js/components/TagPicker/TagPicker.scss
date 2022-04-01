@@ -1,6 +1,8 @@
 .stp_tag_picker {
   .stp_tag_picker_tags {
     display: flex;
+    align-items: center;
+    gap: 8px;
     flex-wrap: wrap;
     padding: 8px;
     border: 1px solid #8F8F9D;
@@ -22,8 +24,6 @@
     font-style: normal;
     line-height: 1em;
     font-weight: 600;
-    margin-bottom: 8px;
-    margin-inline-end: 8px;
     padding: 4px 8px;
     transition: background-color 200ms ease-in-out;
 
@@ -51,15 +51,43 @@
     }
   }
 
-  .stp_tag_picker_input {
-    border: 1px solid #8F8F9D;
-    border-radius: 3px;
-    padding: 6px;
-    width: 100%;
+  .stp_tag_picker_input_wrapper {
+    display: flex;
+    flex-grow: 1;
+  }
 
+  .stp_tag_picker_input {
+    flex-grow: 1;
+    border: 1px solid #8F8F9D;
+    padding: 0 6px;
+    border-start-start-radius: 4px;
+    border-end-start-radius: 4px;
     @include theme_dark {
       background: none;
       color: #FBFBFB;
+    }
+    &:focus {
+      border: 1px solid #0060DF;
+      outline: 1px solid #0060DF;
+    }
+  }
+
+  .stp_tag_picker_button {
+    padding: 4px 6px;
+    background-color: #F0F0F4;
+    border: 1px solid #8F8F9D;
+    border-inline-start: none;
+    border-start-end-radius: 4px;
+    border-end-end-radius: 4px;
+    &:disabled {
+      color: #8F8F9D;
+    }
+    &:hover:enabled {
+      background-color: #DADADF;
+    }
+    &:focus:enabled {
+      border: 1px solid #0060DF;
+      outline: 1px solid #0060DF;
     }
   }
 }

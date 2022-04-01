@@ -9,12 +9,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const INDENT_WIDTH = 12;
 
 // Store common indents so they can be used without recreating the element during render.
-const CONSTANT_INDENTS = [getIndentElement(0), getIndentElement(1)];
+const CONSTANT_INDENTS = [getIndentElement(1)];
 const IN_WARNING_GROUP_INDENT = getIndentElement(1, "warning-indent");
 
 function getIndentElement(indent, className) {
   return dom.span({
-    "data-indent": indent,
     className: `indent${className ? " " + className : ""}`,
     style: {
       width: indent * INDENT_WIDTH,
@@ -24,6 +23,10 @@ function getIndentElement(indent, className) {
 
 function MessageIndent(props) {
   const { indent, inWarningGroup } = props;
+
+  if (!indent) {
+    return null;
+  }
 
   if (inWarningGroup) {
     return IN_WARNING_GROUP_INDENT;

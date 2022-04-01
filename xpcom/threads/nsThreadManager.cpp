@@ -63,8 +63,8 @@ class BackgroundEventTarget final : public nsIEventTarget {
   nsCOMPtr<nsIThreadPool> mPool;
   nsCOMPtr<nsIThreadPool> mIOPool;
 
-  Mutex mMutex MOZ_UNANNOTATED;
-  nsTArray<RefPtr<TaskQueue>> mTaskQueues;
+  Mutex mMutex;
+  nsTArray<RefPtr<TaskQueue>> mTaskQueues GUARDED_BY(mMutex);
 };
 
 NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)

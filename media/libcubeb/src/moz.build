@@ -12,7 +12,6 @@ SOURCES += [
     'cubeb.c',
     'cubeb_log.cpp',
     'cubeb_mixer.cpp',
-    'cubeb_panner.cpp',
     'cubeb_strings.c',
     'cubeb_utils.cpp'
 ]

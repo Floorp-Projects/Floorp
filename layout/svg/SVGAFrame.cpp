@@ -89,7 +89,7 @@ nsresult SVGAFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
       aAttribute == nsGkAtoms::href &&
       (aNameSpaceID == kNameSpaceID_None ||
        aNameSpaceID == kNameSpaceID_XLink)) {
-    dom::SVGAElement* content = static_cast<dom::SVGAElement*>(GetContent());
+    auto* content = static_cast<dom::SVGAElement*>(GetContent());
 
     // SMIL may change whether an <a> element is a link, in which case we will
     // need to update the link state.

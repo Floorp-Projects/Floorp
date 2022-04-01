@@ -4,4 +4,5 @@
 
 browser.jar:
     content/browser/myfirefox.html
+    content/browser/myfirefox.js
 

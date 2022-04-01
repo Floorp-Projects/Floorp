@@ -43,6 +43,15 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStopAndAccumulate(
 }
 
 // Called from within FOG's Rust impl.
+extern "C" NS_EXPORT void GIFFT_TimingDistributionAccumulateRawMillis(
+    uint32_t aMetricId, uint32_t aMS) {
+  auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
+  if (mirrorId) {
+    Accumulate(mirrorId.extract(), aMS);
+  }
+}
+
+// Called from within FOG's Rust impl.
 extern "C" NS_EXPORT void GIFFT_TimingDistributionCancel(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
@@ -62,6 +71,14 @@ TimerId TimingDistributionMetric::Start() const {
 
 void TimingDistributionMetric::StopAndAccumulate(const TimerId&& aId) const {
   fog_timing_distribution_stop_and_accumulate(mId, aId);
+}
+
+// Intentionally not exposed to JS for lack of use case and a time duration
+// type.
+void TimingDistributionMetric::AccumulateRawDuration(
+    const TimeDuration& aDuration) const {
+  fog_timing_distribution_accumulate_raw_nanos(
+      mId, uint64_t(aDuration.ToMicroseconds() * 1000.00));
 }
 
 void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
@@ -153,6 +170,12 @@ GleanTimingDistribution::TestGetValue(const nsACString& aPingName,
     }
     aResult.setObject(*root);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GleanTimingDistribution::TestAccumulateRawMillis(uint64_t aSample) {
+  mTimingDist.AccumulateRawDuration(TimeDuration::FromMilliseconds(aSample));
   return NS_OK;
 }
 
