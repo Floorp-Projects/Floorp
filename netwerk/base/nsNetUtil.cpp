@@ -3346,99 +3346,6 @@ bool SchemeIsFTP(nsIURI* aURI) {
   return aURI->SchemeIs("ftp");
 }
 
-}  // namespace net
-}  // namespace mozilla
-
-nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
-                          bool* aResult) {
-  if (NS_WARN_IF(!aResult)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = false;
-
-  // If the strings are the same, we obviously have a match.
-  if (aInput == aHost) {
-    *aResult = true;
-    return NS_OK;
-  }
-
-  // If aHost is not found, we know we do not have it as a root domain.
-  int32_t index = nsAutoCString(aInput).Find(aHost.BeginReading());
-  if (index == kNotFound) {
-    return NS_OK;
-  }
-
-  // Otherwise, we have aHost as our root domain iff the index of aHost is
-  // aHost.length subtracted from our length and (since we do not have an
-  // exact match) the character before the index is a dot or slash.
-  *aResult = index > 0 && (uint32_t)index == aInput.Length() - aHost.Length() &&
-             (aInput[index - 1] == '.' || aInput[index - 1] == '/');
-  return NS_OK;
-}
-
-void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
-  if (!aURI) {
-    return;
-  }
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-  if (!scheme.EqualsLiteral("chrome") && !scheme.EqualsLiteral("resource")) {
-    return;
-  }
-  nsAutoCString host;
-  aURI->GetHost(host);
-  // Ignore test hits.
-  if (host.EqualsLiteral("mochitests") || host.EqualsLiteral("reftest")) {
-    return;
-  }
-
-  nsAutoCString filePath;
-  aURI->GetFilePath(filePath);
-  // Fluent likes checking for files everywhere and expects failure.
-  if (StringEndsWith(filePath, ".ftl"_ns)) {
-    return;
-  }
-
-  // Ignore fetches/xhrs, as they are frequently used in a way where
-  // non-existence is OK (ie with fallbacks). This risks false negatives (ie
-  // files that *should* be there but aren't) - which we accept for now.
-  ExtContentPolicy policy = aLoadInfo
-                                ? aLoadInfo->GetExternalContentPolicyType()
-                                : ExtContentPolicy::TYPE_OTHER;
-  if (policy == ExtContentPolicy::TYPE_FETCH ||
-      policy == ExtContentPolicy::TYPE_XMLHTTPREQUEST) {
-    return;
-  }
-
-  nsCString spec;
-  aURI->GetSpec(spec);
-
-  // DTD files from gre may not exist when requested by tests.
-  if (StringBeginsWith(spec, "resource://gre/res/dtd/"_ns)) {
-    return;
-  }
-
-  // The background task machinery allows the caller to specify a JSM on the
-  // command line, which is then looked up in both app-specific and toolkit-wide
-  // locations.
-  if (spec.Find("backgroundtasks") != kNotFound) {
-    return;
-  }
-
-  if (xpc::IsInAutomation()) {
-#ifdef DEBUG
-    if (NS_IsMainThread()) {
-      nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
-      Unused << xpc->DebugDumpJSStack(false, false, false);
-    }
-#endif
-    MOZ_CRASH_UNSAFE_PRINTF("Missing chrome or resource URLs: %s", spec.get());
-  } else {
-    printf_stderr("Missing chrome or resource URL: %s\n", spec.get());
-  }
-}
-
 // Decode a parameter value using the encoding defined in RFC 5987 (in place)
 //
 //   charset  "'" [ language ] "'" value-chars
@@ -3753,4 +3660,97 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
   }
 
   return linkHeaders;
+}
+
+}  // namespace net
+}  // namespace mozilla
+
+nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
+                          bool* aResult) {
+  if (NS_WARN_IF(!aResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = false;
+
+  // If the strings are the same, we obviously have a match.
+  if (aInput == aHost) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  // If aHost is not found, we know we do not have it as a root domain.
+  int32_t index = nsAutoCString(aInput).Find(aHost.BeginReading());
+  if (index == kNotFound) {
+    return NS_OK;
+  }
+
+  // Otherwise, we have aHost as our root domain iff the index of aHost is
+  // aHost.length subtracted from our length and (since we do not have an
+  // exact match) the character before the index is a dot or slash.
+  *aResult = index > 0 && (uint32_t)index == aInput.Length() - aHost.Length() &&
+             (aInput[index - 1] == '.' || aInput[index - 1] == '/');
+  return NS_OK;
+}
+
+void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
+  if (!aURI) {
+    return;
+  }
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+  if (!scheme.EqualsLiteral("chrome") && !scheme.EqualsLiteral("resource")) {
+    return;
+  }
+  nsAutoCString host;
+  aURI->GetHost(host);
+  // Ignore test hits.
+  if (host.EqualsLiteral("mochitests") || host.EqualsLiteral("reftest")) {
+    return;
+  }
+
+  nsAutoCString filePath;
+  aURI->GetFilePath(filePath);
+  // Fluent likes checking for files everywhere and expects failure.
+  if (StringEndsWith(filePath, ".ftl"_ns)) {
+    return;
+  }
+
+  // Ignore fetches/xhrs, as they are frequently used in a way where
+  // non-existence is OK (ie with fallbacks). This risks false negatives (ie
+  // files that *should* be there but aren't) - which we accept for now.
+  ExtContentPolicy policy = aLoadInfo
+                                ? aLoadInfo->GetExternalContentPolicyType()
+                                : ExtContentPolicy::TYPE_OTHER;
+  if (policy == ExtContentPolicy::TYPE_FETCH ||
+      policy == ExtContentPolicy::TYPE_XMLHTTPREQUEST) {
+    return;
+  }
+
+  nsCString spec;
+  aURI->GetSpec(spec);
+
+  // DTD files from gre may not exist when requested by tests.
+  if (StringBeginsWith(spec, "resource://gre/res/dtd/"_ns)) {
+    return;
+  }
+
+  // The background task machinery allows the caller to specify a JSM on the
+  // command line, which is then looked up in both app-specific and toolkit-wide
+  // locations.
+  if (spec.Find("backgroundtasks") != kNotFound) {
+    return;
+  }
+
+  if (xpc::IsInAutomation()) {
+#ifdef DEBUG
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+      Unused << xpc->DebugDumpJSStack(false, false, false);
+    }
+#endif
+    MOZ_CRASH_UNSAFE_PRINTF("Missing chrome or resource URLs: %s", spec.get());
+  } else {
+    printf_stderr("Missing chrome or resource URL: %s\n", spec.get());
+  }
 }

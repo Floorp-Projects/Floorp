@@ -7,6 +7,8 @@
 
 #include "nsNetUtil.h"
 
+using namespace mozilla::net;
+
 LinkHeader LinkHeaderSetAll(nsAString const& v) {
   LinkHeader l;
   l.mHref = v;
