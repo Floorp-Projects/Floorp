@@ -31,12 +31,8 @@ server.registerPathHandler("/", (request, response) => {
   response.write(HTML);
 });
 
-function getResourceURI(file) {
-  return Services.io.newFileURI(do_get_file(file)).spec;
-}
-
 const { AllowJavascriptParent } = ChromeUtils.import(
-  getResourceURI("AllowJavascriptParent.jsm")
+  "resource://test/AllowJavascriptParent.jsm"
 );
 
 async function assertScriptsAllowed(bc, expectAllowed, desc) {
@@ -69,11 +65,11 @@ add_task(async function() {
   ChromeUtils.registerWindowActor(ACTOR, {
     allFrames: true,
     child: {
-      moduleURI: getResourceURI("AllowJavascriptChild.jsm"),
+      moduleURI: "resource://test/AllowJavascriptChild.jsm",
       events: { load: { capture: true } },
     },
     parent: {
-      moduleURI: getResourceURI("AllowJavascriptParent.jsm"),
+      moduleURI: "resource://test/AllowJavascriptParent.jsm",
     },
   });
 
