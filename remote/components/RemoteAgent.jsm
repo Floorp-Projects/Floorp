@@ -40,22 +40,31 @@ const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 const PREF_FORCE_LOCAL = "remote.force-local";
 
 class RemoteAgentClass {
+  #classID;
+  #enabled;
+  #port;
+  #server;
+
+  #cdp;
+  #webDriverBiDi;
+
   constructor() {
-    this.classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
-    this.helpInfo = `  --remote-debugging-port [<port>] Start the Firefox remote agent,
-                     which is a low-level debugging interface based on the
-                     CDP protocol. Defaults to listen on localhost:9222.\n`;
+    this.#classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
+    this.#enabled = false;
+    this.#port = DEFAULT_PORT;
+    this.#server = null;
 
-    this._enabled = false;
-    this._port = DEFAULT_PORT;
-    this._server = null;
-
-    this._cdp = null;
-    this._webDriverBiDi = null;
+    // Supported protocols
+    this.#cdp = null;
+    this.#webDriverBiDi = null;
   }
 
   get cdp() {
-    return this._cdp;
+    return this.#cdp;
+  }
+
+  get classID() {
+    return this.#classID;
   }
 
   get debuggerAddress() {
@@ -67,7 +76,13 @@ class RemoteAgentClass {
   }
 
   get enabled() {
-    return this._enabled;
+    return this.#enabled;
+  }
+
+  get helpInfo() {
+    return `  --remote-debugging-port [<port>] Start the Firefox remote agent,
+                     which is a low-level debugging interface based on the
+                     CDP protocol. Defaults to listen on localhost:9222.\n`;
   }
 
   get host() {
@@ -91,11 +106,11 @@ class RemoteAgentClass {
   }
 
   get server() {
-    return this._server;
+    return this.#server;
   }
 
   get webDriverBiDi() {
-    return this._webDriverBiDi;
+    return this.#webDriverBiDi;
   }
 
   handle(cmdLine) {
@@ -139,7 +154,7 @@ class RemoteAgentClass {
     }
 
     try {
-      this._server = new HttpServer();
+      this.#server = new HttpServer();
       this.server._start(port, host);
 
       Services.obs.notifyObservers(null, "remote-listening", true);
@@ -164,7 +179,7 @@ class RemoteAgentClass {
       await this.webDriverBiDi?.stop();
 
       await this.server.stop();
-      this._server = null;
+      this.#server = null;
       Services.obs.notifyObservers(null, "remote-listening");
     } catch (e) {
       // this function must never fail
@@ -193,7 +208,7 @@ class RemoteAgentClass {
         // In case of an invalid port keep the default port
         const parsed = Number(port);
         if (!isNaN(parsed)) {
-          this._port = parsed;
+          this.#port = parsed;
         }
       }
     } catch (e) {
@@ -216,7 +231,7 @@ class RemoteAgentClass {
 
       case "command-line-startup":
         Services.obs.removeObserver(this, topic);
-        this._enabled = this.handleRemoteDebuggingPortFlag(subject);
+        this.#enabled = this.handleRemoteDebuggingPortFlag(subject);
 
         if (this.enabled) {
           Services.obs.addObserver(this, "remote-startup-requested");
@@ -238,14 +253,14 @@ class RemoteAgentClass {
           (activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
           WEBDRIVER_BIDI_ACTIVE
         ) {
-          this._webDriverBiDi = new WebDriverBiDi(this);
+          this.#webDriverBiDi = new WebDriverBiDi(this);
           if (this.enabled) {
             logger.debug("WebDriver BiDi enabled");
           }
         }
 
         if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-          this._cdp = new CDP(this);
+          this.#cdp = new CDP(this);
           if (this.enabled) {
             logger.debug("CDP enabled");
           }
@@ -257,7 +272,7 @@ class RemoteAgentClass {
         Services.obs.removeObserver(this, topic);
 
         try {
-          let address = Services.io.newURI(`http://localhost:${this._port}`);
+          let address = Services.io.newURI(`http://localhost:${this.#port}`);
           await this.listen(address);
         } catch (e) {
           throw Error(`Unable to start remote agent: ${e}`);
