@@ -225,6 +225,23 @@ class nsAccUtils {
    * the container-live attribute would be something other than "off" or empty.
    */
   static bool IsARIALive(const LocalAccessible* aAccessible);
+
+  /**
+   * Get the document Accessible which owns a given Accessible.
+   * This function is needed because there is no unified base class for local
+   * and remote documents.
+   * If aAcc is null, null will be returned.
+   */
+  static Accessible* DocumentFor(Accessible* aAcc);
+
+  /**
+   * Get an Accessible in a given document by its unique id.
+   * An Accessible's id can be obtained using Accessible::ID.
+   * This function is needed because there is no unified base class for local
+   * and remote documents.
+   * If aDoc is nul, null will be returned.
+   */
+  static Accessible* GetAccessibleByID(Accessible* aDoc, uint64_t aID);
 };
 
 }  // namespace a11y
