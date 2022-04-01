@@ -485,6 +485,7 @@ th {
   vertical-align: inherit;
   font-weight: bold;
   padding: 1px;
+  text-align: -moz-center-or-inherit;
 }
 
 tr > form:-moz-is-html, tbody > form:-moz-is-html,
