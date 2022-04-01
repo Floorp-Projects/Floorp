@@ -55,9 +55,10 @@ void RemoteDecoderChild::HandleRejectionError(
 
 // ActorDestroy is called if the channel goes down while waiting for a response.
 void RemoteDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mRemoteDecoderCrashed = (aWhy == AbnormalShutdown);
   mDecodedData.Clear();
   CleanupShmemRecycleAllocator();
-  RecordShutdownTelemetry(aWhy == AbnormalShutdown);
+  RecordShutdownTelemetry(mRemoteDecoderCrashed);
 }
 
 void RemoteDecoderChild::DestroyIPDL() {
@@ -78,6 +79,8 @@ void RemoteDecoderChild::IPDLActorDestroyed() { mIPDLSelfRef = nullptr; }
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
   AssertOnManagerThread();
+
+  mRemoteDecoderCrashed = false;
 
   RefPtr<RemoteDecoderChild> self = this;
   SendInit()
@@ -117,6 +120,11 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
     const nsTArray<RefPtr<MediaRawData>>& aSamples) {
   AssertOnManagerThread();
+
+  if (mRemoteDecoderCrashed) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR, __func__);
+  }
 
   auto samples = MakeRefPtr<ArrayOfRemoteMediaRawData>();
   if (!samples->Fill(aSamples,
