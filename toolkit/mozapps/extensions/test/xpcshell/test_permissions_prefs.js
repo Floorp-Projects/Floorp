@@ -8,6 +8,10 @@
 const PREF_XPI_WHITELIST_PERMISSIONS = "xpinstall.whitelist.add";
 const PREF_XPI_BLACKLIST_PERMISSIONS = "xpinstall.blacklist.add";
 
+const { PermissionsTestUtils } = ChromeUtils.import(
+  "resource://gre/modules/PermissionsUtils.jsm"
+);
+
 function newPrincipal(uri) {
   return Services.scriptSecurityManager.createContentPrincipal(
     NetUtil.newURI(uri),
@@ -24,14 +28,6 @@ function do_check_permission_prefs(preferences) {
       // Successfully emptied
     }
   }
-}
-
-function clear_imported_preferences_cache() {
-  let scope = ChromeUtils.import(
-    "resource://gre/modules/PermissionsUtils.jsm",
-    null
-  );
-  scope.gImportedPrefBranches.clear();
 }
 
 add_task(async function setup() {
@@ -72,7 +68,7 @@ add_task(async function setup() {
   // of code, such as a permissions management UI.
 
   // First, request to flush all permissions
-  clear_imported_preferences_cache();
+  PermissionsTestUtils.clearImportedPrefBranches();
   Services.prefs.setCharPref(
     "xpinstall.whitelist.add.TEST2",
     "https://whitelist2.example.com"
@@ -81,7 +77,7 @@ add_task(async function setup() {
   do_check_permission_prefs(preferences);
 
   // Then, request to flush just install permissions
-  clear_imported_preferences_cache();
+  PermissionsTestUtils.clearImportedPrefBranches();
   Services.prefs.setCharPref(
     "xpinstall.whitelist.add.TEST3",
     "https://whitelist3.example.com"
@@ -90,7 +86,7 @@ add_task(async function setup() {
   do_check_permission_prefs(preferences);
 
   // And a request to flush some other permissions sholdn't flush install permissions
-  clear_imported_preferences_cache();
+  PermissionsTestUtils.clearImportedPrefBranches();
   Services.prefs.setCharPref(
     "xpinstall.whitelist.add.TEST4",
     "https://whitelist4.example.com"
