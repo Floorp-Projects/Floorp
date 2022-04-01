@@ -6,7 +6,6 @@
 
 #include "vm/TraceLogging.h"
 
-#include "mozilla/EndianUtils.h"
 #include "mozilla/MemoryReporting.h"
 
 #include <algorithm>
@@ -26,7 +25,6 @@
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"
-#include "vm/Time.h"
 #include "vm/TraceLoggingGraph.h"
 
 using namespace js;

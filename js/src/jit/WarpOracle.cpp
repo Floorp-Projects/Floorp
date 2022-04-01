@@ -19,6 +19,7 @@
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
+#include "jit/TrialInlining.h"
 #include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
 #include "vm/BuiltinObjectKind.h"
