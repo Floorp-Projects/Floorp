@@ -7,7 +7,7 @@
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "call/audio_state.h"
-#include "call/call.h"
+#include "call/shared_module_thread.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
@@ -16,6 +16,7 @@
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
+#include "modules/utility/include/process_thread.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"

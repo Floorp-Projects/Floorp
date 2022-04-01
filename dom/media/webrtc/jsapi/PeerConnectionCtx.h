@@ -9,6 +9,7 @@
 #include <string>
 
 #include "api/scoped_refptr.h"
+#include "api/transport/webrtc_key_value_config.h"
 #include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 #include "mozIGeckoMediaPluginService.h"
@@ -20,7 +21,6 @@
 namespace webrtc {
 class AudioDecoderFactory;
 class SharedModuleThread;
-class WebRtcKeyValueConfig;
 
 // Used for testing in mediapipeline_unittest.cpp, MockCall.h
 class NoTrialsConfig : public WebRtcKeyValueConfig {
