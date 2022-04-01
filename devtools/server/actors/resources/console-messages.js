@@ -216,20 +216,22 @@ function prepareConsoleMessageForRemote(targetActor, message) {
           return createValueGripForTarget(targetActor, dbgObj);
         })
       : [],
-    chromeContext: message.chromeContext,
     columnNumber: message.columnNumber,
     filename: message.filename,
     level: message.level,
     lineNumber: message.lineNumber,
     timeStamp: message.timeStamp,
     sourceId: getActorIdForInternalSourceId(targetActor, message.sourceId),
-    category: message.category || "webdev",
     innerWindowID: message.innerID,
   };
 
   // This can be a hot path when loading lots of messages, and it only make sense to
   // include the following properties in the message when they have a meaningful value.
   // Otherwise we simply don't include them so we save cycles in JSActor communication.
+  if (message.chromeContext) {
+    result.chromeContext = message.chromeContext;
+  }
+
   if (message.counter) {
     result.counter = message.counter;
   }
