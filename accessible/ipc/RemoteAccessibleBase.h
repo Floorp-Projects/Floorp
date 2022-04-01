@@ -220,10 +220,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   uintptr_t GetWrapper() const { return mWrapper; }
   void SetWrapper(uintptr_t aWrapper) { mWrapper = aWrapper; }
 
-  /*
-   * Return the ID of the accessible being proxied.
-   */
-  uint64_t ID() const { return mID; }
+  virtual uint64_t ID() const override { return mID; }
 
   /**
    * Return the document containing this proxy, or the proxy itself if it is a
