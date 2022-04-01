@@ -346,13 +346,13 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
 
   PathCacheEntry(const SkPath& aPath, Pattern* aPattern,
                  StoredStrokeOptions* aStrokeOptions, const Matrix& aTransform,
-                 const IntRect& aBounds, const Point& aOrigin,
-                 HashNumber aHash);
+                 const IntRect& aBounds, const Point& aOrigin, HashNumber aHash,
+                 float aSigma = -1.0f);
 
   bool MatchesPath(const SkPath& aPath, const Pattern* aPattern,
                    const StrokeOptions* aStrokeOptions,
                    const Matrix& aTransform, const IntRect& aBounds,
-                   HashNumber aHash);
+                   const Point& aOrigin, HashNumber aHash, float aSigma);
 
   static HashNumber HashPath(const SkPath& aPath, const Pattern* aPattern,
                              const Matrix& aTransform, const IntRect& aBounds);
@@ -368,6 +368,8 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   UniquePtr<Pattern> mPattern;
   // The StrokeOptions used for stroked paths, if applicable
   UniquePtr<StoredStrokeOptions> mStrokeOptions;
+  // The shadow blur sigma
+  float mSigma;
 };
 
 class PathCache : public CacheImpl<PathCacheEntry> {
@@ -377,7 +379,7 @@ class PathCache : public CacheImpl<PathCacheEntry> {
   already_AddRefed<PathCacheEntry> FindOrInsertEntry(
       const SkPath& aPath, const Pattern* aPattern,
       const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
-      const IntRect& aBounds, const Point& aOrigin);
+      const IntRect& aBounds, const Point& aOrigin, float aSigma = -1.0f);
 };
 
 }  // namespace mozilla::gfx

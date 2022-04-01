@@ -931,8 +931,7 @@ void DrawTargetCairo::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
 
 void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                             const Point& aDest,
-                                            const DeviceColor& aColor,
-                                            const Point& aOffset, Float aSigma,
+                                            const ShadowOptions& aShadow,
                                             CompositionOp aOperator) {
   if (!IsValid() || !aSurface) {
     gfxCriticalNote << "DrawSurfaceWithShadow with bad surface "
@@ -964,11 +963,11 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
     surf = sourcesurf;
   }
 
-  if (aSigma != 0.0f) {
+  if (aShadow.mSigma != 0.0f) {
     MOZ_ASSERT(cairo_surface_get_type(blursurf) == CAIRO_SURFACE_TYPE_IMAGE);
     Rect extents(0, 0, width, height);
-    AlphaBoxBlur blur(extents, cairo_image_surface_get_stride(blursurf), aSigma,
-                      aSigma);
+    AlphaBoxBlur blur(extents, cairo_image_surface_get_stride(blursurf),
+                      aShadow.mSigma, aShadow.mSigma);
     blur.Blur(cairo_image_surface_get_data(blursurf));
   }
 
@@ -985,8 +984,9 @@ void DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface* aSurface,
     cairo_push_group(mContext);
   }
 
-  cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
-  cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
+  cairo_set_source_rgba(mContext, aShadow.mColor.r, aShadow.mColor.g,
+                        aShadow.mColor.b, aShadow.mColor.a);
+  cairo_mask_surface(mContext, blursurf, aShadow.mOffset.x, aShadow.mOffset.y);
 
   if (blursurf != surf || aSurface->GetFormat() != SurfaceFormat::A8) {
     // Now that the shadow has been drawn, we can draw the surface on top.

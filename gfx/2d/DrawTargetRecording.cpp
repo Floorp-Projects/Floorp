@@ -381,13 +381,14 @@ void DrawTargetRecording::DrawDependentSurface(uint64_t aId,
   mRecorder->RecordEvent(RecordedDrawDependentSurface(this, aId, aDest));
 }
 
-void DrawTargetRecording::DrawSurfaceWithShadow(
-    SourceSurface* aSurface, const Point& aDest, const DeviceColor& aColor,
-    const Point& aOffset, Float aSigma, CompositionOp aOp) {
+void DrawTargetRecording::DrawSurfaceWithShadow(SourceSurface* aSurface,
+                                                const Point& aDest,
+                                                const ShadowOptions& aShadow,
+                                                CompositionOp aOp) {
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "DrawSurfaceWithShadow");
 
-  mRecorder->RecordEvent(RecordedDrawSurfaceWithShadow(
-      this, aSurface, aDest, aColor, aOffset, aSigma, aOp));
+  mRecorder->RecordEvent(
+      RecordedDrawSurfaceWithShadow(this, aSurface, aDest, aShadow, aOp));
 }
 
 void DrawTargetRecording::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
