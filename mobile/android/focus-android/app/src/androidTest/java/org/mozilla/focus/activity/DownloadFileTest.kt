@@ -25,6 +25,7 @@ import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.getTargetContext
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.permAllowBtn
+import org.mozilla.focus.helpers.TestHelper.verifyDownloadedFileOnStorage
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -182,6 +183,28 @@ class DownloadFileTest {
             verifyDownloadConfirmationMessage(downloadFileName)
             openDownloadedFile()
             assertNativeAppOpens(GOOGLE_PHOTOS)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verifyDownloadedFileOnStorageTest() {
+        downloadFileName = "textfile.txt"
+
+        searchScreen {
+        }.loadPage(downloadTestPage) {
+            progressBar.waitUntilGone(waitingTime)
+            clickLinkMatchingText(downloadFileName)
+        }
+        // If permission dialog appears on devices with API<30, grant it
+        if (permAllowBtn.waitForExists(waitingTime)) {
+            permAllowBtn.click()
+        }
+        downloadRobot {
+            verifyDownloadDialog(downloadFileName)
+            clickDownloadButton()
+            verifyDownloadConfirmationMessage(downloadFileName)
+            verifyDownloadedFileOnStorage(downloadFileName)
         }
     }
 }
