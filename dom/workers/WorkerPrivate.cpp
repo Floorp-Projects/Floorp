@@ -656,8 +656,9 @@ class DebuggerImmediateRunnable : public WorkerRunnable {
   }
 };
 
-void PeriodicGCTimerCallback(nsITimer* aTimer, void* aClosure) {
-  // GetJSContext() is safe on the worker thread
+// GetJSContext() is safe on the worker thread
+void PeriodicGCTimerCallback(nsITimer* aTimer,
+                             void* aClosure) NO_THREAD_SAFETY_ANALYSIS {
   auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
@@ -666,7 +667,8 @@ void PeriodicGCTimerCallback(nsITimer* aTimer, void* aClosure) {
                                         false /* collect children */);
 }
 
-void IdleGCTimerCallback(nsITimer* aTimer, void* aClosure) {
+void IdleGCTimerCallback(nsITimer* aTimer,
+                         void* aClosure) NO_THREAD_SAFETY_ANALYSIS {
   auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
@@ -935,8 +937,8 @@ nsString ComputeWorkerPrivateId() {
 class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   // This mutex protects mWorkerPrivate and must be acquired *before* the
   // WorkerPrivate's mutex whenever they must both be held.
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
-  WorkerPrivate* mWorkerPrivate;
+  mozilla::Mutex mMutex;
+  WorkerPrivate* mWorkerPrivate GUARDED_BY(mMutex);
   nsIEventTarget* mWeakNestedEventTarget;
   nsCOMPtr<nsIEventTarget> mNestedEventTarget;
 
@@ -2973,8 +2975,6 @@ void WorkerPrivate::UnrootGlobalScopes() {
 
 void WorkerPrivate::DoRunLoop(JSContext* aCx) {
   auto data = mWorkerThreadAccessible.Access();
-  MOZ_ASSERT(mThread);
-
   MOZ_RELEASE_ASSERT(!GetExecutionManager());
 
   RefPtr<WorkerThread> thread;
@@ -3620,10 +3620,13 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
   }
 }
 
-bool WorkerPrivate::CollectRuntimeStats(JS::RuntimeStats* aRtStats,
-                                        bool aAnonymize) {
+bool WorkerPrivate::CollectRuntimeStats(
+    JS::RuntimeStats* aRtStats, bool aAnonymize) NO_THREAD_SAFETY_ANALYSIS {
+  // We don't have a lock to access mJSContext, but it's safe to access on this
+  // thread.
   AssertIsOnWorkerThread();
   NS_ASSERTION(aRtStats, "Null RuntimeStats!");
+  // We don't really own it, but it's safe to access on this thread
   NS_ASSERTION(mJSContext, "This must never be null!");
 
   return JS::CollectRuntimeStats(mJSContext, aRtStats, nullptr, aAnonymize);
@@ -4051,6 +4054,8 @@ bool WorkerPrivate::RunCurrentSyncLoop() {
   {
     MutexAutoLock lock(mMutex);
     // Copy to local so we don't trigger mutex analysis lower down
+    // mThread is set before we enter, and is never changed during
+    // RunCurrentSyncLoop copy to local so we don't trigger mutex analysis
     thread = mThread;
   }
 
