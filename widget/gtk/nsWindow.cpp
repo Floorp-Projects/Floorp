@@ -2371,8 +2371,8 @@ void nsWindow::WaylandPopupMove() {
       gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
                       mRelativePopupPosition.y);
     }
-    // Notify layout about popup changes.
-    WaylandPopupPropagateChangesToLayout(/* move */ true, /* resize */ false);
+    // Layout already should be aware of our bounds, since we didn't change it
+    // from the widget side for flipping or so.
     return;
   }
 
