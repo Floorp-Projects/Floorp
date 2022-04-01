@@ -17,6 +17,8 @@ rtc_library("call_interfaces") {
     "audio_state.cc",
     "audio_state.h",
     "call.h",
+    "call_basic_stats.cc",
+    "call_basic_stats.h",
     "call_config.cc",
     "call_config.h",
     "flexfec_receive_stream.cc",
