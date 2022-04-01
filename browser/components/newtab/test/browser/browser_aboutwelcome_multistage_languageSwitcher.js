@@ -429,6 +429,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     ]
   );
 
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
+
   info("Clicking the secondary button to skip installing the langpack.");
   await clickVisibleButton(browser, "button.secondary");
 
@@ -441,7 +443,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     liveLanguageSwitchSelectors
   );
 
-  sinon.assert.notCalled(mockable.setRequestedAppLocales);
+  info("The requested locale should be set to the original en-US");
+  sinon.assert.calledWith(mockable.setRequestedAppLocales, ["en-US"]);
 
   eventsMatch(flushClickTelemetry(), [
     {
