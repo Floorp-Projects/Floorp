@@ -538,24 +538,6 @@ module.exports = {
       },
     },
     {
-      // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
-      files: [
-        "toolkit/mozapps/extensions/internal/AddonTestUtils.jsm",
-        "toolkit/mozapps/extensions/test/browser/browser_gmpProvider.js",
-        "toolkit/mozapps/extensions/test/xpcshell/head_addons.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_gmpProvider.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_no_addons.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_permissions_prefs.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_signed_updatepref.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_signed_verify.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_webextension_events.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_XPIStates.js",
-      ],
-      rules: {
-        "mozilla/reject-chromeutils-import-params": "warn",
-      },
-    },
-    {
       // Rules of Hooks broadly checks for camelCase "use" identifiers, so
       // enable only for paths actually using React to avoid false positives.
       extends: ["plugin:react-hooks/recommended"],
