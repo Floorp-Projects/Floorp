@@ -163,13 +163,13 @@ class FormAutofillSection {
   }
 
   /*
-   * Override this method if any data for `createRecord` is needed to be
-   * normalized before submitting the record.
+   * Override this methid if any data for `createRecord` is needed to be
+   * normailized before submitting the record.
    *
    * @param {Object} profile
    *        A record for normalization.
    */
-  createNormalizedRecord(data) {}
+  normalizeCreatingRecord(data) {}
 
   /*
    * Override this method if there is any field value needs to compute for a
@@ -649,7 +649,7 @@ class FormAutofillSection {
       }
     });
 
-    this.createNormalizedRecord(data);
+    this.normalizeCreatingRecord(data);
 
     if (!this.isRecordCreatable(data.record)) {
       return null;
@@ -920,7 +920,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
     return value;
   }
 
-  createNormalizedRecord(address) {
+  normalizeCreatingRecord(address) {
     if (!address) {
       return;
     }
@@ -1317,16 +1317,6 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       profile
     );
     return true;
-  }
-
-  createNormalizedRecord(creditCard) {
-    if (!creditCard) {
-      return;
-    }
-    // Normalize cc-number
-    creditCard.record["cc-number"] = CreditCard.normalizeCardNumber(
-      creditCard.record["cc-number"]
-    );
   }
 }
 
