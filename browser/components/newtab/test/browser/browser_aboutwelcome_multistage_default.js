@@ -143,7 +143,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     [
       "main.AW_STEP1",
       "div.onboardingContainer",
-      "div.proton[style*='.avif']",
+      "div.proton[style*='chrome://activity-stream/content/data/content/assets']",
       "div.section-left",
       "span.attrib-text",
       "div.secondary-cta.top",
@@ -184,7 +184,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     [
       "main.AW_STEP2.dialog-initial",
       "div.onboardingContainer",
-      "div.proton[style*='.avif']",
+      "div.proton[style*='chrome://activity-stream/content/data/content/assets']",
       "div.section-main",
       "nav.steps",
       "div.indicator.current",
@@ -205,7 +205,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     [
       "main.AW_STEP3",
       "div.onboardingContainer",
-      "div.proton[style*='.avif']",
+      "div.proton[style*='chrome://activity-stream/content/data/content/assets']",
       "div.section-main",
       "div.tiles-theme-container",
       "nav.steps",
