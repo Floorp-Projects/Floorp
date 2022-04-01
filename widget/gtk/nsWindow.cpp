@@ -1006,9 +1006,10 @@ void nsWindow::Move(double aX, double aY) {
 
   LOG("nsWindow::Move to %d %d\n", x, y);
 
-  if (mWindowType == eWindowType_toplevel ||
-      mWindowType == eWindowType_dialog) {
-    SetSizeMode(nsSizeMode_Normal);
+  if (mSizeState != nsSizeMode_Normal && (mWindowType == eWindowType_toplevel ||
+                                          mWindowType == eWindowType_dialog)) {
+    LOG("  size state is not normal, bailing");
+    return;
   }
 
   // Since a popup window's x/y coordinates are in relation to to
