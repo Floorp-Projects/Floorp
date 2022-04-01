@@ -18,6 +18,7 @@ import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
+import org.mozilla.focus.helpers.StringsHelper.GOOGLE_DRIVE
 import org.mozilla.focus.helpers.StringsHelper.GOOGLE_PHOTOS
 import org.mozilla.focus.helpers.TestAssetHelper.getImageTestAsset
 import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
@@ -135,6 +136,29 @@ class DownloadFileTest {
             verifyDownloadConfirmationMessage(downloadFileName)
             openDownloadedFile()
             assertNativeAppOpens(GOOGLE_PHOTOS)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun downloadAndOpenPdfFileTest() {
+        downloadFileName = "washington.pdf"
+
+        searchScreen {
+        }.loadPage(downloadTestPage) {
+            progressBar.waitUntilGone(waitingTime)
+            clickLinkMatchingText(downloadFileName)
+        }
+        // If permission dialog appears on devices with API<30, grant it
+        if (permAllowBtn.waitForExists(waitingTime)) {
+            permAllowBtn.click()
+        }
+        downloadRobot {
+            verifyDownloadDialog(downloadFileName)
+            clickDownloadButton()
+            verifyDownloadConfirmationMessage(downloadFileName)
+            openDownloadedFile()
+            assertNativeAppOpens(GOOGLE_DRIVE)
         }
     }
 }
