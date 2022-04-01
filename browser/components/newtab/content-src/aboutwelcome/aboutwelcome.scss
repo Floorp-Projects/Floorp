@@ -1069,12 +1069,12 @@ body {
       .main-content {
         background: transparent;
         box-shadow: none;
-        display: block;
+        display: flex;
         position: absolute;
-        height: 350px;
-        width: 295px;
-        bottom: -60px;
-        inset-inline-end: 80px;
+        height: auto;
+        width: 350px;
+        bottom: 0;
+        inset-inline-end: 30px;
         transition: var(--transition);
       }
 
@@ -1094,6 +1094,10 @@ body {
 
       .welcome-text {
         transition-delay: 1.2s;
+
+        h2 {
+          margin: 10px 6px;
+        }
       }
     }
 
