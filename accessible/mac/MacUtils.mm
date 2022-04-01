@@ -15,21 +15,6 @@ namespace mozilla {
 namespace a11y {
 namespace utils {
 
-// convert an array of Gecko accessibles to an NSArray of native accessibles
-template <typename AccArray>
-NSArray<mozAccessible*>* ConvertToNSArray(AccArray& aArray) {
-  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
-
-  // iterate through the list, and get each native accessible.
-  for (Accessible* curAccessible : aArray) {
-    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
-    if (curNative)
-      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
-  }
-
-  return nativeArray;
-}
-
 /**
  * Get a localized string from the a11y string bundle.
  * Return nil if not found.
