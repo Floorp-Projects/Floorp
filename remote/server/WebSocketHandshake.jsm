@@ -32,37 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
 });
 
-XPCOMUtils.defineLazyGetter(this, "allowedHosts", () => {
-  if (Services.prefs.prefHasUserValue("remote.hosts.allowed")) {
-    const allowedHostsPref = Services.prefs.getCharPref("remote.hosts.allowed");
-    return allowedHostsPref.split(",");
-  }
-
-  // If no value is set for remote.hosts.allowed, select allowed hosts based on
-  // the RemoteAgent server host.
-  const hostUri = Services.io.newURI(`https://${RemoteAgent.host}`);
-
-  // If the server is bound to a hostname, not an IP address, return it as
-  // allowed host.
-  if (!isIPAddress(hostUri)) {
-    return [RemoteAgent.host];
-  }
-
-  // Following Bug 1220810 localhost is guaranteed to resolve to a loopback
-  // address (127.0.0.1 or ::1) unless network.proxy.allow_hijacking_localhost
-  // is set to true, which should not be the case.
-  const loopbackAddresses = ["127.0.0.1", "[::1]"];
-
-  // If the server is bound to an IP address and this IP address is a localhost
-  // loopback address, return localhost as allowed host.
-  if (loopbackAddresses.includes(RemoteAgent.host)) {
-    return ["localhost"];
-  }
-
-  // Otherwise return an empty array.
-  return [];
-});
-
 /**
  * Allowed origins are exposed through 2 separate getters because while most
  * of the values should be valid URIs, `null` is also a valid origin and cannot
@@ -70,7 +39,7 @@ XPCOMUtils.defineLazyGetter(this, "allowedHosts", () => {
  * `allowedOrigins`, those interested in URIs should use `allowedOriginURIs`.
  */
 XPCOMUtils.defineLazyGetter(this, "allowedOrigins", () =>
-  Services.prefs.getCharPref("remote.origins.allowed", "").split(",")
+  RemoteAgent.allowOrigins !== null ? RemoteAgent.allowOrigins : []
 );
 
 XPCOMUtils.defineLazyGetter(this, "allowedOriginURIs", () => {
@@ -159,7 +128,8 @@ function isHostValid(hostHeader) {
     // Might throw both when calling newURI or when accessing the host/port.
     const hostUri = Services.io.newURI(`https://${hostHeader}`);
     const { host, port } = hostUri;
-    const isHostnameValid = isIPAddress(hostUri) || allowedHosts.includes(host);
+    const isHostnameValid =
+      isIPAddress(hostUri) || RemoteAgent.allowHosts.includes(host);
     // For nsIURI a port value of -1 corresponds to the protocol's default port.
     const isPortValid = [-1, RemoteAgent.port].includes(port);
     return isHostnameValid && isPortValid;
@@ -209,7 +179,9 @@ function processRequest({ requestLine, headers }) {
   }
 
   if (!isHostValid(headers.get("host"))) {
-    logger.debug(`Incorrect Host header, allowed hosts: [${allowedHosts}]`);
+    logger.debug(
+      `Incorrect Host header, allowed hosts: [${RemoteAgent.allowHosts}]`
+    );
     throw new Error(
       `The handshake request has incorrect Host header ${headers.get("host")}`
     );
