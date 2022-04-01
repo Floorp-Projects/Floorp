@@ -521,7 +521,7 @@ void WorkerGlobalScope::ClearTimeout(int32_t aHandle) {
 
   DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearTimeout);
 
-  mWorkerPrivate->ClearTimeout(aHandle);
+  mWorkerPrivate->ClearTimeout(aHandle, Timeout::Reason::eTimeoutOrInterval);
 }
 
 int32_t WorkerGlobalScope::SetInterval(JSContext* aCx, Function& aHandler,
@@ -544,7 +544,7 @@ void WorkerGlobalScope::ClearInterval(int32_t aHandle) {
 
   DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearInterval);
 
-  mWorkerPrivate->ClearTimeout(aHandle);
+  mWorkerPrivate->ClearTimeout(aHandle, Timeout::Reason::eTimeoutOrInterval);
 }
 
 int32_t WorkerGlobalScope::SetTimeoutOrInterval(
@@ -565,7 +565,8 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(
   RefPtr<TimeoutHandler> handler =
       new CallbackTimeoutHandler(aCx, this, &aHandler, std::move(args));
 
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
+  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval,
+                                    Timeout::Reason::eTimeoutOrInterval, aRv);
 }
 
 int32_t WorkerGlobalScope::SetTimeoutOrInterval(JSContext* aCx,
@@ -589,7 +590,8 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(JSContext* aCx,
   RefPtr<TimeoutHandler> handler =
       new WorkerScriptTimeoutHandler(aCx, this, aHandler);
 
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
+  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval,
+                                    Timeout::Reason::eTimeoutOrInterval, aRv);
 }
 
 void WorkerGlobalScope::GetOrigin(nsAString& aOrigin) const {
