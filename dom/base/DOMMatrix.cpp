@@ -593,44 +593,33 @@ bool DOMMatrixReadOnly::WriteStructuredClone(
 
 bool DOMMatrixReadOnly::ReadStructuredCloneElements(
     JSStructuredCloneReader* aReader, DOMMatrixReadOnly* matrix) {
-  uint32_t high;
-  uint32_t low;
-
-#define ReadDouble(d)                             \
-  if (!JS_ReadUint32Pair(aReader, &high, &low)) { \
-    return false;                                 \
-  }                                               \
-  (*(d) = BitwiseCast<double>(static_cast<uint64_t>(high) << 32 | low))
-
   if (matrix->Is2D() == 1) {
-    ReadDouble(&(matrix->mMatrix2D->_11));
-    ReadDouble(&(matrix->mMatrix2D->_12));
-    ReadDouble(&(matrix->mMatrix2D->_21));
-    ReadDouble(&(matrix->mMatrix2D->_22));
-    ReadDouble(&(matrix->mMatrix2D->_31));
-    ReadDouble(&(matrix->mMatrix2D->_32));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_11));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_12));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_21));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_22));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_31));
+    JS_ReadDouble(aReader, &(matrix->mMatrix2D->_32));
   } else {
-    ReadDouble(&(matrix->mMatrix3D->_11));
-    ReadDouble(&(matrix->mMatrix3D->_12));
-    ReadDouble(&(matrix->mMatrix3D->_13));
-    ReadDouble(&(matrix->mMatrix3D->_14));
-    ReadDouble(&(matrix->mMatrix3D->_21));
-    ReadDouble(&(matrix->mMatrix3D->_22));
-    ReadDouble(&(matrix->mMatrix3D->_23));
-    ReadDouble(&(matrix->mMatrix3D->_24));
-    ReadDouble(&(matrix->mMatrix3D->_31));
-    ReadDouble(&(matrix->mMatrix3D->_32));
-    ReadDouble(&(matrix->mMatrix3D->_33));
-    ReadDouble(&(matrix->mMatrix3D->_34));
-    ReadDouble(&(matrix->mMatrix3D->_41));
-    ReadDouble(&(matrix->mMatrix3D->_42));
-    ReadDouble(&(matrix->mMatrix3D->_43));
-    ReadDouble(&(matrix->mMatrix3D->_44));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_11));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_12));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_13));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_14));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_21));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_22));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_23));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_24));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_31));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_32));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_33));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_34));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_41));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_42));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_43));
+    JS_ReadDouble(aReader, &(matrix->mMatrix3D->_44));
   }
 
   return true;
-
-#undef ReadDouble
 }
 
 already_AddRefed<DOMMatrix> DOMMatrix::FromMatrix(
