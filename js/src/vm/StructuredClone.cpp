@@ -3614,6 +3614,10 @@ JS_PUBLIC_API bool JS_WriteString(JSStructuredCloneWriter* w,
   return w->writeString(SCTAG_STRING, str);
 }
 
+JS_PUBLIC_API bool JS_WriteDouble(JSStructuredCloneWriter* w, double v) {
+  return w->output().writeDouble(v);
+}
+
 JS_PUBLIC_API bool JS_WriteTypedArray(JSStructuredCloneWriter* w,
                                       HandleValue v) {
   MOZ_ASSERT(v.isObject());
