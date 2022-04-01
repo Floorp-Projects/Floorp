@@ -51,35 +51,26 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
                                                   const char* aCharset,
                                                   nsIURI* aBaseURI,
                                                   nsIURI** result) {
-  nsresult rv;
   nsCOMPtr<nsIURI> uri;
+  nsAutoCString contentType;
+  bool base64;
+  MOZ_TRY(ParseURI(aSpec, contentType, /* contentCharset = */ nullptr, base64,
+                   /* dataBuffer = */ nullptr));
 
-  if (aBaseURI && !aSpec.IsEmpty() && aSpec[0] == '#') {
-    // Looks like a reference instead of a fully-specified URI.
-    // --> initialize |uri| as a clone of |aBaseURI|, with ref appended.
-    rv = NS_MutateURI(aBaseURI).SetRef(aSpec).Finalize(uri);
+  // Strip whitespace unless this is text, where whitespace is important
+  // Don't strip escaped whitespace though (bug 391951)
+  nsresult rv;
+  if (base64 || (strncmp(contentType.get(), "text/", 5) != 0 &&
+                 contentType.Find("xml") == kNotFound)) {
+    // it's ascii encoded binary, don't let any spaces in
+    rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
+             .Apply(&nsISimpleURIMutator::SetSpecAndFilterWhitespace, aSpec,
+                    nullptr)
+             .Finalize(uri);
   } else {
-    // Otherwise, we'll assume |aSpec| is a fully-specified data URI
-    nsAutoCString contentType;
-    bool base64;
-    rv = ParseURI(aSpec, contentType, /* contentCharset = */ nullptr, base64,
-                  /* dataBuffer = */ nullptr);
-    if (NS_FAILED(rv)) return rv;
-
-    // Strip whitespace unless this is text, where whitespace is important
-    // Don't strip escaped whitespace though (bug 391951)
-    if (base64 || (strncmp(contentType.get(), "text/", 5) != 0 &&
-                   contentType.Find("xml") == kNotFound)) {
-      // it's ascii encoded binary, don't let any spaces in
-      rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
-               .Apply(&nsISimpleURIMutator::SetSpecAndFilterWhitespace, aSpec,
-                      nullptr)
-               .Finalize(uri);
-    } else {
-      rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
-               .SetSpec(aSpec)
-               .Finalize(uri);
-    }
+    rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
+             .SetSpec(aSpec)
+             .Finalize(uri);
   }
 
   if (NS_FAILED(rv)) return rv;
