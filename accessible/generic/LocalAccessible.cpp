@@ -3355,6 +3355,19 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::colspan, DeleteEntry());
       }
+      if (mContent->AsElement()->HasAttr(kNameSpaceID_None,
+                                         nsGkAtoms::headers)) {
+        nsTArray<uint64_t> headers;
+        IDRefsIterator iter(mDoc, mContent, nsGkAtoms::headers);
+        while (LocalAccessible* cell = iter.Next()) {
+          if (cell->IsTableCell()) {
+            headers.AppendElement(cell->ID());
+          }
+        }
+        fields->SetAttribute(nsGkAtoms::headers, std::move(headers));
+      } else {
+        fields->SetAttribute(nsGkAtoms::headers, DeleteEntry());
+      }
     }
   }
 
