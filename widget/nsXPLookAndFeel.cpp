@@ -32,6 +32,7 @@
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
 
@@ -1104,7 +1105,8 @@ void LookAndFeel::DoHandleGlobalThemeChange() {
 }
 
 static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
-    const dom::Document& aDoc, LookAndFeel::ColorID aColor) {
+    const dom::Document& aDoc, LookAndFeel::ColorID aColor,
+    const PreferenceSheet::Prefs& aPrefs) {
   using ColorID = LookAndFeel::ColorID;
   if (!aDoc.ShouldAvoidNativeTheme()) {
     return false;
@@ -1134,9 +1136,7 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     case ColorID::Fieldtext:
 
     case ColorID::Graytext:
-
-      return !PreferenceSheet::PrefsFor(aDoc)
-                  .NonNativeThemeShouldBeHighContrast();
+      return !aPrefs.NonNativeThemeShouldBeHighContrast();
 
     default:
       break;
@@ -1149,6 +1149,28 @@ ColorScheme LookAndFeel::sChromeColorScheme;
 ColorScheme LookAndFeel::sContentColorScheme;
 bool LookAndFeel::sColorSchemeInitialized;
 bool LookAndFeel::sGlobalThemeChanged;
+
+bool LookAndFeel::IsDarkColor(nscolor aColor) {
+  // Given https://www.w3.org/TR/WCAG20/#contrast-ratiodef, this is the
+  // threshold that tells us whether contrast is better against white or black.
+  //
+  // Contrast ratio against black is: (L + 0.05) / 0.05
+  // Contrast ratio against white is: 1.05 / (L + 0.05)
+  //
+  // So the intersection is:
+  //
+  //   (L + 0.05) / 0.05 = 1.05 / (L + 0.05)
+  //
+  // And the solution to that equation is:
+  //
+  //   sqrt(1.05 * 0.05) - 0.05
+  //
+  // So we consider a color dark if the contrast is below this threshold, and
+  // it's at least half-opaque.
+  constexpr float kThreshold = 0.179129;
+  return NS_GET_A(aColor) > 127 &&
+         RelativeLuminanceUtils::Compute(aColor) < kThreshold;
+}
 
 auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
   switch (StaticPrefs::browser_theme_toolbar_theme()) {
@@ -1203,25 +1225,18 @@ void LookAndFeel::RecomputeColorSchemes() {
 
 ColorScheme LookAndFeel::ColorSchemeForStyle(
     const dom::Document& aDoc, const StyleColorSchemeFlags& aFlags) {
-  if (PreferenceSheet::MayForceColors()) {
-    auto& prefs = PreferenceSheet::PrefsFor(aDoc);
-    if (!prefs.mUseDocumentColors) {
-      // When forcing colors, we can use our preferred color-scheme. Do this
-      // only if we're using system colors, as dark preference colors are not
-      // exposed on the UI.
-      //
-      // Also, use light if we're using a high-contrast-theme on Windows, since
-      // Windows overrides the light colors with HCM colors when HCM is active.
-#ifdef XP_WIN
-      if (prefs.mUseAccessibilityTheme) {
-        return ColorScheme::Light;
-      }
-#endif
-      if (StaticPrefs::browser_display_use_system_colors()) {
-        return aDoc.PreferredColorScheme();
-      }
+  using Choice = PreferenceSheet::Prefs::ColorSchemeChoice;
+
+  const auto& prefs = PreferenceSheet::PrefsFor(aDoc);
+  switch (prefs.mColorSchemeChoice) {
+    case Choice::Standard:
+      break;
+    case Choice::UserPreferred:
+      return aDoc.PreferredColorScheme();
+    case Choice::Light:
       return ColorScheme::Light;
-    }
+    case Choice::Dark:
+      return ColorScheme::Dark;
   }
 
   StyleColorSchemeFlags style(aFlags);
@@ -1305,15 +1320,11 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
 
 LookAndFeel::UseStandins LookAndFeel::ShouldUseStandins(
     const dom::Document& aDoc, ColorID aId) {
-  if (ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId)) {
+  const auto& prefs = PreferenceSheet::PrefsFor(aDoc);
+  if (ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId, prefs)) {
     return UseStandins::Yes;
   }
-  if (nsContentUtils::UseStandinsForNativeColors() &&
-      ColorIsCSSAccessible(aId) && !nsContentUtils::IsChromeDoc(&aDoc)) {
-    return UseStandins::Yes;
-  }
-  if (aDoc.IsStaticDocument() &&
-      !PreferenceSheet::ContentPrefs().mUseDocumentColors) {
+  if (prefs.mUseStandins && ColorIsCSSAccessible(aId)) {
     return UseStandins::Yes;
   }
   return UseStandins::No;
