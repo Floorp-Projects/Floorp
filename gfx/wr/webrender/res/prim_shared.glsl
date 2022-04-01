@@ -132,25 +132,6 @@ VertexInfo write_vertex(vec2 local_pos,
     return vi;
 }
 
-float cross2(vec2 v0, vec2 v1) {
-    return v0.x * v1.y - v0.y * v1.x;
-}
-
-// Return intersection of line (p0,p1) and line (p2,p3)
-vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
-    vec2 d0 = p0 - p1;
-    vec2 d1 = p2 - p3;
-
-    float s0 = cross2(p0, p1);
-    float s1 = cross2(p2, p3);
-
-    float d = cross2(d0, d1);
-    float nx = s0 * d1.x - d0.x * s1;
-    float ny = s0 * d1.y - d0.y * s1;
-
-    return vec2(nx / d, ny / d);
-}
-
 RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint local_segment_rect,
                                             RectWithEndpoint local_prim_rect,
                                             RectWithEndpoint local_clip_rect,
