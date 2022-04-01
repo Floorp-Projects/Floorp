@@ -116,21 +116,12 @@ void brush_shader_main_vs(
         segment_data = segment_info[1];
     }
 
-    VertexInfo vi;
+    // Most of the time this is the segment rect, but when doing the edge AA
+    // it is inflated.
+    RectWithEndpoint adjusted_segment_rect = segment_rect;
 
     // Write the normal vertex information out.
     if (transform.is_axis_aligned) {
-
-        // Select the corner of the local rect that we are processing.
-        vec2 local_pos = mix(segment_rect.p0, segment_rect.p1, aPosition.xy);
-
-        vi = write_vertex(
-            local_pos,
-            ph.local_clip_rect,
-            ph.z,
-            transform,
-            pic_task
-        );
 
         // TODO(gw): transform bounds may be referenced by
         //           the fragment shader when running in
@@ -142,7 +133,7 @@ void brush_shader_main_vs(
         init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
 #endif
     } else {
-        vi = write_transform_vertex(
+        adjusted_segment_rect = clip_and_init_antialiasing(
             segment_rect,
             ph.local_rect,
             ph.local_clip_rect,
@@ -151,7 +142,23 @@ void brush_shader_main_vs(
             transform,
             pic_task
         );
+
+        // The clip was taken into account in clip_and_init_antialiasing, remove
+        // it so that it doesn't interfere with the aa.
+        ph.local_clip_rect.p0 = vec2(-1.0e16);
+        ph.local_clip_rect.p1 = vec2(1.0e16);
     }
+
+    // Select the corner of the local rect that we are processing.
+    vec2 local_pos = mix(adjusted_segment_rect.p0, adjusted_segment_rect.p1, aPosition.xy);
+
+    VertexInfo vi = write_vertex(
+        local_pos,
+        ph.local_clip_rect,
+        ph.z,
+        transform,
+        pic_task
+    );
 
     // For brush instances in the alpha pass, always write
     // out clip information.
