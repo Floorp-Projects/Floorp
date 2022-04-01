@@ -1253,6 +1253,12 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
     // Note: This implies EnsureURI().
     MOZ_TRY(info.EnsureResolvedURI());
 
+    // Reject imports from untrusted sources.
+    if ((!info.URI()->SchemeIs("resource")) &&
+        (!info.URI()->SchemeIs("chrome"))) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     // get the JAR if there is one
     nsCOMPtr<nsIJARURI> jarURI;
     jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
