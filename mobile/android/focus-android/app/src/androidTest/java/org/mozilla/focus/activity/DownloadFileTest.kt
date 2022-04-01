@@ -161,4 +161,27 @@ class DownloadFileTest {
             assertNativeAppOpens(GOOGLE_DRIVE)
         }
     }
+
+    @SmokeTest
+    @Test
+    fun downloadAndOpenWebmFileTest() {
+        downloadFileName = "videoSample.webm"
+
+        searchScreen {
+        }.loadPage(downloadTestPage) {
+            progressBar.waitUntilGone(waitingTime)
+            clickLinkMatchingText(downloadFileName)
+        }
+        // If permission dialog appears on devices with API<30, grant it
+        if (permAllowBtn.waitForExists(waitingTime)) {
+            permAllowBtn.click()
+        }
+        downloadRobot {
+            verifyDownloadDialog(downloadFileName)
+            clickDownloadButton()
+            verifyDownloadConfirmationMessage(downloadFileName)
+            openDownloadedFile()
+            assertNativeAppOpens(GOOGLE_PHOTOS)
+        }
+    }
 }
