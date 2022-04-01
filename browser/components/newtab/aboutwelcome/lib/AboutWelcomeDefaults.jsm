@@ -35,7 +35,8 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle:
           "It’s our 100th release! Thanks for helping us build a better, healthier internet.",
         hero_text: {
-          string_id: "mr1-welcome-screen-hero-text",
+          string_id: "fx100-thank-you-hero-text",
+          color: "#321C64",
         },
         help_text: {
           string_id: "mr1-onboarding-welcome-image-caption",
