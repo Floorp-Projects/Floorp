@@ -87,6 +87,28 @@ const ONBOARDING_MESSAGES = () => [
                         navigate: true,
                       },
                     },
+                    ios: {
+                      action: {
+                        data: {
+                          args:
+                            "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
+                          where: "tabshifted",
+                        },
+                        type: "OPEN_URL",
+                        navigate: true,
+                      },
+                    },
+                    android: {
+                      action: {
+                        data: {
+                          args:
+                            "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
+                          where: "tabshifted",
+                        },
+                        type: "OPEN_URL",
+                        navigate: true,
+                      },
+                    },
                     tiles: {
                       type: "mobile_downloads",
                       data: {
@@ -101,28 +123,7 @@ const ONBOARDING_MESSAGES = () => [
                               "chrome://browser/content/assets/klar-qr-code.svg",
                           },
                         },
-                        marketplace_buttons: {
-                          ios_link: {
-                            action: {
-                              data: {
-                                args:
-                                  "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
-                                where: "tabshifted",
-                              },
-                              type: "OPEN_URL",
-                            },
-                          },
-                          android_link: {
-                            action: {
-                              data: {
-                                args:
-                                  "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
-                                where: "tabshifted",
-                              },
-                              type: "OPEN_URL",
-                            },
-                          },
-                        },
+                        marketplace_buttons: ["ios", "android"],
                       },
                     },
                   },

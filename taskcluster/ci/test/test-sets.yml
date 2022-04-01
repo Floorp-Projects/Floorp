@@ -35,7 +35,9 @@ mochitest-webgpu:
 talos:
     - talos-bcv
     - talos-chrome
-    - talos-damp
+    - talos-damp-inspector
+    - talos-damp-webconsole
+    - talos-damp-other
     - talos-dromaeojs
     - talos-g1
     - talos-g3
@@ -276,7 +278,9 @@ windows-aarch64-tests:
 windows-talos:
     - talos-bcv
     - talos-chrome
-    - talos-damp
+    - talos-damp-inspector
+    - talos-damp-webconsole
+    - talos-damp-other
     - talos-dromaeojs
     - talos-g1
     - talos-g4
@@ -347,7 +351,9 @@ macosx1015-64-qr-tests:
 macosx64-talos:
     - talos-bcv
     - talos-chrome
-    - talos-damp
+    - talos-damp-inspector
+    - talos-damp-webconsole
+    - talos-damp-other
     - talos-dromaeojs
     - talos-g1
     - talos-g4
@@ -382,6 +388,7 @@ android-x86_64-tests:
     - web-platform-tests
     - web-platform-tests-crashtest
     - web-platform-tests-reftest
+    - web-platform-tests-wdspec
     - xpcshell
 
 android-hw-aarch64-opt-unittests:

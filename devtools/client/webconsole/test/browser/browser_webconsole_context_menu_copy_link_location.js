@@ -36,9 +36,7 @@ add_task(async function() {
   ok(!copyURLItem, "Copy URL menu item is hidden for a simple text message");
 
   info("Open and check the context menu for the logged text message");
-  const locationElement = message.node.querySelector(
-    ".frame-link-source-inner"
-  );
+  const locationElement = message.node.querySelector(".frame-link-source");
   menuPopup = await openContextMenu(hud, locationElement);
   copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
   ok(copyURLItem, "The Copy Link Location entry is displayed");

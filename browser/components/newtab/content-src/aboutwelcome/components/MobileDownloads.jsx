@@ -6,26 +6,26 @@ import React from "react";
 import { Localized } from "./MSLocalized";
 
 export const MarketplaceButtons = props => {
-  const { ios_link: iosLink, android_link: androidLink } = props.links;
-
   return (
     <ul className="mobile-download-buttons">
-      <li className="android">
-        <button
-          data-l10n-id={"spotlight-android-marketplace-button"}
-          onClick={e => {
-            props.handleAction(e, androidLink);
-          }}
-        ></button>
-      </li>
-      <li className="ios">
-        <button
-          data-l10n-id={"spotlight-ios-marketplace-button"}
-          onClick={e => {
-            props.handleAction(e, iosLink);
-          }}
-        ></button>
-      </li>
+      {props.buttons.includes("ios") ? (
+        <li className="ios">
+          <button
+            data-l10n-id={"spotlight-ios-marketplace-button"}
+            value="ios"
+            onClick={props.handleAction}
+          ></button>
+        </li>
+      ) : null}
+      {props.buttons.includes("android") ? (
+        <li className="android">
+          <button
+            data-l10n-id={"spotlight-android-marketplace-button"}
+            value="android"
+            onClick={props.handleAction}
+          ></button>
+        </li>
+      ) : null}
     </ul>
   );
 };
@@ -57,16 +57,15 @@ export const MobileDownloads = props => {
           <Localized text={props.data.email.link_text}>
             <button
               className="email-link"
-              onClick={e => {
-                props.handleAction(e, props.data.email.link);
-              }}
+              value="email_link"
+              onClick={props.handleAction}
             />
           </Localized>
         </div>
       ) : null}
       {props.data.marketplace_buttons ? (
         <MarketplaceButtons
-          links={props.data.marketplace_buttons}
+          buttons={props.data.marketplace_buttons}
           handleAction={props.handleAction}
         />
       ) : null}

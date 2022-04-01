@@ -57,6 +57,7 @@ var PocketCustomizableWidget = {
 
         frame.setAttribute("type", "content");
         frame.setAttribute("remote", true);
+        frame.setAttribute("autocompletepopup", "PopupAutoComplete");
         panelNode.appendChild(frame);
 
         SaveToPocket.onShownInToolbarPanel(panelNode, frame);

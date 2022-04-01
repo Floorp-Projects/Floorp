@@ -73,8 +73,37 @@ const DEFAULT_WELCOME_CONTENT = {
       },
     },
     {
-      id: "AW_SET_DEFAULT",
+      id: "AW_LANGUAGE_MISMATCH",
       order: 1,
+      content: {
+        logo: {},
+        title: { string_id: "onboarding-live-language-header" },
+        subtitle: { string_id: "onboarding-live-language-subtitle" },
+        has_noodles: true,
+        languageSwitcher: {
+          switch: {
+            string_id: "onboarding-live-language-switch-button-label",
+          },
+          downloading: {
+            string_id: "onboarding-live-language-button-label-downloading",
+          },
+          cancel: {
+            string_id: "onboarding-live-language-secondary-cancel-download",
+          },
+          not_now: {
+            string_id: "onboarding-live-language-not-now-button-label",
+          },
+          waiting: { string_id: "onboarding-live-language-waiting-button" },
+          skip: { string_id: "onboarding-live-language-skip-button-label" },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_SET_DEFAULT",
+      order: 2,
       content: {
         logo: {},
         title: {
@@ -97,35 +126,6 @@ const DEFAULT_WELCOME_CONTENT = {
           label: {
             string_id: "mr1-onboarding-set-default-secondary-button-label",
           },
-          action: {
-            navigate: true,
-          },
-        },
-      },
-    },
-    {
-      id: "AW_LANGUAGE_MISMATCH",
-      order: 2,
-      content: {
-        logo: {},
-        title: { string_id: "onboarding-live-language-header" },
-        subtitle: { string_id: "onboarding-live-language-subtitle" },
-        has_noodles: true,
-        languageSwitcher: {
-          switch: {
-            string_id: "onboarding-live-language-switch-button-label",
-          },
-          downloading: {
-            string_id: "onboarding-live-language-button-label-downloading",
-          },
-          cancel: {
-            string_id: "onboarding-live-language-secondary-cancel-download",
-          },
-          not_now: {
-            string_id: "onboarding-live-language-not-now-button-label",
-          },
-          waiting: { string_id: "onboarding-live-language-waiting-button" },
-          skip: { string_id: "onboarding-live-language-skip-button-label" },
           action: {
             navigate: true,
           },

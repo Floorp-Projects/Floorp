@@ -6,13 +6,14 @@ import React, { useState, useEffect } from "react";
 import Header from "../Header/Header";
 import Button from "../Button/Button";
 import ArticleList from "../ArticleList/ArticleList";
+import TagPicker from "../TagPicker/TagPicker";
 import panelMessaging from "../../messages";
 
 function Saved(props) {
   const { locale, pockethost, utmSource, utmCampaign, utmContent } = props;
   // savedStatus can be success, loading, or error.
   const [
-    { savedStatus, savedErrorId, itemId },
+    { savedStatus, savedErrorId, itemId, itemUrl },
     setSavedStatusState,
   ] = useState({ savedStatus: "loading" });
   // removedStatus can be removed, removing, or error.
@@ -73,7 +74,8 @@ function Saved(props) {
       // Success, so no localized error id needed.
       setSavedStatusState({
         savedStatus: "success",
-        itemId: data.item.item_id,
+        itemId: data.item?.item_id,
+        itemUrl: data.item?.given_url,
         savedErrorId: "",
       });
     });
@@ -138,10 +140,7 @@ function Saved(props) {
             {savedStory && (
               <ArticleList articles={[savedStory]} savedArticle={true} />
             )}
-            <h3
-              className="header_small"
-              data-l10n-id="pocket-panel-cta-add-tags"
-            />
+            <TagPicker tags={[]} itemUrl={itemUrl} />
             {similarRecs?.length && locale?.startsWith("en") && (
               <>
                 <hr />

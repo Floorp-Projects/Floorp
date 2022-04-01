@@ -300,14 +300,10 @@ void Module::serialize(const LinkData& linkData, uint8_t* begin,
 }
 
 /* static */
-MutableModule Module::deserialize(const uint8_t* begin, size_t size,
-                                  Metadata* maybeMetadata) {
-  MutableMetadata metadata(maybeMetadata);
+MutableModule Module::deserialize(const uint8_t* begin, size_t size) {
+  MutableMetadata metadata = js_new<Metadata>();
   if (!metadata) {
-    metadata = js_new<Metadata>();
-    if (!metadata) {
-      return nullptr;
-    }
+    return nullptr;
   }
 
   const uint8_t* cursor = begin;
@@ -368,7 +364,7 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
   }
 
   MOZ_RELEASE_ASSERT(cursor == begin + size);
-  MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
+  MOZ_RELEASE_ASSERT(!code->metadata().isAsmJS());
 
   if (metadata->nameCustomSectionIndex) {
     metadata->namePayload =

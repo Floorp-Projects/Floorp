@@ -717,3 +717,78 @@ add_task(async function testTabActivationEvent() {
   await extension.awaitFinish("tabs-events");
   await extension.unload();
 });
+
+add_task(async function test_tabs_event_page() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.eventPages.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id: "eventpage@tabs" } },
+      permissions: ["tabs"],
+      background: { persistent: false },
+    },
+    background() {
+      const EVENTS = [
+        "onActivated",
+        "onAttached",
+        "onDetached",
+        "onRemoved",
+        "onMoved",
+        "onHighlighted",
+        "onUpdated",
+      ];
+      browser.tabs.onCreated.addListener(() => {
+        browser.test.sendMessage("onCreated");
+      });
+      for (let event of EVENTS) {
+        browser.tabs[event].addListener(() => {});
+      }
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  const EVENTS = [
+    "onActivated",
+    "onAttached",
+    "onCreated",
+    "onDetached",
+    "onRemoved",
+    "onMoved",
+    "onHighlighted",
+    "onUpdated",
+  ];
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "tabs", event, {
+      primed: false,
+    });
+  }
+
+  // test events waken background
+  await extension.terminateBackground();
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "tabs", event, {
+      primed: true,
+    });
+  }
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("onCreated");
+  ok(true, "persistent event woke background");
+  for (let event of EVENTS) {
+    assertPersistentListeners(extension, "tabs", event, {
+      primed: false,
+    });
+  }
+  await BrowserTestUtils.closeWindow(win);
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});

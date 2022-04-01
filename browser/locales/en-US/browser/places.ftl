@@ -8,6 +8,9 @@ places-open =
 places-open-in-tab =
   .label = Open in New Tab
   .accesskey = w
+places-open-in-container-tab =
+  .label = Open in New Container Tab
+  .accesskey = i
 places-open-all-bookmarks =
   .label = Open All Bookmarks
   .accesskey = O
@@ -69,13 +72,13 @@ places-sortby-name =
 # places-edit-bookmark and places-edit-generic will show one or the other and can have the same access key.
 places-edit-bookmark =
   .label = Edit Bookmark…
-  .accesskey = i
+  .accesskey = E
 places-edit-generic =
   .label = Edit…
-  .accesskey = i
+  .accesskey = E
 places-edit-folder2 =
   .label = Edit Folder…
-  .accesskey = i
+  .accesskey = E
 places-delete-folder =
   .label =
       { $count ->

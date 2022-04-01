@@ -33,8 +33,8 @@ module.exports = async function() {
         `function () {
       const obj = {};
       for (let i = 0; i < 1000; i++) {
-        obj["item-" + i] = {index: i, ...obj}; 
-      } 
+        obj["item-" + i] = {index: i, ...obj};
+      }
       addMessageListener("do-logs", function () {
         const start = Cu.now();
         for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
@@ -52,9 +52,17 @@ module.exports = async function() {
 
   const allMessagesreceived = waitForConsoleOutputChildListChange(
     hud,
-    consoleOutput =>
-      consoleOutput.querySelectorAll(".message").length >= TOTAL_MESSAGES &&
-      consoleOutput.textContent.includes("damp " + TOTAL_MESSAGES)
+    consoleOutput => {
+      const messages = Array.from(
+        consoleOutput.querySelectorAll(".message-body")
+      );
+      return (
+        messages.find(message => message.textContent.includes("damp 1")) &&
+        messages.find(message =>
+          message.textContent.includes("damp " + TOTAL_MESSAGES)
+        )
+      );
+    }
   );
 
   // Kick off the logging
