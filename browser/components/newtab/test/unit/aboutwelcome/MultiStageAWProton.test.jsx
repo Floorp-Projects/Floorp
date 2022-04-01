@@ -114,7 +114,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should have an image caption", async () => {
       const data = await prepConfig();
 
-      assert.property(data.screens[0].content.help_text, "text");
+      assert.property(data.screens[0].content, "help_text");
     });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
@@ -132,16 +132,14 @@ describe("MultiStageAboutWelcomeProton module", () => {
               position: "corner",
               help_text: {
                 deleteIfNotEn: true,
-                text: {
-                  string_id: "mr1-onboarding-welcome-image-caption",
-                },
+                string_id: "mr1-onboarding-welcome-image-caption",
               },
             },
           },
         ],
       });
 
-      assert.notProperty(data.screens[0].content.help_text, "text");
+      assert.notProperty(data.screens[0].content, "help_text");
     });
   });
   describe("AboutWelcomeDefaults prepareContentForReact", () => {

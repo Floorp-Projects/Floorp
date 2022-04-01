@@ -37,11 +37,9 @@ export const Themes = props => {
                       theme === props.activeTheme ? " selected" : ""
                     } ${theme}`}
                   />
-                  {label && (
-                    <Localized text={label}>
-                      <div className="text" />
-                    </Localized>
-                  )}
+                  <Localized text={label}>
+                    <div className="text" />
+                  </Localized>
                 </label>
               </Localized>
             )
