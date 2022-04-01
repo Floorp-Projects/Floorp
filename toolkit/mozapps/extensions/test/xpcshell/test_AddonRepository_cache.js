@@ -657,7 +657,7 @@ add_task(async function run_test_13() {
   Assert.ok(gDBFile.exists());
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, EMPTY_RESULT);
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
   // Database should have been deleted
   Assert.ok(!gDBFile.exists());
 
@@ -670,7 +670,7 @@ add_task(async function run_test_13() {
 add_task(async function run_test_14() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
   await AddonRepository.flush();
   Assert.ok(gDBFile.exists());
 
@@ -683,7 +683,7 @@ add_task(async function run_test_14() {
 add_task(async function run_test_15() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
   let aAddons = await promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITH_CACHE);
 });
@@ -705,7 +705,7 @@ add_task(async function run_test_17() {
     "foo,bar,extension,baz"
   );
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
   let aAddons = await promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITH_EXTENSION_CACHE);
 });

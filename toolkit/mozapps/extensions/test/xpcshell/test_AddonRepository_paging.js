@@ -71,7 +71,7 @@ add_task(async function test_paged_api() {
     });
   }
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
 
   let ids = [];
   for (let i = 0; i <= MAX_ADDON; i++) {

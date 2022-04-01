@@ -54,6 +54,8 @@ const IGNORE_PRIVATE = [
   "recordTiming",
   "BOOTSTRAP_REASONS",
   "notifyAddonChanged",
+  "overrideAddonRepository",
+  "overrideAsyncShutdown",
 ];
 
 async function test_functions() {
