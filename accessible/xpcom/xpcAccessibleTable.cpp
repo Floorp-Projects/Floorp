@@ -250,12 +250,12 @@ xpcAccessibleTable::GetSelectedCells(nsIArray** aSelectedCells) {
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoTArray<LocalAccessible*, XPC_TABLE_DEFAULT_SIZE> cellsArray;
+  AutoTArray<Accessible*, XPC_TABLE_DEFAULT_SIZE> cellsArray;
   Intl()->SelectedCells(&cellsArray);
 
   uint32_t totalCount = cellsArray.Length();
   for (uint32_t idx = 0; idx < totalCount; idx++) {
-    LocalAccessible* cell = cellsArray.ElementAt(idx);
+    Accessible* cell = cellsArray.ElementAt(idx);
     selCells->AppendElement(static_cast<nsIAccessible*>(ToXPC(cell)));
   }
 
