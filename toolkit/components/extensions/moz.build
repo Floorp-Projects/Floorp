@@ -53,8 +53,6 @@ TESTING_JS_MODULES += [
     "ExtensionTestCommon.jsm",
     "ExtensionXPCShellUtils.jsm",
     "MessageChannel.jsm",
-    "test/xpcshell/data/TestWorkerWatcherChild.jsm",
-    "test/xpcshell/data/TestWorkerWatcherParent.jsm",
 ]
 
 DIRS += [
