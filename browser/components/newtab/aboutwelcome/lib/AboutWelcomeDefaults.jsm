@@ -38,9 +38,7 @@ const DEFAULT_WELCOME_CONTENT = {
           string_id: "mr1-welcome-screen-hero-text",
         },
         help_text: {
-          text: {
-            string_id: "mr1-onboarding-welcome-image-caption",
-          },
+          string_id: "mr1-onboarding-welcome-image-caption",
         },
         has_noodles: true,
         primary_button: {
@@ -443,7 +441,7 @@ async function prepareContentForReact(content) {
   if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
     delete content.screens?.find(
       screen => screen.content?.help_text?.deleteIfNotEn
-    )?.content.help_text.text;
+    )?.content.help_text;
   }
 
   let shouldRemoveLanguageMismatchScreen = true;
