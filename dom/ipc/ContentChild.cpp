@@ -132,10 +132,6 @@
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 
-#if !defined(XP_WIN)
-#  include "mozilla/Omnijar.h"
-#endif
-
 #include "ChildProfilerController.h"
 
 #if defined(MOZ_SANDBOX)
@@ -5017,14 +5013,6 @@ bool StartOpenBSDSandbox(GeckoProcessType type) {
   return true;
 }
 #endif
-
-#if !defined(XP_WIN)
-bool IsDevelopmentBuild() {
-  nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
-  // If the path doesn't exist, we're a dev build.
-  return path == nullptr;
-}
-#endif /* !XP_WIN */
 
 }  // namespace mozilla
 

@@ -178,12 +178,16 @@ const MultiStageAboutWelcome = props => {
   }, screens.map((screen, order) => {
     const isFirstCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[0].order;
     const isLastCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[centeredScreens.length - 1].order;
+    /* If first screen is corner positioned, don't include it in the count for the steps indicator. This assumes corner positioning will only be used on the first screen. */
+
+    const totalNumberOfScreens = screens[0].content.position === "corner" ? screens.length - 1 : screens.length;
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(WelcomeScreen, {
       key: screen.id + order,
       id: screen.id,
-      totalNumberOfScreens: screens.length,
+      totalNumberOfScreens: totalNumberOfScreens,
       isFirstCenteredScreen: isFirstCenteredScreen,
       isLastCenteredScreen: isLastCenteredScreen,
+      startsWithCorner: screens[0].content.position === "corner",
       order: order,
       content: screen.content,
       navigate: handleTransition,
@@ -274,14 +278,14 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     });
   }
 
-  async handleAction(event, target) {
+  async handleAction(event) {
     let {
       props
     } = this;
     let {
       value
     } = event.currentTarget;
-    let targetContent = target || props.content[value] || props.content.tiles || props.content.languageSwitcher;
+    let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
 
     if (!(targetContent && targetContent.action)) {
       return;
@@ -322,7 +326,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       id: this.props.id,
       order: this.props.order,
       activeTheme: this.props.activeTheme,
-      totalNumberOfScreens: this.props.totalNumberOfScreens - 1,
+      totalNumberOfScreens: this.props.totalNumberOfScreens,
       appAndSystemLocaleInfo: this.props.appAndSystemLocaleInfo,
       negotiatedLanguage: this.props.negotiatedLanguage,
       langPackInstallPhase: this.props.langPackInstallPhase,
@@ -330,6 +334,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       messageId: this.props.messageId,
       isFirstCenteredScreen: this.props.isFirstCenteredScreen,
       isLastCenteredScreen: this.props.isLastCenteredScreen,
+      startsWithCorner: this.props.startsWithCorner,
       autoAdvance: this.props.autoAdvance
     });
   }
@@ -591,6 +596,7 @@ const MultiStageProtonScreen = props => {
     handleAction: props.handleAction,
     isFirstCenteredScreen: props.isFirstCenteredScreen,
     isLastCenteredScreen: props.isLastCenteredScreen,
+    startsWithCorner: props.startsWithCorner,
     autoAdvance: props.autoAdvance,
     isRtamo: props.isRtamo,
     addonName: props.addonName,
@@ -686,7 +692,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     } = this.props;
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
-    const hideStepsIndicator = autoAdvance || isCornerPosition || total === 0;
+    const hideStepsIndicator = autoAdvance || isCornerPosition || isFirstCenteredScreen && isLastCenteredScreen;
     const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
 
@@ -768,7 +774,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         total
       })
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.StepsIndicator, {
-      order: this.props.order - 1,
+      order: this.props.startsWithCorner ? this.props.order - 1 : this.props.order,
       totalNumberOfScreens: total
     })))));
   }
@@ -982,27 +988,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const MarketplaceButtons = props => {
-  const {
-    ios_link: iosLink,
-    android_link: androidLink
-  } = props.links;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
     className: "mobile-download-buttons"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-    className: "android"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    "data-l10n-id": "spotlight-android-marketplace-button",
-    onClick: e => {
-      props.handleAction(e, androidLink);
-    }
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
+  }, props.buttons.includes("ios") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
     className: "ios"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     "data-l10n-id": "spotlight-ios-marketplace-button",
-    onClick: e => {
-      props.handleAction(e, iosLink);
-    }
-  })));
+    value: "ios",
+    onClick: props.handleAction
+  })) : null, props.buttons.includes("android") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
+    className: "android"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    "data-l10n-id": "spotlight-android-marketplace-button",
+    value: "android",
+    onClick: props.handleAction
+  })) : null);
 };
 const MobileDownloads = props => {
   var _QRCode$image_overrid;
@@ -1022,11 +1022,10 @@ const MobileDownloads = props => {
     text: props.data.email.link_text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     className: "email-link",
-    onClick: e => {
-      props.handleAction(e, props.data.email.link);
-    }
+    value: "email_link",
+    onClick: props.handleAction
   }))) : null, props.data.marketplace_buttons ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(MarketplaceButtons, {
-    links: props.data.marketplace_buttons,
+    buttons: props.data.marketplace_buttons,
     handleAction: props.handleAction
   }) : null);
 };

@@ -108,9 +108,18 @@ function testClass(node, className) {
 }
 
 function testIndent(node, indent) {
+  if (indent == 0) {
+    is(
+      node.querySelector(".indent"),
+      null,
+      "message doesn't have any indentation"
+    );
+    return;
+  }
+
   indent = `${indent * INDENT_WIDTH}px`;
   is(
-    node.querySelector(".indent").style.width,
+    node.querySelector(".indent")?.style?.width,
     indent,
     "message has the expected level of indentation"
   );

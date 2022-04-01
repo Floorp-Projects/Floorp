@@ -206,6 +206,8 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "border-inline-start-color",
       "border-inline-start-style",
       "border-inline-start-width",
+      "container-name",
+      "container-type",
       "content-visibility",
       "-moz-context-properties",
       "-moz-control-character-visibility",

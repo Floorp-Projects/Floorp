@@ -169,13 +169,19 @@ export const MultiStageAboutWelcome = props => {
           const isLastCenteredScreen =
             screen.content.position !== "corner" &&
             screen.order === centeredScreens[centeredScreens.length - 1].order;
+          /* If first screen is corner positioned, don't include it in the count for the steps indicator. This assumes corner positioning will only be used on the first screen. */
+          const totalNumberOfScreens =
+            screens[0].content.position === "corner"
+              ? screens.length - 1
+              : screens.length;
           return index === order ? (
             <WelcomeScreen
               key={screen.id + order}
               id={screen.id}
-              totalNumberOfScreens={screens.length}
+              totalNumberOfScreens={totalNumberOfScreens}
               isFirstCenteredScreen={isFirstCenteredScreen}
               isLastCenteredScreen={isLastCenteredScreen}
+              startsWithCorner={screens[0].content.position === "corner"}
               order={order}
               content={screen.content}
               navigate={handleTransition}
@@ -263,11 +269,10 @@ export class WelcomeScreen extends React.PureComponent {
     AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
-  async handleAction(event, target) {
+  async handleAction(event) {
     let { props } = this;
     let { value } = event.currentTarget;
     let targetContent =
-      target ||
       props.content[value] ||
       props.content.tiles ||
       props.content.languageSwitcher;
@@ -317,7 +322,7 @@ export class WelcomeScreen extends React.PureComponent {
         id={this.props.id}
         order={this.props.order}
         activeTheme={this.props.activeTheme}
-        totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
+        totalNumberOfScreens={this.props.totalNumberOfScreens}
         appAndSystemLocaleInfo={this.props.appAndSystemLocaleInfo}
         negotiatedLanguage={this.props.negotiatedLanguage}
         langPackInstallPhase={this.props.langPackInstallPhase}
@@ -325,6 +330,7 @@ export class WelcomeScreen extends React.PureComponent {
         messageId={this.props.messageId}
         isFirstCenteredScreen={this.props.isFirstCenteredScreen}
         isLastCenteredScreen={this.props.isLastCenteredScreen}
+        startsWithCorner={this.props.startsWithCorner}
         autoAdvance={this.props.autoAdvance}
       />
     );

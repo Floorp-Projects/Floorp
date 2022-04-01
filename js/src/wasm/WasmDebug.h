@@ -84,9 +84,7 @@ class DebugState {
   const SharedCode code_;
   const SharedModule module_;
 
-  // State maintained when debugging is enabled. In this case, the Code is
-  // not actually shared, but is referenced uniquely by the instance that is
-  // being debugged.
+  // State maintained when debugging is enabled.
 
   bool enterFrameTrapsEnabled_;
   uint32_t enterAndLeaveFrameTrapsCounter_;

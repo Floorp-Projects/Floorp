@@ -98,11 +98,13 @@ bool WebRenderLayerManager::Initialize(
     return false;
   }
 
+  mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
+
   TextureFactoryIdentifier textureFactoryIdentifier;
   wr::MaybeIdNamespace idNamespace;
   // Sync ipc
-  if (!bridge->SendEnsureConnected(&textureFactoryIdentifier, &idNamespace,
-                                   &aError)) {
+  if (!WrBridge()->SendEnsureConnected(&textureFactoryIdentifier, &idNamespace,
+                                       &aError)) {
     gfxCriticalNote << "Failed as lost WebRenderBridgeChild.";
     aError.Assign(hasInitialized
                       ? "FEATURE_FAILURE_WEBRENDER_INITIALIZE_SYNC_POST"_ns
@@ -117,7 +119,6 @@ bool WebRenderLayerManager::Initialize(
     return false;
   }
 
-  mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
   WrBridge()->SetWebRenderLayerManager(this);
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   WrBridge()->SetNamespace(idNamespace.ref());

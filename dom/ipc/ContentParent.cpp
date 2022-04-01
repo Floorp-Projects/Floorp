@@ -354,14 +354,6 @@ extern mozilla::LazyLogModule gFocusLog;
 
 #define LOGFOCUS(args) MOZ_LOG(gFocusLog, mozilla::LogLevel::Debug, args)
 
-// XXX Workaround for bug 986973 to maintain the existing broken semantics
-template <>
-struct nsIConsoleService::COMTypeInfo<nsConsoleService, void> {
-  static const nsIID kIID;
-};
-const nsIID nsIConsoleService::COMTypeInfo<nsConsoleService, void>::kIID =
-    NS_ICONSOLESERVICE_IID;
-
 namespace mozilla {
 namespace CubebUtils {
 extern FileDescriptor CreateAudioIPCConnection();

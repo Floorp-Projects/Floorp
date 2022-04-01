@@ -56,6 +56,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
 
   void GetLinkTarget(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
+  bool HasHref() const;
 
   virtual EventStates IntrinsicState() const override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -63,9 +64,6 @@ class SVGAElement final : public SVGAElementBase, public Link {
                                 const nsAttrValue* aOldValue,
                                 nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
-
-  // Link
-  virtual bool ElementHasHref() const override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedString> Href();
@@ -90,6 +88,8 @@ class SVGAElement final : public SVGAElementBase, public Link {
     ClearHasPendingLinkUpdate();
     SVGAElementBase::NodeInfoChanged(aOldDoc);
   }
+
+  NS_IMPL_FROMNODE_WITH_TAG(SVGAElement, kNameSpaceID_SVG, nsGkAtoms::a);
 
  protected:
   virtual ~SVGAElement() = default;

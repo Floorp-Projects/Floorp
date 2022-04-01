@@ -27,6 +27,15 @@
             data-l10n-id="places-open-in-tab"
             selection-type="single"
             node-type="link"/>
+  <menu id="placesContext_open:newcontainertab"
+            data-l10n-id="places-open-in-container-tab"
+            selection-type="single"
+            node-type="link"
+            hide-if-private-browsing="true"
+            hide-if-usercontext-disabled="true">
+      <menupopup oncommand="PlacesUIUtils.openInContainerTab(event);"
+                 onpopupshowing="return PlacesUIUtils.createContainerTabMenu(event);" />
+  </menu>
   <menuitem id="placesContext_openContainer:tabs"
             oncommand="PlacesUIUtils.openSelectionInTabs(event);"
             data-l10n-id="places-open-all-in-tabs"

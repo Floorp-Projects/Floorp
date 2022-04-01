@@ -129,7 +129,7 @@ pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.x
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 pref(mathml.mathspace_names.disabled,false) == mathml-negativespace.html mathml-negativespace-ref.html
 == negative-mspace-1.html negative-mspace-1-ref.html
-pref(mathml.xlink.disabled,false) != link-1.xhtml link-ref.xhtml
+!= link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 pref(mathml.mathspace_names.disabled,false) == positive-namedspace.html positive-namedspace-ref.html
 == mtable-align-whitespace.html mtable-align-whitespace-ref.html

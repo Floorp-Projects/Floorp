@@ -18,7 +18,7 @@ const LOGS_NUMBER = 500;
 
 module.exports = async function() {
   const input = "abcdefghijklmnopqrst";
-  await testSetup(`data:text/html,<meta charset=utf8><script>
+  await testSetup(`data:text/html,<!DOCTYPE html><meta charset=utf8><script>
     for (let i = 0; i < ${LOGS_NUMBER}; i++) {
       const key = "item" + i;
       console.log(i, key, [i], {key});
@@ -33,9 +33,17 @@ module.exports = async function() {
   const { jsterm } = hud;
 
   // Wait for all the logs to be displayed.
-  await waitFor(
-    () => hud.ui.outputNode.querySelectorAll(".message").length >= LOGS_NUMBER
-  );
+  await waitFor(() => {
+    const messages = Array.from(
+      hud.ui.outputNode.querySelectorAll(".message-body")
+    );
+    return (
+      messages.find(message => message.textContent.includes(`item0`)) &&
+      messages.find(message =>
+        message.textContent.includes(`item${LOGS_NUMBER - 1}`)
+      )
+    );
+  });
 
   jsterm.focus();
 

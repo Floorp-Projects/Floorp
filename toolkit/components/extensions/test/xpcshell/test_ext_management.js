@@ -4,6 +4,12 @@
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function setup() {
   Services.prefs.setBoolPref(
@@ -203,3 +209,131 @@ add_task(async function test_management_getAll() {
   await extension2.unload();
   await extension1.unload();
 });
+
+add_task(
+  { pref_set: [["extensions.eventPages.enabled", true]] },
+  async function test_management_event_page() {
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        permissions: ["management"],
+        background: { persistent: false },
+      },
+      background() {
+        browser.management.onInstalled.addListener(details => {
+          browser.test.sendMessage("onInstalled", details);
+        });
+        browser.management.onUninstalled.addListener(details => {
+          browser.test.sendMessage("onUninstalled", details);
+        });
+        browser.management.onEnabled.addListener(() => {
+          browser.test.sendMessage("onEnabled");
+        });
+        browser.management.onDisabled.addListener(() => {
+          browser.test.sendMessage("onDisabled");
+        });
+      },
+    });
+
+    await extension.startup();
+    let events = ["onInstalled", "onUninstalled", "onEnabled", "onDisabled"];
+    for (let event of events) {
+      assertPersistentListeners(extension, "management", event, {
+        primed: false,
+      });
+    }
+
+    await extension.terminateBackground();
+    for (let event of events) {
+      assertPersistentListeners(extension, "management", event, {
+        primed: true,
+      });
+    }
+
+    let testExt = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        applications: { gecko: { id: "test-ext@mochitest" } },
+      },
+      background() {},
+    });
+    await testExt.startup();
+
+    let details = await extension.awaitMessage("onInstalled");
+    equal(testExt.id, details.id, "got onInstalled event");
+
+    await AddonTestUtils.promiseRestartManager();
+    await extension.awaitStartup();
+    await testExt.awaitStartup();
+
+    for (let event of events) {
+      assertPersistentListeners(extension, "management", event, {
+        primed: true,
+      });
+    }
+
+    // Test uninstalling an addon wakes up the watching extension.
+    let uninstalled = testExt.unload();
+
+    details = await extension.awaitMessage("onUninstalled");
+    equal(testExt.id, details.id, "got onUninstalled event");
+
+    await extension.unload();
+    await uninstalled;
+  }
+);
+
+// Sanity check that Addon listeners are removed on context close.
+add_task(
+  {
+    // __AddonManagerInternal__ is exposed for debug builds only.
+    skip_if: () => !AppConstants.DEBUG,
+  },
+  async function test_management_unregister_listener() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        permissions: ["management"],
+      },
+      files: {
+        "extpage.html": `<!DOCTYPE html><script src="extpage.js"></script>`,
+        "extpage.js": function() {
+          browser.management.onInstalled.addListener(() => {});
+        },
+      },
+    });
+
+    await extension.startup();
+
+    const page = await ExtensionTestUtils.loadContentPage(
+      `moz-extension://${extension.uuid}/extpage.html`
+    );
+
+    const { AddonManager } = ChromeUtils.import(
+      "resource://gre/modules/AddonManager.jsm"
+    );
+    function assertManagementAPIAddonListener(expect) {
+      let found = false;
+      for (const addonListener of AddonManager.__AddonManagerInternal__
+        ?.addonListeners || []) {
+        if (
+          Object.getPrototypeOf(addonListener).constructor.name ===
+          "ManagementAddonListener"
+        ) {
+          found = true;
+        }
+      }
+      equal(
+        found,
+        expect,
+        `${
+          expect ? "Should" : "Should not"
+        } have found an AOM addonListener registered by the management API`
+      );
+    }
+
+    assertManagementAPIAddonListener(true);
+    await page.close();
+    assertManagementAPIAddonListener(false);
+    await extension.unload();
+  }
+);

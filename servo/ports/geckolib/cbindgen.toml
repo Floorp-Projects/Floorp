@@ -148,6 +148,8 @@ include = [
   "LineBreak",
   "WordBreak",
   "Contain",
+  "ContainerType",
+  "ContainerName",
   "ContentVisibility",
   "Origin",
   "RestyleHint",

@@ -34,8 +34,8 @@ add_task(async function() {
     if (!node) {
       return false;
     }
-    const frameLinkNode = node.querySelector(".message-location .frame-link");
-    const url = frameLinkNode.getAttribute("data-url");
+    const messageLocationNode = node.querySelector(".message-location");
+    const url = messageLocationNode.getAttribute("data-url");
     return url.includes("nosuchfile");
   });
 

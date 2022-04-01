@@ -201,12 +201,8 @@
   border-inline-end-color: var(--console-warning-color);
 }
 
-.message > .indent[data-indent="0"] {
-  display: none;
-}
-
 /* Center first level indent within the left gutter */
-.message:not(.startGroup, .startGroupCollapsed) > .indent[data-indent="1"] {
+.message[data-indent="1"]:not(.startGroup, .startGroupCollapsed) > .indent {
   margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
   margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }
@@ -228,7 +224,7 @@
 }
 
 /* Icon on unindented row should be centered within the left gutter */
-.message > .indent[data-indent="0"] + .icon {
+.message[data-indent="0"] + .icon {
   width: 24px;
   margin-inline-start: var(--console-icon-horizontal-offset);
   margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
@@ -335,10 +331,15 @@
   display: none;
 }
 
-.message-location .frame-link-source-inner {
+.message-location .frame-link-source {
+  font-style: normal !important;
   /* Enforce LTR direction for the file name - fixes bug 1290056 */
   direction: ltr;
   unicode-bidi: embed;
+}
+
+.message-location .frame-link-source:visited {
+  color: currentColor;
 }
 
 .message-flex-body {
@@ -940,7 +941,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Align console.group messages with the border they create for their "children" messages */
-.indent[data-indent]:not([data-indent="0"]) ~ .collapse-button {
+.indent ~ .collapse-button {
   margin-inline-start: 3px;
 }
 
@@ -961,8 +962,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* Center the collapse button in the left gutter (first-level only) */
 .message.network > .collapse-button,
-.message.startGroup > .indent[data-indent="0"] ~ .collapse-button,
-.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button {
+.message:is(.startGroup,.startGroupCollapsed)[data-indent="0"] > .collapse-button {
   width: 24px;
   margin-inline-start: var(--console-icon-horizontal-offset);
   margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
@@ -970,10 +970,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* Use a bigger arrow that is visually similar to other icons (10px) */
 .message.network > .collapse-button::before,
-.message.startGroup > .indent[data-indent="0"] ~ .collapse-button::before,
-.message.startGroupCollapsed
-  > .indent[data-indent="0"]
-  ~ .collapse-button::before {
+.message:is(.startGroup,.startGroupCollapsed)[data-indent="0"] > .collapse-button::before {
   width: 100%;
   background-image: url("chrome://devtools/skin/images/arrow-big.svg");
   fill: var(--theme-icon-dimmed-color);

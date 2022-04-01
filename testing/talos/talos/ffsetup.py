@@ -333,7 +333,7 @@ class FFSetup(object):
         self._init_env()
         self._init_profile()
         try:
-            if not self.debug_mode and self.test_config["name"] != "damp":
+            if not self.debug_mode and not self.test_config["name"].startswith("damp"):
                 self._run_profile()
         except BaseException:
             self.clean()

@@ -76,20 +76,24 @@ auto PreferenceSheet::PrefsKindFor(const Document& aDoc) -> PrefsKind {
   return PrefsKind::Content;
 }
 
-static bool UseAccessibilityTheme(bool aIsChrome) {
-  return !aIsChrome &&
-         !!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0);
-}
-
-static bool UseDocumentColors(bool aIsChrome, bool aUseAcccessibilityTheme) {
+static bool UseDocumentColors(bool aUseAcccessibilityTheme) {
   switch (StaticPrefs::browser_display_document_color_use()) {
     case 1:
       return true;
     case 2:
-      return aIsChrome;
+      return false;
     default:
       return !aUseAcccessibilityTheme;
   }
+}
+
+static bool UseStandinsForNativeColors() {
+  return nsContentUtils::ShouldResistFingerprinting(
+             "we want to have consistent colors across the browser if RFP is "
+             "enabled, so we check the global preference"
+             "not excluding chrome browsers or webpages, so we call the legacy "
+             "RFP function to prevent that") ||
+         StaticPrefs::ui_use_standins_for_native_colors();
 }
 
 void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
@@ -102,13 +106,6 @@ void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
     std::swap(colors.mDefault, colors.mDefaultBackground);
   }
 
-  const bool useStandins = nsContentUtils::UseStandinsForNativeColors();
-  // Users should be able to choose to use system colors or preferred colors
-  // when HCM is disabled, and in both OS-level HCM and FF-level HCM.
-  // To make this possible, we don't consider UseDocumentColors and
-  // mUseAccessibilityTheme when computing the following bool.
-  const bool usePrefColors = !useStandins && !mIsChrome &&
-                             !StaticPrefs::browser_display_use_system_colors();
   const auto scheme = aIsLight ? ColorScheme::Light : ColorScheme::Dark;
 
   // Link colors might be provided by the OS, but they might not be. If they are
@@ -119,13 +116,16 @@ void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
   GetColor("browser.active_color", scheme, colors.mActiveLink);
   GetColor("browser.visited_color", scheme, colors.mVisitedLink);
 
-  if (usePrefColors) {
+  // Historically we've given more weight to the "use standins" setting than the
+  // "use system colors" one. In practice most users don't use standins because
+  // it's hidden behind prefs.
+  if (mUsePrefColors && !mUseStandins) {
     GetColor("browser.display.background_color", scheme,
              colors.mDefaultBackground);
     GetColor("browser.display.foreground_color", scheme, colors.mDefault);
   } else {
     using ColorID = LookAndFeel::ColorID;
-    const auto standins = LookAndFeel::UseStandins(useStandins);
+    const auto standins = LookAndFeel::UseStandins(mUseStandins);
     colors.mDefault = LookAndFeel::Color(ColorID::Windowtext, scheme, standins,
                                          colors.mDefault);
     colors.mDefaultBackground = LookAndFeel::Color(
@@ -181,11 +181,49 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   *this = {};
 
   mIsChrome = aIsChrome;
-  mUseAccessibilityTheme = UseAccessibilityTheme(aIsChrome);
+
+  // Chrome documents always use system colors, not stand-ins, not forced, etc.
+  if (!aIsChrome) {
+    mUseAccessibilityTheme =
+        LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme);
+    mUseDocumentColors = UseDocumentColors(mUseAccessibilityTheme);
+    mUsePrefColors = !StaticPrefs::browser_display_use_system_colors();
+    mUseStandins = UseStandinsForNativeColors();
+  }
 
   LoadColors(true);
   LoadColors(false);
-  mUseDocumentColors = UseDocumentColors(aIsChrome, mUseAccessibilityTheme);
+
+  mColorSchemeChoice = [&] {
+    // When not forcing colors, we use the standard mechanism, the document is
+    // in control taking into account user preferences if it wishes to.
+    if (mUseDocumentColors) {
+      return ColorSchemeChoice::Standard;
+    }
+#ifdef XP_WIN
+    // Windows overrides the light colors with the HCM colors when HCM is
+    // active, so make sure to always use the light system colors in that case.
+    // For the same reason, we need to force the light color set to be used.
+    if (mUseAccessibilityTheme) {
+      mMustUseLightColorSet = true;
+      return ColorSchemeChoice::Light;
+    }
+#endif
+    // When forcing preference colors, we derive a color-scheme from those. That
+    // way we can use the system colors more appropriately suited for the user,
+    // avoiding contrast issues like bug 1762018.
+    if (mUsePrefColors) {
+      // We need to forcibly use the light color-set for this case too, as those
+      // are the colors exposed to the user in the preferences page.
+      mMustUseLightColorSet = true;
+      return LookAndFeel::IsDarkColor(mLightColors.mDefaultBackground)
+                 ? ColorSchemeChoice::Dark
+                 : ColorSchemeChoice::Light;
+    }
+    // When using system colors, we can generally just use the preferred color
+    // scheme of the document unconditionally (modulo the HCM case above).
+    return ColorSchemeChoice::UserPreferred;
+  }();
 }
 
 void PreferenceSheet::Initialize() {
@@ -205,8 +243,10 @@ void PreferenceSheet::Initialize() {
     // despite having made it into mLightColors), because it both wastes ink and
     // it might interact poorly with the color adjustments we do while printing.
     //
-    // So we override the light colors with our hardcoded default colors.
+    // So we override the light colors with our hardcoded default colors, and
+    // force the use of stand-ins.
     sPrintPrefs.mLightColors = Prefs().mLightColors;
+    sPrintPrefs.mUseStandins = true;
   }
 
   nsAutoString useDocumentColorPref;

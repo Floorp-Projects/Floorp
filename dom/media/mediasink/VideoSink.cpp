@@ -513,9 +513,35 @@ void VideoSink::UpdateRenderedVideoFrames() {
       VSINK_LOG_V("discarding video frame mTime=%" PRId64
                   " clock_time=%" PRId64,
                   frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
-      PROFILER_MARKER("DiscardVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                      frame->mTime.ToMicroseconds(),
-                      frame->GetEndTime().ToMicroseconds());
+
+      struct VideoSinkDroppedFrameMarker {
+        static constexpr Span<const char> MarkerTypeName() {
+          return MakeStringSpan("VideoSinkDroppedFrame");
+        }
+        static void StreamJSONMarkerData(
+            baseprofiler::SpliceableJSONWriter& aWriter,
+            int64_t aSampleStartTimeUs, int64_t aSampleEndTimeUs,
+            int64_t aClockTimeUs) {
+          aWriter.IntProperty("sampleStartTimeUs", aSampleStartTimeUs);
+          aWriter.IntProperty("sampleEndTimeUs", aSampleEndTimeUs);
+          aWriter.IntProperty("clockTimeUs", aClockTimeUs);
+        }
+        static MarkerSchema MarkerTypeDisplay() {
+          using MS = MarkerSchema;
+          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+          schema.AddKeyLabelFormat("sampleStartTimeUs", "Sample start time",
+                                   MS::Format::Microseconds);
+          schema.AddKeyLabelFormat("sampleEndTimeUs", "Sample end time",
+                                   MS::Format::Microseconds);
+          schema.AddKeyLabelFormat("clockTimeUs", "Audio clock time",
+                                   MS::Format::Microseconds);
+          return schema;
+        }
+      };
+      profiler_add_marker(
+          "VideoSinkDroppedFrame", geckoprofiler::category::MEDIA_PLAYBACK, {},
+          VideoSinkDroppedFrameMarker{}, frame->mTime.ToMicroseconds(),
+          frame->GetEndTime().ToMicroseconds(), clockTime.ToMicroseconds());
     }
   }
 

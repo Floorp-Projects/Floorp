@@ -2164,7 +2164,7 @@ async function checkEvaluateInTopFrame(dbg, text, expected) {
 async function findConsoleMessage({ toolbox }, query) {
   const [message] = await findConsoleMessages(toolbox, query);
   const value = message.querySelector(".message-body").innerText;
-  const link = message.querySelector(".frame-link-source-inner").innerText;
+  const link = message.querySelector(".frame-link-source").innerText;
   return { value, link };
 }
 
