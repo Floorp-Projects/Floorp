@@ -7,189 +7,40 @@
 #ifndef TABLE_ACCESSIBLE_H
 #define TABLE_ACCESSIBLE_H
 
-#include "TableCellAccessible.h"
+#include "LocalAccessible.h"
+#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableCellAccessibleBase.h"
 #include "nsPointerHashKeys.h"
 #include "nsRefPtrHashtable.h"
-#include "nsString.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace a11y {
 
-class LocalAccessible;
-
 /**
- * Accessible table interface.
+ * Base class for LocalAccessible table implementations.
  */
-class TableAccessible {
+class TableAccessible : public TableAccessibleBase {
  public:
-  /**
-   * Return the caption accessible if any for this table.
-   */
-  virtual LocalAccessible* Caption() const { return nullptr; }
+  virtual LocalAccessible* Caption() const override { return nullptr; }
 
-  /**
-   * Get the summary for this table.
-   */
-  virtual void Summary(nsString& aSummary) { aSummary.Truncate(); }
-
-  /**
-   * Return the number of columns in the table.
-   */
-  virtual uint32_t ColCount() const { return 0; }
-
-  /**
-   * Return the number of rows in the table.
-   */
-  virtual uint32_t RowCount() { return 0; }
-
-  /**
-   * Return the accessible for the cell at the given row and column indices.
-   */
-  virtual LocalAccessible* CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
+  virtual LocalAccessible* CellAt(uint32_t aRowIdx, uint32_t aColIdx) override {
     return nullptr;
   }
 
-  /**
-   * Return the index of the cell at the given row and column.
-   */
-  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) {
+  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) override {
     return ColCount() * aRowIdx + aColIdx;
   }
 
-  /**
-   * Return the column index of the cell with the given index.
-   * This returns -1 if the column count is 0 or an invalid index is being
-   * passed in.
-   */
-  virtual int32_t ColIndexAt(uint32_t aCellIdx);
-
-  /**
-   * Return the row index of the cell with the given index.
-   * This returns -1 if the column count is 0 or an invalid index is being
-   * passed in.
-   */
-  virtual int32_t RowIndexAt(uint32_t aCellIdx);
-
-  /**
-   * Get the row and column indices for the cell at the given index.
-   * This returns -1 for both output parameters if the column count is 0 or an
-   * invalid index is being passed in.
-   */
+  virtual int32_t ColIndexAt(uint32_t aCellIdx) override;
+  virtual int32_t RowIndexAt(uint32_t aCellIdx) override;
   virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                  int32_t* aColIdx);
+                                  int32_t* aColIdx) override;
+  virtual bool IsProbablyLayoutTable() override;
+  virtual LocalAccessible* AsAccessible() override = 0;
 
-  /**
-   * Return the number of columns occupied by the cell at the given row and
-   * column indices.
-   */
-  virtual uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx) { return 1; }
-
-  /**
-   * Return the number of rows occupied by the cell at the given row and column
-   * indices.
-   */
-  virtual uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx) { return 1; }
-
-  /**
-   * Get the description of the given column.
-   */
-  virtual void ColDescription(uint32_t aColIdx, nsString& aDescription) {
-    aDescription.Truncate();
-  }
-
-  /**
-   * Get the description for the given row.
-   */
-  virtual void RowDescription(uint32_t aRowIdx, nsString& aDescription) {
-    aDescription.Truncate();
-  }
-
-  /**
-   * Return true if the given column is selected.
-   */
-  virtual bool IsColSelected(uint32_t aColIdx) { return false; }
-
-  /**
-   * Return true if the given row is selected.
-   */
-  virtual bool IsRowSelected(uint32_t aRowIdx) { return false; }
-
-  /**
-   * Return true if the given cell is selected.
-   */
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
-    return false;
-  }
-
-  /**
-   * Return the number of selected cells.
-   */
-  virtual uint32_t SelectedCellCount() { return 0; }
-
-  /**
-   * Return the number of selected columns.
-   */
-  virtual uint32_t SelectedColCount() { return 0; }
-
-  /**
-   * Return the number of selected rows.
-   */
-  virtual uint32_t SelectedRowCount() { return 0; }
-
-  /**
-   * Get the set of selected cells.
-   */
-  virtual void SelectedCells(nsTArray<LocalAccessible*>* aCells) = 0;
-
-  /**
-   * Get the set of selected cell indices.
-   */
-  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) = 0;
-
-  /**
-   * Get the set of selected column indices.
-   */
-  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) = 0;
-
-  /**
-   * Get the set of selected row indices.
-   */
-  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) = 0;
-
-  /**
-   * Select the given column unselecting any other selected columns.
-   */
-  virtual void SelectCol(uint32_t aColIdx) {}
-
-  /**
-   * Select the given row unselecting all other previously selected rows.
-   */
-  virtual void SelectRow(uint32_t aRowIdx) {}
-
-  /**
-   * Unselect the given column leaving other selected columns selected.
-   */
-  virtual void UnselectCol(uint32_t aColIdx) {}
-
-  /**
-   * Unselect the given row leaving other selected rows selected.
-   */
-  virtual void UnselectRow(uint32_t aRowIdx) {}
-
-  /**
-   * Return true if the table is probably for layout.
-   */
-  virtual bool IsProbablyLayoutTable();
-
-  /**
-   * Convert the table to an Accessible*.
-   */
-  virtual LocalAccessible* AsAccessible() = 0;
-
-  typedef nsRefPtrHashtable<nsPtrHashKey<const TableCellAccessible>,
-                            LocalAccessible>
-      HeaderCache;
+  using HeaderCache =
+      nsRefPtrHashtable<nsPtrHashKey<const TableCellAccessibleBase>,
+                        LocalAccessible>;
 
   /**
    * Get the header cache, which maps a TableCellAccessible to its previous
