@@ -17,7 +17,6 @@ from mozperftest.test.webpagetest import (
     WPTInvalidConnectionSelection,
     ACCEPTED_STATISTICS,
     WPTInvalidStatisticsError,
-    WPTErrorWithWebsite,
     WPTDataProcessingError,
 )
 
@@ -41,7 +40,7 @@ def init_placeholder_wpt_data(fvonly=False, invalid_results=False):
     placeholder_data = {
         "data": {
             "summary": "websitelink.com",
-            "location": "ec2-us-west-1:Firefox",
+            "location": "ec2-us-east-1:Firefox",
             "testRuns": 3,
             "successfulFVRuns": 3,
             "successfulRVRuns": 3,
@@ -64,7 +63,7 @@ def init_placeholder_wpt_data(fvonly=False, invalid_results=False):
 def init_mocked_request(status_code, **kwargs):
     mock_data = {
         "data": {
-            "ec2-us-west-1": {"PendingTests": {"Queued": 3}, "Label": "California"},
+            "ec2-us-east-1": {"PendingTests": {"Queued": 3}, "Label": "California"},
             "jsonUrl": "mock_test.com",
             "summary": "Just a pageload test",
         },
@@ -148,37 +147,6 @@ def test_webpagetest_test_timeout(*mocked):
     with pytest.raises(WPTTimeOutError):
         test.run(metadata)
     assert True
-
-
-@mock.patch(
-    "requests.get",
-    return_value=init_mocked_request(200, testRuns=3, successfulFVRuns=2, fvonly=True),
-)
-@mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
-def test_webpagetest_test_fv_count_discrepancy(*mocked):
-    mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
-    metadata.script["options"]["test_list"] = ["google.ca"]
-    metadata.script["options"]["test_parameters"]["wait_between_requests"] = 1
-    test = webpagetest.WebPageTest(env, mach_cmd)
-    with pytest.raises(WPTErrorWithWebsite):
-        test.run(metadata)
-    assert True
-
-
-@mock.patch(
-    "requests.get",
-    return_value=init_mocked_request(
-        200, testRuns=3, successfulFVRuns=3, successfulRVRuns=2, fvonly=False
-    ),
-)
-@mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
-def test_webpagetest_test_rv_count_discrepancy(*mocked):
-    mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
-    metadata.script["options"]["test_list"] = ["google.ca"]
-    metadata.script["options"]["test_parameters"]["wait_between_requests"] = 1
-    test = webpagetest.WebPageTest(env, mach_cmd)
-    with pytest.raises(WPTErrorWithWebsite):
-        test.run(metadata)
 
 
 @mock.patch(
