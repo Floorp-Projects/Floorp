@@ -197,11 +197,9 @@ export class ProtonScreen extends React.PureComponent {
               </Localized>
               <div className="spacer-bottom" />
             </div>
-            {content.help_text && content.help_text.text ? (
-              <Localized text={content.help_text.text}>
-                <span className="attrib-text" />
-              </Localized>
-            ) : null}
+            <Localized text={content.help_text}>
+              <span className="attrib-text" />
+            </Localized>
           </div>
         ) : null}
         <div className="section-main">
@@ -237,25 +235,19 @@ export class ProtonScreen extends React.PureComponent {
                 <Localized text={content.title}>
                   <h1 id="mainContentHeader" />
                 </Localized>
-                {content.subtitle ? (
-                  <Localized text={content.subtitle}>
-                    <h2
-                      data-l10n-args={JSON.stringify({
-                        "addon-name": this.props.addonName,
-                        ...this.props.appAndSystemLocaleInfo?.displayNames,
-                      })}
-                    />
-                  </Localized>
-                ) : null}
+                <Localized text={content.subtitle}>
+                  <h2
+                    data-l10n-args={JSON.stringify({
+                      "addon-name": this.props.addonName,
+                      ...this.props.appAndSystemLocaleInfo?.displayNames,
+                    })}
+                  />
+                </Localized>
               </div>
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
               <div>
-                <Localized
-                  text={
-                    content.primary_button ? content.primary_button.label : null
-                  }
-                >
+                <Localized text={content.primary_button?.label}>
                   <button
                     className="primary"
                     value="primary_button"
