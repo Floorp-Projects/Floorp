@@ -45,6 +45,10 @@ class AbortSignal final : public DOMEventTargetHelper,
                                              JS::Handle<JS::Value> aReason,
                                              ErrorResult& aRv);
 
+  static already_AddRefed<AbortSignal> Timeout(GlobalObject& aGlobal,
+                                               uint64_t aMilliseconds,
+                                               ErrorResult& aRv);
+
   void ThrowIfAborted(JSContext* aCx, ErrorResult& aRv);
 
   // AbortSignalImpl
