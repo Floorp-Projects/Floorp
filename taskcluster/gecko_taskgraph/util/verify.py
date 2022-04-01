@@ -38,7 +38,17 @@ class Verification(ABC):
 
 
 @attr.s(frozen=True)
+class InitialVerification(Verification):
+    """Verification that doesn't depend on any generation state."""
+
+    def verify(self):
+        self.func()
+
+
+@attr.s(frozen=True)
 class GraphVerification(Verification):
+    """Verification for a TaskGraph object."""
+
     run_on_projects = attr.ib(default=None)
 
     def verify(
@@ -66,6 +76,22 @@ class GraphVerification(Verification):
 
 
 @attr.s(frozen=True)
+class ParametersVerification(Verification):
+    """Verification for a set of parameters."""
+
+    def verify(self, parameters: Parameters):
+        self.func(parameters)
+
+
+@attr.s(frozen=True)
+class KindsVerification(Verification):
+    """Verification for kinds."""
+
+    def verify(self, kinds: dict):
+        self.func(kinds)
+
+
+@attr.s(frozen=True)
 class VerificationSequence:
     """
     Container for a sequence of verifications over a TaskGraph. Each
@@ -78,6 +104,9 @@ class VerificationSequence:
     _verifications = attr.ib(factory=dict)
     _verification_types = {
         "graph": GraphVerification,
+        "initial": InitialVerification,
+        "kinds": KindsVerification,
+        "parameters": ParametersVerification,
     }
 
     def __call__(self, name, *args, **kwargs):
@@ -159,6 +188,47 @@ def verify_docs(filename, identifiers, appearing_as):
                     appearing_as, identifier, filename
                 )
             )
+
+
+@verifications.add("initial")
+def verify_run_using():
+    from gecko_taskgraph.transforms.job import registry
+
+    verify_docs(
+        filename="transforms.rst",
+        identifiers=registry.keys(),
+        appearing_as="inline-literal",
+    )
+
+
+@verifications.add("parameters")
+def verify_parameters_docs(parameters):
+    if not parameters.strict:
+        return
+
+    parameters_dict = dict(**parameters)
+    verify_docs(
+        filename="parameters.rst",
+        identifiers=list(parameters_dict),
+        appearing_as="inline-literal",
+    )
+
+
+@verifications.add("kinds")
+def verify_kinds_docs(kinds):
+    verify_docs(filename="kinds.rst", identifiers=kinds.keys(), appearing_as="heading")
+
+
+@verifications.add("full_task_set")
+def verify_attributes(task, taskgraph, scratch_pad, graph_config, parameters):
+    if task is None:
+        verify_docs(
+            filename="attributes.rst",
+            identifiers=list(scratch_pad["attribute_set"]),
+            appearing_as="heading",
+        )
+        return
+    scratch_pad.setdefault("attribute_set", set()).update(task.attributes.keys())
 
 
 @verifications.add("full_task_graph")
