@@ -6333,6 +6333,8 @@ static const char* GetTimeoutReasonString(Timeout* aTimeout) {
     case Timeout::Reason::eAbortSignalTimeout:
       return "AbortSignal timeout";
   }
+  MOZ_CRASH("Unexpected enum value");
+  return "";
 }
 
 bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
