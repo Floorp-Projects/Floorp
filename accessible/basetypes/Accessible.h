@@ -24,6 +24,8 @@ class AccGroupInfo;
 class HyperTextAccessibleBase;
 class LocalAccessible;
 class RemoteAccessible;
+class TableAccessibleBase;
+class TableCellAccessibleBase;
 
 /**
  * Name type flags.
@@ -431,6 +433,9 @@ class Accessible {
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
+
+  virtual TableAccessibleBase* AsTableBase() { return nullptr; }
+  virtual TableCellAccessibleBase* AsTableCellBase() { return nullptr; }
 
   /**
    * Return the localized string for the given key.
