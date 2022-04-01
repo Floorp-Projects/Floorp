@@ -73,7 +73,7 @@ class ProcessPriorityManager final {
 
   /**
    * Updates the contents of mHighPriorityBrowserParents to keep track of
-   * the list of TabIds for this process that are high priority.
+   * the list of TabIds for this process that are active.
    */
   static void BrowserPriorityChanged(dom::CanonicalBrowsingContext* aBC,
                                      bool aPriority);

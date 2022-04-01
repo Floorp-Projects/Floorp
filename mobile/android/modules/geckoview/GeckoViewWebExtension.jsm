@@ -544,7 +544,6 @@ class MobileWindowTracker extends EventEmitter {
   setTabActive(aWindow, aActive) {
     const { browser, tab, docShell } = aWindow;
     tab.active = aActive;
-    browser.frameLoader.remoteTab.priorityHint = aActive;
 
     if (aActive) {
       this._topWindow = Cu.getWeakReference(aWindow);
