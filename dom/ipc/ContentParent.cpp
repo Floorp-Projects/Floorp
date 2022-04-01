@@ -52,7 +52,6 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/BasePrincipal.h"
@@ -606,6 +605,10 @@ UniquePtr<SandboxBrokerPolicyFactory>
 UniquePtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
 
+// This is true when subprocess launching is enabled.  This is the
+// case between StartUp() and ShutDown().
+static bool sCanLaunchSubprocesses;
+
 // Set to true when the first content process gets created.
 static bool sCreatedFirstContentProcess = false;
 
@@ -653,8 +656,11 @@ ContentParent::MakePreallocProcess() {
 
 /*static*/
 void ContentParent::StartUp() {
+  // We could launch sub processes from content process
   // FIXME Bug 1023701 - Stop using ContentParent static methods in
   // child process
+  sCanLaunchSubprocesses = true;
+
   if (!XRE_IsParentProcess()) {
     return;
   }
@@ -682,6 +688,7 @@ void ContentParent::StartUp() {
 void ContentParent::ShutDown() {
   // No-op for now.  We rely on normal process shutdown and
   // ClearOnShutdown() to clean up our state.
+  sCanLaunchSubprocesses = false;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = nullptr;
@@ -1438,7 +1445,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       "BrowsingContext must not have BrowserParent, or have previous "
       "BrowserParent cleared");
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+  if (!sCanLaunchSubprocesses) {
     return nullptr;
   }
 
@@ -1835,7 +1842,8 @@ void ContentParent::AssertNotInPool() {
     MOZ_RELEASE_ASSERT(
         !sBrowserContentParents ||
         !sBrowserContentParents->Contains(mRemoteType) ||
-        !sBrowserContentParents->Get(mRemoteType)->Contains(this));
+        !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
+        !sCanLaunchSubprocesses);  // aka in shutdown - avoid timing issues
 
     for (const auto& group : mGroups) {
       MOZ_RELEASE_ASSERT(group->GetHostProcess(mRemoteType) != this,
@@ -2472,13 +2480,9 @@ void ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs) {
 bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
-    NS_WARNING("Shutdown has begun, we won't spawn any more child processes.");
-    return false;
-  }
-
   if (!ContentProcessManager::GetSingleton()) {
-    MOZ_ASSERT(false, "Unable to acquire ContentProcessManager singleton!");
+    NS_WARNING(
+        "Shutdown has begun, we shouldn't spawn any more child processes");
     return false;
   }
 
