@@ -78,20 +78,13 @@ const DEFAULT_WELCOME_CONTENT = {
       content: {
         logo: {},
         title: { string_id: "onboarding-live-language-header" },
-        subtitle: { string_id: "onboarding-live-language-subtitle" },
         has_noodles: true,
         languageSwitcher: {
-          switch: {
-            string_id: "onboarding-live-language-switch-button-label",
-          },
           downloading: {
             string_id: "onboarding-live-language-button-label-downloading",
           },
           cancel: {
             string_id: "onboarding-live-language-secondary-cancel-download",
-          },
-          not_now: {
-            string_id: "onboarding-live-language-not-now-button-label",
           },
           waiting: { string_id: "onboarding-live-language-waiting-button" },
           skip: { string_id: "onboarding-live-language-skip-button-label" },
