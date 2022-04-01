@@ -94,14 +94,14 @@ static bool PrintCycle(
   fputs("=== Cyclical dependency starts at\n", stderr);
   aOut += "Cyclical dependency starts at\n";
 
-  const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type res =
+  const BlockingResourceBase::DDT::ResourceAcquisitionArray::value_type res =
       aCycle.ElementAt(0);
   maybeImminent &= res->Print(aOut);
 
   BlockingResourceBase::DDT::ResourceAcquisitionArray::index_type i;
   BlockingResourceBase::DDT::ResourceAcquisitionArray::size_type len =
       aCycle.Length();
-  const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type* it =
+  const BlockingResourceBase::DDT::ResourceAcquisitionArray::value_type* it =
       1 + aCycle.Elements();
   for (i = 1; i < len - 1; ++i, ++it) {
     fputs("\n--- Next dependency:\n", stderr);
