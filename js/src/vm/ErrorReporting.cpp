@@ -17,6 +17,7 @@
 #include "js/Warnings.h"              // JS::WarningReporter
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
 
 #include "vm/JSContext-inl.h"
 
@@ -118,6 +119,11 @@ static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
 
   if (!js::ExpandErrorArgumentsVA(cx, js::GetErrorMessage, nullptr, errorNumber,
                                   argumentsType, err, *args)) {
+    return;
+  }
+
+  if (MOZ_UNLIKELY(!cx->runtime()->hasInitializedSelfHosting())) {
+    selfHosting_ErrorReporter(err);
     return;
   }
 
