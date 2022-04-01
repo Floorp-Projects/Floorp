@@ -969,7 +969,8 @@ body {
     }
   }
 
-  .primary {
+  .primary,
+  .secondary {
     font-size: 13px;
     line-height: 16px;
     padding: 11px 15px;
@@ -978,6 +979,11 @@ body {
     &.rtamo {
       margin-top: 24px;
     }
+  }
+
+  .secondary {
+    background-color: var(--in-content-button-background);
+    color: var(--in-content-button-text-color);
   }
 
   // Styles specific to background noodles, with screen-by-screen positions
@@ -1184,6 +1190,7 @@ body {
     }
 
     .primary,
+    .secondary,
     .secondary-cta,
     .steps {
       transition-delay: 1s;
@@ -1198,6 +1205,7 @@ body {
     }
 
     .primary,
+    .secondary,
     .secondary-cta {
       transition-delay: 0.4s;
     }
@@ -1253,6 +1261,7 @@ body {
       .brand-logo,
       .welcome-text,
       .primary,
+      .secondary,
       .secondary-cta:not(.top),
       .message-text {
         opacity: 0;
@@ -1288,6 +1297,7 @@ body {
       .colorway-variations,
       .tiles-theme-section,
       .primary,
+      .secondary,
       .secondary-cta:not(.top) {
         opacity: 0;
         translate: 0 calc(-1 * var(--translate));
@@ -1346,6 +1356,7 @@ body {
       }
 
       .primary,
+      .secondary,
       .secondary-cta:not(.top) {
         opacity: 0;
         translate: 0 var(--translate);
