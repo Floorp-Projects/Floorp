@@ -79,8 +79,7 @@ class DrawTargetOffset : public DrawTarget {
                           const Point& aDestPoint,
                           const DrawOptions& aOptions = DrawOptions()) override;
   virtual void DrawSurfaceWithShadow(
-      SourceSurface* aSurface, const Point& aDest, const DeviceColor& aColor,
-      const Point& aOffset, Float aSigma,
+      SourceSurface* aSurface, const Point& aDest, const ShadowOptions& aShadow,
       CompositionOp aOperator) override { /* Not implemented */
     MOZ_CRASH("GFX: DrawSurfaceWithShadow");
   }

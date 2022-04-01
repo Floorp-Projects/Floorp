@@ -733,15 +733,12 @@ class RecordedDrawSurfaceWithShadow
     : public RecordedDrawingEvent<RecordedDrawSurfaceWithShadow> {
  public:
   RecordedDrawSurfaceWithShadow(DrawTarget* aDT, ReferencePtr aRefSource,
-                                const Point& aDest, const DeviceColor& aColor,
-                                const Point& aOffset, Float aSigma,
-                                CompositionOp aOp)
+                                const Point& aDest,
+                                const ShadowOptions& aShadow, CompositionOp aOp)
       : RecordedDrawingEvent(DRAWSURFACEWITHSHADOW, aDT),
         mRefSource(aRefSource),
         mDest(aDest),
-        mColor(aColor),
-        mOffset(aOffset),
-        mSigma(aSigma),
+        mShadow(aShadow),
         mOp(aOp) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
@@ -760,9 +757,7 @@ class RecordedDrawSurfaceWithShadow
 
   ReferencePtr mRefSource;
   Point mDest;
-  DeviceColor mColor;
-  Point mOffset;
-  Float mSigma;
+  ShadowOptions mShadow;
   CompositionOp mOp;
 };
 
@@ -2933,7 +2928,7 @@ inline bool RecordedDrawSurfaceWithShadow::PlayEvent(
     return false;
   }
 
-  dt->DrawSurfaceWithShadow(surface, mDest, mColor, mOffset, mSigma, mOp);
+  dt->DrawSurfaceWithShadow(surface, mDest, mShadow, mOp);
   return true;
 }
 
@@ -2942,9 +2937,7 @@ void RecordedDrawSurfaceWithShadow::Record(S& aStream) const {
   RecordedDrawingEvent::Record(aStream);
   WriteElement(aStream, mRefSource);
   WriteElement(aStream, mDest);
-  WriteElement(aStream, mColor);
-  WriteElement(aStream, mOffset);
-  WriteElement(aStream, mSigma);
+  WriteElement(aStream, mShadow);
   WriteElement(aStream, mOp);
 }
 
@@ -2953,9 +2946,7 @@ RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(S& aStream)
     : RecordedDrawingEvent(DRAWSURFACEWITHSHADOW, aStream) {
   ReadElement(aStream, mRefSource);
   ReadElement(aStream, mDest);
-  ReadElement(aStream, mColor);
-  ReadElement(aStream, mOffset);
-  ReadElement(aStream, mSigma);
+  ReadElement(aStream, mShadow);
   ReadElementConstrained(aStream, mOp, CompositionOp::OP_OVER,
                          CompositionOp::OP_COUNT);
 }
@@ -2963,8 +2954,9 @@ RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(S& aStream)
 inline void RecordedDrawSurfaceWithShadow::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
   aStringStream << "[" << mDT << "] DrawSurfaceWithShadow (" << mRefSource
-                << ") DeviceColor: (" << mColor.r << ", " << mColor.g << ", "
-                << mColor.b << ", " << mColor.a << ")";
+                << ") DeviceColor: (" << mShadow.mColor.r << ", "
+                << mShadow.mColor.g << ", " << mShadow.mColor.b << ", "
+                << mShadow.mColor.a << ")";
 }
 
 inline RecordedPathCreation::RecordedPathCreation(PathRecording* aPath)
