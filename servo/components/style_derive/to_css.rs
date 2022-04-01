@@ -57,7 +57,6 @@ fn derive_bitflags(input: &syn::DeriveInput, bitflags: &CssBitflagAttrs) -> Toke
     }
 
     body.append_all(quote! {
-        debug_assert!(has_any, "Shouldn't have parsed empty");
         Ok(())
     });
 
