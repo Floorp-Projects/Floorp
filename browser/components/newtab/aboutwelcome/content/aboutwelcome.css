@@ -865,6 +865,7 @@ body[lwt-newtab-brighttext] {
   max-width: 5em;
   text-align: initial;
   white-space: pre-wrap;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
 }
 .onboardingContainer [pos=corner] .section-left .attrib-text {
   height: 18px;
