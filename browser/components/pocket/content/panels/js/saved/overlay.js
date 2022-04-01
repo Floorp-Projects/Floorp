@@ -652,7 +652,7 @@ var SavedOverlay = function(options) {
 };
 
 SavedOverlay.prototype = {
-  create() {
+  create({ pockethost }) {
     if (this.active) {
       return;
     }
@@ -660,7 +660,6 @@ SavedOverlay.prototype = {
     var myself = this;
 
     const { searchParams } = new URL(window.location.href);
-    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const premiumStatus = searchParams.get(`premiumStatus`) == `1`;
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
