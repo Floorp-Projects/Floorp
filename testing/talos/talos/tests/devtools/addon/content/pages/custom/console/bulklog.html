@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Console custom page for logging specific types in loops</title>
+  <script>
+
+    const argByType = {
+      string: "damp",
+      longstring: "damp ".repeat(10000),
+      number: 42,
+      bigint: 42n,
+      null: null,
+      undefined: undefined,
+      nan: NaN,
+      bool: true,
+      infinity: Infinity,
+      symbol: Symbol('sym'),
+      array: Array.from({length: 1000}, (_, i) => i),
+      typedarray: new Uint8Array(Array.from({length: 100000}, (_, i) => i)),
+      /* 10 is already large enough to trigger some slowness */
+      set: new Set(Array.from({length: 10}, (_, i) => i)),
+      /* 10 is already large enough to trigger some slowness */
+      map: new Map(Array.from({length: 10}, (_, i) => ["key-" + i, "value-" + i])),
+      get object(){
+        const value = {};
+        for (let i = 0; i < 100; i++) {
+          value["item-" + i] = {index: i, ...value};
+        }
+        return value;
+      },
+      node: document.body,
+      nodelist: document.querySelectorAll("*"),
+      promise: Promise.resolve(123),
+      get error() {
+        let value;
+        const d = () => {
+          value = new Error('blah', {cause: 'because of you'});
+        }
+        const c = () => d()
+        const b = () => c()
+        const a = () => b()
+        a();
+        return value;
+      },
+      document: document,
+      window: window,
+      date: new Date()
+    }
+
+    globalThis.doLogs = function(type, iterations) {
+      if (!iterations) {
+        throw new Error("iterations is required");
+      }
+      let arg = argByType[type];
+      for (let i = 0; i < iterations; i++) {
+        console.log(arg);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>console.log in for loop for specific types</h1>
+</body>
+</html>
