@@ -21,7 +21,7 @@ const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
   transitions: true,
   backdrop:
-    "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
+    "#F9F9FB url('chrome://activity-stream/content/data/content/assets/fx100-noodles.svg') center/cover no-repeat fixed",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
