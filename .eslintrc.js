@@ -183,7 +183,6 @@ module.exports = {
         // These are suitable as good first bugs, take one or two related lines
         // per bug.
         "caps/tests/unit/test_origin.js",
-        "caps/tests/unit/test_site_origin.js",
         "chrome/test/unit/test_no_remote_registration.js",
         "extensions/permissions/**",
         "image/test/unit/**",
