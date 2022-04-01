@@ -32,6 +32,8 @@ class HomeScreenRobot {
 
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
 
+    fun clickStartBrowsing() = mDevice.findObject(UiSelector().text("Start browsing")).click()
+
     fun verifyOnboardingFirstSlide() {
         firstSlide.check(matches(isDisplayed()))
     }

@@ -15,11 +15,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
+import org.junit.Assert
 import org.mozilla.focus.R
-import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
+import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class CustomTabRobot {
@@ -60,13 +61,32 @@ class CustomTabRobot {
     fun verifyPageURL(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        customTabUrl.waitForExists(TestHelper.waitingTime)
-
         runWithIdleRes(sessionLoadedIdlingResource) {
+            mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
             assertTrue(
+                "Actual url: ${customTabUrl.text}",
                 customTabUrl.text.contains(expectedText)
             )
         }
+    }
+
+    fun verifyPageContent(expectedText: String) {
+        val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            .waitForExists(waitingTime)
+
+        runWithIdleRes(sessionLoadedIdlingResource) {
+            Assert.assertTrue(
+                mDevice.findObject(UiSelector().textContains(expectedText))
+                    .waitForExists(waitingTime)
+            )
+        }
+    }
+
+    fun clickLinkMatchingText(expectedText: String) {
+        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(expectedText)).also { it.click() }
     }
 
     class Transition {
@@ -77,6 +97,13 @@ class CustomTabRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun openCustomTabMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
+            menuButton.perform(click())
+
+            ThreeDotMainMenuRobot().interact()
+            return ThreeDotMainMenuRobot.Transition()
         }
     }
 }

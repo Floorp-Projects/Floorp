@@ -143,6 +143,20 @@ class ThreeDotMainMenuRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun pressBack(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            backButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun pressForward(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            forwardButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -195,4 +209,16 @@ private val requestDesktopSiteButton =
     mDevice.findObject(
         UiSelector()
             .resourceId("$packageName:id/switch_widget")
+    )
+
+private val backButton =
+    mDevice.findObject(
+        UiSelector()
+            .description("Navigate back")
+    )
+
+private val forwardButton =
+    mDevice.findObject(
+        UiSelector()
+            .description("Navigate forward")
     )

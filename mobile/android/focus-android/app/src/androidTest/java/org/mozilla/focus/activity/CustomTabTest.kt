@@ -95,14 +95,13 @@ class CustomTabTest {
 
     @SmokeTest
     @Test
-    @Ignore("Crashing, see: https://github.com/mozilla-mobile/focus-android/issues/5283")
     fun openCustomTabInFocusTest() {
         val browserPage = getPlainPageAsset(webServer)
         val customTabPage = getGenericTabAsset(webServer, 1)
 
         launchActivity<IntentReceiverActivity>()
         homeScreen {
-            skipFirstRun()
+            clickStartBrowsing()
         }
 
         searchScreen {
@@ -119,6 +118,30 @@ class CustomTabTest {
             verifyPageURL(customTabPage.url)
             mDevice.pressBack()
             verifyPageURL(browserPage.url)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun customTabNavigationButtonsTest() {
+        val firstPage = getGenericTabAsset(webServer, 1)
+        val secondPage = getGenericTabAsset(webServer, 2)
+
+        launchActivity<IntentReceiverActivity>(createCustomTabIntent(firstPage.url))
+        customTab {
+            verifyPageContent(firstPage.content)
+            clickLinkMatchingText("Tab 2")
+            verifyPageURL(secondPage.url)
+        }.openCustomTabMenu {
+        }.pressBack {
+            progressBar.waitUntilGone(waitingTime)
+            verifyPageURL(firstPage.url)
+        }.openMainMenu {
+        }.pressForward {
+            verifyPageURL(secondPage.url)
+        }.openMainMenu {
+        }.clickReloadButton {
+            verifyPageContent(secondPage.content)
         }
     }
 }
