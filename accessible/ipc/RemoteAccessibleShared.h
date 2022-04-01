@@ -193,7 +193,6 @@ void TableSelectColumn(uint32_t aCol);
 void TableSelectRow(uint32_t aRow);
 void TableUnselectColumn(uint32_t aCol);
 void TableUnselectRow(uint32_t aRow);
-bool TableIsProbablyForLayout();
 RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
 RemoteAccessible* AtkTableRowHeader(int32_t aRow);
 
