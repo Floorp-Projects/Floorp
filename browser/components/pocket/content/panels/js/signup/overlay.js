@@ -34,14 +34,13 @@ var SignupOverlay = function(options) {
       source: `log_in`,
     });
   };
-  this.create = function() {
+  this.create = function({ pockethost }) {
     const parser = new DOMParser();
     let elBody = document.querySelector(`body`);
 
     // Extract local variables passed into template via URL query params
     const { searchParams } = new URL(window.location.href);
     const isEmailSignupEnabled = searchParams.get(`emailButton`) === `true`;
-    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const locale = searchParams.get(`locale`) || ``;
     const language = locale.split(`-`)[0].toLowerCase();
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
