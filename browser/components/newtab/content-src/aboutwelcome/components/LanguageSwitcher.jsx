@@ -58,6 +58,7 @@ export function useLanguageSwitcher(
               langPack.target_locale,
               appAndSystemLocaleInfo.appLocaleRaw,
             ],
+            originalAppLocales: [appAndSystemLocaleInfo.appLocaleRaw],
           });
         } else {
           setNegotiatedLanguage({
@@ -277,7 +278,12 @@ export function LanguageSwitcher(props) {
             type="button"
             className="secondary"
             value="decline"
-            onClick={handleAction}
+            onClick={event => {
+              window.AWSetRequestedLocales(
+                negotiatedLanguage.originalAppLocales
+              );
+              handleAction(event);
+            }}
           >
             {
               // This is the localized name from the Intl.DisplayNames API.
