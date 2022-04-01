@@ -1204,9 +1204,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkTableColumnHeader(
 #ifdef MOZ_ACCESSIBILITY_ATK
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    LocalAccessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
+    Accessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
     if (header) {
-      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aHeader = header->ID();
       *aOk = true;
     }
   }
@@ -1223,9 +1223,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkTableRowHeader(
 #ifdef MOZ_ACCESSIBILITY_ATK
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    LocalAccessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
+    Accessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
     if (header) {
-      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aHeader = header->ID();
       *aOk = true;
     }
   }
