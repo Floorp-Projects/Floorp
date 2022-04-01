@@ -115,9 +115,6 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     SetAttr(nsGkAtoms::as, aAs, aRv);
   }
 
-  static void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
-  static nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
-
   nsDOMTokenList* Sizes() {
     if (!mSizes) {
       mSizes = new nsDOMTokenList(this, nsGkAtoms::sizes);
@@ -175,10 +172,6 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     mCachedURI = nullptr;
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
-
-  static bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
-                                const nsAString& aMedia, Document* aDocument);
-  static void WarnIgnoredPreload(const Document&, nsIURI&);
 
  protected:
   virtual ~HTMLLinkElement();
