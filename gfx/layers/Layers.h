@@ -40,7 +40,7 @@
 #include "nsRegion.h"       // for nsIntRegion
 #include "nsStringFlags.h"  // for operator&
 #include "nsStringFwd.h"    // for nsCString, nsACString
-#include "nsTArray.h"  // for nsTArray, nsTArray_Impl, nsTArray_Impl<>::elem_type
+#include "nsTArray.h"  // for nsTArray, nsTArray_Impl, nsTArray_Impl<>::value_type
 
 // XXX These includes could be avoided by moving function implementations to the
 // cpp file
