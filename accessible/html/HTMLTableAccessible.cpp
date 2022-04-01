@@ -10,6 +10,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "AccAttributes.h"
+#include "CacheConstants.h"
 #include "DocAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "nsTextEquivUtils.h"
@@ -150,6 +151,10 @@ void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       aAttribute == nsGkAtoms::scope) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
+  }
+  if (aAttribute == nsGkAtoms::rowspan || aAttribute == nsGkAtoms::colspan ||
+      aAttribute == nsGkAtoms::headers) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   }
 }
 

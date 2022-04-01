@@ -3337,6 +3337,27 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  if (aCacheDomain & CacheDomain::Table) {
+    if (TableCellAccessible* cell = AsTableCell()) {
+      // For HTML table cells, we must use the HTMLTableCellAccessible
+      // GetRow/ColExtent methods rather than using the DOM attributes directly.
+      // This is because of things like rowspan="0" which depend on knowing
+      // about thead, tbody, etc., which is info we don't have in the a11y tree.
+      int32_t value = static_cast<int32_t>(cell->RowExtent());
+      if (value != 1) {
+        fields->SetAttribute(nsGkAtoms::rowspan, value);
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(nsGkAtoms::rowspan, DeleteEntry());
+      }
+      value = static_cast<int32_t>(cell->ColExtent());
+      if (value != 1) {
+        fields->SetAttribute(nsGkAtoms::colspan, value);
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(nsGkAtoms::colspan, DeleteEntry());
+      }
+    }
+  }
+
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
