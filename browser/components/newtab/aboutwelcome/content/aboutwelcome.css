@@ -851,7 +851,7 @@ body[lwt-newtab-brighttext] {
   justify-content: center;
 }
 .onboardingContainer [pos=corner] .section-left .message-text .spacer-top {
-  flex: 2;
+  flex: 1;
 }
 .onboardingContainer [pos=corner] .section-left .message-text .spacer-bottom {
   flex: 1;
