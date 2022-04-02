@@ -12,9 +12,7 @@ const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-// These symbols are, unfortunately, accessed via the module global from
-// tests, and therefore cannot be lexical definitions.
-var { GMPPrefs, GMPUtils, GMP_PLUGIN_IDS } = ChromeUtils.import(
+const { GMPPrefs, GMPUtils, GMP_PLUGIN_IDS, WIDEVINE_ID } = ChromeUtils.import(
   "resource://gre/modules/GMPUtils.jsm"
 );
 const { ProductAddonChecker } = ChromeUtils.import(
@@ -647,7 +645,7 @@ GMPAddon.prototype = {
     );
   },
   get isEME() {
-    return this.id == "gmp-widevinecdm" || this.id.indexOf("gmp-eme-") == 0;
+    return this.id == WIDEVINE_ID;
   },
   get isOpenH264() {
     return this.id == "gmp-gmpopenh264";

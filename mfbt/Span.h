@@ -527,9 +527,9 @@ class Span {
           !std::is_const_v<Container> &&
           !span_details::is_span<Container>::value &&
           !span_details::is_std_array<Container>::value &&
-          std::is_convertible_v<typename Container::elem_type*, pointer> &&
+          std::is_convertible_v<typename Container::value_type*, pointer> &&
           std::is_convertible_v<
-              typename Container::elem_type*,
+              typename Container::value_type*,
               decltype(std::declval<Container>().Elements())>>>
   constexpr MOZ_IMPLICIT Span(Container& cont, void* = nullptr)
       : Span(cont.Elements(), ReleaseAssertedCast<index_type>(cont.Length())) {}
@@ -542,9 +542,9 @@ class Span {
       class = std::enable_if_t<
           std::is_const_v<element_type> &&
           !span_details::is_span<Container>::value &&
-          std::is_convertible_v<typename Container::elem_type*, pointer> &&
+          std::is_convertible_v<typename Container::value_type*, pointer> &&
           std::is_convertible_v<
-              typename Container::elem_type*,
+              typename Container::value_type*,
               decltype(std::declval<Container>().Elements())>>>
   constexpr MOZ_IMPLICIT Span(const Container& cont, void* = nullptr)
       : Span(cont.Elements(), ReleaseAssertedCast<index_type>(cont.Length())) {}

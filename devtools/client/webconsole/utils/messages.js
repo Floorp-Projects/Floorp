@@ -287,7 +287,6 @@ function transformNavigationMessagePacket(packet) {
 
 function transformPlatformMessageResource(platformMessageResource) {
   const { message, timeStamp, targetFront } = platformMessageResource;
-
   return new ConsoleMessage({
     targetFront,
     source: MESSAGE_SOURCE.CONSOLE_API,
@@ -295,8 +294,7 @@ function transformPlatformMessageResource(platformMessageResource) {
     level: MESSAGE_LEVEL.LOG,
     messageText: message,
     timeStamp,
-    private: message.private,
-    chromeContext: message.chromeContext,
+    chromeContext: true,
   });
 }
 

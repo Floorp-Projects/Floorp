@@ -68,24 +68,9 @@ class DrawTargetRecording : public DrawTarget {
                           const Point& aDestPoint,
                           const DrawOptions& aOptions = DrawOptions()) override;
 
-  /*
-   * Blend a surface to the draw target with a shadow. The shadow is drawn as a
-   * gaussian blur using a specified sigma. The shadow is clipped to the size
-   * of the input surface, so the input surface should contain a transparent
-   * border the size of the approximate coverage of the blur (3 * aSigma).
-   * NOTE: This function works in device space!
-   *
-   * aSurface Source surface to draw.
-   * aDest Destination point that this drawing operation should draw to.
-   * aColor Color of the drawn shadow
-   * aOffset Offset of the shadow
-   * aSigma Sigma used for the guassian filter kernel
-   * aOperator Composition operator used
-   */
   virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
                                      const Point& aDest,
-                                     const DeviceColor& aColor,
-                                     const Point& aOffset, Float aSigma,
+                                     const ShadowOptions& aShadow,
                                      CompositionOp aOperator) override;
 
   /*

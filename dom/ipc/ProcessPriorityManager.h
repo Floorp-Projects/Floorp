@@ -71,10 +71,14 @@ class ProcessPriorityManager final {
    */
   static bool CurrentProcessIsForeground();
 
-  static void ActivityChanged(dom::CanonicalBrowsingContext* aBC,
-                              bool aIsActive);
-  static void ActivityChanged(dom::BrowserParent* aBrowserParent,
-                              bool aIsActive);
+  /**
+   * Updates the contents of mHighPriorityBrowserParents to keep track of
+   * the list of TabIds for this process that are active.
+   */
+  static void BrowserPriorityChanged(dom::CanonicalBrowsingContext* aBC,
+                                     bool aPriority);
+  static void BrowserPriorityChanged(dom::BrowserParent* aBrowserParent,
+                                     bool aPriority);
 
   static void RemoteBrowserFrameShown(nsFrameLoader* aFrameLoader);
 

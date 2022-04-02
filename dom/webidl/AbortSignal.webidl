@@ -10,6 +10,8 @@
 [Exposed=(Window,Worker)]
 interface AbortSignal : EventTarget {
   [NewObject, Throws] static AbortSignal abort(optional any reason);
+  [Exposed=(Window,Worker), NewObject, Throws]
+  static AbortSignal timeout([EnforceRange] unsigned long long milliseconds);
 
   readonly attribute boolean aborted;
   readonly attribute any reason;

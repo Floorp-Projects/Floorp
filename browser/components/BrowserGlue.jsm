@@ -58,6 +58,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
+  OnboardingMessageProvider:
+    "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
   OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
@@ -85,6 +87,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShellService: "resource:///modules/ShellService.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
@@ -4157,16 +4161,24 @@ BrowserGlue.prototype = {
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
 
-  _showUpgradeDialog() {
-    BrowserWindowTracker.getTopWindow().gDialogBox.open(
-      "chrome://browser/content/upgradeDialog.html"
-    );
+  async _showUpgradeDialog() {
+    // TO DO Bug 1762666: Remove "chrome://browser/content/upgradeDialog.html"
+    const msg = await OnboardingMessageProvider.getUpgradeMessage();
+    const win = BrowserWindowTracker.getTopWindow();
+    const browser = win.gBrowser.selectedBrowser;
+    const config = {
+      type: "SHOW_SPOTLIGHT",
+      data: {
+        content: msg.content,
+      },
+    };
+    SpecialMessageActions.handleAction(config, browser);
   },
 
   async _maybeShowDefaultBrowserPrompt() {
     // Highest priority is the upgrade dialog, which can include a "primary
     // browser" request and is limited in various ways, e.g., major upgrades.
-    const dialogVersion = 94;
+    const dialogVersion = 100;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {
       if (!BrowserHandler.majorUpgrade) {

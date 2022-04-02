@@ -36,7 +36,7 @@ add_task(async function test_systems_update_uninstall_check() {
     "http://example.com/update.json?id=%ITEM_ID%"
   );
 
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
 
   await promiseShutdownManager();
 });

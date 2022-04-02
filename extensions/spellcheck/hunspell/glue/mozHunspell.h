@@ -120,6 +120,13 @@ class mozHunspell final : public mozISpellCheckingEngine,
   nsInterfaceHashtable<nsStringHashKey, nsIURI> mDynamicDictionaries;
 
   struct DictionaryData {
+    // keep track of whether the dictionary is currently in use or not
+    bool mEnabled = true;
+
+    // keep track of whether we've failed loading this dictionary before.
+    // if set, we don't try loading it again.
+    bool mLoadFailed = false;
+
     mozilla::UniquePtr<mozilla::Encoder> mEncoder;
     mozilla::UniquePtr<mozilla::Decoder> mDecoder;
     mozilla::UniquePtr<RLBoxHunspell> mHunspell;
@@ -127,6 +134,9 @@ class mozHunspell final : public mozISpellCheckingEngine,
 
     // helper method for converting a word to the charset of the dictionary
     nsresult ConvertCharset(const nsAString& aStr, std::string& aDst);
+
+    // helper method to the load the dictionary if it is not already loaded
+    nsresult LoadIfNecessary();
   };
 
   nsTHashMap<nsCStringHashKey, DictionaryData> mHunspells;

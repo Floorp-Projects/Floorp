@@ -29,7 +29,7 @@ def load_conditional_requirements(props, base_dir):
                     os.path.join(base_dir, path) for path in requirements_paths]
         else:
             raise KeyError(
-                'Unsupported conditional requirement key: {}'.format(key))
+                f'Unsupported conditional requirement key: {key}')
 
     return {
         "commandline_flag": commandline_flag_requirements,
@@ -38,12 +38,12 @@ def load_conditional_requirements(props, base_dir):
 
 def load_commands():
     rv = {}
-    with open(os.path.join(here, "paths"), "r") as f:
+    with open(os.path.join(here, "paths")) as f:
         paths = [item.strip().replace("/", os.path.sep) for item in f if item.strip()]
     for path in paths:
         abs_path = os.path.join(wpt_root, path, "commands.json")
         base_dir = os.path.dirname(abs_path)
-        with open(abs_path, "r") as f:
+        with open(abs_path) as f:
             data = json.load(f)
             for command, props in data.items():
                 assert "path" in props

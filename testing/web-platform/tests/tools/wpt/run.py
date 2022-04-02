@@ -3,7 +3,7 @@ import os
 import platform
 import sys
 from distutils.spawn import find_executable
-from typing import ClassVar, Type
+from typing import ClassVar, Tuple, Type
 
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
@@ -24,7 +24,7 @@ class WptrunnerHelpAction(argparse.Action):
                  dest=argparse.SUPPRESS,
                  default=argparse.SUPPRESS,
                  help=None):
-        super(WptrunnerHelpAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,
@@ -131,7 +131,7 @@ def check_environ(product):
         else:
             wpt_path = os.path.join(wpt_root, "wpt")
 
-        with open(hosts_path, "r") as f:
+        with open(hosts_path) as f:
             for line in f:
                 line = line.split("#", 1)[0].strip()
                 parts = line.split()
@@ -153,7 +153,7 @@ in PowerShell with Administrator privileges.""" % (wpt_path, hosts_path)
                 raise WptrunError(message)
 
 
-class BrowserSetup(object):
+class BrowserSetup:
     name = None  # type: ClassVar[str]
     browser_cls = None  # type: ClassVar[Type[browser.Browser]]
 
@@ -328,8 +328,8 @@ class FirefoxAndroid(BrowserSetup):
 
 class Chrome(BrowserSetup):
     name = "chrome"
-    browser_cls = browser.Chrome
-    experimental_channels = ("dev", "canary", "nightly")
+    browser_cls = browser.Chrome  # type: ClassVar[Type[browser.ChromeChromiumBase]]
+    experimental_channels = ("dev", "canary", "nightly")  # type: ClassVar[Tuple[str, ...]]
 
     def setup_kwargs(self, kwargs):
         browser_channel = kwargs["browser_channel"]
@@ -338,7 +338,7 @@ class Chrome(BrowserSetup):
             if binary:
                 kwargs["binary"] = binary
             else:
-                raise WptrunError("Unable to locate Chrome binary")
+                raise WptrunError(f"Unable to locate {self.name.capitalize()} binary")
 
         if kwargs["mojojs_path"]:
             kwargs["enable_mojojs"] = True
@@ -360,7 +360,7 @@ class Chrome(BrowserSetup):
         if kwargs["webdriver_binary"] is None:
             webdriver_binary = None
             if not kwargs["install_webdriver"]:
-                webdriver_binary = self.browser.find_webdriver()
+                webdriver_binary = self.browser.find_webdriver(self.venv.bin_path)
                 if webdriver_binary and not self.browser.webdriver_supports_browser(
                         webdriver_binary, kwargs["binary"], browser_channel):
                     webdriver_binary = None
@@ -393,6 +393,12 @@ class Chrome(BrowserSetup):
             # We are on Taskcluster, where our Docker container does not have
             # enough capabilities to run Chrome with sandboxing. (gh-20133)
             kwargs["binary_args"].append("--no-sandbox")
+
+
+class Chromium(Chrome):
+    name = "chromium"
+    browser_cls = browser.Chromium  # type: ClassVar[Type[browser.ChromeChromiumBase]]
+    experimental_channels = ("nightly",)
 
 
 class ChromeAndroidBase(BrowserSetup):
@@ -434,7 +440,7 @@ class ChromeAndroid(ChromeAndroidBase):
     browser_cls = browser.ChromeAndroid
 
     def setup_kwargs(self, kwargs):
-        super(ChromeAndroid, self).setup_kwargs(kwargs)
+        super().setup_kwargs(kwargs)
         if kwargs["browser_channel"] in self.experimental_channels:
             logger.info("Automatically turning on experimental features for Chrome Dev/Canary")
             kwargs["binary_args"].append("--enable-experimental-web-platform-features")
@@ -456,7 +462,7 @@ class AndroidWeblayer(ChromeAndroidBase):
     browser_cls = browser.AndroidWeblayer
 
     def setup_kwargs(self, kwargs):
-        super(AndroidWeblayer, self).setup_kwargs(kwargs)
+        super().setup_kwargs(kwargs)
         if kwargs["browser_channel"] in self.experimental_channels:
             logger.info("Automatically turning on experimental features for WebLayer Dev/Canary")
             kwargs["binary_args"].append("--enable-experimental-web-platform-features")
@@ -705,6 +711,7 @@ product_setup = {
     "chrome": Chrome,
     "chrome_android": ChromeAndroid,
     "chrome_ios": ChromeiOS,
+    "chromium": Chromium,
     "edgechromium": EdgeChromium,
     "edge": Edge,
     "edge_webdriver": EdgeWebDriver,

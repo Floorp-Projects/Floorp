@@ -250,7 +250,7 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 void nsContentSink::DoProcessLinkHeader() {
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
-  auto linkHeaders = ParseLinkHeader(value);
+  auto linkHeaders = net::ParseLinkHeader(value);
   for (const auto& linkHeader : linkHeaders) {
     ProcessLinkFromHeader(linkHeader);
   }
@@ -297,7 +297,7 @@ bool nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor) {
   return same;
 }
 
-nsresult nsContentSink::ProcessLinkFromHeader(const LinkHeader& aHeader) {
+nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader) {
   uint32_t linkTypes = LinkStyle::ParseLinkTypes(aHeader.mRel);
 
   // The link relation may apply to a different resource, specified
@@ -438,18 +438,17 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
   }
 
   nsAttrValue asAttr;
-  HTMLLinkElement::ParseAsValue(aAs, asAttr);
+  mozilla::net::ParseAsValue(aAs, asAttr);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
   nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
 
-  auto policyType = HTMLLinkElement::AsValueToContentPolicy(asAttr);
+  auto policyType = mozilla::net::AsValueToContentPolicy(asAttr);
   if (policyType == nsIContentPolicy::TYPE_INVALID ||
-      !HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, aMedia,
-                                          mDocument)) {
+      !mozilla::net::CheckPreloadAttrs(asAttr, mimeType, aMedia, mDocument)) {
     // Ignore preload wrong or empty attributes.
-    HTMLLinkElement::WarnIgnoredPreload(*mDocument, *uri);
+    mozilla::net::WarnIgnoredPreload(*mDocument, *uri);
     return;
   }
 

@@ -18,11 +18,19 @@ namespace a11y {
 namespace utils {
 
 // convert an array of Gecko accessibles to an NSArray of native accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray);
+template <typename AccArray>
+NSArray<mozAccessible*>* ConvertToNSArray(AccArray& aArray) {
+  NSMutableArray* nativeArray = [[[NSMutableArray alloc] init] autorelease];
 
-// convert an array of Gecko proxy accessibles to an NSArray of native
-// accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray);
+  // iterate through the list, and get each native accessible.
+  for (Accessible* curAccessible : aArray) {
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
 
 /**
  * Get a localized string from the string bundle.

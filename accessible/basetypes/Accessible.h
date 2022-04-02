@@ -24,6 +24,8 @@ class AccGroupInfo;
 class HyperTextAccessibleBase;
 class LocalAccessible;
 class RemoteAccessible;
+class TableAccessibleBase;
+class TableCellAccessibleBase;
 
 /**
  * Name type flags.
@@ -74,6 +76,13 @@ class Accessible {
              uint8_t aRoleMapEntryIndex);
 
  public:
+  /**
+   * Return an id for this Accessible which is unique within the document.
+   * Use nsAccUtils::GetAccessibleByID to retrieve an Accessible given an id
+   * returned from this method.
+   */
+  virtual uint64_t ID() const = 0;
+
   virtual Accessible* Parent() const = 0;
 
   virtual role Role() const = 0;
@@ -424,6 +433,9 @@ class Accessible {
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
+
+  virtual TableAccessibleBase* AsTableBase() { return nullptr; }
+  virtual TableCellAccessibleBase* AsTableCellBase() { return nullptr; }
 
   /**
    * Return the localized string for the given key.

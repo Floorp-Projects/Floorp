@@ -21,19 +21,19 @@ class AlignedAutoTArray : private AutoTArray<E, S + N> {
   typedef AutoTArray<E, S + N> base_type;
 
  public:
-  typedef E elem_type;
+  typedef E value_type;
   typedef typename base_type::size_type size_type;
   typedef typename base_type::index_type index_type;
 
   AlignedAutoTArray() = default;
   explicit AlignedAutoTArray(size_type capacity)
       : base_type(capacity + sExtra) {}
-  elem_type* Elements() { return getAligned(base_type::Elements()); }
-  const elem_type* Elements() const {
+  value_type* Elements() { return getAligned(base_type::Elements()); }
+  const value_type* Elements() const {
     return getAligned(base_type::Elements());
   }
-  elem_type& operator[](index_type i) { return Elements()[i]; }
-  const elem_type& operator[](index_type i) const { return Elements()[i]; }
+  value_type& operator[](index_type i) { return Elements()[i]; }
+  const value_type& operator[](index_type i) const { return Elements()[i]; }
 
   void SetLength(size_type newLen) { base_type::SetLength(newLen + sExtra); }
 
@@ -72,18 +72,18 @@ class AlignedTArray : private nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   typedef nsTArray_Impl<E, nsTArrayInfallibleAllocator> base_type;
 
  public:
-  typedef E elem_type;
+  typedef E value_type;
   typedef typename base_type::size_type size_type;
   typedef typename base_type::index_type index_type;
 
   AlignedTArray() = default;
   explicit AlignedTArray(size_type capacity) : base_type(capacity + sExtra) {}
-  elem_type* Elements() { return getAligned(base_type::Elements()); }
-  const elem_type* Elements() const {
+  value_type* Elements() { return getAligned(base_type::Elements()); }
+  const value_type* Elements() const {
     return getAligned(base_type::Elements());
   }
-  elem_type& operator[](index_type i) { return Elements()[i]; }
-  const elem_type& operator[](index_type i) const { return Elements()[i]; }
+  value_type& operator[](index_type i) { return Elements()[i]; }
+  const value_type& operator[](index_type i) const { return Elements()[i]; }
 
   void SetLength(size_type newLen) { base_type::SetLength(newLen + sExtra); }
 

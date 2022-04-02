@@ -104,9 +104,9 @@ async function testScreenContent(
       unexpectedSelectors: unexpected,
     }) => {
       function selectorIsVisible(selector) {
-        const el = content.document.querySelector(selector);
+        const els = content.document.querySelectorAll(selector);
         // The offsetParent will be null if element is hidden through "display: none;"
-        return el && el.offsetParent !== null;
+        return [...els].some(el => el.offsetParent !== null);
       }
 
       for (let selector of expected) {
@@ -165,7 +165,11 @@ const liveLanguageSwitchSelectors = [
  */
 add_task(async function test_aboutwelcome_languageSwitcher_accept() {
   sandbox.restore();
-  const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
+  const {
+    resolveLangPacks,
+    resolveInstaller,
+    mockable,
+  } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
@@ -200,8 +204,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     // Expected selectors:
     [
       ...liveLanguageSwitchSelectors,
-      `[data-l10n-id="onboarding-live-language-switch-button-label"]`,
-      `[data-l10n-id="onboarding-live-language-not-now-button-label"]`,
+      `button.primary[value="primary_button"]`,
+      `button.secondary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -239,16 +243,21 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     },
   ]);
 
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
+
   await resolveInstaller();
 
   await testScreenContent(
     browser,
-    "Language selection declined",
+    "Language changed",
     // Expected selectors:
     [`.screen-2`],
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
+
+  info("The app locale was changed to the OS locale.");
+  sinon.assert.calledWith(mockable.setRequestedAppLocales, ["es-ES", "en-US"]);
 
   eventsMatch(flushClickTelemetry(), [
     {
@@ -269,7 +278,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_accept() {
   sandbox.restore();
-  const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
+  const {
+    resolveLangPacks,
+    resolveInstaller,
+    mockable,
+  } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
@@ -304,8 +317,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     // Expected selectors:
     [
       ...liveLanguageSwitchSelectors,
-      `[data-l10n-id="onboarding-live-language-switch-button-label"]`,
-      `[data-l10n-id="onboarding-live-language-not-now-button-label"]`,
+      `button.primary[value="primary_button"]`,
+      `button.secondary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -343,16 +356,20 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     },
   ]);
 
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
   await resolveInstaller();
 
   await testScreenContent(
     browser,
-    "Language selection declined",
+    "Language selection accepted",
     // Expected selectors:
     [`.screen-2`],
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
+
+  info("The app locale was changed to the OS locale.");
+  sinon.assert.calledWith(mockable.setRequestedAppLocales, ["es-ES", "en-US"]);
 });
 
 /**
@@ -362,7 +379,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_decline() {
   sandbox.restore();
-  const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
+  const {
+    resolveLangPacks,
+    resolveInstaller,
+    mockable,
+  } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
@@ -398,8 +419,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     // Expected selectors:
     [
       ...liveLanguageSwitchSelectors,
-      `[data-l10n-id="onboarding-live-language-switch-button-label"]`,
-      `[data-l10n-id="onboarding-live-language-not-now-button-label"]`,
+      `button.primary[value="primary_button"]`,
+      `button.secondary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -407,6 +428,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
       `[data-l10n-id="onboarding-live-language-skip-button-label"]`,
     ]
   );
+
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
 
   info("Clicking the secondary button to skip installing the langpack.");
   await clickVisibleButton(browser, "button.secondary");
@@ -419,6 +442,9 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
+
+  info("The requested locale should be set to the original en-US");
+  sinon.assert.calledWith(mockable.setRequestedAppLocales, ["en-US"]);
 
   eventsMatch(flushClickTelemetry(), [
     {
@@ -471,7 +497,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_asyncCalls() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_noMatch() {
   sandbox.restore();
-  const { resolveLangPacks } = mockAddonAndLocaleAPIs({
+  const { resolveLangPacks, mockable } = mockAddonAndLocaleAPIs({
     systemLocale: "tlh", // Klingon
     appLocale: "en-US",
   });
@@ -495,6 +521,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_noMatch() {
       `[data-l10n-id="onboarding-live-language-header"]`,
     ]
   );
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
 });
 
 /**
@@ -504,7 +531,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
   sandbox.restore();
   await pushPrefs(["intl.multilingual.liveReloadBidirectional", false]);
 
-  mockAddonAndLocaleAPIs({
+  const { mockable } = mockAddonAndLocaleAPIs({
     systemLocale: "ar-EG", // Arabic (Egypt)
     appLocale: "en-US",
   });
@@ -525,6 +552,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
       `[data-l10n-id="onboarding-live-language-header"]`,
     ]
   );
+
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
 });
 
 /**
@@ -534,7 +563,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
   sandbox.restore();
   await pushPrefs(["intl.multilingual.liveReloadBidirectional", true]);
 
-  const { resolveLangPacks } = mockAddonAndLocaleAPIs({
+  const { resolveLangPacks, mockable } = mockAddonAndLocaleAPIs({
     systemLocale: "ar-EG", // Arabic (Egypt)
     appLocale: "en-US",
   });
@@ -554,6 +583,8 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
     // Unexpected selectors:
     []
   );
+
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
 });
 
 /**
@@ -561,7 +592,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   sandbox.restore();
-  const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
+  const {
+    resolveLangPacks,
+    resolveInstaller,
+    mockable,
+  } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
@@ -628,4 +663,5 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   await resolveInstaller();
 
   is(flushClickTelemetry().length, 0);
+  sinon.assert.notCalled(mockable.setRequestedAppLocales);
 });

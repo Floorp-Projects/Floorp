@@ -76,6 +76,7 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
   bool mIsHardwareAccelerated = false;
+  bool mRemoteDecoderCrashed = false;
   MediaDataDecoder::ConversionRequired mConversion =
       MediaDataDecoder::ConversionRequired::kNeedNone;
 };

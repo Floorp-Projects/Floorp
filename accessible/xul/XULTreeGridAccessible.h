@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,7 +40,7 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
   virtual uint32_t SelectedCellCount() override;
   virtual uint32_t SelectedColCount() override;
   virtual uint32_t SelectedRowCount() override;
-  virtual void SelectedCells(nsTArray<LocalAccessible*>* aCells) override;
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells) override;
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
@@ -140,9 +141,8 @@ class XULTreeGridCellAccessible : public LeafAccessible,
   virtual TableAccessible* Table() const override;
   virtual uint32_t ColIdx() const override;
   virtual uint32_t RowIdx() const override;
-  virtual void ColHeaderCells(
-      nsTArray<LocalAccessible*>* aHeaderCells) override;
-  virtual void RowHeaderCells(nsTArray<LocalAccessible*>* aCells) override {}
+  virtual void ColHeaderCells(nsTArray<Accessible*>* aHeaderCells) override;
+  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) override {}
   virtual bool Selected() override;
 
   /**

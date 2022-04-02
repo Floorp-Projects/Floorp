@@ -58,4 +58,4 @@ NSS Key Log Format
    secret depends on the selected cipher suite. It is 64, 96 or 128 characters for SHA256, SHA384 or
    SHA512 respectively.
 
-   For Wireshark usage, see `SSL - Wireshark Wiki <https://wiki.wireshark.org/SSL>`__.
+   For Wireshark usage, see `TLS - Wireshark Wiki <https://wiki.wireshark.org/TLS>`__.

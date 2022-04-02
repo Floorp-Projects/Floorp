@@ -636,7 +636,7 @@ class nsFocusManager final : public nsIFocusManager,
   nsIContent* GetNextTabbableContentInAncestorScopes(
       nsIContent* aStartOwner, nsIContent** aStartContent,
       nsIContent* aOriginalStartContent, bool aForward,
-      int32_t* aCurrentTabIndex, bool aIgnoreTabIndex,
+      int32_t* aCurrentTabIndex, bool* aIgnoreTabIndex,
       bool aForDocumentNavigation, bool aNavigateByKey);
 
   /**

@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global RPMGetStringPref:false */
 
 import HomeOverlay from "./home/overlay.js";
 import SignupOverlay from "./signup/overlay.js";
@@ -107,7 +108,9 @@ PKT_PANEL.prototype = {
   },
 
   create() {
-    this.overlay.create();
+    const pockethost =
+      RPMGetStringPref("extensions.pocket.site") || "getpocket.com";
+    this.overlay.create({ pockethost });
   },
 };
 

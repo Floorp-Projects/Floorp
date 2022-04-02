@@ -3312,6 +3312,11 @@ var XPIInternal = {
   maybeResolveURI,
   migrateAddonLoader,
   resolveDBReady,
+
+  // Used by tests to shut down AddonManager.
+  overrideAsyncShutdown(mockAsyncShutdown) {
+    AsyncShutdown = mockAsyncShutdown;
+  },
 };
 
 AddonManagerPrivate.registerProvider(XPIProvider, Array.from(ALL_XPI_TYPES));

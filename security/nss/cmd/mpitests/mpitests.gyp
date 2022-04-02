@@ -13,6 +13,9 @@
       'sources': [
         'mpi-test.c',
       ],
+      'defines': [
+        'NSS_USE_STATIC_LIBS'
+      ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
         '<(DEPTH)/lib/util/util.gyp:nssutil3',
@@ -45,6 +48,7 @@
     ],
   },
   'variables': {
-    'module': 'nss'
+    'module': 'nss',
+    'use_static_libs': 1
   }
 }

@@ -164,8 +164,10 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         Services.prefs.setIntPref(SHOWN_PREF, MAX_SEARCH_BANNER_SHOW_COUNT);
         break;
       }
-      case "ShouldShowVPNPromo": {
-        return BrowserUtils.shouldShowVPNPromo();
+      case "ShouldShowPromo": {
+        return BrowserUtils.shouldShowPromo(
+          BrowserUtils.PromoType[aMessage.data.type]
+        );
       }
       case "SpecialMessageActionDispatch": {
         SpecialMessageActions.handleAction(aMessage.data, browser);
