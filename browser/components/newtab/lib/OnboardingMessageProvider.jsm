@@ -58,8 +58,9 @@ const ONBOARDING_MESSAGES = () => [
           order: 0,
           content: {
             logo: {
-              imageURL: "chrome://browser/content/assets/focus-logo.svg",
-              height: "48px",
+              imageURL:
+                "chrome://activity-stream/content/data/content/assets/heart.gif",
+              height: "73px",
             },
             title: {
               string_id: "fx100-upgrade-thanks-header",
