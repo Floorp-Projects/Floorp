@@ -15,12 +15,12 @@ from support.network import get_free_port
 def browser(full_configuration):
     """Start a Firefox instance without using geckodriver.
 
-    geckodriver will automatically set the remote.origins.allowed and
-    remote.hosts.allowed preferences we want to test in websocket_upgrade.py
+    geckodriver will automatically use the --remote-allow-hosts and
+    --remote.allow.origins command line arguments.
 
-    Starting Firefox without geckodriver allows to set those preferences as
-    needed. The fixture method returns the port that should be used to connect
-    to WebDriverBiDi.
+    Starting Firefox without geckodriver allows to set those command line arguments
+    as needed. The fixture method returns the browser instance that should be used
+    to connect to WebDriverBiDi.
     """
     current_browser = None
 
