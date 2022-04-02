@@ -84,18 +84,15 @@ static void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
 WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
     : mAudioChannels(aConfig.mChannels),
       mChannelsMap(AudioConfig::ChannelLayout::UNKNOWN_MAP),
-      mAudioRate(aConfig.mRate) {
+      mAudioRate(aConfig.mRate),
+      mStreamType(
+          WMFDecoderModule::GetStreamTypeFromMimeType(aConfig.mMimeType)) {
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
-  if (aConfig.mMimeType.EqualsLiteral("audio/mpeg")) {
-    mStreamType = MP3;
-  } else if (aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    mStreamType = AAC;
+  if (mStreamType == WMFStreamType::AAC) {
     AACAudioSpecificConfigToUserData(
         aConfig.mExtendedProfile, aConfig.mCodecSpecificConfig->Elements(),
         aConfig.mCodecSpecificConfig->Length(), mUserData);
-  } else {
-    mStreamType = Unknown;
   }
 }
 
@@ -104,11 +101,11 @@ WMFAudioMFTManager::~WMFAudioMFTManager() {
 }
 
 const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
-  MOZ_ASSERT(mStreamType != Unknown);
+  MOZ_ASSERT(WMFDecoderModule::StreamTypeIsAudio(mStreamType));
   switch (mStreamType) {
-    case AAC:
+    case WMFStreamType::AAC:
       return MFAudioFormat_AAC;
-    case MP3:
+    case WMFStreamType::MP3:
       return MFAudioFormat_MP3;
     default:
       return GUID_NULL;
@@ -116,13 +113,12 @@ const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
 }
 
 bool WMFAudioMFTManager::Init() {
-  NS_ENSURE_TRUE(mStreamType != Unknown, false);
+  NS_ENSURE_TRUE(WMFDecoderModule::StreamTypeIsAudio(mStreamType), false);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
   // Note: MP3 MFT isn't registered as supporting Float output, but it works.
   // Find PCM output MFTs as this is the common type.
-  HRESULT hr = decoder->Create(MFT_CATEGORY_AUDIO_DECODER,
-                               GetMediaSubtypeGUID(), MFAudioFormat_PCM);
+  HRESULT hr = WMFDecoderModule::CreateMFTDecoder(mStreamType, decoder);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   // Setup input/output media types
@@ -143,7 +139,7 @@ bool WMFAudioMFTManager::Init() {
   hr = inputType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mAudioChannels);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  if (mStreamType == AAC) {
+  if (mStreamType == WMFStreamType::AAC) {
     hr = inputType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0);  // Raw AAC packet
     NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
@@ -326,7 +322,7 @@ bool WMFAudioMFTManager::IsPartialOutput(
   // then new output is possible an incorrect partial output.
   // [1]
   // https://docs.microsoft.com/en-us/windows/win32/medfound/mft-message-command-drain
-  if (mStreamType != AAC) {
+  if (mStreamType != WMFStreamType::AAC) {
     return false;
   }
   if (mLastOutputDuration > aNewOutputDuration && !aIsRateChangedToHigher) {
