@@ -2829,42 +2829,30 @@ gfxShapedWord* gfxFont::GetShapedWord(
     Script aRunScript, nsAtom* aLanguage, bool aVertical,
     int32_t aAppUnitsPerDevUnit, gfx::ShapedTextFlags aFlags,
     RoundingFlags aRounding, gfxTextPerfMetrics* aTextPerf GFX_MAYBE_UNUSED) {
-  // if the cache is getting too big, flush it and start over
-  uint32_t wordCacheMaxEntries =
-      gfxPlatform::GetPlatform()->WordCacheMaxEntries();
-  mLock.ReadLock();
-  if (mWordCache->Count() > wordCacheMaxEntries) {
-    // Flush the cache if it is getting overly big.
-    // There's a chance another thread could race with the lock-twiddling here,
-    // but that's OK; it's harmless if we end up calling ClearCacheWords twice
-    // from separate threads. Internally, it will hold the lock exclusively
-    // while doing its thing.
-    mLock.ReadUnlock();
-    NS_WARNING("flushing shaped-word cache");
-    ClearCachedWords();
-    mLock.ReadLock();
-    // Once we've reclaimed a read lock, we can proceed knowing the cache
-    // isn't growing uncontrollably.
-  }
-
-  // if there's a cached entry for this word, just return it
   CacheHashKey key(aText, aLength, aHash, aRunScript, aLanguage,
                    aAppUnitsPerDevUnit, aFlags, aRounding);
-
-  CacheHashEntry* entry = mWordCache->GetEntry(key);
-  if (entry) {
-    gfxShapedWord* sw = entry->mShapedWord.get();
-    sw->ResetAge();
+  {
+    // If we have a word cache, attempt to look up the word in it.
+    AutoReadLock lock(mLock);
+    if (mWordCache) {
+      // if there's a cached entry for this word, just return it
+      if (CacheHashEntry* entry = mWordCache->GetEntry(key)) {
+        gfxShapedWord* sw = entry->mShapedWord.get();
+        sw->ResetAge();
 #ifndef RELEASE_OR_BETA
-    if (aTextPerf) {
-      // XXX we should make sure this is atomic
-      aTextPerf->current.wordCacheHit++;
-    }
+        if (aTextPerf) {
+          // XXX we should make sure this is atomic
+          aTextPerf->current.wordCacheHit++;
+        }
 #endif
-    mLock.ReadUnlock();
-    return sw;
+        return sw;
+      }
+    }
   }
-  mLock.ReadUnlock();
+
+  // We didn't find a cached word (or don't even have a cache yet), so create
+  // a new gfxShapedWord and cache it. We don't have to lock during shaping,
+  // only when it comes time to cache the new entry.
 
   gfxShapedWord* sw =
       gfxShapedWord::Create(aText, aLength, aRunScript, aLanguage,
@@ -2878,9 +2866,21 @@ gfxShapedWord* gfxFont::GetShapedWord(
   NS_WARNING_ASSERTION(ok, "failed to shape word - expect garbled text");
 
   {
-    // We're going to cache the new shaped word, so lock for writing.
+    // We're going to cache the new shaped word, so lock for writing now.
     AutoWriteLock lock(mLock);
-    entry = mWordCache->PutEntry(key, fallible);
+    if (!mWordCache) {
+      mWordCache = MakeUnique<nsTHashtable<CacheHashEntry>>();
+    } else {
+      // If the cache is getting too big, flush it and start over.
+      uint32_t wordCacheMaxEntries =
+          gfxPlatform::GetPlatform()->WordCacheMaxEntries();
+      if (mWordCache->Count() > wordCacheMaxEntries) {
+        // Flush the cache if it is getting overly big.
+        NS_WARNING("flushing shaped-word cache");
+        ClearCachedWordsLocked();
+      }
+    }
+    CacheHashEntry* entry = mWordCache->PutEntry(key, fallible);
     if (!entry) {
       NS_WARNING("failed to create word cache entry - expect missing text");
       delete sw;
@@ -3239,8 +3239,6 @@ bool gfxFont::SplitAndInitTextRun(
                                        vertical, rounding, aTextRun);
     }
   }
-
-  InitWordCache();
 
   // the only flags we care about for ShapedWord construction/caching
   gfx::ShapedTextFlags flags = aTextRun->GetFlags();

@@ -1,6 +1,8 @@
+from copy import deepcopy
+
 import pytest
 
-from . import Geckodriver, get_host, request
+from support.network import get_host, http_request, websocket_request
 
 
 @pytest.mark.parametrize(
@@ -15,11 +17,38 @@ from . import Geckodriver, get_host, request
         (["www.localhost"], "localhost", "server_port", 500),
     ],
 )
-def test_allow_hosts(configuration, allow_hosts, hostname, port_type, status):
+def test_allow_hosts(geckodriver, allow_hosts, hostname, port_type, status):
     extra_args = ["--allow-hosts"] + allow_hosts
 
-    with Geckodriver(configuration, hostname, extra_args) as geckodriver:
-        host = get_host(port_type, hostname, geckodriver.port)
-        response = request(geckodriver.hostname, geckodriver.port, host=host)
+    driver = geckodriver(hostname=hostname, extra_args=extra_args)
+    host = get_host(port_type, hostname, driver.port)
+    response = http_request(driver.hostname, driver.port, host=host)
 
     assert response.status == status
+
+
+@pytest.mark.parametrize(
+    "allow_hosts, hostname, status",
+    [
+        (["mozilla.org", "testhost"], "testhost", 101),
+        (["mozilla.org"], "testhost", 400),
+    ],
+    ids=["allowed", "not allowed"],
+)
+def test_allow_hosts_passed_to_remote_agent(
+    configuration, geckodriver, allow_hosts, hostname, status
+):
+    config = deepcopy(configuration)
+    config["capabilities"]["webSocketUrl"] = True
+
+    extra_args = ["--allow-hosts"] + allow_hosts
+
+    driver = geckodriver(config=config, extra_args=extra_args)
+
+    driver.new_session()
+
+    host = get_host("default_port", hostname, driver.remote_agent_port)
+    response = websocket_request(driver.remote_agent_port, host=host)
+    assert response.status == status
+
+    driver.delete_session()

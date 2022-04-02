@@ -1548,7 +1548,6 @@ void gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
     return;
   }
 
-  aFont->InitWordCache();
   static const uint8_t space = ' ';
   gfx::ShapedTextFlags flags =
       gfx::ShapedTextFlags::TEXT_IS_8BIT | aOrientation;
