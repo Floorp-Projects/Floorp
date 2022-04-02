@@ -9003,9 +9003,9 @@
     mirror: always
 
 -   name: media.wmf.vp9.enabled
-    type: RelaxedAtomicBool
+    type: bool
     value: true
-    mirror: always
+    mirror: once
 
 -   name: media.wmf.av1.enabled
     type: RelaxedAtomicBool
