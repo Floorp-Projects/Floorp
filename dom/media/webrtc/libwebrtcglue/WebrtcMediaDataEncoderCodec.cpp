@@ -141,6 +141,7 @@ static void InitCodecSpecficInfo(webrtc::CodecSpecificInfo& aInfo,
       MOZ_ASSERT(aCodecSettings->VP9().numberOfSpatialLayers == 1);
       aInfo.codecSpecific.VP9.flexible_mode =
           aCodecSettings->VP9().flexibleMode;
+      aInfo.codecSpecific.VP9.first_frame_in_picture = true;
       break;
     }
     default:
@@ -334,12 +335,13 @@ static void UpdateCodecSpecificInfo(webrtc::CodecSpecificInfo& aInfo,
     case webrtc::VideoCodecType::kVideoCodecVP9: {
       // See webrtc::VP9EncoderImpl::PopulateCodecSpecific().
       webrtc::CodecSpecificInfoVP9& vp9 = aInfo.codecSpecific.VP9;
-      vp9.inter_pic_predicted = aIsKeyframe;
+      vp9.inter_pic_predicted = !aIsKeyframe;
       vp9.ss_data_available = aIsKeyframe && !vp9.flexible_mode;
       // One temporal & spatial layer only.
       vp9.temporal_idx = webrtc::kNoTemporalIdx;
       vp9.temporal_up_switch = false;
       vp9.num_spatial_layers = 1;
+      vp9.end_of_picture = true;
       vp9.gof_idx = webrtc::kNoGofIdx;
       vp9.width[0] = aSize.width;
       vp9.height[0] = aSize.height;
