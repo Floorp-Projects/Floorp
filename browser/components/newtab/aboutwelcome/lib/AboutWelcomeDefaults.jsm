@@ -39,14 +39,12 @@ const DEFAULT_WELCOME_CONTENT = {
           string_id: "fx100-thank-you-hero-text",
           color: "#321C64",
           zap: true,
-        },
-        help_text: {
-          string_id: "mr1-onboarding-welcome-image-caption",
+          fontSize: "clamp(48px, 7vw, 137px)",
         },
         has_noodles: true,
         primary_button: {
           label: {
-            string_id: "mr1-onboarding-pin-primary-button-label",
+            string_id: "fx100-thank-you-pin-primary-button-label",
           },
           action: {
             navigate: true,
@@ -64,6 +62,7 @@ const DEFAULT_WELCOME_CONTENT = {
         secondary_button_top: {
           label: {
             string_id: "mr1-onboarding-sign-in-button-label",
+            color: "#321C64",
           },
           action: {
             data: {
