@@ -96,18 +96,20 @@ async function measureCanvasCaptureFrameRate(captureRate) {
       [...stats.values()].find(({type}) => type == "outbound-rtp");
     return outbound?.framesEncoded ?? 0;
   };
-  is(await getFrameCount(), 0, "frame count starts at 0");
+  // Wait for frame count change to ensure sender is working.
+  while (await getFrameCount() == 0) {
+    h.drawColor(c, h.green);
+    await new Promise(resolve => setTimeout(resolve, intervalMillis));
+  }
+  const startFrameCount = await getFrameCount();
   const start = performance.now();
-  let end;
-  while(true) {
+  let end = start;
+  while(end - start <= 1000) {
     h.drawColor(c, h.green);
     await new Promise(resolve => setTimeout(resolve, intervalMillis));
     end = performance.now();
-    if (end - start > 1000) {
-      break;
-    }
   }
-  const framerate = (await getFrameCount()) / ((end - start) / 1000);
+  const framerate = (await getFrameCount() - startFrameCount) / ((end - start) / 1000);
   pc1.close();
   pc2.close();
   return framerate;
