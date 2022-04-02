@@ -291,11 +291,12 @@ body {
         background-size: 100% 100%;
         content: '';
         position: absolute;
-        top: calc(100% - 0.15em);
+        top: 118%;
         width: 100%;
         height: 0.3em;
         left: 0;
         z-index: -1;
+        transform: scaleY(3);
       }
 
       &.short::after {
