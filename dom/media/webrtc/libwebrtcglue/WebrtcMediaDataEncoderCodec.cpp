@@ -152,8 +152,11 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings,
     const webrtc::VideoEncoder::Settings& aSettings) {
   MOZ_ASSERT(aCodecSettings);
-  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1,
-             "Simulcast not implemented for H264");
+
+  if (aCodecSettings->numberOfSimulcastStreams > 1) {
+    LOG("Only one stream is supported. Falling back to simulcast adaptor");
+    return WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED;
+  }
 
   if (mEncoder) {
     // Clean existing encoder.
@@ -436,10 +439,8 @@ int32_t WebrtcMediaDataEncoder::Encode(
 int32_t WebrtcMediaDataEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
-  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
-             "No simulcast support for H264");
   MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
-             "No simulcast support for H264");
+             "No simulcast support for platform encoder");
 
   const uint32_t newBitrateBps = aParameters.bitrate.GetBitrate(0, 0);
   if (newBitrateBps < mMinBitrateBps || newBitrateBps > mMaxBitrateBps) {
