@@ -36,28 +36,27 @@ export function useLanguageSwitcher(
       }
 
       (async () => {
-        const langPack = await window.AWNegotiateLangPackForLanguageMismatch(
+        const {
+          langPack,
+          langPackDisplayName,
+        } = await window.AWNegotiateLangPackForLanguageMismatch(
           appAndSystemLocaleInfo
         );
         if (langPack) {
-          // Convert the BCP 47 identifiers into the proper display names.
-          // e.g. "fr-CA" -> "Canadian French".
-          const displayNames = new Intl.DisplayNames(
-            appAndSystemLocaleInfo.appLocaleRaw,
-            { type: "language" }
-          );
-
           setNegotiatedLanguage({
-            displayName: displayNames.of(langPack.target_locale),
+            langPackDisplayName,
+            appDisplayName: appAndSystemLocaleInfo.displayNames.appLanguage,
             langPack,
             requestSystemLocales: [
               langPack.target_locale,
               appAndSystemLocaleInfo.appLocaleRaw,
             ],
+            originalAppLocales: [appAndSystemLocaleInfo.appLocaleRaw],
           });
         } else {
           setNegotiatedLanguage({
-            displayName: null,
+            langPackDisplayName: null,
+            appDisplayName: null,
             langPack: null,
             requestSystemLocales: null,
           });
@@ -160,13 +159,13 @@ export function LanguageSwitcher(props) {
 
   // The message args are the localized language names.
   const withMessageArgs = obj => {
-    const displayName = negotiatedLanguage?.displayName;
-    if (displayName) {
+    const langPackDisplayName = negotiatedLanguage?.langPackDisplayName;
+    if (langPackDisplayName) {
       return {
         ...obj,
         args: {
           ...obj.args,
-          negotiatedLanguage: displayName,
+          negotiatedLanguage: langPackDisplayName,
         },
       };
     }
@@ -189,6 +188,7 @@ export function LanguageSwitcher(props) {
   // the localized text elements rendering as blank, then filling in the text.
   return (
     <>
+      {/* Pre-loading screen */}
       <div style={{ display: showPreloadingScreen ? "block" : "none" }}>
         <button
           className="primary"
@@ -214,6 +214,7 @@ export function LanguageSwitcher(props) {
           </Localized>
         </div>
       </div>
+      {/* Waiting to download the language screen. */}
       <div style={{ display: showWaitingScreen ? "block" : "none" }}>
         <button
           className="primary"
@@ -245,31 +246,43 @@ export function LanguageSwitcher(props) {
           </Localized>
         </div>
       </div>
+      {/* The typical ready screen. */}
       <div style={{ display: showReadyScreen ? "block" : "none" }}>
         <div>
-          <Localized text={withMessageArgs(content.languageSwitcher.switch)}>
-            <button
-              className="primary"
-              value="primary_button"
-              onClick={() => {
-                AboutWelcomeUtils.sendActionTelemetry(
-                  messageId,
-                  "download_langpack"
-                );
-                setIsAwaitingLangpack(true);
-              }}
-            />
-          </Localized>
+          <button
+            className="primary"
+            value="primary_button"
+            onClick={() => {
+              AboutWelcomeUtils.sendActionTelemetry(
+                messageId,
+                "download_langpack"
+              );
+              setIsAwaitingLangpack(true);
+            }}
+          >
+            {
+              // This is the localized name from the Intl.DisplayNames API.
+              negotiatedLanguage?.langPackDisplayName
+            }
+          </button>
         </div>
-        <div className="secondary-cta">
-          <Localized text={content.languageSwitcher.not_now}>
-            <button
-              type="button"
-              className="secondary text-link"
-              value="decline"
-              onClick={handleAction}
-            />
-          </Localized>
+        <div>
+          <button
+            type="button"
+            className="secondary"
+            value="decline"
+            onClick={event => {
+              window.AWSetRequestedLocales(
+                negotiatedLanguage.originalAppLocales
+              );
+              handleAction(event);
+            }}
+          >
+            {
+              // This is the localized name from the Intl.DisplayNames API.
+              negotiatedLanguage?.appDisplayName
+            }
+          </button>
         </div>
       </div>
     </>

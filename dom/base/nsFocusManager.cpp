@@ -3873,6 +3873,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     bool aSkipOwner) {
   MOZ_ASSERT(IsHostOrSlot(aOwner), "Scope owner should be host or slot");
 
+  // XXX: Why don't we ignore tabindex when the current tabindex < 0?
+  MOZ_ASSERT_IF(aCurrentTabIndex < 0, aIgnoreTabIndex);
+
   if (!aSkipOwner && (aForward && aOwner == aStartContent)) {
     if (nsIFrame* frame = aOwner->GetPrimaryFrame()) {
       auto focusable = frame->IsFocusable();
@@ -4000,7 +4003,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
 nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     nsIContent* aStartOwner, nsIContent** aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t* aCurrentTabIndex,
-    bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey) {
+    bool* aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey) {
   MOZ_ASSERT(aStartOwner == FindScopeOwner(*aStartContent),
              "aStartOWner should be the scope owner of aStartContent");
   MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
@@ -4018,7 +4021,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     }
     nsIContent* contentToFocus = GetNextTabbableContentInScope(
         owner, startContent, aOriginalStartContent, aForward, tabIndex,
-        aIgnoreTabIndex, aForDocumentNavigation, aNavigateByKey,
+        tabIndex < 0, aForDocumentNavigation, aNavigateByKey,
         false /* aSkipOwner */);
     if (contentToFocus) {
       return contentToFocus;
@@ -4032,6 +4035,10 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
   // DOM
   *aStartContent = startContent;
   *aCurrentTabIndex = HostOrSlotTabIndexValue(startContent);
+
+  if (*aCurrentTabIndex < 0) {
+    *aIgnoreTabIndex = true;
+  }
 
   return nullptr;
 }
@@ -4091,7 +4098,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
   if (nsIContent* owner = FindScopeOwner(startContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
         owner, &startContent, aOriginalStartContent, aForward,
-        &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation,
+        &aCurrentTabIndex, &aIgnoreTabIndex, aForDocumentNavigation,
         aNavigateByKey);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);

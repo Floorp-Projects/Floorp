@@ -6,7 +6,6 @@
 
 #include "ContentProcessManager.h"
 #include "ContentParent.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -25,8 +24,7 @@ StaticAutoPtr<ContentProcessManager> ContentProcessManager::sSingleton;
 ContentProcessManager* ContentProcessManager::GetSingleton() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (!sSingleton &&
-      !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+  if (!sSingleton) {
     sSingleton = new ContentProcessManager();
     ClearOnShutdown(&sSingleton);
   }

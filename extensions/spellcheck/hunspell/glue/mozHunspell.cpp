@@ -140,7 +140,9 @@ NS_IMETHODIMP
 mozHunspell::GetDictionaries(nsTArray<nsCString>& aDictionaries) {
   MOZ_ASSERT(aDictionaries.IsEmpty());
   for (auto iter = mHunspells.ConstIter(); !iter.Done(); iter.Next()) {
-    aDictionaries.AppendElement(iter.Key());
+    if (iter.Data().mEnabled) {
+      aDictionaries.AppendElement(iter.Key());
+    }
   }
   return NS_OK;
 }
@@ -156,12 +158,15 @@ mozHunspell::SetDictionaries(const nsTArray<nsCString>& aDictionaries) {
     return NS_OK;
   }
 
-  // SetDictionaries can be called multiple times, so we might have a
-  // valid mHunspell instances which need to be cleaned up.
-  mHunspells.RemoveIf([&aDictionaries](const auto& iter) {
-    return !aDictionaries.Contains(iter.Key());
-  });
+  // Disable any dictionaries we've already loaded that we're not
+  // going to use.
+  for (auto iter = mHunspells.Iter(); !iter.Done(); iter.Next()) {
+    if (!aDictionaries.Contains(iter.Key())) {
+      iter.Data().mEnabled = false;
+    }
+  }
 
+  bool firstDictionary = true;
   for (const auto& dictionary : aDictionaries) {
     NS_ConvertUTF8toUTF16 dict(dictionary);
     nsIURI* affFile = mDictionaries.GetWeak(dict);
@@ -169,41 +174,35 @@ mozHunspell::SetDictionaries(const nsTArray<nsCString>& aDictionaries) {
       return NS_ERROR_FILE_NOT_FOUND;
     }
 
-    nsAutoCString dictFileName, affFileName;
-
+    nsAutoCString affFileName;
     nsresult rv = affFile->GetSpec(affFileName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (auto entry = mHunspells.Lookup(dictionary)) {
       if (entry.Data().mAffixFileName == affFileName) {
+        entry.Data().mEnabled = true;
         continue;
       }
     }
 
-    dictFileName = affFileName;
-    int32_t dotPos = dictFileName.RFindChar('.');
-    if (dotPos == -1) {
-      return NS_ERROR_FAILURE;
-    }
-    dictFileName.SetLength(dotPos);
-    dictFileName.AppendLiteral(".dic");
-
-    UniquePtr<RLBoxHunspell> hunspell(
-        RLBoxHunspell::Create(affFileName, dictFileName));
-    if (!hunspell) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     DictionaryData dictionaryData;
-    dictionaryData.mHunspell = std::move(hunspell);
-    auto encoding = Encoding::ForLabelNoReplacement(
-        dictionaryData.mHunspell->get_dict_encoding());
-    if (!encoding) {
-      return NS_ERROR_UCONV_NOCONV;
-    }
-    dictionaryData.mEncoder = encoding->NewEncoder();
-    dictionaryData.mDecoder = encoding->NewDecoderWithoutBOMHandling();
     dictionaryData.mAffixFileName = affFileName;
+
+    // Load the first dictionary now, we'll load the others lazily during
+    // checking.
+    if (firstDictionary) {
+      rv = dictionaryData.LoadIfNecessary();
+      NS_ENSURE_SUCCESS(rv, rv);
+      firstDictionary = false;
+    }
+
     mHunspells.InsertOrUpdate(dictionary, std::move(dictionaryData));
+  }
+
+  // If we have a large number of dictionaries loaded, try freeing any disabled
+  // dictionaries to limit memory use.
+  if (mHunspells.Count() > 10) {
+    mHunspells.RemoveIf([](const auto& iter) { return !iter.Data().mEnabled; });
   }
 
   return NS_OK;
@@ -307,7 +306,9 @@ void mozHunspell::DictionariesChanged(bool aNotifyChildProcesses) {
   if (!mHunspells.IsEmpty()) {
     nsTArray<nsCString> dictionaries;
     for (auto iter = mHunspells.ConstIter(); !iter.Done(); iter.Next()) {
-      dictionaries.AppendElement(iter.Key());
+      if (iter.Data().mEnabled) {
+        dictionaries.AppendElement(iter.Key());
+      }
     }
     nsresult rv = SetDictionaries(dictionaries);
     if (NS_SUCCEEDED(rv)) return;
@@ -396,6 +397,42 @@ nsresult mozHunspell::DictionaryData::ConvertCharset(const nsAString& aStr,
   return NS_OK;
 }
 
+nsresult mozHunspell::DictionaryData::LoadIfNecessary() {
+  if (mHunspell && mEncoder && mDecoder) {
+    return NS_OK;
+  }
+
+  if (mLoadFailed) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString dictFileName = mAffixFileName;
+  int32_t dotPos = dictFileName.RFindChar('.');
+  if (dotPos == -1) {
+    mLoadFailed = true;
+    return NS_ERROR_FAILURE;
+  }
+  dictFileName.SetLength(dotPos);
+  dictFileName.AppendLiteral(".dic");
+
+  UniquePtr<RLBoxHunspell> hunspell(
+      RLBoxHunspell::Create(mAffixFileName, dictFileName));
+  if (!hunspell) {
+    mLoadFailed = true;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mHunspell = std::move(hunspell);
+  auto encoding =
+      Encoding::ForLabelNoReplacement(mHunspell->get_dict_encoding());
+  if (!encoding) {
+    mLoadFailed = true;
+    return NS_ERROR_UCONV_NOCONV;
+  }
+  mEncoder = encoding->NewEncoder();
+  mDecoder = encoding->NewDecoderWithoutBOMHandling();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 mozHunspell::CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) {
@@ -417,8 +454,17 @@ mozHunspell::Check(const nsAString& aWord, bool* aResult) {
   }
 
   for (auto iter = mHunspells.Iter(); !iter.Done(); iter.Next()) {
+    if (!iter.Data().mEnabled) {
+      continue;
+    }
+
+    nsresult rv = iter.Data().LoadIfNecessary();
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
     std::string charsetWord;
-    nsresult rv = iter.Data().ConvertCharset(aWord, charsetWord);
+    rv = iter.Data().ConvertCharset(aWord, charsetWord);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aResult = iter.Data().mHunspell->spell(charsetWord);
@@ -443,8 +489,17 @@ mozHunspell::Suggest(const nsAString& aWord, nsTArray<nsString>& aSuggestions) {
   MOZ_ASSERT(aSuggestions.IsEmpty());
 
   for (auto iter = mHunspells.Iter(); !iter.Done(); iter.Next()) {
+    if (!iter.Data().mEnabled) {
+      continue;
+    }
+
+    nsresult rv = iter.Data().LoadIfNecessary();
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
     std::string charsetWord;
-    nsresult rv = iter.Data().ConvertCharset(aWord, charsetWord);
+    rv = iter.Data().ConvertCharset(aWord, charsetWord);
     NS_ENSURE_SUCCESS(rv, rv);
 
     std::vector<std::string> suggestions =

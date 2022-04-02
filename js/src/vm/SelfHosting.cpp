@@ -127,6 +127,10 @@ using mozilla::Maybe;
 static void selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report) {
   MOZ_ASSERT(report->isWarning());
 
+  js::selfHosting_ErrorReporter(report);
+}
+
+void js::selfHosting_ErrorReporter(JSErrorReport* report) {
   JS::PrintError(stderr, report, true);
 }
 

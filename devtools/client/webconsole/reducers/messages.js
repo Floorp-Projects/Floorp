@@ -1080,7 +1080,8 @@ function getMessageVisibility(
   // messages.
   if (
     !uiState.showContentMessages &&
-    message.chromeContext === false &&
+    // chromeContext is only included in message when it is true
+    message.chromeContext !== true &&
     message.type !== MESSAGE_TYPE.COMMAND &&
     message.type !== MESSAGE_TYPE.RESULT
   ) {

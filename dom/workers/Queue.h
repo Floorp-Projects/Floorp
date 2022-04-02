@@ -53,26 +53,27 @@ struct StorageWithTArray {
   static void Compact(StorageType& aStorage) { aStorage.Compact(); }
 };
 
-class LockingWithMutex {
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+class CAPABILITY LockingWithMutex {
+  mozilla::Mutex mMutex;
 
  protected:
   LockingWithMutex() : mMutex("LockingWithMutex::mMutex") {}
 
-  PUSH_IGNORE_THREAD_SAFETY
-  void Lock() { mMutex.Lock(); }
+  void Lock() CAPABILITY_ACQUIRE() { mMutex.Lock(); }
 
-  void Unlock() { mMutex.Unlock(); }
+  void Unlock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
 
-  class AutoLock {
+  class SCOPED_CAPABILITY AutoLock {
     LockingWithMutex& mHost;
 
    public:
-    explicit AutoLock(LockingWithMutex& aHost) : mHost(aHost) { mHost.Lock(); }
+    explicit AutoLock(LockingWithMutex& aHost) CAPABILITY_ACQUIRE(aHost)
+        : mHost(aHost) {
+      mHost.Lock();
+    }
 
-    ~AutoLock() { mHost.Unlock(); }
+    ~AutoLock() CAPABILITY_RELEASE() { mHost.Unlock(); }
   };
-  POP_THREAD_SAFETY
 
   friend class AutoLock;
 };

@@ -500,20 +500,20 @@ ${RemoveDefaultBrowserAgentShortcut}
 
   ; An empty string is used for the 5th param because FirefoxHTML- is not a
   ; protocol handler.  Ditto for FirefoxPDF-.
-  ${AddDisabledDDEHandlerValues} "FirefoxHTML$5" "$2" "$8,1" \
+  ${AddDisabledDDEHandlerValues} "FirefoxHTML$5" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                  "${AppRegName} HTML Document" ""
 
-  ${AddDisabledDDEHandlerValues} "FirefoxPDF$5" "$2" "$8,1" \
+  ${AddDisabledDDEHandlerValues} "FirefoxPDF$5" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
                                  "${AppRegName} PDF Document" ""
 
-  ${AddDisabledDDEHandlerValues} "FirefoxURL$5" "$2" "$8,1" "${AppRegName} URL" \
+  ${AddDisabledDDEHandlerValues} "FirefoxURL$5" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "${AppRegName} URL" \
                                  "true"
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and the additional keys
   ; required for a protocol handler.
-  ${AddDisabledDDEHandlerValues} "http" "$2" "$8,1" "" ""
-  ${AddDisabledDDEHandlerValues} "https" "$2" "$8,1" "" ""
-  ${AddDisabledDDEHandlerValues} "mailto" "$2" "$8,1" "" ""
+  ${AddDisabledDDEHandlerValues} "http" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
+  ${AddDisabledDDEHandlerValues} "https" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
+  ${AddDisabledDDEHandlerValues} "mailto" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
 !macroend
 !define SetHandlers "!insertmacro SetHandlers"
 
@@ -561,7 +561,7 @@ ${RemoveDefaultBrowserAgentShortcut}
 
   WriteRegStr ${RegKey} "$0" "" "${BrandFullName}"
 
-  WriteRegStr ${RegKey} "$0\DefaultIcon" "" "$8,0"
+  WriteRegStr ${RegKey} "$0\DefaultIcon" "" "$8,${IDI_APPICON_ZERO_BASED}"
 
   ; The Reinstall Command is defined at
   ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
@@ -580,7 +580,7 @@ ${RemoveDefaultBrowserAgentShortcut}
 
   ; Capabilities registry keys
   WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
-  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,0"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,${IDI_APPICON_ZERO_BASED}"
   WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationName" "${BrandShortName}"
 
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML$2"
@@ -623,7 +623,7 @@ ${RemoveDefaultBrowserAgentShortcut}
     ; Make sure files associated this way use the document icon instead of the
     ; application icon.
     WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\DefaultIcon" \
-                "" "$8,1"
+                "" "$8,${IDI_DOCUMENT_ZERO_BASED}"
     ; If we're going to create this key at all, we also need to list our supported
     ; file types in it, because otherwise we'll be shown as a suggestion for every
     ; single file type, whether we support it in any way or not.
@@ -756,8 +756,8 @@ ${RemoveDefaultBrowserAgentShortcut}
   ${Unless} ${Errors}
     ReadRegStr $1 ${RegKey} "Software\Classes\$3\DefaultIcon" ""
     ${GetLongPath} "$INSTDIR\${FileMainEXE}" $2
-    ${If} "$1" != "$2,1"
-      WriteRegStr ${RegKey} "Software\Classes\$3\DefaultIcon" "" "$2,1"
+    ${If} "$1" != "$2,${IDI_DOCUMENT_ZERO_BASED}"
+      WriteRegStr ${RegKey} "Software\Classes\$3\DefaultIcon" "" "$2,${IDI_DOCUMENT_ZERO_BASED}"
     ${EndIf}
   ${EndUnless}
 !macroend
@@ -853,7 +853,7 @@ ${RemoveDefaultBrowserAgentShortcut}
 
     ; Write the uninstall registry keys
     ${WriteRegStr2} $1 "$0" "Comments" "${BrandFullNameInternal} ${AppVersion}$3 (${ARCH} ${AB_CD})" 0
-    ${WriteRegStr2} $1 "$0" "DisplayIcon" "$8\${FileMainEXE},0" 0
+    ${WriteRegStr2} $1 "$0" "DisplayIcon" "$8\${FileMainEXE},${IDI_APPICON_ZERO_BASED}" 0
     ${WriteRegStr2} $1 "$0" "DisplayName" "${BrandFullNameInternal}$3 (${ARCH} ${AB_CD})" 0
     ${WriteRegStr2} $1 "$0" "DisplayVersion" "${AppVersion}" 0
     ${WriteRegStr2} $1 "$0" "HelpLink" "${HelpLink}" 0
@@ -972,31 +972,31 @@ ${RemoveDefaultBrowserAgentShortcut}
   ${If} "$R9" == "true"
     ; An empty string is used for the 5th param because FirefoxHTML is not a
     ; protocol handler.
-    ${AddDisabledDDEHandlerValues} "FirefoxHTML-$AppUserModelID" "$2" "$8,1" \
+    ${AddDisabledDDEHandlerValues} "FirefoxHTML-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                    "${AppRegName} HTML Document" ""
   ${Else}
     ${IsHandlerForInstallDir} "FirefoxHTML" $R9
     ${If} "$R9" == "true"
-      ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" \
+      ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                      "${AppRegName} HTML Document" ""
     ${EndIf}
   ${EndIf}
 
   ${IsHandlerForInstallDir} "FirefoxPDF-$AppUserModelID" $R9
   ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,1" \
+    ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
                                    "${AppRegName} PDF Document" ""
     ; We've never supported bare "FirefoxPDF".
   ${EndIf}
 
   ${IsHandlerForInstallDir} "FirefoxURL-$AppUserModelID" $R9
   ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,1" \
+    ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                    "${AppRegName} URL" "true"
   ${Else}
     ${IsHandlerForInstallDir} "FirefoxURL" $R9
     ${If} "$R9" == "true"
-      ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" \
+      ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                      "${AppRegName} URL" "true"
     ${EndIf}
   ${EndIf}
@@ -1008,22 +1008,22 @@ ${RemoveDefaultBrowserAgentShortcut}
   ${IsHandlerForInstallDir} "ftp" $R9
   ${If} "$R9" == "true"
     ; In the past, we supported ftp, so we need to delete any registration.
-    ${AddDisabledDDEHandlerValues} "ftp" "$2" "$8,1" "" "delete"
+    ${AddDisabledDDEHandlerValues} "ftp" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" "delete"
   ${EndIf}
 
   ${IsHandlerForInstallDir} "http" $R9
   ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "http" "$2" "$8,1" "" ""
+    ${AddDisabledDDEHandlerValues} "http" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
   ${EndIf}
 
   ${IsHandlerForInstallDir} "https" $R9
   ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "https" "$2" "$8,1" "" ""
+    ${AddDisabledDDEHandlerValues} "https" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
   ${EndIf}
 
   ${IsHandlerForInstallDir} "mailto" $R9
   ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "mailto" "$2" "$8,1" "" ""
+    ${AddDisabledDDEHandlerValues} "mailto" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" "" ""
   ${EndIf}
 !macroend
 !define UpdateProtocolHandlers "!insertmacro UpdateProtocolHandlers"

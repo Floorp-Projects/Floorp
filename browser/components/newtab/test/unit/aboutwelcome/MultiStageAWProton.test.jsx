@@ -61,7 +61,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.propertyVal(
         data.screens[0].content.primary_button.label,
         "string_id",
-        "mr1-onboarding-pin-primary-button-label"
+        "fx100-thank-you-pin-primary-button-label"
       );
     });
     it("should have 'pin' button if we need default and pin", async () => {
@@ -70,7 +70,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.propertyVal(
         data.screens[0].content.primary_button.label,
         "string_id",
-        "mr1-onboarding-pin-primary-button-label"
+        "fx100-thank-you-pin-primary-button-label"
       );
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_SET_DEFAULT");
@@ -111,10 +111,10 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.property(data, "skipFxA", true);
       assert.notProperty(data.screens[0].content, "secondary_button_top");
     });
-    it("should have an image caption", async () => {
+    it("should not have an image caption", async () => {
       const data = await prepConfig();
 
-      assert.property(data.screens[0].content.help_text, "text");
+      assert.notProperty(data.screens[0].content, "help_text");
     });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
@@ -132,16 +132,14 @@ describe("MultiStageAboutWelcomeProton module", () => {
               position: "corner",
               help_text: {
                 deleteIfNotEn: true,
-                text: {
-                  string_id: "mr1-onboarding-welcome-image-caption",
-                },
+                string_id: "mr1-onboarding-welcome-image-caption",
               },
             },
           },
         ],
       });
 
-      assert.notProperty(data.screens[0].content.help_text, "text");
+      assert.notProperty(data.screens[0].content, "help_text");
     });
   });
   describe("AboutWelcomeDefaults prepareContentForReact", () => {

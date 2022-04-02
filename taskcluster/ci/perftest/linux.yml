@@ -37,6 +37,26 @@ try-xpcshell:
             --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
             --xpcshell-xre-path ${MOZ_FETCHES_DIR}/firefox
 
+webpagetest:
+    description: Run webpagetest performance pageload test against Alexa top 50 websites
+    treeherder:
+        symbol: perftest(linux-webpagetest)
+    attributes:
+        cron: true
+    scopes:
+        - secrets:get:project/perftest/gecko/level-{level}/perftest-login
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            testing/performance/perftest_WPT_init_file.js
+            --flavor=webpagetest
+            --webpagetest
+            --perfherder
+            --perfherder-metrics median
+            --output $MOZ_FETCHES_DIR/../artifacts
+
 try-browsertime:
     description: Run ./mach perftest on Linux
     treeherder:

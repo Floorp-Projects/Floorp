@@ -12,7 +12,6 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/WrappingOperations.h"
 
@@ -25,8 +24,6 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
-#include "util/WindowsWrapper.h"
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"

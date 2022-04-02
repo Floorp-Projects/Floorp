@@ -1252,7 +1252,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     if (aBrowsingContext->IsActive()) {
       loadingBC->PreOrderWalk([&](BrowsingContext* aContext) {
         if (BrowserParent* bp = aContext->Canonical()->GetBrowserParent()) {
-          ProcessPriorityManager::ActivityChanged(bp, true);
+          ProcessPriorityManager::BrowserPriorityChanged(bp, true);
         }
       });
     }

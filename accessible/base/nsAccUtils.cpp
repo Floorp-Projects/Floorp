@@ -11,6 +11,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
+#include "DocAccessibleParent.h"
 #include "HyperTextAccessible.h"
 #include "nsIAccessibleTypes.h"
 #include "Role.h"
@@ -451,4 +452,29 @@ bool nsAccUtils::IsARIALive(const LocalAccessible* aAccessible) {
   }
 
   return false;
+}
+
+Accessible* nsAccUtils::DocumentFor(Accessible* aAcc) {
+  if (!aAcc) {
+    return nullptr;
+  }
+  if (LocalAccessible* localAcc = aAcc->AsLocal()) {
+    return localAcc->Document();
+  }
+  return aAcc->AsRemote()->Document();
+}
+
+Accessible* nsAccUtils::GetAccessibleByID(Accessible* aDoc, uint64_t aID) {
+  if (!aDoc) {
+    return nullptr;
+  }
+  if (LocalAccessible* localAcc = aDoc->AsLocal()) {
+    if (DocAccessible* doc = localAcc->AsDoc()) {
+      return doc->GetAccessibleByUniqueID(
+          reinterpret_cast<void*>(static_cast<uintptr_t>(aID)));
+    }
+  } else if (DocAccessibleParent* doc = aDoc->AsRemote()->AsDoc()) {
+    return doc->GetAccessible(aID);
+  }
+  return nullptr;
 }

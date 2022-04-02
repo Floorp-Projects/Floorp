@@ -247,7 +247,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
   // the process will be prioritized in a cross-site iframe navigation in an
   // active tab.
   if (aBrowsingContext->Top()->IsPriorityActive()) {
-    ProcessPriorityManager::ActivityChanged(this, true);
+    ProcessPriorityManager::BrowserPriorityChanged(this, true);
   }
 }
 
@@ -605,7 +605,7 @@ void BrowserParent::Deactivated() {
   PointerLockManager::ReleaseLockedRemoteTarget(this);
   PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
   PresShell::ReleaseCapturingRemoteTarget(this);
-  ProcessPriorityManager::ActivityChanged(this, /* aIsActive = */ false);
+  ProcessPriorityManager::BrowserPriorityChanged(this, /* aPriority = */ false);
 }
 
 void BrowserParent::DestroyInternal() {

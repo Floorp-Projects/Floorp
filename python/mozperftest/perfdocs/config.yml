@@ -34,6 +34,7 @@ suites:
             pageload: ""
             JSConf (warm): ""
             perfstats: ""
+            webpagetest: ""
     browser/base/content/test:
         description: "Performance tests from the 'browser/base/content/test' folder."
         tests:

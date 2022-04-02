@@ -254,10 +254,6 @@ var pktUI = (function() {
       "layoutRefresh",
       NimbusFeatures.saveToPocket.getVariable("layoutRefresh")
     );
-    url.searchParams.append(
-      "pockethost",
-      Services.prefs.getCharPref("extensions.pocket.site")
-    );
     url.searchParams.append("locale", getUILocale());
 
     // We don't have to hide and show the panel again if it's already shown

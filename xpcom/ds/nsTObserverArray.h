@@ -73,7 +73,7 @@ class nsTObserverArray_base {
 template <class T, size_t N>
 class nsAutoTObserverArray : protected nsTObserverArray_base {
  public:
-  typedef T elem_type;
+  typedef T value_type;
   typedef nsTArray<T> array_type;
 
   nsAutoTObserverArray() = default;
@@ -91,18 +91,18 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   // This method provides direct, readonly access to the array elements.
   // @return A pointer to the first element of the array.  If the array is
   // empty, then this pointer must not be dereferenced.
-  const elem_type* Elements() const { return mArray.Elements(); }
-  elem_type* Elements() { return mArray.Elements(); }
+  const value_type* Elements() const { return mArray.Elements(); }
+  value_type* Elements() { return mArray.Elements(); }
 
   // This method provides direct access to an element of the array. The given
   // index must be within the array bounds. If the underlying array may change
   // during iteration, use an iterator instead of this function.
   // @param aIndex The index of an element in the array.
   // @return A reference to the i'th element of the array.
-  elem_type& ElementAt(index_type aIndex) { return mArray.ElementAt(aIndex); }
+  value_type& ElementAt(index_type aIndex) { return mArray.ElementAt(aIndex); }
 
   // Same as above, but readonly.
-  const elem_type& ElementAt(index_type aIndex) const {
+  const value_type& ElementAt(index_type aIndex) const {
     return mArray.ElementAt(aIndex);
   }
 
@@ -111,13 +111,13 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   // value is returned.
   // @param aIndex The index of an element in the array.
   // @param aDef   The value to return if the index is out of bounds.
-  elem_type& SafeElementAt(index_type aIndex, elem_type& aDef) {
+  value_type& SafeElementAt(index_type aIndex, value_type& aDef) {
     return mArray.SafeElementAt(aIndex, aDef);
   }
 
   // Same as above, but readonly.
-  const elem_type& SafeElementAt(index_type aIndex,
-                                 const elem_type& aDef) const {
+  const value_type& SafeElementAt(index_type aIndex,
+                                  const value_type& aDef) const {
     return mArray.SafeElementAt(aIndex, aDef);
   }
 
@@ -131,7 +131,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
   // This method searches, starting from the beginning of the array,
   // for the first element in this array that is equal to the given element.
-  // 'operator==' must be defined for elem_type.
+  // 'operator==' must be defined for value_type.
   // @param aItem The item to search for.
   // @return      true if the element was found.
   template <class Item>
@@ -141,7 +141,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
   // This method searches for the offset of the first element in this
   // array that is equal to the given element.
-  // 'operator==' must be defined for elem_type.
+  // 'operator==' must be defined for value_type.
   // @param aItem  The item to search for.
   // @param aStart The index to start from.
   // @return The index of the found element or NoIndex if not found.
@@ -165,14 +165,14 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
   // Same as above but without copy constructing.
   // This is useful to avoid temporaries.
-  elem_type* InsertElementAt(index_type aIndex) {
-    elem_type* item = mArray.InsertElementAt(aIndex);
+  value_type* InsertElementAt(index_type aIndex) {
+    value_type* item = mArray.InsertElementAt(aIndex);
     AdjustIterators(aIndex, 1);
     return item;
   }
 
   // Prepend an element to the array unless it already exists in the array.
-  // 'operator==' must be defined for elem_type.
+  // 'operator==' must be defined for value_type.
   // @param aItem The item to prepend.
   template <class Item>
   void PrependElementUnlessExists(const Item& aItem) {
@@ -191,10 +191,10 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
   // Same as above, but without copy-constructing. This is useful to avoid
   // temporaries.
-  elem_type* AppendElement() { return mArray.AppendElement(); }
+  value_type* AppendElement() { return mArray.AppendElement(); }
 
   // Append an element to the array unless it already exists in the array.
-  // 'operator==' must be defined for elem_type.
+  // 'operator==' must be defined for value_type.
   // @param aItem The item to append.
   template <class Item>
   void AppendElementUnlessExists(const Item& aItem) {
@@ -213,7 +213,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
   // This helper function combines IndexOf with RemoveElementAt to "search
   // and destroy" the first element that is equal to the given element.
-  // 'operator==' must be defined for elem_type.
+  // 'operator==' must be defined for value_type.
   // @param aItem The item to search for.
   // @return true if the element was found and removed.
   template <class Item>
@@ -233,7 +233,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   template <typename Predicate>
   void NonObservingRemoveElementsBy(Predicate aPredicate) {
     index_type i = 0;
-    mArray.RemoveElementsBy([&](const elem_type& aItem) {
+    mArray.RemoveElementsBy([&](const value_type& aItem) {
       if (aPredicate(aItem)) {
         // This element is going to be removed.
         AdjustIterators(i, -1);
@@ -327,7 +327,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     // Returns the next element and steps one step. This must
     // be preceded by a call to HasMore().
     // @return The next observer.
-    elem_type& GetNext() {
+    value_type& GetNext() {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
       return base_type::mArray.Elements()[base_type::mPosition++];
     }
@@ -358,7 +358,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     // Returns the next element and steps one step. This must
     // be preceded by a call to HasMore().
     // @return The next observer.
-    elem_type& GetNext() {
+    value_type& GetNext() {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
       return base_type::mArray.Elements()[base_type::mPosition++];
     }
@@ -397,7 +397,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     // Returns the next element and steps one step. This must
     // be preceded by a call to HasMore().
     // @return The next observer.
-    elem_type& GetNext() {
+    value_type& GetNext() {
       NS_ASSERTION(HasMore(), "iterating beyond start of array");
       return base_type::mArray.Elements()[--base_type::mPosition];
     }

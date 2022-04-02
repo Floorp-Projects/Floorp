@@ -10588,6 +10588,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "-moz-center",
+      "-moz-center-or-inherit",
       "-moz-left",
       "-moz-right",
       "center",

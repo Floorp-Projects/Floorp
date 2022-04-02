@@ -3561,6 +3561,10 @@ JS_PUBLIC_API bool JS_ReadBytes(JSStructuredCloneReader* r, void* p,
   return r->input().readBytes(p, len);
 }
 
+JS_PUBLIC_API bool JS_ReadDouble(JSStructuredCloneReader* r, double* v) {
+  return r->input().readDouble(v);
+}
+
 JS_PUBLIC_API bool JS_ReadTypedArray(JSStructuredCloneReader* r,
                                      MutableHandleValue vp) {
   uint32_t tag, data;
@@ -3612,6 +3616,10 @@ JS_PUBLIC_API bool JS_WriteBytes(JSStructuredCloneWriter* w, const void* p,
 JS_PUBLIC_API bool JS_WriteString(JSStructuredCloneWriter* w,
                                   HandleString str) {
   return w->writeString(SCTAG_STRING, str);
+}
+
+JS_PUBLIC_API bool JS_WriteDouble(JSStructuredCloneWriter* w, double v) {
+  return w->output().writeDouble(v);
 }
 
 JS_PUBLIC_API bool JS_WriteTypedArray(JSStructuredCloneWriter* w,

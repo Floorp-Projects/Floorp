@@ -34,6 +34,7 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
   enum class Reason : uint8_t {
     eTimeoutOrInterval,
     eIdleCallbackTimeout,
+    eAbortSignalTimeout,
   };
 
   struct TimeoutIdAndReason {

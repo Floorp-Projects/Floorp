@@ -67,12 +67,12 @@ class ContentBlockingLog final {
 
   struct Comparator {
    public:
-    bool Equals(const OriginDataTable::elem_type& aLeft,
-                const OriginDataTable::elem_type& aRight) const {
+    bool Equals(const OriginDataTable::value_type& aLeft,
+                const OriginDataTable::value_type& aRight) const {
       return aLeft.mOrigin.Equals(aRight.mOrigin);
     }
 
-    bool Equals(const OriginDataTable::elem_type& aLeft,
+    bool Equals(const OriginDataTable::value_type& aLeft,
                 const nsACString& aRight) const {
       return aLeft.mOrigin.Equals(aRight);
     }

@@ -141,6 +141,7 @@ static void InitCodecSpecficInfo(webrtc::CodecSpecificInfo& aInfo,
       MOZ_ASSERT(aCodecSettings->VP9().numberOfSpatialLayers == 1);
       aInfo.codecSpecific.VP9.flexible_mode =
           aCodecSettings->VP9().flexibleMode;
+      aInfo.codecSpecific.VP9.first_frame_in_picture = true;
       break;
     }
     default:
@@ -152,8 +153,11 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings,
     const webrtc::VideoEncoder::Settings& aSettings) {
   MOZ_ASSERT(aCodecSettings);
-  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1,
-             "Simulcast not implemented for H264");
+
+  if (aCodecSettings->numberOfSimulcastStreams > 1) {
+    LOG("Only one stream is supported. Falling back to simulcast adaptor");
+    return WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED;
+  }
 
   if (mEncoder) {
     // Clean existing encoder.
@@ -331,12 +335,13 @@ static void UpdateCodecSpecificInfo(webrtc::CodecSpecificInfo& aInfo,
     case webrtc::VideoCodecType::kVideoCodecVP9: {
       // See webrtc::VP9EncoderImpl::PopulateCodecSpecific().
       webrtc::CodecSpecificInfoVP9& vp9 = aInfo.codecSpecific.VP9;
-      vp9.inter_pic_predicted = aIsKeyframe;
+      vp9.inter_pic_predicted = !aIsKeyframe;
       vp9.ss_data_available = aIsKeyframe && !vp9.flexible_mode;
       // One temporal & spatial layer only.
       vp9.temporal_idx = webrtc::kNoTemporalIdx;
       vp9.temporal_up_switch = false;
       vp9.num_spatial_layers = 1;
+      vp9.end_of_picture = true;
       vp9.gof_idx = webrtc::kNoGofIdx;
       vp9.width[0] = aSize.width;
       vp9.height[0] = aSize.height;
@@ -436,10 +441,8 @@ int32_t WebrtcMediaDataEncoder::Encode(
 int32_t WebrtcMediaDataEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
-  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
-             "No simulcast support for H264");
   MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
-             "No simulcast support for H264");
+             "No simulcast support for platform encoder");
 
   const uint32_t newBitrateBps = aParameters.bitrate.GetBitrate(0, 0);
   if (newBitrateBps < mMinBitrateBps || newBitrateBps > mMaxBitrateBps) {

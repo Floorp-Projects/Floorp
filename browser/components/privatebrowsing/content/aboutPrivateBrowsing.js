@@ -78,6 +78,7 @@ async function renderInfo({
 async function renderPromo({
   messageId = null,
   promoEnabled = false,
+  promoType = "VPN",
   promoTitle,
   promoTitleEnabled,
   promoLinkText,
@@ -89,8 +90,10 @@ async function renderPromo({
   promoImageSmall,
   promoButton = null,
 } = {}) {
+  const shouldShow = await RPMSendQuery("ShouldShowPromo", { type: promoType });
   const container = document.querySelector(".promo");
-  if (promoEnabled === false) {
+
+  if (!promoEnabled || !shouldShow) {
     container.remove();
     return false;
   }
@@ -233,13 +236,9 @@ async function setupFeatureConfig() {
   }
 
   await renderInfo(config);
-  // Check the current geo and don't render if we're in the wrong one.
-  const shouldShow = await RPMSendQuery("ShouldShowVPNPromo", {});
-  if (shouldShow) {
-    let hasRendered = await renderPromo(config);
-    if (hasRendered && message) {
-      recordOnceVisible(message);
-    }
+  let hasRendered = await renderPromo(config);
+  if (hasRendered && message) {
+    recordOnceVisible(message);
   }
   // For tests
   document.documentElement.setAttribute("PrivateBrowsingRenderComplete", true);

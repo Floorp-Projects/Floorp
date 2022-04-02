@@ -25,14 +25,12 @@ rawPackets.set(`console.log('foobar', 'test')`, {
       "foobar",
       "test"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -46,14 +44,12 @@ rawPackets.set(`console.log(undefined)`, {
         "type": "undefined"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -65,14 +61,12 @@ rawPackets.set(`console.warn('danger, will robinson!')`, {
     "arguments": [
       "danger, will robinson!"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "warn",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -86,14 +80,12 @@ rawPackets.set(`console.log(NaN)`, {
         "type": "NaN"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -107,14 +99,12 @@ rawPackets.set(`console.log(null)`, {
         "type": "null"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -126,14 +116,12 @@ rawPackets.set(`console.log('鼬')`, {
     "arguments": [
       "鼬"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -143,14 +131,12 @@ rawPackets.set(`console.clear()`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "clear",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -162,14 +148,12 @@ rawPackets.set(`console.count('bar')`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 1,
@@ -209,14 +193,12 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj32"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "assert",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source30",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "stacktrace": [
       {
@@ -237,14 +219,12 @@ rawPackets.set(`console.log('úṇĩçödê țĕșť')`, {
     "arguments": [
       "úṇĩçödê țĕșť"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -272,14 +252,12 @@ rawPackets.set(`console.dirxml(window)`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj35"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "dirxml",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -313,14 +291,12 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj37"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -346,14 +322,12 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj39"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -398,14 +372,12 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj41"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "table",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -454,14 +426,12 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
         "actorID": "server0.conn0.windowGlobal15032385537/obj43"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -473,14 +443,12 @@ rawPackets.set(`console.debug('debug message');`, {
     "arguments": [
       "debug message"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "debug",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -492,14 +460,12 @@ rawPackets.set(`console.info('info message');`, {
     "arguments": [
       "info message"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "info",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -511,14 +477,12 @@ rawPackets.set(`console.error('error message');`, {
     "arguments": [
       "error message"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "error",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source30",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "stacktrace": [
       {
@@ -566,14 +530,12 @@ rawPackets.set(`console.log('mymap')`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj48"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 5,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source46",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -606,14 +568,12 @@ rawPackets.set(`console.log('myset')`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj50"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -623,14 +583,12 @@ rawPackets.set(`console.trace()`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 13,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "trace",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source50",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "stacktrace": [
       {
@@ -712,14 +670,12 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj54"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 13,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "trace",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source51",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "stacktrace": [
       {
@@ -756,14 +712,12 @@ rawPackets.set(`console.trace("%cHello%c|%cWorld")`, {
       "|",
       "World"
     ],
-    "chromeContext": false,
     "columnNumber": 13,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "trace",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child3/source57",
-    "category": "webdev",
     "innerWindowID": 10737418241,
     "stacktrace": [
       {
@@ -789,14 +743,12 @@ rawPackets.set(`console.time('bar')`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "time",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "name": "bar"
@@ -811,14 +763,12 @@ rawPackets.set(`timerAlreadyExists`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "time",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "error": "timerAlreadyExists",
@@ -834,14 +784,12 @@ rawPackets.set(`console.timeLog('bar') - 1`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "timeLog",
     "lineNumber": 4,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "duration": 4,
@@ -883,14 +831,12 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj57"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "timeLog",
     "lineNumber": 5,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source46",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "duration": 5,
@@ -906,14 +852,12 @@ rawPackets.set(`console.timeEnd('bar')`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "timeEnd",
     "lineNumber": 6,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "duration": 9,
@@ -929,14 +873,12 @@ rawPackets.set(`timeEnd.timerDoesntExist`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "timeEnd",
     "lineNumber": 7,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "error": "timerDoesntExist",
@@ -952,14 +894,12 @@ rawPackets.set(`timeLog.timerDoesntExist`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "timeLog",
     "lineNumber": 8,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "timer": {
       "error": "timerDoesntExist",
@@ -975,14 +915,12 @@ rawPackets.set(`console.table('bar')`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "table",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1027,14 +965,12 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj60"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "table",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1046,14 +982,12 @@ rawPackets.set(`console.group('bar')`, {
     "arguments": [
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "group",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1063,14 +997,12 @@ rawPackets.set(`console.groupEnd('bar')`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupEnd",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1082,14 +1014,12 @@ rawPackets.set(`console.groupCollapsed('foo')`, {
     "arguments": [
       "foo"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupCollapsed",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1099,14 +1029,12 @@ rawPackets.set(`console.groupEnd('foo')`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupEnd",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1116,14 +1044,12 @@ rawPackets.set(`console.group()`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "group",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1133,14 +1059,12 @@ rawPackets.set(`console.groupEnd()`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupEnd",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1153,14 +1077,12 @@ rawPackets.set(`console.log(%cfoobar)`, {
       "foo",
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "styles": [
       "color:blue; font-size:1.3em; background:url('https://example.com/test'); position:absolute; top:10px; ",
@@ -1178,14 +1100,12 @@ rawPackets.set(`console.log("%cHello%c|%cWorld")`, {
       "|",
       "World"
     ],
-    "chromeContext": false,
     "columnNumber": 13,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source63",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "styles": [
       "color:red",
@@ -1203,14 +1123,12 @@ rawPackets.set(`console.group(%cfoo%cbar)`, {
       "foo",
       "bar"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "group",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "styles": [
       "color:blue;font-size:1.3em;background:url('https://example.com/test');position:absolute;top:10px",
@@ -1224,14 +1142,12 @@ rawPackets.set(`console.groupEnd(%cfoo%cbar)`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupEnd",
     "lineNumber": 6,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1244,14 +1160,12 @@ rawPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
       "foo",
       "baz"
     ],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupCollapsed",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source48",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "styles": [
       "color:blue;font-size:1.3em;background:url('https://example.com/test');position:absolute;top:10px",
@@ -1265,14 +1179,12 @@ rawPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 11,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "groupEnd",
     "lineNumber": 6,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source54",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1326,14 +1238,12 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
         "actorID": "server0.conn0.windowGlobal15032385537/obj69"
       }
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "dir",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1345,14 +1255,12 @@ rawPackets.set(`console.count | default: 1`, {
     "arguments": [
       "default"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 2,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 1,
@@ -1368,14 +1276,12 @@ rawPackets.set(`console.count | default: 2`, {
     "arguments": [
       "default"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 3,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 2,
@@ -1391,14 +1297,12 @@ rawPackets.set(`console.count | test counter: 1`, {
     "arguments": [
       "test counter"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 4,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 1,
@@ -1414,14 +1318,12 @@ rawPackets.set(`console.count | test counter: 2`, {
     "arguments": [
       "test counter"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 5,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 2,
@@ -1437,14 +1339,12 @@ rawPackets.set(`console.count | default: 3`, {
     "arguments": [
       "default"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 6,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 3,
@@ -1458,14 +1358,12 @@ rawPackets.set(`console.count | clear`, {
   "resourceType": "console-message",
   "message": {
     "arguments": [],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "clear",
     "lineNumber": 7,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false
@@ -1477,14 +1375,12 @@ rawPackets.set(`console.count | default: 4`, {
     "arguments": [
       "default"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 8,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 4,
@@ -1500,14 +1396,12 @@ rawPackets.set(`console.count | test counter: 3`, {
     "arguments": [
       "test counter"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "count",
     "lineNumber": 9,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 3,
@@ -1523,14 +1417,12 @@ rawPackets.set(`console.countReset | test counter: 0`, {
     "arguments": [
       "test counter"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "countReset",
     "lineNumber": 10,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "count": 0,
@@ -1546,14 +1438,12 @@ rawPackets.set(`console.countReset | counterDoesntExist`, {
     "arguments": [
       "test counter"
     ],
-    "chromeContext": false,
     "columnNumber": 15,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "countReset",
     "lineNumber": 11,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source68",
-    "category": "webdev",
     "innerWindowID": 8589934593,
     "counter": {
       "error": "counterDoesntExist",
@@ -1569,14 +1459,12 @@ rawPackets.set(`console.log escaped characters`, {
     "arguments": [
       "hello \nfrom \rthe \"string world!"
     ],
-    "chromeContext": false,
     "columnNumber": 35,
     "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "level": "log",
     "lineNumber": 1,
     "timeStamp": 1572867483805,
     "sourceId": "server0.conn0.child1/source22",
-    "category": "webdev",
     "innerWindowID": 8589934593
   },
   "isAlreadyExistingResource": false

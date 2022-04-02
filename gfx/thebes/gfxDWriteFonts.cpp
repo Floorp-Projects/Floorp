@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
+#include "gfxHarfBuzzShaper.h"
 #include "gfxTextRun.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DWriteSettings.h"
@@ -349,7 +350,7 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     if (aspect > 0.0) {
       // If we created a shaper above (to measure glyphs), discard it so we
       // get a new one for the adjusted scaling.
-      mHarfBuzzShaper = nullptr;
+      delete mHarfBuzzShaper.exchange(nullptr);
       mAdjustedSize = mStyle.GetAdjustedSize(aspect);
     }
   }

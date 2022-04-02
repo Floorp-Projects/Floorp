@@ -10,6 +10,7 @@
 #include <functional>
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
+#include "nsAttrValue.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -994,22 +995,6 @@ bool SchemeIsData(nsIURI* aURI);
 bool SchemeIsViewSource(nsIURI* aURI);
 bool SchemeIsResource(nsIURI* aURI);
 bool SchemeIsFTP(nsIURI* aURI);
-}  // namespace net
-}  // namespace mozilla
-
-/**
- * Returns true if the |aInput| in is part of the root domain of |aHost|.
- * For example, if |aInput| is "www.mozilla.org", and we pass in
- * "mozilla.org" as |aHost|, this will return true.  It would return false
- * the other way around.
- *
- * @param aInput The host to be analyzed.
- * @param aHost  The host to compare to.
- */
-nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
-                          bool* aResult);
-
-void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI);
 
 struct LinkHeader {
   nsString mHref;
@@ -1031,5 +1016,50 @@ struct LinkHeader {
 };
 
 nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData);
+
+enum ASDestination : uint8_t {
+  DESTINATION_INVALID,
+  DESTINATION_AUDIO,
+  DESTINATION_DOCUMENT,
+  DESTINATION_EMBED,
+  DESTINATION_FONT,
+  DESTINATION_IMAGE,
+  DESTINATION_MANIFEST,
+  DESTINATION_OBJECT,
+  DESTINATION_REPORT,
+  DESTINATION_SCRIPT,
+  DESTINATION_SERVICEWORKER,
+  DESTINATION_SHAREDWORKER,
+  DESTINATION_STYLE,
+  DESTINATION_TRACK,
+  DESTINATION_VIDEO,
+  DESTINATION_WORKER,
+  DESTINATION_XSLT,
+  DESTINATION_FETCH
+};
+
+void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
+nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
+
+bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
+                       const nsAString& aMedia,
+                       mozilla::dom::Document* aDocument);
+void WarnIgnoredPreload(const mozilla::dom::Document&, nsIURI&);
+}  // namespace net
+}  // namespace mozilla
+
+/**
+ * Returns true if the |aInput| in is part of the root domain of |aHost|.
+ * For example, if |aInput| is "www.mozilla.org", and we pass in
+ * "mozilla.org" as |aHost|, this will return true.  It would return false
+ * the other way around.
+ *
+ * @param aInput The host to be analyzed.
+ * @param aHost  The host to compare to.
+ */
+nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
+                          bool* aResult);
+
+void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI);
 
 #endif  // !nsNetUtil_h__

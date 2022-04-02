@@ -368,7 +368,7 @@ add_task(async function test_background_update() {
       ],
     },
     () => {
-      AddonManagerInternal.backgroundUpdateCheck();
+      AddonManagerPrivate.backgroundUpdateCheck();
     }
   );
 
@@ -768,7 +768,7 @@ add_task(async function test_no_auto_update() {
       },
     };
     AddonManager.addInstallListener(listener);
-    AddonManagerInternal.backgroundUpdateCheck();
+    AddonManagerPrivate.backgroundUpdateCheck();
   });
   AddonManager.removeInstallListener(listener);
 

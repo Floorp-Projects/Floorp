@@ -78,8 +78,8 @@ class mozHunspellCallbacks {
    * Add filename to allow list.
    */
   static void AllowFile(const nsCString& aFilename);
-  friend RLBoxHunspell* RLBoxHunspell::Create(const nsAutoCString& affpath,
-                                              const nsAutoCString& dpath);
+  friend RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
+                                              const nsCString& dpath);
   /**
    * Clear allow list and map of hunspell file managers.
    */

@@ -488,7 +488,7 @@ struct QueueParamTraits<nsString> : public QueueParamTraits<nsAString> {
 
 template <typename NSTArrayType,
           bool =
-              IsTriviallySerializable<typename NSTArrayType::elem_type>::value>
+              IsTriviallySerializable<typename NSTArrayType::value_type>::value>
 struct NSArrayQueueParamTraits;
 
 // For ElementTypes that are !IsTriviallySerializable

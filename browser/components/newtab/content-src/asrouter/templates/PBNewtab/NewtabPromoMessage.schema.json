@@ -37,6 +37,11 @@
       "type": "boolean",
       "description": "Should we show the promo section."
     },
+    "promoType": {
+      "type": "string",
+      "description": "Promo type used to determine if promo should show to a given user",
+      "enum": ["FOCUS", "RALLY", "VPN"]
+    },
     "promoSectionStyle": {
       "type": "string",
       "description": "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",

@@ -20,6 +20,7 @@
 // If IDI_PBMODE's index changes, PRIVATE_BROWSING_ICON_INDEX
 // in BrowserContentHandler.jsm must also be updated.
 #define IDI_PBMODE 5
+#define IDI_DOCUMENT_PDF 6
 #ifndef IDI_APPLICATION
 #  define IDI_APPLICATION 32512
 #endif

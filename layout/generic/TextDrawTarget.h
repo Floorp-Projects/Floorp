@@ -435,8 +435,8 @@ class TextDrawTarget : public DrawTarget {
   }
 
   void DrawSurfaceWithShadow(SourceSurface* aSurface, const Point& aDest,
-                             const DeviceColor& aColor, const Point& aOffset,
-                             Float aSigma, CompositionOp aOperator) override {
+                             const ShadowOptions& aShadow,
+                             CompositionOp aOperator) override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
   }
 
