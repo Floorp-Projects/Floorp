@@ -67,7 +67,8 @@ class CAPABILITY LockingWithMutex {
     LockingWithMutex& mHost;
 
    public:
-    explicit AutoLock(LockingWithMutex& aHost) CAPABILITY_ACQUIRE(aHost) : mHost(aHost) {
+    explicit AutoLock(LockingWithMutex& aHost) CAPABILITY_ACQUIRE(aHost)
+        : mHost(aHost) {
       mHost.Lock();
     }
 
