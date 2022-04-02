@@ -4,8 +4,6 @@ import os
 import pytest
 from mozprofile import Profile
 
-from . import Geckodriver
-
 
 @pytest.fixture
 def custom_profile(configuration):
@@ -20,15 +18,17 @@ def custom_profile(configuration):
 
 
 @pytest.mark.parametrize("port", ["0", "2828"], ids=["system allocated", "fixed"])
-def test_marionette_port(configuration, port):
+def test_marionette_port(geckodriver, port):
     extra_args = ["--marionette-port", port]
 
-    with Geckodriver(configuration, "localhost", extra_args) as geckodriver:
-        geckodriver.new_session()
-        geckodriver.delete_session()
+    driver = geckodriver(extra_args=extra_args)
+    driver.new_session()
+    driver.delete_session()
 
 
-def test_marionette_port_outdated_active_port_file(configuration, custom_profile):
+def test_marionette_port_outdated_active_port_file(
+    configuration, geckodriver, custom_profile
+):
     config = deepcopy(configuration)
     extra_args = ["--marionette-port", "0"]
 
@@ -43,11 +43,12 @@ def test_marionette_port_outdated_active_port_file(configuration, custom_profile
         custom_profile.profile,
     ]
 
-    with Geckodriver(config, "localhost", extra_args=extra_args) as geckodriver:
-        geckodriver.new_session()
-        with open(active_port_file, "rb") as f:
-            assert f.readline() != b"53"
+    driver = geckodriver(config=config, extra_args=extra_args)
 
-        geckodriver.delete_session()
-        with pytest.raises(FileNotFoundError):
-            open(active_port_file, "rb")
+    driver.new_session()
+    with open(active_port_file, "rb") as f:
+        assert f.readline() != b"53"
+
+    driver.delete_session()
+    with pytest.raises(FileNotFoundError):
+        open(active_port_file, "rb")
