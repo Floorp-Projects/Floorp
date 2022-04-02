@@ -439,6 +439,7 @@ impl FirefoxOptions {
 
         if let Some(args) = rv.args.as_ref() {
             let os_args = parse_args(args.iter().map(OsString::from).collect::<Vec<_>>().iter());
+
             if let Some(path) = get_arg_value(os_args.iter(), Arg::Profile) {
                 if let ProfileType::Path(_) = rv.profile {
                     return Err(WebDriverError::new(
@@ -463,6 +464,27 @@ impl FirefoxOptions {
                        Please instead use the `--profile <path>` Firefox argument to start with an existing profile");
                 rv.profile = ProfileType::Named;
             }
+
+            // Block these Firefox command line arguments that should not be settable
+            // via session capabilities.
+            if let Some(arg) = os_args
+                .iter()
+                .filter_map(|(opt_arg, _)| opt_arg.as_ref())
+                .find(|arg| {
+                    matches!(
+                        arg,
+                        Arg::Marionette
+                            | Arg::RemoteAllowHosts
+                            | Arg::RemoteAllowOrigins
+                            | Arg::RemoteDebuggingPort
+                    )
+                })
+            {
+                return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    format!("Argument {arg} can't be set via capabilities"),
+                ));
+            };
         }
 
         let has_web_socket_url = matched
@@ -485,6 +507,32 @@ impl FirefoxOptions {
             let mut remote_args = Vec::new();
             remote_args.push("--remote-debugging-port".to_owned());
             remote_args.push(settings.websocket_port.to_string());
+
+            // Handle additional hosts for WebDriver BiDi WebSocket connections
+            if !settings.allow_hosts.is_empty() {
+                remote_args.push("--remote-allow-hosts".to_owned());
+                remote_args.push(
+                    settings
+                        .allow_hosts
+                        .iter()
+                        .map(|host| host.to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                );
+            }
+
+            // Handle additional origins for WebDriver BiDi WebSocket connections
+            if !settings.allow_origins.is_empty() {
+                remote_args.push("--remote-allow-origins".to_owned());
+                remote_args.push(
+                    settings
+                        .allow_origins
+                        .iter()
+                        .map(|origin| origin.to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                );
+            }
 
             if let Some(ref mut args) = rv.args {
                 args.append(&mut remote_args);
@@ -533,11 +581,7 @@ impl FirefoxOptions {
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
             let args_array = args_json.as_array().ok_or_else(|| {
-                WebDriverError::new(
-                    ErrorStatus::InvalidArgument,
-                    "Arguments were not an \
-                 array",
-                )
+                WebDriverError::new(ErrorStatus::InvalidArgument, "Arguments were not an array")
             })?;
             let args = args_array
                 .iter()
@@ -549,6 +593,7 @@ impl FirefoxOptions {
                         "Arguments entries were not all strings",
                     )
                 })?;
+
             Ok(Some(args))
         } else {
             Ok(None)
@@ -819,7 +864,7 @@ mod tests {
     use serde_json::{json, Map, Value};
     use std::fs::File;
     use std::io::Read;
-
+    use url::{Host, Url};
     use webdriver::capabilities::Capabilities;
 
     fn example_profile() -> Value {
@@ -890,6 +935,23 @@ mod tests {
     }
 
     #[test]
+    fn fx_options_from_capabilities_with_blocked_firefox_arguments() {
+        let blocked_args = vec![
+            "--marionette",
+            "--remote-allow-hosts",
+            "--remote-allow-origins",
+            "--remote-debugging-port",
+        ];
+
+        for arg in blocked_args {
+            let mut firefox_opts = Capabilities::new();
+            firefox_opts.insert("args".into(), json!([arg]));
+
+            make_options(firefox_opts, None).expect_err("invalid firefox options");
+        }
+    }
+
+    #[test]
     fn fx_options_from_capabilities_with_websocket_url_not_set() {
         let mut caps = Capabilities::new();
 
@@ -934,6 +996,52 @@ mod tests {
             let mut iter = args.iter();
             assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
+        } else {
+            panic!("CLI arguments for Firefox not found");
+        }
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_websocket_and_allow_hosts() {
+        let mut caps = Capabilities::new();
+        caps.insert("webSocketUrl".into(), json!(true));
+
+        let mut marionette_settings: MarionetteSettings = Default::default();
+        marionette_settings.allow_hosts = vec![
+            Host::parse("foo").expect("host"),
+            Host::parse("bar").expect("host"),
+        ];
+        let opts = FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
+            .expect("Valid Firefox options");
+
+        if let Some(args) = opts.args {
+            let mut iter = args.iter();
+            assert!(iter.any(|arg| arg == &"--remote-allow-hosts".to_owned()));
+            assert_eq!(iter.next(), Some(&"foo,bar".to_owned()));
+            assert!(!iter.any(|arg| arg == &"--remote-allow-origins".to_owned()));
+        } else {
+            panic!("CLI arguments for Firefox not found");
+        }
+    }
+
+    #[test]
+    fn fx_options_from_capabilities_with_websocket_and_allow_origins() {
+        let mut caps = Capabilities::new();
+        caps.insert("webSocketUrl".into(), json!(true));
+
+        let mut marionette_settings: MarionetteSettings = Default::default();
+        marionette_settings.allow_origins = vec![
+            Url::parse("http://foo/").expect("url"),
+            Url::parse("http://bar/").expect("url"),
+        ];
+        let opts = FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
+            .expect("Valid Firefox options");
+
+        if let Some(args) = opts.args {
+            let mut iter = args.iter();
+            assert!(iter.any(|arg| arg == &"--remote-allow-origins".to_owned()));
+            assert_eq!(iter.next(), Some(&"http://foo/,http://bar/".to_owned()));
+            assert!(!iter.any(|arg| arg == &"--remote-allow-hosts".to_owned()));
         } else {
             panic!("CLI arguments for Firefox not found");
         }

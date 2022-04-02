@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+from urllib.parse import urlparse
 
 import pytest
 import webdriver
@@ -133,6 +134,13 @@ class Geckodriver:
             self.hostname, self.port, capabilities=capabilities
         )
 
+    @property
+    def remote_agent_port(self):
+        webSocketUrl = self.session.capabilities.get("webSocketUrl")
+        assert webSocketUrl is not None
+
+        return urlparse(webSocketUrl).port
+
     def start(self):
         self.command = (
             [self.config["binary"], "--port", str(self.port)]
@@ -143,6 +151,7 @@ class Geckodriver:
         def processOutputLine(line):
             print(line)
 
+        print(f"Running command: {self.command}")
         self.proc = ProcessHandler(
             self.command, processOutputLine=processOutputLine, universal_newlines=True
         )
