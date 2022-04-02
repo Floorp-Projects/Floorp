@@ -15,9 +15,15 @@ const { TabManager } = ChromeUtils.import(
   "chrome://remote/content/shared/TabManager.jsm"
 );
 
-SpecialPowers.pushPrefEnv({
-  set: [["remote.origins.allowed", "null"]],
-});
+const { allowNullOrigin } = ChromeUtils.import(
+  "chrome://remote/content/server/WebSocketHandshake.jsm"
+);
+
+// The handshake request created by the browser mochitests contains an origin
+// header, which is currently not supported. This origin is a string "null".
+// Explicitly allow such an origin for the duration of the test.
+allowNullOrigin(true);
+registerCleanupFunction(() => allowNullOrigin(false));
 
 const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;
 const TIMEOUT_EVENTS = 1000 * TIMEOUT_MULTIPLIER;

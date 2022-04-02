@@ -1877,21 +1877,6 @@ class gfxFont {
                                RoundingFlags aRounding,
                                gfxTextPerfMetrics* aTextPerf);
 
-  // Ensure the ShapedWord cache is initialized. This MUST be called before
-  // any attempt to use GetShapedWord().
-  void InitWordCache() {
-    mLock.ReadLock();
-    if (!mWordCache) {
-      mLock.ReadUnlock();
-      mozilla::AutoWriteLock lock(mLock);
-      if (!mWordCache) {
-        mWordCache = mozilla::MakeUnique<nsTHashtable<CacheHashEntry>>();
-      }
-    } else {
-      mLock.ReadUnlock();
-    }
-  }
-
   // Called by the gfxFontCache timer to increment the age of all the words,
   // so that they'll expire after a sufficient period of non-use.
   // Returns true if the cache is now empty, otherwise false.
@@ -1901,8 +1886,12 @@ class gfxFont {
   void ClearCachedWords() {
     mozilla::AutoWriteLock lock(mLock);
     if (mWordCache) {
-      mWordCache->Clear();
+      ClearCachedWordsLocked();
     }
+  }
+  void ClearCachedWordsLocked() REQUIRES(mLock) {
+    MOZ_ASSERT(mWordCache);
+    mWordCache->Clear();
   }
 
   // Glyph rendering/geometry has changed, so invalidate data as necessary.
