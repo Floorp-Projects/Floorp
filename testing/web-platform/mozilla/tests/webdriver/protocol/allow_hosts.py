@@ -1,6 +1,6 @@
 import pytest
 
-from . import Geckodriver, get_host, request
+from support.network import get_host, http_request
 
 
 @pytest.mark.parametrize(
@@ -15,11 +15,11 @@ from . import Geckodriver, get_host, request
         (["www.localhost"], "localhost", "server_port", 500),
     ],
 )
-def test_allow_hosts(configuration, allow_hosts, hostname, port_type, status):
+def test_allow_hosts(geckodriver, allow_hosts, hostname, port_type, status):
     extra_args = ["--allow-hosts"] + allow_hosts
 
-    with Geckodriver(configuration, hostname, extra_args) as geckodriver:
-        host = get_host(port_type, hostname, geckodriver.port)
-        response = request(geckodriver.hostname, geckodriver.port, host=host)
+    driver = geckodriver(hostname=hostname, extra_args=extra_args)
+    host = get_host(port_type, hostname, driver.port)
+    response = http_request(driver.hostname, driver.port, host=host)
 
     assert response.status == status
