@@ -19,7 +19,7 @@ add_task(async function() {
   });
   info("Starting test... ");
 
-  const { document, store, windowRequire } = monitor.panelWin;
+  const { document, store, windowRequire, connector } = monitor.panelWin;
 
   // Action should be processed synchronously in tests.
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -165,21 +165,17 @@ add_task(async function() {
   const checkbox = lastHeader.querySelector("input");
   checkbox.click();
 
-  const waitForHeadersPanel = waitUntil(() =>
-    document.querySelector(".headers-overview")
-  );
-
   info("Click on the button to send a new request");
   const waitUntilEventsDisplayed = waitForNetworkEvents(monitor, 1);
   const buttonSend = document.querySelector("#http-custom-request-send-button");
   buttonSend.click();
   await waitUntilEventsDisplayed;
 
-  await waitForHeadersPanel;
-  await waitForRequestData(store, ["requestHeaders"]);
+  const newRequestSelectedId = getSelectedRequest(store.getState()).id;
+  await connector.requestData(newRequestSelectedId, "requestHeaders");
+  const updatedSelectedRequest = getSelectedRequest(store.getState());
 
-  const newRequestSelected = getSelectedRequest(store.getState());
-  let found = newRequestSelected.requestHeaders.headers.some(
+  let found = updatedSelectedRequest.requestHeaders.headers.some(
     item => item.name == "My-header-2" && item.value == "my-value-2"
   );
 
