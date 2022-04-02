@@ -102,8 +102,7 @@ def test_host_header(browser, hostname, port_type, status):
 def test_allowed_hosts(browser, hostname, port_type, status):
     # Request a browser with custom allowed hosts.
     current_browser = browser(
-        extra_args=["--remote-debugging-port"],
-        extra_prefs={"remote.hosts.allowed": "testhost"},
+        extra_args=["--remote-debugging-port", "--remote-allow-hosts", "testhost"]
     )
     server_port = current_browser.remote_agent_port
     test_host = get_host(port_type, hostname, server_port)
@@ -142,8 +141,11 @@ def test_origin_header(browser, origin, status):
 def test_allowed_origins(browser, origin, status):
     # Request a browser with custom allowed origins.
     current_browser = browser(
-        extra_args=["--remote-debugging-port"],
-        extra_prefs={"remote.origins.allowed": "http://localhost:1234"},
+        extra_args=[
+            "--remote-debugging-port",
+            "--remote-allow-origins",
+            "http://localhost:1234",
+        ]
     )
     server_port = current_browser.remote_agent_port
     response = websocket_request(server_port, origin=origin)

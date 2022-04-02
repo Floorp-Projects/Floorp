@@ -40,6 +40,8 @@ const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 const PREF_FORCE_LOCAL = "remote.force-local";
 
 class RemoteAgentClass {
+  #allowHosts;
+  #allowOrigins;
   #classID;
   #enabled;
   #port;
@@ -49,6 +51,8 @@ class RemoteAgentClass {
   #webDriverBiDi;
 
   constructor() {
+    this.#allowHosts = null;
+    this.#allowOrigins = null;
     this.#classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
     this.#enabled = false;
     this.#port = DEFAULT_PORT;
@@ -59,12 +63,41 @@ class RemoteAgentClass {
     this.#webDriverBiDi = null;
   }
 
-  get cdp() {
-    return this.#cdp;
+  get allowHosts() {
+    if (this.#allowHosts !== null) {
+      return this.#allowHosts;
+    }
+
+    if (this.server) {
+      // If the server is bound to a hostname, not an IP address, return it as
+      // allowed host.
+      const hostUri = Services.io.newURI(`https://${this.host}`);
+      if (!this.#isIPAddress(hostUri)) {
+        return [RemoteAgent.host];
+      }
+
+      // Following Bug 1220810 localhost is guaranteed to resolve to a loopback
+      // address (127.0.0.1 or ::1) unless network.proxy.allow_hijacking_localhost
+      // is set to true, which should not be the case.
+      const loopbackAddresses = ["127.0.0.1", "[::1]"];
+
+      // If the server is bound to an IP address and this IP address is a localhost
+      // loopback address, return localhost as allowed host.
+      if (loopbackAddresses.includes(this.host)) {
+        return ["localhost"];
+      }
+    }
+
+    // Otherwise return an empty array.
+    return [];
   }
 
-  get classID() {
-    return this.#classID;
+  get allowOrigins() {
+    return this.#allowOrigins;
+  }
+
+  get cdp() {
+    return this.#cdp;
   }
 
   get debuggerAddress() {
@@ -77,12 +110,6 @@ class RemoteAgentClass {
 
   get enabled() {
     return this.#enabled;
-  }
-
-  get helpInfo() {
-    return `  --remote-debugging-port [<port>] Start the Firefox remote agent,
-                     which is a low-level debugging interface based on the
-                     CDP protocol. Defaults to listen on localhost:9222.\n`;
   }
 
   get host() {
@@ -111,6 +138,23 @@ class RemoteAgentClass {
 
   get webDriverBiDi() {
     return this.#webDriverBiDi;
+  }
+
+  /**
+   * Check if the provided URI's host is an IP address.
+   *
+   * @param {nsIURI} uri
+   *     The URI to check.
+   * @return {boolean}
+   */
+  #isIPAddress(uri) {
+    try {
+      // getBaseDomain throws an explicit error if the uri host is an IP address.
+      Services.eTLD.getBaseDomain(uri);
+    } catch (e) {
+      return e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS;
+    }
+    return false;
   }
 
   handle(cmdLine) {
@@ -219,6 +263,27 @@ class RemoteAgentClass {
     return enabled;
   }
 
+  handleAllowHostsFlag(cmdLine) {
+    try {
+      const hosts = cmdLine.handleFlagWithParam("remote-allow-hosts", false);
+      return hosts.split(",");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  handleAllowOriginsFlag(cmdLine) {
+    try {
+      const origins = cmdLine.handleFlagWithParam(
+        "remote-allow-origins",
+        false
+      );
+      return origins.split(",");
+    } catch (e) {
+      return null;
+    }
+  }
+
   async observe(subject, topic) {
     if (this.enabled) {
       logger.trace(`Received observer notification ${topic}`);
@@ -231,10 +296,14 @@ class RemoteAgentClass {
 
       case "command-line-startup":
         Services.obs.removeObserver(this, topic);
+
         this.#enabled = this.handleRemoteDebuggingPortFlag(subject);
 
         if (this.enabled) {
           Services.obs.addObserver(this, "remote-startup-requested");
+
+          this.#allowHosts = this.handleAllowHostsFlag(subject);
+          this.#allowOrigins = this.handleAllowOriginsFlag(subject);
         }
 
         // Ideally we should only enable the Remote Agent when the command
@@ -289,6 +358,18 @@ class RemoteAgentClass {
   }
 
   // XPCOM
+
+  get classID() {
+    return this.#classID;
+  }
+
+  get helpInfo() {
+    return `  --remote-debugging-port [<port>] Start the Firefox Remote Agent,
+                     which is a low-level remote debugging interface used for WebDriver
+                     BiDi and CDP. Defaults to port 9222.
+  --remote-allow-hosts <hosts> Values of the Host header to allow for incoming requests.
+  --remote-allow-origins <origins> Values of the Origin header to allow for incoming requests.\n`;
+  }
 
   get QueryInterface() {
     return ChromeUtils.generateQI([
