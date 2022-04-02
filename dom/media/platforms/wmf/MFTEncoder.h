@@ -8,7 +8,9 @@
 #  define MFTEncoder_h_
 
 #  include <functional>
+#  include <queue>
 #  include "mozilla/RefPtr.h"
+#  include "mozilla/ResultVariant.h"
 #  include "nsISupportsImpl.h"
 #  include "nsDeque.h"
 #  include "WMF.h"
@@ -40,6 +42,55 @@ class MFTEncoder final {
   };
 
  private:
+  // Abstractions to support sync MFTs using the same logic for async MFTs.
+  // When the MFT is async and a real event generator is available, simply
+  // forward the calls. For sync MFTs, use the synchronous processing model
+  // described in
+  // https://docs.microsoft.com/en-us/windows/win32/medfound/basic-mft-processing-model#process-data
+  // to generate events of the asynchronous processing model.
+  using Event = Result<MediaEventType, HRESULT>;
+  using EventQueue = std::queue<MediaEventType>;
+  class EventSource final {
+   public:
+    EventSource() : mImpl(Nothing{}) {}
+
+    void SetAsyncEventGenerator(
+        already_AddRefed<IMFMediaEventGenerator>&& aAsyncEventGenerator) {
+      MOZ_ASSERT(mImpl.is<Nothing>());
+      mImpl.emplace<RefPtr<IMFMediaEventGenerator>>(aAsyncEventGenerator);
+    }
+
+    void InitSyncMFTEventQueue() {
+      MOZ_ASSERT(mImpl.is<Nothing>());
+      mImpl.emplace<UniquePtr<EventQueue>>(MakeUnique<EventQueue>());
+    }
+
+    bool IsSync() const { return mImpl.is<UniquePtr<EventQueue>>(); }
+
+    Event GetEvent();
+    // Push an event when sync MFT is used.
+    HRESULT QueueSyncMFTEvent(MediaEventType aEventType);
+
+   private:
+    // Pop an event from the queue when sync MFT is used.
+    Event GetSyncMFTEvent();
+
+    Variant<
+        // Uninitialized.
+        Nothing,
+        // For async MFT events. See
+        // https://docs.microsoft.com/en-us/windows/win32/medfound/asynchronous-mfts#events
+        RefPtr<IMFMediaEventGenerator>,
+        // Event queue for a sync MFT. Storing EventQueue directly breaks the
+        // code so a pointer is introduced.
+        UniquePtr<EventQueue>>
+        mImpl;
+#  ifdef DEBUG
+    bool IsOnCurrentThread();
+    nsCOMPtr<nsISerialEventTarget> mThread;
+#  endif
+  };
+
   ~MFTEncoder() { Destroy(); };
 
   static nsTArray<Info>& Infos();
@@ -47,7 +98,10 @@ class MFTEncoder final {
   static Maybe<Info> GetInfo(const GUID& aSubtype);
 
   already_AddRefed<IMFActivate> CreateFactory(const GUID& aSubtype);
-  HRESULT EnableAsync();
+  // Return true when successfully enabled, false for MFT that doesn't support
+  // async processing model, and error otherwise.
+  using AsyncMFTResult = Result<bool, HRESULT>;
+  AsyncMFTResult AttemptEnableAsync();
   HRESULT GetStreamIDs();
   GUID MatchInputSubtype(IMFMediaType* aInputType);
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
@@ -63,9 +117,6 @@ class MFTEncoder final {
   // For encoder configuration. See
   // https://docs.microsoft.com/en-us/windows/win32/directshow/encoder-api
   RefPtr<ICodecAPI> mConfig;
-  // For async MFT events. See
-  // https://docs.microsoft.com/en-us/windows/win32/medfound/asynchronous-mfts#events
-  RefPtr<IMFMediaEventGenerator> mEventSource;
 
   DWORD mInputStreamID;
   DWORD mOutputStreamID;
@@ -79,6 +130,8 @@ class MFTEncoder final {
 
   nsRefPtrDeque<IMFSample> mPendingInputs;
   nsTArray<RefPtr<IMFSample>> mOutputs;
+
+  EventSource mEventSource;
 };
 
 }  // namespace mozilla
