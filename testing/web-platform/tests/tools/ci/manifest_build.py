@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class Status(object):
+class Status:
     SUCCESS = 0
     FAIL = 1
 

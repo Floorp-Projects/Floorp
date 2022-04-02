@@ -60,7 +60,9 @@ class MOZ_RAII AutoAssertReportedException {
     }
 
     if (!cx_->isHelperThreadContext()) {
-      MOZ_ASSERT(cx_->isExceptionPending());
+      // Error while compiling self-hosted code isn't set as an exception.
+      MOZ_ASSERT_IF(cx_->runtime()->hasInitializedSelfHosting(),
+                    cx_->isExceptionPending());
       return;
     }
 

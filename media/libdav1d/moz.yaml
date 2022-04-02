@@ -63,6 +63,7 @@ vendoring:
       pattern: '@VCS_TAG@'
       with: '{revision}'
       file: '{yaml_dir}/vcs_version.h'
-
-
-
+    - action: run-script
+      script: '{yaml_dir}/update-version.sh'
+      cwd: '{vendor_dir}'
+      args: ['{yaml_dir}/version.h']

@@ -102,16 +102,19 @@ let RemotePageAccessManager = {
       RPMSendAsyncMessage: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
+      RPMGetStringPref: ["extensions.pocket.site"],
     },
     "about:pocket-signup": {
       RPMSendAsyncMessage: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
+      RPMGetStringPref: ["extensions.pocket.site"],
     },
     "about:pocket-home": {
       RPMSendAsyncMessage: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
+      RPMGetStringPref: ["extensions.pocket.site"],
     },
     "about:pocket-style-guide": {
       RPMSendAsyncMessage: ["*"],
@@ -128,7 +131,7 @@ let RemotePageAccessManager = {
       RPMSendQuery: [
         "ShouldShowSearch",
         "ShouldShowSearchBanner",
-        "ShouldShowVPNPromo",
+        "ShouldShowPromo",
         "SpecialMessageActionDispatch",
       ],
       RPMAddMessageListener: ["*"],

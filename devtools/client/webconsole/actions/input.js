@@ -272,6 +272,7 @@ function handleHelperResult(response) {
                   message: {
                     level: message.level || "log",
                     arguments: [message.text],
+                    chromeContext: true,
                   },
                   resourceType: ResourceCommand.TYPES.CONSOLE_MESSAGE,
                 }))

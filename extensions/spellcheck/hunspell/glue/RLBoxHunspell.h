@@ -29,8 +29,8 @@
 
 class RLBoxHunspell {
  public:
-  static RLBoxHunspell* Create(const nsAutoCString& affpath,
-                               const nsAutoCString& dpath);
+  static RLBoxHunspell* Create(const nsCString& affpath,
+                               const nsCString& dpath);
 
   ~RLBoxHunspell();
 
@@ -49,7 +49,7 @@ class RLBoxHunspell {
 
   RLBoxHunspell(
       mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> aSandbox,
-      const nsAutoCString& affpath, const nsAutoCString& dpath);
+      const nsCString& affpath, const nsCString& dpath);
 
   mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> mSandbox;
   sandbox_callback_hunspell<hunspell_create_filemgr_t*> mCreateFilemgr;

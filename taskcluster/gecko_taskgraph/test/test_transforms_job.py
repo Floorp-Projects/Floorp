@@ -60,6 +60,8 @@ def transform(monkeypatch, config):
     This gives test functions an easy way to generate the inputs required for
     many of the `run_using` subsystems.
     """
+    # Needed by 'generic_worker_run_task'
+    monkeypatch.setenv("TASK_ID", "fakeid")
 
     def inner(task_input):
         task = deepcopy(TASK_DEFAULTS)

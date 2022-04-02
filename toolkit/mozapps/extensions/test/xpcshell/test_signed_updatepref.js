@@ -35,11 +35,10 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     info("Verifying signatures");
-    let XPIscope = ChromeUtils.import(
-      "resource://gre/modules/addons/XPIProvider.jsm",
-      null
+    const { XPIDatabase } = ChromeUtils.import(
+      "resource://gre/modules/addons/XPIDatabase.jsm"
     );
-    XPIscope.XPIDatabase.verifySignatures();
+    XPIDatabase.verifySignatures();
   });
 }
 
@@ -75,7 +74,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   // Update checks shouldn't affect the add-on
-  await AddonManagerInternal.backgroundUpdateCheck();
+  await AddonManagerPrivate.backgroundUpdateCheck();
   addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);
   Assert.ok(!addon.appDisabled);

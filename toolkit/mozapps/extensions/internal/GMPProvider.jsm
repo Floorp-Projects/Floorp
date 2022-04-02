@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [];
+var EXPORTED_SYMBOLS = ["GMPTestUtils"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -867,3 +867,25 @@ var GMPProvider = {
 };
 
 GMPProvider.addObserver();
+
+// For test use only.
+const GMPTestUtils = {
+  /**
+   * Used to override the GMP service with a mock.
+   *
+   * @param {object} mockService
+   *        The mocked gmpService object.
+   * @param {function} callback
+   *        Method called with the overridden gmpService. The override
+   *        is undone after the callback returns.
+   */
+  async overrideGmpService(mockService, callback) {
+    let originalGmpService = gmpService;
+    gmpService = mockService;
+    try {
+      return await callback();
+    } finally {
+      gmpService = originalGmpService;
+    }
+  },
+};

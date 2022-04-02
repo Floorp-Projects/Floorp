@@ -28,6 +28,7 @@
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/FlippedOnce.h"
+#include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -84,10 +85,10 @@ class WorkerThread;
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
 // Mutex&.
-class SharedMutex {
+class CAPABILITY SharedMutex {
   using Mutex = mozilla::Mutex;
 
-  class RefCountedMutex final : public Mutex {
+  class CAPABILITY RefCountedMutex final : public Mutex {
    public:
     explicit RefCountedMutex(const char* aName) : Mutex(aName) {}
 
@@ -105,11 +106,17 @@ class SharedMutex {
 
   SharedMutex(const SharedMutex& aOther) = default;
 
-  operator Mutex&() RETURN_CAPABILITY(*mMutex) { return *mMutex; }
+  operator Mutex&() RETURN_CAPABILITY(this) { return *mMutex; }
 
-  operator const Mutex&() const RETURN_CAPABILITY(*mMutex) { return *mMutex; }
+  operator const Mutex&() const RETURN_CAPABILITY(this) { return *mMutex; }
 
-  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(*mMutex) {
+  // We need these to make thread-safety analysis work
+  void Lock() CAPABILITY_ACQUIRE() { mMutex->Lock(); }
+  void Unlock() CAPABILITY_RELEASE() { mMutex->Unlock(); }
+
+  // We can assert we own 'this', but we can't assert we hold mMutex
+  void AssertCurrentThreadOwns() const
+      ASSERT_CAPABILITY(this) NO_THREAD_SAFETY_ANALYSIS {
     mMutex->AssertCurrentThreadOwns();
   }
 };
@@ -166,18 +173,18 @@ class WorkerPrivate final
 
   bool Cancel() { return Notify(Canceling); }
 
-  bool Close();
+  bool Close() REQUIRES(mMutex);
 
   // The passed principal must be the Worker principal in case of a
   // ServiceWorker and the loading principal for any other type.
   static void OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo,
                                         nsIPrincipal* aPrincipal);
 
-  bool IsDebuggerRegistered() {
+  bool IsDebuggerRegistered() NO_THREAD_SAFETY_ANALYSIS {
     AssertIsOnMainThread();
 
     // No need to lock here since this is only ever modified by the same thread.
-    return mDebuggerRegistered;
+    return mDebuggerRegistered;  // would give a thread-safety warning
   }
 
   bool ExtensionAPIAllowed() {
@@ -311,9 +318,10 @@ class WorkerPrivate final
                                    const nsTArray<nsString>& aParams);
 
   int32_t SetTimeout(JSContext* aCx, TimeoutHandler* aHandler, int32_t aTimeout,
-                     bool aIsInterval, ErrorResult& aRv);
+                     bool aIsInterval, Timeout::Reason aReason,
+                     ErrorResult& aRv);
 
-  void ClearTimeout(int32_t aId);
+  void ClearTimeout(int32_t aId, Timeout::Reason aReason);
 
   MOZ_CAN_RUN_SCRIPT bool RunExpiredTimeouts(JSContext* aCx);
 
@@ -361,7 +369,7 @@ class WorkerPrivate final
     return mFetchHandlerWasAdded;
   }
 
-  JSContext* GetJSContext() const {
+  JSContext* GetJSContext() const NO_THREAD_SAFETY_ANALYSIS {
     // mJSContext is only modified on the worker thread, so workerthread code
     // can safely read it without a lock
     AssertIsOnWorkerThread();
@@ -539,7 +547,7 @@ class WorkerPrivate final
     return mParentStatus;
   }
 
-  WorkerStatus ParentStatus() const {
+  WorkerStatus ParentStatus() const REQUIRES(mMutex) {
     mMutex.AssertCurrentThreadOwns();
     return mParentStatus;
   }
@@ -1090,13 +1098,14 @@ class WorkerPrivate final
     return ProcessAllControlRunnablesLocked();
   }
 
-  ProcessAllControlRunnablesResult ProcessAllControlRunnablesLocked();
+  ProcessAllControlRunnablesResult ProcessAllControlRunnablesLocked()
+      REQUIRES(mMutex);
 
   void EnableMemoryReporter();
 
   void DisableMemoryReporter();
 
-  void WaitForWorkerEvents();
+  void WaitForWorkerEvents() REQUIRES(mMutex);
 
   // If the worker shutdown status is equal or greater then aFailStatus, this
   // operation will fail and nullptr will be returned. See WorkerStatus.h for
@@ -1133,7 +1142,7 @@ class WorkerPrivate final
   // to allow runnables to be atomically dispatched in bulk.
   nsresult DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
                             nsIEventTarget* aSyncLoopTarget,
-                            const MutexAutoLock& aProofOfLock);
+                            const MutexAutoLock& aProofOfLock) REQUIRES(mMutex);
 
   // This method dispatches a simple runnable that starts the shutdown procedure
   // after a self.close(). This method is called after a ClearMainEventQueue()
@@ -1172,7 +1181,7 @@ class WorkerPrivate final
   friend class mozilla::dom::WorkerThread;
 
   SharedMutex mMutex;
-  mozilla::CondVar mCondVar;
+  mozilla::CondVar mCondVar GUARDED_BY(mMutex);
 
   // We cannot make this CheckedUnsafePtr<WorkerPrivate> as this would violate
   // our static assert
@@ -1206,18 +1215,18 @@ class WorkerPrivate final
   LocationInfo mLocationInfo;
 
   // Protected by mMutex.
-  workerinternals::JSSettings mJSSettings;
+  workerinternals::JSSettings mJSSettings GUARDED_BY(mMutex);
 
   WorkerDebugger* mDebugger;
 
   workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
   workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
-  JSContext* mJSContext;
-  RefPtr<WorkerThread> mThread;
   // Touched on multiple threads, protected with mMutex. Only modified on the
   // worker thread
+  JSContext* mJSContext GUARDED_BY(mMutex);
   // mThread is only modified on the Worker thread, before calling DoRunLoop
+  RefPtr<WorkerThread> mThread GUARDED_BY(mMutex);
   // mPRThread is only modified on another thread in ScheduleWorker(), and is
   // constant for the duration of DoRunLoop.  Static mutex analysis doesn't help
   // here
@@ -1261,7 +1270,7 @@ class WorkerPrivate final
   RefPtr<WorkerCSPEventListener> mCSPEventListener;
 
   // Protected by mMutex.
-  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
+  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables GUARDED_BY(mMutex);
 
   // Only touched on the parent thread. This is set only if IsSharedWorker().
   RefPtr<RemoteWorkerChild> mRemoteWorkerController;
@@ -1271,8 +1280,8 @@ class WorkerPrivate final
 
   JS::UniqueChars mDefaultLocale;  // nulled during worker JSContext init
   TimeStamp mKillTime;
-  WorkerStatus mParentStatus;
-  WorkerStatus mStatus;
+  WorkerStatus mParentStatus GUARDED_BY(mMutex);
+  WorkerStatus mStatus GUARDED_BY(mMutex);
 
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
@@ -1405,7 +1414,7 @@ class WorkerPrivate final
   // use our global object's secure state there.
   const bool mIsSecureContext;
 
-  bool mDebuggerRegistered;
+  bool mDebuggerRegistered GUARDED_BY(mMutex);
 
   // During registration, this worker may be marked as not being ready to
   // execute debuggee runnables or content.

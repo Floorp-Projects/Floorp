@@ -40,6 +40,12 @@
 !define BrandFullName         "${BrandFullNameInternal}"
 !endif
 
+; The C++ defines in `nsNativeAppSupportWin.h` are 1-based.  The Windows
+; resource IDs in the registry are 0-based.
+!define IDI_APPICON_ZERO_BASED      "0"
+!define IDI_DOCUMENT_ZERO_BASED     "1"
+!define IDI_DOCUMENT_PDF_ZERO_BASED "5"
+
 !define CERTIFICATE_NAME            "Mozilla Corporation"
 !define CERTIFICATE_ISSUER          "DigiCert SHA2 Assured ID Code Signing CA"
 ; Changing the name or issuer requires us to have both the old and the new

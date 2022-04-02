@@ -179,7 +179,6 @@ class VideoEncoderSoftwareFallbackWrapper final : public VideoEncoder {
   // The last channel parameters set.
   absl::optional<float> packet_loss_;
   absl::optional<int64_t> rtt_;
-  FecControllerOverride* fec_controller_override_;
   absl::optional<LossNotification> loss_notification_;
 
   enum class EncoderState {
@@ -204,8 +203,7 @@ VideoEncoderSoftwareFallbackWrapper::VideoEncoderSoftwareFallbackWrapper(
     std::unique_ptr<webrtc::VideoEncoder> sw_encoder,
     std::unique_ptr<webrtc::VideoEncoder> hw_encoder,
     bool prefer_temporal_support)
-    : fec_controller_override_(nullptr),
-      encoder_state_(EncoderState::kUninitialized),
+    : encoder_state_(EncoderState::kUninitialized),
       encoder_(std::move(hw_encoder)),
       fallback_encoder_(std::move(sw_encoder)),
       callback_(nullptr),
@@ -232,9 +230,6 @@ void VideoEncoderSoftwareFallbackWrapper::PrimeEncoder(
   }
   if (packet_loss_.has_value()) {
     encoder->OnPacketLossRateUpdate(packet_loss_.value());
-  }
-  if (fec_controller_override_) {
-    encoder->SetFecControllerOverride(fec_controller_override_);
   }
   if (loss_notification_.has_value()) {
     encoder->OnLossNotification(loss_notification_.value());
@@ -276,8 +271,8 @@ void VideoEncoderSoftwareFallbackWrapper::SetFecControllerOverride(
   // |fec_controller_override| at a given time. This is the responsibility
   // of |this| to maintain.
 
-  fec_controller_override_ = fec_controller_override;
-  current_encoder()->SetFecControllerOverride(fec_controller_override);
+  encoder_->SetFecControllerOverride(fec_controller_override);
+  fallback_encoder_->SetFecControllerOverride(fec_controller_override);
 }
 
 int32_t VideoEncoderSoftwareFallbackWrapper::InitEncode(

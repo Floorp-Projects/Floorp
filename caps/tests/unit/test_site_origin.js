@@ -1,10 +1,6 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const scriptSecMan = Services.scriptSecurityManager;
 
-function makeURI(uri) {
-  return Services.io.newURI(uri);
-}
-
 // SystemPrincipal checks
 let systemPrincipal = scriptSecMan.getSystemPrincipal();
 Assert.ok(systemPrincipal.isSystemPrincipal);

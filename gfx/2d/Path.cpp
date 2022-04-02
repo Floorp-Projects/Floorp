@@ -536,5 +536,11 @@ void FlattenBezier(const BezierControlPoints& aControlPoints, PathSink* aSink,
   }
 }
 
+Rect Path::GetFastBounds(const Matrix& aTransform,
+                         const StrokeOptions* aStrokeOptions) const {
+  return aStrokeOptions ? GetStrokedBounds(*aStrokeOptions, aTransform)
+                        : GetBounds(aTransform);
+}
+
 }  // namespace gfx
 }  // namespace mozilla

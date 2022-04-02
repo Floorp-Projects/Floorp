@@ -456,6 +456,8 @@ class VendorManifest(MozbuildObject):
                 for a in update.get("args", []):
                     if a == "{revision}":
                         args.append(revision)
+                    elif any(s in a for s in ["{cwd}", "{vendor_dir}", "{yaml_dir}"]):
+                        args.append(get_full_path(a, support_cwd=True))
                     else:
                         args.append(a)
 

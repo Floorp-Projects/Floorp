@@ -7,23 +7,88 @@ import logging
 import re
 import os
 import sys
+from abc import ABC, abstractmethod
 
 import attr
 
-from .. import GECKO
-from .treeherder import join_symbol
-from gecko_taskgraph.util.attributes import match_run_on_projects, RELEASE_PROJECTS
+from taskgraph.parameters import Parameters
+from taskgraph.taskgraph import TaskGraph
 
-from gecko_taskgraph.util.attributes import ALL_PROJECTS, RUN_ON_PROJECT_ALIASES
+from gecko_taskgraph import GECKO
+from gecko_taskgraph.config import GraphConfig
+from gecko_taskgraph.util.attributes import (
+    match_run_on_projects,
+    RELEASE_PROJECTS,
+    ALL_PROJECTS,
+    RUN_ON_PROJECT_ALIASES,
+)
+from gecko_taskgraph.util.treeherder import join_symbol
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, "taskcluster", "docs")
 
 
 @attr.s(frozen=True)
-class Verification:
-    verify = attr.ib()
-    run_on_projects = attr.ib()
+class Verification(ABC):
+    func = attr.ib()
+
+    @abstractmethod
+    def verify(self, **kwargs) -> None:
+        pass
+
+
+@attr.s(frozen=True)
+class InitialVerification(Verification):
+    """Verification that doesn't depend on any generation state."""
+
+    def verify(self):
+        self.func()
+
+
+@attr.s(frozen=True)
+class GraphVerification(Verification):
+    """Verification for a TaskGraph object."""
+
+    run_on_projects = attr.ib(default=None)
+
+    def verify(
+        self, graph: TaskGraph, graph_config: GraphConfig, parameters: Parameters
+    ):
+        if self.run_on_projects and not match_run_on_projects(
+            parameters["project"], self.run_on_projects
+        ):
+            return
+
+        scratch_pad = {}
+        graph.for_each_task(
+            self.func,
+            scratch_pad=scratch_pad,
+            graph_config=graph_config,
+            parameters=parameters,
+        )
+        self.func(
+            None,
+            graph,
+            scratch_pad=scratch_pad,
+            graph_config=graph_config,
+            parameters=parameters,
+        )
+
+
+@attr.s(frozen=True)
+class ParametersVerification(Verification):
+    """Verification for a set of parameters."""
+
+    def verify(self, parameters: Parameters):
+        self.func(parameters)
+
+
+@attr.s(frozen=True)
+class KindsVerification(Verification):
+    """Verification for kinds."""
+
+    def verify(self, kinds: dict):
+        self.func(kinds)
 
 
 @attr.s(frozen=True)
@@ -37,34 +102,22 @@ class VerificationSequence:
     """
 
     _verifications = attr.ib(factory=dict)
+    _verification_types = {
+        "graph": GraphVerification,
+        "initial": InitialVerification,
+        "kinds": KindsVerification,
+        "parameters": ParametersVerification,
+    }
 
-    def __call__(self, graph_name, graph, graph_config, parameters):
-        for verification in self._verifications.get(graph_name, []):
-            if not match_run_on_projects(
-                parameters["project"], verification.run_on_projects
-            ):
-                continue
-            scratch_pad = {}
-            graph.for_each_task(
-                verification.verify,
-                scratch_pad=scratch_pad,
-                graph_config=graph_config,
-                parameters=parameters,
-            )
-            verification.verify(
-                None,
-                graph,
-                scratch_pad=scratch_pad,
-                graph_config=graph_config,
-                parameters=parameters,
-            )
-        return graph_name, graph
+    def __call__(self, name, *args, **kwargs):
+        for verification in self._verifications.get(name, []):
+            verification.verify(*args, **kwargs)
 
-    def add(self, graph_name, run_on_projects={"all"}):
+    def add(self, name, **kwargs):
+        cls = self._verification_types.get(name, GraphVerification)
+
         def wrap(func):
-            self._verifications.setdefault(graph_name, []).append(
-                Verification(func, run_on_projects)
-            )
+            self._verifications.setdefault(name, []).append(cls(func, **kwargs))
             return func
 
         return wrap
@@ -135,6 +188,47 @@ def verify_docs(filename, identifiers, appearing_as):
                     appearing_as, identifier, filename
                 )
             )
+
+
+@verifications.add("initial")
+def verify_run_using():
+    from gecko_taskgraph.transforms.job import registry
+
+    verify_docs(
+        filename="transforms.rst",
+        identifiers=registry.keys(),
+        appearing_as="inline-literal",
+    )
+
+
+@verifications.add("parameters")
+def verify_parameters_docs(parameters):
+    if not parameters.strict:
+        return
+
+    parameters_dict = dict(**parameters)
+    verify_docs(
+        filename="parameters.rst",
+        identifiers=list(parameters_dict),
+        appearing_as="inline-literal",
+    )
+
+
+@verifications.add("kinds")
+def verify_kinds_docs(kinds):
+    verify_docs(filename="kinds.rst", identifiers=kinds.keys(), appearing_as="heading")
+
+
+@verifications.add("full_task_set")
+def verify_attributes(task, taskgraph, scratch_pad, graph_config, parameters):
+    if task is None:
+        verify_docs(
+            filename="attributes.rst",
+            identifiers=list(scratch_pad["attribute_set"]),
+            appearing_as="heading",
+        )
+        return
+    scratch_pad.setdefault("attribute_set", set()).update(task.attributes.keys())
 
 
 @verifications.add("full_task_graph")

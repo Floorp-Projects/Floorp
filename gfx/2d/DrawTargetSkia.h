@@ -63,8 +63,7 @@ class DrawTargetSkia : public DrawTarget {
                           const DrawOptions& aOptions = DrawOptions()) override;
   virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
                                      const Point& aDest,
-                                     const DeviceColor& aColor,
-                                     const Point& aOffset, Float aSigma,
+                                     const ShadowOptions& aShadow,
                                      CompositionOp aOperator) override;
   void Clear(const Rect* aRect = nullptr);
   virtual void ClearRect(const Rect& aRect) override { Clear(&aRect); }

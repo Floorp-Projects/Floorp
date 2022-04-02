@@ -305,8 +305,7 @@ void DrawTargetD2D1::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
 
 void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                            const Point& aDest,
-                                           const DeviceColor& aColor,
-                                           const Point& aOffset, Float aSigma,
+                                           const ShadowOptions& aShadow,
                                            CompositionOp aOperator) {
   if (!EnsureInitialized()) {
     return;
@@ -329,7 +328,7 @@ void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
     return;
   }
 
-  if (!PrepareForDrawing(aOperator, ColorPattern(aColor))) {
+  if (!PrepareForDrawing(aOperator, ColorPattern(aShadow.mColor))) {
     return;
   }
 
@@ -343,16 +342,19 @@ void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
   if (SUCCEEDED(hr) && shadowEffect) {
     shadowEffect->SetInput(0, image);
     if (mFormat == SurfaceFormat::A8) {
-      shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, aSigma);
+      shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION,
+                             aShadow.mSigma);
       shadowEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_BORDER_MODE,
                              D2D1_BORDER_MODE_HARD);
     } else {
-      shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, aSigma);
-      D2D1_VECTOR_4F color = {aColor.r, aColor.g, aColor.b, aColor.a};
+      shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION,
+                             aShadow.mSigma);
+      D2D1_VECTOR_4F color = {aShadow.mColor.r, aShadow.mColor.g,
+                              aShadow.mColor.b, aShadow.mColor.a};
       shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, color);
     }
 
-    D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aOffset);
+    D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aShadow.mOffset);
     mDC->DrawImage(shadowEffect, &shadowPoint, nullptr,
                    D2D1_INTERPOLATION_MODE_LINEAR,
                    D2D1_COMPOSITE_MODE_SOURCE_OVER);
@@ -366,7 +368,7 @@ void DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface* aSurface,
                    D2D1_COMPOSITE_MODE_SOURCE_OVER);
   }
 
-  FinalizeDrawing(aOperator, ColorPattern(aColor));
+  FinalizeDrawing(aOperator, ColorPattern(aShadow.mColor));
 }
 
 void DrawTargetD2D1::ClearRect(const Rect& aRect) {

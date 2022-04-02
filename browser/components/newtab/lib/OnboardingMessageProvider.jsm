@@ -3,7 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 /* globals Localization */
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
+});
 
 const L10N = new Localization([
   "branding/brand.ftl",
@@ -38,6 +46,54 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "protectionsPanelOpen" },
   },
   {
+    id: "FX_100_UPGRADE",
+    template: "spotlight",
+    targeting: "false",
+    content: {
+      template: "multistage",
+      id: "FX_100_UPGRADE",
+      screens: [
+        {
+          id: "UPGRADE_PIN_FIREFOX",
+          order: 0,
+          content: {
+            logo: {
+              imageURL:
+                "chrome://activity-stream/content/data/content/assets/heart.gif",
+              height: "73px",
+            },
+            title: {
+              string_id: "fx100-upgrade-thanks-header",
+            },
+            title_style: "fancy",
+            background:
+              "url(chrome://activity-stream/content/data/content/assets/confetti.svg) top / 100% no-repeat var(--in-content-page-background)",
+            subtitle: {
+              string_id: "fx100-upgrade-thanks-keep-body",
+            },
+            primary_button: {
+              label: {
+                string_id: "fx100-thank-you-pin-primary-button-label",
+              },
+              action: {
+                navigate: true,
+                type: "PIN_FIREFOX_TO_TASKBAR",
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id: "mr1-onboarding-set-default-secondary-button-label",
+              },
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
     id: "PB_NEWTAB_FOCUS_PROMO",
     template: "pb_newtab",
     groups: ["pbNewtab"],
@@ -49,6 +105,7 @@ const ONBOARDING_MESSAGES = () => [
       infoTitle: "",
       infoTitleEnabled: false,
       promoEnabled: true,
+      promoType: "FOCUS",
       promoHeader: "fluent:about-private-browsing-focus-promo-header",
       promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
       promoLinkText: "fluent:about-private-browsing-focus-promo-cta",
@@ -207,6 +264,47 @@ const OnboardingMessageProvider = {
       translatedMessages.push(translatedMessage);
     }
     return translatedMessages;
+  },
+  async _doesAppNeedPin() {
+    const needPin = await ShellService.doesAppNeedPin();
+    return needPin;
+  },
+  async _doesAppNeedDefault() {
+    let checkDefault = Services.prefs.getBoolPref(
+      "browser.shell.checkDefaultBrowser",
+      false
+    );
+    let isDefault = await ShellService.isDefaultBrowser();
+    return checkDefault && !isDefault;
+  },
+  async getUpgradeMessage() {
+    let message = (await OnboardingMessageProvider.getMessages()).find(
+      ({ id }) => id === "FX_100_UPGRADE"
+    );
+    let { content } = message;
+    let pinScreen = content.screens?.find(
+      screen => screen.id === "UPGRADE_PIN_FIREFOX"
+    );
+    const needPin = await this._doesAppNeedPin();
+    const needDefault = await this._doesAppNeedDefault();
+    // If user doesn't need pin, update screen to set "default" or "get started" configuration
+    if (!needPin && pinScreen) {
+      let primary = pinScreen.content.primary_button;
+      if (needDefault) {
+        pinScreen.id = "UPGRADE_ONLY_DEFAULT";
+        primary.label.string_id =
+          "mr1-onboarding-set-default-only-primary-button-label";
+        primary.action.type = "SET_DEFAULT_BROWSER";
+      } else {
+        pinScreen.id = "UPGRADE_GET_STARTED";
+        pinScreen.content.subtitle.string_id = "fx100-upgrade-thank-you-body";
+        primary.label.string_id = "mr2-onboarding-start-browsing-button-label";
+        delete primary.action.type;
+        delete pinScreen.content.secondary_button;
+      }
+    }
+
+    return message;
   },
 };
 this.OnboardingMessageProvider = OnboardingMessageProvider;

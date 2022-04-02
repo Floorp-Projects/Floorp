@@ -183,7 +183,6 @@ module.exports = {
         // These are suitable as good first bugs, take one or two related lines
         // per bug.
         "caps/tests/unit/test_origin.js",
-        "caps/tests/unit/test_site_origin.js",
         "chrome/test/unit/test_no_remote_registration.js",
         "extensions/permissions/**",
         "image/test/unit/**",
@@ -536,24 +535,6 @@ module.exports = {
       ],
       rules: {
         "mozilla/prefer-boolean-length-check": "off",
-      },
-    },
-    {
-      // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
-      files: [
-        "toolkit/mozapps/extensions/internal/AddonTestUtils.jsm",
-        "toolkit/mozapps/extensions/test/browser/browser_gmpProvider.js",
-        "toolkit/mozapps/extensions/test/xpcshell/head_addons.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_gmpProvider.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_no_addons.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_permissions_prefs.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_signed_updatepref.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_signed_verify.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_webextension_events.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_XPIStates.js",
-      ],
-      rules: {
-        "mozilla/reject-chromeutils-import-params": "warn",
       },
     },
     {

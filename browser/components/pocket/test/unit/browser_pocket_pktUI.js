@@ -85,10 +85,7 @@ test_runner(async function test_pktUI_getAndShowRecsForItem_locale({
 
 test_runner(async function test_pktUI_showPanel({ sandbox }) {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.pocket.site", "test-site"],
-      ["extensions.pocket.refresh.layout.enabled", true],
-    ],
+    set: [["extensions.pocket.refresh.layout.enabled", true]],
   });
   const testFrame = {
     setAttribute: sandbox.stub(),
@@ -100,7 +97,7 @@ test_runner(async function test_pktUI_showPanel({ sandbox }) {
 
   Assert.deepEqual(testFrame.setAttribute.args[0], [
     "src",
-    `about:pocket-saved?utmSource=firefox_pocket_save_button&layoutRefresh=true&pockethost=test-site&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
+    `about:pocket-saved?utmSource=firefox_pocket_save_button&layoutRefresh=true&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
   ]);
   Assert.deepEqual(testFrame.style, { width: "10px", height: "10px" });
 });

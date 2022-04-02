@@ -37,9 +37,8 @@ var HomeOverlay = function(options) {
 };
 
 HomeOverlay.prototype = {
-  create() {
+  create({ pockethost }) {
     const { searchParams } = new URL(window.location.href);
-    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
     const locale = searchParams.get(`locale`) || ``;
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
     const hideRecentSaves = searchParams.get(`hiderecentsaves`) === `true`;
