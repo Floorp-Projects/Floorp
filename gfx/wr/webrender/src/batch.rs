@@ -2894,59 +2894,7 @@ impl BatchBuilder {
                     }
                 }
             }
-            PrimitiveInstanceKind::Backdrop { data_handle } => {
-                let prim_data = &ctx.data_stores.backdrop[data_handle];
-                let backdrop_pic_index = prim_data.kind.pic_index;
-
-                let backdrop_task_id = ctx.prim_store
-                    .pictures[backdrop_pic_index.0]
-                    .primary_render_task_id
-                    .expect("backdrop surface should be resolved by now");
-
-                let (backdrop_uv_rect_address, texture) = render_tasks.resolve_location(
-                    backdrop_task_id,
-                    gpu_cache,
-                ).unwrap();
-                let textures = BatchTextures::prim_textured(texture, TextureSource::Invalid);
-
-                let batch_key = BatchKey::new(
-                    BatchKind::Brush(BrushBatchKind::Image(ImageBufferKind::Texture2D)),
-                    BlendMode::PremultipliedAlpha,
-                    textures,
-                );
-
-                let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
-                let prim_header = PrimitiveHeader {
-                    local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
-                    transform_id,
-                    specific_prim_address: prim_cache_address,
-                };
-
-                let prim_header_index = prim_headers.push(
-                    &prim_header,
-                    z_id,
-                    ImageBrushData {
-                        color_mode: ShaderColorMode::Image,
-                        alpha_type: AlphaType::PremultipliedAlpha,
-                        raster_space: RasterizationSpace::Screen,
-                        opacity: 1.0,
-                    }.encode(),
-                );
-
-                self.add_brush_instance_to_batches(
-                    batch_key,
-                    batch_features,
-                    bounding_rect,
-                    z_id,
-                    INVALID_SEGMENT_INDEX,
-                    EdgeAaSegmentMask::empty(),
-                    OPAQUE_TASK_ADDRESS,
-                    BrushFlags::empty(),
-                    prim_header_index,
-                    backdrop_uv_rect_address.as_int(),
-                );
-            }
+            PrimitiveInstanceKind::Backdrop { .. } => {}
         }
     }
 
