@@ -152,6 +152,21 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
+    // Map a local space point to the target coordinate space
+    pub fn map_point(&self, p: Point2D<f32, F>) -> Option<Point2D<f32, T>> {
+        match self.kind {
+            CoordinateSpaceMapping::Local => {
+                Some(p.cast_unit())
+            }
+            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
+                Some(scale_offset.map_point(&p))
+            }
+            CoordinateSpaceMapping::Transform(ref transform) => {
+                transform.transform_point2d(p)
+            }
+        }
+    }
+
     pub fn map_vector(&self, v: Vector2D<f32, F>) -> Vector2D<f32, T> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
