@@ -4,10 +4,9 @@
 
 use crate::frame_builder::FrameBuildingContext;
 use crate::internal_types::FastHashMap;
-use crate::prim_store::{PictureIndex, PrimitiveInstance};
+use crate::prim_store::PictureIndex;
 use crate::picture::{PicturePrimitive, SurfaceIndex, SurfaceInfo};
 use crate::picture::{TileCacheInstance, SliceId};
-use crate::render_backend::DataStores;
 use smallvec::SmallVec;
 
 #[derive(Debug)]
@@ -129,8 +128,6 @@ impl PictureGraph {
         pictures: &mut [PicturePrimitive],
         surfaces: &mut [SurfaceInfo],
         frame_context: &FrameBuildingContext,
-        data_stores: &mut DataStores,
-        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         for pass in self.update_passes.iter().rev() {
             for pic_index in pass {
@@ -151,8 +148,6 @@ impl PictureGraph {
                     parent_surface_index,
                     surfaces,
                     frame_context,
-                    data_stores,
-                    prim_instances,
                 );
             }
         }
