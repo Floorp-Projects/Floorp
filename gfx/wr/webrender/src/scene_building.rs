@@ -63,7 +63,6 @@ use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
 use crate::prim_store::PolygonKey;
-use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{
     GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient,
@@ -2085,7 +2084,6 @@ impl<'a> SceneBuilder<'a> {
                 transform_style,
                 context_3d,
                 is_redundant,
-                is_backdrop_root: flags.contains(StackingContextFlags::IS_BACKDROP_ROOT),
                 flags,
                 raster_space: new_space,
             });
@@ -3460,182 +3458,6 @@ impl<'a> SceneBuilder<'a> {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn add_backdrop_filter(
-        &mut self,
-        spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
-        info: &LayoutPrimitiveInfo,
-        filters: Vec<Filter>,
-        filter_datas: Vec<FilterData>,
-        filter_primitives: Vec<FilterPrimitive>,
-    ) {
-        let mut backdrop_pic_index = match self.cut_backdrop_picture() {
-            // Backdrop contains no content, so no need to add backdrop-filter
-            None => return,
-            Some(backdrop_pic_index) => backdrop_pic_index,
-        };
-
-        let backdrop_spatial_node_index = self.prim_store.pictures[backdrop_pic_index.0].spatial_node_index;
-
-        let mut instance = self.create_primitive(
-            info,
-            // TODO(cbrewster): This is a bit of a hack to help figure out the correct sizing of the backdrop
-            // region. By makings sure to include this, the clip chain instance computes the correct clip rect,
-            // but we don't actually apply the filtered backdrop clip yet (this is done to the last instance in
-            // the filter chain below).
-            backdrop_spatial_node_index,
-            clip_chain_id,
-            Backdrop {
-                pic_index: backdrop_pic_index,
-                spatial_node_index,
-                border_rect: info.rect.into(),
-            },
-        );
-
-        // We will append the filtered backdrop to the backdrop root, but we need to
-        // make sure all clips between the current stacking context and backdrop root
-        // are taken into account. So we wrap the backdrop filter instance with a picture with
-        // a clip for each stacking context.
-        for stacking_context in self.sc_stack.iter().rev().take_while(|sc| !sc.is_backdrop_root) {
-            let clip_chain_id = stacking_context.clip_chain_id;
-            let prim_flags = stacking_context.prim_flags;
-            let composite_mode = None;
-
-            let mut prim_list = PrimitiveList::empty();
-            prim_list.add_prim(
-                instance,
-                LayoutRect::zero(),
-                backdrop_spatial_node_index,
-                prim_flags,
-                &mut self.prim_instances,
-            );
-
-            backdrop_pic_index = PictureIndex(self.prim_store.pictures
-                .alloc()
-                .init(PicturePrimitive::new_image(
-                    composite_mode.clone(),
-                    Picture3DContext::Out,
-                    true,
-                    prim_flags,
-                    prim_list,
-                    backdrop_spatial_node_index,
-                    stacking_context.raster_space,
-                ))
-            );
-
-            instance = create_prim_instance(
-                backdrop_pic_index,
-                composite_mode.into(),
-                stacking_context.raster_space,
-                clip_chain_id,
-                &mut self.interners,
-            );
-        }
-
-        let mut source = PictureChainBuilder::from_instance(
-            instance,
-            info.flags,
-            backdrop_spatial_node_index,
-            RasterSpace::Screen,
-        );
-
-        source = self.wrap_prim_with_filters(
-            source,
-            filters,
-            filter_primitives,
-            filter_datas,
-        );
-
-        // Apply filters from all stacking contexts up to, but not including the backdrop root.
-        // Gecko pushes separate stacking contexts for filters and opacity,
-        // so we must iterate through multiple stacking contexts to find all effects
-        // that need to be applied to the filtered backdrop.
-        let backdrop_root_pos = self.sc_stack.iter().rposition(|sc| sc.is_backdrop_root).expect("no backdrop root?");
-        for i in ((backdrop_root_pos + 1)..self.sc_stack.len()).rev() {
-            let stacking_context = &self.sc_stack[i];
-            let filters = stacking_context.composite_ops.filters.clone();
-            let filter_primitives = stacking_context.composite_ops.filter_primitives.clone();
-            let filter_datas = stacking_context.composite_ops.filter_datas.clone();
-
-            source = self.wrap_prim_with_filters(
-                source,
-                filters,
-                filter_primitives,
-                filter_datas,
-            );
-        }
-
-        let filtered_instance = source.finalize(
-            clip_chain_id,
-            &mut self.interners,
-            &mut self.prim_store,
-        );
-
-        self.sc_stack
-            .iter_mut()
-            .rev()
-            .find(|sc| sc.is_backdrop_root)
-            .unwrap()
-            .prim_list
-            .add_prim(
-                filtered_instance,
-                LayoutRect::zero(),
-                backdrop_spatial_node_index,
-                info.flags,
-                &mut self.prim_instances,
-            );
-    }
-
-    /// Create pictures for each stacking context rendered into their parents, down to the nearest
-    /// backdrop root until we have a picture that represents the contents of all primitives added
-    /// since the backdrop root
-    #[allow(dead_code)]
-    pub fn cut_backdrop_picture(&mut self) -> Option<PictureIndex> {
-        let mut flattened_items = None;
-        let mut backdrop_root =  None;
-        let mut spatial_node_index = SpatialNodeIndex::INVALID;
-        let mut prim_flags = PrimitiveFlags::default();
-        for sc in self.sc_stack.iter_mut().rev() {
-            // Add child contents to parent stacking context
-            if let Some((_, flattened_instance)) = flattened_items.take() {
-                sc.prim_list.add_prim(
-                    flattened_instance,
-                    LayoutRect::zero(),
-                    spatial_node_index,
-                    prim_flags,
-                    &mut self.prim_instances,
-                );
-            }
-            flattened_items = sc.cut_item_sequence(
-                &mut self.prim_store,
-                &mut self.interners,
-                None,
-                Picture3DContext::Out,
-            );
-            spatial_node_index = sc.spatial_node_index;
-            prim_flags = sc.prim_flags;
-            if sc.is_backdrop_root {
-                backdrop_root = Some(sc);
-                break;
-            }
-        }
-
-        let (pic_index, instance) = flattened_items?;
-        self.prim_store.pictures[pic_index.0].composite_mode = Some(PictureCompositeMode::Blit(BlitReason::BACKDROP));
-        backdrop_root.expect("no backdrop root found")
-            .prim_list
-            .add_prim(
-                instance,
-                LayoutRect::zero(),
-                spatial_node_index,
-                prim_flags,
-                &mut self.prim_instances,
-            );
-
-        Some(pic_index)
-    }
-
     #[must_use]
     fn wrap_prim_with_filters(
         &mut self,
@@ -3805,10 +3627,6 @@ struct FlattenedStackingContext {
 
     /// Defines the relationship to a preserve-3D hiearachy.
     context_3d: Picture3DContext<ExtendedPrimitiveInstance>,
-
-    /// True if this stacking context is a backdrop root.
-    #[allow(dead_code)]
-    is_backdrop_root: bool,
 
     /// True if this stacking context is redundant (i.e. doesn't require a surface)
     is_redundant: bool,
