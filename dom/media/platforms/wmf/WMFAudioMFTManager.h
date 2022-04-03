@@ -9,7 +9,6 @@
 
 #  include "MFTDecoder.h"
 #  include "WMF.h"
-#  include "WMFDecoderModule.h"
 #  include "WMFMediaDataDecoder.h"
 #  include "mozilla/RefPtr.h"
 
@@ -48,8 +47,10 @@ class WMFAudioMFTManager : public MFTManager {
   uint32_t mAudioRate;
   nsTArray<BYTE> mUserData;
 
-  WMFStreamType mStreamType;
+  enum StreamType { Unknown, AAC, MP3 };
+  StreamType mStreamType;
 
+  const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
 
   media::TimeUnit mLastInputTime = media::TimeUnit::Zero();
