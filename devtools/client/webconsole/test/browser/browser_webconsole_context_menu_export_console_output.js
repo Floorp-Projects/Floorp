@@ -38,8 +38,8 @@ const { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-var { Cu } = require("chrome");
-var FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm").FileUtils;
+var FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
+  .FileUtils;
 
 // Test the export visible messages to clipboard of the webconsole copies the expected
 // clipboard text for different log messages to find if everything is copied to clipboard.
