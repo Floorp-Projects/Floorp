@@ -3485,17 +3485,14 @@ void CodeGenerator::visitLambda(LLambda* lir) {
 
 void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   Register envChain = ToRegister(lir->environmentChain());
-  ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetIndex);
   Register output = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
 
   JSFunction* fun = lir->mir()->templateFunction();
 
-  using Fn =
-      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
+  using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
   OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
-      lir, ArgList(ImmGCPtr(fun), envChain, newTarget),
-      StoreRegisterTo(output));
+      lir, ArgList(ImmGCPtr(fun), envChain), StoreRegisterTo(output));
 
   TemplateObject templateObject(fun);
   masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
@@ -3507,7 +3504,7 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   MOZ_ASSERT(fun->isExtended());
   static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
                 "|new.target| must be stored in first slot");
-  masm.storeValue(newTarget,
+  masm.storeValue(NullValue(),
                   Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
 
   masm.bind(ool->rejoin());
