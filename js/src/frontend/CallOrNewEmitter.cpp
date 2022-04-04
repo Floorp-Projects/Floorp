@@ -252,20 +252,21 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
     }
   }
 
-  state_ = State::SpreadIteration;
+  state_ = State::SpreadArgumentsTest;
   return true;
 }
 
 bool CallOrNewEmitter::wantSpreadIteration() {
-  MOZ_ASSERT(state_ == State::SpreadIteration);
+  MOZ_ASSERT(state_ == State::SpreadArgumentsTest);
   MOZ_ASSERT(isSpread());
 
-  state_ = State::Arguments;
+  state_ = State::SpreadIteration;
   return !isPassthroughRest();
 }
 
-bool CallOrNewEmitter::emitEnd(uint32_t argc, uint32_t beginPos) {
-  MOZ_ASSERT(state_ == State::Arguments);
+bool CallOrNewEmitter::emitSpreadArgumentsTestEnd() {
+  MOZ_ASSERT(state_ == State::SpreadIteration);
+  MOZ_ASSERT(isSpread());
 
   if (isSingleSpread()) {
     if (!ifNotOptimizable_->emitElse()) {
@@ -288,21 +289,13 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, uint32_t beginPos) {
 
     ifNotOptimizable_.reset();
   }
-  if (isNew() || isSuperCall()) {
-    if (isSuperCall()) {
-      if (!bce_->emit1(JSOp::NewTarget)) {
-        //          [stack] CALLEE THIS ARG.. NEW.TARGET
-        return false;
-      }
-    } else {
-      // Repush the callee as new.target
-      uint32_t effectiveArgc = isSpread() ? 1 : argc;
-      if (!bce_->emitDupAt(effectiveArgc + 1)) {
-        //          [stack] CALLEE THIS ARR CALLEE
-        return false;
-      }
-    }
-  }
+
+  state_ = State::Arguments;
+  return true;
+}
+
+bool CallOrNewEmitter::emitEnd(uint32_t argc, uint32_t beginPos) {
+  MOZ_ASSERT(state_ == State::Arguments);
   if (!bce_->updateSourceCoordNotes(beginPos)) {
     return false;
   }
