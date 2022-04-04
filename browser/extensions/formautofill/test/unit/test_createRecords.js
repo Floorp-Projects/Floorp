@@ -269,6 +269,8 @@ const TESTCASES = [
           "cc-name": "Foo Bar",
           "cc-exp": "2022-06",
           "cc-type": "Visa",
+          "cc-exp-month": "6",
+          "cc-exp-year": "2022",
         },
       ],
     },
