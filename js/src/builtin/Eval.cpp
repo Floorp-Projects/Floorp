@@ -351,14 +351,8 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     esg.setNewScript(script);
   }
 
-  // If this is a direct eval we need to use the caller's newTarget.
-  RootedValue newTargetVal(cx);
-  if (esg.script()->isDirectEvalInFunction()) {
-    newTargetVal = caller.newTarget();
-  }
-
-  return ExecuteKernel(cx, esg.script(), env, newTargetVal,
-                       NullFramePtr() /* evalInFrame */, vp);
+  return ExecuteKernel(cx, esg.script(), env, NullFramePtr() /* evalInFrame */,
+                       vp);
 }
 
 bool js::IndirectEval(JSContext* cx, unsigned argc, Value* vp) {
@@ -400,8 +394,8 @@ static bool ExecuteInExtensibleLexicalEnvironment(
   MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
   RootedValue rval(cx);
-  return ExecuteKernel(cx, scriptArg, env, UndefinedHandleValue,
-                       NullFramePtr() /* evalInFrame */, &rval);
+  return ExecuteKernel(cx, scriptArg, env, NullFramePtr() /* evalInFrame */,
+                       &rval);
 }
 
 JS_PUBLIC_API bool js::ExecuteInFrameScriptEnvironment(
