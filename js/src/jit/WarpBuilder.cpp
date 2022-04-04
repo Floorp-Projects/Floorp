@@ -2805,20 +2805,6 @@ bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
-  MOZ_ASSERT(usesEnvironmentChain());
-
-  MDefinition* env = current->environmentChain();
-
-  JSFunction* fun = loc.getFunction(script_);
-  MConstant* funConst = constant(ObjectValue(*fun));
-
-  auto* ins = MLambdaArrow::New(alloc(), env, funConst);
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins, loc);
-}
-
 bool WarpBuilder::build_FunWithProto(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 

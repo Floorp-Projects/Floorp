@@ -6186,28 +6186,6 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   bool canRecoverOnBailout() const override { return true; }
 };
 
-class MLambdaArrow : public MBinaryInstruction,
-                     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
-  MLambdaArrow(MDefinition* envChain, MConstant* cst)
-      : MBinaryInstruction(classOpcode, envChain, cst) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(LambdaArrow)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, environmentChain))
-
-  MConstant* functionOperand() const { return getOperand(1)->toConstant(); }
-  JSFunction* templateFunction() const {
-    return &functionOperand()->toObject().as<JSFunction>();
-  }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-};
-
 class MFunctionWithProto : public MTernaryInstruction,
                            public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
                                             ObjectPolicy<2>>::Data {

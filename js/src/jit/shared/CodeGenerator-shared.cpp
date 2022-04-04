@@ -368,8 +368,6 @@ void CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot,
       MConstant* functionOperand = nullptr;
       if (mir->isLambda()) {
         functionOperand = mir->toLambda()->functionOperand();
-      } else if (mir->isLambdaArrow()) {
-        functionOperand = mir->toLambdaArrow()->functionOperand();
       } else if (mir->isFunctionWithProto()) {
         functionOperand = mir->toFunctionWithProto()->functionOperand();
       }

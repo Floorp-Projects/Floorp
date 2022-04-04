@@ -235,9 +235,7 @@ bool FunctionEmitter::emitNonHoisted(GCThingIndex index) {
 
   // This is a FunctionExpression, ArrowFunctionExpression, or class
   // constructor. Emit the single instruction (without location info).
-  JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOp::LambdaArrow
-                                                     : JSOp::Lambda;
-  if (!bce_->emitGCIndexOp(op, index)) {
+  if (!bce_->emitGCIndexOp(JSOp::Lambda, index)) {
     //              [stack] FUN
     return false;
   }
