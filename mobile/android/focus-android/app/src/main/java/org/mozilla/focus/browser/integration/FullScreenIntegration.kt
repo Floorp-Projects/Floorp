@@ -58,6 +58,11 @@ class FullScreenIntegration(
 
             switchToImmersiveMode()
         } else {
+            // If the video is in PiP, but is not in fullscreen anymore we should move the task containing
+            // this activity to the back of the activity stack
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
+                activity.moveTaskToBack(false)
+            }
             statusBar.visibility = View.VISIBLE
             exitBrowserFullscreen()
 
