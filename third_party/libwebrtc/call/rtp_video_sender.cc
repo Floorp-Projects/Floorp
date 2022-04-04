@@ -334,9 +334,6 @@ RtpVideoSender::RtpVideoSender(
     : send_side_bwe_with_overhead_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
           "Enabled")),
-      account_for_packetization_overhead_(!absl::StartsWith(
-          field_trials_.Lookup("WebRTC-SubtractPacketizationOverhead"),
-          "Disabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
       use_deferred_fec_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-DeferredFecGeneration"),
@@ -786,16 +783,13 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
     // since |fec_allowed_| may be toggled back on at any moment.
   }
 
-  uint32_t packetization_rate_bps = 0;
-  if (account_for_packetization_overhead_) {
     // Subtract packetization overhead from the encoder target. If target rate
     // is really low, cap the overhead at 50%. This also avoids the case where
     // |encoder_target_rate_bps_| is 0 due to encoder pause event while the
     // packetization rate is positive since packets are still flowing.
-    packetization_rate_bps =
-        std::min(GetPacketizationOverheadRate(), encoder_target_rate_bps_ / 2);
-    encoder_target_rate_bps_ -= packetization_rate_bps;
-  }
+  uint32_t packetization_rate_bps =
+      std::min(GetPacketizationOverheadRate(), encoder_target_rate_bps_ / 2);
+  encoder_target_rate_bps_ -= packetization_rate_bps;
 
   loss_mask_vector_.clear();
 
