@@ -2301,6 +2301,22 @@ function createVersionizedHttpTestServer(testFolderName) {
     if (request.path == "/" || request.path == "/index.html") {
       response.setHeader("Content-Type", "text/html");
     }
+    // If a query string is passed, lookup with a matching file, if available
+    // The '?' is replaced by '.'
+    if (request.queryString) {
+      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
+      try {
+        const content = await fetch(url);
+        // Log this only if the request succeed
+        info(`[test-http-server] serving: ${url}`);
+        const text = await content.text();
+        response.write(text);
+        response.finish();
+        return;
+      } catch (e) {
+        // Ignore any error and proceed without the query string
+      }
+    }
     const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}`;
     info(`[test-http-server] serving: ${url}`);
     const content = await fetch(url);

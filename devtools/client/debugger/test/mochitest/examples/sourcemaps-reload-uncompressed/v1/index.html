@@ -6,11 +6,16 @@
   <!-- A simple script -->
   <script src="script.js"></script>
 
+  <!-- Scripts with query strings, which are merged in the SourceTree -->
+  <script src="query.js?x=1"></script>
+  <script src="query.js?x=2"></script>
+
   <!-- A bundle/generated source that contains original.js -->
   <script src="bundle.js"></script>
 
   <!-- Another bundle/generated source that contains removed-original.js -->
   <script src="replaced-bundle.js"></script>
+
   <head>
     <meta charset="utf-8"/>
     <title>Empty test page 1</title>
@@ -21,6 +26,22 @@
     <script>
       // Comment
       console.log('breakable-line');
+    </script>
+
+    <script>
+      console.log("second in line script");
+
+      eval(`
+        function nameLessEval() {
+          console.log("name-less-eval");
+        }
+      `);
+      eval(`
+        function namedEval() {
+          console.log("named-eval");
+        }
+        //# sourceURL=named-eval.js
+      `);
     </script>
   </body>
 
