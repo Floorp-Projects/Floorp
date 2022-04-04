@@ -17,6 +17,7 @@ from .util import (
     create_tasks,
     fetch_graph_and_labels,
     get_decision_task_id,
+    get_pushes,
     get_pushes_from_params_input,
     trigger_action,
     get_downstream_browsertime_tasks,
@@ -318,3 +319,129 @@ def add_task_with_original_manifests(
         )
 
     combine_task_graph_files(list(range(times)))
+
+
+@register_callback_action(
+    title="Backfill all browsertime",
+    name="backfill-all-browsertime",
+    permission="backfill",
+    symbol="baB",
+    description=(
+        "Schedule all browsertime tests for the current and previous push in the same project."
+    ),
+    order=800,
+    context=[],  # This will be available for all tasks
+    available=lambda parameters: True,
+)
+def backfill_all_browsertime(parameters, graph_config, input, task_group_id, task_id):
+    """
+    This action takes a revision and schedules it on previous pushes (via support action).
+
+    To execute this action locally follow the documentation here:
+    https://firefox-source-docs.mozilla.org/taskcluster/actions.html#testing-the-action-locally
+    """
+    pushes = get_pushes(
+        project=parameters["head_repository"],
+        end_id=int(parameters["pushlog_id"]),
+        depth=2,
+    )
+
+    for push_id in pushes:
+        try:
+            # The Gecko decision task can sometimes fail on a push and we need to handle
+            # the exception that this call will produce
+            push_decision_task_id = get_decision_task_id(parameters["project"], push_id)
+        except Exception:
+            logger.warning(f"Could not find decision task for push {push_id}")
+            # The decision task may have failed, this is common enough that we
+            # don't want to report an error for it.
+            continue
+
+        try:
+            trigger_action(
+                action_name="add-all-browsertime",
+                # This lets the action know on which push we want to add a new task
+                decision_task_id=push_decision_task_id,
+            )
+        except Exception:
+            logger.exception(f"Failed to trigger action for {push_id}")
+            sys.exit(1)
+
+
+def filter_raptor_jobs(full_task_graph, label_to_taskid):
+    to_run = []
+    for label, entry in full_task_graph.tasks.items():
+        if entry.kind != "test":
+            continue
+        if entry.task.get("extra", {}).get("suite", "") != "raptor":
+            continue
+        if "browsertime" not in entry.attributes.get("raptor_try_name", ""):
+            continue
+        if not entry.attributes.get("test_platform", "").endswith("shippable-qr/opt"):
+            continue
+        exceptions = ("live", "profiling", "youtube-playback")
+        if any(e in entry.attributes.get("raptor_try_name", "") for e in exceptions):
+            continue
+        if "firefox" in entry.attributes.get(
+            "raptor_try_name", ""
+        ) and entry.attributes.get("test_platform", "").endswith("64-shippable-qr/opt"):
+            if "fission" not in entry.attributes.get("unittest_variant", ""):
+                continue
+            # add the browsertime test
+            if label not in label_to_taskid:
+                to_run.append(label)
+            # add the vismet job
+            vismet_label = get_downstream_browsertime_tasks(
+                [label], full_task_graph, label_to_taskid
+            )
+            if vismet_label not in label_to_taskid:
+                to_run.extend(vismet_label)
+        if "geckoview" in entry.attributes.get("raptor_try_name", ""):
+            # add the pageload test
+            if label not in label_to_taskid:
+                to_run.append(label)
+            # add the vismet job
+            vismet_label = get_downstream_browsertime_tasks(
+                [label], full_task_graph, label_to_taskid
+            )
+            if vismet_label not in label_to_taskid:
+                to_run.extend(vismet_label)
+    return to_run
+
+
+@register_callback_action(
+    name="add-all-browsertime",
+    title="Add All Browsertime Tests.",
+    permission="backfill",
+    symbol="aaB",
+    description="This action is normally scheduled by the backfill-all-browsertime action. "
+    "The intent is to schedule all browsertime tests on a specific pushe.",
+    order=900,
+    context=[],
+)
+def add_all_browsertime(parameters, graph_config, input, task_group_id, task_id):
+    """
+    This action is normally scheduled by the backfill-all-browsertime action. The intent is to
+    trigger all browsertime tasks for the current revision.
+
+    The push in which we want to schedule a new task is defined by the parameters object.
+
+    To execute this action locally follow the documentation here:
+    https://firefox-source-docs.mozilla.org/taskcluster/actions.html#testing-the-action-locally
+    """
+    logger.info("Retreving the full task graph and labels.")
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+        parameters, graph_config
+    )
+
+    to_run = filter_raptor_jobs(full_task_graph, label_to_taskid)
+
+    create_tasks(
+        graph_config,
+        to_run,
+        full_task_graph,
+        label_to_taskid,
+        parameters,
+        decision_task_id,
+    )
+    logger.info(f"Scheduled {len(to_run)} raptor tasks (time 1)")
