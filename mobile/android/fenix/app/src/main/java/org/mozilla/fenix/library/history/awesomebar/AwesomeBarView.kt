@@ -47,7 +47,8 @@ class AwesomeBarView(
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT
+                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                showEditSuggestion = false,
             )
 
         view.addProviders(combinedHistoryProvider)

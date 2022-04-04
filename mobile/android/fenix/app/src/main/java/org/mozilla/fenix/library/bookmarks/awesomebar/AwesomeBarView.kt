@@ -48,7 +48,8 @@ class AwesomeBarView(
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
-                engine = engineForSpeculativeConnects
+                engine = engineForSpeculativeConnects,
+                showEditSuggestion = false,
             )
 
         view.addProviders(bookmarksStorageSuggestionProvider)
