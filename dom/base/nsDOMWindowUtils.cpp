@@ -26,6 +26,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
@@ -4049,6 +4050,19 @@ nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
   RefPtr<HandlingUserInputHelper> helper(
       new HandlingUserInputHelper(aHandlingUserInput));
   helper.forget(aHelper);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsKeyboardEventUserActivity(Event* aEvent, bool* aResult) {
+  NS_ENSURE_STATE(aEvent);
+  if (!aEvent->AsKeyboardEvent()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
+  NS_ENSURE_STATE(internalEvent);
+  *aResult = EventStateManager::IsKeyboardEventUserActivity(internalEvent);
   return NS_OK;
 }
 

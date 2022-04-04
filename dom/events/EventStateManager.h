@@ -191,6 +191,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   void TryToFlushPendingNotificationsToIME();
 
+  static bool IsKeyboardEventUserActivity(WidgetEvent* aEvent);
+
   /**
    * Register accesskey on the given element. When accesskey is activated then
    * the element will be notified via Element::PerformAccesskey() method.
