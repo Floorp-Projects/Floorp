@@ -16,6 +16,7 @@
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -122,16 +123,6 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
       << "`frame` does not look like a 10 ms frame for an APM supported sample "
          "rate";
 
-  // Log every second.
-  calls_since_last_gain_log_++;
-  if (calls_since_last_gain_log_ == 100) {
-    calls_since_last_gain_log_ = 0;
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.DigitalGainApplied",
-                                last_gain_db_, 0, kMaxGainDb, kMaxGainDb + 1);
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.EstimatedNoiseLevel",
-                                -info.input_noise_level_dbfs, 0, 100, 101);
-  }
-
   const float target_gain_db = LimitGainByLowConfidence(
       LimitGainByNoise(ComputeGainDb(std::min(info.input_level_dbfs, 0.f)),
                        info.input_noise_level_dbfs,
@@ -167,5 +158,22 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
   // Remember that the gain has changed for the next iteration.
   last_gain_db_ = last_gain_db_ + gain_change_this_frame_db;
   apm_data_dumper_->DumpRaw("agc2_applied_gain_db", last_gain_db_);
+
+  // Log every 10 seconds.
+  calls_since_last_gain_log_++;
+  if (calls_since_last_gain_log_ == 1000) {
+    calls_since_last_gain_log_ = 0;
+    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.DigitalGainApplied",
+                                last_gain_db_, 0, kMaxGainDb, kMaxGainDb + 1);
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        "WebRTC.Audio.Agc2.EstimatedSpeechPlusNoiseLevel",
+        -info.input_level_dbfs, 0, 100, 101);
+    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc2.EstimatedNoiseLevel",
+                                -info.input_noise_level_dbfs, 0, 100, 101);
+    RTC_LOG(LS_INFO) << "AGC2 adaptive digital"
+                     << " | speech_plus_noise_dbfs: " << info.input_level_dbfs
+                     << " | noise_dbfs: " << info.input_noise_level_dbfs
+                     << " | gain_db: " << last_gain_db_;
+  }
 }
 }  // namespace webrtc
