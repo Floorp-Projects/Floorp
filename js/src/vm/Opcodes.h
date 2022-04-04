@@ -788,9 +788,7 @@
      *
      * The result is a constructor or `undefined`.
      *
-     * This must be used only in scripts where `new.target` is allowed:
-     * non-arrow function scripts and other scripts that have a non-arrow
-     * function script on the scope chain.
+     * This must be used only in non-arrow function scripts.
      *
      * Implements: [GetNewTarget][1].
      *
