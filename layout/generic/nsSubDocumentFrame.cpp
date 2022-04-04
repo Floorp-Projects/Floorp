@@ -834,8 +834,9 @@ void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
         return usedColorScheme != ColorScheme::Dark;
       case PrefersColorSchemeOverride::None:
       case PrefersColorSchemeOverride::EndGuard_:
-        return true;
+        break;
     }
+    return true;
   }();
   if (!needUpdate) {
     return;

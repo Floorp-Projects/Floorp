@@ -432,7 +432,9 @@ static constexpr struct {
 } kMediaQueryPrefs[] = {
     {"browser.display.windows.native_menus"_ns},
     {"browser.proton.places-tooltip.enabled"_ns},
-    {"layout.css.prefers-color-scheme.content-override"_ns},
+    // Affects env().
+    {"layout.css.prefers-color-scheme.content-override"_ns,
+     widget::ThemeChangeKind::Style},
     // Affects media queries and scrollbar sizes, so gotta relayout.
     {"widget.gtk.overlay-scrollbars.enabled"_ns,
      widget::ThemeChangeKind::StyleAndLayout},
