@@ -17,6 +17,7 @@
 #include "api/uma_metrics.h"
 #include "pc/media_stream.h"
 #include "pc/peer_connection.h"
+#include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_media_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
@@ -772,10 +773,11 @@ class SdpOfferAnswerHandler::SetSessionDescriptionObserverAdapter
     if (!handler_)
       return;
     if (error.ok()) {
-      handler_->pc_->PostSetSessionDescriptionSuccess(inner_observer_);
+      handler_->pc_->message_handler()->PostSetSessionDescriptionSuccess(
+          inner_observer_);
     } else {
-      handler_->pc_->PostSetSessionDescriptionFailure(inner_observer_,
-                                                      std::move(error));
+      handler_->pc_->message_handler()->PostSetSessionDescriptionFailure(
+          inner_observer_, std::move(error));
     }
   }
 
@@ -1772,7 +1774,7 @@ void SdpOfferAnswerHandler::DoCreateOffer(
   if (pc_->IsClosed()) {
     std::string error = "CreateOffer called when PeerConnection is closed.";
     RTC_LOG(LS_ERROR) << error;
-    pc_->PostCreateSessionDescriptionFailure(
+    pc_->message_handler()->PostCreateSessionDescriptionFailure(
         observer, RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
     return;
   }
@@ -1782,7 +1784,7 @@ void SdpOfferAnswerHandler::DoCreateOffer(
   if (session_error() != SessionError::kNone) {
     std::string error_message = GetSessionErrorMsg();
     RTC_LOG(LS_ERROR) << "CreateOffer: " << error_message;
-    pc_->PostCreateSessionDescriptionFailure(
+    pc_->message_handler()->PostCreateSessionDescriptionFailure(
         observer,
         RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error_message)));
     return;
@@ -1791,7 +1793,7 @@ void SdpOfferAnswerHandler::DoCreateOffer(
   if (!ValidateOfferAnswerOptions(options)) {
     std::string error = "CreateOffer called with invalid options.";
     RTC_LOG(LS_ERROR) << error;
-    pc_->PostCreateSessionDescriptionFailure(
+    pc_->message_handler()->PostCreateSessionDescriptionFailure(
         observer, RTCError(RTCErrorType::INVALID_PARAMETER, std::move(error)));
     return;
   }
@@ -1801,7 +1803,8 @@ void SdpOfferAnswerHandler::DoCreateOffer(
   if (IsUnifiedPlan()) {
     RTCError error = HandleLegacyOfferOptions(options);
     if (!error.ok()) {
-      pc_->PostCreateSessionDescriptionFailure(observer, std::move(error));
+      pc_->message_handler()->PostCreateSessionDescriptionFailure(
+          observer, std::move(error));
       return;
     }
   }
@@ -1856,7 +1859,7 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
   if (session_error() != SessionError::kNone) {
     std::string error_message = GetSessionErrorMsg();
     RTC_LOG(LS_ERROR) << "CreateAnswer: " << error_message;
-    pc_->PostCreateSessionDescriptionFailure(
+    pc_->message_handler()->PostCreateSessionDescriptionFailure(
         observer,
         RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error_message)));
     return;
@@ -1868,7 +1871,7 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
         "PeerConnection cannot create an answer in a state other than "
         "have-remote-offer or have-local-pranswer.";
     RTC_LOG(LS_ERROR) << error;
-    pc_->PostCreateSessionDescriptionFailure(
+    pc_->message_handler()->PostCreateSessionDescriptionFailure(
         observer, RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
     return;
   }
