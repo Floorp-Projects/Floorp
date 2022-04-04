@@ -89,12 +89,13 @@ internal class CrashNotification(
             sdkLevel: Int = Build.VERSION.SDK_INT
         ): Boolean {
             return when {
-                // We always want to show the notification for background child process crashes.
-                crash is Crash.NativeCodeCrash && crash.processType ==
-                    Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD -> true
-
                 // We can always launch an activity from a background service pre Android Q.
                 sdkLevel < NOTIFICATION_SDK_LEVEL -> false
+
+                // We may not be able to launch an activity if a background process crash occurs
+                // while the application is in the background.
+                crash is Crash.NativeCodeCrash && crash.processType ==
+                    Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD -> true
 
                 // An uncaught exception is crashing the app and we may not be able to launch an activity from here.
                 crash is Crash.UncaughtExceptionCrash -> true
