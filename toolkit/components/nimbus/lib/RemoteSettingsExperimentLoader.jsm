@@ -379,7 +379,6 @@ class _RemoteSettingsExperimentLoader {
             NimbusFeatures[featureId].manifest
           );
           validator = validatorCache[featureId] = new Validator(schema);
-          continue;
         }
 
         if (feature.enabled ?? true) {
