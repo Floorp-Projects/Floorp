@@ -3017,11 +3017,9 @@ void LIRGenerator::visitLambda(MLambda* ins) {
 
 void LIRGenerator::visitLambdaArrow(MLambdaArrow* ins) {
   MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->newTargetDef()->type() == MIRType::Value);
 
   LLambdaArrow* lir =
-      new (alloc()) LLambdaArrow(useRegister(ins->environmentChain()),
-                                 useBox(ins->newTargetDef()), temp());
+      new (alloc()) LLambdaArrow(useRegister(ins->environmentChain()), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

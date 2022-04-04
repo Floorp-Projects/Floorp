@@ -814,7 +814,7 @@ class RLambda final : public RInstruction {
 
 class RLambdaArrow final : public RInstruction {
  public:
-  RINSTRUCTION_HEADER_NUM_OP_(LambdaArrow, 3)
+  RINSTRUCTION_HEADER_NUM_OP_(LambdaArrow, 2)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

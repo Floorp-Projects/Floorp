@@ -1652,19 +1652,14 @@
     /*
      * Push a new arrow function.
      *
-     * `newTarget` matters only if the arrow function uses the expression
-     * `new.target`. It should be the current value of `new.target`, so that
-     * the arrow function inherits `new.target` from the enclosing scope. (If
-     * `new.target` is illegal here, the value doesn't matter; use `null`.)
-     *
      * The function indicated by `funcIndex` must be an arrow function.
      *
      *   Category: Functions
      *   Type: Creating functions
      *   Operands: uint32_t funcIndex
-     *   Stack: newTarget => arrowFn
+     *   Stack: => arrowFn
      */ \
-    MACRO(LambdaArrow, lambda_arrow, NULL, 5, 1, 1, JOF_OBJECT) \
+    MACRO(LambdaArrow, lambda_arrow, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Set the name of a function.
      *
