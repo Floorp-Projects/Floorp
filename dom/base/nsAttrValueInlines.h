@@ -44,7 +44,7 @@ struct MiscContainer final {
         uint32_t mEnumValue;
         mozilla::DeclarationBlock* mCSSDeclaration;
         nsIURI* mURL;
-        mozilla::AtomArray* mAtomArray;
+        mozilla::AttrAtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
         const mozilla::ShadowParts* mShadowParts;
         const mozilla::SVGAnimatedIntegerPair* mSVGAnimatedIntegerPair;
@@ -147,7 +147,7 @@ inline double nsAttrValue::GetPercentValue() const {
   return GetMiscContainer()->mDoubleValue / 100.0f;
 }
 
-inline mozilla::AtomArray* nsAttrValue::GetAtomArrayValue() const {
+inline mozilla::AttrAtomArray* nsAttrValue::GetAtomArrayValue() const {
   MOZ_ASSERT(Type() == eAtomArray, "wrong type");
   return GetMiscContainer()->mValue.mAtomArray;
 }
