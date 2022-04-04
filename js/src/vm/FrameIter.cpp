@@ -947,19 +947,6 @@ Value FrameIter::thisArgument(JSContext* cx) const {
   MOZ_CRASH("Unexpected state");
 }
 
-Value FrameIter::newTarget() const {
-  switch (data_.state_) {
-    case DONE:
-      break;
-    case INTERP:
-      return interpFrame()->newTarget();
-    case JIT:
-      MOZ_ASSERT(jsJitFrame().isBaselineJS());
-      return jsJitFrame().baselineFrame()->newTarget();
-  }
-  MOZ_CRASH("Unexpected state");
-}
-
 Value FrameIter::returnValue() const {
   switch (data_.state_) {
     case DONE:
