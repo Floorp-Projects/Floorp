@@ -9994,10 +9994,6 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
   MOZ_ASSERT(memberInitializers.valid);
 
   if (memberInitializers.hasPrivateBrand) {
-    // Stamp the class's private brand onto the instance.  We use a getter
-    // instead of a field to save a slot per object, but the getter is never
-    // called, so it doesn't matter what function we use.
-
     // This is guaranteed to run after super(), so we don't need TDZ checks.
     if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotThis())) {
       //            [stack] THIS
@@ -10016,11 +10012,11 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
       //            [stack] THIS BRAND
       return false;
     }
-    if (!emitBuiltinObject(BuiltinObjectKind::FunctionPrototype)) {
-      //            [stack] THIS BRAND GETTER
+    if (!emit1(JSOp::Null)) {
+      //            [stack] THIS BRAND NULL
       return false;
     }
-    if (!emit1(JSOp::InitHiddenElemGetter)) {
+    if (!emit1(JSOp::InitHiddenElem)) {
       //            [stack] THIS
       return false;
     }
