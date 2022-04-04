@@ -211,10 +211,10 @@ class AecState {
         size_t blocks_with_proper_filter_adaptation);
 
    private:
-    const int delay_headroom_samples_;
+    const int delay_headroom_blocks_;
     bool external_delay_reported_ = false;
     std::vector<int> filter_delays_blocks_;
-    int min_filter_delay_ = 0;
+    int min_filter_delay_;
     absl::optional<DelayEstimate> external_delay_;
   } delay_state_;
 
