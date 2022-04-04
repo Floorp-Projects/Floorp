@@ -118,6 +118,7 @@ bool IsNonVolatile(RTPExtensionType type) {
     case kRtpExtensionVideoRotation:
     case kRtpExtensionPlayoutDelay:
     case kRtpExtensionVideoContentType:
+    case kRtpExtensionVideoLayersAllocation:
     case kRtpExtensionVideoTiming:
     case kRtpExtensionRepairedRtpStreamId:
     case kRtpExtensionColorSpace:
