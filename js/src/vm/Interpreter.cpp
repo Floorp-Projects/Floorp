@@ -3752,15 +3752,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       /* Load the specified function object literal. */
       ReservedRooted<JSFunction*> fun(&rootFunction0,
                                       script->getFunction(REGS.pc));
-      ReservedRooted<Value> newTarget(&rootValue1, REGS.sp[-1]);
-      JSObject* obj =
-          LambdaArrow(cx, fun, REGS.fp()->environmentChain(), newTarget);
+      JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->environmentChain());
       if (!obj) {
         goto error;
       }
 
       MOZ_ASSERT(obj->staticPrototype());
-      REGS.sp[-1].setObject(*obj);
+      PUSH_OBJECT(*obj);
     }
     END_CASE(LambdaArrow)
 
@@ -4696,7 +4694,7 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
 }
 
 JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
-                          HandleObject parent, HandleValue newTargetv) {
+                          HandleObject parent) {
   MOZ_ASSERT(fun->isArrow());
 
   RootedObject proto(cx, fun->staticPrototype());
@@ -4706,7 +4704,7 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
   }
 
   MOZ_ASSERT(clone->isArrow());
-  clone->setExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT, newTargetv);
+  clone->setExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT, NullValue());
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;

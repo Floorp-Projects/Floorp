@@ -2631,19 +2631,14 @@ bool BaselineCodeGen<Handler>::emit_Lambda() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_LambdaArrow() {
-  // Keep pushed newTarget in R0.
-  frame.popRegsAndSync(1);
-
   prepareVMCall();
-  masm.loadPtr(frame.addressOfEnvironmentChain(), R2.scratchReg());
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
 
-  pushArg(R0);
-  pushArg(R2.scratchReg());
+  pushArg(R0.scratchReg());
   pushScriptGCThingArg(ScriptGCThingType::Function, R0.scratchReg(),
                        R1.scratchReg());
 
-  using Fn =
-      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
+  using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
   if (!callVM<Fn, js::LambdaArrow>()) {
     return false;
   }
