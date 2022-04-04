@@ -404,7 +404,7 @@ bool FunctionScriptEmitter::prepareForParameters() {
 
   if (funbox_->isClassConstructor()) {
     if (!funbox_->isDerivedClassConstructor()) {
-      if (!bce_->emitInitializeInstanceMembers()) {
+      if (!bce_->emitInitializeInstanceMembers(false)) {
         //          [stack]
         return false;
       }

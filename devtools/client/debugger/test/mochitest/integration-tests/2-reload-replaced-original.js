@@ -5,11 +5,15 @@
 /* import-globals-from ../head.js */
 
 /**
- * This second test will focus on removed-original.js which is an original source mapped file.
+ * This second test will focus on v1/removed-original.js which is an original source mapped file.
  * This source is mapped to replaced-bundle.js.
- * This original source is removed and another original file: new-original.js
+ * In the first reload (v2), this original source is removed and another original file: v2/new-original.js
  * will replace the content of the removed-original.js in the replaced-bundle.js generated file.
- * And finally, everything is removed, both original and generated source.
+ * And finally, in the second reload (v3) everything is removed, both original and generated source.
+ *
+ * Note that great care is done to ensure that new-original replaces removed-original with the
+ * exact same breakable lines and columns. So that the breakpoint isn't simply removed
+ * because the location is no longer breakable.
  */
 
 "use strict";

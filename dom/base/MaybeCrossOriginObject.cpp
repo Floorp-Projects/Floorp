@@ -474,48 +474,6 @@ bool MaybeCrossOriginObject<Base>::enumerate(
   return js::GetPropertyKeys(cx, self, 0, props);
 }
 
-template <typename Base>
-bool MaybeCrossOriginObject<Base>::hasInstance(JSContext* cx,
-                                               JS::Handle<JSObject*> proxy,
-                                               JS::MutableHandle<JS::Value> v,
-                                               bool* bp) const {
-  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-    // In the cross-origin case we never have @@hasInstance, and we're never
-    // callable, so just go ahead and report an error.  If we enter the realm of
-    // "proxy" to do that, our caller won't be able to do anything with the
-    // exception, so instead let's wrap "proxy" into our realm.  We definitely
-    // do NOT want to call JS::InstanceofOperator here after entering "proxy's"
-    // realm, because that would do the wrong thing with @@hasInstance on the
-    // object by seeing any such definitions when we should not.
-    JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*proxy));
-    if (!MaybeWrapValue(cx, &val)) {
-      return false;
-    }
-    return js::ReportIsNotFunction(cx, val);
-  }
-
-  // We need to wrap `proxy` into our compartment or enter proxy's realm
-  // and wrap `v` into proxy's compartment because at this point `v` and `proxy`
-  // might no longer be same-compartment. One solution is to enter the realm of
-  // `proxy` and look up @@hasInstance there. However, that will lead to
-  // incorrect error reporting because the mechanism for reporting the "not a
-  // function" exception only works correctly if we are in the realm of the
-  // script that encountered the instanceof expression. Thus, we don't want to
-  // switch realms and will wrap `proxy` into our current compartment and lookup
-  // @@hasInstance. Note that accesses to get @@hasInstance on `proxy` after it
-  // is wrapped in the `cx` compartment will still work because `cx` and `proxy`
-  // are same-origin.
-  JS::Rooted<JSObject*> proxyWrap(cx, proxy);
-  if (!MaybeWrapObject(cx, &proxyWrap)) {
-    return false;
-  }
-  // We are not calling BaseProxyHandler::hasInstance here because it expects
-  // `proxy` to be passed as the object. However, `proxy`, as a
-  // MaybeCrossOriginObject, may not be in current cx->realm() and we may now
-  // have a cross-compartment wrapper for `proxy`.
-  return JS::InstanceofOperator(cx, proxyWrap, v, bp);
-}
-
 // Force instantiations of the out-of-line template methods we need.
 template class MaybeCrossOriginObject<js::Wrapper>;
 template class MaybeCrossOriginObject<DOMProxyHandler>;

@@ -374,51 +374,51 @@ class CreditCard {
   static parseExpirationString(expirationString) {
     let rules = [
       {
-        regex: "(\\d{4})[-/](\\d{1,2})",
-        yearIndex: 1,
-        monthIndex: 2,
+        regex: /(?:^|\D)(\d{2})(\d{2})(?!\d)/,
       },
       {
-        regex: "(\\d{1,2})[-/](\\d{4})",
-        yearIndex: 2,
+        regex: /(?:^|\D)(\d{4})[-/](\d{1,2})(?!\d)/,
+        yearIndex: 0,
         monthIndex: 1,
       },
       {
-        regex: "(\\d{1,2})[-/](\\d{1,2})",
+        regex: /(?:^|\D)(\d{1,2})[-/](\d{4})(?!\d)/,
+        yearIndex: 1,
+        monthIndex: 0,
       },
       {
-        regex: "(\\d{2})(\\d{2})",
+        regex: /(?:^|\D)(\d{1,2})[-/](\d{1,2})(?!\d)/,
+      },
+      {
+        regex: /(?:^|\D)(\d{2})(\d{2})(?!\d)/,
       },
     ];
 
+    expirationString = expirationString.replaceAll(" ", "");
     for (let rule of rules) {
-      let result = new RegExp(`(?:^|\\D)${rule.regex}(?!\\d)`).exec(
-        expirationString
-      );
+      let result = rule.regex.exec(expirationString);
       if (!result) {
         continue;
       }
 
       let year, month;
-
+      const parsedResults = [parseInt(result[1], 10), parseInt(result[2], 10)];
       if (!rule.yearIndex || !rule.monthIndex) {
-        month = parseInt(result[1], 10);
+        month = parsedResults[0];
         if (month > 12) {
-          year = parseInt(result[1], 10);
-          month = parseInt(result[2], 10);
+          year = parsedResults[0];
+          month = parsedResults[1];
         } else {
-          year = parseInt(result[2], 10);
+          year = parsedResults[1];
         }
       } else {
-        year = parseInt(result[rule.yearIndex], 10);
-        month = parseInt(result[rule.monthIndex], 10);
+        year = parsedResults[rule.yearIndex];
+        month = parsedResults[rule.monthIndex];
       }
 
-      if (month < 1 || month > 12 || (year >= 100 && year < 2000)) {
-        continue;
+      if (month >= 1 && month <= 12 && (year < 100 || year > 2000)) {
+        return { month, year };
       }
-
-      return { month, year };
     }
     return { month: undefined, year: undefined };
   }

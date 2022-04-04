@@ -200,6 +200,29 @@ const TESTCASES = [
     },
   },
   {
+    description: "Form with a readonly input and non-readonly inputs",
+    document: `<form>
+                <input id="given-name" autocomplete="given-name">
+                <input id="family-name" autocomplete="family-name">
+                <input id="street-addr" autocomplete="street-address">
+                <input id="city" autocomplete="address-level2" readonly value="TEST CITY">
+               </form>`,
+    focusedInputId: "given-name",
+    profileData: {
+      guid: "123",
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "100 Main Street",
+      city: "Hamilton",
+    },
+    expectedResult: {
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-addr": "100 Main Street",
+      city: "TEST CITY",
+    },
+  },
+  {
     description: "Fill address fields in a form with addr and CC fields.",
     document: `<form>
                <input id="given-name" autocomplete="given-name">

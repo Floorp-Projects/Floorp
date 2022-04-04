@@ -1931,6 +1931,13 @@ interface nsIDOMWindowUtils : nsISupports {
   nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
 
   /**
+   * Returns true if a keyboard event qualifies as "user activity" such that
+   * it would mark the document with the ChromeOnly userHasInteracted
+   * property.
+   */
+  bool isKeyboardEventUserActivity(in Event aKeyboardEvent);
+
+  /**
    * Get the content- and compositor-side APZ test data instances.
    * The return values are of type APZTestData (see APZTestData.webidl).
    */

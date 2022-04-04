@@ -880,6 +880,7 @@ this.FormAutofillHeuristics = {
     // The heuristic below should be covered by fathom rules, so we can skip doing
     // it.
     if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
+      fieldScanner.parsingIndex++;
       return true;
     }
 

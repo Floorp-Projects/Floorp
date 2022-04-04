@@ -3,19 +3,50 @@
 <!doctype html>
 
 <html>
-  <script src="script.js"></script>
-  <script src="bundle.js"></script>
-  <script src="replaced-bundle.js"></script>
   <head>
     <meta charset="utf-8"/>
     <title>Empty test page 1</title>
   </head>
 
   <body>
+    <!-- A simple inline script, that helps to cover breakable lines/columns -->
+    <!-- Have them define first, so that we avoid shifting lines when adding new scripts later in the html -->
     <script>
       // Comment
       console.log('breakable-line');
     </script>
+
+    <!-- A second inline script, that helps cover bugs when having two distinct inline scripts -->
+    <script>
+      console.log("second in line script");
+
+      eval(`
+        function nameLessEval() {
+          console.log("name-less-eval");
+        }
+      `);
+      eval(`
+        function namedEval() {
+          console.log("named-eval");
+        }
+        //# sourceURL=named-eval.js
+      `);
+    </script>
+
+    <!-- A simple script -->
+    <script src="script.js"></script>
+    <!-- Another script containing helper functions trigerred by the tests -->
+    <script src="test-functions.js"></script>
+
+    <!-- Scripts with query strings, which are merged in the SourceTree -->
+    <script src="query.js?x=1"></script>
+    <script src="query.js?x=2"></script>
+
+    <!-- A bundle/generated source that contains original.js -->
+    <script src="bundle.js"></script>
+
+    <!-- Another bundle/generated source that contains removed-original.js -->
+    <script src="replaced-bundle.js"></script>
   </body>
 
 </html>

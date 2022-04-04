@@ -52,10 +52,10 @@ add_task(function instanceof_xrays() {
     Assert.equal(Cu.waiveXrays(proxy) instanceof sandbox.Array, false,
                  "instanceof should ignore the proxy target despite the waived xrays on the proxy");
 
-    Assert.equal(proxy instanceof Cu.waiveXrays(sandbox.Date), false,
-                 "instanceof should ignore the proxy trap despite the waived xrays on the constructor");
+    Assert.ok(proxy instanceof Cu.waiveXrays(sandbox.Date),
+              "instanceof should trigger the proxy trap after waiving Xrays on the constructor");
     Assert.equal(proxy instanceof Cu.waiveXrays(sandbox.Array), false,
-                 "instanceof should ignore the proxy target despite the waived xrays on the constructor");
+                 "instanceof should trigger the proxy trap after waiving Xrays on the constructor");
 
     Assert.ok(Cu.waiveXrays(proxy) instanceof Cu.waiveXrays(sandbox.Date),
               "instanceof should trigger the proxy trap after waiving both Xrays");
@@ -69,8 +69,8 @@ add_task(function instanceof_xrays() {
     Assert.equal(Cu.waiveXrays(inheritedProxy) instanceof sandbox.Date, false,
                  "instanceof should ignore the inherited proxy trap despite the waived xrays on the proxy");
 
-    Assert.equal(inheritedProxy instanceof Cu.waiveXrays(sandbox.Date), false,
-                 "instanceof should ignore the inherited proxy trap despite the waived xrays on the constructor");
+    Assert.ok(inheritedProxy instanceof Cu.waiveXrays(sandbox.Date),
+              "instanceof should trigger the inherited proxy trap after waiving Xrays on the constructor");
 
     Assert.ok(Cu.waiveXrays(inheritedProxy) instanceof Cu.waiveXrays(sandbox.Date),
               "instanceof should trigger the inherited proxy trap after waiving both Xrays");
@@ -93,8 +93,8 @@ add_task(function instanceof_xrays() {
       /sandbox.proxy is not a function/,
       "Opaque non-constructor proxy should be hidden by Xrays");
 
-    Assert.equal(functionProxyInstance instanceof Cu.waiveXrays(FunctionProxy), false,
-                 "Waiver on opaque constructor proxy should be ignored for XrayWrapped functionProxyInstance");
+    Assert.ok(functionProxyInstance instanceof Cu.waiveXrays(FunctionProxy),
+              "instanceof should get through the proxy after waiving Xrays on the constructor proxy");
     Assert.ok(Cu.waiveXrays(functionProxyInstance) instanceof Cu.waiveXrays(FunctionProxy),
               "instanceof should get through the proxy after waiving both Xrays");
   }
@@ -107,8 +107,8 @@ add_task(function instanceof_xrays() {
       () => customClassInstance instanceof CustomClass,
       /TypeError: 'prototype' property of CustomClass is not an object/,
       "instanceof on a custom JS class with xrays should fail");
-    Assert.equal(customClassInstance instanceof Cu.waiveXrays(CustomClass), false,
-                 "instanceof should return false if the instance and constructor have distinct Xray vision");
+    Assert.ok(customClassInstance instanceof Cu.waiveXrays(CustomClass),
+              "instanceof should see the true prototype of CustomClass after waiving Xrays on the class");
     Assert.ok(Cu.waiveXrays(customClassInstance) instanceof Cu.waiveXrays(CustomClass),
               "instanceof should see the true prototype of CustomClass after waiving Xrays");
   }
@@ -174,12 +174,6 @@ add_task(function instanceof_dom_xrays_hasInstance() {
       /sandboxObjWithHasInstance is not a function/,
       `sandbox.${Obj}[Symbol.hasInstance] should be hidden by Xrays, despite the waived Xrays at the left`);
 
-    // The Xay waiver on the right operand should be ignored if the left
-    // operand still has Xrays.
-    Assert.throws(
-      () => sandbox.Object() instanceof Cu.waiveXrays(sandboxObjWithHasInstance),
-      /Cu.waiveXrays\(\.\.\.\) is not a function/,
-      `Waiver on sandbox.${Obj} should be ignored when the left operand has Xrays`);
     // (Cases where the left operand has no Xrays are checked below.)
   }
 
@@ -189,22 +183,26 @@ add_task(function instanceof_dom_xrays_hasInstance() {
   Assert.throws(
     () => [] instanceof Cu.waiveXrays(sandbox.ObjectWithHasInstance),
     /Permission denied to access property "throwsIfVCannotBeAccessed"/,
-    `Should call (waived) sandbox.ObjectWithHasInstance[Symbol.hasInstance] when the left operand has no Xrays`);
+    `Should call (waived) sandbox.ObjectWithHasInstance[Symbol.hasInstance] when the right operand has waived Xrays`);
 
+  // The Xray waiver on the right operand should be sufficient to call
+  // hasInstance even if the left operand still has Xrays.
+  Assert.ok(sandbox.Object() instanceof Cu.waiveXrays(sandbox.ObjectWithHasInstance),
+            `Should call (waived) sandbox.ObjectWithHasInstance[Symbol.hasInstance] when the right operand has waived Xrays`);
   Assert.ok(Cu.waiveXrays(sandbox.Object()) instanceof Cu.waiveXrays(sandbox.ObjectWithHasInstance),
-            `Should call (waived) sandbox.ObjectWithHasInstance[Symbol.hasInstance] when the left operand has waived Xrays`);
+            `Should call (waived) sandbox.ObjectWithHasInstance[Symbol.hasInstance] when both operands have waived Xrays`);
 
   // When Xrays of the DOM object are waived, we end up in the owner document's
   // compartment (instead of the sandbox).
   Assert.throws(
     () => [] instanceof Cu.waiveXrays(sandbox.DOMObjectWithHasInstance),
     /hasInstance_in_window/,
-    "Should call (waived) sandbox.DOMObjectWithHasInstance[Symbol.hasInstance] when the left operand has no Xrays");
+    "Should call (waived) sandbox.DOMObjectWithHasInstance[Symbol.hasInstance] when the right operand has waived Xrays");
 
   Assert.throws(
     () => Cu.waiveXrays(sandbox.Object()) instanceof Cu.waiveXrays(sandbox.DOMObjectWithHasInstance),
     /hasInstance_in_window/,
-    "Should call (waived) sandbox.DOMObjectWithHasInstance[Symbol.hasInstance] when the left operand has waived Xrays");
+    "Should call (waived) sandbox.DOMObjectWithHasInstance[Symbol.hasInstance] when both operands have waived Xrays");
 
   webnav.close();
 });

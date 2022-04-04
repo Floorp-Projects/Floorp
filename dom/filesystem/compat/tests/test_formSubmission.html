@@ -30,8 +30,7 @@ function setup_tests() {
     next();
   };
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
-                                     ["dom.webkitBlink.dirPicker.enabled", true],
+  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
                                      ["dom.filesystem.pathcheck.disabled", true],
                                      ["dom.webkitBlink.filesystem.enabled", true]]}, next);
 }
@@ -86,13 +85,12 @@ function setup_plain() {
 function test_plain() {
   var content = iframe.contentDocument.documentElement.textContent;
   var submission = JSON.parse(content);
-  input.getFilesAndDirectories().then(function(array) {
-    is(submission, array.map(function(v) {
-       return "input=" + v.name + "\r\n";
-    }).join(""), "Data match");
+  info(submission);
+  is(submission, input.webkitEntries.map(function(v) {
+     return "input=" + v.name + "\r\n";
+  }).join(""), "Data match");
 
-    next();
-  });
+  next();
 }
 
 function setup_urlencoded() {
@@ -122,13 +120,12 @@ function setup_urlencoded_empty() {
 function test_urlencoded() {
   var content = iframe.contentDocument.documentElement.textContent;
   var submission = JSON.parse(content);
-  input.getFilesAndDirectories().then(function(array) {
-    is(submission, array.map(function(v) {
-       return "input=" + v.name;
-    }).join("&"), "Data match");
+  info(submission);
+  is(submission, input.webkitEntries.map(function(v) {
+     return "input=" + v.name;
+  }).join("&"), "Data match");
 
-    next();
-  });
+  next();
 }
 
 function setup_formData() {
@@ -142,81 +139,77 @@ function setup_formData() {
 
 function test_multipart() {
   var submission = JSON.parse(xhr.responseText);
-  input.getFilesAndDirectories().then(function(array) {
-    is(submission.length, array.length, "Same length");
 
-    for (var i = 0; i < array.length; ++i) {
-      if (array[i] instanceof Directory) {
-        is(submission[i].headers["Content-Disposition"],
-           "form-data; name=\"input\"; filename=\"/" + array[i].name + "\"",
-           "Correct Content-Disposition");
-        is(submission[i].headers["Content-Type"], "application/octet-stream",
-           "Correct Content-Type");
-        is(submission[i].body, "", "Correct body");
-      } else {
-        ok(array[i] instanceof File);
-        is(submission[i].headers["Content-Disposition"],
-           "form-data; name=\"input\"; filename=\"" + array[i].name + "\"",
-           "Correct Content-Disposition");
-        is(submission[i].headers["Content-Type"], array[i].type,
-           "Correct Content-Type");
-        is(submission[i].body, "", "Correct body");
-      }
+  var array = input.webkitEntries;
+  is(submission.length, array.length, "Same length");
+  info(submission);
+
+  for (var i = 0; i < array.length; ++i) {
+    if (array[i].isDirectory) {
+      is(submission[i].headers["Content-Disposition"],
+         "form-data; name=\"input\"; filename=\"/" + array[i].name + "\"",
+         "Correct Content-Disposition");
+      is(submission[i].headers["Content-Type"], "application/octet-stream",
+         "Correct Content-Type");
+      is(submission[i].body, "", "Correct body");
+    } else {
+      ok(array[i].isFile);
+      is(submission[i].headers["Content-Disposition"],
+         "form-data; name=\"input\"; filename=\"" + array[i].name + "\"",
+         "Correct Content-Disposition");
+      is(submission[i].headers["Content-Type"], array[i].type,
+         "Correct Content-Type");
+      is(submission[i].body, "", "Correct body");
     }
-    next();
-  });
+  }
+
+  next();
+}
+
+function getInputFiles(inputElement) {
+  var array = [];
+  for (var i = 0; i < inputElement.files.length; ++i) {
+    array.push(inputElement.files[i]);
+  }
+  return array;
 }
 
 function test_webkit_plain() {
   var content = iframe.contentDocument.documentElement.textContent;
   var submission = JSON.parse(content);
 
-  input.getFiles(true).then(function(array) {
-    is(submission, array.map(function(v) {
-       return "input=" + v.name + "\r\n";
-    }).join(""), "Data match");
+  is(submission, getInputFiles(input).map(function(v) {
+    return "input=" + v.name + "\r\n";
+  }).join(""), "Data match");
 
-    next();
-  });
+  next();
 }
 
 function test_webkit_urlencoded() {
   var content = iframe.contentDocument.documentElement.textContent;
   var submission = JSON.parse(content);
-  input.getFiles(true).then(function(array) {
-    is(submission, array.map(function(v) {
-       return "input=" + v.name;
-    }).join("&"), "Data match");
+  is(submission, getInputFiles(input).map(function(v) {
+     return "input=" + v.name;
+  }).join("&"), "Data match");
 
-    next();
-  });
+  next();
 }
 
 function test_webkit_multipart() {
   var submission = JSON.parse(xhr.responseText);
-  input.getFiles(true).then(function(array) {
-    is(submission.length, array.length, "Same length");
+  var array = getInputFiles(input);
+  is(submission.length, array.length, "Same length");
 
-    for (var i = 0; i < array.length; ++i) {
-      if (array[i] instanceof Directory) {
-        is(submission[i].headers["Content-Disposition"],
-           "form-data; name=\"input\"; filename=\"/" + array[i].name + "\"",
-           "Correct Content-Disposition");
-        is(submission[i].headers["Content-Type"], "application/octet-stream",
-           "Correct Content-Type");
-        is(submission[i].body, "", "Correct body");
-      } else {
-        ok(array[i] instanceof File);
-        is(submission[i].headers["Content-Disposition"],
-           "form-data; name=\"input\"; filename=\"" + array[i].webkitRelativePath + "\"",
-           "Correct Content-Disposition");
-        is(submission[i].headers["Content-Type"], array[i].type,
-           "Correct Content-Type");
-        is(submission[i].body, "", "Correct body");
-      }
-    }
-    next();
-  });
+  for (var i = 0; i < array.length; ++i) {
+    ok(array[i] instanceof File);
+    is(submission[i].headers["Content-Disposition"],
+       "form-data; name=\"input\"; filename=\"" + array[i].webkitRelativePath + "\"",
+       "Correct Content-Disposition");
+    is(submission[i].headers["Content-Type"], array[i].type,
+       "Correct Content-Type");
+    is(submission[i].body, "", "Correct body");
+  }
+  next();
 }
 
 var tests = [

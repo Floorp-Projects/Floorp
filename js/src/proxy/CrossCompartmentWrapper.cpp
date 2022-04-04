@@ -303,16 +303,6 @@ bool CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test,
   return cx->compartment()->wrap(cx, srcArgs.rval());
 }
 
-bool CrossCompartmentWrapper::hasInstance(JSContext* cx, HandleObject wrapper,
-                                          MutableHandleValue v,
-                                          bool* bp) const {
-  AutoRealm call(cx, wrappedObject(wrapper));
-  if (!cx->compartment()->wrap(cx, v)) {
-    return false;
-  }
-  return Wrapper::hasInstance(cx, wrapper, v, bp);
-}
-
 const char* CrossCompartmentWrapper::className(JSContext* cx,
                                                HandleObject wrapper) const {
   AutoRealm call(cx, wrappedObject(wrapper));

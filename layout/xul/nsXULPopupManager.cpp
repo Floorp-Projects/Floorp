@@ -2932,6 +2932,7 @@ nsXULPopupPositionedEvent::Run() {
 
   PopupPositionedEventInit init;
   init.mComposed = true;
+  init.mIsAnchored = popupFrame->IsAnchored();
   init.mAlignmentOffset = popupOffset;
   AlignmentPositionToString(popupFrame, init.mAlignmentPosition);
   RefPtr<PopupPositionedEvent> event =
