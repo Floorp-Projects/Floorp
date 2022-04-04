@@ -336,7 +336,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
 
   nsCOMPtr<nsITimer> mResetPriorityTimer;
 
-  // This hashtable contains the list of active TabId for this process.
+  // This hashtable contains the list of high priority TabIds for this process.
   nsTHashSet<uint64_t> mHighPriorityBrowserParents;
 };
 

@@ -286,8 +286,9 @@ async function assertPriorityChangeOnBackground({
 
 /**
  * Test that if a normal tab goes into the background,
- * it has its process priority lowered to
- * PROCESS_PRIORITY_BACKGROUND.
+ * it has its process priority lowered to PROCESS_PRIORITY_BACKGROUND.
+ * Additionally, test priorityHint flag sets the process priority
+ * appropriately to PROCESS_PRIORITY_BACKGROUND and PROCESS_PRIORITY_FOREGROUND.
  */
 add_task(async function test_normal_background_tab() {
   let originalTab = gBrowser.selectedTab;
@@ -307,6 +308,62 @@ add_task(async function test_normal_background_tab() {
         toTab: tab,
         fromTabExpectedPriority: PROCESS_PRIORITY_BACKGROUND,
       });
+
+      let origtabID = browsingContextChildID(
+        originalTab.linkedBrowser.browsingContext
+      );
+      Assert.equal(
+        originalTab.linkedBrowser.frameLoader.remoteTab.priorityHint,
+        false,
+        "PriorityHint of the original tab should be false on default"
+      );
+
+      // Test when priorityHint is true, the original tab priority
+      // becomes PROCESS_PRIORITY_FOREGROUND.
+      originalTab.linkedBrowser.frameLoader.remoteTab.priorityHint = true;
+      Assert.equal(
+        gTabPriorityWatcher.currentPriority(origtabID),
+        PROCESS_PRIORITY_FOREGROUND,
+        "Setting priorityHint to true should set the original tab to foreground priority"
+      );
+
+      // Test when priorityHint is false, the original tab priority
+      // becomes PROCESS_PRIORITY_BACKGROUND.
+      originalTab.linkedBrowser.frameLoader.remoteTab.priorityHint = false;
+      await new Promise(resolve =>
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        setTimeout(resolve, WAIT_FOR_CHANGE_TIME_MS)
+      );
+      Assert.equal(
+        gTabPriorityWatcher.currentPriority(origtabID),
+        PROCESS_PRIORITY_BACKGROUND,
+        "Setting priorityHint to false should set the original tab to background priority"
+      );
+
+      let tabID = browsingContextChildID(tab.linkedBrowser.browsingContext);
+      Assert.equal(
+        tab.linkedBrowser.frameLoader.remoteTab.priorityHint,
+        false,
+        "PriorityHint of the active tab should be false on default"
+      );
+
+      // Test when priorityHint is true, the process priority of the
+      // active tab remains PROCESS_PRIORITY_FOREGROUND.
+      tab.linkedBrowser.frameLoader.remoteTab.priorityHint = true;
+      Assert.equal(
+        gTabPriorityWatcher.currentPriority(tabID),
+        PROCESS_PRIORITY_FOREGROUND,
+        "Setting priorityHint to true should maintain the new tab priority as foreground"
+      );
+
+      // Test when priorityHint is false, the process priority of the
+      // active tab remains PROCESS_PRIORITY_FOREGROUND.
+      tab.linkedBrowser.frameLoader.remoteTab.priorityHint = false;
+      Assert.equal(
+        gTabPriorityWatcher.currentPriority(tabID),
+        PROCESS_PRIORITY_FOREGROUND,
+        "Setting priorityHint to false should maintain the new tab priority as foreground"
+      );
     }
   );
 });
