@@ -420,11 +420,13 @@ const MESSAGES = () => [
     content: {
       template: "multistage",
       backdrop: "transparent",
+      transitions: true,
       screens: [
         {
           id: "AW_PIN_FIREFOX",
           order: 0,
           content: {
+            has_noodles: true,
             title: {
               string_id: "mr1-onboarding-pin-header",
             },
@@ -460,6 +462,7 @@ const MESSAGES = () => [
           id: "AW_SET_DEFAULT",
           order: 1,
           content: {
+            has_noodles: true,
             logo: {
               imageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
               height: "100px",
