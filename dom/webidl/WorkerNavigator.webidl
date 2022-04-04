@@ -29,3 +29,6 @@ partial interface WorkerNavigator {
 
 // https://wicg.github.io/web-locks/#navigator-mixins
 WorkerNavigator includes NavigatorLocks;
+
+// https://gpuweb.github.io/gpuweb/#navigator-gpu
+WorkerNavigator includes GPUProvider;
