@@ -423,7 +423,7 @@ add_task(async function() {
     nodes.push(node);
   }
   const consoleTableNodes = hud.ui.outputNode.querySelectorAll(
-    ".message .new-consoletable"
+    ".message .consoletable"
   );
   is(
     consoleTableNodes.length,
@@ -504,7 +504,7 @@ async function testItem(testCase, node) {
 
 function findConsoleTable(node, index) {
   const condition = node.querySelector(
-    `.message:nth-of-type(${index + 1}) .new-consoletable`
+    `.message:nth-of-type(${index + 1}) .consoletable`
   );
   return condition;
 }

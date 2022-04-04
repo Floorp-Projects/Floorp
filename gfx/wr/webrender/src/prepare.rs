@@ -21,7 +21,7 @@ use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureCont
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
-use crate::picture::{PicturePrimitive, SliceId, ClusterFlags, SurfaceRenderTasks};
+use crate::picture::{PicturePrimitive, SliceId, ClusterFlags};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
@@ -808,31 +808,7 @@ fn prepare_interned_prim_for_render(
                 prim_instance.clear_visibility();
             }
         }
-        PrimitiveInstanceKind::Backdrop { data_handle } => {
-            profile_scope!("Backdrop");
-            let backdrop_pic_index = data_stores.backdrop[*data_handle].kind.pic_index;
-
-            // Setup a dependency on the backdrop picture to ensure it is rendered prior to rendering this primitive.
-            let backdrop_surface_index = store.pictures[backdrop_pic_index.0].raster_config.as_ref().unwrap().surface_index;
-            if let Some(ref backdrop_tasks) = frame_state.surfaces[backdrop_surface_index.0].render_tasks {
-                // This is untidy / code duplication but matches existing behavior and will be
-                // removed in follow up patches to this bug to rework how backdrop-filter works.
-                let backdrop_task_id = match backdrop_tasks {
-                    SurfaceRenderTasks::Tiled(..) => unreachable!(),
-                    SurfaceRenderTasks::Simple(id) => *id,
-                    SurfaceRenderTasks::Chained { port_task_id, .. } => *port_task_id,
-                };
-
-                frame_state.add_child_render_task(
-                    pic_context.surface_index,
-                    backdrop_task_id,
-                );
-            } else {
-                if prim_instance.is_chased() {
-                    info!("\tBackdrop primitive culled because backdrop task was not assigned render tasks");
-                }
-                prim_instance.clear_visibility();
-            }
+        PrimitiveInstanceKind::Backdrop { .. } => {
         }
     };
 }
