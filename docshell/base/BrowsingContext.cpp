@@ -703,8 +703,8 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
       }
       txn.SetMessageManagerGroup(messageManagerGroup);
 
-      bool useGlobalHistory = !aEmbedder->HasAttr(
-          kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
+      bool useGlobalHistory =
+          !aEmbedder->HasAttr(nsGkAtoms::disableglobalhistory);
       txn.SetUseGlobalHistory(useGlobalHistory);
     }
 
@@ -2781,19 +2781,21 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_TouchEventsOverrideInternal>,
   return XRE_IsParentProcess() && !aSource;
 }
 
+void BrowsingContext::DidSet(FieldIndex<IDX_EmbedderColorScheme>,
+                             dom::PrefersColorSchemeOverride aOldValue) {
+  if (GetEmbedderColorScheme() == aOldValue) {
+    return;
+  }
+  PresContextAffectingFieldChanged();
+}
+
 void BrowsingContext::DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
                              dom::PrefersColorSchemeOverride aOldValue) {
   MOZ_ASSERT(IsTop());
   if (PrefersColorSchemeOverride() == aOldValue) {
     return;
   }
-  PreOrderWalk([&](BrowsingContext* aContext) {
-    if (nsIDocShell* shell = aContext->GetDocShell()) {
-      if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->RecomputeBrowsingContextDependentData();
-      }
-    }
-  });
+  PresContextAffectingFieldChanged();
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_MediumOverride>,
@@ -2802,13 +2804,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_MediumOverride>,
   if (GetMediumOverride() == aOldValue) {
     return;
   }
-  PreOrderWalk([&](BrowsingContext* aContext) {
-    if (nsIDocShell* shell = aContext->GetDocShell()) {
-      if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->RecomputeBrowsingContextDependentData();
-      }
-    }
-  });
+  PresContextAffectingFieldChanged();
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_DisplayMode>,
@@ -2878,7 +2874,10 @@ void BrowsingContext::DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue) {
   if (GetOverrideDPPX() == aOldValue) {
     return;
   }
+  PresContextAffectingFieldChanged();
+}
 
+void BrowsingContext::PresContextAffectingFieldChanged() {
   PreOrderWalk([&](BrowsingContext* aContext) {
     if (nsIDocShell* shell = aContext->GetDocShell()) {
       if (nsPresContext* pc = shell->GetPresContext()) {
