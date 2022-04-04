@@ -14,6 +14,9 @@ permalink: /changelog/
 * **feature-webnotifications**
   * 🌟 The Engine notification (WebNotification) is now persisted in the native notification, transparent to the consuming app which can delegate the native notification click to a new `WebNotificationIntentProcessor` to actually check and trigger a WebNotification click when appropriate.
 
+* **feature-media**
+  * Media playback is now paused when AudioManager.ACTION_AUDIO_BECOMING_NOISY is broadcast by the system.
+
 # 100.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v99.0.0...v100.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/147?closed=1)
