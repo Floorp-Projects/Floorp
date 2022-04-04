@@ -363,6 +363,10 @@ class PeerConnection : public PeerConnectionInternal,
     RTC_DCHECK_RUN_ON(signaling_thread());
     return &mid_generator_;
   }
+  absl::optional<std::string> sctp_mid() {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    return sctp_mid_s_;
+  }
 
   // Functions made public for testing.
   void ReturnHistogramVeryQuicklyForTesting() {
@@ -370,10 +374,6 @@ class PeerConnection : public PeerConnectionInternal,
     return_histogram_very_quickly_ = true;
   }
   void RequestUsagePatternReportForTesting();
-  absl::optional<std::string> sctp_mid() {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return sctp_mid_s_;
-  }
 
  protected:
   ~PeerConnection() override;
@@ -426,9 +426,6 @@ class PeerConnection : public PeerConnectionInternal,
   GetFirstAudioTransceiver() const RTC_RUN_ON(signaling_thread());
 
 
-  // Helper function to remove stopped transceivers.
-  void RemoveStoppedTransceivers();
-
   void CreateAudioReceiver(MediaStreamInterface* stream,
                            const RtpSenderInfo& remote_sender_info)
       RTC_RUN_ON(signaling_thread());
@@ -480,7 +477,7 @@ class PeerConnection : public PeerConnectionInternal,
       cricket::MediaType media_type,
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
       const RtpTransceiverInit& init,
-      bool fire_callback = true) RTC_RUN_ON(signaling_thread());
+      bool fire_callback = true);
 
   rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>
   CreateSender(cricket::MediaType media_type,
@@ -560,36 +557,8 @@ class PeerConnection : public PeerConnectionInternal,
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
   GetTransceiverByMLineIndex(size_t mline_index) const;
 
-  // Runs the algorithm **process the removal of a remote track** specified in
-  // the WebRTC specification.
-  // This method will update the following lists:
-  // |remove_list| is the list of transceivers for which the receiving track is
-  //     being removed.
-  // |removed_streams| is the list of streams which no longer have a receiving
-  //     track so should be removed.
-  // https://w3c.github.io/webrtc-pc/#process-remote-track-removal
-  void ProcessRemovalOfRemoteTrack(
-      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-          transceiver,
-      std::vector<rtc::scoped_refptr<RtpTransceiverInterface>>* remove_list,
-      std::vector<rtc::scoped_refptr<MediaStreamInterface>>* removed_streams);
-
-  void RemoveRemoteStreamsIfEmpty(
-      const std::vector<rtc::scoped_refptr<MediaStreamInterface>>&
-          remote_streams,
-      std::vector<rtc::scoped_refptr<MediaStreamInterface>>* removed_streams);
-
   void OnNegotiationNeeded();
 
-
-  RTCError HandleLegacyOfferOptions(const RTCOfferAnswerOptions& options);
-  void RemoveRecvDirectionFromReceivingTransceiversOfType(
-      cricket::MediaType media_type) RTC_RUN_ON(signaling_thread());
-  void AddUpToOneReceivingTransceiverOfType(cricket::MediaType media_type);
-  std::vector<
-      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
-  GetReceivingTransceiversOfType(cricket::MediaType media_type)
-      RTC_RUN_ON(signaling_thread());
 
   // Generates MediaDescriptionOptions for the |session_opts| based on existing
   // local description or remote description.
@@ -617,47 +586,22 @@ class PeerConnection : public PeerConnectionInternal,
   // channels are configured this will return nullopt.
   absl::optional<std::string> GetDataMid() const;
 
-  // Remove all local and remote senders of type |media_type|.
-  // Called when a media type is rejected (m-line set to port 0).
-  void RemoveSenders(cricket::MediaType media_type);
-
-  // Makes sure a MediaStreamTrack is created for each StreamParam in |streams|,
-  // and existing MediaStreamTracks are removed if there is no corresponding
-  // StreamParam. If |default_track_needed| is true, a default MediaStreamTrack
-  // is created if it doesn't exist; if false, it's removed if it exists.
-  // |media_type| is the type of the |streams| and can be either audio or video.
-  // If a new MediaStream is created it is added to |new_streams|.
-  void UpdateRemoteSendersList(
-      const std::vector<cricket::StreamParams>& streams,
-      bool default_track_needed,
-      cricket::MediaType media_type,
-      StreamCollection* new_streams);
-
   // Triggered when a remote sender has been seen for the first time in a remote
   // session description. It creates a remote MediaStreamTrackInterface
   // implementation and triggers CreateAudioReceiver or CreateVideoReceiver.
   void OnRemoteSenderAdded(const RtpSenderInfo& sender_info,
-                           cricket::MediaType media_type)
-      RTC_RUN_ON(signaling_thread());
+                           cricket::MediaType media_type);
 
   // Triggered when a remote sender has been removed from a remote session
   // description. It removes the remote sender with id |sender_id| from a remote
   // MediaStream and triggers DestroyAudioReceiver or DestroyVideoReceiver.
   void OnRemoteSenderRemoved(const RtpSenderInfo& sender_info,
-                             cricket::MediaType media_type)
-      RTC_RUN_ON(signaling_thread());
+                             cricket::MediaType media_type);
 
   // Finds remote MediaStreams without any tracks and removes them from
   // |remote_streams_| and notifies the observer that the MediaStreams no longer
   // exist.
   void UpdateEndedRemoteMediaStreams();
-
-  // Loops through the vector of |streams| and finds added and removed
-  // StreamParams since last time this method was called.
-  // For each new or removed StreamParam, OnLocalSenderSeen or
-  // OnLocalSenderRemoved is invoked.
-  void UpdateLocalSenders(const std::vector<cricket::StreamParams>& streams,
-                          cricket::MediaType media_type);
 
   // Triggered when a local sender has been seen for the first time in a local
   // session description.
@@ -665,8 +609,7 @@ class PeerConnection : public PeerConnectionInternal,
   // streams in the local SessionDescription can be mapped to a MediaStreamTrack
   // in a MediaStream in |local_streams_|
   void OnLocalSenderAdded(const RtpSenderInfo& sender_info,
-                          cricket::MediaType media_type)
-      RTC_RUN_ON(signaling_thread());
+                          cricket::MediaType media_type);
 
   // Triggered when a local sender has been removed from a local session
   // description.
@@ -674,8 +617,7 @@ class PeerConnection : public PeerConnectionInternal,
   // has been removed from the local SessionDescription and the stream can be
   // mapped to a MediaStreamTrack in a MediaStream in |local_streams_|.
   void OnLocalSenderRemoved(const RtpSenderInfo& sender_info,
-                            cricket::MediaType media_type)
-      RTC_RUN_ON(signaling_thread());
+                            cricket::MediaType media_type);
 
   // Returns true if the PeerConnection is configured to use Unified Plan
   // semantics for creating offers/answers and setting local/remote
@@ -753,19 +695,6 @@ class PeerConnection : public PeerConnectionInternal,
 
   cricket::ChannelManager* channel_manager() const;
 
-  enum class SessionError {
-    kNone,       // No error.
-    kContent,    // Error in BaseChannel SetLocalContent/SetRemoteContent.
-    kTransport,  // Error from the underlying transport.
-  };
-
-  // Returns the last error in the session. See the enum above for details.
-  SessionError session_error() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return session_error_;
-  }
-  const std::string& session_error_desc() const { return session_error_desc_; }
-
   cricket::ChannelInterface* GetChannel(const std::string& content_name);
 
   cricket::IceConfig ParseIceConfig(
@@ -778,20 +707,9 @@ class PeerConnection : public PeerConnectionInternal,
   void OnCertificateReady(
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate);
 
-  // Updates the error state, signaling if necessary.
-  void SetSessionError(SessionError error, const std::string& error_desc);
-
   // Based on number of transceivers per media type, enabled or disable
   // payload type based demuxing in the affected channels.
-  void UpdatePayloadTypeDemuxingState(cricket::ContentSource source)
-      RTC_RUN_ON(signaling_thread());
-  // Push the media parts of the local or remote session description
-  // down to all of the channels.
-  RTCError PushdownMediaDescription(SdpType type,
-                                    cricket::ContentSource source);
-
-  RTCError PushdownTransportDescription(cricket::ContentSource source,
-                                        SdpType type);
+  void UpdatePayloadTypeDemuxingState(cricket::ContentSource source);
 
   // Returns true and the TransportInfo of the given |content_name|
   // from |description|. Returns false if it's not available.
@@ -799,11 +717,6 @@ class PeerConnection : public PeerConnectionInternal,
       const cricket::SessionDescription* description,
       const std::string& content_name,
       cricket::TransportDescription* info);
-
-  // Enables media channels to allow sending of media.
-  // This enables media to flow on all configured audio/video channels and the
-  // RtpDataChannel.
-  void EnableSending();
 
   // Destroys all BaseChannels and destroys the SCTP data channel, if present.
   void DestroyAllChannels() RTC_RUN_ON(signaling_thread());
@@ -822,9 +735,6 @@ class PeerConnection : public PeerConnectionInternal,
   RTCErrorOr<const cricket::ContentInfo*> FindContentInfo(
       const SessionDescriptionInterface* description,
       const IceCandidateInterface* candidate) RTC_RUN_ON(signaling_thread());
-  // Deletes the corresponding channel of contents that don't exist in |desc|.
-  // |desc| can be null. This means that all channels are deleted.
-  void RemoveUnusedChannels(const cricket::SessionDescription* desc);
 
   // Allocates media channels based on the |desc|. If |desc| doesn't have
   // the BUNDLE option, this method will disable BUNDLE in PortAllocator.
@@ -879,15 +789,8 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_RUN_ON(signaling_thread());
   void OnTransportControllerDtlsHandshakeError(rtc::SSLHandshakeError error);
 
-  const char* SessionErrorToString(SessionError error) const;
-  std::string GetSessionErrorMsg();
-
   // Report the UMA metric SdpFormatReceived for the given remote offer.
   void ReportSdpFormatReceived(const SessionDescriptionInterface& remote_offer);
-
-  // Report inferred negotiated SDP semantics from a local/remote answer to the
-  // UMA observer.
-  void ReportNegotiatedSdpSemantics(const SessionDescriptionInterface& answer);
 
   // Invoked when TransportController connection completion is signaled.
   // Reports stats for all transports in use.
@@ -1054,10 +957,6 @@ class PeerConnection : public PeerConnectionInternal,
   // MIDs will be generated using this generator which will keep track of
   // all the MIDs that have been seen over the life of the PeerConnection.
   rtc::UniqueStringGenerator mid_generator_ RTC_GUARDED_BY(signaling_thread());
-
-  SessionError session_error_ RTC_GUARDED_BY(signaling_thread()) =
-      SessionError::kNone;
-  std::string session_error_desc_ RTC_GUARDED_BY(signaling_thread());
 
   std::string session_id_ RTC_GUARDED_BY(signaling_thread());
 

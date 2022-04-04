@@ -150,6 +150,12 @@ class SdpOfferAnswerHandler {
   class SetSessionDescriptionObserverAdapter;
   friend class SetSessionDescriptionObserverAdapter;
 
+  enum class SessionError {
+    kNone,       // No error.
+    kContent,    // Error in BaseChannel SetLocalContent/SetRemoteContent.
+    kTransport,  // Error from the underlying transport.
+  };
+
   // Represents the [[LocalIceCredentialsToReplace]] internal slot in the spec.
   // It makes the next CreateOffer() produce new ICE credentials even if
   // RTCOfferAnswerOptions::ice_restart is false.
@@ -316,6 +322,89 @@ class SdpOfferAnswerHandler {
       cricket::MediaSessionOptions* session_options)
       RTC_RUN_ON(signaling_thread());
 
+  const char* SessionErrorToString(SessionError error) const;
+  std::string GetSessionErrorMsg();
+  // Returns the last error in the session. See the enum above for details.
+  SessionError session_error() const {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    return session_error_;
+  }
+  const std::string& session_error_desc() const { return session_error_desc_; }
+
+  RTCError HandleLegacyOfferOptions(
+      const PeerConnectionInterface::RTCOfferAnswerOptions& options);
+  void RemoveRecvDirectionFromReceivingTransceiversOfType(
+      cricket::MediaType media_type) RTC_RUN_ON(signaling_thread());
+  void AddUpToOneReceivingTransceiverOfType(cricket::MediaType media_type);
+
+  std::vector<
+      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
+  GetReceivingTransceiversOfType(cricket::MediaType media_type)
+      RTC_RUN_ON(signaling_thread());
+
+  // Runs the algorithm **process the removal of a remote track** specified in
+  // the WebRTC specification.
+  // This method will update the following lists:
+  // |remove_list| is the list of transceivers for which the receiving track is
+  //     being removed.
+  // |removed_streams| is the list of streams which no longer have a receiving
+  //     track so should be removed.
+  // https://w3c.github.io/webrtc-pc/#process-remote-track-removal
+  void ProcessRemovalOfRemoteTrack(
+      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
+          transceiver,
+      std::vector<rtc::scoped_refptr<RtpTransceiverInterface>>* remove_list,
+      std::vector<rtc::scoped_refptr<MediaStreamInterface>>* removed_streams);
+
+  void RemoveRemoteStreamsIfEmpty(
+      const std::vector<rtc::scoped_refptr<MediaStreamInterface>>&
+          remote_streams,
+      std::vector<rtc::scoped_refptr<MediaStreamInterface>>* removed_streams);
+
+  // Remove all local and remote senders of type |media_type|.
+  // Called when a media type is rejected (m-line set to port 0).
+  void RemoveSenders(cricket::MediaType media_type);
+
+  // Loops through the vector of |streams| and finds added and removed
+  // StreamParams since last time this method was called.
+  // For each new or removed StreamParam, OnLocalSenderSeen or
+  // OnLocalSenderRemoved is invoked.
+  void UpdateLocalSenders(const std::vector<cricket::StreamParams>& streams,
+                          cricket::MediaType media_type);
+
+  // Makes sure a MediaStreamTrack is created for each StreamParam in |streams|,
+  // and existing MediaStreamTracks are removed if there is no corresponding
+  // StreamParam. If |default_track_needed| is true, a default MediaStreamTrack
+  // is created if it doesn't exist; if false, it's removed if it exists.
+  // |media_type| is the type of the |streams| and can be either audio or video.
+  // If a new MediaStream is created it is added to |new_streams|.
+  void UpdateRemoteSendersList(
+      const std::vector<cricket::StreamParams>& streams,
+      bool default_track_needed,
+      cricket::MediaType media_type,
+      StreamCollection* new_streams);
+
+  // Enables media channels to allow sending of media.
+  // This enables media to flow on all configured audio/video channels and the
+  // RtpDataChannel.
+  void EnableSending();
+  // Push the media parts of the local or remote session description
+  // down to all of the channels.
+  RTCError PushdownMediaDescription(SdpType type,
+                                    cricket::ContentSource source);
+
+  RTCError PushdownTransportDescription(cricket::ContentSource source,
+                                        SdpType type);
+  // Helper function to remove stopped transceivers.
+  void RemoveStoppedTransceivers();
+  // Deletes the corresponding channel of contents that don't exist in |desc|.
+  // |desc| can be null. This means that all channels are deleted.
+  void RemoveUnusedChannels(const cricket::SessionDescription* desc);
+
+  // Report inferred negotiated SDP semantics from a local/remote answer to the
+  // UMA observer.
+  void ReportNegotiatedSdpSemantics(const SessionDescriptionInterface& answer);
+
   // ===================================================================
 
   PeerConnection* const pc_;
@@ -369,6 +458,13 @@ class SdpOfferAnswerHandler {
   // Used when rolling back RTP data channels.
   bool have_pending_rtp_data_channel_ RTC_GUARDED_BY(signaling_thread()) =
       false;
+
+  // Updates the error state, signaling if necessary.
+  void SetSessionError(SessionError error, const std::string& error_desc);
+
+  SessionError session_error_ RTC_GUARDED_BY(signaling_thread()) =
+      SessionError::kNone;
+  std::string session_error_desc_ RTC_GUARDED_BY(signaling_thread());
 
   rtc::WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());
