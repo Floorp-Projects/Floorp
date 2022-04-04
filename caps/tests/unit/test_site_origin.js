@@ -43,6 +43,16 @@ Assert.equal(prinicpal3.originNoSuffix, "https://test1.test2.example.com:5555");
 Assert.equal(prinicpal3.siteOrigin, "https://example.com^userContextId=5555");
 Assert.equal(prinicpal3.siteOriginNoSuffix, "https://example.com");
 
+let uri4 = Services.io.newURI("https://.example.com:6666");
+let prinicpal4 = scriptSecMan.createContentPrincipal(uri4, {
+  userContextId: 6666,
+});
+Assert.ok(prinicpal4.isContentPrincipal);
+Assert.equal(prinicpal4.origin, "https://.example.com:6666^userContextId=6666");
+Assert.equal(prinicpal4.originNoSuffix, "https://.example.com:6666");
+Assert.equal(prinicpal4.siteOrigin, "https://.example.com^userContextId=6666");
+Assert.equal(prinicpal4.siteOriginNoSuffix, "https://.example.com");
+
 let aboutURI = Services.io.newURI("about:preferences");
 let aboutPrincipal = scriptSecMan.createContentPrincipal(aboutURI, {
   userContextId: 66,
