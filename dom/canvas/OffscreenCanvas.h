@@ -163,12 +163,10 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
       nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise);
 
   void CanvasAttrChanged() {
-    mAttrDirty = true;
     ErrorResult dummy;
     UpdateContext(nullptr, JS::NullHandleValue, dummy);
   }
 
-  bool mAttrDirty;
   bool mNeutered;
   bool mIsWriteOnly;
 
