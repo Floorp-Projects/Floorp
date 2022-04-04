@@ -378,6 +378,10 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
     adjusted_cfg.render_levels.active_render_limit = 30.f;
   }
 
+  if (field_trial::IsEnabled("WebRTC-Aec3NonlinearModeReverbKillSwitch")) {
+    adjusted_cfg.echo_model.model_reverb_in_nonlinear_mode = false;
+  }
+
   // Field-trial based override for the whole suppressor tuning.
   const std::string suppressor_tuning_override_trial_name =
       field_trial::FindFullName("WebRTC-Aec3SuppressorTuningOverride");
