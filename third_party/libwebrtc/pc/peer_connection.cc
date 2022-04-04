@@ -94,41 +94,7 @@ static const char kDefaultVideoSenderId[] = "defaultv0";
 // The length of RTCP CNAMEs.
 static const int kRtcpCnameLength = 16;
 
-enum {
-  MSG_SET_SESSIONDESCRIPTION_SUCCESS = 0,
-  MSG_SET_SESSIONDESCRIPTION_FAILED,
-  MSG_CREATE_SESSIONDESCRIPTION_FAILED,
-  MSG_GETSTATS,
-  MSG_REPORT_USAGE_PATTERN,
-};
-
 static const int REPORT_USAGE_PATTERN_DELAY_MS = 60000;
-
-struct SetSessionDescriptionMsg : public rtc::MessageData {
-  explicit SetSessionDescriptionMsg(
-      webrtc::SetSessionDescriptionObserver* observer)
-      : observer(observer) {}
-
-  rtc::scoped_refptr<webrtc::SetSessionDescriptionObserver> observer;
-  RTCError error;
-};
-
-struct CreateSessionDescriptionMsg : public rtc::MessageData {
-  explicit CreateSessionDescriptionMsg(
-      webrtc::CreateSessionDescriptionObserver* observer)
-      : observer(observer) {}
-
-  rtc::scoped_refptr<webrtc::CreateSessionDescriptionObserver> observer;
-  RTCError error;
-};
-
-struct GetStatsMsg : public rtc::MessageData {
-  GetStatsMsg(webrtc::StatsObserver* observer,
-              webrtc::MediaStreamTrackInterface* track)
-      : observer(observer), track(track) {}
-  rtc::scoped_refptr<webrtc::StatsObserver> observer;
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track;
-};
 
 // Check if we can send |new_stream| on a PeerConnection.
 bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
@@ -428,7 +394,8 @@ PeerConnection::PeerConnection(PeerConnectionFactory* factory,
       call_(std::move(call)),
       call_ptr_(call_.get()),
       sdp_handler_(this),
-      data_channel_controller_(this) {}
+      data_channel_controller_(this),
+      message_handler_(signaling_thread()) {}
 
 PeerConnection::~PeerConnection() {
   TRACE_EVENT0("webrtc", "PeerConnection::~PeerConnection");
@@ -471,23 +438,6 @@ PeerConnection::~PeerConnection() {
     // The event log must outlive call (and any other object that uses it).
     event_log_.reset();
   });
-
-  // Process all pending notifications in the message queue. If we don't do
-  // this, requests will linger and not know they succeeded or failed.
-  rtc::MessageList list;
-  signaling_thread()->Clear(this, rtc::MQID_ANY, &list);
-  for (auto& msg : list) {
-    if (msg.message_id == MSG_CREATE_SESSIONDESCRIPTION_FAILED) {
-      // Processing CreateOffer() and CreateAnswer() messages ensures their
-      // observers are invoked even if the PeerConnection is destroyed early.
-      OnMessage(&msg);
-    } else {
-      // TODO(hbos): Consider processing all pending messages. This would mean
-      // that SetLocalDescription() and SetRemoteDescription() observers are
-      // informed of successes and failures; this is currently NOT the case.
-      delete msg.pdata;
-    }
-  }
 }
 
 void PeerConnection::DestroyAllChannels() {
@@ -729,8 +679,13 @@ bool PeerConnection::Initialize(
   }
   int delay_ms =
       return_histogram_very_quickly_ ? 0 : REPORT_USAGE_PATTERN_DELAY_MS;
-  signaling_thread()->PostDelayed(RTC_FROM_HERE, delay_ms, this,
-                                  MSG_REPORT_USAGE_PATTERN, nullptr);
+
+  message_handler_.RequestUsagePatternReport(
+      [this]() {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        ReportUsagePattern();
+      },
+      delay_ms);
 
   if (dependencies.video_bitrate_allocator_factory) {
     video_bitrate_allocator_factory_ =
@@ -1379,8 +1334,7 @@ bool PeerConnection::GetStats(StatsObserver* observer,
                         << track->id();
     return false;
   }
-  signaling_thread()->Post(RTC_FROM_HERE, this, MSG_GETSTATS,
-                           new GetStatsMsg(observer, track));
+  message_handler_.PostGetStats(observer, stats_.get(), track);
   return true;
 }
 
@@ -2027,48 +1981,6 @@ void PeerConnection::Close() {
   observer_ = nullptr;
 }
 
-void PeerConnection::OnMessage(rtc::Message* msg) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  switch (msg->message_id) {
-    case MSG_SET_SESSIONDESCRIPTION_SUCCESS: {
-      SetSessionDescriptionMsg* param =
-          static_cast<SetSessionDescriptionMsg*>(msg->pdata);
-      param->observer->OnSuccess();
-      delete param;
-      break;
-    }
-    case MSG_SET_SESSIONDESCRIPTION_FAILED: {
-      SetSessionDescriptionMsg* param =
-          static_cast<SetSessionDescriptionMsg*>(msg->pdata);
-      param->observer->OnFailure(std::move(param->error));
-      delete param;
-      break;
-    }
-    case MSG_CREATE_SESSIONDESCRIPTION_FAILED: {
-      CreateSessionDescriptionMsg* param =
-          static_cast<CreateSessionDescriptionMsg*>(msg->pdata);
-      param->observer->OnFailure(std::move(param->error));
-      delete param;
-      break;
-    }
-    case MSG_GETSTATS: {
-      GetStatsMsg* param = static_cast<GetStatsMsg*>(msg->pdata);
-      StatsReports reports;
-      stats_->GetStats(param->track, &reports);
-      param->observer->OnComplete(reports);
-      delete param;
-      break;
-    }
-    case MSG_REPORT_USAGE_PATTERN: {
-      ReportUsagePattern();
-      break;
-    }
-    default:
-      RTC_NOTREACHED() << "Not implemented";
-      break;
-  }
-}
-
 cricket::VoiceMediaChannel* PeerConnection::voice_media_channel() const {
   RTC_DCHECK(!IsUnifiedPlan());
   auto* voice_channel = static_cast<cricket::VoiceChannel*>(
@@ -2373,34 +2285,6 @@ void PeerConnection::OnVideoTrackRemoved(VideoTrackInterface* track,
   RemoveVideoTrack(track, stream);
   sdp_handler_.UpdateNegotiationNeeded();
 }
-
-void PeerConnection::PostSetSessionDescriptionSuccess(
-    SetSessionDescriptionObserver* observer) {
-  SetSessionDescriptionMsg* msg = new SetSessionDescriptionMsg(observer);
-  signaling_thread()->Post(RTC_FROM_HERE, this,
-                           MSG_SET_SESSIONDESCRIPTION_SUCCESS, msg);
-}
-
-void PeerConnection::PostSetSessionDescriptionFailure(
-    SetSessionDescriptionObserver* observer,
-    RTCError&& error) {
-  RTC_DCHECK(!error.ok());
-  SetSessionDescriptionMsg* msg = new SetSessionDescriptionMsg(observer);
-  msg->error = std::move(error);
-  signaling_thread()->Post(RTC_FROM_HERE, this,
-                           MSG_SET_SESSIONDESCRIPTION_FAILED, msg);
-}
-
-void PeerConnection::PostCreateSessionDescriptionFailure(
-    CreateSessionDescriptionObserver* observer,
-    RTCError error) {
-  RTC_DCHECK(!error.ok());
-  CreateSessionDescriptionMsg* msg = new CreateSessionDescriptionMsg(observer);
-  msg->error = std::move(error);
-  signaling_thread()->Post(RTC_FROM_HERE, this,
-                           MSG_CREATE_SESSIONDESCRIPTION_FAILED, msg);
-}
-
 
 void PeerConnection::GenerateMediaDescriptionOptions(
     const SessionDescriptionInterface* session_desc,
@@ -3988,14 +3872,18 @@ void PeerConnection::ClearStatsCache() {
   }
 }
 
-void PeerConnection::RequestUsagePatternReportForTesting() {
-  signaling_thread()->Post(RTC_FROM_HERE, this, MSG_REPORT_USAGE_PATTERN,
-                           nullptr);
-}
-
 bool PeerConnection::ShouldFireNegotiationNeededEvent(uint32_t event_id) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return sdp_handler_.ShouldFireNegotiationNeededEvent(event_id);
+}
+
+void PeerConnection::RequestUsagePatternReportForTesting() {
+  message_handler_.RequestUsagePatternReport(
+      [this]() {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        ReportUsagePattern();
+      },
+      /* delay_ms= */ 0);
 }
 
 std::function<void(const rtc::CopyOnWriteBuffer& packet,

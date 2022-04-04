@@ -77,7 +77,8 @@ class StatsCollector : public StatsCollectorInterface {
   // of filling in |reports|.  As is, there's a requirement that the caller
   // uses |reports| immediately without allowing any async activity on
   // the thread (message handling etc) and then discard the results.
-  void GetStats(MediaStreamTrackInterface* track, StatsReports* reports);
+  void GetStats(MediaStreamTrackInterface* track,
+                StatsReports* reports) override;
 
   // Prepare a local or remote SSRC report for the given ssrc. Used internally
   // in the ExtractStatsFromList template.

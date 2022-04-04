@@ -27,6 +27,7 @@
 #include "pc/jsep_transport_controller.h"
 #include "pc/peer_connection_factory.h"
 #include "pc/peer_connection_internal.h"
+#include "pc/peer_connection_message_handler.h"
 #include "pc/rtc_stats_collector.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_transceiver.h"
@@ -67,7 +68,6 @@ class SdpOfferAnswerHandler;
 class PeerConnection : public PeerConnectionInternal,
                        public JsepTransportController::Observer,
                        public RtpSenderBase::SetStreamsObserver,
-                       public rtc::MessageHandler,
                        public sigslot::has_slots<> {
  public:
   // A bit in the usage pattern is registered when its defining event occurs at
@@ -367,6 +367,10 @@ class PeerConnection : public PeerConnectionInternal,
     RTC_DCHECK_RUN_ON(signaling_thread());
     return sctp_mid_s_;
   }
+  PeerConnectionMessageHandler* message_handler() {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    return &message_handler_;
+  }
 
   // Functions made public for testing.
   void ReturnHistogramVeryQuicklyForTesting() {
@@ -400,9 +404,6 @@ class PeerConnection : public PeerConnectionInternal,
     // for communicating with the lower layers.
     uint32_t first_ssrc;
   };
-
-  // Implements MessageHandler.
-  void OnMessage(rtc::Message* msg) override;
 
   // Plan B helpers for getting the voice/video media channels for the single
   // audio/video transceiver, if it exists.
@@ -539,14 +540,6 @@ class PeerConnection : public PeerConnectionInternal,
   void OnVideoTrackRemoved(VideoTrackInterface* track,
                            MediaStreamInterface* stream)
       RTC_RUN_ON(signaling_thread());
-
-  void PostSetSessionDescriptionSuccess(
-      SetSessionDescriptionObserver* observer);
-  void PostSetSessionDescriptionFailure(SetSessionDescriptionObserver* observer,
-                                        RTCError&& error);
-  void PostCreateSessionDescriptionFailure(
-      CreateSessionDescriptionObserver* observer,
-      RTCError error);
 
   // Returns the RtpTransceiver, if found, that is associated to the given MID.
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
@@ -1003,6 +996,9 @@ class PeerConnection : public PeerConnectionInternal,
       video_bitrate_allocator_factory_;
 
   DataChannelController data_channel_controller_;
+
+  // Machinery for handling messages posted to oneself
+  PeerConnectionMessageHandler message_handler_;
 };
 
 }  // namespace webrtc
