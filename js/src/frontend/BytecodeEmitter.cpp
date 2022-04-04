@@ -6229,11 +6229,22 @@ bool BytecodeEmitter::emitCheckDerivedClassConstructorReturn() {
   return true;
 }
 
-bool BytecodeEmitter::emitNewTarget(NewTargetNode* pn) {
+bool BytecodeEmitter::emitNewTarget() {
   if (!emit1(JSOp::NewTarget)) {
     return false;
   }
   return true;
+}
+
+bool BytecodeEmitter::emitNewTarget(NewTargetNode* pn) {
+  return emitNewTarget();
+}
+
+bool BytecodeEmitter::emitNewTarget(CallNode* pn) {
+  MOZ_ASSERT(pn->callOp() == JSOp::SuperCall ||
+             pn->callOp() == JSOp::SpreadSuperCall);
+
+  return emitNewTarget();
 }
 
 bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
@@ -8315,7 +8326,7 @@ bool BytecodeEmitter::emitCallOrNew(
   // Push new.target for construct calls.
   if (IsConstructOp(op)) {
     if (op == JSOp::SuperCall || op == JSOp::SpreadSuperCall) {
-      if (!emit1(JSOp::NewTarget)) {
+      if (!emitNewTarget(callNode)) {
         //          [stack] CALLEE THIS ARGS.. NEW.TARGET
         return false;
       }
