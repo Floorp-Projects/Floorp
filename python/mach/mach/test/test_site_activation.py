@@ -42,7 +42,7 @@ def test_new_package_appears_in_pkg_resources():
         venv = PythonVirtualenv(venv_dir)
         venv.pip_install(["carrot==0.10.7"])
 
-        metadata = MozSiteMetadata(None, None, None, None, None, venv.prefix)
+        metadata = MozSiteMetadata(None, None, None, None, venv.prefix)
         with metadata.update_current_site(venv.python_path):
             activate_virtualenv(venv)
 
