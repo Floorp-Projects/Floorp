@@ -555,7 +555,8 @@ bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
 bool ParseContext::hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
                                               TaggedParserAtomIndex name) {
   MOZ_ASSERT(name == TaggedParserAtomIndex::WellKnown::arguments() ||
-             name == TaggedParserAtomIndex::WellKnown::dotThis());
+             name == TaggedParserAtomIndex::WellKnown::dotThis() ||
+             name == TaggedParserAtomIndex::WellKnown::dotNewTarget());
   return hasUsedName(usedNames, name) ||
          functionBox()->bindingsAccessedDynamically();
 }
@@ -569,7 +570,8 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   }
 
   // Derived class constructors emit JSOp::CheckReturn, which requires
-  // '.this' to be bound.
+  // '.this' to be bound. Class field initializers implicitly read `.this`.
+  // Therefore we unconditionally declare `.this` in all class constructors.
   FunctionBox* funbox = functionBox();
   auto dotThis = TaggedParserAtomIndex::WellKnown::dotThis();
 
@@ -651,6 +653,38 @@ bool ParseContext::declareFunctionArgumentsObject(
 
   if (usesArguments) {
     funbox->setNeedsArgsObj();
+  }
+
+  return true;
+}
+
+bool ParseContext::declareNewTarget(const UsedNameTracker& usedNames,
+                                    bool canSkipLazyClosedOverBindings) {
+  // The asm.js validator does all its own symbol-table management so, as an
+  // optimization, avoid doing any work here.
+  if (useAsmOrInsideUseAsm()) {
+    return true;
+  }
+
+  FunctionBox* funbox = functionBox();
+  auto dotNewTarget = TaggedParserAtomIndex::WellKnown::dotNewTarget();
+
+  bool declareNewTarget;
+  if (canSkipLazyClosedOverBindings) {
+    declareNewTarget = funbox->functionHasNewTargetBinding();
+  } else {
+    declareNewTarget = hasUsedFunctionSpecialName(usedNames, dotNewTarget);
+  }
+
+  if (declareNewTarget) {
+    ParseContext::Scope& funScope = functionScope();
+    AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotNewTarget);
+    MOZ_ASSERT(!p);
+    if (!funScope.addDeclaredName(this, p, dotNewTarget, DeclarationKind::Var,
+                                  DeclaredNameInfo::npos)) {
+      return false;
+    }
+    funbox->setFunctionHasNewTargetBinding();
   }
 
   return true;
