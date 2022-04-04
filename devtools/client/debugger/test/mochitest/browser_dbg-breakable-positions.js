@@ -30,9 +30,13 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakablePositions(dbg, "index.html", 28, [
-    { line: 23, columns: [6, 14] },
-    { line: 24, columns: [] },
+  await assertBreakablePositions(dbg, "index.html", 49, [
+    { line: 28, columns: [6, 14] },
+    { line: 29, columns: [] },
+    { line: 32, columns: [6, 14] },
+    { line: 34, columns: [] },
+    { line: 39, columns: [] },
+    { line: 45, columns: [] },
   ]);
 
   info("Assert breakable lines of the first original source file, original.js");
