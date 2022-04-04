@@ -67,6 +67,10 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer .screen:dir(rtl) {
   transform: unset;
 }
+:root[dialogroot] .onboardingContainer .screen.with-noodles {
+  min-width: 610px;
+  min-height: 610px;
+}
 
 .onboardingContainer {
   text-align: center;
@@ -1113,5 +1117,5 @@ body[lwt-newtab-brighttext] {
   transition-delay: 0.4s;
 }
 .onboardingContainer .screen.with-noodles:not(.corner) .section-main {
-  height: 503px;
+  height: 504px;
 }

@@ -52,6 +52,7 @@ const ONBOARDING_MESSAGES = () => [
     content: {
       template: "multistage",
       id: "FX_100_UPGRADE",
+      transitions: true,
       screens: [
         {
           id: "UPGRADE_PIN_FIREFOX",
@@ -62,10 +63,11 @@ const ONBOARDING_MESSAGES = () => [
                 "chrome://activity-stream/content/data/content/assets/heart.gif",
               height: "73px",
             },
+            has_noodles: true,
             title: {
               string_id: "fx100-upgrade-thanks-header",
             },
-            title_style: "fancy",
+            title_style: "fancy larger",
             background:
               "url(chrome://activity-stream/content/data/content/assets/confetti.svg) top / 100% no-repeat var(--in-content-page-background)",
             subtitle: {
@@ -299,6 +301,7 @@ const OnboardingMessageProvider = {
         pinScreen.id = "UPGRADE_GET_STARTED";
         pinScreen.content.subtitle.string_id = "fx100-upgrade-thank-you-body";
         primary.label.string_id = "mr2-onboarding-start-browsing-button-label";
+        pinScreen.auto_advance = "primary_button";
         delete primary.action.type;
         delete pinScreen.content.secondary_button;
       }

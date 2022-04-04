@@ -9,6 +9,7 @@ $break-point-small: 570px;
 $break-point-medium: 610px;
 $break-point-large: 866px;
 $logo-size: 80px;
+$main-section-width: 504px;
 
 html {
   height: 100%;
@@ -34,7 +35,7 @@ body {
 :root {
   &[dialogroot] {
     background-color: transparent;
-    min-width: 504px;
+    min-width: $main-section-width;
     overflow: hidden;
 
     body {
@@ -54,6 +55,14 @@ body {
         &:dir(rtl) {
           transform: unset;
         }
+
+        &.with-noodles {
+          // Adjust for noodles partially extending out from the square modal
+          $noodle-buffer: 106px;
+          min-width: $main-section-width + $noodle-buffer;
+          min-height: $main-section-width + $noodle-buffer;
+        }
+
       }
     }
   }
@@ -102,7 +111,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 504px;
+    width: $main-section-width;
     flex-shrink: 0;
   }
 
@@ -1385,6 +1394,6 @@ body {
   }
 
   .screen.with-noodles:not(.corner) .section-main {
-    height: 503px;
+    height: $main-section-width;
   }
 }

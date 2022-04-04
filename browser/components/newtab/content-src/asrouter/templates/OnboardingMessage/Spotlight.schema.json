@@ -204,6 +204,10 @@
         "screens": {
           "type": "array",
           "description": "Collection of individual screen content"
+        },
+        "transitions": {
+          "type": "boolean",
+          "description": "Show transitions within and between screens"
         }
       },
       "additionalProperties": false,
