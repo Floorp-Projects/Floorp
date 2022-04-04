@@ -34,13 +34,15 @@ const val DEFAULT_HISTORY_SUGGESTION_LIMIT = 20
  * highest scored suggestion URL.
  * @param maxNumberOfSuggestions optional parameter to specify the maximum number of returned suggestions,
  * defaults to [DEFAULT_HISTORY_SUGGESTION_LIMIT]
+ * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  */
 class HistoryStorageSuggestionProvider(
     private val historyStorage: HistoryStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT
+    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
+    private val showEditSuggestion: Boolean = true,
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -59,14 +61,15 @@ class HistoryStorageSuggestionProvider(
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
 
-        return suggestions.into(this, icons, loadUrlUseCase)
+        return suggestions.into(this, icons, loadUrlUseCase, showEditSuggestion)
     }
 }
 
 internal suspend fun Iterable<SearchResult>.into(
     provider: AwesomeBar.SuggestionProvider,
     icons: BrowserIcons?,
-    loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    showEditSuggestion: Boolean = true,
 ): List<AwesomeBar.Suggestion> {
     val iconRequests = this.map { icons?.loadIcon(IconRequest(url = it.url, waitOnNetworkLoad = false)) }
     return this.zip(iconRequests) { result, icon ->
@@ -76,7 +79,7 @@ internal suspend fun Iterable<SearchResult>.into(
             icon = icon?.await()?.bitmap,
             title = result.title,
             description = result.url,
-            editSuggestion = result.url,
+            editSuggestion = if (showEditSuggestion) result.url else null,
             score = result.score,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(result.url)

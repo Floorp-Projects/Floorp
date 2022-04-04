@@ -18,6 +18,7 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -54,6 +55,18 @@ class HistoryStorageSuggestionProviderTest {
         val suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
         assertEquals("http://www.mozilla.com/", suggestions[0].description)
+    }
+
+    @Test
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+        val provider = HistoryStorageSuggestionProvider(history, mock(), showEditSuggestion = false)
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+        assertEquals("http://www.mozilla.com/", suggestions[0].description)
+        assertNull(suggestions[0].editSuggestion)
     }
 
     @Test

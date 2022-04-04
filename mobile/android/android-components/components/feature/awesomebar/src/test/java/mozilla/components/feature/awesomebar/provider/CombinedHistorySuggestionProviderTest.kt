@@ -15,6 +15,7 @@ import mozilla.components.concept.storage.SearchResult
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -157,5 +158,20 @@ class CombinedHistorySuggestionProviderTest {
 
         assertEquals("https://www.mozilla.com/pocket", result[2].description)
         assertEquals(2, result[2].score)
+    }
+
+    @Test
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
+        val history: HistoryStorage = mock()
+        doReturn(listOf(SearchResult("id", "http://www.mozilla.com/firefox/", 10))).`when`(history).getSuggestions(eq("moz"), anyInt())
+        val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), maxNumberOfSuggestions = 1, showEditSuggestion = false)
+
+        val result = provider.onInputChanged("moz")
+
+        assertEquals(1, result.size)
+        assertEquals("http://www.mozilla.com/firefox/", result[0].description)
+        assertNull(result[0].editSuggestion)
     }
 }

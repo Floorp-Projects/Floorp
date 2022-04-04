@@ -19,6 +19,7 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -169,5 +170,19 @@ class HistoryMetadataSuggestionProviderTest {
             ),
             emittedFacts.first()
         )
+    }
+
+    @Test
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+
+        whenever(storage.queryHistoryMetadata("moz", DEFAULT_METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))
+
+        val provider = HistoryMetadataSuggestionProvider(storage, mock(), showEditSuggestion = false)
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+        assertEquals(historyEntry.key.url, suggestions[0].description)
+        assertEquals(historyEntry.title, suggestions[0].title)
+        assertNull(suggestions[0].editSuggestion)
     }
 }

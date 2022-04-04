@@ -30,13 +30,15 @@ private const val BOOKMARKS_SUGGESTION_LIMIT = 20
  * for bookmarked URLs.
  * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
  * highest scored suggestion URL.
+ * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  */
 class BookmarksStorageSuggestionProvider(
     private val bookmarksStorage: BookmarksStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     private val indicatorIcon: Drawable? = null,
-    private val engine: Engine? = null
+    private val engine: Engine? = null,
+    private val showEditSuggestion: Boolean = true,
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -71,7 +73,7 @@ class BookmarksStorageSuggestionProvider(
                 flags = setOf(AwesomeBar.Suggestion.Flag.BOOKMARK),
                 title = result.title,
                 description = result.url,
-                editSuggestion = result.url,
+                editSuggestion = if (showEditSuggestion) result.url else null,
                 onSuggestionClicked = {
                     val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
                     loadUrlUseCase.invoke(result.url!!, flags = flags)

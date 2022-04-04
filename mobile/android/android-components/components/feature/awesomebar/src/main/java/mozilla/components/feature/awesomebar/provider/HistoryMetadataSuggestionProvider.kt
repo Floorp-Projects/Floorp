@@ -34,13 +34,15 @@ const val DEFAULT_METADATA_SUGGESTION_LIMIT = 5
  * highest scored suggestion URL.
  * @param maxNumberOfSuggestions optional parameter to specify the maximum number of returned suggestions,
  * defaults to [DEFAULT_METADATA_SUGGESTION_LIMIT].
+ * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  */
 class HistoryMetadataSuggestionProvider(
     private val historyStorage: HistoryMetadataStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT
+    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT,
+    private val showEditSuggestion: Boolean = true,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -54,14 +56,15 @@ class HistoryMetadataSuggestionProvider(
             .filter { it.totalViewTime > 0 }
 
         suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }
-        return suggestions.into(this, icons, loadUrlUseCase)
+        return suggestions.into(this, icons, loadUrlUseCase, showEditSuggestion)
     }
 }
 
 internal suspend fun Iterable<HistoryMetadata>.into(
     provider: AwesomeBar.SuggestionProvider,
     icons: BrowserIcons?,
-    loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    showEditSuggestion: Boolean = true,
 ): List<AwesomeBar.Suggestion> {
     val iconRequests = this.map { icons?.loadIcon(IconRequest(url = it.key.url, waitOnNetworkLoad = false)) }
     return this.zip(iconRequests) { result, icon ->
@@ -70,7 +73,7 @@ internal suspend fun Iterable<HistoryMetadata>.into(
             icon = icon?.await()?.bitmap,
             title = result.title,
             description = result.key.url,
-            editSuggestion = result.key.url,
+            editSuggestion = if (showEditSuggestion) result.key.url else null,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(result.key.url)
                 emitHistorySuggestionClickedFact()

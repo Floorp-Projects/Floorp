@@ -40,6 +40,7 @@ const val DEFAULT_COMBINED_SUGGESTION_LIMIT = 5
  * highest scored suggestion URL.
  * @param maxNumberOfSuggestions optional parameter to specify the maximum number of returned suggestions,
  * defaults to [DEFAULT_COMBINED_SUGGESTION_LIMIT].
+ * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  */
 @Suppress("LongParameterList")
 class CombinedHistorySuggestionProvider(
@@ -48,7 +49,8 @@ class CombinedHistorySuggestionProvider(
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT
+    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
+    private val showEditSuggestion: Boolean = true,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -62,13 +64,13 @@ class CombinedHistorySuggestionProvider(
             historyMetadataStorage
                 .queryHistoryMetadata(text, maxNumberOfSuggestions)
                 .filter { it.totalViewTime > 0 }
-                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase)
+                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
         }
         val historySuggestionsAsync = async {
             historyStorage.getSuggestions(text, maxNumberOfSuggestions)
                 .sortedByDescending { it.score }
                 .distinctBy { it.id }
-                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase)
+                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
         }
 
         val metadataSuggestions = metadataSuggestionsAsync.await()
