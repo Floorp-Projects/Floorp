@@ -85,6 +85,7 @@ void text_shader_main(
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND      32
 #define BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE    64
 #define BRUSH_FLAG_TEXEL_RECT                 128
+#define BRUSH_FLAG_FORCE_AA                   256
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
@@ -120,19 +121,10 @@ void brush_shader_main_vs(
     // it is inflated.
     RectWithEndpoint adjusted_segment_rect = segment_rect;
 
-    // Write the normal vertex information out.
-    if (transform.is_axis_aligned) {
+    bool antialiased = !transform.is_axis_aligned || ((brush_flags & BRUSH_FLAG_FORCE_AA) != 0);
 
-        // TODO(gw): transform bounds may be referenced by
-        //           the fragment shader when running in
-        //           the alpha pass, even on non-transformed
-        //           items. For now, just ensure it has no
-        //           effect. We can tidy this up as we move
-        //           more items to be brush shaders.
-#if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
-        init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
-#endif
-    } else {
+    // Write the normal vertex information out.
+    if (antialiased) {
         adjusted_segment_rect = clip_and_init_antialiasing(
             segment_rect,
             ph.local_rect,
@@ -147,6 +139,18 @@ void brush_shader_main_vs(
         // it so that it doesn't interfere with the aa.
         ph.local_clip_rect.p0 = vec2(-1.0e16);
         ph.local_clip_rect.p1 = vec2(1.0e16);
+    } else {
+        // The common case for most CSS content.
+
+        // TODO(gw): transform bounds may be referenced by
+        //           the fragment shader when running in
+        //           the alpha pass, even on non-transformed
+        //           items. For now, just ensure it has no
+        //           effect. We can tidy this up as we move
+        //           more items to be brush shaders.
+#if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
+        init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
+#endif
     }
 
     // Select the corner of the local rect that we are processing.
