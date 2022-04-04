@@ -52,6 +52,8 @@ const SECTION_TYPES = {
   CREDIT_CARD: "creditCard",
 };
 
+const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
+
 // The maximum length of data to be saved in a single field for preventing DoS
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
@@ -456,19 +458,26 @@ this.FormAutofillUtils = {
     return true;
   },
 
-  ALLOWED_TYPES: ["text", "email", "tel", "number", "month"],
+  /**
+   * Determines if an element is eligible to be used by credit card or address autofill.
+   *
+   * @param {HTMLElement} element
+   * @returns {boolean}
+   */
   isFieldEligibleForAutofill(element) {
-    let tagName = element.tagName;
-    if (tagName == "INPUT") {
+    if (!element) {
+      return false;
+    }
+    if (element instanceof HTMLInputElement) {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
-      if (!this.ALLOWED_TYPES.includes(element.type)) {
+      if (!ELIGIBLE_INPUT_TYPES.includes(element.type)) {
         return false;
       }
       // If the field is visually invisible, we do not want to autofill into it.
       if (!this.isFieldVisible(element)) {
         return false;
       }
-    } else if (tagName != "SELECT") {
+    } else if (!(element instanceof HTMLSelectElement)) {
       return false;
     }
 
