@@ -1632,10 +1632,8 @@
      *
      * The new function inherits the current environment chain.
      *
-     * Used to create most JS functions. Notable exceptions are arrow functions
-     * and derived or default class constructors.
-     *
-     * The function indicated by `funcIndex` must be a non-arrow function.
+     * Used to create most JS functions. Notable exceptions are derived or
+     * default class constructors.
      *
      * Implements: [InstantiateFunctionObject][1], [Evaluation for
      * *FunctionExpression*][2], and so on.
@@ -1649,17 +1647,6 @@
      *   Stack: => fn
      */ \
     MACRO(Lambda, lambda, NULL, 5, 0, 1, JOF_OBJECT) \
-    /*
-     * Push a new arrow function.
-     *
-     * The function indicated by `funcIndex` must be an arrow function.
-     *
-     *   Category: Functions
-     *   Type: Creating functions
-     *   Operands: uint32_t funcIndex
-     *   Stack: => arrowFn
-     */ \
-    MACRO(LambdaArrow, lambda_arrow, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Set the name of a function.
      *
@@ -3542,13 +3529,14 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  IF_RECORD_TUPLE(/* empty */, MACRO(225))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(226))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
+  MACRO(232)                                   \
   MACRO(233)                                   \
   MACRO(234)                                   \
   MACRO(235)                                   \

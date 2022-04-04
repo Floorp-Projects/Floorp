@@ -275,7 +275,6 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
       case JSOp::GetAliasedVar:
       case JSOp::SetAliasedVar:
       case JSOp::Lambda:
-      case JSOp::LambdaArrow:
       case JSOp::PushLexicalEnv:
       case JSOp::PopLexicalEnv:
       case JSOp::ImplicitThis:

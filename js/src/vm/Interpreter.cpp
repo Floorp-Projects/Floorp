@@ -3748,20 +3748,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(Lambda)
 
-    CASE(LambdaArrow) {
-      /* Load the specified function object literal. */
-      ReservedRooted<JSFunction*> fun(&rootFunction0,
-                                      script->getFunction(REGS.pc));
-      JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->environmentChain());
-      if (!obj) {
-        goto error;
-      }
-
-      MOZ_ASSERT(obj->staticPrototype());
-      PUSH_OBJECT(*obj);
-    }
-    END_CASE(LambdaArrow)
-
     CASE(ToAsyncIter) {
       ReservedRooted<Value> nextMethod(&rootValue0, REGS.sp[-1]);
       ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-2].toObject());
@@ -4675,8 +4661,6 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 }
 
 JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
-  MOZ_ASSERT(!fun->isArrow());
-
   JSFunction* clone;
   if (fun->isNativeFun()) {
     MOZ_ASSERT(IsAsmJSModule(fun));
@@ -4688,22 +4672,6 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
   if (!clone) {
     return nullptr;
   }
-
-  MOZ_ASSERT(fun->global() == clone->global());
-  return clone;
-}
-
-JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
-                          HandleObject parent) {
-  MOZ_ASSERT(fun->isArrow());
-
-  RootedObject proto(cx, fun->staticPrototype());
-  JSFunction* clone = CloneFunctionReuseScript(cx, fun, parent, proto);
-  if (!clone) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(clone->isArrow());
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;

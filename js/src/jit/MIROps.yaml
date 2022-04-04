@@ -996,9 +996,6 @@
 - name: Lambda
   gen_boilerplate: false
 
-- name: LambdaArrow
-  gen_boilerplate: false
-
 - name: FunctionWithProto
   gen_boilerplate: false
 

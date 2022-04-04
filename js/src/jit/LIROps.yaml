@@ -1435,13 +1435,6 @@
   num_temps: 1
   mir_op: true
 
-- name: LambdaArrow
-  result_type: WordSized
-  operands:
-    environmentChain: WordSized
-  num_temps: 1
-  mir_op: true
-
 - name: FunctionWithProto
   result_type: WordSized
   operands:
