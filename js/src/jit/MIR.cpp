@@ -1769,7 +1769,7 @@ void MTrunc::trySpecializeFloat32(TempAllocator& alloc) {
 }
 
 void MNearbyInt::trySpecializeFloat32(TempAllocator& alloc) {
-  if (EnsureFloatInputOrConvert(this, alloc)) {
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
     specialization_ = MIRType::Float32;
     setResultType(MIRType::Float32);
   }
