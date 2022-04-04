@@ -13,7 +13,6 @@ function setup_tests(aNext) {
   SpecialPowers.pushPrefEnv(
     {
       set: [
-        ["dom.input.dirpicker", true],
         ["dom.filesystem.pathcheck.disabled", true],
         ["dom.webkitBlink.dirPicker.enabled", true],
       ],

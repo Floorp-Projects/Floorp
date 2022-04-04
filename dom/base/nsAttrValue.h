@@ -48,6 +48,29 @@ class SVGPointList;
 class SVGStringList;
 class SVGTransformList;
 
+struct AttrAtomArray {
+  AtomArray mArray;
+  bool mMayContainDuplicates = false;
+  void RemoveDuplicates() {
+    if (mMayContainDuplicates) {
+      DoRemoveDuplicates();
+    }
+  }
+  AttrAtomArray Clone() const {
+    return {mArray.Clone(), mMayContainDuplicates};
+  }
+  void Clear() {
+    mArray.Clear();
+    mMayContainDuplicates = false;
+  }
+  bool operator==(const AttrAtomArray& aOther) const {
+    return mArray == aOther.mArray;
+  }
+
+ private:
+  void DoRemoveDuplicates();
+};
+
 namespace dom {
 class DOMString;
 }
@@ -222,7 +245,7 @@ class nsAttrValue {
   bool GetColorValue(nscolor& aColor) const;
   inline int16_t GetEnumValue() const;
   inline double GetPercentValue() const;
-  inline mozilla::AtomArray* GetAtomArrayValue() const;
+  inline mozilla::AttrAtomArray* GetAtomArrayValue() const;
   inline mozilla::DeclarationBlock* GetCSSDeclarationValue() const;
   inline nsIURI* GetURLValue() const;
   inline double GetDoubleValue() const;

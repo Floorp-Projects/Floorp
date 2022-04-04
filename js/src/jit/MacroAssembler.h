@@ -209,14 +209,6 @@
 #define PER_SHARED_ARCH DEFINED_ON(ALL_SHARED_ARCH)
 #define OOL_IN_HEADER
 
-constexpr int32_t Imm32_16Adj(uint32_t x) {
-#if MOZ_LITTLE_ENDIAN()
-  return x << 16;
-#else
-  return x;
-#endif
-}
-
 namespace JS {
 struct ExpandoAndGeneration;
 }
@@ -1638,6 +1630,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchIfScriptHasJitScript(Register script, Label* label);
   inline void branchIfScriptHasNoJitScript(Register script, Label* label);
   inline void loadJitScript(Register script, Register dest);
+
+  // Loads the function's argument count.
+  inline void loadFunctionArgCount(Register func, Register output);
 
   // Loads the function length. This handles interpreted, native, and bound
   // functions. The caller is responsible for checking that INTERPRETED_LAZY and

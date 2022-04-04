@@ -73,6 +73,11 @@ const TESTCASES = [
     fieldId: "targetElement",
     expectedResult: false,
   },
+  {
+    document: `<input id="targetElement" type="text" readonly>`,
+    fieldId: "targetElement",
+    expectedResult: true,
+  },
 ];
 
 TESTCASES.forEach(testcase => {

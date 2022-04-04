@@ -28,17 +28,6 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-import.html",
     },
     fixable: "code",
-    schema: [
-      {
-        type: "object",
-        properties: {
-          allowCu: {
-            type: "boolean",
-          },
-        },
-        additionalProperties: false,
-      },
-    ],
     type: "suggestion",
   },
 
@@ -49,12 +38,11 @@ module.exports = {
           return;
         }
 
-        let { allowCu } = context.options[0] || {};
         let { callee } = node;
 
         // Is the expression starting with `Cu` or `Components.utils`?
         if (
-          ((!allowCu && isIdentifier(callee.object, "Cu")) ||
+          (isIdentifier(callee.object, "Cu") ||
             isMemberExpression(callee.object, "Components", "utils")) &&
           isIdentifier(callee.property, "import")
         ) {

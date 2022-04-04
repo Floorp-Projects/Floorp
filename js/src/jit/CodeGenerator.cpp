@@ -5388,9 +5388,7 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
   MOZ_ASSERT(call->numActualArgs() ==
              call->mir()->numStackArgs() - numNonArgsOnStack);
-  masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
-              nargsreg);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), nargsreg);
+  masm.loadFunctionArgCount(calleereg, nargsreg);
   masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()),
                 &thunk);
   masm.jump(&makeCall);
@@ -5999,9 +5997,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Check whether the provided arguments satisfy target argc.
     if (!apply->hasSingleTarget()) {
       Register nformals = extraStackSpace;
-      masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
-                  nformals);
-      masm.rshift32(Imm32(JSFunction::ArgCountShift), nformals);
+      masm.loadFunctionArgCount(calleereg, nformals);
       masm.branch32(Assembler::Below, argcreg, nformals, &underflow);
     } else {
       masm.branch32(Assembler::Below, argcreg,

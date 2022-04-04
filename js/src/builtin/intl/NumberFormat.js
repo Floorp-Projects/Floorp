@@ -181,9 +181,9 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
     const hasSignificantDigits = mnsd !== undefined || mxsd !== undefined;
     const hasFractionDigits = mnfd !== undefined || mxfd !== undefined;
 
-    const needSignificantDigits = hasSignificantDigits || roundingPriority !== "auto";
-    const needFractionalDigits = (!hasSignificantDigits && notation !== "compact") ||
-                                 roundingPriority !== "auto";
+    const needSignificantDigits = (roundingPriority !== "auto") || hasSignificantDigits;
+    const needFractionalDigits = (roundingPriority !== "auto") ||
+                                 !(hasSignificantDigits || (!hasFractionDigits && notation === "compact"));
 
     if (needSignificantDigits) {
         // Step 11.

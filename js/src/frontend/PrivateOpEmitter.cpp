@@ -302,9 +302,22 @@ bool PrivateOpEmitter::emitIncDec() {
     return false;
   }
 
-  if (!bce_->emitElemOpBase(JSOp::StrictSetElem)) {
-    //              [stack] N? N+1
-    return false;
+  if (brandLoc_) {
+    if (!bce_->emit2(JSOp::ThrowMsg,
+                     uint8_t(ThrowMsgKind::AssignToPrivateMethod))) {
+      return false;
+    }
+
+    // Balance the expression stack.
+    if (!bce_->emitPopN(2)) {
+      //            [stack] N? N+1
+      return false;
+    }
+  } else {
+    if (!bce_->emitElemOpBase(JSOp::StrictSetElem)) {
+      //            [stack] N? N+1
+      return false;
+    }
   }
 
   if (isPostIncDec()) {

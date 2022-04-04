@@ -170,6 +170,10 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   void mozSetDndFilesAndDirectories(sequence<(File or Directory)> list);
 
+  // This method is meant to use for testing only.
+  [ChromeOnly, Throws]
+  Promise<sequence<(File or Directory)>> getFilesAndDirectories();
+
   boolean mozIsTextField(boolean aExcludePassword);
 
   [ChromeOnly]
@@ -214,23 +218,6 @@ interface mixin MozEditableElement {
 };
 
 HTMLInputElement includes MozEditableElement;
-
-partial interface HTMLInputElement {
-  [Pref="dom.input.dirpicker", SetterThrows]
-  attribute boolean allowdirs;
-
-  [Pref="dom.input.dirpicker"]
-  readonly attribute boolean isFilesAndDirectoriesSupported;
-
-  [Throws, Pref="dom.input.dirpicker"]
-  Promise<sequence<(File or Directory)>> getFilesAndDirectories();
-
-  [Throws, Pref="dom.input.dirpicker"]
-  Promise<sequence<File>> getFiles(optional boolean recursiveFlag = false);
-
-  [Throws, Pref="dom.input.dirpicker"]
-  void chooseDirectory();
-};
 
 HTMLInputElement includes MozImageLoadingContent;
 

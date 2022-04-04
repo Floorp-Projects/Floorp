@@ -124,9 +124,17 @@ async function checkFormFieldsStyle(profile, isPreviewing = true) {
   const elems = document.querySelectorAll("input, select");
 
   for (const elem of elems) {
-    const fillableValue = profile && profile[elem.id];
-    const previewValue = (isPreviewing && fillableValue) || "";
-
+    let fillableValue;
+    let previewValue;
+    let isElementEligible =
+      FormAutofillUtils.isFieldEligibleForAutofill(elem) && !elem.readOnly;
+    if (!isElementEligible) {
+      fillableValue = "";
+      previewValue = "";
+    } else {
+      fillableValue = profile && profile[elem.id];
+      previewValue = (isPreviewing && fillableValue) || "";
+    }
     await checkFieldHighlighted(elem, !!fillableValue);
     await checkFieldPreview(elem, previewValue);
   }

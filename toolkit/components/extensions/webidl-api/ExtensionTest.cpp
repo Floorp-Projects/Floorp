@@ -169,8 +169,7 @@ MOZ_CAN_RUN_SCRIPT bool ExtensionTest::AssertMatchInternal(
       // Expected value is a constructor, test if the actual value is an
       // instanceof the expected constructor.
       NS_ENSURE_TRUE(
-          JS::InstanceofOperator(aCx, expectedMatchObj, aActualValue, &matched),
-          false);
+          JS_HasInstance(aCx, expectedMatchObj, aActualValue, &matched), false);
     } else {
       // Fallback to strict equal for any other js object type we don't expect.
       NS_ENSURE_TRUE(
