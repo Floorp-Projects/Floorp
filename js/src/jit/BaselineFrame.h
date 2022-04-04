@@ -207,7 +207,7 @@ class BaselineFrame {
     }
     MOZ_ASSERT(isFunctionFrame());
     if (callee()->isArrow()) {
-      return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+      return NullValue();
     }
     if (isConstructing()) {
       return *(Value*)(reinterpret_cast<const uint8_t*>(this) +

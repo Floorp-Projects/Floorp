@@ -210,7 +210,7 @@ class RematerializedFrame {
   Value newTarget() {
     MOZ_ASSERT(isFunctionFrame());
     if (callee()->isArrow()) {
-      return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+      return NullValue();
     }
     MOZ_ASSERT_IF(!isConstructing(), newTarget_.isUndefined());
     return newTarget_;
