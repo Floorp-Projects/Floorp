@@ -3500,13 +3500,6 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
 
   emitLambdaInit(output, envChain);
 
-  // Lexical new.target is stored in the first extended slot.
-  MOZ_ASSERT(fun->isExtended());
-  static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
-                "|new.target| must be stored in first slot");
-  masm.storeValue(NullValue(),
-                  Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-
   masm.bind(ool->rejoin());
 }
 
@@ -7660,13 +7653,6 @@ void CodeGenerator::visitImplicitThis(LImplicitThis* lir) {
   using Fn = bool (*)(JSContext*, HandleObject, HandlePropertyName,
                       MutableHandleValue);
   callVM<Fn, ImplicitThisOperation>(lir);
-}
-
-void CodeGenerator::visitArrowNewTarget(LArrowNewTarget* lir) {
-  Register callee = ToRegister(lir->callee());
-  ValueOperand output = ToOutValue(lir);
-  masm.loadValue(
-      Address(callee, FunctionExtended::offsetOfArrowNewTargetSlot()), output);
 }
 
 void CodeGenerator::visitArrayLength(LArrayLength* lir) {

@@ -2895,11 +2895,6 @@
 - name: NewTarget
   result_type: BoxedValue
 
-- name: ArrowNewTarget
-  result_type: BoxedValue
-  operands:
-    callee: WordSized
-
 - name: Random
   gen_boilerplate: false
 
