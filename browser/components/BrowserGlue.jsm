@@ -4224,10 +4224,6 @@ BrowserGlue.prototype = {
     // Show the upgrade dialog if allowed and remember the version.
     if (!dialogReason) {
       Services.prefs.setIntPref(dialogVersionPref, dialogVersion);
-
-      // Show Firefox Home behind the upgrade dialog to see theme changes.
-      const { gBrowser } = BrowserWindowTracker.getTopWindow();
-      gBrowser.selectedTab = gBrowser.addTrustedTab("about:home");
       this._showUpgradeDialog();
       return;
     }
