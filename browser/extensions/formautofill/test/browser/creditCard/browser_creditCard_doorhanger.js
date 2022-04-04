@@ -847,6 +847,34 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
   await removeAllRecords();
 });
 
+add_task(async function test_submit_form_with_combined_expiry_field() {
+  let onChanged = waitForStorageChangedEvents("add");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_COMBINED_EXPIRY_URL },
+    async function(browser) {
+      let promiseShown = promiseNotificationShown();
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "John Doe",
+          "#cc-number": "374542158116607",
+          "#cc-exp": "05/28",
+        },
+      });
+      await promiseShown;
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+  await onChanged;
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Card should be added");
+  is(creditCards[0]["cc-exp"], "2028-05", "Verify cc-exp field");
+  is(creditCards[0]["cc-exp-month"], 5, "Verify cc-exp-month field");
+  is(creditCards[0]["cc-exp-year"], 2028, "Verify cc-exp-year field");
+  await removeAllRecords();
+});
+
 /*
   The next four tests look very similar because if we try to do multiple
   credit card operations in one test, there's a good chance the test will timeout

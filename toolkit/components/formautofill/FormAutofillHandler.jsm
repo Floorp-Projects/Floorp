@@ -163,13 +163,13 @@ class FormAutofillSection {
   }
 
   /*
-   * Override this methid if any data for `createRecord` is needed to be
-   * normailized before submitting the record.
+   * Override this method if any data for `createRecord` is needed to be
+   * normalized before submitting the record.
    *
    * @param {Object} profile
    *        A record for normalization.
    */
-  normalizeCreatingRecord(data) {}
+  createNormalizedRecord(data) {}
 
   /*
    * Override this method if there is any field value needs to compute for a
@@ -650,7 +650,7 @@ class FormAutofillSection {
       }
     });
 
-    this.normalizeCreatingRecord(data);
+    this.createNormalizedRecord(data);
 
     if (!this.isRecordCreatable(data.record)) {
       return null;
@@ -921,7 +921,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
     return value;
   }
 
-  normalizeCreatingRecord(address) {
+  createNormalizedRecord(address) {
     if (!address) {
       return;
     }
@@ -1318,6 +1318,26 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       profile
     );
     return true;
+  }
+
+  createNormalizedRecord(creditCard) {
+    if (!creditCard?.record["cc-number"]) {
+      return;
+    }
+    // Normalize cc-exp-month and cc-exp-year using the cc-exp field
+    if (creditCard.record["cc-exp"]) {
+      let { month, year } = CreditCard.normalizeExpiration({
+        expirationString: creditCard.record["cc-exp"],
+        expirationMonth: creditCard.record["cc-exp-month"],
+        expirationYear: creditCard.record["cc-exp-year"],
+      });
+      if (month) {
+        creditCard.record["cc-exp-month"] = month;
+      }
+      if (year) {
+        creditCard.record["cc-exp-year"] = year;
+      }
+    }
   }
 }
 
