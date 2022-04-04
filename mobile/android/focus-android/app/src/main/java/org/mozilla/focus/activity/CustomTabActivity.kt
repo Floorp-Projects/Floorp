@@ -25,6 +25,7 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
     private lateinit var browserFragment: BrowserFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        updateSecureWindowFlags()
         super.onCreate(savedInstanceState)
 
         val intent = SafeIntent(intent)
@@ -59,12 +60,6 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
         if (isFinishing) {
             components.customTabsUseCases.remove(customTabId)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        updateSecureWindowFlags()
     }
 
     override fun onBackPressed() {

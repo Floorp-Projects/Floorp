@@ -55,6 +55,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         get() = components.store.state.privateTabs.size
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        updateSecureWindowFlags()
         super.onCreate(savedInstanceState)
 
         if (!isTaskRoot) {
@@ -125,7 +126,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         TelemetryWrapper.startSession()
         checkBiometricStillValid()
-        updateSecureWindowFlags()
     }
 
     override fun onPause() {
