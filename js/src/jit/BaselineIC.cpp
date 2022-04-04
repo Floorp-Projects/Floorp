@@ -1923,7 +1923,7 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedObject obj(cx, &rhs.toObject());
   bool cond = false;
-  if (!HasInstance(cx, obj, lhs, &cond)) {
+  if (!InstanceofOperator(cx, obj, lhs, &cond)) {
     return false;
   }
 

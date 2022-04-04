@@ -296,8 +296,10 @@ extern JSType TypeOfObject(JSObject* obj);
 
 extern JSType TypeOfValue(const Value& v);
 
-extern bool HasInstance(JSContext* cx, HandleObject obj, HandleValue v,
-                        bool* bp);
+// Implementation of
+// https://www.ecma-international.org/ecma-262/6.0/#sec-instanceofoperator
+extern bool InstanceofOperator(JSContext* cx, HandleObject obj, HandleValue v,
+                               bool* bp);
 
 // Unwind environment chain and iterator to match the scope corresponding to
 // the given bytecode position.
