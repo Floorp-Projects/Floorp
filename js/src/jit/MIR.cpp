@@ -5253,19 +5253,12 @@ MDefinition* MGuardFunctionScript::foldsTo(TempAllocator& alloc) {
       in->toLambda()->templateFunction()->baseScript() == expected()) {
     return in;
   }
-  if (in->isLambdaArrow() &&
-      in->toLambdaArrow()->templateFunction()->baseScript() == expected()) {
-    return in;
-  }
   return this;
 }
 
 MDefinition* MFunctionEnvironment::foldsTo(TempAllocator& alloc) {
   if (input()->isLambda()) {
     return input()->toLambda()->environmentChain();
-  }
-  if (input()->isLambdaArrow()) {
-    return input()->toLambdaArrow()->environmentChain();
   }
   if (input()->isFunctionWithProto()) {
     return input()->toFunctionWithProto()->environmentChain();
