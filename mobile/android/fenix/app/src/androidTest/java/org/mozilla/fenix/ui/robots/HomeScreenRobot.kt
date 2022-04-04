@@ -48,6 +48,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -505,8 +506,13 @@ private fun verifySearchEngineIcon(searchEngineName: String) {
 
 // First Run elements
 private fun assertWelcomeHeader() =
-    onView(allOf(withText("Welcome to $appName!")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains(
+                getStringResource(R.string.onboarding_header)
+            )
+        ).waitForExists(waitingTime)
+    )
 
 private fun assertStartSyncHeader() {
     scrollToElementByText(STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER)
