@@ -3,7 +3,7 @@
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">Кушодани пайванд дар варақаи нав</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Кушодани пайванд дар варақаи махфӣ</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Кушодани пайванд дар варақаи хусусӣ</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Кушодани тасвир дар варақаи нав</string>
     <!-- Text for context menu item to save / download the link. -->
@@ -23,7 +23,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Варақаи нав кушода шуд</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
-    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Варақаи махфии нав кушода шуд</string>
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Варақаи хусусии нав кушода шуд</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Пайванд ба ҳофизаи муваққатӣ нусха бардошта шуд</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
@@ -41,7 +41,7 @@
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Ҷустуҷӯ</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
-    <string name="mozac_selection_context_menu_search_privately_2">Ҷустуҷӯи махфӣ</string>
+    <string name="mozac_selection_context_menu_search_privately_2">Ҷустуҷӯи хусусӣ</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Мубодила кардан</string>
     <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->

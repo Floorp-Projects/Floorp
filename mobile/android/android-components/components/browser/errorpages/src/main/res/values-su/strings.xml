@@ -206,7 +206,7 @@
     <string name="mozac_browser_errorpages_file_access_denied_title">Aksés ka berkas ditolak</string>
 
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
-        <li>Bisa jadi kulantaran geus dipupus, dipindahhkeun, atawa ayana idin berkas anu matak nyaram aksés.</li>
+        <li>Bisa jadi kulantaran geus dipupus, dipindahkeun, atawa ayana idin berkas anu matak nyaram aksés.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->

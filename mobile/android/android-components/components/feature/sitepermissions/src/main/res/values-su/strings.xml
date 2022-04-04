@@ -38,6 +38,9 @@
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
     <string name="mozac_feature_sitepermissions_storage_access_title">Idinan %1$s maké réréméhna di %2$s?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">Anjeun bisa meungpeuk aksés lamun teu puguh naha %s butuh ieu data.</string>
     <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
     <string name="mozac_feature_sitepermissions_learn_more_title">Lenyepan</string>
 </resources>
