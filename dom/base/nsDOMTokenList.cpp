@@ -17,7 +17,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMTokenListBinding.h"
-#include "mozilla/BloomFilter.h"
 #include "mozilla/ErrorResult.h"
 
 using namespace mozilla;
@@ -53,38 +52,11 @@ const nsAttrValue* nsDOMTokenList::GetParsedAttr() {
   return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
 }
 
-static void RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart) {
-  nsTHashMap<nsPtrHashKey<nsAtom>, bool> tokens;
-
-  for (uint32_t i = 0; i < aArray->Length(); i++) {
-    nsAtom* atom = aArray->ElementAt(i);
-    // No need to check the hashtable below aStart
-    if (i >= aStart && tokens.Get(atom)) {
-      aArray->RemoveElementAt(i);
-      i--;
-    } else {
-      tokens.InsertOrUpdate(atom, true);
-    }
-  }
-}
-
-void nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr) {
+static void RemoveDuplicates(const nsAttrValue* aAttr) {
   if (!aAttr || aAttr->Type() != nsAttrValue::eAtomArray) {
     return;
   }
-
-  BitBloomFilter<8, nsAtom> filter;
-  AtomArray* array = aAttr->GetAtomArrayValue();
-  for (uint32_t i = 0; i < array->Length(); i++) {
-    nsAtom* atom = array->ElementAt(i);
-    if (filter.mightContain(atom)) {
-      // Start again, with a hashtable
-      RemoveDuplicatesInternal(array, i);
-      return;
-    } else {
-      filter.add(atom);
-    }
-  }
+  aAttr->GetAtomArrayValue()->RemoveDuplicates();
 }
 
 uint32_t nsDOMTokenList::Length() {

@@ -53,7 +53,6 @@ class nsDOMTokenList : public nsISupports, public nsWrapperCache {
 
   DocGroup* GetDocGroup() const;
 
-  void RemoveDuplicates(const nsAttrValue* aAttr);
   uint32_t Length();
   void Item(uint32_t aIndex, nsAString& aResult) {
     bool found;
