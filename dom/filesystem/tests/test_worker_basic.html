@@ -31,7 +31,8 @@ function create_fileList() {
 }
 
 function test_worker() {
-  fileList.getFilesAndDirectories().then(function(array) {
+  SpecialPowers.wrap(fileList).getFilesAndDirectories().then(function(array) {
+    array = SpecialPowers.unwrap(array);
     var worker = new Worker("worker_basic.js");
     worker.onmessage = function(e) {
       if (e.data.type == "finish") {

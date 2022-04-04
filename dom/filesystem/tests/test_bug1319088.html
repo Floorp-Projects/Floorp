@@ -12,8 +12,7 @@
 <script type="application/javascript">
 
 function testSetup() {
-  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
-                                     ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
+  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true]]}, next);
 }
 
 function populateInputFile() {

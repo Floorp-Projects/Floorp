@@ -31,8 +31,7 @@ function run() {
   script.sendAsyncMessage("file.open");
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
-                                   ["dom.webkitBlink.dirPicker.enabled", true]]}, run);
+SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true]]}, run);
 
 SimpleTest.waitForExplicitFinish();
 
