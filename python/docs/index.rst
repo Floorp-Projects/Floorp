@@ -151,8 +151,7 @@ variable can be used:
         environment is created for Mach.
     * - ``<unset>``
       - Same behaviour as ``"pip"`` if ``MOZ_AUTOMATION`` isn't set. Otherwise, uses
-        the same behaviour as ``"system"`` if any needed native Python packages can be found in
-        the system Python.
+        the same behaviour as ``"none"``.
 
 There's a couple restrictions here:
 
@@ -180,8 +179,13 @@ get OS information respectively. Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="
 Mozilla CI non-Build Tasks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We generally don't want to create a Mach virtual environment, but it's ok to ``pip install``
-for specific command sites as needed. Use ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="none"``.
+We generally don't want to create a Mach virtual environment to avoid redundant processing,
+but it's ok to ``pip install`` for specific command sites as needed, so leave
+``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE`` unset (``MOZ_AUTOMATION`` implies the default
+behaviour of ``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="none"``).
+
+In cases where native packages *are* needed by Mach, use
+``MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="pip"``.
 
 Downstream CI Builds
 ~~~~~~~~~~~~~~~~~~~~
