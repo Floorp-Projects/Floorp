@@ -2387,9 +2387,8 @@ void HTMLInputElement::GetDisplayFileName(nsAString& aValue) const {
   nsAutoString value;
 
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
-    if ((StaticPrefs::dom_input_dirpicker() && Allowdirs()) ||
-        (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
-         HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
+    if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
+        HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
       nsContentUtils::GetMaybeLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                               "NoDirSelected", OwnerDoc(),
                                               value);
@@ -2549,12 +2548,6 @@ void HTMLInputElement::FireChangeEventIfNeeded() {
 
 FileList* HTMLInputElement::GetFiles() {
   if (mType != FormControlType::InputFile) {
-    return nullptr;
-  }
-
-  if (StaticPrefs::dom_input_dirpicker() && Allowdirs() &&
-      (!StaticPrefs::dom_webkitBlink_dirPicker_enabled() ||
-       !HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
     return nullptr;
   }
 
@@ -3516,9 +3509,8 @@ nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
     nsIContent* target =
         nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
     if (target && target->FindFirstNonChromeOnlyAccessContent() == this &&
-        ((StaticPrefs::dom_input_dirpicker() && Allowdirs()) ||
-         (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
-          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)))) {
+        StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
+        HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
       type = FILE_PICKER_DIRECTORY;
     }
     return InitFilePicker(type);
@@ -5225,8 +5217,7 @@ nsChangeHint HTMLInputElement::GetAttributeChangeHint(const nsAtom* aAttribute,
     }
 
     if (mType == FormControlType::InputFile &&
-        (aAttribute == nsGkAtoms::allowdirs ||
-         aAttribute == nsGkAtoms::webkitdirectory)) {
+        aAttribute == nsGkAtoms::webkitdirectory) {
       // The presence or absence of the 'directory' attribute determines what
       // value we show in the file label when empty, via GetDisplayFileName.
       return true;
@@ -5284,32 +5275,6 @@ nsMapRuleToAttributesFunc HTMLInputElement::GetAttributeMappingFunction()
 
 // Directory picking methods:
 
-bool HTMLInputElement::IsFilesAndDirectoriesSupported() const {
-  // This method is supposed to return true if a file and directory picker
-  // supports the selection of both files and directories *at the same time*.
-  // Only Mac currently supports that. We could implement it for Mac, but
-  // currently we do not.
-  return false;
-}
-
-void HTMLInputElement::ChooseDirectory(ErrorResult& aRv) {
-  if (mType != FormControlType::InputFile) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  // Script can call this method directly, so even though we don't show the
-  // "Pick Folder..." button on platforms that don't have a directory picker
-  // we have to redirect to the file picker here.
-  InitFilePicker(
-#if defined(ANDROID)
-      // No native directory picker - redirect to plain file picker
-      FILE_PICKER_FILE
-#else
-      FILE_PICKER_DIRECTORY
-#endif
-  );
-}
-
 already_AddRefed<Promise> HTMLInputElement::GetFilesAndDirectories(
     ErrorResult& aRv) {
   if (mType != FormControlType::InputFile) {
@@ -5356,34 +5321,6 @@ already_AddRefed<Promise> HTMLInputElement::GetFilesAndDirectories(
   }
 
   p->MaybeResolve(filesAndDirsSeq);
-  return p.forget();
-}
-
-already_AddRefed<Promise> HTMLInputElement::GetFiles(bool aRecursiveFlag,
-                                                     ErrorResult& aRv) {
-  if (mType != FormControlType::InputFile) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  GetFilesHelper* helper = GetOrCreateGetFilesHelper(aRecursiveFlag, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  MOZ_ASSERT(helper);
-
-  nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
-  MOZ_ASSERT(global);
-  if (!global) {
-    return nullptr;
-  }
-
-  RefPtr<Promise> p = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  helper->AddPromise(p);
   return p.forget();
 }
 

@@ -699,14 +699,6 @@ class HTMLInputElement final : public TextControlElement,
                                        SelectionMode aSelectMode,
                                        ErrorResult& aRv);
 
-  bool Allowdirs() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::allowdirs);
-  }
-
-  void SetAllowdirs(bool aValue, ErrorResult& aRv) {
-    SetHTMLBoolAttr(nsGkAtoms::allowdirs, aValue, aRv);
-  }
-
   bool WebkitDirectoryAttr() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
   }
@@ -717,13 +709,7 @@ class HTMLInputElement final : public TextControlElement,
 
   void GetWebkitEntries(nsTArray<RefPtr<FileSystemEntry>>& aSequence);
 
-  bool IsFilesAndDirectoriesSupported() const;
-
   already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
-
-  already_AddRefed<Promise> GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
-
-  void ChooseDirectory(ErrorResult& aRv);
 
   void GetAlign(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::align, aValue); }
   void SetAlign(const nsAString& aValue, ErrorResult& aRv) {

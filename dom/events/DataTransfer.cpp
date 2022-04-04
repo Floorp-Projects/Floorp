@@ -804,48 +804,6 @@ void DataTransfer::UpdateDragImage(Element& aImage, int32_t aX, int32_t aY) {
   }
 }
 
-already_AddRefed<Promise> DataTransfer::GetFilesAndDirectories(
-    nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
-  if (!parentNode) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = parentNode->OwnerDoc()->GetScopeObject();
-  MOZ_ASSERT(global);
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<Promise> p = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<FileList> files = mItems->Files(&aSubjectPrincipal);
-  if (NS_WARN_IF(!files)) {
-    return nullptr;
-  }
-
-  Sequence<RefPtr<File>> filesSeq;
-  files->ToSequence(filesSeq, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  p->MaybeResolve(filesSeq);
-
-  return p.forget();
-}
-
-already_AddRefed<Promise> DataTransfer::GetFiles(
-    bool aRecursiveFlag, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
-  // Currently we don't support directories.
-  return GetFilesAndDirectories(aSubjectPrincipal, aRv);
-}
-
 void DataTransfer::AddElement(Element& aElement, ErrorResult& aRv) {
   if (IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);

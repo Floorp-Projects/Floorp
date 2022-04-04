@@ -1,7 +1,3 @@
-function setup_tests() {
-  SpecialPowers.pushPrefEnv({ set: [["dom.input.dirpicker", true]] }, next);
-}
-
 function getType(a) {
   if (a === null || a === undefined) {
     return "null";
@@ -126,15 +122,18 @@ function create_directory() {
     var fileList = document.getElementById("fileList");
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
 
-    fileList.getFilesAndDirectories().then(function(list) {
-      // Just a simple test
-      is(list.length, 1, "This list has 1 element");
-      ok(list[0] instanceof Directory, "We have a directory.");
+    SpecialPowers.wrap(fileList)
+      .getFilesAndDirectories()
+      .then(function(list) {
+        list = SpecialPowers.unwrap(list);
+        // Just a simple test
+        is(list.length, 1, "This list has 1 element");
+        ok(list[0] instanceof Directory, "We have a directory.");
 
-      clonableObjects.push({ target: "all", data: list[0] });
-      script.destroy();
-      next();
-    });
+        clonableObjects.push({ target: "all", data: list[0] });
+        script.destroy();
+        next();
+      });
   }
 
   script.addMessageListener("dir.opened", onOpened);
@@ -391,4 +390,4 @@ function next() {
   test();
 }
 
-var tests = [setup_tests, create_fileList, create_directory, create_wasmModule];
+var tests = [create_fileList, create_directory, create_wasmModule];
