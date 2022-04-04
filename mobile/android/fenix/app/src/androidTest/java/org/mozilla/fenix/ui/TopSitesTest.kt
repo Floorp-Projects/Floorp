@@ -36,7 +36,7 @@ class TopSitesTest {
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule(skipOnboarding = true)
 
     @Before
     fun setUp() {
