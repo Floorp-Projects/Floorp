@@ -337,9 +337,6 @@ RtpVideoSender::RtpVideoSender(
       account_for_packetization_overhead_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-SubtractPacketizationOverhead"),
           "Disabled")),
-      use_early_loss_detection_(!absl::StartsWith(
-          field_trials_.Lookup("WebRTC-UseEarlyLossDetection"),
-          "Disabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
       use_deferred_fec_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-DeferredFecGeneration"),
@@ -899,7 +896,6 @@ void RtpVideoSender::OnPacketFeedbackVector(
     }
   }
 
-  if (use_early_loss_detection_) {
     // Map from SSRC to vector of RTP sequence numbers that are indicated as
     // lost by feedback, without being trailed by any received packets.
     std::map<uint32_t, std::vector<uint16_t>> early_loss_detected_per_ssrc;
@@ -925,7 +921,6 @@ void RtpVideoSender::OnPacketFeedbackVector(
         rtp_sender->ReSendPacket(sequence_number);
       }
     }
-  }
 
   for (const auto& kv : acked_packets_per_ssrc) {
     const uint32_t ssrc = kv.first;
