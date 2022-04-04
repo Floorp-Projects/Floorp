@@ -1231,6 +1231,12 @@ class SpecialPowersParent extends JSWindowActorParent {
           return extension.terminateBackground();
         }
 
+        case "SPExtensionWakeupBackground": {
+          let id = aMessage.data.id;
+          let extension = this._extensions.get(id);
+          return extension.wakeupBackground();
+        }
+
         case "SetAsDefaultAssertHandler": {
           defaultAssertHandler = this;
           return undefined;
