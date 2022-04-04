@@ -619,7 +619,7 @@ class InterpreterFrame {
     MOZ_ASSERT(isFunctionFrame());
 
     if (callee().isArrow()) {
-      return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+      return NullValue();
     }
 
     if (isConstructing()) {

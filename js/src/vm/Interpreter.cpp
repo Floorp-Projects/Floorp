@@ -4704,7 +4704,6 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
   }
 
   MOZ_ASSERT(clone->isArrow());
-  clone->setExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT, NullValue());
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;
