@@ -2022,6 +2022,12 @@ PerHandlerParser<ParseHandler>::newThisName() {
 
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
+PerHandlerParser<ParseHandler>::newNewTargetName() {
+  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotNewTarget());
+}
+
+template <class ParseHandler>
+typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newDotGeneratorName() {
   return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotGenerator());
 }
@@ -2473,9 +2479,9 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
-  // Declare the 'arguments' and 'this' bindings if necessary before
-  // finishing up the scope so these special bindings get marked as closed
-  // over if necessary. Arrow functions don't have these bindings.
+  // Declare the 'arguments', 'this', and 'new.target' bindings if necessary
+  // before finishing up the scope so these special bindings get marked as
+  // closed over if necessary. Arrow functions don't have these bindings.
   if (kind != FunctionSyntaxKind::Arrow) {
     bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
     if (!pc_->declareFunctionArgumentsObject(usedNames_,
@@ -2483,6 +2489,9 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       return null();
     }
     if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+      return null();
+    }
+    if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
       return null();
     }
   }
@@ -8312,8 +8321,18 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     return null();
   }
 
+  if (hasHeritage == HasHeritage::Yes) {
+    // |super()| implicitly reads |new.target|.
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+      return null();
+    }
+  }
+
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
   }
 
@@ -8450,6 +8469,9 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
   }
 
@@ -8785,6 +8807,9 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
   }
 
@@ -10704,6 +10729,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberSuperCall(
     return null();
   }
 
+  // |super()| implicitly reads |new.target|.
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+    return null();
+  }
+
   NameNodeType thisName = newThisName();
   if (!thisName) {
     return null();
@@ -12210,7 +12240,7 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
     return false;
   }
 
-  NullLiteralType newTargetName = handler_.newNullLiteral(pos());
+  NameNodeType newTargetName = newNewTargetName();
   if (!newTargetName) {
     return false;
   }
