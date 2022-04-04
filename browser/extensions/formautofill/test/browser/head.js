@@ -2,7 +2,7 @@
             BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5, TEST_ADDRESS_CA_1, TEST_ADDRESS_DE_1,
             TEST_ADDRESS_IE_1,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, TEST_CREDIT_CARD_4, TEST_CREDIT_CARD_5,
-            FORM_URL, CREDITCARD_FORM_URL, CREDITCARD_FORM_IFRAME_URL
+            FORM_URL, CREDITCARD_FORM_URL, CREDITCARD_FORM_IFRAME_URL, CREDITCARD_FORM_COMBINED_EXPIRY_URL,
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF,
             AUTOFILL_ADDRESSES_AVAILABLE_PREF,
             ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF,
@@ -48,6 +48,10 @@ const CREDITCARD_FORM_IFRAME_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
   "creditCard/autocomplete_creditcard_iframe.html";
+const CREDITCARD_FORM_COMBINED_EXPIRY_URL =
+  "https://example.org" +
+  HTTP_TEST_PATH +
+  "creditCard/autocomplete_creditcard_cc_exp_field.html";
 
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
