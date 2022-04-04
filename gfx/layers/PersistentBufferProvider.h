@@ -96,6 +96,13 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
   virtual bool PreservesDrawingState() const = 0;
 
   /**
+   * Whether or not the provider should be recreated, such as when profiling
+   * heuristics determine this type of provider is no longer advantageous to
+   * use.
+   */
+  virtual bool RequiresRefresh() const { return false; }
+
+  /**
    * Provide a WebGL front buffer for compositing, if available.
    */
   virtual Maybe<layers::SurfaceDescriptor> GetFrontBuffer() {
@@ -154,6 +161,8 @@ class PersistentBufferProviderAccelerated
       const gfx::IntRect& aPersistedRect) override;
 
   bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+
+  bool RequiresRefresh() const override;
 
  protected:
   ~PersistentBufferProviderAccelerated() override;
