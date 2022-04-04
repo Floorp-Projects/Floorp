@@ -25,6 +25,7 @@ dependencies {
     implementation project(':browser-icons')
     implementation project(':concept-engine')
     implementation project(':feature-sitepermissions')
+    implementation project(':feature-intent')
     implementation project(':support-ktx')
     implementation project(':support-utils')
 

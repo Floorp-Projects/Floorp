@@ -26,7 +26,7 @@ internal class NativeNotificationBridge(
     @DrawableRes private val smallIcon: Int
 ) {
     companion object {
-        private const val EXTRA_ON_CLICK = "mozac.feature.webnotifications.generic.onclick"
+        internal const val EXTRA_ON_CLICK = "mozac.feature.webnotifications.generic.onclick"
     }
 
     /**
@@ -50,7 +50,7 @@ internal class NativeNotificationBridge(
         with(notification) {
             activityClass?.let {
                 val intent = Intent(context, activityClass).apply {
-                    putExtra(EXTRA_ON_CLICK, tag)
+                    putExtra(EXTRA_ON_CLICK, notification.engineNotification)
                 }
 
                 PendingIntent.getActivity(context, requestId, intent, PendingIntentUtils.defaultFlags).apply {

@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.JsonReader
 import androidx.annotation.VisibleForTesting
@@ -64,6 +65,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebExtensionController
+import org.mozilla.geckoview.WebNotification
 import java.lang.ref.WeakReference
 
 /**
@@ -530,6 +532,10 @@ class GeckoEngine(
             runtime = runtime,
             engineSettings = defaultSettings
         )
+    }
+
+    override fun handleWebNotificationClick(webNotification: Parcelable) {
+        (webNotification as? WebNotification)?.click()
     }
 
     /**

@@ -78,6 +78,7 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGN
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 import org.mozilla.geckoview.WebExtensionController
+import org.mozilla.geckoview.WebNotification
 import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
@@ -2108,6 +2109,20 @@ class GeckoEngineTest {
         assertEquals(delegate, result.delegate)
         assertEquals(runtime, result.runtime)
         assertEquals(settings, result.engineSettings)
+    }
+
+    @Test
+    fun `handleWebNotificationClick calls click on the WebNotification`() {
+        val runtime = GeckoRuntime.getDefault(testContext)
+        val settings = DefaultSettings()
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = settings)
+
+        // Check that having another argument doesn't cause any issues
+        engine.handleWebNotificationClick(runtime)
+
+        val notification: WebNotification = mock()
+        engine.handleWebNotificationClick(notification)
+        verify(notification).click()
     }
 
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {

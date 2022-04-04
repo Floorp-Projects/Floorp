@@ -49,7 +49,8 @@ class WebNotificationFeatureTest {
         "https://mozilla.org/image.ico",
         "rtl",
         "en",
-        false
+        false,
+        mock()
     )
 
     @Before
@@ -143,6 +144,7 @@ class WebNotificationFeatureTest {
             "rtl",
             "en",
             false,
+            mock(),
             triggeredByWebExtension = true
         )
 

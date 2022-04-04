@@ -30,7 +30,8 @@ internal class GeckoWebNotificationDelegate(
             direction = textDirection,
             lang = lang,
             requireInteraction = requireInteraction,
-            triggeredByWebExtension = source == null
+            triggeredByWebExtension = source == null,
+            engineNotification = this@toWebNotification
         )
     }
 }

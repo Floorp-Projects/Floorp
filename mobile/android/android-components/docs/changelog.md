@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-webnotifications**
+  * 🌟 The Engine notification (WebNotification) is now persisted in the native notification, transparent to the consuming app which can delegate the native notification click to a new `WebNotificationIntentProcessor` to actually check and trigger a WebNotification click when appropriate.
+
 # 100.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v99.0.0...v100.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/147?closed=1)

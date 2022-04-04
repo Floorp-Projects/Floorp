@@ -39,7 +39,7 @@ private const val TEST_CHANNEL = "testChannel"
 class NativeNotificationBridgeTest {
     private val blankNotification = WebNotification(
         TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
-        null, true, 0
+        null, true, mock(), 0
     )
 
     private lateinit var icons: BrowserIcons

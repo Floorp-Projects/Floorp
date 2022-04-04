@@ -4,6 +4,9 @@
 
 package mozilla.components.concept.engine.webnotifications
 
+import android.os.Parcelable
+import mozilla.components.concept.engine.Engine
+
 /**
  * A notification sent by the Web Notifications API.
  *
@@ -16,6 +19,8 @@ package mozilla.components.concept.engine.webnotifications
  * @property direction Preference for text direction.
  * @property lang language of the notification.
  * @property requireInteraction Preference flag that indicates the notification should remain.
+ * @property engineNotification Notification instance native to [Engine] which can be
+ * sent across processes or persisted and restored later.
  * @property timestamp Time when the notification was created.
  * @property triggeredByWebExtension True if this notification was triggered by a
  * web extension, otherwise false.
@@ -29,6 +34,7 @@ data class WebNotification(
     val direction: String?,
     val lang: String?,
     val requireInteraction: Boolean,
+    val engineNotification: Parcelable,
     val timestamp: Long = System.currentTimeMillis(),
     val triggeredByWebExtension: Boolean = false
 )
