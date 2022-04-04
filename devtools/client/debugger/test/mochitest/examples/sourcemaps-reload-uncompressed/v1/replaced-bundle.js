@@ -74,8 +74,8 @@ module.exports = __webpack_require__(1);
 /* 1 */
 /***/ (function(module, exports) {
 
-// Add two comment lines, to match the one from new-original.js and have same
-// breakpoint positions..............................
+// Add two comment lines, to match the one from v2/new-original.js and have same....
+// breakpoint column positions.......................
 window.removedOriginal = function removedOriginal() {
   console.log("Removed original");
 };
