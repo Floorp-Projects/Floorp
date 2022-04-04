@@ -10436,7 +10436,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
   if (tt == TokenKind::New) {
     uint32_t newBegin = pos().begin;
     // Make sure this wasn't a |new.target| in disguise.
-    BinaryNodeType newTarget;
+    NewTargetNodeType newTarget;
     if (!tryNewTarget(&newTarget)) {
       return null();
     }
@@ -12167,7 +12167,7 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
-    BinaryNodeType* newTarget) {
+    NewTargetNodeType* newTarget) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::New));
 
   *newTarget = null();
@@ -12210,7 +12210,12 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
     return false;
   }
 
-  *newTarget = handler_.newNewTarget(newHolder, targetHolder);
+  NullLiteralType newTargetName = handler_.newNullLiteral(pos());
+  if (!newTargetName) {
+    return false;
+  }
+
+  *newTarget = handler_.newNewTarget(newHolder, targetHolder, newTargetName);
   return !!*newTarget;
 }
 
