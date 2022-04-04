@@ -486,6 +486,11 @@ void MacroAssembler::loadJitScript(Register script, Register dest) {
   loadPtr(Address(script, JSScript::offsetOfWarmUpData()), dest);
 }
 
+void MacroAssembler::loadFunctionArgCount(Register func, Register output) {
+  load32(Address(func, JSFunction::offsetOfFlagsAndArgCount()), output);
+  rshift32(Imm32(JSFunction::ArgCountShift), output);
+}
+
 void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
                                                      Register scratch,
                                                      Label* slowCheck,

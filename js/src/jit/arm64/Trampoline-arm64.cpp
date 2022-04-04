@@ -423,9 +423,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.And(x5, x1, Operand(CalleeTokenMask));
 
   // Get the arguments from the function object.
-  masm.Ldr(ARMRegister(x6.code(), 32),
-           MemOperand(x5, JSFunction::offsetOfFlagsAndArgCount()));
-  masm.Lsr(x6, x6, JSFunction::ArgCountShift);
+  masm.loadFunctionArgCount(x5.asUnsized(), x6.asUnsized());
 
   static_assert(CalleeToken_FunctionConstructing == 0x1,
                 "Constructing must be low-order bit");
