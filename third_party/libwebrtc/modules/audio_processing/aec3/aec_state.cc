@@ -350,8 +350,9 @@ void AecState::InitialState::InitialState::Update(bool active_render,
 
 AecState::FilterDelay::FilterDelay(const EchoCanceller3Config& config,
                                    size_t num_capture_channels)
-    : delay_headroom_samples_(config.delay.delay_headroom_samples),
-      filter_delays_blocks_(num_capture_channels, 0) {}
+    : delay_headroom_blocks_(config.delay.delay_headroom_samples / kBlockSize),
+      filter_delays_blocks_(num_capture_channels, delay_headroom_blocks_),
+      min_filter_delay_(delay_headroom_blocks_) {}
 
 void AecState::FilterDelay::Update(
     rtc::ArrayView<const int> analyzer_filter_delay_estimates_blocks,
@@ -369,7 +370,7 @@ void AecState::FilterDelay::Update(
   const bool delay_estimator_may_not_have_converged =
       blocks_with_proper_filter_adaptation < 2 * kNumBlocksPerSecond;
   if (delay_estimator_may_not_have_converged && external_delay_) {
-    int delay_guess = delay_headroom_samples_ / kBlockSize;
+    const int delay_guess = delay_headroom_blocks_;
     std::fill(filter_delays_blocks_.begin(), filter_delays_blocks_.end(),
               delay_guess);
   } else {
