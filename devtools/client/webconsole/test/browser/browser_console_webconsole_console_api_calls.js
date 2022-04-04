@@ -99,7 +99,7 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
     const tableMessage = findMessage(hud, "console.table()", ".message.table");
 
     const table = await waitFor(() =>
-      tableMessage.querySelector(".new-consoletable")
+      tableMessage.querySelector(".consoletable")
     );
     ok(table, "There is a table element");
     const tableTextContent = table.textContent;

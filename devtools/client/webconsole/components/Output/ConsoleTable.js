@@ -53,7 +53,7 @@ class ConsoleTable extends Component {
       headerItems.push(
         dom.div(
           {
-            className: "new-consoletable-header",
+            className: "consoletable-header",
             role: "columnheader",
             key,
             title: value,
@@ -118,7 +118,7 @@ class ConsoleTable extends Component {
 
     return dom.div(
       {
-        className: "new-consoletable",
+        className: "consoletable",
         role: "grid",
         style: {
           gridTemplateColumns: `repeat(${columns.size}, calc(100% / ${columns.size}))`,
