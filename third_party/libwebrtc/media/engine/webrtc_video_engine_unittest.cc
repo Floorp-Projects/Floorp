@@ -10,6 +10,7 @@
 
 #include "media/engine/webrtc_video_engine.h"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <string>
@@ -7545,10 +7546,13 @@ TEST_F(WebRtcVideoChannelTest, MinOrMaxSimulcastBitratePropagatedToEncoder) {
   EXPECT_EQ(kDefault[0].max_bitrate_bps,
             stream->GetVideoStreams()[0].max_bitrate_bps);
   // Layer 1: max configured bitrate should overwrite max default.
+  // And target bitrate should be 3/4 * max bitrate or default target
+  // which is larger.
   EXPECT_EQ(kDefault[1].min_bitrate_bps,
             stream->GetVideoStreams()[1].min_bitrate_bps);
-  EXPECT_EQ(kDefault[1].target_bitrate_bps,
-            stream->GetVideoStreams()[1].target_bitrate_bps);
+  const int kTargetBpsLayer1 =
+      std::max(kDefault[1].target_bitrate_bps, kMaxBpsLayer1 * 3 / 4);
+  EXPECT_EQ(kTargetBpsLayer1, stream->GetVideoStreams()[1].target_bitrate_bps);
   EXPECT_EQ(kMaxBpsLayer1, stream->GetVideoStreams()[1].max_bitrate_bps);
   // Layer 2: min and max bitrate not configured, default expected.
   EXPECT_EQ(kDefault[2].min_bitrate_bps,
