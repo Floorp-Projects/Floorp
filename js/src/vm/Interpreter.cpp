@@ -4420,6 +4420,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(SuperBase)
 
     CASE(NewTarget) {
+      MOZ_ASSERT(REGS.fp()->isFunctionFrame());
       PUSH_COPY(REGS.fp()->newTarget());
       MOZ_ASSERT(REGS.sp[-1].isObject() || REGS.sp[-1].isUndefined());
     }
