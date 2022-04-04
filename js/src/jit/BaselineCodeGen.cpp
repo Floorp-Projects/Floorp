@@ -4225,7 +4225,31 @@ void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
 }
 
 template <typename Handler>
-void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
+bool BaselineCodeGen<Handler>::emit_NewTarget() {
+  MOZ_ASSERT_IF(handler.maybeFunction(), !handler.maybeFunction()->isArrow());
+
+  frame.syncStack(0);
+
+#ifdef DEBUG
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  Label isFunction;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &isFunction);
+  masm.assumeUnreachable("Unexpected non-function script");
+  masm.bind(&isFunction);
+
+  Label notArrow;
+  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+  masm.branchFunctionKind(Assembler::NotEqual,
+                          FunctionFlags::FunctionKind::Arrow, scratch1,
+                          scratch2, &notArrow);
+  masm.assumeUnreachable("Unexpected arrow function");
+  masm.bind(&notArrow);
+#endif
+
   // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
   Label notConstructing, done;
   masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
@@ -4252,41 +4276,6 @@ void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
 
   masm.bind(&done);
   frame.push(R0);
-}
-
-template <>
-bool BaselineCompilerCodeGen::emit_NewTarget() {
-  MOZ_ASSERT(handler.function());
-  frame.syncStack(0);
-
-  MOZ_ASSERT(!handler.function()->isArrow());
-  emitPushNonArrowFunctionNewTarget();
-  return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_NewTarget() {
-#ifdef DEBUG
-  Register scratch1 = R0.scratchReg();
-  Register scratch2 = R1.scratchReg();
-
-  Label isFunction;
-  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
-  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
-                     &isFunction);
-  masm.assumeUnreachable("Unexpected non-function script");
-  masm.bind(&isFunction);
-
-  Label notArrow;
-  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-  masm.branchFunctionKind(Assembler::NotEqual,
-                          FunctionFlags::FunctionKind::Arrow, scratch1,
-                          scratch2, &notArrow);
-  masm.assumeUnreachable("Unexpected arrow function");
-  masm.bind(&notArrow);
-#endif
-
-  emitPushNonArrowFunctionNewTarget();
   return true;
 }
 
