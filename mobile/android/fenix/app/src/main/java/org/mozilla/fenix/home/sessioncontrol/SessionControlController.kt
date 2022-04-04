@@ -310,6 +310,7 @@ class DefaultSessionControlController(
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
         removeCollectionWithUndo(collection)
+        Collections.removed.record(NoExtras())
     }
 
     override fun handleOpenInPrivateTabClicked(topSite: TopSite) {

@@ -402,6 +402,10 @@ class DefaultSessionControlControllerTest {
         ).handleDeleteCollectionTapped(expectedCollection)
 
         assertEquals(expectedCollection, actualCollection)
+        assertTrue(Collections.removed.testHasValue())
+        val recordedEvents = Collections.removed.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
     }
 
     @Test
