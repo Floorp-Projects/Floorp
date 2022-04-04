@@ -6230,13 +6230,19 @@ bool BytecodeEmitter::emitCheckDerivedClassConstructorReturn() {
 }
 
 bool BytecodeEmitter::emitNewTarget() {
-  if (!emit1(JSOp::NewTarget)) {
+  MOZ_ASSERT(sc->allowNewTarget());
+
+  if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+    //              [stack] NEW.TARGET
     return false;
   }
   return true;
 }
 
 bool BytecodeEmitter::emitNewTarget(NewTargetNode* pn) {
+  MOZ_ASSERT(pn->newTargetName()->isName(
+      TaggedParserAtomIndex::WellKnown::dotNewTarget()));
+
   return emitNewTarget();
 }
 
@@ -6244,6 +6250,8 @@ bool BytecodeEmitter::emitNewTarget(CallNode* pn) {
   MOZ_ASSERT(pn->callOp() == JSOp::SuperCall ||
              pn->callOp() == JSOp::SpreadSuperCall);
 
+  // The parser is responsible for marking the "new.target" binding as being
+  // implicitly used in super() calls.
   return emitNewTarget();
 }
 
@@ -10803,11 +10811,11 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
           return false;
         }
         if (!bce->emit1(op)) {
-          //        [stack] THIS/ARGUMENTS
+          //        [stack] THIS/ARGUMENTS/NEW.TARGET
           return false;
         }
         if (!noe.emitAssignment()) {
-          //        [stack] THIS/ARGUMENTS
+          //        [stack] THIS/ARGUMENTS/NEW.TARGET
           return false;
         }
         if (!bce->emit1(JSOp::Pop)) {
@@ -10835,6 +10843,17 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
     if (!emitInitializeFunctionSpecialName(
             this, TaggedParserAtomIndex::WellKnown::dotThis(),
             JSOp::FunctionThis)) {
+      return false;
+    }
+  }
+
+  // Do nothing if the function doesn't have a new.target-binding (this happens
+  // for instance if it doesn't use new.target/eval or if it's an arrow
+  // function).
+  if (funbox->functionHasNewTargetBinding()) {
+    if (!emitInitializeFunctionSpecialName(
+            this, TaggedParserAtomIndex::WellKnown::dotNewTarget(),
+            JSOp::NewTarget)) {
       return false;
     }
   }
