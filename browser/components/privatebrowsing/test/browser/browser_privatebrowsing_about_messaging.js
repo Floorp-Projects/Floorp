@@ -101,7 +101,7 @@ add_task(async function test_experiment_messaging_system() {
       "should open info url in new tab"
     );
     is(
-      content.document.querySelector(".promo a").getAttribute("target"),
+      content.document.querySelector(".promo button").getAttribute("target"),
       "_blank",
       "should open promo url in new tab"
     );
@@ -152,7 +152,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
     is(
-      content.document.querySelector(".promo a").getAttribute("href"),
+      content.document.querySelector(".promo button").getAttribute("href"),
       "http://bar.example.com/" + locale,
       "should format the promoLinkUrl url"
     );
@@ -162,7 +162,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   await SpecialPowers.spawn(tab2, [LOCALE], async function(locale) {
     is(
-      content.document.querySelector(".promo a").getAttribute("href"),
+      content.document.querySelector(".promo button").getAttribute("href"),
       "http://bar.example.com/" + locale,
       "should format the promoLinkUrl url"
     );
@@ -172,7 +172,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   await SpecialPowers.spawn(tab3, [], async function() {
     is(
-      content.document.querySelector(".promo a"),
+      content.document.querySelector(".promo button"),
       null,
       "should no longer render the experiment message after 2 impressions"
     );
@@ -207,7 +207,7 @@ add_task(async function test_experiment_messaging_system_dismiss() {
 
   await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
     is(
-      content.document.querySelector(".promo a").getAttribute("href"),
+      content.document.querySelector(".promo button").getAttribute("href"),
       "http://bar.example.com/" + locale,
       "should format the promoLinkUrl url"
     );
@@ -219,7 +219,7 @@ add_task(async function test_experiment_messaging_system_dismiss() {
 
   await SpecialPowers.spawn(tab2, [], async function() {
     is(
-      content.document.querySelector(".promo a"),
+      content.document.querySelector(".promo button"),
       null,
       "should no longer render the experiment message after dismissing"
     );
