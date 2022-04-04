@@ -15,6 +15,7 @@
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.h"
 
 namespace webrtc {
 // We decide which header extensions to register by reading four bytes
@@ -140,6 +141,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
       case kRtpExtensionInbandComfortNoise: {
         absl::optional<uint8_t> noise_level;
         packet.GetExtension<InbandComfortNoiseExtension>(&noise_level);
+        break;
+      }
+      case kRtpExtensionVideoLayersAllocation: {
+        VideoLayersAllocation allocation;
+        packet.GetExtension<RtpVideoLayersAllocationExtension>(&allocation);
         break;
       }
       case kRtpExtensionGenericFrameDescriptor02:

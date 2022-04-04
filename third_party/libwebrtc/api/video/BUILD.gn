@@ -21,6 +21,7 @@ rtc_library("video_rtp_headers") {
     "hdr_metadata.h",
     "video_content_type.cc",
     "video_content_type.h",
+    "video_layers_allocation.h",
     "video_rotation.h",
     "video_timing.cc",
     "video_timing.h",
@@ -30,8 +31,12 @@ rtc_library("video_rtp_headers") {
     "..:array_view",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
+    "../units:data_rate",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("video_frame") {
