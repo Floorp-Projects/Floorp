@@ -834,10 +834,6 @@ extern bool JS::InstanceofOperator(JSContext* cx, HandleObject obj,
 }
 
 bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
-  if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
-    RootedValue local(cx, v);
-    return Proxy::hasInstance(cx, obj, &local, bp);
-  }
   return JS::InstanceofOperator(cx, obj, v, bp);
 }
 

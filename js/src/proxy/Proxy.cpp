@@ -687,22 +687,6 @@ bool Proxy::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
   return proxy->as<ProxyObject>().handler()->nativeCall(cx, test, impl, args);
 }
 
-bool Proxy::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
-                        bool* bp) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return false;
-  }
-  const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
-  *bp = false;  // default result if we refuse to perform this action
-  AutoEnterPolicy policy(cx, handler, proxy, JS::VoidHandlePropertyKey,
-                         BaseProxyHandler::GET, true);
-  if (!policy.allowed()) {
-    return policy.returnValue();
-  }
-  return proxy->as<ProxyObject>().handler()->hasInstance(cx, proxy, v, bp);
-}
-
 bool Proxy::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) {
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {

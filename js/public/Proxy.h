@@ -342,8 +342,6 @@ class JS_PUBLIC_API BaseProxyHandler {
       JS::MutableHandleIdVector props) const;
   virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                           JS::NativeImpl impl, const JS::CallArgs& args) const;
-  virtual bool hasInstance(JSContext* cx, JS::HandleObject proxy,
-                           JS::MutableHandleValue v, bool* bp) const;
   virtual bool getBuiltinClass(JSContext* cx, JS::HandleObject proxy,
                                ESClass* cls) const;
   virtual bool isArray(JSContext* cx, JS::HandleObject proxy,
