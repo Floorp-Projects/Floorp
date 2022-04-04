@@ -1726,6 +1726,20 @@ template <size_t Arity>
   return false;
 }
 
+template <size_t Arity>
+[[nodiscard]] static bool EnsureFloatConsumersAndInputOrConvert(
+    MAryInstruction<Arity>* owner, TempAllocator& alloc) {
+  MOZ_ASSERT(IsFloatingPointType(owner->type()),
+             "Integer types don't need to check consumers");
+
+  if (AllOperandsCanProduceFloat32(owner) &&
+      CheckUsesAreFloat32Consumers(owner)) {
+    return true;
+  }
+  ConvertOperandsToDouble(owner, alloc);
+  return false;
+}
+
 void MFloor::trySpecializeFloat32(TempAllocator& alloc) {
   MOZ_ASSERT(type() == MIRType::Int32);
   if (EnsureFloatInputOrConvert(this, alloc)) {
@@ -2577,21 +2591,9 @@ void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
     return;
   }
 
-  MDefinition* left = lhs();
-  MDefinition* right = rhs();
-
-  if (!left->canProduceFloat32() || !right->canProduceFloat32() ||
-      !CheckUsesAreFloat32Consumers(this)) {
-    if (left->type() == MIRType::Float32) {
-      ConvertDefinitionToDouble<0>(alloc, left, this);
-    }
-    if (right->type() == MIRType::Float32) {
-      ConvertDefinitionToDouble<1>(alloc, right, this);
-    }
-    return;
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
+    setResultType(MIRType::Float32);
   }
-
-  setResultType(MIRType::Float32);
 }
 
 void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
@@ -2821,14 +2823,9 @@ void MAbs::trySpecializeFloat32(TempAllocator& alloc) {
     return;
   }
 
-  if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
-    if (input()->type() == MIRType::Float32) {
-      ConvertDefinitionToDouble<0>(alloc, input(), this);
-    }
-    return;
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
+    setResultType(MIRType::Float32);
   }
-
-  setResultType(MIRType::Float32);
 }
 
 MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
@@ -2937,15 +2934,10 @@ bool MMod::fallible() const {
 }
 
 void MMathFunction::trySpecializeFloat32(TempAllocator& alloc) {
-  if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
-    if (input()->type() == MIRType::Float32) {
-      ConvertDefinitionToDouble<0>(alloc, input(), this);
-    }
-    return;
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
+    setResultType(MIRType::Float32);
+    specialization_ = MIRType::Float32;
   }
-
-  setResultType(MIRType::Float32);
-  specialization_ = MIRType::Float32;
 }
 
 bool MMathFunction::isFloat32Commutative() const {
@@ -5460,15 +5452,10 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
 }
 
 void MSqrt::trySpecializeFloat32(TempAllocator& alloc) {
-  if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
-    if (input()->type() == MIRType::Float32) {
-      ConvertDefinitionToDouble<0>(alloc, input(), this);
-    }
-    return;
+  if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
+    setResultType(MIRType::Float32);
+    specialization_ = MIRType::Float32;
   }
-
-  setResultType(MIRType::Float32);
-  specialization_ = MIRType::Float32;
 }
 
 MDefinition* MClz::foldsTo(TempAllocator& alloc) {
