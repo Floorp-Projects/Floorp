@@ -77,8 +77,6 @@ class XULPopupElement : public nsXULElement {
 
   nsINode* GetTriggerNode() const;
 
-  bool IsAnchored() const;
-
   Element* GetAnchorNode() const;
 
   already_AddRefed<DOMRect> GetOuterScreenRect();
