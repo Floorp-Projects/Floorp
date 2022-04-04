@@ -4256,11 +4256,6 @@ void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_NewTarget() {
-  if (handler.script()->isForEval()) {
-    frame.pushEvalNewTarget();
-    return true;
-  }
-
   MOZ_ASSERT(handler.function());
   frame.syncStack(0);
 
@@ -4271,22 +4266,16 @@ bool BaselineCompilerCodeGen::emit_NewTarget() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_NewTarget() {
+#ifdef DEBUG
   Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
 
-  Label isFunction, done;
+  Label isFunction;
   masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
   masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
                      &isFunction);
-  {
-    // Case 1: eval.
-    frame.pushEvalNewTarget();
-    masm.jump(&done);
-  }
-
+  masm.assumeUnreachable("Unexpected non-function script");
   masm.bind(&isFunction);
-
-#ifdef DEBUG
-  Register scratch2 = R1.scratchReg();
 
   Label notArrow;
   masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
@@ -4297,10 +4286,7 @@ bool BaselineInterpreterCodeGen::emit_NewTarget() {
   masm.bind(&notArrow);
 #endif
 
-  // Case 2: non-arrow function.
   emitPushNonArrowFunctionNewTarget();
-
-  masm.bind(&done);
   return true;
 }
 
