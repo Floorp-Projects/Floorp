@@ -378,7 +378,7 @@ class RTC_EXPORT VideoEncoder {
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
   virtual int32_t Release() = 0;
 
-  // Encode an I420 image (as a part of a video stream). The encoded image
+  // Encode an image (as a part of a video stream). The encoded image
   // will be returned to the user through the encode complete callback.
   //
   // Input:
