@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Custom page for the Netmonitor</title>
+
+  <!-- 10 css requests -->
+  <!-- count to keep in sync in nemonitor/custom.js -->
+  <link rel="stylesheet" type="text/css" href="style.css?1" />
+  <link rel="stylesheet" type="text/css" href="style.css?2" />
+  <link rel="stylesheet" type="text/css" href="style.css?3" />
+  <link rel="stylesheet" type="text/css" href="style.css?4" />
+  <link rel="stylesheet" type="text/css" href="style.css?5" />
+  <link rel="stylesheet" type="text/css" href="style.css?6" />
+  <link rel="stylesheet" type="text/css" href="style.css?7" />
+  <link rel="stylesheet" type="text/css" href="style.css?8" />
+  <link rel="stylesheet" type="text/css" href="style.css?9" />
+  <link rel="stylesheet" type="text/css" href="style.css?10" />
+
+  <style>
+    iframe {
+      width: 100px;
+      height: 50px;
+      border: 1px solid black;
+    }
+    span {
+      font-size: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Performance test page for the network monitor.</h1>
+
+<!-- 10 js requests -->
+<!-- count to keep in sync in nemonitor/custom.js -->
+<script type="text/javascript" src="script.js?1"></script>
+<script type="text/javascript" src="script.js?2"></script>
+<script type="text/javascript" src="script.js?3"></script>
+<script type="text/javascript" src="script.js?4"></script>
+<script type="text/javascript" src="script.js?5"></script>
+<script type="text/javascript" src="script.js?6"></script>
+<script type="text/javascript" src="script.js?7"></script>
+<script type="text/javascript" src="script.js?8"></script>
+<script type="text/javascript" src="script.js?9"></script>
+<script type="text/javascript" src="script.js?10"></script>
+
+<!-- each of these iframe will do 2 requests.
+     one for the html file and one for the JS file.
+     There is also one additional request for the CSS file,
+     but all subsequent iframe will load it from cache and no
+     request will appear in the netmonitor.
+     So in total we have 21 requests related to these iframes. -->
+<!-- count to keep in sync in nemonitor/custom.js -->
+<iframe src="iframe.html?1"></iframe>
+<iframe src="iframe.html?2"></iframe>
+<iframe src="iframe.html?3"></iframe>
+<iframe src="iframe.html?4"></iframe>
+<iframe src="iframe.html?5"></iframe>
+<iframe src="iframe.html?6"></iframe>
+<iframe src="iframe.html?7"></iframe>
+<iframe src="iframe.html?8"></iframe>
+<iframe src="iframe.html?9"></iframe>
+<iframe src="iframe.html?10"></iframe>
+
+<script>
+// These query parameters are set in netmonitor/custom.js and define the various
+// threshold we use to run this test.
+let searchParams = new URLSearchParams(location.search);
+let bigFileRequests = searchParams.get("bigFileRequests");
+let postDataRequests = searchParams.get("postDataRequests");
+let xhrRequests = searchParams.get("xhrRequests");
+
+// Do one XHR against a significant size file
+async function requestBigFile() {
+  await fetch("/tests/video/clips/testsrc.1080p.60fps.mp4?" + Math.round(Math.random() * 10000));
+}
+
+// Do one XHR with significant POST data
+async function requestPostData() {
+  let postDataSize = 500000, postDataFields = 10;
+
+  let postData = [];
+  for (let i = 0; i < postDataFields; i++) {
+    postData.push("a" + i + "=" + i);
+  }
+  // Include one field that fakes a 500k file upload.
+  postData.push("data=" + new Array(postDataSize).join("x"));
+
+  await fetch("script.js?post-data", {
+    method: "POST",
+    headers: {
+      "Content-type": "application/x-www-form-urlencoded",
+    },
+    body: postData.join("&"),
+  });
+}
+
+// Do many XHR against smaller files
+let headersCount = 10, headerDataSize = 10000;
+let headers = new Headers();
+for (let i = 0; i < headersCount; i++) {
+  headers.append("X-Custom-Header-" + i, "header");
+}
+// Set one significant headers, 10K
+headers.append("X-Custom-Header-data", new Array(headerDataSize).join("x"));
+async function doSmallRequest(i) {
+  await fetch("script.js?xhr=" + i, { headers });
+}
+
+// Force some DOM updates to better simulate a single page webapp
+// which is going to create its DOM dynamically.
+// This will help seeing if the page load slow down because
+// of netmonitor listeners.
+let interval = setInterval(function forcePaint() {
+  let div = document.createElement("span");
+  div.textContent = " force paint ";
+  document.body.appendChild(div);
+}, 20);
+
+window.onload = async function() {
+  for (let i = 0; i < bigFileRequests; i++) {
+    await requestBigFile();
+  }
+  for (let i = 0; i < postDataRequests; i++) {
+    await requestPostData();
+  }
+  for (let i = 0; i < xhrRequests; i++) {
+    await doSmallRequest(i);
+  }
+
+  // Tells damp test script when all request are sent
+  window.postMessage("ready", "*");
+  window.isReady = true;
+
+  // Stop forcing reflows once all the request are done
+  clearInterval(interval);
+}
+
+
+</script>
+</body>
+</html>

@@ -207,6 +207,12 @@ module.exports = {
       path: "debugger/custom.js",
     },
     {
+      name: "custom.netmonitor",
+      path: "netmonitor/custom.js",
+      description:
+        "Measure open/reload/close toolbox on network monitor panel against a custom test document",
+    },
+    {
       name: "panelsInBackground.reload",
       path: "toolbox/panels-in-background.js",
       description: "Measure page reload time when all panels are in background",
