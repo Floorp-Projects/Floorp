@@ -31,7 +31,6 @@ class VideoStreamDecoderInterface {
     virtual ~Callbacks() = default;
 
     struct FrameInfo {
-      absl::optional<int> decode_time_ms;
       absl::optional<int> qp;
       VideoContentType content_type;
     };
