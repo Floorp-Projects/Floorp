@@ -133,6 +133,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void ResetFrameLoader(RetainPaintData);
   void ClearRetainedPaintData();
 
+  void MaybeUpdateEmbedderColorScheme();
   void PropagateIsUnderHiddenEmbedderElementToSubView(
       bool aIsUnderHiddenEmbedderElement);
 
