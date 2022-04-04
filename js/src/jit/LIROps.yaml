@@ -1435,6 +1435,14 @@
   num_temps: 1
   mir_op: true
 
+- name: LambdaArrow
+  result_type: WordSized
+  operands:
+    environmentChain: WordSized
+    newTarget: BoxedValue
+  num_temps: 1
+  mir_op: true
+
 - name: FunctionWithProto
   result_type: WordSized
   operands:
@@ -2887,6 +2895,11 @@
 
 - name: NewTarget
   result_type: BoxedValue
+
+- name: ArrowNewTarget
+  result_type: BoxedValue
+  operands:
+    callee: WordSized
 
 - name: Random
   gen_boilerplate: false

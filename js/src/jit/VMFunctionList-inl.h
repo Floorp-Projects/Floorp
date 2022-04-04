@@ -181,6 +181,7 @@ namespace jit {
   _(IsPossiblyWrappedTypedArray, js::jit::IsPossiblyWrappedTypedArray)         \
   _(IsPrototypeOf, js::IsPrototypeOf)                                          \
   _(Lambda, js::Lambda)                                                        \
+  _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
   _(LoadAliasedDebugVar, js::LoadAliasedDebugVar)                              \
   _(MapObjectGet, js::jit::MapObjectGet)                                       \

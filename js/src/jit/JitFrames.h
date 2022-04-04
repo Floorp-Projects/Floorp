@@ -270,6 +270,7 @@ class JitFrameLayout : public CommonFrameLayout {
     return offsetof(JitFrameLayout, numActualArgs_);
   }
   static size_t offsetOfThis() { return sizeof(JitFrameLayout); }
+  static size_t offsetOfEvalNewTarget() { return sizeof(JitFrameLayout); }
   static size_t offsetOfActualArgs() {
     return offsetOfThis() + sizeof(JS::Value);
   }

@@ -179,6 +179,7 @@ class BaselineCodeGen {
 
   [[nodiscard]] bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);
+  void emitPushNonArrowFunctionNewTarget();
   void emitGetAliasedVar(ValueOperand dest);
   [[nodiscard]] bool emitGetAliasedDebugVar(ValueOperand dest);
 
