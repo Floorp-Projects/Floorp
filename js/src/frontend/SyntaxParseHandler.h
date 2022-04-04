@@ -344,8 +344,9 @@ class SyntaxParseHandler {
     return NodeLexicalDeclaration;
   }
 
-  BinaryNodeType newNewTarget(NullaryNodeType newHolder,
-                              NullaryNodeType targetHolder) {
+  NewTargetNodeType newNewTarget(NullaryNodeType newHolder,
+                                 NullaryNodeType targetHolder,
+                                 Node newTargetName) {
     return NodeGeneric;
   }
   NullaryNodeType newPosHolder(const TokenPos& pos) { return NodeGeneric; }
