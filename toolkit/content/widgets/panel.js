@@ -92,7 +92,7 @@
     }
 
     _setSideAttribute(event) {
-      if (!this.isArrowPanel || !this.isAnchored) {
+      if (!this.isArrowPanel || !event.isAnchored) {
         return;
       }
 
@@ -123,7 +123,7 @@
         this.panelContent.style.display = "";
       }
       if (this.isArrowPanel && event.target == this) {
-        if (this.isAnchored && this.anchorNode) {
+        if (this.anchorNode) {
           let anchorRoot =
             this.anchorNode.closest("toolbarbutton, .anchor-root") ||
             this.anchorNode;
@@ -194,7 +194,7 @@
           this.setAttribute("animate", "cancel");
         }
 
-        if (this.isAnchored && this.anchorNode) {
+        if (this.anchorNode) {
           let anchorRoot =
             this.anchorNode.closest("toolbarbutton, .anchor-root") ||
             this.anchorNode;

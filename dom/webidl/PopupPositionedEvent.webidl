@@ -5,6 +5,7 @@
  */
 
 dictionary PopupPositionedEventInit : EventInit {
+  boolean isAnchored = false;
   /**
    * Returns the alignment position where the popup has appeared relative to its
    * anchor node or point, accounting for any flipping that occurred.
@@ -17,6 +18,7 @@ dictionary PopupPositionedEventInit : EventInit {
 interface PopupPositionedEvent : Event {
   constructor(DOMString type, optional PopupPositionedEventInit init = {});
 
+  readonly attribute boolean isAnchored;
   readonly attribute DOMString alignmentPosition;
   readonly attribute long alignmentOffset;
 };

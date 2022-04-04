@@ -168,12 +168,6 @@ interface XULPopupElement : XULElement
   readonly attribute Node? triggerNode;
 
   /**
-   * True if the popup is anchored to a point or rectangle. False if it
-   * appears at a fixed screen coordinate.
-   */
-  readonly attribute boolean isAnchored;
-
-  /**
    * Retrieve the anchor that was specified to openPopup or for menupopups in a
    * menu, the parent menu.
    */
