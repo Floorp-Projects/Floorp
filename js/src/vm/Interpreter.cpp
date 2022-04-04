@@ -320,8 +320,8 @@ InterpreterFrame* InvokeState::pushInterpreterFrame(JSContext* cx) {
 }
 
 InterpreterFrame* ExecuteState::pushInterpreterFrame(JSContext* cx) {
-  return cx->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
-                                                 envChain_, evalInFrame_);
+  return cx->interpreterStack().pushExecuteFrame(cx, script_, envChain_,
+                                                 evalInFrame_);
 }
 
 InterpreterFrame* RunState::pushInterpreterFrame(JSContext* cx) {
@@ -726,8 +726,7 @@ bool js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
 }
 
 bool js::ExecuteKernel(JSContext* cx, HandleScript script,
-                       HandleObject envChainArg, HandleValue newTargetValue,
-                       AbstractFramePtr evalInFrame,
+                       HandleObject envChainArg, AbstractFramePtr evalInFrame,
                        MutableHandleValue result) {
   MOZ_ASSERT_IF(script->isGlobalCode(),
                 IsGlobalLexicalEnvironment(envChainArg) ||
@@ -757,8 +756,7 @@ bool js::ExecuteKernel(JSContext* cx, HandleScript script,
   }
 
   probes::StartExecution(script);
-  ExecuteState state(cx, script, newTargetValue, envChainArg, evalInFrame,
-                     result);
+  ExecuteState state(cx, script, envChainArg, evalInFrame, result);
   bool ok = RunScript(cx, state);
   probes::StopExecution(script);
 
@@ -791,8 +789,8 @@ bool js::Execute(JSContext* cx, HandleScript script, HandleObject envChain,
   } while ((s = s->enclosingEnvironment()));
 #endif
 
-  return ExecuteKernel(cx, script, envChain, NullHandleValue,
-                       NullFramePtr() /* evalInFrame */, rval);
+  return ExecuteKernel(cx, script, envChain, NullFramePtr() /* evalInFrame */,
+                       rval);
 }
 
 /*
@@ -4420,7 +4418,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(SuperBase)
 
     CASE(NewTarget) {
-      MOZ_ASSERT(REGS.fp()->isFunctionFrame());
       PUSH_COPY(REGS.fp()->newTarget());
       MOZ_ASSERT(REGS.sp[-1].isObject() || REGS.sp[-1].isUndefined());
     }
