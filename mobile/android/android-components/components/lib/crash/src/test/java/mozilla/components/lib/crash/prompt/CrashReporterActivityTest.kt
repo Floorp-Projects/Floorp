@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.prompt
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
@@ -146,6 +147,54 @@ class CrashReporterActivityTest {
             assertTrue(activity.isSendReportPreferenceEnabled)
         }
     }
+
+    @Test
+    fun `Restart button visible for main process crash`() = runBlockingTest {
+        CrashReporter(
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            services = listOf(service),
+            scope = scope
+        ).install(testContext)
+
+        val crash = Crash.NativeCodeCrash(
+            0,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+            arrayListOf()
+        )
+        val scenario = launchActivityWith(crash)
+
+        scenario.onActivity { activity ->
+            assertEquals(activity.restartButton.visibility, View.VISIBLE)
+        }
+    }
+
+    @Test
+    fun `Restart button hidden for background child process crash`() = runBlockingTest {
+        CrashReporter(
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            services = listOf(service),
+            scope = scope
+        ).install(testContext)
+
+        val crash = Crash.NativeCodeCrash(
+            0,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+            arrayListOf()
+        )
+        val scenario = launchActivityWith(crash)
+
+        scenario.onActivity { activity ->
+            assertEquals(activity.restartButton.visibility, View.GONE)
+        }
+    }
 }
 
 /**
@@ -153,7 +202,7 @@ class CrashReporterActivityTest {
  */
 @ExperimentalCoroutinesApi
 private fun TestCoroutineScope.launchActivityWith(
-    crash: Crash.UncaughtExceptionCrash
+    crash: Crash
 ): ActivityScenario<CrashReporterActivity> = run {
     val intent = Intent(testContext, CrashReporterActivity::class.java)
         .also { crash.fillIn(it) }

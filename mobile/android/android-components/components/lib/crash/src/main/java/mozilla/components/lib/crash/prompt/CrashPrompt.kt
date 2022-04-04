@@ -21,8 +21,16 @@ internal class CrashPrompt(
         fun createIntent(context: Context, crash: Crash): Intent {
             val intent = Intent(context, CrashReporterActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            // For background process native crashes we want to keep the browser visible in the
+            // background behind the prompt. For other types we want to clear the existing task.
+            if (crash is Crash.NativeCodeCrash &&
+                crash.processType == Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD
+            ) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            } else {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
 
             crash.fillIn(intent)
 

@@ -11,6 +11,7 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
@@ -53,9 +54,17 @@ class CrashReporterActivity : AppCompatActivity() {
         val appName = crashReporter.promptConfiguration.appName
         val organizationName = crashReporter.promptConfiguration.organizationName
 
-        binding.titleView.text = getString(R.string.mozac_lib_crash_dialog_title, appName)
-        binding.sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)
+        val isBackgroundCrash = (crash as? Crash.NativeCodeCrash)?.processType ==
+            Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD
+        binding.titleView.text = when (isBackgroundCrash) {
+            true -> getString(
+                R.string.mozac_lib_crash_background_process_notification_title,
+                appName
+            )
+            false -> getString(R.string.mozac_lib_crash_dialog_title, appName)
+        }
 
+        binding.sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)
         binding.sendCheckbox.isChecked = sharedPreferences.getBoolean(PREFERENCE_KEY_SEND_REPORT, true)
 
         binding.restartButton.apply {
@@ -63,6 +72,19 @@ class CrashReporterActivity : AppCompatActivity() {
             setOnClickListener { restart() }
         }
         binding.closeButton.setOnClickListener { close() }
+
+        // For background crashes show just the close button. Otherwise show close and restart.
+        if (isBackgroundCrash) {
+            binding.restartButton.visibility = View.GONE
+            val closeButtonParams = binding.closeButton.layoutParams as ConstraintLayout.LayoutParams
+            closeButtonParams.startToStart = ConstraintLayout.LayoutParams.UNSET
+            closeButtonParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+        } else {
+            binding.restartButton.visibility = View.VISIBLE
+            val closeButtonParams = binding.closeButton.layoutParams as ConstraintLayout.LayoutParams
+            closeButtonParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            closeButtonParams.endToEnd = ConstraintLayout.LayoutParams.UNSET
+        }
 
         if (crashReporter.promptConfiguration.message == null) {
             binding.messageView.visibility = View.GONE
