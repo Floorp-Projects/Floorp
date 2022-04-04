@@ -21,9 +21,7 @@ add_task(async function() {
   });
 
   const [table1, table2, table3] = await waitFor(() => {
-    const res = hud.ui.outputNode.querySelectorAll(
-      ".message .new-consoletable"
-    );
+    const res = hud.ui.outputNode.querySelectorAll(".message .consoletable");
     if (res.length === 3) {
       return res;
     }
