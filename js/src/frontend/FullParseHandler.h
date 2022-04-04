@@ -384,7 +384,7 @@ class FullParseHandler {
   }
   NewTargetNodeType newNewTarget(NullaryNodeType newHolder,
                                  NullaryNodeType targetHolder,
-                                 Node newTargetName) {
+                                 NameNodeType newTargetName) {
     return new_<NewTargetNode>(newHolder, targetHolder, newTargetName);
   }
   NullaryNodeType newPosHolder(const TokenPos& pos) {

@@ -2126,7 +2126,7 @@ class OptionalPrivateMemberAccess : public PrivateMemberAccessBase {
 class NewTargetNode : public TernaryNode {
  public:
   NewTargetNode(NullaryNode* newHolder, NullaryNode* targetHolder,
-                ParseNode* newTargetName)
+                NameNode* newTargetName)
       : TernaryNode(ParseNodeKind::NewTargetExpr, newHolder, targetHolder,
                     newTargetName) {}
 
@@ -2138,7 +2138,7 @@ class NewTargetNode : public TernaryNode {
 
   auto* newHolder() const { return &kid1()->as<NullaryNode>(); }
   auto* targetHolder() const { return &kid2()->as<NullaryNode>(); }
-  auto* newTargetName() const { return kid3(); }
+  auto* newTargetName() const { return &kid3()->as<NameNode>(); }
 };
 
 /*
