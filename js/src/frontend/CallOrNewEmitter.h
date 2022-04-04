@@ -216,18 +216,11 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // |                                |
   // |                                +<------------------------------------+
   // |                                |                                     |
-  // |                                | emitSpreadArgumentsTestEnd          |
+  // |                                | wantSpreadIteration                 |
   // |                                |                                     |
   // |                                |         +-----------------+         |
   // |                                +---------| SpreadIteration |------+  |
   // |                                          +-----------------+      |  |
-  // |                                +----------------------------------+  |
-  // |                                |                                     |
-  // |                                | wantSpreadIteration                 |
-  // |                                |                                     |
-  // |                                |         +---------------------+     |
-  // |                                +---------| SpreadArgumentsTest |--+  |
-  // |                                          +---------------------+  |  |
   // | [isSpread]                                                        |  |
   // |   wantSpreadOperand +-------------------+ emitSpreadArgumentsTest |  |
   // +-------------------->| WantSpreadOperand |-------------------------+  |
@@ -270,9 +263,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
     WantSpreadOperand,
 
     // After calling emitSpreadArgumentsTest.
-    SpreadArgumentsTest,
-
-    // After calling wantSpreadIteration.
     SpreadIteration,
 
     // After calling prepareForNonSpreadArguments.
@@ -338,7 +328,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // See the usage in the comment at the top of the class.
   [[nodiscard]] bool wantSpreadOperand();
   [[nodiscard]] bool emitSpreadArgumentsTest();
-  [[nodiscard]] bool emitSpreadArgumentsTestEnd();
   [[nodiscard]] bool wantSpreadIteration();
 
   // Parameters are the offset in the source code for each character below:

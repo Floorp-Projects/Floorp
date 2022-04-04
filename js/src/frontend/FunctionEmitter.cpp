@@ -224,6 +224,17 @@ bool FunctionEmitter::emitNonHoisted(GCThingIndex index) {
 
   //                [stack]
 
+  // JSOp::LambdaArrow is always preceded by a opcode that pushes new.target.
+  // See below.
+  MOZ_ASSERT(funbox_->isArrow() == (syntaxKind_ == FunctionSyntaxKind::Arrow));
+
+  if (funbox_->isArrow()) {
+    if (!emitNewTargetForArrow()) {
+      //            [stack] NEW.TARGET/NULL
+      return false;
+    }
+  }
+
   if (syntaxKind_ == FunctionSyntaxKind::DerivedClassConstructor) {
     //              [stack] PROTO
     if (!bce_->emitGCIndexOp(JSOp::FunWithProto, index)) {
@@ -235,7 +246,9 @@ bool FunctionEmitter::emitNonHoisted(GCThingIndex index) {
 
   // This is a FunctionExpression, ArrowFunctionExpression, or class
   // constructor. Emit the single instruction (without location info).
-  if (!bce_->emitGCIndexOp(JSOp::Lambda, index)) {
+  JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOp::LambdaArrow
+                                                     : JSOp::Lambda;
+  if (!bce_->emitGCIndexOp(op, index)) {
     //              [stack] FUN
     return false;
   }
@@ -293,6 +306,24 @@ bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
   // range of indices in `BytecodeEmitter::emitDeclarationInstantiation` instead
   // of discrete indices.
   (void)index;
+
+  return true;
+}
+
+bool FunctionEmitter::emitNewTargetForArrow() {
+  //                [stack]
+
+  if (bce_->sc->allowNewTarget()) {
+    if (!bce_->emit1(JSOp::NewTarget)) {
+      //            [stack] NEW.TARGET
+      return false;
+    }
+  } else {
+    if (!bce_->emit1(JSOp::Null)) {
+      //            [stack] NULL
+      return false;
+    }
+  }
 
   return true;
 }
@@ -446,10 +477,10 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
       continue;
     }
 
-    // The '.this', '.newTarget', and '.generator' function special binding
-    // should never appear in the extra var scope. 'arguments', however, may.
+    // The '.this' and '.generator' function special
+    // bindings should never appear in the extra var
+    // scope. 'arguments', however, may.
     MOZ_ASSERT(name != TaggedParserAtomIndex::WellKnown::dotThis() &&
-               name != TaggedParserAtomIndex::WellKnown::dotNewTarget() &&
                name != TaggedParserAtomIndex::WellKnown::dotGenerator());
 
     NameOpEmitter noe(bce_, name, NameOpEmitter::Kind::Initialize);

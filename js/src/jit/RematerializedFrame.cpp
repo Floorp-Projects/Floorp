@@ -52,7 +52,7 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top,
   CopyValueToRematerializedFrame op(slots_);
   iter.readFrameArgsAndLocals(cx, op, op, &envChain_, &hasInitialEnv_,
                               &returnValue_, &argsObj_, &thisArgument_,
-                              ReadFrame_Actuals, fallback);
+                              &newTarget_, ReadFrame_Actuals, fallback);
 }
 
 /* static */
@@ -145,6 +145,7 @@ void RematerializedFrame::trace(JSTracer* trc) {
   }
   TraceRoot(trc, &returnValue_, "remat ion frame return value");
   TraceRoot(trc, &thisArgument_, "remat ion frame this");
+  TraceRoot(trc, &newTarget_, "remat ion frame newTarget");
   TraceRootRange(trc, numArgSlots() + script_->nfixed(), slots_,
                  "remat ion frame stack");
 }

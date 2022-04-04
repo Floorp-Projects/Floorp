@@ -602,11 +602,16 @@ JSScript* FunctionScope::script() const {
 }
 
 /* static */
+bool FunctionScope::isSpecialName(JSContext* cx, JSAtom* name) {
+  return name == cx->names().arguments || name == cx->names().dotThis ||
+         name == cx->names().dotGenerator;
+}
+
+/* static */
 bool FunctionScope::isSpecialName(JSContext* cx,
                                   frontend::TaggedParserAtomIndex name) {
   return name == frontend::TaggedParserAtomIndex::WellKnown::arguments() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotThis() ||
-         name == frontend::TaggedParserAtomIndex::WellKnown::dotNewTarget() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotGenerator();
 }
 
