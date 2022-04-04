@@ -42,13 +42,9 @@ using JS::Value;
 
 void InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
                                         AbstractFramePtr evalInFramePrev,
-                                        HandleValue newTargetValue,
                                         HandleObject envChain) {
   flags_ = 0;
   script_ = script;
-
-  Value* dstvp = (Value*)this - 1;
-  dstvp[0] = newTargetValue;
 
   envChain_ = envChain.get();
   prev_ = nullptr;
@@ -336,9 +332,6 @@ void InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc) {
     // Trace arguments.
     unsigned argc = std::max(numActualArgs(), numFormalArgs());
     TraceRootRange(trc, argc + isConstructing(), argv_, "fp argv");
-  } else {
-    // Trace newTarget.
-    TraceRoot(trc, ((Value*)this) - 1, "stack newTarget");
   }
 
   JSScript* script = this->script();
@@ -418,21 +411,20 @@ InterpreterFrame* InterpreterStack::pushInvokeFrame(
 }
 
 InterpreterFrame* InterpreterStack::pushExecuteFrame(
-    JSContext* cx, HandleScript script, HandleValue newTargetValue,
-    HandleObject envChain, AbstractFramePtr evalInFrame) {
+    JSContext* cx, HandleScript script, HandleObject envChain,
+    AbstractFramePtr evalInFrame) {
   LifoAlloc::Mark mark = allocator_.mark();
 
-  unsigned nvars = 1 /* newTarget */ + script->nslots();
+  unsigned nvars = script->nslots();
   uint8_t* buffer =
       allocateFrame(cx, sizeof(InterpreterFrame) + nvars * sizeof(Value));
   if (!buffer) {
     return nullptr;
   }
 
-  InterpreterFrame* fp =
-      reinterpret_cast<InterpreterFrame*>(buffer + 1 * sizeof(Value));
+  InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer);
   fp->mark_ = mark;
-  fp->initExecuteFrame(cx, script, evalInFrame, newTargetValue, envChain);
+  fp->initExecuteFrame(cx, script, evalInFrame, envChain);
   fp->initLocals();
 
   return fp;
