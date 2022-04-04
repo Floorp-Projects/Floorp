@@ -62,19 +62,20 @@
 
 "use strict";
 
-const { components, Cc, Ci, Cu } = require("chrome");
+const ChromeUtils = require("ChromeUtils");
+const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 
 loader.lazyGetter(this, "certDecoder", () => {
-  const { asn1js } = Cu.import(
+  const { asn1js } = ChromeUtils.import(
     "chrome://global/content/certviewer/asn1js_bundle.js"
   );
-  const { pkijs } = Cu.import(
+  const { pkijs } = ChromeUtils.import(
     "chrome://global/content/certviewer/pkijs_bundle.js"
   );
-  const { pvutils } = Cu.import(
+  const { pvutils } = ChromeUtils.import(
     "chrome://global/content/certviewer/pvutils_bundle.js"
   );
 
@@ -82,7 +83,7 @@ loader.lazyGetter(this, "certDecoder", () => {
   const { Certificate } = pkijs.pkijs;
   const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
 
-  const { certDecoderInitializer } = Cu.import(
+  const { certDecoderInitializer } = ChromeUtils.import(
     "chrome://global/content/certviewer/certDecoder.js"
   );
   const { parse, pemToDER } = certDecoderInitializer(

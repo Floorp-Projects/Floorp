@@ -154,7 +154,6 @@ module.exports = {
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": ["error", "everything"],
     "mozilla/var-only-at-top-level": "error",
-    "mozilla/use-chromeutils-import": ["error", { allowCu: true }],
 
     // Rules from the React plugin
     "react/display-name": "error",
