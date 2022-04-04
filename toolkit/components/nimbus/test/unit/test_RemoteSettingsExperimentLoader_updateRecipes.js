@@ -340,7 +340,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
         features: [
           {
             featureId: "testFeature",
-            value: { testInt: "xyz456", enabled: true },
+            value: { testInt: 456, enabled: true },
           },
         ],
       },
