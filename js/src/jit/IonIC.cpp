@@ -456,7 +456,7 @@ bool IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript,
 
   TryAttachIonStub<InstanceOfIRGenerator>(cx, ic, ionScript, lhs, rhs);
 
-  return HasInstance(cx, rhs, lhs, res);
+  return InstanceofOperator(cx, rhs, lhs, res);
 }
 
 /*  static */
