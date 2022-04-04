@@ -143,6 +143,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     float noise_gate_slope = 0.3f;
     size_t render_pre_window_size = 1;
     size_t render_post_window_size = 1;
+    bool model_reverb_in_nonlinear_mode = true;
   } echo_model;
 
   struct ComfortNoise {

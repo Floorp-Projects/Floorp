@@ -22,6 +22,7 @@ TEST(EchoCanceller3JsonHelpers, ToStringAndParseJson) {
   cfg.filter.refined.error_floor = 2.f;
   cfg.filter.coarse_initial.length_blocks = 3u;
   cfg.comfort_noise.noise_floor_dbfs = 100.f;
+  cfg.echo_model.model_reverb_in_nonlinear_mode = false;
   cfg.suppressor.normal_tuning.mask_hf.enr_suppress = .5f;
   cfg.suppressor.subband_nearend_detection.nearend_average_blocks = 3;
   cfg.suppressor.subband_nearend_detection.subband1 = {1, 3};
@@ -48,6 +49,8 @@ TEST(EchoCanceller3JsonHelpers, ToStringAndParseJson) {
             cfg_transformed.filter.refined.error_floor);
   EXPECT_EQ(cfg.comfort_noise.noise_floor_dbfs,
             cfg_transformed.comfort_noise.noise_floor_dbfs);
+  EXPECT_EQ(cfg.echo_model.model_reverb_in_nonlinear_mode,
+            cfg_transformed.echo_model.model_reverb_in_nonlinear_mode);
   EXPECT_EQ(cfg.suppressor.normal_tuning.mask_hf.enr_suppress,
             cfg_transformed.suppressor.normal_tuning.mask_hf.enr_suppress);
   EXPECT_EQ(cfg.suppressor.subband_nearend_detection.nearend_average_blocks,
