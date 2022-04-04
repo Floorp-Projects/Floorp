@@ -4284,17 +4284,7 @@ bool BaselineCompilerCodeGen::emit_NewTarget() {
   MOZ_ASSERT(handler.function());
   frame.syncStack(0);
 
-  if (handler.function()->isArrow()) {
-    // Arrow functions store their |new.target| value in an
-    // extended slot.
-    Register scratch = R0.scratchReg();
-    masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
-    masm.loadValue(
-        Address(scratch, FunctionExtended::offsetOfArrowNewTargetSlot()), R0);
-    frame.push(R0);
-    return true;
-  }
-
+  MOZ_ASSERT(!handler.function()->isArrow());
   emitPushNonArrowFunctionNewTarget();
   return true;
 }
@@ -4302,7 +4292,6 @@ bool BaselineCompilerCodeGen::emit_NewTarget() {
 template <>
 bool BaselineInterpreterCodeGen::emit_NewTarget() {
   Register scratch1 = R0.scratchReg();
-  Register scratch2 = R1.scratchReg();
 
   Label isFunction, done;
   masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
@@ -4316,21 +4305,19 @@ bool BaselineInterpreterCodeGen::emit_NewTarget() {
 
   masm.bind(&isFunction);
 
+#ifdef DEBUG
+  Register scratch2 = R1.scratchReg();
+
   Label notArrow;
   masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
   masm.branchFunctionKind(Assembler::NotEqual,
                           FunctionFlags::FunctionKind::Arrow, scratch1,
                           scratch2, &notArrow);
-  {
-    // Case 2: arrow function.
-    masm.pushValue(
-        Address(scratch1, FunctionExtended::offsetOfArrowNewTargetSlot()));
-    masm.jump(&done);
-  }
-
+  masm.assumeUnreachable("Unexpected arrow function");
   masm.bind(&notArrow);
+#endif
 
-  // Case 3: non-arrow function.
+  // Case 2: non-arrow function.
   emitPushNonArrowFunctionNewTarget();
 
   masm.bind(&done);
