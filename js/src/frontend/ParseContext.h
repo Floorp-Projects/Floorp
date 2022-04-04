@@ -597,8 +597,6 @@ class ParseContext : public Nestable<ParseContext> {
                            bool canSkipLazyClosedOverBindings);
   bool declareFunctionArgumentsObject(const UsedNameTracker& usedNames,
                                       bool canSkipLazyClosedOverBindings);
-  bool declareNewTarget(const UsedNameTracker& usedNames,
-                        bool canSkipLazyClosedOverBindings);
   bool declareDotGeneratorName();
   bool declareTopLevelDotGeneratorName();
 

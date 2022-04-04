@@ -809,6 +809,16 @@ inline Value& AbstractFramePtr::thisArgument() const {
   return asRematerializedFrame()->thisArgument();
 }
 
+inline Value AbstractFramePtr::newTarget() const {
+  if (isInterpreterFrame()) {
+    return asInterpreterFrame()->newTarget();
+  }
+  if (isBaselineFrame()) {
+    return asBaselineFrame()->newTarget();
+  }
+  return asRematerializedFrame()->newTarget();
+}
+
 inline bool AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const {
   if (isWasmDebugFrame()) {
     return false;

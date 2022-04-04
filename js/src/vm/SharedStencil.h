@@ -303,7 +303,6 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
   _(ImmutableFlags, needsArgsObj, NeedsArgsObj)                               \
   _(ImmutableFlags, hasMappedArgsObj, HasMappedArgsObj)                       \
   _(ImmutableFlags, isInlinableLargeFunction, IsInlinableLargeFunction)       \
-  _(ImmutableFlags, functionHasNewTargetBinding, FunctionHasNewTargetBinding) \
                                                                               \
   GeneratorKind generatorKind() const {                                       \
     return isGenerator() ? GeneratorKind::Generator                           \

@@ -210,6 +210,7 @@ class AbstractFramePtr {
   inline Value& thisArgument() const;
 
   inline bool isConstructing() const;
+  inline Value newTarget() const;
 
   inline bool debuggerNeedsCheckPrimitiveReturn() const;
 
@@ -364,7 +365,8 @@ class InterpreterFrame {
 
   /* Used for eval, module or global frames. */
   void initExecuteFrame(JSContext* cx, HandleScript script,
-                        AbstractFramePtr prev, HandleObject envChain);
+                        AbstractFramePtr prev, HandleValue newTargetValue,
+                        HandleObject envChain);
 
  public:
   /*
@@ -605,11 +607,20 @@ class InterpreterFrame {
   /*
    * New Target
    *
-   * Only non-arrow function frames have a meaningful newTarget.
+   * Only function frames have a meaningful newTarget. An eval frame in a
+   * function will have a copy of the newTarget of the enclosing function
+   * frame.
    */
   Value newTarget() const {
+    if (isEvalFrame()) {
+      return ((Value*)this)[-1];
+    }
+
     MOZ_ASSERT(isFunctionFrame());
-    MOZ_ASSERT(!callee().isArrow());
+
+    if (callee().isArrow()) {
+      return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+    }
 
     if (isConstructing()) {
       unsigned pushedArgs = std::max(numFormalArgs(), numActualArgs());
@@ -821,6 +832,7 @@ class InterpreterStack {
 
   // For execution of eval, module or global code.
   InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script,
+                                     HandleValue newTargetValue,
                                      HandleObject envChain,
                                      AbstractFramePtr evalInFrame);
 

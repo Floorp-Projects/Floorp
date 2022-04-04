@@ -521,7 +521,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   NameNodeType newInternalDotName(TaggedParserAtomIndex name);
   NameNodeType newThisName();
-  NameNodeType newNewTargetName();
   NameNodeType newDotGeneratorName();
 
   NameNodeType identifierReference(TaggedParserAtomIndex name);
@@ -767,7 +766,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::identifierReference;
   using Base::leaveInnerFunction;
   using Base::newInternalDotName;
-  using Base::newNewTargetName;
   using Base::newThisName;
   using Base::nextTokenContinuesLetDeclaration;
   using Base::noSubstitutionTaggedTemplate;
@@ -1205,7 +1203,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                     TripledotHandling tripledotHandling,
                     PossibleError* possibleError = nullptr);
 
-  bool tryNewTarget(NewTargetNodeType* newTarget);
+  bool tryNewTarget(BinaryNodeType* newTarget);
 
   BinaryNodeType importExpr(YieldHandling yieldHandling, bool allowCallSyntax);
 

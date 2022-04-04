@@ -32,6 +32,7 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
       return KnownClass::PlainObject;
 
     case MDefinition::Opcode::Lambda:
+    case MDefinition::Opcode::LambdaArrow:
     case MDefinition::Opcode::FunctionWithProto:
       return KnownClass::Function;
 
