@@ -2285,6 +2285,9 @@ bool ExpressionDecompiler::write(JSString* str) {
   if (str == cx->names().dotThis) {
     return write("this");
   }
+  if (str == cx->names().dotNewTarget) {
+    return write("new.target");
+  }
   return sprinter.putString(str);
 }
 

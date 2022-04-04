@@ -247,6 +247,11 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // Large self-hosted methods that should be inlined anyway by the JIT for
   // performance reasons can be marked with this flag.
   IsInlinableLargeFunction = 1 << 28,
+
+  // This function has an internal .newTarget binding and we need to emit
+  // JSOp::NewTarget in the prologue to initialize it. This binding may be
+  // used directly for "new.target", or indirectly (e.g. in super() calls).
+  FunctionHasNewTargetBinding = 1 << 29,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {
