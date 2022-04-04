@@ -61,7 +61,7 @@ class SitePackagesSource(enum.Enum):
     VENV = "pip"
 
     @classmethod
-    def from_environment(cls, external_python, site_name, requirements):
+    def from_environment(cls, site_name):
         source = os.environ.get("MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE", "").lower()
         if source == "system":
             source = SitePackagesSource.SYSTEM
@@ -97,9 +97,6 @@ class SitePackagesSource(enum.Enum):
                 )
             return source
 
-        if not (mach_use_system_python or moz_automation):
-            return SitePackagesSource.VENV
-
         # Only print this warning once for the Mach site, so we don't spam it every
         # time a site handle is created.
         if site_name == "mach" and mach_use_system_python:
@@ -110,14 +107,11 @@ class SitePackagesSource(enum.Enum):
                 '"MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none"'
             )
 
-        if not external_python.has_pip():
-            source = SitePackagesSource.NONE
-        elif external_python.provides_any_package(site_name, requirements):
-            source = SitePackagesSource.SYSTEM
-        else:
-            source = SitePackagesSource.NONE
-
-        return source
+        return (
+            SitePackagesSource.NONE
+            if (mach_use_system_python or moz_automation)
+            else SitePackagesSource.VENV
+        )
 
 
 class MozSiteMetadata:
@@ -326,9 +320,7 @@ class MachSiteManager:
         else:
             original_python = external_python
 
-        source = SitePackagesSource.from_environment(
-            external_python, "mach", requirements
-        )
+        source = SitePackagesSource.from_environment("mach")
         virtualenv_root = (
             _mach_virtualenv_root(get_state_dir())
             if source == SitePackagesSource.VENV
@@ -533,17 +525,13 @@ class CommandSiteManager:
             active_metadata
         ), "A Mach-managed site must be active before doing work with command sites"
 
-        external_python = ExternalPythonSite(sys.executable)
         requirements = resolve_requirements(topsrcdir, site_name)
-        source = SitePackagesSource.from_environment(
-            external_python, site_name, requirements
-        )
+        source = SitePackagesSource.from_environment(site_name)
         if source == SitePackagesSource.NONE and requirements.pypi_requirements:
             raise Exception(
-                f'The "{site_name}" site requires pip '
-                "packages, and Mach has been told to find such pip packages in "
-                "the system environment, but it can't because the system doesn't "
-                'have "pip" installed.'
+                "Mach is currently configured to run without installing any pip "
+                f'packages, but the current site ("{site_name}") has external '
+                f"dependencies."
             )
 
         mach_virtualenv_root = (
@@ -977,33 +965,6 @@ class ExternalPythonSite:
             universal_newlines=True,
         )
         return ast.literal_eval(stdlib_paths)
-
-    @functools.lru_cache(maxsize=None)
-    def has_pip(self):
-        return (
-            subprocess.run(
-                [self.python_path, "-c", "import pip"], stderr=subprocess.DEVNULL
-            ).returncode
-            == 0
-        )
-
-    def provides_any_package(self, virtualenv_name, requirements):
-        system_packages = self._resolve_installed_packages()
-        result = RequirementsValidationResult.from_packages(
-            system_packages, requirements
-        )
-        if not result.has_all_packages:
-            print(result.report())
-            raise Exception(
-                f'The Python packages associated with "{self.python_path}" aren\'t '
-                f'compatible with the "{virtualenv_name}" virtualenv'
-            )
-
-        return result.provides_any_package
-
-    @functools.lru_cache(maxsize=None)
-    def _resolve_installed_packages(self):
-        return _resolve_installed_packages(self.python_path)
 
 
 @functools.lru_cache(maxsize=None)
