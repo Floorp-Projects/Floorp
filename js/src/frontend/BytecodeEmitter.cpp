@@ -8101,6 +8101,11 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
         return false;
       }
     }
+
+    if (!cone.emitSpreadArgumentsTestEnd()) {
+      //            [stack] CALLEE THIS ARR
+      return false;
+    }
   } else {
     if (!cone.prepareForSpreadArguments()) {
       //            [stack] CALLEE THIS
@@ -8291,6 +8296,23 @@ bool BytecodeEmitter::emitCallOrNew(
   if (!emitArguments(argsList, isCall, isSpread, cone)) {
     //              [stack] CALLEE THIS ARGS...
     return false;
+  }
+
+  // Push new.target for construct calls.
+  if (IsConstructOp(op)) {
+    if (op == JSOp::SuperCall || op == JSOp::SpreadSuperCall) {
+      if (!emit1(JSOp::NewTarget)) {
+        //          [stack] CALLEE THIS ARGS.. NEW.TARGET
+        return false;
+      }
+    } else {
+      // Repush the callee as new.target
+      uint32_t effectiveArgc = isSpread ? 1 : argc;
+      if (!emitDupAt(effectiveArgc + 1)) {
+        //          [stack] CALLEE THIS ARGS.. CALLEE
+        return false;
+      }
+    }
   }
 
   ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
