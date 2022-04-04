@@ -482,7 +482,7 @@ impl FirefoxOptions {
             {
                 return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
-                    format!("Argument {arg} can't be set via capabilities"),
+                    format!("Argument {} can't be set via capabilities", arg),
                 ));
             };
         }
