@@ -193,17 +193,6 @@ class BaselineFrame {
                                         ArrayObject* dest) const;
 
  public:
-  Value newTarget() const {
-    MOZ_ASSERT(isFunctionFrame());
-    MOZ_ASSERT(!callee()->isArrow());
-    if (isConstructing()) {
-      return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
-                       BaselineFrame::Size() +
-                       offsetOfArg(std::max(numFormalArgs(), numActualArgs())));
-    }
-    return UndefinedValue();
-  }
-
   void prepareForBaselineInterpreterToJitOSR() {
     // Clearing the RUNNING_IN_INTERPRETER flag is sufficient, but we also null
     // out the interpreter fields to ensure we don't use stale values.
