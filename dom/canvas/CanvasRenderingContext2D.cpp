@@ -1401,14 +1401,12 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   IntRect persistedRect =
       canDiscardContent ? IntRect() : IntRect(0, 0, mWidth, mHeight);
 
-  if (mBufferProvider) {
+  if (mBufferProvider && !mBufferProvider->RequiresRefresh()) {
     mTarget = mBufferProvider->BorrowDrawTarget(persistedRect);
-
-    if (mTarget && !mBufferProvider->PreservesDrawingState()) {
-      RestoreClipsAndTransformToTarget();
-    }
-
     if (mTarget && mTarget->IsValid()) {
+      if (!mBufferProvider->PreservesDrawingState()) {
+        RestoreClipsAndTransformToTarget();
+      }
       return true;
     }
   }
@@ -1534,6 +1532,15 @@ static WindowRenderer* WindowRendererFromCanvasElement(
 bool CanvasRenderingContext2D::TryAcceleratedTarget(
     RefPtr<gfx::DrawTarget>& aOutDT,
     RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
+  if (mBufferProvider && mBufferProvider->IsAccelerated() &&
+      mBufferProvider->RequiresRefresh()) {
+    // If there is already a provider and we got here, then the provider needs
+    // to be refreshed and we should avoid using acceleration in the future.
+    mAllowAcceleration = false;
+  }
+  if (!mAllowAcceleration) {
+    return false;
+  }
   aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
   if (!aOutDT) {
     return false;
