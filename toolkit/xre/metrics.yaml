@@ -21,17 +21,19 @@ startup:
       - privileged_install_failed
       - installed_and_relaunched
     description: >
-      The outcome after the app detected that it was running from DMG and
-      should offer to install and relaunch itself.
+      The outcome after the app detected that it was running from DMG or an app
+      translocated location and should offer to install and relaunch itself.
     metadata: &metadata
       tags:
         - "Toolkit :: Startup and Profile System"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1755049
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745788
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328#c1
     notification_emails:
       - jwatt@jwatt.org
       - mbalfanz@mozilla.com
+      - spohl@mozilla.com
     expires: 108
