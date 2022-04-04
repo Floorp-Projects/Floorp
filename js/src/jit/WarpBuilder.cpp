@@ -2628,14 +2628,7 @@ bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
 bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
   MOZ_ASSERT(script_->isFunction());
   MOZ_ASSERT(info().hasFunMaybeLazy());
-
-  if (scriptSnapshot()->isArrowFunction()) {
-    MDefinition* callee = getCallee();
-    MArrowNewTarget* ins = MArrowNewTarget::New(alloc(), callee);
-    current->add(ins);
-    current->push(ins);
-    return true;
-  }
+  MOZ_ASSERT(!scriptSnapshot()->isArrowFunction());
 
   if (inlineCallInfo()) {
     if (inlineCallInfo()->constructing()) {

@@ -803,10 +803,6 @@ class FunctionExtended : public JSFunction {
 
   static const uint32_t NUM_EXTENDED_SLOTS = 2;
 
-  // Arrow functions store their lexical new.target in the first extended
-  // slot.
-  static const uint32_t ARROW_NEWTARGET_SLOT = 0;
-
   static const uint32_t METHOD_HOMEOBJECT_SLOT = 0;
 
   // Stores the length for bound functions, so the .length property doesn't need
@@ -830,9 +826,6 @@ class FunctionExtended : public JSFunction {
   static inline size_t offsetOfExtendedSlot(uint32_t which) {
     MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);
     return getFixedSlotOffset(FirstExtendedSlot + which);
-  }
-  static inline size_t offsetOfArrowNewTargetSlot() {
-    return offsetOfExtendedSlot(ARROW_NEWTARGET_SLOT);
   }
   static inline size_t offsetOfMethodHomeObjectSlot() {
     return offsetOfExtendedSlot(METHOD_HOMEOBJECT_SLOT);
