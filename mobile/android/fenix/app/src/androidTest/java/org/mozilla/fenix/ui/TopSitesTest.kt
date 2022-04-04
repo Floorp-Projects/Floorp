@@ -55,6 +55,7 @@ class TopSitesTest {
     }
 
     @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24462")
+    @SmokeTest
     @Test
     fun verifyAddToFirefoxHome() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

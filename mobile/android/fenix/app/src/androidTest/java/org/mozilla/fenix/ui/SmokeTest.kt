@@ -325,23 +325,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24458")
-    @Test
-    // Verifies the Add to top sites option in a tab's 3 dot menu
-    fun openMainMenuAddTopSiteTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-            expandMenu()
-        }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
-        }.goToHomescreen {
-            verifyExistingTopSitesTabs(defaultWebPage.title)
-        }
-    }
-
     @Test
     // Verifies the Add to home screen option in a tab's 3 dot menu
     fun mainMenuAddToHomeScreenTest() {
