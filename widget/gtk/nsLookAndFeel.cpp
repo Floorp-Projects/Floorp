@@ -673,10 +673,10 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
 
     case ColorID::Threedlightshadow:
     case ColorID::MozDisabledfield:
-      aColor = mIsDark ? *GenericDarkColor(aID) : NS_RGB(0xE0, 0xE0, 0xE0);
+      aColor = NS_RGB(0xE0, 0xE0, 0xE0);
       break;
     case ColorID::Threeddarkshadow:
-      aColor = mIsDark ? *GenericDarkColor(aID) : NS_RGB(0xDC, 0xDC, 0xDC);
+      aColor = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
 
     case ColorID::MozEventreerow:
