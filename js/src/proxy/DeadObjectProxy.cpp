@@ -92,12 +92,6 @@ bool DeadObjectProxy::nativeCall(JSContext* cx, IsAcceptableThis test,
   return false;
 }
 
-bool DeadObjectProxy::hasInstance(JSContext* cx, HandleObject proxy,
-                                  MutableHandleValue v, bool* bp) const {
-  ReportDead(cx);
-  return false;
-}
-
 bool DeadObjectProxy::getBuiltinClass(JSContext* cx, HandleObject proxy,
                                       ESClass* cls) const {
   ReportDead(cx);

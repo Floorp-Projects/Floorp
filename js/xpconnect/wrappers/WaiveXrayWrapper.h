@@ -39,8 +39,6 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
   virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                           JS::NativeImpl impl,
                           const JS::CallArgs& args) const override;
-  virtual bool hasInstance(JSContext* cx, JS::HandleObject wrapper,
-                           JS::MutableHandleValue v, bool* bp) const override;
 
   static const WaiveXrayWrapper singleton;
 };
