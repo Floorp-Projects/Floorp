@@ -179,8 +179,6 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
   data.osrNumStackValues =
       fp->script()->nfixed() + cx->interpreterRegs().stackDepth();
 
-  RootedValue newTarget(cx);
-
   if (fp->isFunctionFrame()) {
     data.constructing = fp->isConstructing();
     data.numActualArgs = fp->numActualArgs();
@@ -195,14 +193,7 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
     data.maxArgc = 0;
     data.maxArgv = nullptr;
     data.envChain = fp->environmentChain();
-
     data.calleeToken = CalleeToToken(fp->script());
-
-    if (fp->isEvalFrame()) {
-      newTarget = fp->newTarget();
-      data.maxArgc = 1;
-      data.maxArgv = newTarget.address();
-    }
   }
 
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
