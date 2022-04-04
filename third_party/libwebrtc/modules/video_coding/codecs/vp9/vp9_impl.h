@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "api/fec_controller_override.h"
+#include "api/transport/webrtc_key_value_config.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/include/video_frame_buffer_pool.h"
 #include "media/base/vp9_profile.h"
@@ -35,6 +36,8 @@ namespace webrtc {
 class VP9EncoderImpl : public VP9Encoder {
  public:
   explicit VP9EncoderImpl(const cricket::VideoCodec& codec);
+  VP9EncoderImpl(const cricket::VideoCodec& codec,
+                 const WebRtcKeyValueConfig& trials);
 
   ~VP9EncoderImpl() override;
 
@@ -180,7 +183,7 @@ class VP9EncoderImpl : public VP9Encoder {
     int frames_before_steady_state;
   } variable_framerate_experiment_;
   static VariableFramerateExperiment ParseVariableFramerateConfig(
-      std::string group_name);
+      const WebRtcKeyValueConfig& trials);
   FramerateController variable_framerate_controller_;
 
   const struct QualityScalerExperiment {
@@ -189,7 +192,14 @@ class VP9EncoderImpl : public VP9Encoder {
     bool enabled;
   } quality_scaler_experiment_;
   static QualityScalerExperiment ParseQualityScalerConfig(
-      std::string group_name);
+      const WebRtcKeyValueConfig& trials);
+  const bool external_ref_ctrl_;
+
+  const struct SpeedSettings {
+    bool enabled;
+    int layers[kMaxSpatialLayers];
+  } per_layer_speed_;
+  static SpeedSettings ParsePerLayerSpeed(const WebRtcKeyValueConfig& trials);
 
   int num_steady_state_frames_;
   // Only set config when this flag is set.
@@ -199,6 +209,7 @@ class VP9EncoderImpl : public VP9Encoder {
 class VP9DecoderImpl : public VP9Decoder {
  public:
   VP9DecoderImpl();
+  explicit VP9DecoderImpl(const WebRtcKeyValueConfig& trials);
 
   virtual ~VP9DecoderImpl();
 

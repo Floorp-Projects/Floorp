@@ -566,6 +566,8 @@ rtc_library("webrtc_vp9") {
     ":webrtc_vp9_helpers",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
+    "../../api/transport:field_trial_based_config",
+    "../../api/transport:webrtc_key_value_config",
     "../../api/video:video_frame",
     "../../api/video:video_frame_i010",
     "../../api/video:video_rtp_headers",
@@ -575,13 +577,17 @@ rtc_library("webrtc_vp9") {
     "../../media:rtc_vp9_profile",
     "../../rtc_base",
     "../../rtc_base:checks",
+    "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/experiments:rate_control_settings",
     "../../rtc_base/synchronization:mutex",
     "../../system_wrappers:field_trial",
     "../rtp_rtcp:rtp_rtcp_format",
     #"//third_party/libyuv",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings:strings",
+  ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
   }

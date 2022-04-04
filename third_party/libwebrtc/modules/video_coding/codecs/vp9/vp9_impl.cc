@@ -19,6 +19,8 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/match.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/video/color_space.h"
 #include "api/video/i010_buffer.h"
 #include "common_video/include/video_frame_buffer.h"
@@ -27,12 +29,12 @@
 #include "modules/video_coding/codecs/vp9/svc_rate_allocator.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/field_trial.h"
 #include "libyuv/include/libyuv/convert.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vp8dx.h"
@@ -221,6 +223,10 @@ void VP9EncoderImpl::EncoderOutputCodedPacketCallback(vpx_codec_cx_pkt* pkt,
 }
 
 VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec)
+    : VP9EncoderImpl(codec, FieldTrialBasedConfig()) {}
+
+VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec,
+                               const WebRtcKeyValueConfig& trials)
     : encoded_image_(),
       encoded_complete_callback_(nullptr),
       profile_(
@@ -239,15 +245,18 @@ VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec)
       num_spatial_layers_(0),
       num_active_spatial_layers_(0),
       first_active_layer_(0),
-      layer_deactivation_requires_key_frame_(
-          field_trial::IsEnabled("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation")),
+      layer_deactivation_requires_key_frame_(absl::StartsWith(
+          trials.Lookup("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation"),
+          "Enabled")),
       is_svc_(false),
       inter_layer_pred_(InterLayerPredMode::kOn),
       external_ref_control_(false),  // Set in InitEncode because of tests.
-      trusted_rate_controller_(RateControlSettings::ParseFromFieldTrials()
-                                   .LibvpxVp9TrustedRateController()),
+      trusted_rate_controller_(
+          RateControlSettings::ParseFromKeyValueConfig(&trials)
+              .LibvpxVp9TrustedRateController()),
       dynamic_rate_settings_(
-          RateControlSettings::ParseFromFieldTrials().Vp9DynamicRateSettings()),
+          RateControlSettings::ParseFromKeyValueConfig(&trials)
+              .Vp9DynamicRateSettings()),
       layer_buffering_(false),
       full_superframe_drop_(true),
       first_frame_in_picture_(true),
@@ -255,12 +264,14 @@ VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec)
       force_all_active_layers_(false),
       num_cores_(0),
       is_flexible_mode_(false),
-      variable_framerate_experiment_(ParseVariableFramerateConfig(
-          "WebRTC-VP9VariableFramerateScreenshare")),
+      variable_framerate_experiment_(ParseVariableFramerateConfig(trials)),
       variable_framerate_controller_(
           variable_framerate_experiment_.framerate_limit),
-      quality_scaler_experiment_(
-          ParseQualityScalerConfig("WebRTC-VP9QualityScaler")),
+      quality_scaler_experiment_(ParseQualityScalerConfig(trials)),
+      external_ref_ctrl_(
+          !absl::StartsWith(trials.Lookup("WebRTC-Vp9ExternalRefCtrl"),
+                            "Disabled")),
+      per_layer_speed_(ParsePerLayerSpeed(trials)),
       num_steady_state_frames_(0),
       config_changed_(true) {
   codec_ = {};
@@ -271,8 +282,7 @@ VP9EncoderImpl::~VP9EncoderImpl() {
   Release();
 }
 
-void VP9EncoderImpl::SetFecControllerOverride(
-    FecControllerOverride* fec_controller_override) {
+void VP9EncoderImpl::SetFecControllerOverride(FecControllerOverride*) {
   // Ignored.
 }
 
@@ -616,11 +626,10 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
 
   // External reference control is required for different frame rate on spatial
   // layers because libvpx generates rtp incompatible references in this case.
-  external_ref_control_ =
-      !field_trial::IsDisabled("WebRTC-Vp9ExternalRefCtrl") ||
-      (num_spatial_layers_ > 1 &&
-       codec_.mode == VideoCodecMode::kScreensharing) ||
-      inter_layer_pred_ == InterLayerPredMode::kOn;
+  external_ref_control_ = external_ref_ctrl_ ||
+                          (num_spatial_layers_ > 1 &&
+                           codec_.mode == VideoCodecMode::kScreensharing) ||
+                          inter_layer_pred_ == InterLayerPredMode::kOn;
 
   if (num_temporal_layers_ == 1) {
     gof_.SetGofInfoVP9(kTemporalStructureMode1);
@@ -757,6 +766,22 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
     RTC_LOG(LS_ERROR) << "Init error: " << vpx_codec_err_to_string(rv);
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
+
+  if (per_layer_speed_.enabled) {
+    for (int i = 0; i < num_spatial_layers_; ++i) {
+      if (codec_.spatialLayers[i].active) {
+        continue;
+      }
+
+      if (per_layer_speed_.layers[i] != -1) {
+        svc_params_.speed_per_layer[i] = per_layer_speed_.layers[i];
+      } else {
+        svc_params_.speed_per_layer[i] = GetCpuSpeed(
+            codec_.spatialLayers[i].width, codec_.spatialLayers[i].height);
+      }
+    }
+  }
+
   vpx_codec_control(encoder_, VP8E_SET_CPUUSED, cpu_speed_);
   vpx_codec_control(encoder_, VP8E_SET_MAX_INTRA_BITRATE_PCT,
                     rc_max_intra_target_);
@@ -1705,7 +1730,8 @@ size_t VP9EncoderImpl::SteadyStateSize(int sid, int tid) {
 
 // static
 VP9EncoderImpl::VariableFramerateExperiment
-VP9EncoderImpl::ParseVariableFramerateConfig(std::string group_name) {
+VP9EncoderImpl::ParseVariableFramerateConfig(
+    const WebRtcKeyValueConfig& trials) {
   FieldTrialFlag enabled = FieldTrialFlag("Enabled");
   FieldTrialParameter<double> framerate_limit("min_fps", 5.0);
   FieldTrialParameter<int> qp("min_qp", 32);
@@ -1714,7 +1740,7 @@ VP9EncoderImpl::ParseVariableFramerateConfig(std::string group_name) {
       "frames_before_steady_state", 5);
   ParseFieldTrial({&enabled, &framerate_limit, &qp, &undershoot_percentage,
                    &frames_before_steady_state},
-                  field_trial::FindFullName(group_name));
+                  trials.Lookup("WebRTC-VP9VariableFramerateScreenshare"));
   VariableFramerateExperiment config;
   config.enabled = enabled.Get();
   config.framerate_limit = framerate_limit.Get();
@@ -1727,12 +1753,12 @@ VP9EncoderImpl::ParseVariableFramerateConfig(std::string group_name) {
 
 // static
 VP9EncoderImpl::QualityScalerExperiment
-VP9EncoderImpl::ParseQualityScalerConfig(std::string group_name) {
+VP9EncoderImpl::ParseQualityScalerConfig(const WebRtcKeyValueConfig& trials) {
   FieldTrialFlag disabled = FieldTrialFlag("Disabled");
   FieldTrialParameter<int> low_qp("low_qp", kLowVp9QpThreshold);
   FieldTrialParameter<int> high_qp("hihg_qp", kHighVp9QpThreshold);
   ParseFieldTrial({&disabled, &low_qp, &high_qp},
-                  field_trial::FindFullName(group_name));
+                  trials.Lookup("WebRTC-VP9QualityScaler"));
   QualityScalerExperiment config;
   config.enabled = !disabled.Get();
   RTC_LOG(LS_INFO) << "Webrtc quality scaler for vp9 is "
@@ -1741,6 +1767,20 @@ VP9EncoderImpl::ParseQualityScalerConfig(std::string group_name) {
   config.high_qp = high_qp.Get();
 
   return config;
+}
+
+// static
+VP9EncoderImpl::SpeedSettings VP9EncoderImpl::ParsePerLayerSpeed(
+    const WebRtcKeyValueConfig& trials) {
+  FieldTrialFlag enabled("enabled");
+  FieldTrialParameter<int> speeds[kMaxSpatialLayers]{
+      {"s0", -1}, {"s1", -1}, {"s2", -1}, {"s3", -1}, {"s4", -1}};
+  ParseFieldTrial(
+      {&enabled, &speeds[0], &speeds[1], &speeds[2], &speeds[3], &speeds[4]},
+      trials.Lookup("WebRTC-VP9-PerLayerSpeed"));
+  return SpeedSettings{enabled.Get(),
+                       {speeds[0].Get(), speeds[1].Get(), speeds[2].Get(),
+                        speeds[3].Get(), speeds[4].Get()}};
 }
 
 void VP9EncoderImpl::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
@@ -1755,14 +1795,16 @@ void VP9EncoderImpl::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
   // else no-op since the image is already in the right format.
 }
 
-VP9DecoderImpl::VP9DecoderImpl()
+VP9DecoderImpl::VP9DecoderImpl() : VP9DecoderImpl(FieldTrialBasedConfig()) {}
+VP9DecoderImpl::VP9DecoderImpl(const WebRtcKeyValueConfig& trials)
     : decode_complete_callback_(nullptr),
       inited_(false),
       decoder_(nullptr),
       key_frame_required_(true),
-      preferred_output_format_(field_trial::IsEnabled("WebRTC-NV12Decode")
-                                   ? VideoFrameBuffer::Type::kNV12
-                                   : VideoFrameBuffer::Type::kI420) {}
+      preferred_output_format_(
+          absl::StartsWith(trials.Lookup("WebRTC-NV12Decode"), "Enabled")
+              ? VideoFrameBuffer::Type::kNV12
+              : VideoFrameBuffer::Type::kI420) {}
 
 VP9DecoderImpl::~VP9DecoderImpl() {
   inited_ = true;  // in order to do the actual release
