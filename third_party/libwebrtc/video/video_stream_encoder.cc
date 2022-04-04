@@ -1311,15 +1311,9 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   last_encode_info_ms_ = clock_->TimeInMilliseconds();
 
   VideoFrame out_frame(video_frame);
-
-  const VideoFrameBuffer::Type buffer_type =
-      out_frame.video_frame_buffer()->type();
-  const bool is_buffer_type_supported =
-      buffer_type == VideoFrameBuffer::Type::kI420 ||
-      (buffer_type == VideoFrameBuffer::Type::kNative &&
-       info.supports_native_handle);
-
-  if (!is_buffer_type_supported) {
+  if (out_frame.video_frame_buffer()->type() ==
+          VideoFrameBuffer::Type::kNative &&
+      !info.supports_native_handle) {
     // This module only supports software encoding.
     rtc::scoped_refptr<I420BufferInterface> converted_buffer(
         out_frame.video_frame_buffer()->ToI420());
