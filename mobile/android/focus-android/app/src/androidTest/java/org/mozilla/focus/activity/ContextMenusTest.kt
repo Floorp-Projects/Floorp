@@ -115,6 +115,22 @@ class ContextMenusTest {
         }
     }
 
+    @SmokeTest
+    @Test
+    fun shareLinkTest() {
+        val tab1Page = getGenericTabAsset(webServer, 1)
+        val tab2Page = getGenericTabAsset(webServer, 2)
+
+        searchScreen {
+        }.loadPage(tab1Page.url) {
+            verifyPageContent("Tab 1")
+            longPressLink("Tab 2")
+            verifyLinkContextMenu(tab2Page.url)
+            clickShareLink()
+            verifyShareAppsListOpened()
+        }
+    }
+
     @Test
     fun copyImageLocationTest() {
         val imagesTestPage = getImageTestAsset(webServer)

@@ -176,6 +176,8 @@ class BrowserRobot {
 
     fun clickShareImage(): ViewInteraction = shareImage.perform(click())
 
+    fun clickShareLink(): ViewInteraction = shareLink.perform(click())
+
     fun clickCopyImageLocation(): ViewInteraction = copyImageLocation.perform(click())
 
     fun clickLinkMatchingText(expectedText: String) {
