@@ -1334,6 +1334,20 @@ this.menusInternal = class extends ExtensionAPIPersistent {
       menus,
       menusInternal: {
         create: function(createProperties) {
+          // event pages require id
+          if (!extension.persistentBackground) {
+            if (!createProperties.id) {
+              throw new ExtensionError(
+                "menus.create requires an id for non-persistent background scripts."
+              );
+            }
+            if (gMenuMap.get(extension).has(createProperties.id)) {
+              throw new ExtensionError(
+                `The menu id ${createProperties.id} already exists in menus.create.`
+              );
+            }
+          }
+
           // Note that the id is required by the schema. If the addon did not set
           // it, the implementation of menus.create in the child should
           // have added it.

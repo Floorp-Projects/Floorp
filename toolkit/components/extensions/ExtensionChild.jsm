@@ -386,7 +386,14 @@ class BrowserExtensionContent extends EventEmitter {
     this.optionalPermissions = policy.optionalPermissions;
 
     if (WebExtensionPolicy.isExtensionProcess) {
-      Object.assign(this, this.getSharedData("extendedData"));
+      // Keep in sync with serializeExtended in Extension.jsm
+      let ed = this.getSharedData("extendedData");
+      this.backgroundScripts = ed.backgroundScripts;
+      this.backgroundWorkerScript = ed.backgroundWorkerScript;
+      this.childModules = ed.childModules;
+      this.dependencies = ed.dependencies;
+      this.persistentBackground = ed.persistentBackground;
+      this.schemaURLs = ed.schemaURLs;
     }
 
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
