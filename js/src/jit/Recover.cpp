@@ -1712,10 +1712,9 @@ RLambdaArrow::RLambdaArrow(CompactBufferReader& reader) {}
 
 bool RLambdaArrow::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject scopeChain(cx, &iter.read().toObject());
-  RootedValue newTarget(cx, iter.read());
   RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
 
-  JSObject* resultObject = js::LambdaArrow(cx, fun, scopeChain, newTarget);
+  JSObject* resultObject = js::LambdaArrow(cx, fun, scopeChain);
   if (!resultObject) {
     return false;
   }

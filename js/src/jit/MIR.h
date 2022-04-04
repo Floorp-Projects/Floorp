@@ -6186,20 +6186,19 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   bool canRecoverOnBailout() const override { return true; }
 };
 
-class MLambdaArrow
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
-  MLambdaArrow(MDefinition* envChain, MDefinition* newTarget, MConstant* cst)
-      : MTernaryInstruction(classOpcode, envChain, newTarget, cst) {
+class MLambdaArrow : public MBinaryInstruction,
+                     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
+  MLambdaArrow(MDefinition* envChain, MConstant* cst)
+      : MBinaryInstruction(classOpcode, envChain, cst) {
     setResultType(MIRType::Object);
   }
 
  public:
   INSTRUCTION_HEADER(LambdaArrow)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
+  NAMED_OPERANDS((0, environmentChain))
 
-  MConstant* functionOperand() const { return getOperand(2)->toConstant(); }
+  MConstant* functionOperand() const { return getOperand(1)->toConstant(); }
   JSFunction* templateFunction() const {
     return &functionOperand()->toObject().as<JSFunction>();
   }

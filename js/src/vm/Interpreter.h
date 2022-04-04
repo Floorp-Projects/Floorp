@@ -508,8 +508,7 @@ bool GetProperty(JSContext* cx, HandleValue value, HandlePropertyName name,
 
 JSObject* Lambda(JSContext* cx, HandleFunction fun, HandleObject parent);
 
-JSObject* LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent,
-                      HandleValue newTargetv);
+JSObject* LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent);
 
 bool SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
                       HandleValue value, bool strict);
