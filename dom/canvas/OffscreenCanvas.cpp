@@ -48,7 +48,6 @@ OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
                                  layers::TextureType aTextureType,
                                  OffscreenCanvasDisplayHelper* aDisplay)
     : DOMEventTargetHelper(aGlobal),
-      mAttrDirty(false),
       mNeutered(false),
       mIsWriteOnly(false),
       mWidth(aWidth),

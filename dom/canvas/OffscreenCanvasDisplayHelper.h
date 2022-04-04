@@ -28,6 +28,7 @@ struct OffscreenCanvasDisplayData final {
   bool mIsOpaque = true;
   bool mIsAlphaPremult = true;
   mozilla::gl::OriginPos mOriginPos = gl::OriginPos::TopLeft;
+  mozilla::layers::CompositableHandle mHandle;
 };
 
 class OffscreenCanvasDisplayHelper final {
@@ -40,6 +41,8 @@ class OffscreenCanvasDisplayHelper final {
   CanvasContextType GetContextType() const;
 
   RefPtr<layers::ImageContainer> GetImageContainer() const;
+
+  layers::CompositableHandle GetCompositableHandle() const;
 
   void UpdateContext(CanvasContextType aType, const Maybe<int32_t>& aChildId);
 
