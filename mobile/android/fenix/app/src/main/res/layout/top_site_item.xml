@@ -8,7 +8,6 @@
     android:id="@+id/top_site_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/top_sites_item_margin_top"
     android:layout_marginBottom="@dimen/top_sites_item_margin_bottom"
     android:orientation="vertical">
 

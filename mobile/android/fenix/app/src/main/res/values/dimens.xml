@@ -169,7 +169,6 @@
     <dimen name="account_settings_device_name_min_height">48dp</dimen>
 
     <!-- Top sites  -->
-    <dimen name="top_sites_item_margin_top">8dp</dimen>
     <dimen name="top_sites_item_margin_bottom">12dp</dimen>
     <dimen name="top_sites_text_margin_top">6dp</dimen>
     <dimen name="top_sites_favicon_size">36dp</dimen>
