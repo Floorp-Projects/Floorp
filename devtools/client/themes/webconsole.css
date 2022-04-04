@@ -276,10 +276,6 @@
   margin: var(--console-output-vertical-padding) 0;
 }
 
-.message-body-wrapper .table-widget-body {
-  overflow: visible;
-}
-
 .message-body-wrapper .elements-label {
   color: var(--location-color);
   margin: calc(var(--console-output-vertical-padding) * 2) 0;
@@ -288,6 +284,7 @@
 /* The bubble that shows the number of times a message is repeated */
 .message-repeats,
 .warning-group-badge {
+  display: inline-block;
   flex-shrink: 0;
   margin: 2px 5px 0 5px;
   padding: 0 6px;
@@ -299,17 +296,11 @@
 }
 
 .message-repeats {
-  display: inline-block;
   color: white;
   background-color: var(--console-repeat-bubble-background);
 }
 
-.message-repeats[value="1"] {
-  display: none;
-}
-
 .warning-group-badge {
-  display: inline-block;
   color: var(--console-warning-background);
   background-color: var(--console-warning-color);
 }
@@ -357,25 +348,84 @@
 }
 
 /* Network styles */
-
-.console-string {
-  color: var(--theme-highlight-lightorange);
+.webconsole-app .message.network.network-message-blocked .method,
+.webconsole-app .message.network.network-message-blocked .message-flex-body .message-body .url,
+.webconsole-app .message.network.network-message-blocked .status {
+  color: var(--timing-blocked-color);
 }
 
-.theme-selected .console-string,
-.theme-selected .cm-number,
-.theme-selected .cm-variable,
-.theme-selected .kind-ArrayLike {
-  color: #f5f7fa !important; /* Selection Text Color */
+.webconsole-app .message.network .method {
+  flex: none;
+  margin-inline-end: 1ch;
+}
+
+.webconsole-app .message.network .xhr {
+  background-color: var(--theme-comment);
+  color: white;
+  border-radius: 2px;
+  font-size: 10px;
+  padding: 1px 2px;
+  margin-inline-start: 0;
+  margin-inline-end: 1ex;
+}
+
+.webconsole-app .message.network .message-flex-body .message-body .url {
+  color: var(--theme-comment);
+  font-style: inherit;
+}
+
+.webconsole-app .message.network .status {
+  color: var(--theme-highlight-blue);
+  font-style: inherit;
+}
+
+.webconsole-app .message.network .network-monitor .empty-notice {
+  font-size: 16px;
+}
+
+/* For 4XX and 5XX requests, display the text in the "error" color */
+.webconsole-app .message.network.error .message-flex-body .message-body .url,
+.webconsole-app .message.network.error .message-flex-body .message-body .status {
+  color: currentColor;
+}
+
+.network.message .network-info {
+  display: none;
+  margin-block: 6px 2px;
+  border: solid 1px var(--theme-splitter-color);
+}
+
+.network.message.open .network-info {
+  display: block;
+}
+
+:root:dir(rtl) .network.message.open .network-info {
+  direction: rtl;
+}
+
+.network.message .network-info .panels {
+  min-height: 250px;
+}
+/* Response panel needs an absolute height size as the
+ * sizing of its content depends on it, it also needs override
+ * the inline height set on the panels */
+.network.message .network-info #response-panel {
+  height: 250px !important;
+}
+
+.network.message .network-info .accordion-item:last-child .accordion-content {
+  position: static;
+}
+
+.network .message-flex-body > .message-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
 }
 
 .message.network > .message-body {
   display: flex;
   flex-wrap: wrap;
-}
-
-.message.network .method {
-  flex: none;
 }
 
 .message.network .url {
@@ -407,22 +457,8 @@
   margin: 0 1ch;
 }
 
-.message.network .xhr {
-  background-color: var(--theme-text-color-alt);
-  color: var(--theme-body-background);
-  border-radius: 3px;
-  font-weight: bold;
-  font-size: 10px;
-  padding: 1px 2px;
-  line-height: 10px;
-  margin-inline-start: 0;
-  margin-inline-end: 1ex;
-}
-
 /* Hide the headers panel toolbar buttons in the console */
-.message.network .headers-panel-container #block-button,
-.message.network .headers-panel-container #edit-resend-button,
-.message.network .headers-panel-container .devtools-separator {
+.message.network .headers-panel-container :is(#block-button, #edit-resend-button, .devtools-separator) {
   display: none;
 }
 
@@ -493,8 +529,6 @@ html #webconsole-notificationbox {
   display: none !important;
 }
 
-/* Security styles */
-
 .stacktrace {
   display: none;
   overflow-y: auto;
@@ -509,20 +543,6 @@ html #webconsole-notificationbox {
 
 .objectBox-stackTrace .frames {
   padding-inline-start: 16px;
-}
-
-.consoletable {
-  margin: 5px 0 0 0;
-}
-
-/* Force cells to only show one row of contents.  Getting normal ellipses
-   behavior has proven impossible so far, so this is better than letting
-   rows get out of vertical alignment when one cell has a lot of content. */
-.consoletable .table-widget-cell > span {
-  overflow: hidden;
-  display: flex;
-  height: 1.25em;
-  line-height: 1.25em;
 }
 
 .cm-s-mozilla a[class] {
@@ -721,94 +741,6 @@ a.learn-more-link.webconsole-learn-more-link {
 /* Prefix text that can be set by ConsoleAPI option */
 .webconsole-app .console-message-prefix {
   color: var(--theme-comment);
-}
-
-/* Network Messages */
-
-.webconsole-app .message.network.network-message-blocked .method,
-.webconsole-app .message.network.network-message-blocked .message-flex-body .message-body .url,
-.webconsole-app .message.network.network-message-blocked .status {
-  color: var(--timing-blocked-color);
-}
-
-.webconsole-app .message.network .method {
-  margin-inline-end: 1ch;
-}
-
-.webconsole-app .message.network .xhr {
-  background-color: var(--theme-comment);
-  color: white;
-  border-radius: 2px;
-  font-weight: normal;
-  line-height: inherit;
-}
-
-.webconsole-app .message.network .message-flex-body .message-body .url {
-  color: var(--theme-comment);
-  font-style: inherit;
-}
-
-.webconsole-app .message.network .status {
-  color: var(--theme-highlight-blue);
-  font-style: inherit;
-}
-
-.webconsole-app .message.network .network-monitor .empty-notice {
-  font-size: 16px;
-}
-
-/* For 4XX and 5XX requests, display the text in the "error" color */
-.webconsole-app .message.network.error .message-flex-body .message-body .url,
-.webconsole-app .message.network.error .message-flex-body .message-body .status {
-  color: currentColor;
-}
-
-.network.message .network-info {
-  display: none;
-  margin-block: 6px 2px;
-  border: solid 1px var(--theme-splitter-color);
-}
-
-.network.message.open .network-info {
-  display: block;
-}
-
-:root:dir(rtl) .network.message.open .network-info {
-  direction: rtl;
-}
-
-.network.message .network-info .panels {
-  min-height: 250px;
-}
-/* Response panel needs an absolute height size as the
- * sizing of its content depends on it, it also needs override
- * the inline height set on the panels */
-.network.message .network-info #response-panel {
-  height: 250px !important;
-}
-
-.network.message .network-info .accordion-item:last-child .accordion-content {
-  position: static;
-}
-
-/* Hide 'Edit And Resend' button since the feature isn't
-   supported in the Console panel. */
-.network.message #headers-panel .edit-and-resend-button {
-  display: none;
-}
-
-.network .message-flex-body > .message-body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-}
-
-/*
- * Open DOMNode in inspector button. Style need to be reset in the new
- * console since its style is already defined in reps.css .
- */
-.webconsole-app .open-inspector {
-  background-image: unset;
 }
 
 /* console.table() */
