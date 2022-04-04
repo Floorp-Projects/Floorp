@@ -122,7 +122,7 @@ body[lwt-newtab-brighttext] {
 }
 .icon.icon-modal-delete {
   flex-shrink: 0;
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-modal-delete-32.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-modal-delete-20.svg");
   background-size: 32px;
   height: 32px;
   width: 32px;
