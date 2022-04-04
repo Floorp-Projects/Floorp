@@ -4099,8 +4099,6 @@ bitflags! {
         /// the cluster is visible or not. It's read during the second pass when primitives
         /// consult their owning clusters to see if the primitive itself is visible.
         const IS_VISIBLE = 2;
-        /// Is a backdrop-filter cluster that requires special handling during post_update.
-        const IS_BACKDROP_FILTER = 4;
     }
 }
 
@@ -4212,9 +4210,6 @@ impl PrimitiveList {
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
                 self.child_pictures.push(pic_index);
-            }
-            PrimitiveInstanceKind::Backdrop { .. } => {
-                flags.insert(ClusterFlags::IS_BACKDROP_FILTER);
             }
             _ => {}
         }
@@ -5807,8 +5802,6 @@ impl PicturePrimitive {
         parent_surface_index: Option<SurfaceIndex>,
         surfaces: &mut [SurfaceInfo],
         frame_context: &FrameBuildingContext,
-        data_stores: &mut DataStores,
-        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         let surface = &mut surfaces[surface_index.0];
 
@@ -5838,62 +5831,6 @@ impl PicturePrimitive {
                 .get_spatial_node(cluster.spatial_node_index);
             if !spatial_node.invertible {
                 continue;
-            }
-
-            // Update any primitives/cluster bounding rects that can only be done
-            // with information available during frame building.
-            if cluster.flags.contains(ClusterFlags::IS_BACKDROP_FILTER) {
-                let backdrop_to_world_mapper = SpaceMapper::new_with_target(
-                    frame_context.root_spatial_node_index,
-                    cluster.spatial_node_index,
-                    LayoutRect::max_rect(),
-                    frame_context.spatial_tree,
-                );
-
-                for prim_instance in &mut prim_instances[cluster.prim_range()] {
-                    match prim_instance.kind {
-                        PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
-                            // The actual size and clip rect of this primitive are determined by computing the bounding
-                            // box of the projected rect of the backdrop-filter element onto the backdrop.
-                            let prim_data = &mut data_stores.backdrop[data_handle];
-                            let spatial_node_index = prim_data.kind.spatial_node_index;
-
-                            // We cannot use the relative transform between the backdrop and the element because
-                            // that doesn't take into account any projection transforms that both spatial nodes are children of.
-                            // Instead, we first project from the element to the world space and get a flattened 2D bounding rect
-                            // in the screen space, we then map this rect from the world space to the backdrop space to get the
-                            // proper bounding box where the backdrop-filter needs to be processed.
-
-                            let prim_to_world_mapper = SpaceMapper::new_with_target(
-                                frame_context.root_spatial_node_index,
-                                spatial_node_index,
-                                LayoutRect::max_rect(),
-                                frame_context.spatial_tree,
-                            );
-
-                            // First map to the screen and get a flattened rect
-                            let prim_rect = prim_to_world_mapper
-                                .map(&prim_data.kind.border_rect)
-                                .unwrap_or_else(LayoutRect::zero);
-                            // Backwards project the flattened rect onto the backdrop
-                            let prim_rect = backdrop_to_world_mapper
-                                .unmap(&prim_rect)
-                                .unwrap_or_else(LayoutRect::zero);
-
-                            // TODO(aosmond): Is this safe? Updating the primitive size during
-                            // frame building is usually problematic since scene building will cache
-                            // the primitive information in the GPU already.
-                            prim_data.common.prim_rect = prim_rect;
-                            prim_instance.clip_set.local_clip_rect = prim_rect;
-
-                            // Update the cluster bounding rect now that we have the backdrop rect.
-                            cluster.bounding_rect = cluster.bounding_rect.union(&prim_rect);
-                        }
-                        _ => {
-                            panic!("BUG: unexpected deferred primitive kind for cluster updates");
-                        }
-                    }
-                }
             }
 
             // Map the cluster bounding rect into the space of the surface, and

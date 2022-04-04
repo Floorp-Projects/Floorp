@@ -419,7 +419,6 @@ devtools.jar:
     content/webconsole/components/App.css (webconsole/components/App.css)
 
     # Netmonitor
-    content/netmonitor/src/assets/styles/httpi.css (netmonitor/src/assets/styles/httpi.css)
     content/netmonitor/src/assets/styles/netmonitor.css (netmonitor/src/assets/styles/netmonitor.css)
     content/netmonitor/src/assets/styles/NetworkActionBar.css (netmonitor/src/assets/styles/NetworkActionBar.css)
     content/netmonitor/src/assets/styles/RequestBlockingPanel.css (netmonitor/src/assets/styles/RequestBlockingPanel.css)

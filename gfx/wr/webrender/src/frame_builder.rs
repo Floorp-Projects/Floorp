@@ -400,8 +400,6 @@ impl FrameBuilder {
             &mut scene.prim_store.pictures,
             &mut scene.surfaces,
             &frame_context,
-            data_stores,
-            &mut scene.prim_instances,
         );
 
         {
