@@ -204,11 +204,6 @@
   color: var(--theme-icon-dimmed-color);
 }
 
-.theme-dark .network-monitor .edit-and-resend-button {
-  background-color: var(--toolbarbutton-background);
-  color: var(--theme-selection-color);
-}
-
 .network-monitor .headers-summary-label,
 .network-monitor .tree-container .objectBox {
   white-space: nowrap;
