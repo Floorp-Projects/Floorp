@@ -2816,12 +2816,11 @@ bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
   MDefinition* env = current->environmentChain();
-  MDefinition* newTarget = current->pop();
 
   JSFunction* fun = loc.getFunction(script_);
   MConstant* funConst = constant(ObjectValue(*fun));
 
-  auto* ins = MLambdaArrow::New(alloc(), env, newTarget, funConst);
+  auto* ins = MLambdaArrow::New(alloc(), env, funConst);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);

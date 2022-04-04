@@ -224,17 +224,6 @@ bool FunctionEmitter::emitNonHoisted(GCThingIndex index) {
 
   //                [stack]
 
-  // JSOp::LambdaArrow is always preceded by a opcode that pushes new.target.
-  // See below.
-  MOZ_ASSERT(funbox_->isArrow() == (syntaxKind_ == FunctionSyntaxKind::Arrow));
-
-  if (funbox_->isArrow()) {
-    if (!emitNewTargetForArrow()) {
-      //            [stack] NEW.TARGET/NULL
-      return false;
-    }
-  }
-
   if (syntaxKind_ == FunctionSyntaxKind::DerivedClassConstructor) {
     //              [stack] PROTO
     if (!bce_->emitGCIndexOp(JSOp::FunWithProto, index)) {
@@ -306,24 +295,6 @@ bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
   // range of indices in `BytecodeEmitter::emitDeclarationInstantiation` instead
   // of discrete indices.
   (void)index;
-
-  return true;
-}
-
-bool FunctionEmitter::emitNewTargetForArrow() {
-  //                [stack]
-
-  if (bce_->sc->allowNewTarget()) {
-    if (!bce_->emit1(JSOp::NewTarget)) {
-      //            [stack] NEW.TARGET
-      return false;
-    }
-  } else {
-    if (!bce_->emit1(JSOp::Null)) {
-      //            [stack] NULL
-      return false;
-    }
-  }
 
   return true;
 }
