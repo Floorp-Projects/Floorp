@@ -357,14 +357,8 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
     displayISize += maxOptionSize;
   }
 
-  // Add room for the dropmarker button (if there is one) and scrollbar on the
-  // popup.
+  // Add room for the dropmarker button (if there is one).
   displayISize += DropDownButtonISize();
-  nsPresContext* pc = PresContext();
-  if (!pc->UseOverlayScrollbars()) {
-    displayISize += nsIScrollableFrame::GetNondisappearingScrollbarWidth(
-        pc, GetWritingMode());
-  }
 
   return displayISize;
 }

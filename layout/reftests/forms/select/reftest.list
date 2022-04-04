@@ -20,3 +20,4 @@ skip-if(Android) == select-option-display-none-inline-size.html select-option-di
 skip-if(Android||winWidget) == themed-select-padding-no-clip.html themed-select-padding-no-clip-ref.html
 
 == select-scrollbar-width.html select-scrollbar-width-ref.html
+test-pref(ui.useOverlayScrollbars,0) ref-pref(ui.useOverlayScrollbars,1) == intrinsic-size-scrollbar.html intrinsic-size-scrollbar.html
