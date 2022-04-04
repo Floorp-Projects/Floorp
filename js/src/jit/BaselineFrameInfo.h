@@ -72,11 +72,9 @@ class StackValue {
     LocalSlot,
     ArgSlot,
     ThisSlot,
-    EvalNewTargetSlot
 #ifdef DEBUG
     // In debug builds, assert Kind is initialized.
-    ,
-    Uninitialized
+    Uninitialized,
 #endif
   };
 
@@ -159,10 +157,6 @@ class StackValue {
     kind_ = ThisSlot;
     knownType_ = JSVAL_TYPE_UNKNOWN;
   }
-  void setEvalNewTarget() {
-    kind_ = EvalNewTargetSlot;
-    knownType_ = JSVAL_TYPE_UNKNOWN;
-  }
   void setStack() {
     kind_ = Stack;
     knownType_ = JSVAL_TYPE_UNKNOWN;
@@ -187,9 +181,6 @@ class FrameInfo {
   }
   Address addressOfThis() const {
     return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
-  }
-  Address addressOfEvalNewTarget() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfEvalNewTarget());
   }
   Address addressOfCalleeToken() const {
     return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
@@ -299,11 +290,6 @@ class CompilerFrameInfo : public FrameInfo {
   inline void pushThis() {
     StackValue* sv = rawPush();
     sv->setThis();
-  }
-  inline void pushEvalNewTarget() {
-    MOZ_ASSERT(script->isForEval());
-    StackValue* sv = rawPush();
-    sv->setEvalNewTarget();
   }
 
   inline void pushScratchValue() {
@@ -422,7 +408,6 @@ class InterpreterFrameInfo : public FrameInfo {
   void push(const Value& val) { masm.pushValue(val); }
 
   void pushThis() { masm.pushValue(addressOfThis()); }
-  void pushEvalNewTarget() { masm.pushValue(addressOfEvalNewTarget()); }
   void pushScratchValue() { masm.pushValue(addressOfScratchValue()); }
 
   void storeStackValue(int32_t depth, const Address& dest,
