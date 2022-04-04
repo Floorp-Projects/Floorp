@@ -483,15 +483,6 @@ void LIRGenerator::visitImplicitThis(MImplicitThis* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitArrowNewTarget(MArrowNewTarget* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Value);
-  MOZ_ASSERT(ins->callee()->type() == MIRType::Object);
-
-  LArrowNewTarget* lir =
-      new (alloc()) LArrowNewTarget(useRegister(ins->callee()));
-  defineBox(lir, ins);
-}
-
 bool LIRGenerator::lowerCallArguments(MCall* call) {
   uint32_t argc = call->numStackArgs();
 
