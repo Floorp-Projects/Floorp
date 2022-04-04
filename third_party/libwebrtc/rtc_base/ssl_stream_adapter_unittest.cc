@@ -26,8 +26,6 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/stream.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/field_trial.h"
 
 using ::testing::Combine;
@@ -216,15 +214,7 @@ class SSLDummyStreamBase : public rtc::StreamInterface,
     out_->Close();
   }
 
- private:
-  void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
-      SignalEvent(this, events, err);
-    }));
-  }
-
-  webrtc::ScopedTaskSafety task_safety_;
-  rtc::Thread* const thread_ = rtc::Thread::Current();
+ protected:
   SSLStreamAdapterTestBase* test_base_;
   const std::string side_;
   rtc::StreamInterface* in_;
@@ -286,17 +276,10 @@ class BufferQueueStream : public rtc::StreamInterface {
 
  protected:
   void NotifyReadableForTest() { PostEvent(rtc::SE_READ, 0); }
+
   void NotifyWritableForTest() { PostEvent(rtc::SE_WRITE, 0); }
 
  private:
-  void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
-      SignalEvent(this, events, err);
-    }));
-  }
-
-  rtc::Thread* const thread_ = rtc::Thread::Current();
-  webrtc::ScopedTaskSafety task_safety_;
   rtc::BufferQueue buffer_;
 };
 
