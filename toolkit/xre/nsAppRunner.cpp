@@ -5615,9 +5615,9 @@ nsresult XREMain::XRE_mainRun() {
       NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
 #  ifdef MOZILLA_OFFICIAL
-      // Check if we're running from a DMG and allow the user to install to the
-      // Applications directory.
-      if (MacRunFromDmgUtils::MaybeInstallFromDmgAndRelaunch()) {
+      // Check if we're running from a DMG or an app translocated location and
+      // allow the user to install to the Applications directory.
+      if (MacRunFromDmgUtils::MaybeInstallAndRelaunch()) {
         bool userAllowedQuit = true;
         appStartup->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
       }
