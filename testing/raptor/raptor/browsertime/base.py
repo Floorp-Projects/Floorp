@@ -159,6 +159,12 @@ class Browsertime(Perftest):
                 ["--chrome.chromedriverPath", self.browsertime_chromedriver]
             )
 
+        # YTP tests fail in mozilla-release due to the `MOZ_DISABLE_NONLOCAL_CONNECTIONS`
+        # environment variable. This logic changes this variable for the browsertime test
+        # subprocess call in `run_test`
+        if "youtube-playback" in test["name"] and self.config["is_release_build"]:
+            os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "0"
+
         LOG.info("test: {}".format(test))
 
     def run_test_teardown(self, test):
