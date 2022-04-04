@@ -7,13 +7,13 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -29,7 +29,11 @@ class SettingsHomepageTest {
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule(skipOnboarding = true)
+
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -48,7 +52,6 @@ class SettingsHomepageTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24375")
     @SmokeTest
     @Test
     fun jumpBackInOptionTest() {
@@ -66,7 +69,6 @@ class SettingsHomepageTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24384")
     @SmokeTest
     @Test
     fun recentBookmarksOptionTest() {

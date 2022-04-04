@@ -12,14 +12,12 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
@@ -674,15 +672,15 @@ private fun assertTopSiteContextMenuItems() {
     )
 }
 
-private fun assertJumpBackInSectionIsDisplayed() = jumpBackInSection().check(matches(isDisplayed()))
+private fun assertJumpBackInSectionIsDisplayed() = assertTrue(jumpBackInSection().waitForExists(waitingTime))
 
-private fun assertJumpBackInSectionIsNotDisplayed() = jumpBackInSection().check(doesNotExist())
+private fun assertJumpBackInSectionIsNotDisplayed() = assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
 
 private fun assertRecentBookmarksSectionIsDisplayed() =
-    recentBookmarksSection().check(matches(isDisplayed()))
+    assertTrue(recentBookmarksSection().waitForExists(waitingTime))
 
 private fun assertRecentBookmarksSectionIsNotDisplayed() =
-    recentBookmarksSection().check(doesNotExist())
+    assertFalse(recentBookmarksSection().waitForExists(waitingTimeShort))
 
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
@@ -691,20 +689,10 @@ private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collec
 private fun tabsCounter() = onView(withId(R.id.tab_button))
 
 private fun jumpBackInSection() =
-    onView(
-        allOf(
-            withText(R.string.recent_tabs_header),
-            hasSibling(withText(R.string.recent_tabs_show_all))
-        )
-    )
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_tabs_header)))
 
 private fun recentBookmarksSection() =
-    onView(
-        allOf(
-            withText(R.string.recent_bookmarks_title),
-            hasSibling(withText(R.string.recently_saved_show_all))
-        )
-    )
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_bookmarks_title)))
 
 private fun startBrowsingButton(): UiObject {
     val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
