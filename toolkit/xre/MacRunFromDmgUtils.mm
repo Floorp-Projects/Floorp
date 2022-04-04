@@ -469,6 +469,8 @@ bool MaybeInstallAndRelaunch() {
     }
 
     Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_DMG, isFromDmg);
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_APP_TRANSLOCATED_LOCATION,
+                         isTranslocated);
 
     if (!isFromDmg && !isTranslocated) {
       if (getenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG")) {
