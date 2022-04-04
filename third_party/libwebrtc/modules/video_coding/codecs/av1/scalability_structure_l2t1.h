@@ -10,32 +10,20 @@
 #ifndef MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L2T1_H_
 #define MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L2T1_H_
 
-#include <vector>
-
 #include "api/transport/rtp/dependency_descriptor.h"
-#include "common_video/generic_frame_descriptor/generic_frame_info.h"
-#include "modules/video_coding/codecs/av1/scalable_video_controller.h"
+#include "modules/video_coding/codecs/av1/scalability_structure_full_svc.h"
 
 namespace webrtc {
 
 // S1  0--0--0-
 //     |  |  | ...
 // S0  0--0--0-
-class ScalabilityStructureL2T1 : public ScalableVideoController {
+class ScalabilityStructureL2T1 : public ScalabilityStructureFullSvc {
  public:
+  ScalabilityStructureL2T1() : ScalabilityStructureFullSvc(2, 1) {}
   ~ScalabilityStructureL2T1() override;
 
-  StreamLayersConfig StreamConfig() const override;
   FrameDependencyStructure DependencyStructure() const override;
-
-  std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
-
- private:
-  LayerFrameConfig KeyFrameConfig() const;
-
-  bool keyframe_ = true;
 };
 
 }  // namespace webrtc

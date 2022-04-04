@@ -56,6 +56,8 @@ rtc_source_set("scalability_structures") {
   sources = [
     "create_scalability_structure.cc",
     "create_scalability_structure.h",
+    "scalability_structure_full_svc.cc",
+    "scalability_structure_full_svc.h",
     "scalability_structure_l1t2.cc",
     "scalability_structure_l1t2.h",
     "scalability_structure_l1t3.cc",
