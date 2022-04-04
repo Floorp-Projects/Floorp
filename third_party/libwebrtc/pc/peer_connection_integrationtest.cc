@@ -5386,6 +5386,49 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
                           PeerConnectionInterface::kHaveRemoteOffer));
 }
 
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       H264FmtpSpsPpsIdrInKeyframeParameterUsage) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->AddVideoTrack();
+  auto munger = [](cricket::SessionDescription* desc) {
+    cricket::VideoContentDescription* video =
+        GetFirstVideoContentDescription(desc);
+    auto codecs = video->codecs();
+    for (auto&& codec : codecs) {
+      if (codec.name == "H264") {
+        std::string value;
+        // The parameter is not supposed to be present in SDP by default.
+        EXPECT_FALSE(
+            codec.GetParam(cricket::kH264FmtpSpsPpsIdrInKeyframe, &value));
+        codec.SetParam(std::string(cricket::kH264FmtpSpsPpsIdrInKeyframe),
+                       std::string(""));
+      }
+    }
+    video->set_codecs(codecs);
+  };
+  // Munge local offer for SLD.
+  caller()->SetGeneratedSdpMunger(munger);
+  // Munge remote answer for SRD.
+  caller()->SetReceivedSdpMunger(munger);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  // Observe that after munging the parameter is present in generated SDP.
+  caller()->SetGeneratedSdpMunger([](cricket::SessionDescription* desc) {
+    cricket::VideoContentDescription* video =
+        GetFirstVideoContentDescription(desc);
+    for (auto&& codec : video->codecs()) {
+      if (codec.name == "H264") {
+        std::string value;
+        EXPECT_TRUE(
+            codec.GetParam(cricket::kH264FmtpSpsPpsIdrInKeyframe, &value));
+      }
+    }
+  });
+  caller()->CreateOfferAndWait();
+}
+
 INSTANTIATE_TEST_SUITE_P(PeerConnectionIntegrationTest,
                          PeerConnectionIntegrationTest,
                          Values(SdpSemantics::kPlanB,
