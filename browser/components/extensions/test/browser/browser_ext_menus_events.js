@@ -359,6 +359,7 @@ add_task(async function test_show_hide_browserAction_v3() {
     manifest_version: 3,
     id: "browser-action@mochitest",
     menuCreateParams: {
+      id: "action_item",
       title: "Action item",
       contexts: ["action"],
     },
@@ -427,6 +428,7 @@ add_task(async function test_show_hide_browserAction_popup_v3() {
     manifest_version: 3,
     id: "browser-action-popup@mochitest",
     menuCreateParams: {
+      id: "action_popup",
       title: "Action popup - TEST_EXPECT_NO_TAB",
       contexts: ["all", "action"],
     },
