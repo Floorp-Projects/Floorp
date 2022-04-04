@@ -248,7 +248,7 @@ void VideoStreamDecoderImpl::OnDecodedFrameCallback(
   int64_t decode_stop_time_ms = rtc::TimeMillis();
 
   bookkeeping_queue_.PostTask([this, decode_stop_time_ms, decoded_image,
-                               decode_time_ms, qp]() {
+                               decode_time_ms, qp]() mutable {
     RTC_DCHECK_RUN_ON(&bookkeeping_queue_);
 
     FrameInfo* frame_info = GetFrameInfo(decoded_image.timestamp());
@@ -264,14 +264,17 @@ void VideoStreamDecoderImpl::OnDecodedFrameCallback(
     if (qp)
       callback_info.qp.emplace(*qp);
 
-    callback_info.decode_time_ms = decode_time_ms.value_or(
-        decode_stop_time_ms - frame_info->decode_start_time_ms);
+    if (!decode_time_ms) {
+      decode_time_ms = decode_stop_time_ms - frame_info->decode_start_time_ms;
+    }
+    decoded_image.set_processing_time(
+        {Timestamp::Millis(frame_info->decode_start_time_ms),
+         Timestamp::Millis(frame_info->decode_start_time_ms +
+                           *decode_time_ms)});
+    decoded_image.set_timestamp_us(frame_info->render_time_us);
+    timing_.StopDecodeTimer(*decode_time_ms, decode_stop_time_ms);
 
-    timing_.StopDecodeTimer(*callback_info.decode_time_ms, decode_stop_time_ms);
-
-    VideoFrame copy = decoded_image;
-    copy.set_timestamp_us(frame_info->render_time_us);
-    callbacks_->OnDecodedFrame(copy, callback_info);
+    callbacks_->OnDecodedFrame(decoded_image, callback_info);
   });
 }
 
