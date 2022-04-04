@@ -10,11 +10,8 @@
 #ifndef MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L2T2_H_
 #define MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L2T2_H_
 
-#include <vector>
-
 #include "api/transport/rtp/dependency_descriptor.h"
-#include "common_video/generic_frame_descriptor/generic_frame_info.h"
-#include "modules/video_coding/codecs/av1/scalable_video_controller.h"
+#include "modules/video_coding/codecs/av1/scalability_structure_full_svc.h"
 
 namespace webrtc {
 
@@ -26,42 +23,12 @@ namespace webrtc {
 //        |/  |/  |/
 // S0T0   0---0---0--
 // Time-> 0 1 2 3 4
-class ScalabilityStructureL2T2 : public ScalableVideoController {
+class ScalabilityStructureL2T2 : public ScalabilityStructureFullSvc {
  public:
+  ScalabilityStructureL2T2() : ScalabilityStructureFullSvc(2, 2) {}
   ~ScalabilityStructureL2T2() override;
 
-  StreamLayersConfig StreamConfig() const override;
   FrameDependencyStructure DependencyStructure() const override;
-
-  std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
-
-  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
-
- private:
-  enum FramePattern {
-    kKey,
-    kDeltaT1,
-    kDeltaT0,
-  };
-  static constexpr int kNumSpatialLayers = 2;
-  static constexpr int kNumTemporalLayers = 2;
-
-  // Index of the buffer to store last frame for layer (`sid`, `tid`)
-  static constexpr int BufferIndex(int sid, int tid) {
-    return tid * kNumSpatialLayers + sid;
-  }
-  bool DecodeTargetIsActive(int sid, int tid) const {
-    return active_decode_targets_[sid * kNumTemporalLayers + tid];
-  }
-  void SetDecodeTargetIsActive(int sid, int tid, bool value) {
-    active_decode_targets_.set(sid * kNumTemporalLayers + tid, value);
-  }
-
-  FramePattern next_pattern_ = kKey;
-  bool use_temporal_dependency_on_t0_[kNumSpatialLayers] = {false, false};
-  std::bitset<32> active_decode_targets_ = 0b1111;
 };
 
 }  // namespace webrtc

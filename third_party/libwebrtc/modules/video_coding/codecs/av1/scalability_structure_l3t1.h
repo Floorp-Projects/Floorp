@@ -10,12 +10,8 @@
 #ifndef MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L3T1_H_
 #define MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L3T1_H_
 
-#include <vector>
-
-#include "absl/types/optional.h"
 #include "api/transport/rtp/dependency_descriptor.h"
-#include "common_video/generic_frame_descriptor/generic_frame_info.h"
-#include "modules/video_coding/codecs/av1/scalable_video_controller.h"
+#include "modules/video_coding/codecs/av1/scalability_structure_full_svc.h"
 
 namespace webrtc {
 
@@ -25,28 +21,12 @@ namespace webrtc {
 //        | | |
 // S0     0-0-0-
 // Time-> 0 1 2
-class ScalabilityStructureL3T1 : public ScalableVideoController {
+class ScalabilityStructureL3T1 : public ScalabilityStructureFullSvc {
  public:
+  ScalabilityStructureL3T1() : ScalabilityStructureFullSvc(3, 1) {}
   ~ScalabilityStructureL3T1() override;
 
-  StreamLayersConfig StreamConfig() const override;
   FrameDependencyStructure DependencyStructure() const override;
-
-  std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
-  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
-
- private:
-  enum FramePattern {
-    kKeyFrame,
-    kDeltaFrame,
-  };
-  static constexpr int kNumSpatialLayers = 3;
-
-  FramePattern next_pattern_ = kKeyFrame;
-  bool use_temporal_dependency_[kNumSpatialLayers] = {false, false, false};
-  std::bitset<32> active_decode_targets_ = 0b111;
 };
 
 }  // namespace webrtc
