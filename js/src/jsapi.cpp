@@ -1652,7 +1652,7 @@ JS_PUBLIC_API bool JS_HasInstance(JSContext* cx, HandleObject obj,
                                   HandleValue value, bool* bp) {
   AssertHeapIsIdle();
   cx->check(obj, value);
-  return HasInstance(cx, obj, value, bp);
+  return InstanceofOperator(cx, obj, value, bp);
 }
 
 JS_PUBLIC_API JSObject* JS_GetConstructor(JSContext* cx, HandleObject proto) {

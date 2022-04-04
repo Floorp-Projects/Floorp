@@ -222,13 +222,6 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
    */
   already_AddRefed<FileList> GetFiles(nsIPrincipal& aSubjectPrincipal);
 
-  already_AddRefed<Promise> GetFilesAndDirectories(
-      nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aRv);
-
-  already_AddRefed<Promise> GetFiles(bool aRecursiveFlag,
-                                     nsIPrincipal& aSubjectPrincipal,
-                                     ErrorResult& aRv);
-
   void AddElement(Element& aElement, mozilla::ErrorResult& aRv);
 
   uint32_t MozItemCount() const;

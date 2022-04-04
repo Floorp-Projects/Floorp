@@ -473,7 +473,8 @@ ContentPrincipal::GetSiteOriginNoSuffix(nsACString& aSiteOrigin) {
     // If this is an IP address or something like "localhost", we just continue
     // with gotBaseDomain = false.
     if (rv != NS_ERROR_HOST_IS_IP_ADDRESS &&
-        rv != NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        rv != NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS &&
+        rv != NS_ERROR_INVALID_ARG) {
       return rv;
     }
   }

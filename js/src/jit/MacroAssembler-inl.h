@@ -427,11 +427,11 @@ void MacroAssembler::branchIfNotFunctionIsNonBuiltinCtor(Register fun,
   // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
   // have the SELF_HOSTED flag.
   // This is equivalent to JSFunction::isNonBuiltinConstructor.
-  constexpr int32_t mask =
-      Imm32_16Adj(FunctionFlags::BASESCRIPT | FunctionFlags::SELF_HOSTED |
-                  FunctionFlags::CONSTRUCTOR);
+  constexpr int32_t mask = FunctionFlags::BASESCRIPT |
+                           FunctionFlags::SELF_HOSTED |
+                           FunctionFlags::CONSTRUCTOR;
   constexpr int32_t expected =
-      Imm32_16Adj(FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR);
+      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
 
   load32(Address(fun, JSFunction::offsetOfFlagsAndArgCount()), scratch);
   and32(Imm32(mask), scratch);
@@ -484,6 +484,11 @@ void MacroAssembler::loadJitScript(Register script, Register dest) {
   static_assert(ScriptWarmUpData::JitScriptTag == 0,
                 "Code below depends on tag value");
   loadPtr(Address(script, JSScript::offsetOfWarmUpData()), dest);
+}
+
+void MacroAssembler::loadFunctionArgCount(Register func, Register output) {
+  load32(Address(func, JSFunction::offsetOfFlagsAndArgCount()), output);
+  rshift32(Imm32(JSFunction::ArgCountShift), output);
 }
 
 void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,

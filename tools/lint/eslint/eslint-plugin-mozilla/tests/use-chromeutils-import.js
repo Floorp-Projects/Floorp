@@ -37,10 +37,6 @@ ruleTester.run("use-chromeutils-import", rule, {
     `XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                        "resource://gre/modules/Service.jsm",
                                        undefined, preServicesLambda);`,
-    {
-      options: [{ allowCu: true }],
-      code: `Cu.import("resource://gre/modules/Service.jsm");`,
-    },
   ],
   invalid: [
     {
@@ -61,12 +57,6 @@ ruleTester.run("use-chromeutils-import", rule, {
     {
       code: `Components.utils.import("resource://gre/modules/Services.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm");`,
-      errors: callError(MESSAGE_IMPORT),
-    },
-    {
-      options: [{ allowCu: true }],
-      code: `Components.utils.import("resource://gre/modules/Services.jsm", this);`,
-      output: `ChromeUtils.import("resource://gre/modules/Services.jsm", this);`,
       errors: callError(MESSAGE_IMPORT),
     },
     {

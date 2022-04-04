@@ -337,13 +337,6 @@ bool BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
   return false;
 }
 
-bool BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy,
-                                   MutableHandleValue v, bool* bp) const {
-  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), GET);
-  cx->check(proxy, v);
-  return JS::InstanceofOperator(cx, proxy, v, bp);
-}
-
 bool BaseProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
                                        ESClass* cls) const {
   *cls = ESClass::Other;

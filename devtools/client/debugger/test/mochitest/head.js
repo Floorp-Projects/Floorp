@@ -96,3 +96,39 @@ async function runAllIntegrationTests(testFolder, env) {
     await task(testServer, testUrl, env);
   }
 }
+
+/**
+ * Install a Web Extension which will run a content script against any test page
+ * served from https://example.com
+ *
+ * This content script is meant to be debuggable when devtools.chrome.enabled is true.
+ */
+async function installAndStartContentScriptExtension() {
+  function contentScript() {
+    console.log("content script loads");
+
+    // This listener prevents the source from being garbage collected
+    // and be missing from the scripts returned by `dbg.findScripts()`
+    // in `ThreadActor._discoverSources`.
+    window.onload = () => {};
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          js: ["content_script.js"],
+          matches: ["https://example.com/*"],
+          run_at: "document_start",
+        },
+      ],
+    },
+    files: {
+      "content_script.js": contentScript,
+    },
+  });
+
+  await extension.startup();
+
+  return extension;
+}

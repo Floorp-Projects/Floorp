@@ -650,7 +650,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                   ListNode* obj,
                                                   FieldPlacement placement);
   const MemberInitializers& findMemberInitializersForCall();
-  [[nodiscard]] bool emitInitializeInstanceMembers();
+  [[nodiscard]] bool emitInitializeInstanceMembers(
+      bool isDerivedClassConstructor);
   [[nodiscard]] bool emitInitializeStaticFields(ListNode* classMembers);
 
   [[nodiscard]] bool emitPrivateMethodInitializers(ClassEmitter& ce,

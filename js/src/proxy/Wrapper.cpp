@@ -218,13 +218,6 @@ bool ForwardingProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
   return CallNativeImpl(cx, impl, args);
 }
 
-bool ForwardingProxyHandler::hasInstance(JSContext* cx, HandleObject proxy,
-                                         MutableHandleValue v, bool* bp) const {
-  assertEnteredPolicy(cx, proxy, JS::PropertyKey::Void(), GET);
-  RootedObject target(cx, proxy->as<ProxyObject>().target());
-  return HasInstance(cx, target, v, bp);
-}
-
 bool ForwardingProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
                                              ESClass* cls) const {
   RootedObject target(cx, proxy->as<ProxyObject>().target());

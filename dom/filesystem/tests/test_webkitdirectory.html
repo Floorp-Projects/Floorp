@@ -8,8 +8,6 @@
 
 <body>
 <input id="inputFileWebkitDirectory" type="file" webkitdirectory></input>
-<input id="inputFileWebkitDirectoryAndDirectory" type="file" webkitdirectory allowdirs></input>
-<input id="inputFileDirectory" type="file" allowdirs></input>
 <input id="inputFileDirectoryChange" type="file" webkitdirectory></input>
 
 <script type="application/javascript">
@@ -178,8 +176,7 @@ async function test_setup() {
   promptHandler.sendAsyncMessage("init");
   await promptHandlerReady;
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
-                                     ["dom.filesystem.pathcheck.disabled", true],
+  SpecialPowers.pushPrefEnv({"set": [["dom.filesystem.pathcheck.disabled", true],
                                      ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
 }
 
@@ -197,12 +194,8 @@ var tests = [
   test_setup,
 
   function() { populateInputFile("inputFileWebkitDirectory"); },
-  function() { populateInputFile("inputFileWebkitDirectoryAndDirectory"); },
-  function() { populateInputFile("inputFileDirectory"); },
 
   function() { test_fileList("inputFileWebkitDirectory", testDirData); },
-  function() { test_fileList("inputFileWebkitDirectoryAndDirectory", testDirData); },
-  function() { test_fileList("inputFileDirectory", null); },
 
   test_webkitdirectory_attribute,
 
