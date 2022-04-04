@@ -462,8 +462,8 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportWritableState_n);
   dtls->SignalReceivingState.connect(
       this, &JsepTransportController::OnTransportReceivingState_n);
-  dtls->SignalDtlsHandshakeError.AddReceiver(
-      [this](rtc::SSLHandshakeError error) { OnDtlsHandshakeError(error); });
+  dtls->SignalDtlsHandshakeError.connect(
+      this, &JsepTransportController::OnDtlsHandshakeError);
   dtls->ice_transport()->SignalGatheringState.connect(
       this, &JsepTransportController::OnTransportGatheringState_n);
   dtls->ice_transport()->SignalCandidateGathered.connect(
@@ -1154,8 +1154,7 @@ void JsepTransportController::OnTransportCandidateGathered_n(
   std::string transport_name = transport->transport_name();
   invoker_.AsyncInvoke<void>(
       RTC_FROM_HERE, signaling_thread_, [this, transport_name, candidate] {
-        SignalIceCandidatesGathered.Send(
-            transport_name, std::vector<cricket::Candidate>{candidate});
+        SignalIceCandidatesGathered(transport_name, {candidate});
       });
 }
 
@@ -1164,21 +1163,20 @@ void JsepTransportController::OnTransportCandidateError_n(
     const cricket::IceCandidateErrorEvent& event) {
   RTC_DCHECK(network_thread_->IsCurrent());
 
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this, event] {
-    SignalIceCandidateError.Send(event);
-  });
+  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_,
+                             [this, event] { SignalIceCandidateError(event); });
 }
 void JsepTransportController::OnTransportCandidatesRemoved_n(
     cricket::IceTransportInternal* transport,
     const cricket::Candidates& candidates) {
   invoker_.AsyncInvoke<void>(
       RTC_FROM_HERE, signaling_thread_,
-      [this, candidates] { SignalIceCandidatesRemoved.Send(candidates); });
+      [this, candidates] { SignalIceCandidatesRemoved(candidates); });
 }
 void JsepTransportController::OnTransportCandidatePairChanged_n(
     const cricket::CandidatePairChangeEvent& event) {
   invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this, event] {
-    SignalIceCandidatePairChanged.Send(event);
+    SignalIceCandidatePairChanged(event);
   });
 }
 
@@ -1319,14 +1317,14 @@ void JsepTransportController::UpdateAggregateStates_n() {
             PeerConnectionInterface::kIceConnectionCompleted) {
       // Ensure that we never skip over the "connected" state.
       invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this] {
-        SignalStandardizedIceConnectionState.Send(
+        SignalStandardizedIceConnectionState(
             PeerConnectionInterface::kIceConnectionConnected);
       });
     }
     standardized_ice_connection_state_ = new_ice_connection_state;
     invoker_.AsyncInvoke<void>(
         RTC_FROM_HERE, signaling_thread_, [this, new_ice_connection_state] {
-          SignalStandardizedIceConnectionState.Send(new_ice_connection_state);
+          SignalStandardizedIceConnectionState(new_ice_connection_state);
         });
   }
 
@@ -1380,7 +1378,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
     combined_connection_state_ = new_combined_state;
     invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_,
                                [this, new_combined_state] {
-                                 SignalConnectionState.Send(new_combined_state);
+                                 SignalConnectionState(new_combined_state);
                                });
   }
 
@@ -1394,10 +1392,10 @@ void JsepTransportController::UpdateAggregateStates_n() {
   }
   if (ice_gathering_state_ != new_gathering_state) {
     ice_gathering_state_ = new_gathering_state;
-    invoker_.AsyncInvoke<void>(
-        RTC_FROM_HERE, signaling_thread_, [this, new_gathering_state] {
-          SignalIceGatheringState.Send(new_gathering_state);
-        });
+    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_,
+                               [this, new_gathering_state] {
+                                 SignalIceGatheringState(new_gathering_state);
+                               });
   }
 }
 
@@ -1410,7 +1408,7 @@ void JsepTransportController::OnRtcpPacketReceived_n(
 
 void JsepTransportController::OnDtlsHandshakeError(
     rtc::SSLHandshakeError error) {
-  SignalDtlsHandshakeError.Send(error);
+  SignalDtlsHandshakeError(error);
 }
 
 }  // namespace webrtc

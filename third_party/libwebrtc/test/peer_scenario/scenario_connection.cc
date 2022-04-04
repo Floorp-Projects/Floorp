@@ -165,12 +165,8 @@ void ScenarioIceConnectionImpl::SetRemoteSdp(SdpType type,
                                              const std::string& remote_sdp) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   remote_description_ = webrtc::CreateSessionDescription(type, remote_sdp);
-  jsep_controller_->SignalIceCandidatesGathered.AddReceiver(
-      [this](const std::string& transport,
-             const std::vector<cricket::Candidate>& candidate) {
-        ScenarioIceConnectionImpl::OnCandidates(transport, candidate);
-      });
-
+  jsep_controller_->SignalIceCandidatesGathered.connect(
+      this, &ScenarioIceConnectionImpl::OnCandidates);
   auto res = jsep_controller_->SetRemoteDescription(
       remote_description_->GetType(), remote_description_->description());
   RTC_CHECK(res.ok()) << res.message();
