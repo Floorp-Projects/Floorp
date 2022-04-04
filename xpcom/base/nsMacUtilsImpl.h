@@ -68,9 +68,10 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 
 #if defined(MOZ_SANDBOX) || defined(__aarch64__)
   // Cache the appDir returned from GetAppPath to avoid doing I/O
-  static StaticAutoPtr<nsCString> sCachedAppPath;
+  static StaticAutoPtr<nsCString> sCachedAppPath
+      GUARDED_BY(sCachedAppPathMutex);
   // For thread safe setting/checking of sCachedAppPath
-  static StaticMutex sCachedAppPathMutex MOZ_UNANNOTATED;
+  static StaticMutex sCachedAppPathMutex;
   // Utility method to call ClearOnShutdown() on the main thread
   static nsresult ClearCachedAppPathOnShutdown();
 #endif
