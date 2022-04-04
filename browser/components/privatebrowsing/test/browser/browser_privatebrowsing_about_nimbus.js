@@ -194,7 +194,7 @@ add_task(async function test_experiment_format_urls() {
       "should format the infoLinkUrl url"
     );
     is(
-      content.document.querySelector(".promo a").getAttribute("href"),
+      content.document.querySelector(".promo button").getAttribute("href"),
       "http://bar.mozilla.com/" + locale,
       "should format the promoLinkUrl url"
     );
@@ -249,7 +249,7 @@ add_task(async function test_experiment_click_promo_telemetry() {
   Services.telemetry.clearEvents();
 
   await SpecialPowers.spawn(tab, [], () => {
-    const el = content.document.querySelector(".promo a");
+    const el = content.document.querySelector(".promo button");
     el.click();
   });
 
