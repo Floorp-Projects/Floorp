@@ -1,2 +1,2 @@
 vendored:third_party/python/glean_parser
-pypi:pytest==4.6.6
+pypi:pytest==7.0.1
