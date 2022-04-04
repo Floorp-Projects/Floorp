@@ -210,8 +210,12 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(AuthorStyleDisabledDefault, bool)                                     \
   FIELD(ServiceWorkersTestingEnabled, bool)                                   \
   FIELD(MediumOverride, nsString)                                             \
-  FIELD(PrefersColorSchemeOverride, mozilla::dom::PrefersColorSchemeOverride) \
-  FIELD(DisplayMode, mozilla::dom::DisplayMode)                               \
+  /* DevTools override for prefers-color-scheme */                            \
+  FIELD(PrefersColorSchemeOverride, dom::PrefersColorSchemeOverride)          \
+  /* prefers-color-scheme override based on the color-scheme style of our     \
+   * <browser> embedder element. */                                           \
+  FIELD(EmbedderColorScheme, dom::PrefersColorSchemeOverride)                 \
+  FIELD(DisplayMode, dom::DisplayMode)                                        \
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
   FIELD(HistoryEntryCount, uint32_t)                                          \
@@ -1017,6 +1021,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return IsTop();
   }
 
+  bool CanSet(FieldIndex<IDX_EmbedderColorScheme>,
+              dom::PrefersColorSchemeOverride, ContentParent* aSource) {
+    return CheckOnlyEmbedderCanSet(aSource);
+  }
+
   bool CanSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
               dom::PrefersColorSchemeOverride, ContentParent*) {
     return IsTop();
@@ -1024,8 +1033,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue);
 
+  void DidSet(FieldIndex<IDX_EmbedderColorScheme>,
+              dom::PrefersColorSchemeOverride aOldValue);
+
   void DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
               dom::PrefersColorSchemeOverride aOldValue);
+
+  void PresContextAffectingFieldChanged();
 
   void DidSet(FieldIndex<IDX_MediumOverride>, nsString&& aOldValue);
 

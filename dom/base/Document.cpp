@@ -17741,7 +17741,7 @@ ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
   }
 
   if (nsPresContext* pc = GetPresContext()) {
-    if (auto scheme = pc->GetOverriddenColorScheme()) {
+    if (auto scheme = pc->GetOverriddenOrEmbedderColorScheme()) {
       return *scheme;
     }
   }
