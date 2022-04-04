@@ -35,6 +35,12 @@ const MOCK_STORAGE = [
     organization: "Random Org",
     "address-level1": "First Admin Level",
     tel: "+13453453456",
+  },
+  {
+    organization: "readonly Org",
+    "address-level1": "First Admin Level",
+    tel: "+13453453456",
+    name: "John Doe",
   }
 ];
 
@@ -55,6 +61,7 @@ add_task(async function check_preview() {
   await checkFormFieldsStyle(null);
 
   for (let i = 0; i < MOCK_STORAGE.length; i++) {
+    info(`Checking organization: ${MOCK_STORAGE[i].organization} preview`);
     synthesizeKey("KEY_ArrowDown");
     await notifySelectedIndex(i);
     await checkFormFieldsStyle(MOCK_STORAGE[i]);
@@ -97,6 +104,7 @@ add_task(async function check_filled_highlight() {
         <option>Second Admin Level</option>
       </select>
     </label></p>
+    <p><label>full name: <input id="name" autocomplete="name" readonly value="UNCHANGED"></label></p>
   </form>
 
 </div>

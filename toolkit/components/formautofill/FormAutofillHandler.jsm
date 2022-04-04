@@ -356,7 +356,8 @@ class FormAutofillSection {
       // 3. value already chosen in select element
 
       let element = fieldDetail.elementWeakRef.get();
-      if (!element) {
+      // Skip the field if it is null or readonly
+      if (!element || element.readOnly) {
         continue;
       }
 
@@ -432,8 +433,8 @@ class FormAutofillSection {
         profile[fieldDetail.fieldName] ||
         "";
 
-      // Skip the field that is null
-      if (!element) {
+      // Skip the field if it is null or readonly
+      if (!element || element.readOnly) {
         continue;
       }
 
