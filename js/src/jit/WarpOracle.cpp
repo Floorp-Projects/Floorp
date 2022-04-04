@@ -413,8 +413,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::Lambda:
-      case JSOp::LambdaArrow: {
+      case JSOp::Lambda: {
         JSFunction* fun = loc.getFunction(script_);
         if (IsAsmJSModule(fun)) {
           return abort(AbortReason::Disable, "asm.js module function lambda");

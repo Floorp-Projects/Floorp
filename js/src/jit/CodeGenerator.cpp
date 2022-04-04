@@ -3478,36 +3478,12 @@ void CodeGenerator::visitLambda(LLambda* lir) {
   masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
                       ool->entry());
 
-  emitLambdaInit(output, envChain);
-
-  masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
-  Register envChain = ToRegister(lir->environmentChain());
-  Register output = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp0());
-
-  JSFunction* fun = lir->mir()->templateFunction();
-
-  using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
-  OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
-      lir, ArgList(ImmGCPtr(fun), envChain), StoreRegisterTo(output));
-
-  TemplateObject templateObject(fun);
-  masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
-                      ool->entry());
-
-  emitLambdaInit(output, envChain);
-
-  masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::emitLambdaInit(Register output, Register envChain) {
   masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
                   Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
+
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {

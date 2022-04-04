@@ -3000,17 +3000,10 @@ void LIRGenerator::visitDynamicImport(MDynamicImport* ins) {
 }
 
 void LIRGenerator::visitLambda(MLambda* ins) {
-  auto* lir =
-      new (alloc()) LLambda(useRegister(ins->environmentChain()), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitLambdaArrow(MLambdaArrow* ins) {
   MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
 
-  LLambdaArrow* lir =
-      new (alloc()) LLambdaArrow(useRegister(ins->environmentChain()), temp());
+  auto* lir =
+      new (alloc()) LLambda(useRegister(ins->environmentChain()), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

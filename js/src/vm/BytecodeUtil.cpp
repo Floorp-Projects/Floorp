@@ -2158,7 +2158,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("ITER");
 
       case JSOp::Lambda:
-      case JSOp::LambdaArrow:
         return write("FUN");
 
       case JSOp::ToAsyncIter:

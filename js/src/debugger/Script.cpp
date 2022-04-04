@@ -1531,7 +1531,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::ToAsyncIter:
     case JSOp::ToPropertyKey:
     case JSOp::Lambda:
-    case JSOp::LambdaArrow:
     case JSOp::PushLexicalEnv:
     case JSOp::PopLexicalEnv:
     case JSOp::FreshenLexicalEnv:
