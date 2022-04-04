@@ -1203,7 +1203,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                     TripledotHandling tripledotHandling,
                     PossibleError* possibleError = nullptr);
 
-  bool tryNewTarget(BinaryNodeType* newTarget);
+  bool tryNewTarget(NewTargetNodeType* newTarget);
 
   BinaryNodeType importExpr(YieldHandling yieldHandling, bool allowCallSyntax);
 
