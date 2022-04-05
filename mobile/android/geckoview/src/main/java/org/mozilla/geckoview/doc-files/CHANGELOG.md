@@ -18,8 +18,6 @@ exclude: true
 - [`WebNotification`][100.2] now implements [`Parcelable`][100.3] to support
   persisting notifications and responding to them while the browser is not
   running.
-- Removed deprecated `GeckoRuntime.EXTRA_CRASH_FATAL`
-- Removed deprecated `MediaSource.rawId`
 
 [100.1]: {{javadoc_uri}}/GeckoSession.html#isOpen()
 [100.2]: {{javadoc_uri}}/WebNotification.html
@@ -1151,4 +1149,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c9f91f7e909c6c71adca2ea333f92af6ff3af054
+[api-version]: 68503adf56bf73da9de696e2d9d725368e27008d
