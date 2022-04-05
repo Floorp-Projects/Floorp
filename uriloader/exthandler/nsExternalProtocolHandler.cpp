@@ -170,9 +170,9 @@ nsresult nsExtProtocolChannel::OpenURL() {
       mLoadInfo->RedirectChain().LastElement()->GetPrincipal(
           getter_AddRefs(redirectPrincipal));
     }
-    rv = extProtService->LoadURI(mUrl, triggeringPrincipal, redirectPrincipal,
-                                 ctx, mLoadInfo->GetLoadTriggeredFromExternal(),
-                                 mLoadInfo->GetHasValidUserGestureActivation());
+    rv =
+        extProtService->LoadURI(mUrl, triggeringPrincipal, redirectPrincipal,
+                                ctx, mLoadInfo->GetLoadTriggeredFromExternal());
 
     if (NS_SUCCEEDED(rv) && mListener) {
       mStatus = NS_ERROR_NO_CONTENT;
