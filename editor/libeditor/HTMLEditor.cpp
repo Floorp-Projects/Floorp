@@ -45,6 +45,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 
 #include "nsContentList.h"
@@ -5706,33 +5707,29 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
-    Element& aPreviousBlock, Element& aNewBlock,
-    RefPtr<Element>* aNewBRElement) {
+Result<RefPtr<HTMLBRElement>, nsresult>
+HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
+                                                       Element& aNewBlock,
+                                                       Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (NS_WARN_IF(!aNewBRElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aNewBRElement = nullptr;
-
-  RefPtr<Element> previousBlock(&aPreviousBlock);
-  RefPtr<Element> newBlock(&aNewBlock);
 
   // First, clear out aNewBlock.  Contract is that we want only the styles
   // from aPreviousBlock.
-  for (nsCOMPtr<nsIContent> child = newBlock->GetFirstChild(); child;
-       child = newBlock->GetFirstChild()) {
-    nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_FAILED(rv)) {
+  AutoTArray<OwningNonNull<nsIContent>, 32> newBlockChildren;
+  HTMLEditor::GetChildNodesOf(aNewBlock, newBlockChildren);
+  for (const OwningNonNull<nsIContent>& child : newBlockChildren) {
+    // MOZ_KNownLive(child) because of bug 1622253
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(child));
+    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return rv;
+      return Err(rv);
     }
   }
-
-  RefPtr<Element> editingHost = GetActiveEditingHost();
-  if (!editingHost) {
-    return NS_OK;
+  if (MOZ_UNLIKELY(aNewBlock.GetFirstChild())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   // XXX aNewBlock may be moved or removed.  Even in such case, we should
@@ -5741,7 +5738,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   // Look for the deepest last editable leaf node in aPreviousBlock.
   // Then, if found one is a <br> element, look for non-<br> element.
   nsIContent* deepestEditableContent = nullptr;
-  for (nsCOMPtr<nsIContent> child = previousBlock.get(); child;
+  for (nsCOMPtr<nsIContent> child = &aPreviousBlock; child;
        child = HTMLEditUtils::GetLastChild(
            *child, {WalkTreeOption::IgnoreNonEditableNode})) {
     deepestEditableContent = child;
@@ -5750,16 +5747,16 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
          deepestEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     deepestEditableContent = HTMLEditUtils::GetPreviousContent(
         *deepestEditableContent, {WalkTreeOption::IgnoreNonEditableNode},
-        editingHost);
+        &aEditingHost);
   }
   if (!deepestEditableContent) {
-    return NS_OK;
+    return RefPtr<HTMLBRElement>();
   }
 
   Element* deepestVisibleEditableElement =
       deepestEditableContent->GetAsElementOrParentElement();
   if (!deepestVisibleEditableElement) {
-    return NS_OK;
+    return RefPtr<HTMLBRElement>();
   }
 
   // Clone inline elements to keep current style in the new block.
@@ -5769,20 +5766,20 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   //     after that with transaction.
   RefPtr<Element> lastClonedElement, firstClonedElement;
   for (RefPtr<Element> elementInPreviousBlock = deepestVisibleEditableElement;
-       elementInPreviousBlock && elementInPreviousBlock != previousBlock;
+       elementInPreviousBlock && elementInPreviousBlock != &aPreviousBlock;
        elementInPreviousBlock = elementInPreviousBlock->GetParentElement()) {
     if (!HTMLEditUtils::IsInlineStyle(elementInPreviousBlock) &&
         !elementInPreviousBlock->IsHTMLElement(nsGkAtoms::span)) {
       continue;
     }
-    nsAtom* tagName = elementInPreviousBlock->NodeInfo()->NameAtom();
+    OwningNonNull<nsAtom> tagName =
+        *elementInPreviousBlock->NodeInfo()->NameAtom();
     // At first time, just create the most descendant inline container
     // element.
     if (!firstClonedElement) {
       Result<RefPtr<Element>, nsresult> maybeNewElement =
           CreateAndInsertElement(
-              WithTransaction::Yes, MOZ_KnownLive(*tagName),
-              EditorDOMPoint(newBlock, 0u),
+              WithTransaction::Yes, tagName, EditorDOMPoint(&aNewBlock, 0u),
               // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
               [&elementInPreviousBlock](
                   HTMLEditor& aHTMLEditor, Element& aNewElement,
@@ -5796,41 +5793,47 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
                     aNewElement, *elementInPreviousBlock);
                 return NS_OK;
               });
-      if (maybeNewElement.isErr()) {
+      if (MOZ_UNLIKELY(maybeNewElement.isErr())) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-        return maybeNewElement.unwrapErr();
+        return Err(maybeNewElement.unwrapErr());
       }
       firstClonedElement = lastClonedElement = maybeNewElement.unwrap();
       continue;
     }
     // Otherwise, inserts new parent inline container to the previous inserted
     // inline container.
-    lastClonedElement = InsertContainerWithTransaction(*lastClonedElement,
-                                                       MOZ_KnownLive(*tagName));
-    if (!lastClonedElement) {
+    lastClonedElement =
+        InsertContainerWithTransaction(*lastClonedElement, tagName);
+    if (MOZ_UNLIKELY(!lastClonedElement)) {
       NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
     CloneAttributesWithTransaction(*lastClonedElement, *elementInPreviousBlock);
+    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
   }
 
   if (!firstClonedElement) {
     // XXX Even if no inline elements are cloned, shouldn't we create new
     //     <br> element for aNewBlock?
-    return NS_OK;
+    return RefPtr<HTMLBRElement>();
   }
 
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElement(WithTransaction::Yes,
                       EditorDOMPoint(firstClonedElement, 0u));
-  if (resultOfInsertingBRElement.isErr()) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (MOZ_UNLIKELY(resultOfInsertingBRElement.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return Err(resultOfInsertingBRElement.unwrapErr());
   }
   MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-  *aNewBRElement = resultOfInsertingBRElement.unwrap().forget();
-  return NS_OK;
+  return RefPtr<HTMLBRElement>(
+      HTMLBRElement::FromNode(resultOfInsertingBRElement.unwrap().get()));
 }
 
 nsresult HTMLEditor::GetElementOrigin(Element& aElement, int32_t& aX,

@@ -73,6 +73,7 @@ class AbstractRange;
 class Blob;
 class DocumentFragment;
 class Event;
+class HTMLBRElement;
 class MouseEvent;
 class StaticRange;
 }  // namespace dom
@@ -807,14 +808,17 @@ class HTMLEditor final : public EditorBase,
    * @param aPreviousBlock      The previous block element.  All inline
    *                            elements which are last sibling of each level
    *                            are cloned to aNewBlock.
-   * @param aNewBlock           New block container element.
-   * @param aNewBRElement       If this method creates a new <br> element for
-   *                            placeholder, this is set to the new <br>
+   * @param aNewBlock           New block container element.  All children of
+   *                            this is deleted first.
+   * @param aEditingHost        Current editing host.
+   * @return                    If this method creates a new <br> element for
+   *                            placeholder, this returns the new <br>
    *                            element.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult CopyLastEditableChildStylesWithTransaction(
-      Element& aPreviousBlock, Element& aNewBlock,
-      RefPtr<Element>* aNewBRElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<dom::HTMLBRElement>, nsresult>
+  CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
+                                             Element& aNewBlock,
+                                             Element& aEditingHost);
 
   /**
    * RemoveBlockContainerWithTransaction() removes aElement from the DOM tree
