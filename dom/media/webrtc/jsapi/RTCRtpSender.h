@@ -26,6 +26,7 @@ class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
 class TransceiverImpl;
+class PeerConnectionImpl;
 class DOMMediaStream;
 
 namespace dom {
@@ -36,7 +37,7 @@ class RTCDTMFSender;
 
 class RTCRtpSender : public nsISupports, public nsWrapperCache {
  public:
-  RTCRtpSender(nsPIDOMWindowInner* aWindow, const std::string& aPCHandle,
+  RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                MediaTransportHandler* aTransportHandler,
                JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
@@ -76,7 +77,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void Stop();
   void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
-  const std::string& GetPcHandle() const { return mPCHandle; }
+  bool IsMyPc(const PeerConnectionImpl* aPc) const { return mPc.get() == aPc; }
   RefPtr<MediaPipelineTransmit> GetPipeline() const;
   already_AddRefed<dom::Promise> MakePromise() const;
   bool SeamlessTrackSwitch(const RefPtr<MediaStreamTrack>& aWithTrack);
@@ -118,7 +119,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   nsresult ConfigureVideoCodecMode();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  const std::string mPCHandle;
+  RefPtr<PeerConnectionImpl> mPc;
   const RefPtr<JsepTransceiver> mJsepTransceiver;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
   RTCRtpParameters mParameters;
