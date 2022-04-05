@@ -2207,7 +2207,6 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   }
 #endif
 
-  Label success;
   masm.bind(&checkSuccess);
   masm.branch32(Assembler::Equal, temp1,
                 Imm32(RegExpRunStatus_Success_NotFound), notFound);
@@ -10134,8 +10133,6 @@ void CodeGenerator::visitSameValue(LSameValue* lir) {
   ValueOperand lhs = ToValue(lir, LSameValue::LhsIndex);
   ValueOperand rhs = ToValue(lir, LSameValue::RhsIndex);
   Register output = ToRegister(lir->output());
-
-  Label call, done;
 
   using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
   OutOfLineCode* ool =
