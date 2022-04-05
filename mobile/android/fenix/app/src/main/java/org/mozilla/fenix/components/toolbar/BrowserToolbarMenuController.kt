@@ -26,9 +26,11 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -165,7 +167,7 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.CustomizeReaderView -> {
                 readerModeController.showControls()
-                metrics.track(Event.ReaderModeAppearanceOpened)
+                ReaderMode.appearance.record(NoExtras())
             }
             is ToolbarMenu.Item.Back -> {
                 if (item.viewHistory) {

@@ -28,7 +28,6 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
-import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentTabs
@@ -126,18 +125,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
             { CustomTab.closed.record(it) }
-        )
-        is Event.ReaderModeAvailable -> EventWrapper<NoExtraKeys>(
-            { ReaderMode.available.record(it) }
-        )
-        is Event.ReaderModeOpened -> EventWrapper<NoExtraKeys>(
-            { ReaderMode.opened.record(it) }
-        )
-        is Event.ReaderModeClosed -> EventWrapper<NoExtraKeys>(
-            { ReaderMode.closed.record(it) }
-        )
-        is Event.ReaderModeAppearanceOpened -> EventWrapper<NoExtraKeys>(
-            { ReaderMode.appearance.record(it) }
         )
         is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPlay.record(it) }

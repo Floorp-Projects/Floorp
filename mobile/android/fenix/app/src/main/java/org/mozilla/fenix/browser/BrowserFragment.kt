@@ -24,12 +24,13 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -203,7 +204,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     binding.readerViewControlsBar
                 ) { available, active ->
                     if (available) {
-                        components.analytics.metrics.track(Event.ReaderModeAvailable)
+                        ReaderMode.available.record(NoExtras())
                     }
 
                     readerModeAvailable = available

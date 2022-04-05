@@ -17,6 +17,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -24,7 +25,6 @@ import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.ReaderModeController
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
@@ -128,10 +128,10 @@ class DefaultBrowserToolbarController(
     override fun handleReaderModePressed(enabled: Boolean) {
         if (enabled) {
             readerModeController.showReaderView()
-            metrics.track(Event.ReaderModeOpened)
+            ReaderMode.opened.record(NoExtras())
         } else {
             readerModeController.hideReaderView()
-            metrics.track(Event.ReaderModeClosed)
+            ReaderMode.closed.record(NoExtras())
         }
     }
 

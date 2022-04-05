@@ -25,21 +25,23 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
-import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounterMenu
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -211,17 +213,25 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun `handle reader mode enabled`() {
         val controller = createController()
+        assertFalse(ReaderMode.opened.testHasValue())
+
         controller.handleReaderModePressed(enabled = true)
 
         verify { readerModeController.showReaderView() }
+        assertTrue(ReaderMode.opened.testHasValue())
+        assertNull(ReaderMode.opened.testGetValue().single().extra)
     }
 
     @Test
     fun `handle reader mode disabled`() {
         val controller = createController()
+        assertFalse(ReaderMode.closed.testHasValue())
+
         controller.handleReaderModePressed(enabled = false)
 
         verify { readerModeController.hideReaderView() }
+        assertTrue(ReaderMode.closed.testHasValue())
+        assertNull(ReaderMode.closed.testGetValue().single().extra)
     }
 
     @Test

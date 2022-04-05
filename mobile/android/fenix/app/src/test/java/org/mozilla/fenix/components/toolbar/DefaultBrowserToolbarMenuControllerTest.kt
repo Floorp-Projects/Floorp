@@ -52,6 +52,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -59,6 +60,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -69,7 +71,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
@@ -241,13 +242,15 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `WHEN reader mode menu item is pressed THEN handle appearance change`() = runBlockingTest {
         val item = ToolbarMenu.Item.CustomizeReaderView
+        assertFalse(ReaderMode.appearance.testHasValue())
 
         val controller = createController(scope = this, store = browserStore)
 
         controller.handleToolbarItemInteraction(item)
 
         verify { readerModeController.showControls() }
-        verify { metrics.track(Event.ReaderModeAppearanceOpened) }
+        assertTrue(ReaderMode.appearance.testHasValue())
+        assertNull(ReaderMode.appearance.testGetValue().single().extra)
     }
 
     @Test
