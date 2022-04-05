@@ -52,6 +52,7 @@
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/UseCounter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -625,6 +626,7 @@ nsresult nsXMLContentSink::AddContentAsLeaf(nsIContent* aContent) {
 // the XSL stylesheet located at the given URI.
 nsresult nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl) {
   nsCOMPtr<nsIDocumentTransformer> processor = new txMozillaXSLTProcessor();
+  mDocument->SetUseCounter(eUseCounter_custom_XSLStylesheet);
 
   processor->SetTransformObserver(this);
 
