@@ -662,6 +662,10 @@ void nsVideoFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
+  if (IsContentHidden()) {
+    return;
+  }
+
   const bool shouldDisplayPoster = ShouldDisplayPoster();
 
   // NOTE: If we're displaying a poster image (instead of video data), we can
