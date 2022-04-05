@@ -1118,7 +1118,9 @@ nsUnknownContentTypeDialog.prototype = {
       ) {
         this.updateHelperAppPref();
       }
-    } catch (e) {}
+    } catch (e) {
+      Cu.reportError(e);
+    }
 
     this.onUnload();
   },
@@ -1130,7 +1132,10 @@ nsUnknownContentTypeDialog.prototype = {
     // Cancel app launcher.
     try {
       this.mLauncher.cancel(Cr.NS_BINDING_ABORTED);
-    } catch (exception) {}
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
     this.onUnload();
   },
 
