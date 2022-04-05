@@ -43,50 +43,20 @@ def make_archive(archive_name, base, exclude, include):
 
                 fill_archive(add_file)
         elif archive_basename.endswith(".tar.zst"):
-            import mozfile
-            import subprocess
             import tarfile
-            from buildconfig import topsrcdir
+            import zstandard
 
-            # Ideally, we'd do this:
-            #   import zstandard
-            #   ctx = zstandard.ZstdCompressor(threads=-1)
-            #   zstdwriter = ctx.stream_writer(fh)
-            # and use `zstdwriter` as the fileobj input for `tarfile.open`.
-            # But this script is invoked with `PYTHON3` in a Makefile, which
-            # uses the virtualenv python where zstandard is not installed.
-            # Both `sys.executable` and `buildconfig.substs['PYTHON3']` would
-            # be the same. Instead, search within PATH to find another python3,
-            # which hopefully has zstandard available (and that's the case on
-            # automation, where this code path is expected to be followed).
-            python_path = mozpath.normpath(os.path.dirname(sys.executable))
-            path = [
-                p
-                for p in os.environ["PATH"].split(os.pathsep)
-                if mozpath.normpath(p) != python_path
-            ]
-            python3 = mozfile.which("python3", path=path)
-            proc = subprocess.Popen(
-                [
-                    python3,
-                    os.path.join(topsrcdir, "taskcluster", "scripts", "misc", "zstdpy"),
-                    "-T0",
-                ],
-                stdin=subprocess.PIPE,
-                stdout=fh,
-            )
+            ctx = zstandard.ZstdCompressor(threads=-1)
+            with ctx.stream_writer(fh) as zstdwriter:
+                with tarfile.open(
+                    mode="w|", fileobj=zstdwriter, bufsize=1024 * 1024
+                ) as tar:
 
-            with tarfile.open(
-                mode="w|", fileobj=proc.stdin, bufsize=1024 * 1024
-            ) as tar:
+                    def add_file(p, f):
+                        info = tar.gettarinfo(os.path.join(base, p), p)
+                        tar.addfile(info, f.open())
 
-                def add_file(p, f):
-                    info = tar.gettarinfo(os.path.join(base, p), p)
-                    tar.addfile(info, f.open())
-
-                fill_archive(add_file)
-            proc.stdin.close()
-            proc.wait()
+                    fill_archive(add_file)
         else:
             raise Exception(
                 "Unsupported archive format for {}".format(archive_basename)
