@@ -24,7 +24,7 @@ const NativePanHandlerForWindows = {
   beginPhase: SpecialPowers.DOMWindowUtils.PHASE_BEGIN,
   updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
   endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
-  promiseNativePanEvent: promiseNativeTouchpadPan,
+  promiseNativePanEvent: promiseNativeTouchpadPanEventAndWaitForObserver,
   deltaOnRTL: 50,
 };
 

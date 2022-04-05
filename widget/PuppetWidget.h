@@ -280,7 +280,8 @@ class PuppetWidget : public nsBaseWidget,
   virtual nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
                                                LayoutDeviceIntPoint aPoint,
                                                double aDeltaX, double aDeltaY,
-                                               int32_t aModifierFlags) override;
+                                               int32_t aModifierFlags,
+                                               nsIObserver* aObserver) override;
 
   virtual void LockNativePointer() override;
   virtual void UnlockNativePointer() override;
