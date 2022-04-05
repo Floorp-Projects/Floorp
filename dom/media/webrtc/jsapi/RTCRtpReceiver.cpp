@@ -88,16 +88,17 @@ static already_AddRefed<dom::MediaStreamTrack> CreateTrack(
   name(AbstractThread::MainThread(), val, \
        "RTCRtpReceiver::" #name " (Canonical)")
 
-RTCRtpReceiver::RTCRtpReceiver(
-    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-    const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
-    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
+RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                               const std::string& aPCHandle,
+                               MediaTransportHandler* aTransportHandler,
+                               JsepTransceiver* aJsepTransceiver,
+                               AbstractThread* aCallThread,
+                               nsISerialEventTarget* aStsThread,
+                               MediaSessionConduit* aConduit,
+                               TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mJsepTransceiver(aJsepTransceiver),
-      mMainThread(aMainThread),
       mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
@@ -116,20 +117,18 @@ RTCRtpReceiver::RTCRtpReceiver(
   if (Preferences::GetBool("media.peerconnection.mute_on_bye_or_timeout",
                            false)) {
     mRtcpByeListener = aConduit->RtcpByeEvent().Connect(
-        mMainThread, this, &RTCRtpReceiver::OnRtcpBye);
+        GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnRtcpBye);
     mRtcpTimeoutListener = aConduit->RtcpTimeoutEvent().Connect(
-        mMainThread, this, &RTCRtpReceiver::OnRtcpTimeout);
+        GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnRtcpTimeout);
   }
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
-        mPCHandle, aTransportHandler, mMainThread.get(), aCallThread,
-        mStsThread.get(), *aConduit->AsAudioSessionConduit(), mTrack,
-        principalHandle);
+        mPCHandle, aTransportHandler, aCallThread, mStsThread.get(),
+        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle);
   } else {
     mPipeline = new MediaPipelineReceiveVideo(
-        mPCHandle, aTransportHandler, mMainThread.get(), aCallThread,
-        mStsThread.get(), *aConduit->AsVideoSessionConduit(), mTrack,
-        principalHandle);
+        mPCHandle, aTransportHandler, aCallThread, mStsThread.get(),
+        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle);
   }
 }
 
@@ -542,7 +541,7 @@ void RTCRtpReceiver::GetSynchronizationSources(
 nsPIDOMWindowInner* RTCRtpReceiver::GetParentObject() const { return mWindow; }
 
 void RTCRtpReceiver::Shutdown() {
-  ASSERT_ON_THREAD(mMainThread);
+  MOZ_ASSERT(NS_IsMainThread());
   if (mPipeline) {
     mPipeline->Shutdown();
     mPipeline = nullptr;
@@ -554,7 +553,7 @@ void RTCRtpReceiver::Shutdown() {
 }
 
 void RTCRtpReceiver::UpdateTransport() {
-  ASSERT_ON_THREAD(mMainThread);
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mHaveSetupTransport) {
     mPipeline->SetLevel(mJsepTransceiver->GetLevel());
     mHaveSetupTransport = true;

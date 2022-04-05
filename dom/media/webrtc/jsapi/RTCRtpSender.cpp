@@ -38,9 +38,9 @@ LazyLogModule gSenderLog("RTCRtpSender");
 RTCRtpSender::RTCRtpSender(
     nsPIDOMWindowInner* aWindow, const std::string& aPCHandle,
     MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
-    nsISerialEventTarget* aMainThread, AbstractThread* aCallThread,
-    nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
-    dom::MediaStreamTrack* aTrack, TransceiverImpl* aTransceiverImpl)
+    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
+    MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
+    TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mJsepTransceiver(aJsepTransceiver),
@@ -55,7 +55,7 @@ RTCRtpSender::RTCRtpSender(
       INIT_CANONICAL(mVideoCodecMode, webrtc::VideoCodecMode::kRealtimeVideo),
       INIT_CANONICAL(mCname, std::string()) {
   mPipeline = new MediaPipelineTransmit(
-      mPCHandle, aTransportHandler, aMainThread, aCallThread, aStsThread,
+      mPCHandle, aTransportHandler, aCallThread, aStsThread,
       aConduit->type() == MediaSessionConduit::VIDEO, aConduit);
 
   if (aConduit->type() == MediaSessionConduit::AUDIO) {

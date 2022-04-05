@@ -57,12 +57,14 @@ class TransceiverImpl : public nsISupports,
   /**
    * |aSendTrack| might or might not be set.
    */
-  TransceiverImpl(
-      nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-      const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-      JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
-      nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
-      WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator);
+  TransceiverImpl(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                  const std::string& aPCHandle,
+                  MediaTransportHandler* aTransportHandler,
+                  JsepTransceiver* aJsepTransceiver,
+                  nsISerialEventTarget* aStsThread,
+                  dom::MediaStreamTrack* aSendTrack,
+                  WebrtcCallWrapper* aCallWrapper,
+                  RTCStatsIdGenerator* aIdGenerator);
 
   bool IsValid() const { return !!mConduit; }
 
@@ -175,7 +177,6 @@ class TransceiverImpl : public nsISupports,
   const std::string mPCHandle;
   RefPtr<MediaTransportHandler> mTransportHandler;
   const RefPtr<JsepTransceiver> mJsepTransceiver;
-  nsCOMPtr<nsISerialEventTarget> mMainThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebrtcCallWrapper> mCallWrapper;

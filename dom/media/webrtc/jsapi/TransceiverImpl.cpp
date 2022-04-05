@@ -146,14 +146,13 @@ NS_INTERFACE_MAP_END
 TransceiverImpl::TransceiverImpl(
     nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
-    nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
-    WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator)
+    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aStsThread,
+    dom::MediaStreamTrack* aSendTrack, WebrtcCallWrapper* aCallWrapper,
+    RTCStatsIdGenerator* aIdGenerator)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mTransportHandler(aTransportHandler),
       mJsepTransceiver(aJsepTransceiver),
-      mMainThread(aMainThread),
       mStsThread(aStsThread),
       mCallWrapper(aCallWrapper),
       mIdGenerator(aIdGenerator),
@@ -173,11 +172,11 @@ TransceiverImpl::TransceiverImpl(
 
   mReceiver = new RTCRtpReceiver(
       aWindow, aPrivacyNeeded, aPCHandle, aTransportHandler, aJsepTransceiver,
-      aMainThread, mCallWrapper->mCallThread, aStsThread, mConduit, this);
+      mCallWrapper->mCallThread, aStsThread, mConduit, this);
 
-  mSender = new RTCRtpSender(
-      aWindow, aPCHandle, aTransportHandler, aJsepTransceiver, aMainThread,
-      mCallWrapper->mCallThread, aStsThread, mConduit, aSendTrack, this);
+  mSender = new RTCRtpSender(aWindow, aPCHandle, aTransportHandler,
+                             aJsepTransceiver, mCallWrapper->mCallThread,
+                             aStsThread, mConduit, aSendTrack, this);
 
   if (mConduit) {
     InitConduitControl();
@@ -213,8 +212,8 @@ void TransceiverImpl::RollbackToStableDtlsTransport() {
 
 void TransceiverImpl::UpdateDtlsTransportState(const std::string& aTransportId,
                                                TransportLayer::State aState) {
-  if (!mMainThread->IsOnCurrentThread()) {
-    mMainThread->Dispatch(
+  if (!GetMainThreadEventTarget()->IsOnCurrentThread()) {
+    GetMainThreadEventTarget()->Dispatch(
         WrapRunnable(this, &TransceiverImpl::UpdateDtlsTransportState,
                      aTransportId, aState),
         NS_DISPATCH_NORMAL);
@@ -828,7 +827,7 @@ void TransceiverImpl::Stop() {
     auto conduit = std::move(mConduit);
     (conduit ? conduit->Shutdown()
              : GenericPromise::CreateAndResolve(true, __func__))
-        ->Then(mMainThread, __func__,
+        ->Then(GetMainThreadSerialEventTarget(), __func__,
                [sender = mSender, receiver = mReceiver]() mutable {
                  // Shutdown pipelines when conduits are guaranteed shut down,
                  // so that all packets sent from conduits can be delivered.

@@ -38,8 +38,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
  public:
   RTCRtpSender(nsPIDOMWindowInner* aWindow, const std::string& aPCHandle,
                MediaTransportHandler* aTransportHandler,
-               JsepTransceiver* aJsepTransceiver,
-               nsISerialEventTarget* aMainThread, AbstractThread* aCallThread,
+               JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
                dom::MediaStreamTrack* aTrack,
                TransceiverImpl* aTransceiverImpl);
