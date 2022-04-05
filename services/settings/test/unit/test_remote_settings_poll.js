@@ -15,6 +15,9 @@ const { RemoteSettingsClient } = ChromeUtils.import(
 const { pushBroadcastService } = ChromeUtils.import(
   "resource://gre/modules/PushBroadcastService.jsm"
 );
+const { SyncHistory } = ChromeUtils.import(
+  "resource://services-settings/SyncHistory.jsm"
+);
 const {
   RemoteSettings,
   remoteSettingsBroadcastHandler,
@@ -55,13 +58,18 @@ async function clear_state() {
 
   // Clear events snapshot.
   TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
+
+  // Clear sync history.
+  await new SyncHistory("").clear();
 }
 
-function serveChangesEntries(serverTime, entries) {
+function serveChangesEntries(serverTime, entriesOrFunc) {
   return (request, response) => {
     response.setStatusLine(null, 200, "OK");
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date(serverTime).toUTCString());
+    const entries =
+      typeof entriesOrFunc == "function" ? entriesOrFunc() : entriesOrFunc;
     const latest = entries[0]?.last_modified ?? 42;
     if (entries.length) {
       response.setHeader("ETag", `"${latest}"`);
@@ -137,14 +145,6 @@ add_task(async function test_offline_is_reported_if_relevant() {
 add_task(clear_state);
 
 add_task(async function test_check_success() {
-  const startPollSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE_POLL
-  );
-  const startSyncSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE_SYNC
-  );
   const serverTime = 8000;
 
   server.registerPathHandler(
@@ -824,6 +824,154 @@ add_task(async function test_client_error() {
 });
 add_task(clear_state);
 
+add_task(async function test_sync_success_is_stored_in_history() {
+  const collectionDetails = {
+    last_modified: 444,
+    bucket: "main",
+    collection: "desktop-manager",
+  };
+  server.registerPathHandler(
+    CHANGES_PATH,
+    serveChangesEntries(10000, [collectionDetails])
+  );
+  const c = RemoteSettings("desktop-manager");
+  c.maybeSync = () => {};
+  try {
+    await RemoteSettings.pollChanges({ expectedTimestamp: 555 });
+  } catch (e) {}
+
+  const { history } = await RemoteSettings.inspect();
+
+  Assert.deepEqual(history, {
+    [TELEMETRY_SOURCE_SYNC]: [
+      {
+        timestamp: 444,
+        status: "success",
+        infos: {},
+        datetime: new Date(444),
+      },
+    ],
+  });
+});
+add_task(clear_state);
+
+add_task(async function test_sync_error_is_stored_in_history() {
+  const collectionDetails = {
+    last_modified: 1337,
+    bucket: "main",
+    collection: "desktop-manager",
+  };
+  server.registerPathHandler(
+    CHANGES_PATH,
+    serveChangesEntries(10000, [collectionDetails])
+  );
+  const c = RemoteSettings("desktop-manager");
+  c.maybeSync = () => {
+    throw new RemoteSettingsClient.MissingSignatureError(
+      "main/desktop-manager"
+    );
+  };
+  try {
+    await RemoteSettings.pollChanges({ expectedTimestamp: 123456 });
+  } catch (e) {}
+
+  const { history } = await RemoteSettings.inspect();
+
+  Assert.deepEqual(history, {
+    [TELEMETRY_SOURCE_SYNC]: [
+      {
+        timestamp: 1337,
+        status: "sync_error",
+        infos: {
+          expectedTimestamp: 123456,
+          errorName: "MissingSignatureError",
+        },
+        datetime: new Date(1337),
+      },
+    ],
+  });
+});
+add_task(clear_state);
+
+add_task(
+  async function test_sync_broken_signal_is_sent_on_consistent_failure() {
+    const startSnapshot = getUptakeTelemetrySnapshot(
+      TELEMETRY_COMPONENT,
+      TELEMETRY_SOURCE_POLL
+    );
+    // Wait for the "sync-broken-error" notification.
+    let notificationObserved = false;
+    const observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, "remote-settings:broken-sync-error");
+        notificationObserved = true;
+      },
+    };
+    Services.obs.addObserver(observer, "remote-settings:broken-sync-error");
+    // Register a client with a failing sync method.
+    const c = RemoteSettings("desktop-manager");
+    c.maybeSync = () => {
+      throw new RemoteSettingsClient.InvalidSignatureError(
+        "main/desktop-manager"
+      );
+    };
+    // Simulate a response whose ETag gets incremented on each call
+    // (in order to generate several history entries, indexed by timestamp).
+    let timestamp = 1337;
+    server.registerPathHandler(
+      CHANGES_PATH,
+      serveChangesEntries(10000, () => {
+        return [
+          {
+            last_modified: ++timestamp,
+            bucket: "main",
+            collection: "desktop-manager",
+          },
+        ];
+      })
+    );
+
+    // Now obtain several failures in a row (less than threshold).
+    for (var i = 0; i < 9; i++) {
+      try {
+        await RemoteSettings.pollChanges();
+      } catch (e) {}
+    }
+    Assert.ok(!notificationObserved, "Not notified yet");
+
+    // Fail again once. Will now notify.
+    try {
+      await RemoteSettings.pollChanges();
+    } catch (e) {}
+    Assert.ok(notificationObserved, "Broken sync notified");
+    // Uptake event to notify broken sync is sent.
+    const endSnapshot = getUptakeTelemetrySnapshot(
+      TELEMETRY_COMPONENT,
+      TELEMETRY_SOURCE_SYNC
+    );
+    const expectedIncrements = {
+      [UptakeTelemetry.STATUS.SYNC_ERROR]: 10,
+      [UptakeTelemetry.STATUS.SYNC_BROKEN_ERROR]: 1,
+    };
+    checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
+
+    // Synchronize successfully.
+    notificationObserved = false;
+    const failingSync = c.maybeSync;
+    c.maybeSync = () => {};
+    await RemoteSettings.pollChanges();
+    Assert.ok(!notificationObserved, "Not notified after success");
+
+    // Now fail again. Broken sync isn't notified, we need several in a row.
+    c.maybeSync = failingSync;
+    try {
+      await RemoteSettings.pollChanges();
+    } catch (e) {}
+    Assert.ok(!notificationObserved, "Not notified on single error");
+  }
+);
+add_task(clear_state);
+
 add_task(async function test_check_clockskew_is_updated() {
   const serverTime = 2000;
 
@@ -1148,6 +1296,7 @@ add_task(
       response.write(
         JSON.stringify({
           changes: entries,
+          timestamp: 42,
         })
       );
       response.setHeader("ETag", '"42"');

@@ -387,7 +387,7 @@ nsresult nsZipArchive::Test(const char* aEntryName) {
   if (aEntryName)  // only test specified item
   {
     currItem = GetItem(aEntryName);
-    if (!currItem) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+    if (!currItem) return NS_ERROR_FILE_NOT_FOUND;
     //-- don't test (synthetic) directory items
     if (currItem->IsDirectory()) return NS_OK;
     return ExtractFile(currItem, 0, 0);
@@ -582,7 +582,7 @@ nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
   }
   MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
   LOG(("ZipHandle::FindNext[%p] not found %s", this, mPattern));
-  return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+  return NS_ERROR_FILE_NOT_FOUND;
 }
 
 //***********************************************************

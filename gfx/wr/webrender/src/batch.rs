@@ -16,7 +16,7 @@ use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
-use crate::picture::{Picture3DContext, PictureCompositeMode, TileKey, SubSliceIndex};
+use crate::picture::{Picture3DContext, PictureCompositeMode, TileKey};
 use crate::prim_store::{PrimitiveInstanceKind, ClipData, PrimitiveInstanceIndex};
 use crate::prim_store::{PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
@@ -30,7 +30,7 @@ use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
-use std::{f32, i32, usize, mem};
+use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, MatrixHelpers, TransformedRectKind, ScaleOffset};
 use crate::segment::EdgeAaSegmentMask;
 
@@ -3673,57 +3673,84 @@ impl Command {
     }
 }
 
+// TODO(gw): We should probably move cmd-buffer code to a separate source file, it's
+//           related to batching but not exactly the same.
+
+// Index into a command buffer stored in a `CommandBufferList`
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone)]
+pub struct CommandBufferIndex(pub u32);
+
+// Container for a list of command buffers that are built for a frame
+pub struct CommandBufferList {
+    cmd_buffers: Vec<CommandBuffer>,
+}
+
+impl CommandBufferList {
+    pub fn new() -> Self {
+        CommandBufferList {
+            cmd_buffers: Vec::new(),
+        }
+    }
+
+    pub fn create_cmd_buffer(
+        &mut self,
+    ) -> CommandBufferIndex {
+        let index = CommandBufferIndex(self.cmd_buffers.len() as u32);
+        self.cmd_buffers.push(CommandBuffer::new());
+        index
+    }
+
+    pub fn get(&self, index: CommandBufferIndex) -> &CommandBuffer {
+        &self.cmd_buffers[index.0 as usize]
+    }
+
+    pub fn get_mut(&mut self, index: CommandBufferIndex) -> &mut CommandBuffer {
+        &mut self.cmd_buffers[index.0 as usize]
+    }
+}
+
 /// A list of commands describing how to draw a primitive list
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CommandBuffer {
     /// The encoded drawing commands
     commands: Vec<Command>,
-    /// Dirty rect to reject adding commands that are outside the dirty (scissor) rect
-    dirty_rect: PictureRect,
     /// Cached current spatial node
     current_spatial_node_index: SpatialNodeIndex,
 }
 
 impl CommandBuffer {
     /// Construct a new cmd buffer
-    fn new(dirty_rect: PictureRect) -> Self {
+    pub fn new() -> Self {
         CommandBuffer {
             commands: Vec::new(),
-            dirty_rect,
             current_spatial_node_index: SpatialNodeIndex::INVALID,
         }
     }
 
-    /// Add a primitive to the command buffer. Returns true if added, false if it
-    /// was outside the dirty rect
-    fn add_prim(
+    /// Add a primitive to the command buffer
+    pub fn add_prim(
         &mut self,
-        coverage_rect: PictureRect,
         prim_instance_index: PrimitiveInstanceIndex,
         spatial_node_index: SpatialNodeIndex,
         gpu_address: Option<GpuCacheAddress>,
-    ) -> bool {
-        if coverage_rect.intersects(&self.dirty_rect) {
-            if self.current_spatial_node_index != spatial_node_index {
-                self.commands.push(Command::set_spatial_node(spatial_node_index));
-                self.current_spatial_node_index = spatial_node_index;
-            }
-
-            match gpu_address {
-                Some(gpu_address) => {
-                    self.commands.push(Command::draw_complex_prim(prim_instance_index));
-                    self.commands.push(Command::data((gpu_address.u as u32) << 16 | gpu_address.v as u32));
-                }
-                None => {
-                    self.commands.push(Command::draw_simple_prim(prim_instance_index));
-                }
-            }
-
-            return true;
+    ) {
+        if self.current_spatial_node_index != spatial_node_index {
+            self.commands.push(Command::set_spatial_node(spatial_node_index));
+            self.current_spatial_node_index = spatial_node_index;
         }
 
-        false
+        match gpu_address {
+            Some(gpu_address) => {
+                self.commands.push(Command::draw_complex_prim(prim_instance_index));
+                self.commands.push(Command::data((gpu_address.u as u32) << 16 | gpu_address.v as u32));
+            }
+            None => {
+                self.commands.push(Command::draw_simple_prim(prim_instance_index));
+            }
+        }
     }
 
     /// Iterate the command list, calling a provided closure for each primitive draw command
@@ -3773,120 +3800,49 @@ pub enum CommandBufferBuilderKind {
         //           of a hash map if it ever shows up in profiles. This is
         //           slightly complicated by the sub_slice_index in the
         //           TileKey structure - could have a 2 level array?
-        tiles: FastHashMap<TileKey, CommandBuffer>,
+        tiles: FastHashMap<TileKey, RenderTaskId>,
     },
     Simple {
-        cmd_buffer: CommandBuffer,
+        render_task_id: RenderTaskId,
+        root_task_id: Option<RenderTaskId>,
     },
+    Invalid,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CommandBufferBuilder {
-    kind: CommandBufferBuilderKind,
+    pub kind: CommandBufferBuilderKind,
 }
 
 impl CommandBufferBuilder {
+    pub fn empty() -> Self {
+        CommandBufferBuilder {
+            kind: CommandBufferBuilderKind::Invalid,
+        }
+    }
+
     /// Construct a tiled command buffer builder
-    pub fn new_tiled() -> Self {
+    pub fn new_tiled(
+        tiles: FastHashMap<TileKey, RenderTaskId>,
+    ) -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Tiled {
-                tiles: FastHashMap::default(),
+                tiles,
             },
         }
     }
 
     /// Construct a simple command buffer builder
     pub fn new_simple(
-        dirty_rect: PictureRect,
+        render_task_id: RenderTaskId,
+        root_task_id: Option<RenderTaskId>,
     ) -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Simple {
-                cmd_buffer: CommandBuffer::new(dirty_rect),
+                render_task_id,
+                root_task_id,
             },
-        }
-    }
-
-    /// Register an active tile for a tiled command buffer builder
-    pub fn add_tile(
-        &mut self,
-        key: TileKey,
-        dirty_rect: PictureRect,
-    ) {
-        match self.kind {
-            CommandBufferBuilderKind::Tiled { ref mut tiles } => {
-                tiles.insert(
-                    key,
-                    CommandBuffer::new(dirty_rect),
-                );
-            }
-            CommandBufferBuilderKind::Simple { .. } => {
-                unreachable!();
-            }
-        }
-    }
-
-    /// Push a new primitive in to the command buffer builder
-    pub fn push_prim(
-        &mut self,
-        prim_instance_index: PrimitiveInstanceIndex,
-        spatial_node_index: SpatialNodeIndex,
-        pic_coverage_rect: PictureRect,
-        tile_rect: crate::picture::TileRect,
-        sub_slice_index: SubSliceIndex,
-        gpu_address: Option<crate::gpu_cache::GpuCacheAddress>,
-    ) -> bool {
-        let mut added_prim = false;
-
-        match self.kind {
-            CommandBufferBuilderKind::Tiled { ref mut tiles } => {
-                // For tiled builders, try add the prim to the command buffer of each
-                // tile that this primitive affects.
-                for y in tile_rect.min.y .. tile_rect.max.y {
-                    for x in tile_rect.min.x .. tile_rect.max.x {
-
-                        let key = TileKey {
-                            tile_offset: crate::picture::TileOffset::new(x, y),
-                            sub_slice_index,
-                        };
-
-                        if let Some(cmd_buffer) = tiles.get_mut(&key) {
-                            added_prim |= cmd_buffer.add_prim(
-                                pic_coverage_rect,
-                                prim_instance_index,
-                                spatial_node_index,
-                                gpu_address,
-                            );
-                        }
-                    }
-                }
-            }
-            CommandBufferBuilderKind::Simple { ref mut cmd_buffer } => {
-                // For simple builders, just add the prim (if it's inside the dirty rect)
-                added_prim = cmd_buffer.add_prim(
-                    pic_coverage_rect,
-                    prim_instance_index,
-                    spatial_node_index,
-                    gpu_address,
-                );
-            }
-        }
-
-        added_prim
-    }
-
-    /// Remove a command buffer for a given tile key (None for simple command buffer builders)
-    pub fn take_cmd_buffer(
-        &mut self,
-        key: Option<TileKey>,
-    ) -> CommandBuffer {
-        match self.kind {
-            CommandBufferBuilderKind::Tiled { ref mut tiles } => {
-                tiles.remove(&key.unwrap()).unwrap()
-            }
-            CommandBufferBuilderKind::Simple { ref mut cmd_buffer } => {
-                mem::replace(cmd_buffer, CommandBuffer::new(PictureRect::zero()))
-            }
         }
     }
 }

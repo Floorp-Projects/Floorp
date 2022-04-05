@@ -749,11 +749,8 @@ static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
 static nsresult DeleteDirIfExists(nsIFile* dir) {
   if (dir) {
     // Don't return an error if the directory doesn't exist.
-    // Windows Remove() returns NS_ERROR_FILE_NOT_FOUND while
-    // OS X returns NS_ERROR_FILE_TARGET_DOES_NOT_EXIST.
     nsresult rv = dir->Remove(/* aRecursive */ true);
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND &&
-        rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
       return rv;
     }
   }

@@ -1324,6 +1324,11 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     if (!creditCard?.record["cc-number"]) {
       return;
     }
+    // Normalize cc-number
+    creditCard.record["cc-number"] = CreditCard.normalizeCardNumber(
+      creditCard.record["cc-number"]
+    );
+
     // Normalize cc-exp-month and cc-exp-year using the cc-exp field
     if (creditCard.record["cc-exp"]) {
       let { month, year } = CreditCard.normalizeExpiration({

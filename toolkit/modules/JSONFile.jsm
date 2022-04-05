@@ -372,10 +372,7 @@ JSONFile.prototype = {
           let backupFile = new FileUtils.File(this._options.backupFile);
           backupFile.copyTo(null, basename);
         } catch (e) {
-          if (
-            e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-            e.result != Cr.NS_ERROR_FILE_NOT_FOUND
-          ) {
+          if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
             Cu.reportError(e);
           }
         }
@@ -401,10 +398,7 @@ JSONFile.prototype = {
             inputStream.close();
           }
         } catch (e3) {
-          if (
-            e3.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-            e3.result != Cr.NS_ERROR_FILE_NOT_FOUND
-          ) {
+          if (e3.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
             Cu.reportError(e3);
           }
         }

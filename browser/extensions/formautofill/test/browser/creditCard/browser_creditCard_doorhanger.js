@@ -1035,3 +1035,81 @@ add_task(async function test_update_generic_creditCard_logo() {
   await onChanged;
   await removeAllRecords();
 });
+
+add_task(async function test_save_panel_spaces_in_cc_number_logo() {
+  const amexCard = {
+    "cc-number": "37 4542 158116 607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = promiseNotificationShown();
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-number": amexCard["cc-number"],
+        },
+      });
+
+      await promiseShown;
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+
+      is(
+        creditCardLogoWithoutExtension,
+        "chrome://formautofill/content/third-party/cc-logo-amex",
+        "CC logo should be amex"
+      );
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+});
+
+add_task(async function test_update_panel_with_spaces_in_cc_number_logo() {
+  const amexCard = {
+    "cc-number": "374 54215 8116607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+
+  await saveCreditCard(amexCard);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+
+  let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = promiseNotificationShown();
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "Mark Smith",
+          "#cc-number": amexCard["cc-number"],
+          "#cc-exp-month": "4",
+          "#cc-exp-year": new Date().getFullYear(),
+        },
+      });
+
+      await promiseShown;
+
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+      is(
+        creditCardLogoWithoutExtension,
+        `chrome://formautofill/content/third-party/cc-logo-amex`,
+        `CC Logo should be amex`
+      );
+      // We are not testing whether the cc-number is saved correctly,
+      // we only care that the logo in the update panel shows correctly.
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+  await onChanged;
+  await removeAllRecords();
+});

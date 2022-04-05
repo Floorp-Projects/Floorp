@@ -4,7 +4,7 @@
 
 use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
 use api::units::*;
-use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer, CommandBufferBuilder};
+use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer, CommandBufferList};
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
@@ -14,22 +14,23 @@ use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
-use crate::picture::{SurfaceInfo, SurfaceIndex, SurfaceRenderTasks, SubSliceIndex};
+use crate::picture::{SurfaceInfo, SurfaceIndex};
 use crate::picture::{SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
-use crate::prim_store::{DeferredResolve, PrimitiveInstance, PrimitiveInstanceIndex};
+use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, AlphaRenderTarget, ColorRenderTarget};
-use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, Pass, SubPassSurface};
+use crate::render_task_graph::{RenderTaskGraph, Pass, SubPassSurface};
 use crate::render_task_graph::{RenderPass, RenderTaskGraphBuilder};
 use crate::render_task::{RenderTaskKind, StaticRenderTaskSurface};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::space::SpaceMapper;
 use crate::segment::SegmentBuilder;
+use crate::surface::SurfaceBuilder;
 use std::{f32, mem};
 use crate::util::{VecHelper, Preallocator};
 use crate::visibility::{update_prim_visibility, FrameVisibilityState, FrameVisibilityContext};
@@ -128,7 +129,6 @@ pub struct FrameScratchBuffer {
     dirty_region_stack: Vec<DirtyRegion>,
     surface_stack: Vec<(PictureIndex, SurfaceIndex)>,
     clip_chain_stack: ClipChainStack,
-    cmd_buffer_stack: Vec<CommandBufferBuilder>,
 }
 
 impl Default for FrameScratchBuffer {
@@ -137,7 +137,6 @@ impl Default for FrameScratchBuffer {
             dirty_region_stack: Vec::new(),
             surface_stack: Vec::new(),
             clip_chain_stack: ClipChainStack::new(),
-            cmd_buffer_stack: Vec::new(),
         }
     }
 }
@@ -147,7 +146,6 @@ impl FrameScratchBuffer {
         self.dirty_region_stack.clear();
         self.surface_stack.clear();
         self.clip_chain_stack.clear();
-        self.cmd_buffer_stack.clear();
     }
 }
 
@@ -184,7 +182,8 @@ pub struct FrameBuildingState<'a> {
     pub composite_state: &'a mut CompositeState,
     pub num_visible_primitives: u32,
     pub plane_splitters: &'a mut [PlaneSplitter],
-    pub cmd_buffer_stack: Vec<CommandBufferBuilder>,
+    pub surface_builder: SurfaceBuilder,
+    pub cmd_buffers: &'a mut CommandBufferList,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -201,111 +200,6 @@ impl<'a> FrameBuildingState<'a> {
     /// Pop the top dirty region from the stack.
     pub fn pop_dirty_region(&mut self) {
         self.dirty_region_stack.pop().unwrap();
-    }
-
-    /// Initialize render tasks for a surface that is tiled (currently applies
-    /// only to picture cache surfaces).
-    pub fn init_surface_tiled(
-        &mut self,
-        surface_index: SurfaceIndex,
-        tasks: Vec<RenderTaskId>,
-        clipping_rect: PictureRect,
-    ) {
-        let surface = &mut self.surfaces[surface_index.0];
-        assert!(surface.render_tasks.is_none());
-        surface.render_tasks = Some(SurfaceRenderTasks::Tiled(tasks));
-        surface.clipping_rect = clipping_rect;
-    }
-
-    /// Initialize render tasks for a simple surface, that contains only a
-    /// single render task.
-    pub fn init_surface(
-        &mut self,
-        surface_index: SurfaceIndex,
-        task_id: RenderTaskId,
-        parent_surface_index: SurfaceIndex,
-        clipping_rect: PictureRect,
-    ) {
-        let surface = &mut self.surfaces[surface_index.0];
-        assert!(surface.render_tasks.is_none());
-        surface.render_tasks = Some(SurfaceRenderTasks::Simple(task_id));
-        surface.clipping_rect = clipping_rect;
-
-        self.add_child_render_task(
-            parent_surface_index,
-            task_id,
-        );
-    }
-
-    /// Initialize render tasks for a surface that is made up of a chain of
-    /// render tasks, where the final output render task is different than the
-    /// input render task (for example, a blur pass on a picture).
-    pub fn init_surface_chain(
-        &mut self,
-        surface_index: SurfaceIndex,
-        root_task_id: RenderTaskId,
-        port_task_id: RenderTaskId,
-        parent_surface_index: SurfaceIndex,
-        clipping_rect: PictureRect,
-    ) {
-        let surface = &mut self.surfaces[surface_index.0];
-        assert!(surface.render_tasks.is_none());
-        surface.render_tasks = Some(SurfaceRenderTasks::Chained { root_task_id, port_task_id });
-        surface.clipping_rect = clipping_rect;
-
-        self.add_child_render_task(
-            parent_surface_index,
-            root_task_id,
-        );
-    }
-
-    /// Add a render task as a dependency of a given surface.
-    pub fn add_child_render_task(
-        &mut self,
-        surface_index: SurfaceIndex,
-        child_task_id: RenderTaskId,
-    ) {
-        add_child_render_task(
-            surface_index,
-            child_task_id,
-            self.surfaces,
-            self.rg_builder,
-        );
-    }
-
-    pub fn push_surface(
-        &mut self,
-        cmd_buffer_builder: CommandBufferBuilder,
-    ) {
-        self.cmd_buffer_stack.push(cmd_buffer_builder);
-    }
-
-    pub fn push_prim(
-        &mut self,
-        prim_instance_index: PrimitiveInstanceIndex,
-        spatial_node_index: SpatialNodeIndex,
-        pic_coverage_rect: PictureRect,
-        tile_rect: crate::picture::TileRect,
-        sub_slice_index: SubSliceIndex,
-        gpu_address: Option<crate::gpu_cache::GpuCacheAddress>,
-    ) -> bool {
-        self.cmd_buffer_stack
-            .last_mut()
-            .unwrap()
-            .push_prim(
-                prim_instance_index,
-                spatial_node_index,
-                pic_coverage_rect,
-                tile_rect,
-                sub_slice_index,
-                gpu_address,
-            )
-    }
-
-    pub fn pop_surface(
-        &mut self,
-    ) -> CommandBufferBuilder {
-        self.cmd_buffer_stack.pop().unwrap()
     }
 }
 
@@ -356,6 +250,7 @@ impl FrameBuilder {
         composite_state: &mut CompositeState,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &SpatialTree,
+        cmd_buffers: &mut CommandBufferList,
         profile: &mut TransactionProfile,
     ) {
         profile_scope!("build_layer_screen_rects_and_cull_layers");
@@ -503,7 +398,8 @@ impl FrameBuilder {
             composite_state,
             num_visible_primitives: 0,
             plane_splitters: &mut scene.plane_splitters,
-            cmd_buffer_stack: scratch.frame.cmd_buffer_stack.take(),
+            surface_builder: SurfaceBuilder::new(),
+            cmd_buffers,
         };
 
         // Push a default dirty region which culls primitives
@@ -559,11 +455,11 @@ impl FrameBuilder {
         }
 
         frame_state.pop_dirty_region();
+        frame_state.surface_builder.finalize();
         profile.end_time(profiler::FRAME_PREPARE_TIME);
         profile.set(profiler::VISIBLE_PRIMITIVES, frame_state.num_visible_primitives);
 
         scratch.frame.dirty_region_stack = frame_state.dirty_region_stack.take();
-        scratch.frame.cmd_buffer_stack = frame_state.cmd_buffer_stack.take();
 
         {
             profile_marker!("BlockOnResources");
@@ -628,6 +524,8 @@ impl FrameBuilder {
 
         self.composite_state_prealloc.preallocate(&mut composite_state);
 
+        let mut cmd_buffers = CommandBufferList::new();
+
         self.build_layer_screen_rects_and_cull_layers(
             scene,
             screen_world_rect,
@@ -643,6 +541,7 @@ impl FrameBuilder {
             &mut composite_state,
             tile_caches,
             spatial_tree,
+            &mut cmd_buffers,
             profile,
         );
 
@@ -702,6 +601,7 @@ impl FrameBuilder {
                     &mut z_generator,
                     scene.config.gpu_supports_fast_clears,
                     &scene.prim_instances,
+                    &cmd_buffers,
                 );
 
                 has_texture_cache_tasks |= !pass.texture_cache.is_empty();
@@ -829,6 +729,7 @@ pub fn build_render_pass(
     z_generator: &mut ZBufferIdGenerator,
     gpu_supports_fast_clears: bool,
     prim_instances: &[PrimitiveInstance],
+    cmd_buffers: &CommandBufferList,
 ) -> RenderPass {
     profile_scope!("build_render_pass");
 
@@ -894,7 +795,7 @@ pub fn build_render_pass(
 
                 match task.kind {
                     RenderTaskKind::Picture(ref pic_task) => {
-                        let cmd_buffer = pic_task.cmd_buffer.as_ref().expect("bug: no cmd buffer set for picture!");
+                        let cmd_buffer = cmd_buffers.get(pic_task.cmd_buffer_index);
                         let scissor_rect = pic_task.scissor_rect.expect("bug: must be set for cache tasks");
                         let valid_rect = pic_task.valid_rect.expect("bug: must be set for cache tasks");
 
@@ -979,6 +880,7 @@ pub fn build_render_pass(
         transforms,
         z_generator,
         prim_instances,
+        cmd_buffers,
     );
     pass.alpha.build(
         ctx,
@@ -988,6 +890,7 @@ pub fn build_render_pass(
         transforms,
         z_generator,
         prim_instances,
+        cmd_buffers,
     );
 
     pass
@@ -1047,38 +950,5 @@ impl Frame {
         // test if a composite is needed due to picture cache surfaces moving
         // or external surfaces being updated).
         self.passes.is_empty()
-    }
-}
-
-/// Add a child render task as a dependency to a surface. This is a free
-/// function for now as it's also used by the render task cache.
-// TODO(gw): Find a more appropriate place for this to live - probably clearer
-//           once SurfaceInfo gets refactored.
-pub fn add_child_render_task(
-    surface_index: SurfaceIndex,
-    child_task_id: RenderTaskId,
-    surfaces: &[SurfaceInfo],
-    rg_builder: &mut RenderTaskGraphBuilder,
-) {
-    let surface_tasks = surfaces[surface_index.0]
-        .render_tasks
-        .as_ref()
-        .expect("bug: no task for surface");
-
-    match surface_tasks {
-        SurfaceRenderTasks::Tiled(ref tasks) => {
-            // For a tiled render task, add as a dependency to every tile.
-            for parent_id in tasks {
-                rg_builder.add_dependency(*parent_id, child_task_id);
-            }
-        }
-        SurfaceRenderTasks::Simple(parent_id) => {
-            rg_builder.add_dependency(*parent_id, child_task_id);
-        }
-        SurfaceRenderTasks::Chained { port_task_id, .. } => {
-            // For chained render tasks, add as a dependency of the lowest part of
-            // the chain (the picture content)
-            rg_builder.add_dependency(*port_task_id, child_task_id);
-        }
     }
 }

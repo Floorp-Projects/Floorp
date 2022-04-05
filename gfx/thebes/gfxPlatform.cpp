@@ -2446,15 +2446,6 @@ void gfxPlatform::InitGPUProcessPrefs() {
 
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
-  nsCString message;
-  nsCString failureId;
-  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
-                                        &message, failureId)) {
-    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-    // Don't return early here. We must continue the checks below in case
-    // the user has force-enabled the GPU process.
-  }
-
   // We require E10S - otherwise, there is very little benefit to the GPU
   // process, since the UI process must still use acceleration for
   // performance.
@@ -2470,6 +2461,14 @@ void gfxPlatform::InitGPUProcessPrefs() {
 
   if (StaticPrefs::layers_gpu_process_force_enabled_AtStartup()) {
     gpuProc.UserForceEnable("User force-enabled via pref");
+  }
+
+  nsCString message;
+  nsCString failureId;
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
+                                        &message, failureId)) {
+    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+    return;
   }
 
   if (IsHeadless()) {
@@ -2692,6 +2691,19 @@ void gfxPlatform::InitWebRenderConfig() {
     FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
     feature.EnableByDefault();
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
+  }
+
+  // XXX relax limitation to Windows 8.1
+  if (StaticPrefs::media_wmf_no_copy_nv12_textures() && IsWin10OrLater() &&
+      hasHardware) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
+    feature.EnableByDefault();
+    gfxVars::SetHwDecodedVideoNoCopy(true);
+  } else {
+    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+    feature.DisableByDefault(FeatureStatus::Disabled, "Disabled by default",
+                             "FEATURE_NO_COPY_DISABLED"_ns);
   }
 
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {

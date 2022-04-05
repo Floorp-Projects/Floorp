@@ -73,7 +73,6 @@ function rebuildProfileList() {
         lock.unlock();
       } catch (e) {
         if (
-          e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
           e.result != Cr.NS_ERROR_FILE_NOT_DIRECTORY &&
           e.result != Cr.NS_ERROR_FILE_NOT_FOUND
         ) {

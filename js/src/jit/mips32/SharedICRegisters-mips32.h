@@ -26,9 +26,6 @@ static constexpr ValueOperand R2(t7, t6);
 static constexpr Register ICTailCallReg = ra;
 static constexpr Register ICStubReg = t5;
 
-static constexpr Register ExtractTemp0 = InvalidReg;
-static constexpr Register ExtractTemp1 = InvalidReg;
-
 // Register used internally by MacroAssemblerMIPS.
 static constexpr Register BaselineSecondScratchReg = SecondScratchReg;
 

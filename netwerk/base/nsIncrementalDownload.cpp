@@ -287,8 +287,7 @@ nsresult nsIncrementalDownload::ProcessTimeout() {
 nsresult nsIncrementalDownload::ReadCurrentSize() {
   int64_t size;
   nsresult rv = mDest->GetFileSize((int64_t*)&size);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+  if (rv == NS_ERROR_FILE_NOT_FOUND) {
     mCurrentSize = 0;
     return NS_OK;
   }

@@ -729,15 +729,8 @@ namespace js {
 // JSFunction will not change. Note: the object can still be moved by GC.
 extern bool ObjectMayBeSwapped(const JSObject* obj);
 
-/**
- * This enum is used to select whether the defined functions should be marked as
- * builtin native instrinsics for self-hosted code.
- */
-enum DefineAsIntrinsic { NotIntrinsic, AsIntrinsic };
-
 extern bool DefineFunctions(JSContext* cx, HandleObject obj,
-                            const JSFunctionSpec* fs,
-                            DefineAsIntrinsic intrinsic);
+                            const JSFunctionSpec* fs);
 
 /* ES6 draft rev 36 (2015 March 17) 7.1.1 ToPrimitive(vp[, preferredType]) */
 extern bool ToPrimitiveSlow(JSContext* cx, JSType hint, MutableHandleValue vp);

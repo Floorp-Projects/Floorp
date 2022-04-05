@@ -40,9 +40,6 @@ class RareArgumentsData {
   static RareArgumentsData* create(JSContext* cx, ArgumentsObject* obj);
   static size_t bytesRequired(size_t numActuals);
 
-  bool isAnyElementDeleted(size_t len) const {
-    return IsAnyBitArrayElementSet(deletedBits_, len);
-  }
   bool isElementDeleted(size_t len, size_t i) const {
     MOZ_ASSERT(i < len);
     return IsBitArrayElementSet(deletedBits_, len, i);
@@ -313,6 +310,7 @@ class ArgumentsObject : public NativeObject {
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
   }
 
+ private:
   /*
    * Because the arguments object is a real object, its elements may be
    * deleted. This is implemented by setting a 'deleted' flag for the arg
@@ -325,7 +323,7 @@ class ArgumentsObject : public NativeObject {
    *
    * This works because, once a property is deleted from an arguments object,
    * it gets regular properties with regular getters/setters that don't alias
-   * ArgumentsData::slots.
+   * ArgumentsData::args.
    */
   bool isElementDeleted(uint32_t i) const {
     MOZ_ASSERT(i < data()->numArgs);
@@ -338,14 +336,23 @@ class ArgumentsObject : public NativeObject {
     return result;
   }
 
-  bool isAnyElementDeleted() const {
-    bool result = maybeRareData() &&
-                  maybeRareData()->isAnyElementDeleted(initialLength());
-    MOZ_ASSERT_IF(result, hasOverriddenElement());
-    return result;
-  }
-
+ protected:
   bool markElementDeleted(JSContext* cx, uint32_t i);
+
+ public:
+  /*
+   * Return true iff the index is a valid element index for this arguments
+   * object.
+   *
+   * Returning true here doesn't imply that the element value can be read
+   * through |ArgumentsObject::element()|. For example unmapped arguments
+   * objects can have an element index property redefined without having marked
+   * the element as deleted. Instead use |maybeGetElement()| or manually check
+   * for |hasOverriddenElement()|.
+   */
+  bool isElement(uint32_t i) const {
+    return i < initialLength() && !isElementDeleted(i);
+  }
 
   /*
    * An ArgumentsObject serves two roles:
@@ -412,7 +419,7 @@ class ArgumentsObject : public NativeObject {
    * NB: Returning false does not indicate error!
    */
   bool maybeGetElement(uint32_t i, MutableHandleValue vp) {
-    if (i >= initialLength() || isElementDeleted(i)) {
+    if (i >= initialLength() || hasOverriddenElement()) {
       return false;
     }
     vp.set(element(i));

@@ -976,23 +976,14 @@ function ArraySpeciesCreate(originalArray, length) {
 
 // ES 2017 draft (April 8, 2016) 22.1.3.1.1
 function IsConcatSpreadable(O) {
-    /* Use an intermediate var in order to evade a lint error for
-     * unreachable code (the linter doesn't recognize preprocessor
-     * directives) */
-    var maybeSpreadable = true;
-
     // Step 1.
-    if (!IsObject(O)) {
-        maybeSpreadable = false;
+    if (!IsObject(O)
 #ifdef ENABLE_RECORD_TUPLE
-        // This check ensures that unboxed Tuples are spreadable
-        if (IsTuple(O)) {
-            return true;
-        }
+        && !IsTuple(O)
 #endif
-    }
-    if (!maybeSpreadable)
+    ) {
         return false;
+    }
 
     // Step 2.
     var spreadable = O[GetBuiltinSymbol("isConcatSpreadable")];
@@ -1001,13 +992,13 @@ function IsConcatSpreadable(O) {
     if (spreadable !== undefined)
         return ToBoolean(spreadable);
 
-    // Step 4.
-    spreadable |= IsArray(O);
 #ifdef ENABLE_RECORD_TUPLE
-    // This check ensures that Tuple object wrappers are spreadable
-    spreadable |= IsTuple(O);
+    if (IsTuple(O))
+        return true;
 #endif
-    return spreadable;
+
+    // Step 4.
+    return IsArray(O);
 }
 
 // ES 2016 draft Mar 25, 2016 22.1.3.1.
@@ -1034,6 +1025,11 @@ function ArrayConcat(arg1) {
     while (true) {
         // Steps 5.b-c.
         if (IsConcatSpreadable(E)) {
+#ifdef ENABLE_RECORD_TUPLE
+            // FIXME: spec bug - steps below expect that |E| is an object.
+            E = ToObject(E);
+#endif
+
             // Step 5.c.ii.
             len = ToLength(E.length);
 

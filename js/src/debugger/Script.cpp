@@ -488,8 +488,8 @@ bool DebuggerScript::CallData::getGlobal() {
 
 bool DebuggerScript::CallData::getFormat() {
   args.rval().setString(referent.get().match(
-      [=](BaseScript*&) { return cx->names().js.get(); },
-      [=](WasmInstanceObject*&) { return cx->names().wasm.get(); }));
+      [this](BaseScript*&) { return cx->names().js.get(); },
+      [this](WasmInstanceObject*&) { return cx->names().wasm.get(); }));
   return true;
 }
 

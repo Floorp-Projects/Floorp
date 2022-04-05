@@ -115,6 +115,7 @@ class UptakeTelemetry {
    * - `SHUTDOWN_ERROR`: Error occuring during shutdown.
    * - `UNKNOWN_ERROR`: Uncategorized error.
    * - `CLEANUP_ERROR`: Clean-up of temporary files has failed.
+   * - `SYNC_BROKEN_ERROR`: Synchronization is broken.
    * - `CUSTOM_1_ERROR`: Update source specific error #1.
    * - `CUSTOM_2_ERROR`: Update source specific error #2.
    * - `CUSTOM_3_ERROR`: Update source specific error #3.
@@ -146,6 +147,7 @@ class UptakeTelemetry {
       SHUTDOWN_ERROR: "shutdown_error",
       UNKNOWN_ERROR: "unknown_error",
       CLEANUP_ERROR: "cleanup_error",
+      SYNC_BROKEN_ERROR: "sync_broken_error",
       CUSTOM_1_ERROR: "custom_1_error",
       CUSTOM_2_ERROR: "custom_2_error",
       CUSTOM_3_ERROR: "custom_3_error",

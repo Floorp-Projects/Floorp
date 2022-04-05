@@ -16,6 +16,7 @@
 #include "mozilla/Maybe.h"
 
 #include <limits> /* for std::numeric_limits */
+#include <type_traits>
 
 #include "jstypes.h"
 
@@ -162,7 +163,8 @@ namespace detail {
 #if defined(JS_NUNBOX32)
 
 constexpr JSValueTag ValueTypeToTag(JSValueType type) {
-  return static_cast<JSValueTag>(JSVAL_TAG_CLEAR | type);
+  return static_cast<JSValueTag>(JSVAL_TAG_CLEAR |
+                                 std::underlying_type_t<JSValueType>(type));
 }
 
 constexpr bool ValueIsDouble(uint64_t bits) {
@@ -176,7 +178,8 @@ constexpr JSValueTag ValueLowerInclGCThingTag = JSVAL_TAG_STRING;
 #elif defined(JS_PUNBOX64)
 
 constexpr JSValueTag ValueTypeToTag(JSValueType type) {
-  return static_cast<JSValueTag>(JSVAL_TAG_MAX_DOUBLE | type);
+  return static_cast<JSValueTag>(JSVAL_TAG_MAX_DOUBLE |
+                                 std::underlying_type_t<JSValueType>(type));
 }
 
 constexpr bool ValueIsDouble(uint64_t bits) {

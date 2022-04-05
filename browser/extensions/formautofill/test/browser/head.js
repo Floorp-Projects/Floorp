@@ -676,6 +676,17 @@ function getDoorhangerButton(button) {
   return getNotification()[button];
 }
 
+/**
+ * Removes all addresses and credit cards from storage.
+ *
+ * **NOTE: If you add or update a record in a test, then you must wait for the
+ * respective storage event to fire before calling this function.**
+ * This is because this function doesn't guarantee that a record that
+ * is about to be added or update will also be removed,
+ * since the add or update is triggered by an asynchronous call.
+ *
+ * @see waitForStorageChangedEvents for more details about storage events to wait for
+ */
 async function removeAllRecords() {
   let addresses = await getAddresses();
   if (addresses.length) {

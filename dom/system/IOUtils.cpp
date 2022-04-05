@@ -93,8 +93,7 @@ namespace mozilla::dom {
  * @see nsLocalFileUnix.cpp
  */
 static bool IsFileNotFound(nsresult aResult) {
-  return aResult == NS_ERROR_FILE_NOT_FOUND ||
-         aResult == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+  return aResult == NS_ERROR_FILE_NOT_FOUND;
 }
 /**
  * Like |IsFileNotFound|, but checks for known results that suggest a file
@@ -173,8 +172,6 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
 
   switch (aError.Code()) {
     case NS_ERROR_FILE_UNRESOLVABLE_SYMLINK:
-      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
-    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
       [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
     case NS_ERROR_FILE_NOT_FOUND:
       [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH

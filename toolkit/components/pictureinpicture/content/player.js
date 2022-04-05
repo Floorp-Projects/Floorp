@@ -141,6 +141,9 @@ let Player = {
 
     browser.setAttribute("nodefaultsrc", "true");
 
+    let playPauseBtn = document.getElementById("playpause");
+    playPauseBtn.focus({ preventFocusRing: true });
+
     // Set the specific remoteType and browsingContextGroupID to use for the
     // initial about:blank load. The combination of these two properties will
     // ensure that the browser loads in the same process as our originating

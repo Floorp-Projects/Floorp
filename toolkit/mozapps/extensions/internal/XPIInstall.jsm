@@ -1020,9 +1020,6 @@ function recursiveRemove(aFile) {
     // If the file has already gone away then don't worry about it, this can
     // happen on OSX where the resource fork is automatically moved with the
     // data fork for the file. See bug 733436.
-    if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-      return;
-    }
     if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
       return;
     }

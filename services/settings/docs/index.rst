@@ -326,6 +326,7 @@ The polling for changes process sends two notifications that observers can regis
 * ``remote-settings:changes-poll-end``: Polling for changes has ended
 * ``remote-settings:sync-error``: A synchronization error occured. Notification subject provides information about the error and affected
   collection in the ``wrappedJSObject`` attribute.
+* ``remote-settings:broken-sync-error``: Synchronization seems to be consistently failing. Profile is at risk.
 
 .. code-block:: javascript
 

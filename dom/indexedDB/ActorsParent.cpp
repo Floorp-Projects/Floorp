@@ -5718,8 +5718,7 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 }
 
 bool IsFileNotFoundError(const nsresult aRv) {
-  return aRv == NS_ERROR_FILE_NOT_FOUND ||
-         aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+  return aRv == NS_ERROR_FILE_NOT_FOUND;
 }
 
 enum struct Idempotency { Yes, No };
@@ -5739,8 +5738,8 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
 
   // Callers which pass Idempotency::Yes call this function without checking if
   // the file already exists (idempotent usage). QM_OR_ELSE_WARN_IF is not used
-  // here since we just want to log NS_ERROR_FILE_NOT_FOUND and
-  // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST results and not spam the reports.
+  // here since we just want to log NS_ERROR_FILE_NOT_FOUND results and not spam
+  // the reports.
   // Theoretically, there should be no QM_OR_ELSE_(WARN|LOG_VERBOSE)_IF when a
   // caller passes Idempotency::No, but it's simpler when the predicate just
   // always returns false in that case.
@@ -12381,10 +12380,10 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
         }
 
         // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
-        // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-        // check, but the file was found by a directory traversal and ToInteger
-        // on the name succeeded, so it should be our file and if the file
-        // disappears, the use of QM_OR_ELSE_WARN_IF is ok here.
+        // NS_ERROR_FILE_NOT_FOUND check, but the file was found by a directory
+        // traversal and ToInteger on the name succeeded, so it should be our
+        // file and if the file disappears, the use of QM_OR_ELSE_WARN_IF is ok
+        // here.
         QM_TRY_INSPECT(const auto& thisUsage,
                        QM_OR_ELSE_WARN_IF(
                            // Expression.
@@ -12394,8 +12393,7 @@ Result<FileUsageType, nsresult> DatabaseFileManager::GetUsage(
                                }),
                            // Predicate.
                            ([](const nsresult rv) {
-                             return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                                    rv == NS_ERROR_FILE_NOT_FOUND;
+                             return rv == NS_ERROR_FILE_NOT_FOUND;
                            }),
                            // Fallback. If the file does no longer exist, treat
                            // it as 0-sized.
@@ -12822,17 +12820,15 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                                           databaseFilename + kSQLiteWALSuffix));
 
         // QM_OR_ELSE_WARN_IF is not used here since we just want to log
-        // NS_ERROR_FILE_NOT_FOUND/NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
-        // result and not spam the reports (the -wal file doesn't have to
-        // exist).
+        // NS_ERROR_FILE_NOT_FOUND result and not spam the reports (the -wal
+        // file doesn't have to exist).
         QM_TRY_INSPECT(const int64_t& walFileSize,
                        QM_OR_ELSE_LOG_VERBOSE_IF(
                            // Expression.
                            MOZ_TO_RESULT_INVOKE_MEMBER(walFile, GetFileSize),
                            // Predicate.
                            ([](const nsresult rv) {
-                             return rv == NS_ERROR_FILE_NOT_FOUND ||
-                                    rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+                             return rv == NS_ERROR_FILE_NOT_FOUND;
                            }),
                            // Fallback.
                            (ErrToOk<0, int64_t>)));
