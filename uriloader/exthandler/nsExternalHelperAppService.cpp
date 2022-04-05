@@ -30,6 +30,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsDependentSubstring.h"
+#include "nsSandboxFlags.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
@@ -1095,18 +1096,61 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
   return ios->NewURI(escapedSpec, nullptr, nullptr, aResult);
 }
 
+bool ExternalProtocolIsBlockedBySandbox(
+    BrowsingContext* aBrowsingContext,
+    const bool aHasValidUserGestureActivation) {
+  if (!aBrowsingContext || aBrowsingContext->IsTop()) {
+    return false;
+  }
+
+  uint32_t sandboxFlags = aBrowsingContext->GetSandboxFlags();
+
+  if (sandboxFlags == SANDBOXED_NONE) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_CUSTOM_PROTOCOLS)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) &&
+      aHasValidUserGestureActivation) {
+    return false;
+  }
+
+  return true;
+}
+
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
                                     nsIPrincipal* aRedirectPrincipal,
                                     BrowsingContext* aBrowsingContext,
-                                    bool aTriggeredExternally) {
+                                    bool aTriggeredExternally,
+                                    bool aHasValidUserGestureActivation) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
         aURI, aTriggeringPrincipal, aRedirectPrincipal, aBrowsingContext,
-        aTriggeredExternally);
+        aTriggeredExternally, aHasValidUserGestureActivation);
+    return NS_OK;
+  }
+
+  // Prevent sandboxed BrowsingContexts from navigating to external protocols.
+  // This only uses the sandbox flags of the target BrowsingContext of the
+  // load. The navigating document's CSP sandbox flags do not apply.
+  if (aBrowsingContext &&
+      ExternalProtocolIsBlockedBySandbox(aBrowsingContext,
+                                         aHasValidUserGestureActivation)) {
     return NS_OK;
   }
 
