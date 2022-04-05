@@ -267,6 +267,9 @@ class RTC_EXPORT VideoEncoder {
 
     // Target bitrate, per spatial/temporal layer.
     // A target bitrate of 0bps indicates a layer should not be encoded at all.
+    VideoBitrateAllocation target_bitrate;
+    // Adjusted target bitrate, per spatial/temporal layer. May be lower or
+    // higher than the target depending on encoder behaviour.
     VideoBitrateAllocation bitrate;
     // Target framerate, in fps. A value <= 0.0 is invalid and should be
     // interpreted as framerate target not available. In this case the encoder
