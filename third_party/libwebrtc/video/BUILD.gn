@@ -540,7 +540,6 @@ if (rtc_include_tests) {
       "end_to_end_tests/multi_stream_tester.h",
       "end_to_end_tests/multi_stream_tests.cc",
       "end_to_end_tests/network_state_tests.cc",
-      "end_to_end_tests/probing_tests.cc",
       "end_to_end_tests/retransmission_tests.cc",
       "end_to_end_tests/rtp_rtcp_tests.cc",
       "end_to_end_tests/ssrc_tests.cc",

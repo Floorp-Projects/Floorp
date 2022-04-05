@@ -269,6 +269,13 @@ DataRate CallClient::padding_rate() const {
   return network_controller_factory_.GetUpdate().pacer_config->pad_rate();
 }
 
+void CallClient::UpdateBitrateConstraints(
+    const BitrateConstraints& constraints) {
+  SendTask([this, &constraints]() {
+    call_->GetTransportControllerSend()->SetSdpBitrateParameters(constraints);
+  });
+}
+
 void CallClient::OnPacketReceived(EmulatedIpPacket packet) {
   MediaType media_type = MediaType::ANY;
   if (!RtpHeaderParser::IsRtcp(packet.cdata(), packet.data.size())) {
