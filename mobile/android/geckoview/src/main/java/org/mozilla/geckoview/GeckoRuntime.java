@@ -96,19 +96,6 @@ public final class GeckoRuntime implements Parcelable {
   public static final String EXTRA_EXTRAS_PATH = "extrasPath";
 
   /**
-   * This is a key for extra data sent with {@link #ACTION_CRASHED}. The value is a boolean
-   * indicating whether or not the crash was fatal or not. If true, the main application process was
-   * affected by the crash. If false, only an internal process used by Gecko has crashed and the
-   * application may be able to recover.
-   *
-   * @see GeckoSession.ContentDelegate#onCrash(GeckoSession)
-   * @deprecated use {@link #EXTRA_CRASH_PROCESS_TYPE} instead.
-   */
-  @Deprecated
-  @DeprecationSchedule(id = "crashreporter-fatal", version = 100)
-  public static final String EXTRA_CRASH_FATAL = "fatal";
-
-  /**
    * This is a key for extra data sent with {@link #ACTION_CRASHED}. The value is a String matching
    * one of the `CRASHED_PROCESS_TYPE_*` constants, describing what type of process the crash
    * occurred in.
@@ -323,7 +310,6 @@ public final class GeckoRuntime implements Parcelable {
             final Intent i = new Intent(ACTION_CRASHED, null, context, crashHandler);
             i.putExtra(EXTRA_MINIDUMP_PATH, message.getString(EXTRA_MINIDUMP_PATH));
             i.putExtra(EXTRA_EXTRAS_PATH, message.getString(EXTRA_EXTRAS_PATH));
-            i.putExtra(EXTRA_CRASH_FATAL, message.getBoolean(EXTRA_CRASH_FATAL, true));
             i.putExtra(EXTRA_CRASH_PROCESS_TYPE, message.getString(EXTRA_CRASH_PROCESS_TYPE));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

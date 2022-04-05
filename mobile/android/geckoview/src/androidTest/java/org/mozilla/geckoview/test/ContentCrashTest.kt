@@ -25,7 +25,7 @@ class ContentCrashTest : BaseSessionTest() {
     @Before
     fun setup() {
         assertTrue(client.connect(env.defaultTimeoutMillis))
-        client.setEvalNextCrashDump(/* expectFatal */ false, GeckoRuntime.CRASHED_PROCESS_TYPE_FOREGROUND_CHILD)
+        client.setEvalNextCrashDump(GeckoRuntime.CRASHED_PROCESS_TYPE_FOREGROUND_CHILD)
     }
 
     @IgnoreCrash
