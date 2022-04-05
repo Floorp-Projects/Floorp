@@ -23,6 +23,7 @@
 #include "MediaEventSource.h"
 #include "MediaPipelineFilter.h"
 #include "MediaSegment.h"
+#include "PrincipalChangeObserver.h"
 #include "jsapi/PacketDumper.h"
 
 #include "test/rtp_header_parser.h"
@@ -224,7 +225,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Only safe to access from STS thread.
   std::map<uint32_t, RtpCSRCStats> mCsrcStats;
 
-  // Written in c'tor. Read on STS thread.
+  // Written in c'tor. Read on STS and main thread.
   const std::string mPc;
 
   // String describing this MediaPipeline for logging purposes. Only safe to
@@ -253,7 +254,9 @@ class MediaPipeline : public sigslot::has_slots<> {
 
 // A specialization of pipeline for reading from an input device
 // and transmitting to the network.
-class MediaPipelineTransmit : public MediaPipeline {
+class MediaPipelineTransmit
+    : public MediaPipeline,
+      public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
  public:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& aPc,
@@ -272,10 +275,14 @@ class MediaPipelineTransmit : public MediaPipeline {
 
   // When the principal of the domtrack changes, it calls through to here
   // so that we can determine whether to enable track transmission.
-  // `track` has to be null or equal `mDomTrack` for us to apply the update.
-  virtual void UpdateSinkIdentity_m(const dom::MediaStreamTrack* aTrack,
-                                    nsIPrincipal* aPrincipal,
-                                    const PeerIdentity* aSinkIdentity);
+  // In cases where the peer isn't yet identified, we disable the pipeline (not
+  // the stream, that would potentially affect others), so that it sends
+  // black/silence.  Once the peer is identified, re-enable those streams.
+  virtual void UpdateSinkIdentity(nsIPrincipal* aPrincipal,
+                                  const PeerIdentity* aSinkIdentity);
+
+  // for monitoring changes in track ownership
+  void PrincipalChanged(dom::MediaStreamTrack* aTrack) override;
 
   // Override MediaPipeline::TransportReady_s.
   void TransportReady_s() override;

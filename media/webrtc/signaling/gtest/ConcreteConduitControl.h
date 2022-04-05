@@ -22,7 +22,7 @@ class ConcreteCanonicals {
         INIT_CANONICAL(mLocalSsrcs, Ssrcs()),
         INIT_CANONICAL(mLocalVideoRtxSsrcs, Ssrcs()),
         INIT_CANONICAL(mLocalCname, std::string()),
-        INIT_CANONICAL(mLocalMid, std::string()),
+        INIT_CANONICAL(mMid, std::string()),
         INIT_CANONICAL(mSyncGroup, std::string()),
         INIT_CANONICAL(mLocalSendRtpExtensions, RtpExtList()),
         INIT_CANONICAL(mLocalRecvRtpExtensions, RtpExtList()),
@@ -42,7 +42,7 @@ class ConcreteCanonicals {
   Canonical<Ssrcs> mLocalSsrcs;
   Canonical<Ssrcs> mLocalVideoRtxSsrcs;
   Canonical<std::string> mLocalCname;
-  Canonical<std::string> mLocalMid;
+  Canonical<std::string> mMid;
   Canonical<std::string> mSyncGroup;
   Canonical<RtpExtList> mLocalSendRtpExtensions;
   Canonical<RtpExtList> mLocalRecvRtpExtensions;
@@ -92,9 +92,7 @@ class ConcreteConduitControl : public AudioConduitControlInterface,
   AbstractCanonical<std::string>* CanonicalLocalCname() override {
     return &mLocalCname;
   }
-  AbstractCanonical<std::string>* CanonicalLocalMid() override {
-    return &mLocalMid;
-  }
+  AbstractCanonical<std::string>* CanonicalMid() override { return &mMid; }
   AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() override {
     return &mRemoteSsrc;
   }
