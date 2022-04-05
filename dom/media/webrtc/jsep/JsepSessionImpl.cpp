@@ -88,6 +88,31 @@ nsresult JsepSessionImpl::Init() {
   return NS_OK;
 }
 
+static void GetIceCredentials(
+    const Sdp& aSdp,
+    std::set<std::pair<std::string, std::string>>* aCredentials) {
+  for (size_t i = 0; i < aSdp.GetMediaSectionCount(); ++i) {
+    const SdpAttributeList& attrs = aSdp.GetMediaSection(i).GetAttributeList();
+    if (attrs.HasAttribute(SdpAttribute::kIceUfragAttribute) &&
+        attrs.HasAttribute(SdpAttribute::kIcePwdAttribute)) {
+      aCredentials->insert(
+          std::make_pair(attrs.GetIceUfrag(), attrs.GetIcePwd()));
+    }
+  }
+}
+
+std::set<std::pair<std::string, std::string>>
+JsepSessionImpl::GetLocalIceCredentials() const {
+  std::set<std::pair<std::string, std::string>> result;
+  if (mCurrentLocalDescription) {
+    GetIceCredentials(*mCurrentLocalDescription, &result);
+  }
+  if (mPendingLocalDescription) {
+    GetIceCredentials(*mPendingLocalDescription, &result);
+  }
+  return result;
+}
+
 nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
   mLastError.clear();
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: Adding transceiver.");
@@ -2365,7 +2390,7 @@ nsresult JsepSessionImpl::Close() {
 
 const std::string JsepSessionImpl::GetLastError() const { return mLastError; }
 
-const std::vector<std::pair<size_t, std::string> >&
+const std::vector<std::pair<size_t, std::string>>&
 JsepSessionImpl::GetLastSdpParsingErrors() const {
   return mLastSdpParsingErrors;
 }

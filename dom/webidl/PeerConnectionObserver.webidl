@@ -52,6 +52,8 @@ interface PeerConnectionObserver
   */
   void fireStreamEvent(MediaStream stream);
 
+  void fireNegotiationNeededEvent();
+
   /* Packet dump callback */
   void onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
                 ArrayBuffer packet);

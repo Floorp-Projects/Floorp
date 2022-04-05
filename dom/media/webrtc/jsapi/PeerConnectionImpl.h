@@ -17,6 +17,7 @@
 #include "nsIUUIDGenerator.h"
 #include "nsIThread.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Attributes.h"
 
 // Work around nasty macro in webrtc/voice_engine/voice_engine_defines.h
 #ifdef GetLastError
@@ -29,9 +30,12 @@
 
 #include "mozilla/ErrorResult.h"
 #include "jsapi/PacketDumper.h"
+#include "mozilla/dom/RTCPeerConnectionBinding.h"  // mozPacketDumpType, maybe move?
+#include "mozilla/dom/PeerConnectionImplBinding.h"  // ChainedOperation
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "PrincipalChangeObserver.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/net/DataChannel.h"
@@ -277,7 +281,7 @@ class PeerConnectionImpl final
       const nsAString& aKind, dom::MediaStreamTrack* aSendTrack,
       ErrorResult& rv);
 
-  bool CheckNegotiationNeeded(ErrorResult& rv);
+  bool CheckNegotiationNeeded();
 
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrackNoRenegotiation, ErrorResult& rv,
                                TransceiverImpl& aTransceiver,
@@ -382,6 +386,9 @@ class PeerConnectionImpl final
     rv = SetConfiguration(aConfiguration);
   }
 
+  void RestartIce();
+  void RestartIceNoRenegotiationNeeded();
+
   void RecordEndOfCallTelemetry();
 
   nsresult InitializeDataChannel();
@@ -393,6 +400,58 @@ class PeerConnectionImpl final
                                       uint16_t aMaxTime, uint16_t aMaxNum,
                                       bool aExternalNegotiated,
                                       uint16_t aStream);
+
+  // Base class for chained operations. Necessary right now because some
+  // operations come from JS (in the form of dom::ChainedOperation), and others
+  // come from c++ (dom::ChainedOperation is very unwieldy and arcane to build
+  // in c++). Once we stop using JSImpl, we should be able to simplify this.
+  class Operation : public dom::PromiseNativeHandler {
+   public:
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(Operation)
+    explicit Operation(PeerConnectionImpl* aPc);
+    MOZ_CAN_RUN_SCRIPT
+    void Call();
+    dom::Promise* GetPromise() { return mPromise; }
+    MOZ_CAN_RUN_SCRIPT
+    void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                          ErrorResult& aRv) override;
+
+    MOZ_CAN_RUN_SCRIPT
+    void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                          ErrorResult& aRv) override;
+
+   protected:
+    MOZ_CAN_RUN_SCRIPT
+    virtual RefPtr<dom::Promise> CallImpl() = 0;
+    virtual ~Operation();
+    // This is the promise p from https://w3c.github.io/webrtc-pc/#dfn-chain
+    // This will be a content promise, since we return this to the caller of
+    // Chain.
+    RefPtr<dom::Promise> mPromise;
+    RefPtr<PeerConnectionImpl> mPc;
+  };
+
+  class JSOperation final : public Operation {
+   public:
+    explicit JSOperation(PeerConnectionImpl* aPc, dom::ChainedOperation& aOp);
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JSOperation, Operation)
+
+   private:
+    MOZ_CAN_RUN_SCRIPT
+    RefPtr<dom::Promise> CallImpl() override;
+    ~JSOperation() = default;
+    RefPtr<dom::ChainedOperation> mOperation;
+  };
+
+  MOZ_CAN_RUN_SCRIPT
+  dom::Promise* Chain(dom::ChainedOperation& aOperation);
+  MOZ_CAN_RUN_SCRIPT
+  dom::Promise* Chain(const RefPtr<Operation>& aOperation);
+  already_AddRefed<dom::Promise> MakePromise() const;
+
+  void UpdateNegotiationNeeded();
 
   // Gets the RTC Signaling State of the JSEP session
   dom::RTCSignalingState GetSignalingState() const;
@@ -494,6 +553,10 @@ class PeerConnectionImpl final
 
   dom::Sequence<dom::RTCSdpParsingErrorInternal> GetLastSdpParsingErrors()
       const;
+
+  MOZ_CAN_RUN_SCRIPT
+  void RunNextOperation();
+
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
   // any other attributes of this class.
@@ -693,6 +756,12 @@ class PeerConnectionImpl final
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   bool mRtxIsAllowed = true;
+
+  nsTArray<RefPtr<Operation>> mOperations;
+  bool mChainingOperation = false;
+  bool mUpdateNegotiationNeededFlagOnEmptyChain = false;
+  bool mNegotiationNeeded = false;
+  std::set<std::pair<std::string, std::string>> mLocalIceCredentialsToReplace;
 
   nsTArray<RefPtr<TransceiverImpl>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>

@@ -135,6 +135,9 @@ class JsepSessionImpl : public JsepSession {
     return !mOldIceUfrag.empty();
   }
 
+  virtual std::set<std::pair<std::string, std::string>> GetLocalIceCredentials()
+      const override;
+
   virtual const std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
       const override {
     return mTransceivers;
