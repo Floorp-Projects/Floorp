@@ -288,6 +288,7 @@ void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
           cookie->Expiry() == aCookie->Expiry() &&
           cookie->IsSecure() == aCookie->IsSecure() &&
           cookie->SameSite() == aCookie->SameSite() &&
+          cookie->RawSameSite() == aCookie->RawSameSite() &&
           cookie->IsSession() == aCookie->IsSession() &&
           cookie->IsHttpOnly() == aCookie->IsHttpOnly()) {
         cookie->SetLastAccessed(aCookie->LastAccessed());
