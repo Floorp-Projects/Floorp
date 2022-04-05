@@ -171,20 +171,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       0%, 100% { transform: translateX(50px) }
       25%, 75% { transform: none }
     }
-
-    .fill-vh {
-      width: 100px;
-      height: 100vh;
-    }
-
-    @scroll-timeline test-timeline {
-      orientation: block;
-    }
-
-    @keyframes geometry {
-      from { width: 50px; }
-      to { width: 100px; }
-    }
   </style>
 </head>
 <body>
@@ -2858,37 +2844,6 @@ addAsyncAnimTest(async function() {
           "transform-like properties transition runs on compositor thread");
 
   done_div();
-});
-
-// transform property with scroll-linked animations.
-addAsyncAnimTest(async function() {
-  new_div("animation: always_fifty 10s scroll_timeline;");
-
-  await waitForPaintsFlushed();
-  omta_todo_is("transform", { tx: 50 }, RunningOn.TodoCompositor,
-               "scroll transform animations should runs on compositor thread");
-  done_div();
-});
-
-// The non-omta property with scroll-timeline together with an omta property
-// with document-timeline.
-addAsyncAnimTest(async function() {
-  // Put an empty filling element to make the scroll range be non-zero, so the
-  // progress of scroll-timeline is 0% (running), instead of 100% (finished).
-  let filling = document.createElement("div");
-  filling.classList.add("fill-vh");
-  document.body.appendChild(filling);
-
-  new_div("animation: geometry 10s test-timeline, always_fifty 1s infinite;");
-
-  await waitForPaintsFlushed();
-  // Note: width is not a OMTA property, so it must be running on the main
-  // thread.
-  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
-          "transform animations should runs on compositor thread");
-
-  done_div();
-  filling.remove();
 });
 
 </script>

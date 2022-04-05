@@ -161,6 +161,12 @@ class ScrollTimeline final : public AnimationTimeline {
   // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
   layers::ScrollDirection Axis() const;
 
+  StyleOverflow SourceScrollStyle() const;
+
+  bool APZIsActiveForSource() const;
+
+  bool ScrollingDirectionIsAvailable() const;
+
   static constexpr const TimingParams& GetTiming() { return sTiming; }
 
  protected:

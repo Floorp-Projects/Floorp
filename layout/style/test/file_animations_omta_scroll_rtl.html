@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+  <title>Test for css-animations running on the compositor thread with
+    scroll-timeline and right to left writing mode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    @scroll-timeline scroll_timeline {
+      orientation: horizontal;
+    }
+
+    @keyframes transform_anim {
+      from { transform: translateX(-100px) }
+      to { transform: translateX(-200px) }
+    }
+
+    html {
+      min-width: 100%;
+      padding-left: 100px;
+      direction: rtl;
+    }
+
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: green;
+    }
+  </style>
+</head>
+<body>
+  <div id="display"></div>
+  <pre id="test"></pre>
+</body>
+<script type="application/javascript">
+"use strict";
+
+// Global state
+var gDiv = null;
+
+// Shortcut omta_is and friends by filling in the initial 'elem' argument
+// with gDiv.
+[ 'omta_is', 'omta_todo_is', 'omta_is_approx' ].forEach(function(fn) {
+  var origFn = window[fn];
+  window[fn] = function() {
+    var args = Array.from(arguments);
+    if (!(args[0] instanceof Element)) {
+      args.unshift(gDiv);
+    }
+    return origFn.apply(window, args);
+  };
+});
+
+// Shortcut new_div and done_div to update gDiv
+var originalNewDiv = window.new_div;
+window.new_div = function(style) {
+  [ gDiv ] = originalNewDiv(style);
+};
+var originalDoneDiv = window.done_div;
+window.done_div = function() {
+  originalDoneDiv();
+  gDiv = null;
+};
+
+// Bind the ok and todo to the opener, and close this window when we finish.
+var ok = opener.ok.bind(opener);
+var todo = opener.todo.bind(opener);
+function finish() {
+  var o = opener;
+  self.close();
+  o.SimpleTest.finish();
+}
+
+waitUntilApzStable().then(() => {
+  runOMTATest(function() {
+    var onAbort = function() {
+      if (gDiv) {
+        done_div();
+      }
+    };
+    runAllAsyncAnimTests(onAbort).then(finish);
+  }, finish);
+});
+
+//----------------------------------------------------------------------
+//
+// Test cases
+//
+//----------------------------------------------------------------------
+
+// transform property with scroll-linked animations. The writing mode is from
+// right to left, so we have to use the negative scroll offset.
+addAsyncAnimTest(async function() {
+  new_div("animation: transform_anim 1s linear scroll_timeline;");
+  await waitForPaintsFlushed();
+
+  const root = document.scrollingElement;
+  const maxScroll = root.scrollWidth - root.clientWidth;
+  root.scrollLeft = -0.5 * maxScroll;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: -150 }, 0.1, RunningOn.Compositor,
+                 "scroll transform animations should runs on compositor " +
+                 "thread");
+
+  root.scrollLeft = 0;
+  done_div();
+});
+
+</script>
+</html>
