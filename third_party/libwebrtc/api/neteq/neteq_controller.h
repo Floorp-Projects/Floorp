@@ -163,6 +163,10 @@ class NetEqController {
                                             uint32_t main_timestamp,
                                             int fs_hz) = 0;
 
+  // Notify the NetEqController that we are currently in muted state.
+  // TODO(ivoc): Make pure virtual when downstream is updated.
+  virtual void NotifyMutedState() {}
+
   // Returns true if a peak was found.
   virtual bool PeakFound() const = 0;
 
