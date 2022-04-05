@@ -42,9 +42,6 @@ this.takeshot = (function() {
       options.rect = rectangle;
       options.resetScrollPosition = true;
 
-      // To avoid creating extremely large images (which causes
-      // performance problems), we set the devicePixelRatio to 1.
-      devicePixelRatio = 1;
       options.scale = 1 / zoomFactor;
     } else if (screenshotType != "visible") {
       let rectangle = {
