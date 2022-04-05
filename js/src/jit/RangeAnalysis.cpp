@@ -310,22 +310,10 @@ bool RangeAnalysis::addBetaNodes() {
         }
         break;
       case JSOp::StrictEq:
-        // A strict comparison can test for things other than numeric value.
-        if (!compare->isNumericComparison()) {
-          continue;
-        }
-        // Otherwise fall through to handle JSOp::StrictEq the same as JSOp::Eq.
-        [[fallthrough]];
       case JSOp::Eq:
         comp.setDouble(bound, bound);
         break;
       case JSOp::StrictNe:
-        // A strict comparison can test for things other than numeric value.
-        if (!compare->isNumericComparison()) {
-          continue;
-        }
-        // Otherwise fall through to handle JSOp::StrictNe the same as JSOp::Ne.
-        [[fallthrough]];
       case JSOp::Ne:
         // Negative zero is not not-equal to zero.
         if (bound == 0) {
