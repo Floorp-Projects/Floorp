@@ -2588,19 +2588,30 @@ var SessionStoreInternal = {
     gBrowser.tabContainer.updateTabIndicatorAttr(aTab);
 
     let { userTypedValue = null, userTypedClear = 0 } = browser;
+    let hasStartedLoad = browser.didStartLoadSinceLastUserTyping();
 
     let cacheState = TabStateCache.get(browser.permanentKey);
 
-    // cache the userTypedValue either if the there is no cache state at all
-    // (e.g. if it was already discarded before we got to cache its state) or
+    // Cache the browser userTypedValue either if there is no cache state
+    // at all (e.g. if it was already discarded before we got to cache its state)
     // or it may have been created but not including a userTypedValue (e.g.
     // for a private tab we will cache `isPrivate: true` as soon as the tab
     // is opened).
     //
-    // In both cases we want to be sure that we are caching the userTypedValue
-    // if the browser element has one, otherwise the lazy tab will not be
-    // restored with the expected url once activated again (e.g. See Bug 1724205).
-    if (userTypedValue && !cacheState?.userTypedValue) {
+    // But only if:
+    //
+    // - if there is no cache state yet (which is unfortunately required
+    //   for tabs discarded immediately after creation by extensions, see
+    //   Bug 1422588).
+    //
+    // - or the user typed value was already being loaded (otherwise the lazy
+    //   tab will not be restored with the expected url once activated again,
+    //   see Bug 1724205).
+    let shouldUpdateCacheState =
+      userTypedValue &&
+      (!cacheState || (hasStartedLoad && !cacheState.userTypedValue));
+
+    if (shouldUpdateCacheState) {
       // Discard was likely called before state can be cached.  Update
       // the persistent tab state cache with browser information so a
       // restore will be successful.  This information is necessary for
