@@ -14,6 +14,7 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "modules/audio_device/include/mock_audio_device.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
+#include "modules/utility/include/mock/mock_process_thread.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
 
@@ -40,15 +41,20 @@ class VoipCoreTest : public ::testing::Test {
     rtc::scoped_refptr<AudioProcessing> audio_processing =
         new rtc::RefCountedObject<test::MockAudioProcessing>();
 
+    auto process_thread = std::make_unique<NiceMock<MockProcessThread>>();
+    // Hold the pointer to use for testing.
+    process_thread_ = process_thread.get();
+
     voip_core_ = std::make_unique<VoipCore>();
     voip_core_->Init(std::move(encoder_factory), std::move(decoder_factory),
                      CreateDefaultTaskQueueFactory(), audio_device_,
-                     std::move(audio_processing));
+                     std::move(audio_processing), std::move(process_thread));
   }
 
   std::unique_ptr<VoipCore> voip_core_;
   NiceMock<MockTransport> transport_;
   rtc::scoped_refptr<test::MockAudioDeviceModule> audio_device_;
+  NiceMock<MockProcessThread>* process_thread_;
 };
 
 // Validate expected API calls that involves with VoipCore. Some verification is
@@ -174,6 +180,35 @@ TEST_F(VoipCoreTest, StopSendAndPlayoutWithoutStarting) {
   EXPECT_TRUE(voip_core_->StopPlayout(*channel));
 
   voip_core_->ReleaseChannel(*channel);
+}
+
+// This tests correctness on ProcessThread usage where we expect the first/last
+// channel creation/release triggers its Start/Stop method once only.
+TEST_F(VoipCoreTest, TestProcessThreadOperation) {
+  EXPECT_CALL(*process_thread_, Start);
+  EXPECT_CALL(*process_thread_, RegisterModule).Times(2);
+
+  auto channel_one = voip_core_->CreateChannel(&transport_, 0xdeadc0de);
+  auto channel_two = voip_core_->CreateChannel(&transport_, 0xdeadbeef);
+  EXPECT_TRUE(channel_one);
+  EXPECT_TRUE(channel_two);
+
+  EXPECT_CALL(*process_thread_, Stop);
+  EXPECT_CALL(*process_thread_, DeRegisterModule).Times(2);
+
+  voip_core_->ReleaseChannel(*channel_one);
+  voip_core_->ReleaseChannel(*channel_two);
+
+  EXPECT_CALL(*process_thread_, Start);
+  EXPECT_CALL(*process_thread_, RegisterModule);
+
+  auto channel_three = voip_core_->CreateChannel(&transport_, absl::nullopt);
+  EXPECT_TRUE(channel_three);
+
+  EXPECT_CALL(*process_thread_, Stop);
+  EXPECT_CALL(*process_thread_, DeRegisterModule);
+
+  voip_core_->ReleaseChannel(*channel_three);
 }
 
 }  // namespace

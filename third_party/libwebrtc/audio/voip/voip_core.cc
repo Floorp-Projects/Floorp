@@ -41,14 +41,18 @@ bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
                     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
                     std::unique_ptr<TaskQueueFactory> task_queue_factory,
                     rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
-                    rtc::scoped_refptr<AudioProcessing> audio_processing) {
+                    rtc::scoped_refptr<AudioProcessing> audio_processing,
+                    std::unique_ptr<ProcessThread> process_thread) {
   encoder_factory_ = std::move(encoder_factory);
   decoder_factory_ = std::move(decoder_factory);
   task_queue_factory_ = std::move(task_queue_factory);
   audio_device_module_ = std::move(audio_device_module);
   audio_processing_ = std::move(audio_processing);
+  process_thread_ = std::move(process_thread);
 
-  process_thread_ = ProcessThread::Create("ModuleProcessThread");
+  if (!process_thread_) {
+    process_thread_ = ProcessThread::Create("ModuleProcessThread");
+  }
   audio_mixer_ = AudioMixerImpl::Create();
 
   // AudioTransportImpl depends on audio mixer and audio processing instances.
