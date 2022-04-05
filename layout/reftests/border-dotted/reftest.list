@@ -15,3 +15,5 @@ fuzzy(0-80,0-1500) fails == border-dashed-non-integer.html masked.html
 fuzzy(0-80,0-1500) fails fails-if(useDrawSnapshot) == border-dashed-radius-zoom.html masked-zoom.html
 fuzzy(0-80,0-1500) fails-if(!useDrawSnapshot) == border-dotted-radius-zero.html masked-small.html
 == 1752624.html 1752624-ref.html
+# 1761756.html uses the fallback rendering and the result is slightly different
+fuzzy(0-200,0-200) == 1761756.html 1761756-ref.html
