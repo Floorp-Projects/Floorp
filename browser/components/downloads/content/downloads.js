@@ -1043,7 +1043,7 @@ var DownloadsView = {
   },
 
   onDownloadDragStart(aEvent) {
-    let element = this.richListBox.selectedItem;
+    let element = aEvent.target.closest("richlistitem");
     if (!element) {
       return;
     }
