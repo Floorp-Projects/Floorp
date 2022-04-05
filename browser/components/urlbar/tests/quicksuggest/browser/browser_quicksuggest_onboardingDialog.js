@@ -24,9 +24,11 @@ const OFFLINE_DEFAULT_PREFS = {
 let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
 let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
 
-// Allow more time for Mac machines so they don't time out in verify mode.
-if (AppConstants.platform == "macosx") {
-  requestLongerTimeout(3);
+// Allow more time for Mac and Linux machines so they don't time out in verify mode.
+if (AppConstants.platform === "macosx") {
+  requestLongerTimeout(4);
+} else if (AppConstants.platform === "linux") {
+  requestLongerTimeout(2);
 }
 
 // Whether the tab key can move the focus. On macOS with full keyboard access
@@ -59,269 +61,26 @@ add_task(async function aboutWelcome() {
   });
 });
 
-// Test for transition from introduction to main.
-add_task(async function transition() {
-  await doTransitionTest({
-    trigger: win => {
-      info("Find next button");
-      const onboardingNext = win.document.getElementById("onboardingNext");
-      info("Click to transition");
-      onboardingNext.click();
-    },
-  });
-});
-
-// Test for transition from introduction to main by enter key.
-add_task(async function transition_by_enter() {
-  await doTransitionTest({
-    trigger: () => {
-      info("Enter to transition");
-      EventUtils.synthesizeKey("KEY_Enter");
-    },
-  });
-});
-
-// When the accept option is selected, the user should be opted in.
-add_task(async function accept() {
-  await doDialogTest({
-    callback: async () => {
-      let tabCount = gBrowser.tabs.length;
-
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: true,
-      });
-
-      info("Select accept option");
-      win.document.getElementById("onboardingAccept").click();
-
-      info("Submit");
-      win.document.getElementById("onboardingSubmit").click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        "about:blank",
-        "Nothing loaded in the current tab"
-      );
-      Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
-    },
-    onboardingDialogChoice: "accept_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.onboardingDialogVersion": JSON.stringify({ version: 1 }),
-      "quicksuggest.dataCollection.enabled": true,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "enabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "accept_2",
-      },
-    ],
-  });
-});
-
-// When the reject option is selected, the user should be opted out.
-add_task(async function reject() {
-  await doDialogTest({
-    callback: async () => {
-      let tabCount = gBrowser.tabs.length;
-
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: true,
-      });
-
-      info("Select reject option");
-      win.document.getElementById("onboardingReject").click();
-
-      info("Submit");
-      win.document.getElementById("onboardingSubmit").click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        "about:blank",
-        "Nothing loaded in the current tab"
-      );
-      Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
-    },
-    onboardingDialogChoice: "reject_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "reject_2",
-      },
-    ],
-  });
-});
-
-// When the "X" close button is clicked, the user should remain opted out.
-add_task(async function close() {
-  await doDialogTest({
-    callback: async () => {
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog();
-
-      info("Check the status of the close button");
-      const closeButton = win.document.getElementById("onboardingClose");
-      Assert.ok(BrowserTestUtils.is_visible(closeButton));
-      Assert.equal(closeButton.getAttribute("title"), "Close");
-
-      info("Click on the close button");
-      closeButton.click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-    },
-    onboardingDialogChoice: "close_1",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "close_1",
-      },
-    ],
-  });
-});
-
-// When the Not Now link is clicked, the user should remain opted out.
-add_task(async function skip() {
-  await doDialogTest({
-    callback: async () => {
-      let tabCount = gBrowser.tabs.length;
-
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: true,
-      });
-
-      info("Click on not now link");
-      win.document.getElementById("onboardingSkipLink").click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        "about:blank",
-        "Nothing loaded in the current tab"
-      );
-      Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
-    },
-    onboardingDialogChoice: "not_now_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "not_now_2",
-      },
-    ],
-  });
-});
-
-// When Learn More is clicked, the user should remain opted out and the support
-// URL should open in a new tab.
-add_task(async function learnMore() {
-  await doDialogTest({
-    callback: async () => {
-      let loadPromise = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        QuickSuggestTestUtils.LEARN_MORE_URL
-      ).then(tab => {
-        info("Saw new tab");
-        return tab;
-      });
-
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: true,
-      });
-
-      info("Click on learn more link");
-      win.document.getElementById("onboardingLearnMore").click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-
-      info("Waiting for new tab");
-      let tab = await loadPromise;
-
-      Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        QuickSuggestTestUtils.LEARN_MORE_URL,
-        "Current tab is the support page"
-      );
-      BrowserTestUtils.removeTab(tab);
-    },
-    onboardingDialogChoice: "learn_more_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "learn_more_2",
-      },
-    ],
-  });
-});
-
 // The Escape key should dismiss the dialog without opting in. This task tests
 // when Escape is pressed while the focus is inside the dialog.
 add_task(async function escKey_focusInsideDialog() {
-  await doFocusTest({
-    tabKeyRepeat: 0,
-    expectedFocusID: "onboardingNext",
+  await doDialogTest({
     callback: async () => {
-      let tabCount = gBrowser.tabs.length;
+      const { maybeShowPromise } = await showOnboardingDialog({
+        skipIntroduction: true,
+      });
+
+      const tabCount = gBrowser.tabs.length;
       Assert.ok(
         document.activeElement.classList.contains("dialogFrame"),
         "dialogFrame is focused in the browser window"
       );
 
+      info("Close the dialog");
       EventUtils.synthesizeKey("KEY_Escape");
+
+      await maybeShowPromise;
+
       Assert.equal(
         gBrowser.currentURI.spec,
         "about:blank",
@@ -329,6 +88,7 @@ add_task(async function escKey_focusInsideDialog() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
+    onboardingDialogVersion: JSON.stringify({ version: 1 }),
     onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
@@ -351,17 +111,24 @@ add_task(async function escKey_focusInsideDialog() {
 // The Escape key should dismiss the dialog without opting in. This task tests
 // when Escape is pressed while the focus is outside the dialog.
 add_task(async function escKey_focusOutsideDialog() {
-  await doFocusTest({
-    tabKeyRepeat: 0,
-    expectedFocusID: "onboardingNext",
+  await doDialogTest({
     callback: async () => {
+      const { maybeShowPromise } = await showOnboardingDialog({
+        skipIntroduction: true,
+      });
+
       document.documentElement.focus();
       Assert.ok(
         !document.activeElement.classList.contains("dialogFrame"),
         "dialogFrame is not focused in the browser window"
       );
+
+      info("Close the dialog");
       EventUtils.synthesizeKey("KEY_Escape");
+
+      await maybeShowPromise;
     },
+    onboardingDialogVersion: JSON.stringify({ version: 1 }),
     onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
@@ -429,6 +196,7 @@ async function doQueuedEscKeyTest(otherDialogKey) {
       EventUtils.synthesizeKey("KEY_Escape");
       await onboardingClosedPromise;
     },
+    onboardingDialogVersion: JSON.stringify({ version: 1 }),
     onboardingDialogChoice: "dismiss_1",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
@@ -452,22 +220,11 @@ async function doQueuedEscKeyTest(otherDialogKey) {
 add_task(async function dismissed_other_on_introduction() {
   await doDialogTest({
     callback: async () => {
-      let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
-        null,
-        ONBOARDING_URI,
-        { isSubDialog: true }
-      );
-
-      let maybeShowPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
-
-      let win = await dialogPromise;
-      if (win.document.readyState != "complete") {
-        await BrowserTestUtils.waitForEvent(win, "load");
-      }
-
+      const { maybeShowPromise } = await showOnboardingDialog();
       gDialogBox._dialog.close();
       await maybeShowPromise;
     },
+    onboardingDialogVersion: JSON.stringify({ version: 1 }),
     onboardingDialogChoice: "dismiss_1",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
@@ -482,344 +239,6 @@ add_task(async function dismissed_other_on_introduction() {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_1",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog on introduction section.
-add_task(async function focus_order_on_introduction() {
-  if (!gCanTabMoveFocus) {
-    Assert.ok(true, "Tab key can't move focus, skipping test");
-    return;
-  }
-
-  setDialogPrereqPrefs();
-
-  info("Calling showOnboardingDialog");
-  const { win, maybeShowPromise } = await showOnboardingDialog();
-
-  info("Check the first focus");
-  Assert.equal(win.document.activeElement.id, "onboardingNext");
-
-  assertFocusOrder(
-    ["onboardingClose", "onboardingNext", "onboardingClose"],
-    win
-  );
-
-  EventUtils.synthesizeKey("KEY_Escape");
-
-  info("Waiting for maybeShowOnboardingDialog to finish");
-  await maybeShowPromise;
-});
-
-// Tests tabbing through the dialog on main section.
-add_task(async function focus_order_on_main() {
-  if (!gCanTabMoveFocus) {
-    Assert.ok(true, "Tab key can't move focus, skipping test");
-    return;
-  }
-
-  setDialogPrereqPrefs();
-
-  info("Calling showOnboardingDialog");
-  const { win, maybeShowPromise } = await showOnboardingDialog({
-    skipIntroduction: true,
-  });
-
-  assertFocusOrder(
-    [
-      "onboardingAccept",
-      "onboardingLearnMore",
-      "onboardingReject",
-      "onboardingSkipLink",
-      "onboardingAccept",
-    ],
-    win
-  );
-
-  EventUtils.synthesizeKey("KEY_Escape");
-
-  info("Waiting for maybeShowOnboardingDialog to finish");
-  await maybeShowPromise;
-});
-
-// Tests tabbing through the dialog after selecting accept option.
-add_task(async function focus_order_with_accept_option() {
-  if (!gCanTabMoveFocus) {
-    Assert.ok(true, "Tab key can't move focus, skipping test");
-    return;
-  }
-
-  setDialogPrereqPrefs();
-
-  info("Calling showOnboardingDialog");
-  const { win, maybeShowPromise } = await showOnboardingDialog({
-    skipIntroduction: true,
-  });
-
-  info("Select onboardingAccept");
-  EventUtils.synthesizeKey("KEY_Tab");
-  Assert.equal(win.document.activeElement.id, "onboardingAccept");
-  EventUtils.synthesizeKey(" ");
-
-  assertFocusOrder(
-    [
-      "onboardingLearnMore",
-      "onboardingSubmit",
-      "onboardingSkipLink",
-      "onboardingAccept",
-    ],
-    win
-  );
-
-  EventUtils.synthesizeKey("KEY_Escape");
-
-  info("Waiting for maybeShowOnboardingDialog to finish");
-  await maybeShowPromise;
-});
-
-// Tests tabbing through the dialog after selecting reject option.
-add_task(async function focus_order_with_reject_option() {
-  if (!gCanTabMoveFocus) {
-    Assert.ok(true, "Tab key can't move focus, skipping test");
-    return;
-  }
-
-  setDialogPrereqPrefs();
-
-  info("Calling showOnboardingDialog");
-  const { win, maybeShowPromise } = await showOnboardingDialog({
-    skipIntroduction: true,
-  });
-
-  info("Select onboardingReject");
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
-  Assert.equal(win.document.activeElement.id, "onboardingReject");
-  EventUtils.synthesizeKey(" ");
-
-  assertFocusOrder(
-    [
-      "onboardingSubmit",
-      "onboardingSkipLink",
-      "onboardingLearnMore",
-      "onboardingReject",
-    ],
-    win
-  );
-
-  EventUtils.synthesizeKey("KEY_Escape");
-
-  info("Waiting for maybeShowOnboardingDialog to finish");
-  await maybeShowPromise;
-});
-
-// Tests tabbing through the dialog and pressing enter on introduction pane.
-// Tab key count: 1
-// Expected focused element: close button
-add_task(async function focus_close() {
-  await doFocusTest({
-    introductionPane: true,
-    tabKeyRepeat: 1,
-    expectedFocusID: "onboardingClose",
-    callback: async () => {
-      info("Enter to submit");
-      EventUtils.synthesizeKey("KEY_Enter");
-    },
-    onboardingDialogChoice: "close_1",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "close_1",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog and pressing enter.
-// Tab key count: 1
-// Expected focused element: accept option
-add_task(async function focus_accept() {
-  await doFocusTest({
-    tabKeyRepeat: 1,
-    expectedFocusID: "onboardingAccept",
-    callback: async () => {
-      info("Select accept option");
-      EventUtils.synthesizeKey(" ");
-
-      info("Enter to submit");
-      EventUtils.synthesizeKey("KEY_Enter");
-    },
-    onboardingDialogChoice: "accept_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": true,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "enabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "accept_2",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog and pressing enter.
-// Tab key count: 2
-// Expected focused element: learn more link
-add_task(async function focus_learnMore() {
-  await doFocusTest({
-    tabKeyRepeat: 2,
-    expectedFocusID: "onboardingLearnMore",
-    callback: async () => {
-      let loadPromise = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        QuickSuggestTestUtils.LEARN_MORE_URL
-      ).then(tab => {
-        info("Saw new tab");
-        return tab;
-      });
-
-      EventUtils.synthesizeKey("KEY_Enter");
-
-      info("Waiting for new tab");
-      let tab = await loadPromise;
-
-      Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        QuickSuggestTestUtils.LEARN_MORE_URL,
-        "Current tab is the support page"
-      );
-      BrowserTestUtils.removeTab(tab);
-    },
-    onboardingDialogChoice: "learn_more_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "learn_more_2",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog and pressing enter.
-// Tab key count: 3
-// Expected focused element: reject option
-add_task(async function focus_reject() {
-  await doFocusTest({
-    tabKeyRepeat: 3,
-    expectedFocusID: "onboardingReject",
-    callback: async () => {
-      info("Select reject option");
-      EventUtils.synthesizeKey(" ");
-
-      info("Enter to submit");
-      EventUtils.synthesizeKey("KEY_Enter");
-    },
-    onboardingDialogChoice: "reject_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "reject_2",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog and pressing enter. (no option)
-// Tab key count: 4
-// Expected focused element: skip link
-add_task(async function focus_skip() {
-  await doFocusTest({
-    tabKeyRepeat: 4,
-    expectedFocusID: "onboardingSkipLink",
-    callback: async () => {
-      let tabCount = gBrowser.tabs.length;
-      EventUtils.synthesizeKey("KEY_Enter");
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        "about:blank",
-        "Nothing loaded in the current tab"
-      );
-      Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
-    },
-    onboardingDialogChoice: "not_now_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": false,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "disabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "not_now_2",
-      },
-    ],
-  });
-});
-
-// Tests tabbing through the dialog and pressing enter.
-// Expected focused element: accept option (wraps around)
-add_task(async function focus_accept_wraparound() {
-  await doFocusTest({
-    tabKeyRepeat: 5,
-    expectedFocusID: "onboardingAccept",
-    callback: async win => {
-      info("Select accept option");
-      EventUtils.synthesizeKey(" ");
-      EventUtils.synthesizeKey("KEY_Enter");
-    },
-    onboardingDialogChoice: "accept_2",
-    expectedUserBranchPrefs: {
-      "quicksuggest.dataCollection.enabled": true,
-    },
-    telemetryEvents: [
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "data_collect_toggled",
-        object: "enabled",
-      },
-      {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-        method: "opt_in_dialog",
-        object: "accept_2",
       },
     ],
   });
@@ -898,451 +317,7 @@ add_task(async function nimbus_skip_onboarding_dialog() {
   });
 });
 
-// Test the UI variation A.
-add_task(async function variation_A() {
-  await doVariationTest({
-    variation: "A",
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-1",
-      "main-title": "firefox-suggest-onboarding-main-title-1",
-      "main-description": "firefox-suggest-onboarding-main-description-1",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-1",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-1",
-    },
-  });
-});
-
-// Test the UI variation B.
-add_task(async function variation_B() {
-  await doVariationTest({
-    variation: "B",
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
-      "main-title": "firefox-suggest-onboarding-main-title-2",
-      "main-description": "firefox-suggest-onboarding-main-description-2",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-1",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-1",
-    },
-  });
-});
-
-// Test the UI variation C.
-add_task(async function variation_C() {
-  await doVariationTest({
-    variation: "C",
-    expectedUI: {
-      firefoxLogo: true,
-    },
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-3",
-      "main-title": "firefox-suggest-onboarding-main-title-3",
-      "main-description": "firefox-suggest-onboarding-main-description-3",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-1",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-1",
-    },
-  });
-});
-
-// Test the UI variation D.
-add_task(async function variation_D() {
-  await doVariationTest({
-    variation: "D",
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
-      "main-title": "firefox-suggest-onboarding-main-title-4",
-      "main-description": "firefox-suggest-onboarding-main-description-4",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-2",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-2",
-    },
-  });
-});
-
-// Test the UI variation E.
-add_task(async function variation_E() {
-  await doVariationTest({
-    variation: "E",
-    expectedUI: {
-      firefoxLogo: true,
-    },
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
-      "main-title": "firefox-suggest-onboarding-main-title-5",
-      "main-description": "firefox-suggest-onboarding-main-description-5",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-2",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-2",
-    },
-  });
-});
-
-// Test the UI variation F.
-add_task(async function variation_F() {
-  await doVariationTest({
-    variation: "F",
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-2",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
-      "main-title": "firefox-suggest-onboarding-main-title-6",
-      "main-description": "firefox-suggest-onboarding-main-description-6",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-2",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-2",
-    },
-  });
-});
-
-// Test the UI variation G.
-add_task(async function variation_G() {
-  await doVariationTest({
-    variation: "G",
-    expectedUI: {
-      mainPrivacyFirst: true,
-    },
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-7",
-      "main-title": "firefox-suggest-onboarding-main-title-7",
-      "main-description": "firefox-suggest-onboarding-main-description-7",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-2",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-2",
-    },
-  });
-});
-
-// Test the UI variation H.
-add_task(async function variation_H() {
-  await doVariationTest({
-    variation: "H",
-    expectedUI: {
-      firefoxLogo: true,
-    },
-    expectedL10N: {
-      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
-      "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
-      "main-title": "firefox-suggest-onboarding-main-title-8",
-      "main-description": "firefox-suggest-onboarding-main-description-8",
-      "main-accept-option-label":
-        "firefox-suggest-onboarding-main-accept-option-label",
-      "main-accept-option-description":
-        "firefox-suggest-onboarding-main-accept-option-description-1",
-      "main-reject-option-label":
-        "firefox-suggest-onboarding-main-reject-option-label",
-      "main-reject-option-description":
-        "firefox-suggest-onboarding-main-reject-option-description-1",
-    },
-  });
-});
-
-// Test the variation 100-a.
-add_task(async function variation_100_A_introduction() {
-  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
-
-  await QuickSuggestTestUtils.withExperiment({
-    valueOverrides: {
-      quickSuggestScenario: "online",
-      quickSuggestOnboardingDialogVariation: "100-A",
-    },
-    callback: async () => {
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog();
-
-      info("Check whether the introduction page is shown");
-      const introductionSection = win.document.getElementById(
-        "introduction-section"
-      );
-      const mainSection = win.document.getElementById("main-section");
-      Assert.ok(BrowserTestUtils.is_visible(introductionSection));
-      Assert.ok(BrowserTestUtils.is_hidden(mainSection));
-
-      info("Check whether the description on the introduction page is shown");
-      const descriptionSection = introductionSection.querySelector(
-        ".description-section"
-      );
-      Assert.ok(BrowserTestUtils.is_visible(descriptionSection));
-
-      info("Check the l10n messages");
-      assertL10N(
-        {
-          onboardingNext:
-            "firefox-suggest-onboarding-introduction-next-button-3",
-          "introduction-title": "firefox-suggest-onboarding-main-title-9",
-        },
-        win
-      );
-
-      info("Check the logo");
-      const introductionLogoImage = win.getComputedStyle(
-        win.document.querySelector("#introduction-section .logo")
-      ).backgroundImage;
-      Assert.equal(
-        introductionLogoImage,
-        'url("chrome://branding/content/about-logo.svg")'
-      );
-
-      info("Check the first focus");
-      Assert.equal(win.document.activeElement.id, "onboardingNext");
-
-      if (gCanTabMoveFocus) {
-        info("Check the focus order");
-        assertFocusOrder(
-          [
-            "onboardingLearnMoreOnIntroduction",
-            "onboardingClose",
-            "onboardingNext",
-          ],
-          win
-        );
-      }
-
-      info("Check the learn more link");
-      const learnMoreLink = win.document.getElementById(
-        "onboardingLearnMoreOnIntroduction"
-      );
-      Assert.ok(BrowserTestUtils.is_visible(learnMoreLink));
-
-      info("Click on learn more link");
-      const loadPromise = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        QuickSuggestTestUtils.LEARN_MORE_URL
-      ).then(tab => {
-        info("Saw new tab");
-        return tab;
-      });
-      learnMoreLink.click();
-
-      info("Waiting for maybeShowOnboardingDialog to finish");
-      await maybeShowPromise;
-
-      info("Waiting for new tab");
-      let tab = await loadPromise;
-      Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
-      Assert.equal(
-        gBrowser.currentURI.spec,
-        QuickSuggestTestUtils.LEARN_MORE_URL,
-        "Current tab is the support page"
-      );
-      BrowserTestUtils.removeTab(tab);
-
-      info("Check the user's choice and the telemetry");
-      Assert.equal(
-        UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
-        "learn_more_1"
-      );
-      Assert.equal(
-        TelemetryEnvironment.currentEnvironment.settings.userPrefs[
-          "browser.urlbar.quicksuggest.onboardingDialogChoice"
-        ],
-        "learn_more_1"
-      );
-    },
-  });
-});
-
-add_task(async function variation_100_A_main() {
-  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
-
-  await QuickSuggestTestUtils.withExperiment({
-    valueOverrides: {
-      quickSuggestScenario: "online",
-      quickSuggestOnboardingDialogVariation: "100-A",
-    },
-    callback: async () => {
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: true,
-      });
-
-      info("Check the l10n messages");
-      assertL10N(
-        {
-          "main-title": "firefox-suggest-onboarding-main-title-9",
-          "main-description": "firefox-suggest-onboarding-main-description-9",
-          "main-accept-option-label":
-            "firefox-suggest-onboarding-main-accept-option-label-2",
-          "main-accept-option-description":
-            "firefox-suggest-onboarding-main-accept-option-description-3",
-          "main-reject-option-label":
-            "firefox-suggest-onboarding-main-reject-option-label-2",
-          "main-reject-option-description":
-            "firefox-suggest-onboarding-main-reject-option-description-3",
-        },
-        win
-      );
-
-      info("Check the logo");
-      const mainLogoImage = win.getComputedStyle(
-        win.document.querySelector("#main-section .logo")
-      ).backgroundImage;
-      Assert.equal(
-        mainLogoImage,
-        'url("chrome://branding/content/about-logo.svg")'
-      );
-
-      info("Check the learn more link");
-      Assert.ok(
-        win.document.querySelector("#main-description #onboardingLearnMore")
-      );
-      Assert.ok(
-        !win.document.querySelector(
-          "#main-accept-option-label #onboardingLearnMore"
-        )
-      );
-
-      if (gCanTabMoveFocus) {
-        info("Check the focus order");
-        assertFocusOrder(
-          [
-            "onboardingLearnMore",
-            "onboardingAccept",
-            "onboardingReject",
-            "onboardingSkipLink",
-            "onboardingLearnMore",
-          ],
-          win
-        );
-      }
-
-      EventUtils.synthesizeKey("KEY_Escape");
-      await maybeShowPromise;
-    },
-  });
-});
-
-// Test the variation 100-b.
-add_task(async function variation_100_B() {
-  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
-
-  await QuickSuggestTestUtils.withExperiment({
-    valueOverrides: {
-      quickSuggestScenario: "online",
-      quickSuggestOnboardingDialogVariation: "100-B",
-    },
-    callback: async () => {
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog();
-
-      info("Check whether the main page is shown from the beginning");
-      const introductionSection = win.document.getElementById(
-        "introduction-section"
-      );
-      const mainSection = win.document.getElementById("main-section");
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          BrowserTestUtils.is_hidden(introductionSection) &&
-          BrowserTestUtils.is_visible(mainSection),
-        "Wait until the main page is ready"
-      );
-
-      info("Check the l10n messages");
-      assertL10N(
-        {
-          "main-title": "firefox-suggest-onboarding-main-title-9",
-          "main-description": "firefox-suggest-onboarding-main-description-9",
-          "main-accept-option-label":
-            "firefox-suggest-onboarding-main-accept-option-label-2",
-          "main-accept-option-description":
-            "firefox-suggest-onboarding-main-accept-option-description-3",
-          "main-reject-option-label":
-            "firefox-suggest-onboarding-main-reject-option-label-2",
-          "main-reject-option-description":
-            "firefox-suggest-onboarding-main-reject-option-description-3",
-        },
-        win
-      );
-
-      info("Check the logo");
-      const mainLogoImage = win.getComputedStyle(
-        win.document.querySelector("#main-section .logo")
-      ).backgroundImage;
-      Assert.equal(
-        mainLogoImage,
-        'url("chrome://branding/content/about-logo.svg")'
-      );
-
-      info("Check the learn more link");
-      Assert.ok(
-        win.document.querySelector("#main-description #onboardingLearnMore")
-      );
-      Assert.ok(
-        !win.document.querySelector(
-          "#main-accept-option-label #onboardingLearnMore"
-        )
-      );
-
-      if (gCanTabMoveFocus) {
-        info("Check the first focus");
-        Assert.equal(win.document.activeElement.id, "onboardingLearnMore");
-
-        info("Check the focus order");
-        assertFocusOrder(
-          [
-            "onboardingAccept",
-            "onboardingReject",
-            "onboardingSkipLink",
-            "onboardingLearnMore",
-          ],
-          win
-        );
-      }
-
-      EventUtils.synthesizeKey("KEY_Escape");
-      await maybeShowPromise;
-    },
-  });
-});
-
-add_task(async function nimbusExposureEvent() {
+add_task(async function nimbus_exposure_event() {
   const testData = [
     {
       experimentType: "modal",
@@ -1383,10 +358,1034 @@ add_task(async function nimbusExposureEvent() {
   }
 });
 
+const LOGO_TYPE = {
+  FIREFOX: 1,
+  MAGGLASS: 2,
+  ANIMATION_MAGGLASS: 3,
+};
+
+const VARIATION_TEST_DATA = [
+  {
+    name: "A",
+    introductionSection: {
+      logoType: LOGO_TYPE.ANIMATION_MAGGLASS,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-1",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+      defaultFocusOrder: [
+        "onboardingNext",
+        "onboardingClose",
+        "onboardingNext",
+      ],
+      actions: ["onboardingClose", "onboardingNext"],
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.MAGGLASS,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-1",
+        "main-description": "firefox-suggest-onboarding-main-description-1",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-1",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-1",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+      defaultFocusOrder: [
+        "onboardingNext",
+        "onboardingAccept",
+        "onboardingLearnMore",
+        "onboardingReject",
+        "onboardingSkipLink",
+        "onboardingAccept",
+      ],
+      acceptFocusOrder: [
+        "onboardingAccept",
+        "onboardingLearnMore",
+        "onboardingSubmit",
+        "onboardingSkipLink",
+        "onboardingAccept",
+      ],
+      rejectFocusOrder: [
+        "onboardingReject",
+        "onboardingSubmit",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+        "onboardingReject",
+      ],
+      actions: [
+        "onboardingAccept",
+        "onboardingReject",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+      ],
+    },
+  },
+  {
+    // We don't need to test the focus order and actions because the layout of
+    // variation B-H is as same as A.
+    name: "B",
+    introductionSection: {
+      logoType: LOGO_TYPE.ANIMATION_MAGGLASS,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.MAGGLASS,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-2",
+        "main-description": "firefox-suggest-onboarding-main-description-2",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-1",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-1",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "C",
+    introductionSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-3",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-3",
+        "main-description": "firefox-suggest-onboarding-main-description-3",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-1",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-1",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "D",
+    introductionSection: {
+      logoType: LOGO_TYPE.ANIMATION_MAGGLASS,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.MAGGLASS,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-4",
+        "main-description": "firefox-suggest-onboarding-main-description-4",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-2",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-2",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "E",
+    introductionSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-5",
+        "main-description": "firefox-suggest-onboarding-main-description-5",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-2",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-2",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "F",
+    introductionSection: {
+      logoType: LOGO_TYPE.ANIMATION_MAGGLASS,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-2",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.MAGGLASS,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-6",
+        "main-description": "firefox-suggest-onboarding-main-description-6",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-2",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-2",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "G",
+    introductionSection: {
+      logoType: LOGO_TYPE.ANIMATION_MAGGLASS,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-7",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.MAGGLASS,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-7",
+        "main-description": "firefox-suggest-onboarding-main-description-7",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-2",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-2",
+      },
+      visibility: {
+        "#main-privacy-first": true,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "H",
+    introductionSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+        "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": false,
+        ".description-section": false,
+        ".pager": true,
+      },
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-8",
+        "main-description": "firefox-suggest-onboarding-main-description-8",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-1",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-1",
+      },
+      visibility: {
+        "#main-privacy-first": false,
+        ".description-section #onboardingLearnMore": false,
+        ".accept #onboardingLearnMore": true,
+        ".pager": true,
+      },
+    },
+  },
+  {
+    name: "100-A",
+    introductionSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        onboardingNext: "firefox-suggest-onboarding-introduction-next-button-3",
+        "introduction-title": "firefox-suggest-onboarding-main-title-9",
+      },
+      visibility: {
+        "#onboardingLearnMoreOnIntroduction": true,
+        ".description-section": true,
+        ".pager": true,
+      },
+      defaultFocusOrder: [
+        "onboardingNext",
+        "onboardingLearnMoreOnIntroduction",
+        "onboardingClose",
+        "onboardingNext",
+      ],
+      actions: [
+        "onboardingClose",
+        "onboardingNext",
+        "onboardingLearnMoreOnIntroduction",
+      ],
+    },
+    mainSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-9",
+        "main-description": "firefox-suggest-onboarding-main-description-9",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label-2",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-3",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label-2",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-3",
+      },
+      visibility: {
+        "#main-privacy-first": true,
+        ".description-section #onboardingLearnMore": true,
+        ".accept #onboardingLearnMore": false,
+        ".pager": false,
+      },
+      defaultFocusOrder: [
+        "onboardingNext",
+        "onboardingLearnMore",
+        "onboardingAccept",
+        "onboardingReject",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+      ],
+      acceptFocusOrder: [
+        "onboardingAccept",
+        "onboardingSubmit",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+        "onboardingAccept",
+      ],
+      rejectFocusOrder: [
+        "onboardingReject",
+        "onboardingSubmit",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+        "onboardingReject",
+      ],
+      actions: [
+        "onboardingAccept",
+        "onboardingReject",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+      ],
+    },
+  },
+  {
+    name: "100-B",
+    mainSection: {
+      logoType: LOGO_TYPE.FIREFOX,
+      l10n: {
+        "main-title": "firefox-suggest-onboarding-main-title-9",
+        "main-description": "firefox-suggest-onboarding-main-description-9",
+        "main-accept-option-label":
+          "firefox-suggest-onboarding-main-accept-option-label-2",
+        "main-accept-option-description":
+          "firefox-suggest-onboarding-main-accept-option-description-3",
+        "main-reject-option-label":
+          "firefox-suggest-onboarding-main-reject-option-label-2",
+        "main-reject-option-description":
+          "firefox-suggest-onboarding-main-reject-option-description-3",
+      },
+      visibility: {
+        "#main-privacy-first": true,
+        ".description-section #onboardingLearnMore": true,
+        ".accept #onboardingLearnMore": false,
+        ".pager": false,
+      },
+      // Layout of 100-B is same as 100-A, but since there is no the introduction
+      // pane, only the default focus order on the main pane is a bit diffrence.
+      defaultFocusOrder: [
+        "onboardingLearnMore",
+        "onboardingAccept",
+        "onboardingReject",
+        "onboardingSkipLink",
+        "onboardingLearnMore",
+      ],
+    },
+  },
+];
+
+/**
+ * This test checks for differences due to variations in logo type, l10n text,
+ * element visibility, order of focus, actions, etc. The designation is on
+ * VARIATION_TEST_DATA. The items that can be specified are below.
+ *
+ * name: Specify the variation name.
+ *
+ * The following items are specified for each section.
+ * (introductionSection, mainSection).
+ *
+ * logoType:
+ *   Specify the expected logo type. Please refer to LOGO_TYPE about the type.
+ *
+ * l10n:
+ *   Specify the expected l10n id applied to elements.
+ *
+ * visibility:
+ *   Specify the expected visibility of elements. The way to specify the element
+ *   is using selector.
+ *
+ * defaultFocusOrder:
+ *   Specify the expected focus order right after the section is appeared. The
+ *   way to specify the element is using id.
+ *
+ * acceptFocusOrder:
+ *   Specify the expected focus order after selecting accept option.
+ *
+ * rejectFocusOrder:
+ *   Specify the expected focus order after selecting reject option.
+ *
+ * actions:
+ *   Specify the action we want to verify such as clicking the  close button. The
+ *   available actions are below.
+ * - onboardingClose:
+ *     Action of the close button “x” by mouse/keyboard.
+ * - onboardingNext:
+ *     Action of the next button that transits from the introduction section to
+ *     the main section by mouse/keyboard.
+ * - onboardingAccept:
+ *      Action of the submit button by mouse/keyboard after selecting accept
+ *      option by mouse/keyboard.
+ * - onboardingReject:
+ *      Action of the submit button by mouse/keyboard after selecting reject
+ *      option by mouse/keyboard.
+ * - onboardingSkipLink:
+ *      Action of the skip link by mouse/keyboard.
+ * - onboardingLearnMore:
+ *      Action of the learn more link by mouse/keyboard.
+ * - onboardingLearnMoreOnIntroduction:
+ *      Action of the learn more link on the introduction section by
+ *      mouse/keyboard.
+ */
+add_task(async function variation_test() {
+  for (const variation of VARIATION_TEST_DATA) {
+    info(`Test for variation [${variation.name}]`);
+
+    info("Do layout test");
+    await doLayoutTest(variation);
+
+    for (const action of variation.introductionSection?.actions || []) {
+      info(
+        `${action} test on the introduction section for variation [${variation.name}]`
+      );
+      await this[action](variation);
+    }
+
+    for (const action of variation.mainSection?.actions || []) {
+      info(
+        `${action} test on the main section for variation [${variation.name}]`
+      );
+      await this[action](variation, !!variation.introductionSection);
+    }
+  }
+});
+
+async function doLayoutTest(variation) {
+  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "online",
+      quickSuggestOnboardingDialogVariation: variation.name,
+    },
+    callback: async () => {
+      info("Calling showOnboardingDialog");
+      const { win, maybeShowPromise } = await showOnboardingDialog();
+
+      const introductionSection = win.document.getElementById(
+        "introduction-section"
+      );
+      const mainSection = win.document.getElementById("main-section");
+
+      if (variation.introductionSection) {
+        info("Check the section visibility");
+        Assert.ok(BrowserTestUtils.is_visible(introductionSection));
+        Assert.ok(BrowserTestUtils.is_hidden(mainSection));
+
+        info("Check the introduction section");
+        await assertSection(introductionSection, variation.introductionSection);
+
+        info("Transition to the main section");
+        win.document.getElementById("onboardingNext").click();
+        await BrowserTestUtils.waitForCondition(
+          () =>
+            BrowserTestUtils.is_hidden(introductionSection) &&
+            BrowserTestUtils.is_visible(mainSection)
+        );
+      } else {
+        info("Check the section visibility");
+        Assert.ok(BrowserTestUtils.is_hidden(introductionSection));
+        Assert.ok(BrowserTestUtils.is_visible(mainSection));
+      }
+
+      info("Check the main section");
+      await assertSection(mainSection, variation.mainSection);
+
+      info("Close the dialog");
+      EventUtils.synthesizeKey("KEY_Escape", {}, win);
+      await maybeShowPromise;
+    },
+  });
+}
+
+async function assertSection(sectionElement, expectedSection) {
+  info("Check the logo");
+  assertLogo(sectionElement, expectedSection.logoType);
+
+  info("Check the l10n");
+  assertL10N(sectionElement, expectedSection.l10n);
+
+  info("Check the visibility");
+  assertVisibility(sectionElement, expectedSection.visibility);
+
+  if (!gCanTabMoveFocus) {
+    Assert.ok(true, "Tab key can't move focus, skipping test for focus order");
+    return;
+  }
+
+  if (expectedSection.defaultFocusOrder) {
+    info("Check the default focus order");
+    assertFocusOrder(sectionElement, expectedSection.defaultFocusOrder);
+  }
+
+  if (expectedSection.acceptFocusOrder) {
+    info("Check the focus order after selecting accept option");
+    sectionElement.querySelector("#onboardingAccept").focus();
+    EventUtils.synthesizeKey("VK_SPACE", {}, sectionElement.ownerGlobal);
+    assertFocusOrder(sectionElement, expectedSection.acceptFocusOrder);
+  }
+
+  if (expectedSection.rejectFocusOrder) {
+    info("Check the focus order after selecting reject option");
+    sectionElement.querySelector("#onboardingReject").focus();
+    EventUtils.synthesizeKey("VK_SPACE", {}, sectionElement.ownerGlobal);
+    assertFocusOrder(sectionElement, expectedSection.rejectFocusOrder);
+  }
+}
+
+function assertLogo(sectionElement, expectedLogoType) {
+  let expectedLogoImage;
+  switch (expectedLogoType) {
+    case LOGO_TYPE.FIREFOX: {
+      expectedLogoImage = 'url("chrome://branding/content/about-logo.svg")';
+      break;
+    }
+    case LOGO_TYPE.MAGGLASS: {
+      expectedLogoImage =
+        'url("chrome://browser/content/urlbar/quicksuggestOnboarding_magglass.svg")';
+      break;
+    }
+    case LOGO_TYPE.ANIMATION_MAGGLASS: {
+      const mediaQuery = sectionElement.ownerGlobal.matchMedia(
+        "(prefers-reduced-motion: no-preference)"
+      );
+      expectedLogoImage = mediaQuery.matches
+        ? 'url("chrome://browser/content/urlbar/quicksuggestOnboarding_magglass_animation.svg")'
+        : 'url("chrome://browser/content/urlbar/quicksuggestOnboarding_magglass.svg")';
+      break;
+    }
+    default: {
+      Assert.ok(false, `Unexpected image type ${expectedLogoType}`);
+      break;
+    }
+  }
+
+  const logo = sectionElement.querySelector(".logo");
+  Assert.ok(BrowserTestUtils.is_visible(logo));
+  const logoImage = sectionElement.ownerGlobal.getComputedStyle(logo)
+    .backgroundImage;
+  Assert.equal(logoImage, expectedLogoImage);
+}
+
+function assertL10N(sectionElement, expectedL10N) {
+  for (const [id, l10n] of Object.entries(expectedL10N)) {
+    const element = sectionElement.querySelector("#" + id);
+    Assert.equal(element.getAttribute("data-l10n-id"), l10n);
+  }
+}
+
+function assertVisibility(sectionElement, expectedVisibility) {
+  for (const [selector, visibility] of Object.entries(expectedVisibility)) {
+    const element = sectionElement.querySelector(selector);
+    if (visibility) {
+      Assert.ok(BrowserTestUtils.is_visible(element));
+    } else {
+      if (!element) {
+        Assert.ok(true);
+        return;
+      }
+      Assert.ok(BrowserTestUtils.is_hidden(element));
+    }
+  }
+}
+
+function assertFocusOrder(sectionElement, expectedFocusOrder) {
+  const win = sectionElement.ownerGlobal;
+
+  // Check initial active element.
+  Assert.equal(win.document.activeElement.id, expectedFocusOrder[0]);
+
+  for (const next of expectedFocusOrder.slice(1)) {
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    Assert.equal(win.document.activeElement.id, next);
+  }
+}
+
+async function onboardingClose(variation) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the close button");
+      const closeButton = win.document.getElementById("onboardingClose");
+      Assert.ok(BrowserTestUtils.is_visible(closeButton));
+      Assert.equal(closeButton.getAttribute("title"), "Close");
+
+      info("Commit the close button");
+      userAction(closeButton);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+    },
+    variation,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    onboardingDialogChoice: "close_1",
+    expectedUserBranchPrefs: {
+      "quicksuggest.dataCollection.enabled": false,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "disabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "close_1",
+      },
+    ],
+  });
+}
+
+async function onboardingNext(variation) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the next button");
+      const nextButton = win.document.getElementById("onboardingNext");
+      Assert.ok(BrowserTestUtils.is_visible(nextButton));
+
+      info("Commit the next button");
+      userAction(nextButton);
+
+      const introductionSection = win.document.getElementById(
+        "introduction-section"
+      );
+      const mainSection = win.document.getElementById("main-section");
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          BrowserTestUtils.is_hidden(introductionSection) &&
+          BrowserTestUtils.is_visible(mainSection),
+        "Wait for the transition"
+      );
+
+      info("Exit");
+      EventUtils.synthesizeKey("KEY_Escape", {}, win);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+    },
+    variation,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    onboardingDialogChoice: "dismiss_2",
+    expectedUserBranchPrefs: {
+      "quicksuggest.dataCollection.enabled": false,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "disabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "dismiss_2",
+      },
+    ],
+  });
+}
+
+async function onboardingAccept(variation, skipIntroduction) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the accept option and submit button");
+      const acceptOption = win.document.getElementById("onboardingAccept");
+      const submitButton = win.document.getElementById("onboardingSubmit");
+      Assert.ok(acceptOption);
+      Assert.ok(submitButton.disabled);
+
+      info("Select the accept option");
+      userAction(acceptOption);
+
+      info("Commit the submit button");
+      Assert.ok(!submitButton.disabled);
+      userAction(submitButton);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+    },
+    variation,
+    skipIntroduction,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    onboardingDialogChoice: "accept_2",
+    expectedUserBranchPrefs: {
+      "quicksuggest.onboardingDialogVersion": JSON.stringify({ version: 1 }),
+      "quicksuggest.dataCollection.enabled": true,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "accept_2",
+      },
+    ],
+  });
+}
+
+async function onboardingReject(variation, skipIntroduction) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the reject option and submit button");
+      const rejectOption = win.document.getElementById("onboardingReject");
+      const submitButton = win.document.getElementById("onboardingSubmit");
+      Assert.ok(rejectOption);
+      Assert.ok(submitButton.disabled);
+
+      info("Select the reject option");
+      userAction(rejectOption);
+
+      info("Commit the submit button");
+      Assert.ok(!submitButton.disabled);
+      userAction(submitButton);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+    },
+    variation,
+    skipIntroduction,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    onboardingDialogChoice: "reject_2",
+    expectedUserBranchPrefs: {
+      "quicksuggest.dataCollection.enabled": false,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "disabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "reject_2",
+      },
+    ],
+  });
+}
+
+async function onboardingSkipLink(variation, skipIntroduction) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the skip link");
+      const skipLink = win.document.getElementById("onboardingSkipLink");
+      Assert.ok(BrowserTestUtils.is_visible(skipLink));
+
+      info("Commit the skip link");
+      const tabCount = gBrowser.tabs.length;
+      userAction(skipLink);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+
+      info("Check the current tab status");
+      Assert.equal(
+        gBrowser.currentURI.spec,
+        "about:blank",
+        "Nothing loaded in the current tab"
+      );
+      Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
+    },
+    variation,
+    skipIntroduction,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    onboardingDialogChoice: "not_now_2",
+    expectedUserBranchPrefs: {
+      "quicksuggest.dataCollection.enabled": false,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "disabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "not_now_2",
+      },
+    ],
+  });
+}
+
+async function onboardingLearnMore(variation, skipIntroduction) {
+  await doLearnMoreTest(
+    variation,
+    skipIntroduction,
+    "onboardingLearnMore",
+    "learn_more_2"
+  );
+}
+
+async function onboardingLearnMoreOnIntroduction(variation, skipIntroduction) {
+  await doLearnMoreTest(
+    variation,
+    skipIntroduction,
+    "onboardingLearnMoreOnIntroduction",
+    "learn_more_1"
+  );
+}
+
+async function doLearnMoreTest(variation, skipIntroduction, target, telemetry) {
+  await doActionTest({
+    callback: async (win, userAction, maybeShowPromise) => {
+      info("Check the status of the learn more link");
+      const learnMoreLink = win.document.getElementById(target);
+      Assert.ok(BrowserTestUtils.is_visible(learnMoreLink));
+
+      info("Commit the learn more link");
+      const loadPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        QuickSuggestTestUtils.LEARN_MORE_URL
+      ).then(tab => {
+        info("Saw new tab");
+        return tab;
+      });
+      userAction(learnMoreLink);
+
+      info("Waiting for maybeShowOnboardingDialog to finish");
+      await maybeShowPromise;
+
+      info("Waiting for new tab");
+      let tab = await loadPromise;
+
+      info("Check the current tab status");
+      Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
+      Assert.equal(
+        gBrowser.currentURI.spec,
+        QuickSuggestTestUtils.LEARN_MORE_URL,
+        "Current tab is the support page"
+      );
+      BrowserTestUtils.removeTab(tab);
+    },
+    variation,
+    skipIntroduction,
+    onboardingDialogChoice: telemetry,
+    onboardingDialogVersion: JSON.stringify({
+      version: 1,
+      variation: variation.name.toLowerCase(),
+    }),
+    expectedUserBranchPrefs: {
+      "quicksuggest.dataCollection.enabled": false,
+    },
+    telemetryEvents: [
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "disabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: telemetry,
+      },
+    ],
+  });
+}
+
+async function doActionTest({
+  variation,
+  skipIntroduction,
+  callback,
+  onboardingDialogVersion,
+  onboardingDialogChoice,
+  expectedUserBranchPrefs,
+  telemetryEvents,
+}) {
+  const userClick = target => {
+    info("Click on the target");
+    target.click();
+  };
+  const userEnter = target => {
+    target.focus();
+    if (target.type === "radio") {
+      info("Space on the target");
+      EventUtils.synthesizeKey("VK_SPACE", {}, target.ownerGlobal);
+    } else {
+      info("Enter on the target");
+      EventUtils.synthesizeKey("KEY_Enter", {}, target.ownerGlobal);
+    }
+  };
+
+  for (const userAction of [userClick, userEnter]) {
+    UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
+
+    await QuickSuggestTestUtils.withExperiment({
+      valueOverrides: {
+        quickSuggestScenario: "online",
+        quickSuggestOnboardingDialogVariation: variation.name,
+      },
+      callback: async () => {
+        await doDialogTest({
+          callback: async () => {
+            info("Calling showOnboardingDialog");
+            const { win, maybeShowPromise } = await showOnboardingDialog({
+              skipIntroduction,
+            });
+
+            await callback(win, userAction, maybeShowPromise);
+          },
+          onboardingDialogVersion,
+          onboardingDialogChoice,
+          expectedUserBranchPrefs,
+          telemetryEvents,
+        });
+      },
+    });
+  }
+}
+
 async function doDialogTest({
+  callback,
+  onboardingDialogVersion,
   onboardingDialogChoice,
   telemetryEvents,
-  callback,
   expectedUserBranchPrefs,
 }) {
   setDialogPrereqPrefs();
@@ -1442,6 +1441,11 @@ async function doDialogTest({
   }
 
   Assert.equal(
+    UrlbarPrefs.get("quicksuggest.onboardingDialogVersion"),
+    onboardingDialogVersion,
+    "onboardingDialogVersion"
+  );
+  Assert.equal(
     UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
     onboardingDialogChoice,
     "onboardingDialogChoice"
@@ -1472,184 +1476,6 @@ async function doDialogTest({
   }
   for (let name of Object.keys(expectedUserBranchPrefs)) {
     gUserBranch.clearUserPref(name);
-  }
-}
-
-async function doFocusTest({
-  tabKeyRepeat,
-  expectedFocusID,
-  onboardingDialogChoice,
-  telemetryEvents,
-  callback,
-  expectedUserBranchPrefs,
-  introductionPane,
-}) {
-  if (!gCanTabMoveFocus && tabKeyRepeat) {
-    Assert.ok(true, "Tab key can't move focus, skipping test");
-    return;
-  }
-
-  await doDialogTest({
-    onboardingDialogChoice,
-    expectedUserBranchPrefs,
-    telemetryEvents,
-    callback: async () => {
-      const { win, maybeShowPromise } = await showOnboardingDialog({
-        skipIntroduction: !introductionPane,
-      });
-
-      let doc = win.document;
-
-      Assert.equal(
-        doc.activeElement.id,
-        "onboardingNext",
-        "onboardingNext is focused initially"
-      );
-
-      if (tabKeyRepeat) {
-        EventUtils.synthesizeKey("KEY_Tab", { repeat: tabKeyRepeat });
-      }
-
-      if (!gCanTabMoveFocus) {
-        expectedFocusID = "onboardingNext";
-      }
-
-      Assert.equal(
-        doc.activeElement.id,
-        expectedFocusID,
-        "Expected element is focused: " + expectedFocusID
-      );
-
-      await callback(win);
-      await maybeShowPromise;
-    },
-  });
-}
-
-async function doTransitionTest({ trigger }) {
-  setDialogPrereqPrefs();
-
-  info("Calling showOnboardingDialog");
-  const { win, maybeShowPromise } = await showOnboardingDialog();
-
-  info("Check initial status");
-  const introductionSection = win.document.getElementById(
-    "introduction-section"
-  );
-  const mainSection = win.document.getElementById("main-section");
-  Assert.ok(BrowserTestUtils.is_visible(introductionSection));
-  Assert.ok(BrowserTestUtils.is_hidden(mainSection));
-
-  // Trigger the transition.
-  await trigger(win);
-
-  info("Wait for transition");
-  await BrowserTestUtils.waitForCondition(
-    () =>
-      BrowserTestUtils.is_hidden(introductionSection) &&
-      BrowserTestUtils.is_visible(mainSection)
-  );
-  Assert.ok(true, "The transition is finished successfully");
-
-  info("Close the dialog");
-  EventUtils.synthesizeKey("KEY_Escape");
-  await maybeShowPromise;
-}
-
-async function doVariationTest({
-  variation,
-  expectedUI = {},
-  expectedL10N = {},
-}) {
-  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
-  UrlbarPrefs.clear("quicksuggest.seenRestarts", 0);
-
-  await QuickSuggestTestUtils.withExperiment({
-    valueOverrides: {
-      quickSuggestScenario: "online",
-      quickSuggestShowOnboardingDialogAfterNRestarts: 0,
-      quickSuggestOnboardingDialogVariation: variation,
-    },
-    callback: async () => {
-      info("Calling showOnboardingDialog");
-      const { win, maybeShowPromise } = await showOnboardingDialog();
-
-      info("Check the logo");
-      const introductionLogoImage = win.getComputedStyle(
-        win.document.querySelector("#introduction-section .logo")
-      ).backgroundImage;
-      const mainLogoImage = win.getComputedStyle(
-        win.document.querySelector("#main-section .logo")
-      ).backgroundImage;
-
-      if (expectedUI.firefoxLogo) {
-        const logoImage = 'url("chrome://branding/content/about-logo.svg")';
-        Assert.equal(introductionLogoImage, logoImage);
-        Assert.equal(mainLogoImage, logoImage);
-      } else {
-        const logoImage =
-          'url("chrome://browser/content/urlbar/quicksuggestOnboarding_magglass.svg")';
-        const animationImage =
-          'url("chrome://browser/content/urlbar/quicksuggestOnboarding_magglass_animation.svg")';
-        const mediaQuery = window.matchMedia(
-          "(prefers-reduced-motion: no-preference)"
-        );
-        const expectedIntroductionLogoImage = mediaQuery.matches
-          ? animationImage
-          : logoImage;
-        Assert.equal(introductionLogoImage, expectedIntroductionLogoImage);
-        Assert.equal(mainLogoImage, logoImage);
-      }
-
-      info("Check the l10n attribute");
-      assertL10N(expectedL10N, win);
-
-      // Trigger the transition by pressing Enter on the Next button.
-      EventUtils.synthesizeKey("KEY_Enter");
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          BrowserTestUtils.is_hidden(
-            win.document.getElementById("introduction-section")
-          ) &&
-          BrowserTestUtils.is_visible(
-            win.document.getElementById("main-section")
-          )
-      );
-
-      info("Check the privacy first message on main pane");
-      const mainPrivacyFirst = win.document.querySelector(
-        "#main-section .privacy-first"
-      );
-      if (expectedUI.mainPrivacyFirst) {
-        Assert.ok(BrowserTestUtils.is_visible(mainPrivacyFirst));
-      } else {
-        Assert.ok(BrowserTestUtils.is_hidden(mainPrivacyFirst));
-      }
-
-      EventUtils.synthesizeKey("KEY_Escape");
-      await maybeShowPromise;
-
-      info("Check the version and variation pref");
-      Assert.equal(
-        UrlbarPrefs.get("quicksuggest.onboardingDialogVersion"),
-        JSON.stringify({ version: 1, variation: variation.toLowerCase() })
-      );
-    },
-  });
-}
-
-function assertFocusOrder(order, win) {
-  for (const next of order) {
-    EventUtils.synthesizeKey("KEY_Tab");
-    Assert.equal(win.document.activeElement.id, next);
-  }
-}
-
-function assertL10N(expectedL10N, win) {
-  for (const [id, l10n] of Object.entries(expectedL10N)) {
-    const element = win.document.getElementById(id);
-    Assert.equal(element.getAttribute("data-l10n-id"), l10n);
   }
 }
 
@@ -1751,6 +1577,7 @@ async function canTabMoveFocus() {
       EventUtils.synthesizeKey("KEY_Escape");
       await maybeShowPromise;
     },
+    onboardingDialogVersion: JSON.stringify({ version: 1 }),
     onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
