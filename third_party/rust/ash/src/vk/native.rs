@@ -620,6 +620,7 @@ fn bindgen_test_layout_StdVideoH264HrdParameters() {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH264SequenceParameterSetVui {
+    pub flags: StdVideoH264SpsVuiFlags,
     pub aspect_ratio_idc: StdVideoH264AspectRatioIdc,
     pub sar_width: u16,
     pub sar_height: u16,
@@ -629,10 +630,9 @@ pub struct StdVideoH264SequenceParameterSetVui {
     pub matrix_coefficients: u8,
     pub num_units_in_tick: u32,
     pub time_scale: u32,
-    pub pHrdParameters: *mut StdVideoH264HrdParameters,
+    pub pHrdParameters: *const StdVideoH264HrdParameters,
     pub max_num_reorder_frames: u8,
     pub max_dec_frame_buffering: u8,
-    pub flags: StdVideoH264SpsVuiFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
@@ -651,10 +651,23 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).flags as *const _
+                as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH264SequenceParameterSetVui),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).aspect_ratio_idc
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -667,7 +680,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).sar_width as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -680,7 +693,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).sar_height as *const _
                 as usize
         },
-        6usize,
+        10usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -693,7 +706,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).video_format as *const _
                 as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -706,7 +719,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).color_primaries
                 as *const _ as usize
         },
-        9usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -719,7 +732,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).transfer_characteristics
                 as *const _ as usize
         },
-        10usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -732,7 +745,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).matrix_coefficients
                 as *const _ as usize
         },
-        11usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -745,7 +758,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).num_units_in_tick
                 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -758,7 +771,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).time_scale as *const _
                 as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSetVui),
@@ -803,19 +816,6 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSetVui() {
             stringify!(StdVideoH264SequenceParameterSetVui),
             "::",
             stringify!(max_dec_frame_buffering)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH264SequenceParameterSetVui>())).flags as *const _
-                as usize
-        },
-        36usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH264SequenceParameterSetVui),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -1186,6 +1186,7 @@ fn bindgen_test_layout_StdVideoH264ScalingLists() {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH264SequenceParameterSet {
+    pub flags: StdVideoH264SpsFlags,
     pub profile_idc: StdVideoH264ProfileIdc,
     pub level_idc: StdVideoH264Level,
     pub seq_parameter_set_id: u8,
@@ -1205,10 +1206,9 @@ pub struct StdVideoH264SequenceParameterSet {
     pub frame_crop_right_offset: u32,
     pub frame_crop_top_offset: u32,
     pub frame_crop_bottom_offset: u32,
-    pub flags: StdVideoH264SpsFlags,
-    pub pOffsetForRefFrame: *mut i32,
-    pub pScalingLists: *mut StdVideoH264ScalingLists,
-    pub pSequenceParameterSetVui: *mut StdVideoH264SequenceParameterSetVui,
+    pub pOffsetForRefFrame: *const i32,
+    pub pScalingLists: *const StdVideoH264ScalingLists,
+    pub pSequenceParameterSetVui: *const StdVideoH264SequenceParameterSetVui,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
@@ -1227,10 +1227,22 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH264SequenceParameterSet),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).profile_idc as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1243,7 +1255,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).level_idc as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1256,7 +1268,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).seq_parameter_set_id
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1269,7 +1281,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).chroma_format_idc
                 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1282,7 +1294,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).bit_depth_luma_minus8
                 as *const _ as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1295,7 +1307,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).bit_depth_chroma_minus8
                 as *const _ as usize
         },
-        17usize,
+        21usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1308,7 +1320,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).log2_max_frame_num_minus4
                 as *const _ as usize
         },
-        18usize,
+        22usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1321,7 +1333,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).pic_order_cnt_type
                 as *const _ as usize
         },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1334,7 +1346,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>()))
                 .log2_max_pic_order_cnt_lsb_minus4 as *const _ as usize
         },
-        24usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1347,7 +1359,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).offset_for_non_ref_pic
                 as *const _ as usize
         },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1360,7 +1372,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>()))
                 .offset_for_top_to_bottom_field as *const _ as usize
         },
-        32usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1373,7 +1385,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>()))
                 .num_ref_frames_in_pic_order_cnt_cycle as *const _ as usize
         },
-        36usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1386,7 +1398,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).max_num_ref_frames
                 as *const _ as usize
         },
-        37usize,
+        41usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1399,7 +1411,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).pic_width_in_mbs_minus1
                 as *const _ as usize
         },
-        40usize,
+        44usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1412,7 +1424,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>()))
                 .pic_height_in_map_units_minus1 as *const _ as usize
         },
-        44usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1425,7 +1437,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).frame_crop_left_offset
                 as *const _ as usize
         },
-        48usize,
+        52usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1438,7 +1450,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).frame_crop_right_offset
                 as *const _ as usize
         },
-        52usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1451,7 +1463,7 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).frame_crop_top_offset
                 as *const _ as usize
         },
-        56usize,
+        60usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
@@ -1464,24 +1476,12 @@ fn bindgen_test_layout_StdVideoH264SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).frame_crop_bottom_offset
                 as *const _ as usize
         },
-        60usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH264SequenceParameterSet),
-            "::",
-            stringify!(frame_crop_bottom_offset)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH264SequenceParameterSet>())).flags as *const _ as usize
-        },
         64usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264SequenceParameterSet),
             "::",
-            stringify!(flags)
+            stringify!(frame_crop_bottom_offset)
         )
     );
     assert_eq!(
@@ -1708,6 +1708,7 @@ impl StdVideoH264PpsFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH264PictureParameterSet {
+    pub flags: StdVideoH264PpsFlags,
     pub seq_parameter_set_id: u8,
     pub pic_parameter_set_id: u8,
     pub num_ref_idx_l0_default_active_minus1: u8,
@@ -1717,8 +1718,7 @@ pub struct StdVideoH264PictureParameterSet {
     pub pic_init_qs_minus26: i8,
     pub chroma_qp_index_offset: i8,
     pub second_chroma_qp_index_offset: i8,
-    pub flags: StdVideoH264PpsFlags,
-    pub pScalingLists: *mut StdVideoH264ScalingLists,
+    pub pScalingLists: *const StdVideoH264ScalingLists,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
@@ -1734,10 +1734,22 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH264PictureParameterSet),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).seq_parameter_set_id
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1750,7 +1762,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).pic_parameter_set_id
                 as *const _ as usize
         },
-        1usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1763,7 +1775,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>()))
                 .num_ref_idx_l0_default_active_minus1 as *const _ as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1776,7 +1788,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>()))
                 .num_ref_idx_l1_default_active_minus1 as *const _ as usize
         },
-        3usize,
+        7usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1789,7 +1801,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).weighted_bipred_idc
                 as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1802,7 +1814,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).pic_init_qp_minus26
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1815,7 +1827,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).pic_init_qs_minus26
                 as *const _ as usize
         },
-        9usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1828,7 +1840,7 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).chroma_qp_index_offset
                 as *const _ as usize
         },
-        10usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
@@ -1841,24 +1853,12 @@ fn bindgen_test_layout_StdVideoH264PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>()))
                 .second_chroma_qp_index_offset as *const _ as usize
         },
-        11usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH264PictureParameterSet),
             "::",
             stringify!(second_chroma_qp_index_offset)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH264PictureParameterSet>())).flags as *const _ as usize
-        },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH264PictureParameterSet),
-            "::",
-            stringify!(flags)
         )
     );
     assert_eq!(
@@ -2007,13 +2007,13 @@ impl StdVideoDecodeH264PictureInfoFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoDecodeH264PictureInfo {
+    pub flags: StdVideoDecodeH264PictureInfoFlags,
     pub seq_parameter_set_id: u8,
     pub pic_parameter_set_id: u8,
     pub reserved: u16,
     pub frame_num: u16,
     pub idr_pic_id: u16,
     pub PicOrderCnt: [i32; 2usize],
-    pub flags: StdVideoDecodeH264PictureInfoFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
@@ -2029,10 +2029,22 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoDecodeH264PictureInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).seq_parameter_set_id
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
@@ -2045,7 +2057,7 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).pic_parameter_set_id
                 as *const _ as usize
         },
-        1usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
@@ -2057,7 +2069,7 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
         unsafe {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).reserved as *const _ as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
@@ -2069,7 +2081,7 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
         unsafe {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).frame_num as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
@@ -2082,7 +2094,7 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).idr_pic_id as *const _
                 as usize
         },
-        6usize,
+        10usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
@@ -2095,24 +2107,12 @@ fn bindgen_test_layout_StdVideoDecodeH264PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).PicOrderCnt as *const _
                 as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264PictureInfo),
             "::",
             stringify!(PicOrderCnt)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH264PictureInfo>())).flags as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoDecodeH264PictureInfo),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -2167,11 +2167,11 @@ impl StdVideoDecodeH264ReferenceInfoFlags {
         }
     }
     #[inline]
-    pub fn is_long_term(&self) -> u32 {
+    pub fn used_for_long_term_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_long_term(&mut self, val: u32) {
+    pub fn set_used_for_long_term_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(2usize, 1u8, val as u64)
@@ -2192,7 +2192,7 @@ impl StdVideoDecodeH264ReferenceInfoFlags {
     pub fn new_bitfield_1(
         top_field_flag: u32,
         bottom_field_flag: u32,
-        is_long_term: u32,
+        used_for_long_term_reference: u32,
         is_non_existing: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
@@ -2205,8 +2205,9 @@ impl StdVideoDecodeH264ReferenceInfoFlags {
             bottom_field_flag as u64
         });
         __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let is_long_term: u32 = unsafe { ::std::mem::transmute(is_long_term) };
-            is_long_term as u64
+            let used_for_long_term_reference: u32 =
+                unsafe { ::std::mem::transmute(used_for_long_term_reference) };
+            used_for_long_term_reference as u64
         });
         __bindgen_bitfield_unit.set(3usize, 1u8, {
             let is_non_existing: u32 = unsafe { ::std::mem::transmute(is_non_existing) };
@@ -2218,10 +2219,10 @@ impl StdVideoDecodeH264ReferenceInfoFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoDecodeH264ReferenceInfo {
+    pub flags: StdVideoDecodeH264ReferenceInfoFlags,
     pub FrameNum: u16,
     pub reserved: u16,
     pub PicOrderCnt: [i32; 2usize],
-    pub flags: StdVideoDecodeH264ReferenceInfoFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoDecodeH264ReferenceInfo() {
@@ -2237,10 +2238,22 @@ fn bindgen_test_layout_StdVideoDecodeH264ReferenceInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoDecodeH264ReferenceInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoDecodeH264ReferenceInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoDecodeH264ReferenceInfo>())).FrameNum as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264ReferenceInfo),
@@ -2253,7 +2266,7 @@ fn bindgen_test_layout_StdVideoDecodeH264ReferenceInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH264ReferenceInfo>())).reserved as *const _
                 as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264ReferenceInfo),
@@ -2266,24 +2279,12 @@ fn bindgen_test_layout_StdVideoDecodeH264ReferenceInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH264ReferenceInfo>())).PicOrderCnt as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH264ReferenceInfo),
             "::",
             stringify!(PicOrderCnt)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH264ReferenceInfo>())).flags as *const _ as usize
-        },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoDecodeH264ReferenceInfo),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -2567,7 +2568,7 @@ fn bindgen_test_layout_StdVideoDecodeH264MvcElement() {
 pub struct StdVideoDecodeH264Mvc {
     pub viewId0: u32,
     pub mvcElementCount: u32,
-    pub pMvcElements: *mut StdVideoDecodeH264MvcElement,
+    pub pMvcElements: *const StdVideoDecodeH264MvcElement,
 }
 #[test]
 fn bindgen_test_layout_StdVideoDecodeH264Mvc() {
@@ -2953,6 +2954,7 @@ impl StdVideoH265HrdFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH265HrdParameters {
+    pub flags: StdVideoH265HrdFlags,
     pub tick_divisor_minus2: u8,
     pub du_cpb_removal_delay_increment_length_minus1: u8,
     pub dpb_output_delay_du_length_minus1: u8,
@@ -2964,9 +2966,8 @@ pub struct StdVideoH265HrdParameters {
     pub dpb_output_delay_length_minus1: u8,
     pub cpb_cnt_minus1: [u8; 7usize],
     pub elemental_duration_in_tc_minus1: [u16; 7usize],
-    pub pSubLayerHrdParametersNal: [*mut StdVideoH265SubLayerHrdParameters; 7usize],
-    pub pSubLayerHrdParametersVcl: [*mut StdVideoH265SubLayerHrdParameters; 7usize],
-    pub flags: StdVideoH265HrdFlags,
+    pub pSubLayerHrdParametersNal: [*const StdVideoH265SubLayerHrdParameters; 7usize],
+    pub pSubLayerHrdParametersVcl: [*const StdVideoH265SubLayerHrdParameters; 7usize],
 }
 #[test]
 fn bindgen_test_layout_StdVideoH265HrdParameters() {
@@ -2981,11 +2982,21 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
         concat!("Alignment of ", stringify!(StdVideoH265HrdParameters))
     );
     assert_eq!(
+        unsafe { &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).flags as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH265HrdParameters),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
         unsafe {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).tick_divisor_minus2 as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -2998,7 +3009,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>()))
                 .du_cpb_removal_delay_increment_length_minus1 as *const _ as usize
         },
-        1usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3011,7 +3022,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).dpb_output_delay_du_length_minus1
                 as *const _ as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3024,7 +3035,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).bit_rate_scale as *const _
                 as usize
         },
-        3usize,
+        7usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3037,7 +3048,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).cpb_size_scale as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3050,7 +3061,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).cpb_size_du_scale as *const _
                 as usize
         },
-        5usize,
+        9usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3063,7 +3074,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>()))
                 .initial_cpb_removal_delay_length_minus1 as *const _ as usize
         },
-        6usize,
+        10usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3076,7 +3087,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).au_cpb_removal_delay_length_minus1
                 as *const _ as usize
         },
-        7usize,
+        11usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3089,7 +3100,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).dpb_output_delay_length_minus1
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3102,7 +3113,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).cpb_cnt_minus1 as *const _
                 as usize
         },
-        9usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3115,7 +3126,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).elemental_duration_in_tc_minus1
                 as *const _ as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3128,7 +3139,7 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).pSubLayerHrdParametersNal
                 as *const _ as usize
         },
-        32usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
@@ -3141,22 +3152,12 @@ fn bindgen_test_layout_StdVideoH265HrdParameters() {
             &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).pSubLayerHrdParametersVcl
                 as *const _ as usize
         },
-        88usize,
+        96usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265HrdParameters),
             "::",
             stringify!(pSubLayerHrdParametersVcl)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<StdVideoH265HrdParameters>())).flags as *const _ as usize },
-        144usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH265HrdParameters),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -3260,14 +3261,14 @@ impl StdVideoH265VpsFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH265VideoParameterSet {
+    pub flags: StdVideoH265VpsFlags,
     pub vps_video_parameter_set_id: u8,
     pub vps_max_sub_layers_minus1: u8,
     pub vps_num_units_in_tick: u32,
     pub vps_time_scale: u32,
     pub vps_num_ticks_poc_diff_one_minus1: u32,
-    pub pDecPicBufMgr: *mut StdVideoH265DecPicBufMgr,
-    pub pHrdParameters: *mut StdVideoH265HrdParameters,
-    pub flags: StdVideoH265VpsFlags,
+    pub pDecPicBufMgr: *const StdVideoH265DecPicBufMgr,
+    pub pHrdParameters: *const StdVideoH265HrdParameters,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
@@ -3283,10 +3284,22 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH265VideoParameterSet),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).vps_video_parameter_set_id
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3299,7 +3312,7 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).vps_max_sub_layers_minus1
                 as *const _ as usize
         },
-        1usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3312,7 +3325,7 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).vps_num_units_in_tick
                 as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3325,7 +3338,7 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).vps_time_scale as *const _
                 as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3338,7 +3351,7 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>()))
                 .vps_num_ticks_poc_diff_one_minus1 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3351,7 +3364,7 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).pDecPicBufMgr as *const _
                 as usize
         },
-        16usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
@@ -3364,24 +3377,12 @@ fn bindgen_test_layout_StdVideoH265VideoParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).pHrdParameters as *const _
                 as usize
         },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH265VideoParameterSet),
-            "::",
-            stringify!(pHrdParameters)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH265VideoParameterSet>())).flags as *const _ as usize
-        },
         32usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265VideoParameterSet),
             "::",
-            stringify!(flags)
+            stringify!(pHrdParameters)
         )
     );
 }
@@ -3821,6 +3822,7 @@ impl StdVideoH265SpsVuiFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH265SequenceParameterSetVui {
+    pub flags: StdVideoH265SpsVuiFlags,
     pub aspect_ratio_idc: u8,
     pub sar_width: u16,
     pub sar_height: u16,
@@ -3837,13 +3839,12 @@ pub struct StdVideoH265SequenceParameterSetVui {
     pub vui_num_units_in_tick: u32,
     pub vui_time_scale: u32,
     pub vui_num_ticks_poc_diff_one_minus1: u32,
-    pub pHrdParameters: *mut StdVideoH265HrdParameters,
+    pub pHrdParameters: *const StdVideoH265HrdParameters,
     pub min_spatial_segmentation_idc: u16,
     pub max_bytes_per_pic_denom: u8,
     pub max_bits_per_min_cu_denom: u8,
     pub log2_max_mv_length_horizontal: u8,
     pub log2_max_mv_length_vertical: u8,
-    pub flags: StdVideoH265SpsVuiFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
@@ -3862,10 +3863,23 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).flags as *const _
+                as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH265SequenceParameterSetVui),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).aspect_ratio_idc
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3878,7 +3892,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).sar_width as *const _
                 as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3891,7 +3905,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).sar_height as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3904,7 +3918,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).video_format as *const _
                 as usize
         },
-        6usize,
+        10usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3917,7 +3931,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).colour_primaries
                 as *const _ as usize
         },
-        7usize,
+        11usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3930,7 +3944,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).transfer_characteristics
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3943,7 +3957,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).matrix_coeffs
                 as *const _ as usize
         },
-        9usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3956,7 +3970,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .chroma_sample_loc_type_top_field as *const _ as usize
         },
-        10usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3969,7 +3983,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .chroma_sample_loc_type_bottom_field as *const _ as usize
         },
-        11usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3982,7 +3996,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).def_disp_win_left_offset
                 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -3995,7 +4009,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .def_disp_win_right_offset as *const _ as usize
         },
-        14usize,
+        18usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4008,7 +4022,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).def_disp_win_top_offset
                 as *const _ as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4021,7 +4035,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .def_disp_win_bottom_offset as *const _ as usize
         },
-        18usize,
+        22usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4034,7 +4048,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).vui_num_units_in_tick
                 as *const _ as usize
         },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4047,7 +4061,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).vui_time_scale
                 as *const _ as usize
         },
-        24usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4060,7 +4074,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .vui_num_ticks_poc_diff_one_minus1 as *const _ as usize
         },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4073,7 +4087,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).pHrdParameters
                 as *const _ as usize
         },
-        32usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4086,7 +4100,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .min_spatial_segmentation_idc as *const _ as usize
         },
-        40usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4099,7 +4113,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).max_bytes_per_pic_denom
                 as *const _ as usize
         },
-        42usize,
+        50usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4112,7 +4126,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .max_bits_per_min_cu_denom as *const _ as usize
         },
-        43usize,
+        51usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4125,7 +4139,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .log2_max_mv_length_horizontal as *const _ as usize
         },
-        44usize,
+        52usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
@@ -4138,25 +4152,12 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSetVui() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>()))
                 .log2_max_mv_length_vertical as *const _ as usize
         },
-        45usize,
+        53usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSetVui),
             "::",
             stringify!(log2_max_mv_length_vertical)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH265SequenceParameterSetVui>())).flags as *const _
-                as usize
-        },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH265SequenceParameterSetVui),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -4469,47 +4470,58 @@ impl StdVideoH265SpsFlags {
         }
     }
     #[inline]
-    pub fn sps_curr_pic_ref_enabled_flag(&self) -> u32 {
+    pub fn sps_scc_extension_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(23usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_sps_curr_pic_ref_enabled_flag(&mut self, val: u32) {
+    pub fn set_sps_scc_extension_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(23usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn palette_mode_enabled_flag(&self) -> u32 {
+    pub fn sps_curr_pic_ref_enabled_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(24usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_palette_mode_enabled_flag(&mut self, val: u32) {
+    pub fn set_sps_curr_pic_ref_enabled_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(24usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn sps_palette_predictor_initializer_present_flag(&self) -> u32 {
+    pub fn palette_mode_enabled_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(25usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_sps_palette_predictor_initializer_present_flag(&mut self, val: u32) {
+    pub fn set_palette_mode_enabled_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(25usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn intra_boundary_filtering_disabled_flag(&self) -> u32 {
+    pub fn sps_palette_predictor_initializer_present_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(26usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_sps_palette_predictor_initializer_present_flag(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(26usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn intra_boundary_filtering_disabled_flag(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(27usize, 1u8) as u32) }
     }
     #[inline]
     pub fn set_intra_boundary_filtering_disabled_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(26usize, 1u8, val as u64)
+            self._bitfield_1.set(27usize, 1u8, val as u64)
         }
     }
     #[inline]
@@ -4537,6 +4549,7 @@ impl StdVideoH265SpsFlags {
         high_precision_offsets_enabled_flag: u32,
         persistent_rice_adaptation_enabled_flag: u32,
         cabac_bypass_alignment_enabled_flag: u32,
+        sps_scc_extension_flag: u32,
         sps_curr_pic_ref_enabled_flag: u32,
         palette_mode_enabled_flag: u32,
         sps_palette_predictor_initializer_present_flag: u32,
@@ -4657,21 +4670,26 @@ impl StdVideoH265SpsFlags {
             cabac_bypass_alignment_enabled_flag as u64
         });
         __bindgen_bitfield_unit.set(23usize, 1u8, {
+            let sps_scc_extension_flag: u32 =
+                unsafe { ::std::mem::transmute(sps_scc_extension_flag) };
+            sps_scc_extension_flag as u64
+        });
+        __bindgen_bitfield_unit.set(24usize, 1u8, {
             let sps_curr_pic_ref_enabled_flag: u32 =
                 unsafe { ::std::mem::transmute(sps_curr_pic_ref_enabled_flag) };
             sps_curr_pic_ref_enabled_flag as u64
         });
-        __bindgen_bitfield_unit.set(24usize, 1u8, {
+        __bindgen_bitfield_unit.set(25usize, 1u8, {
             let palette_mode_enabled_flag: u32 =
                 unsafe { ::std::mem::transmute(palette_mode_enabled_flag) };
             palette_mode_enabled_flag as u64
         });
-        __bindgen_bitfield_unit.set(25usize, 1u8, {
+        __bindgen_bitfield_unit.set(26usize, 1u8, {
             let sps_palette_predictor_initializer_present_flag: u32 =
                 unsafe { ::std::mem::transmute(sps_palette_predictor_initializer_present_flag) };
             sps_palette_predictor_initializer_present_flag as u64
         });
-        __bindgen_bitfield_unit.set(26usize, 1u8, {
+        __bindgen_bitfield_unit.set(27usize, 1u8, {
             let intra_boundary_filtering_disabled_flag: u32 =
                 unsafe { ::std::mem::transmute(intra_boundary_filtering_disabled_flag) };
             intra_boundary_filtering_disabled_flag as u64
@@ -4682,6 +4700,7 @@ impl StdVideoH265SpsFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH265SequenceParameterSet {
+    pub flags: StdVideoH265SpsFlags,
     pub profile_idc: StdVideoH265ProfileIdc,
     pub level_idc: StdVideoH265Level,
     pub pic_width_in_luma_samples: u32,
@@ -4693,7 +4712,7 @@ pub struct StdVideoH265SequenceParameterSet {
     pub bit_depth_luma_minus8: u8,
     pub bit_depth_chroma_minus8: u8,
     pub log2_max_pic_order_cnt_lsb_minus4: u8,
-    pub sps_max_dec_pic_buffering_minus1: u8,
+    pub sps_max_dec_pic_buffering_minus1: [u8; 8usize],
     pub log2_min_luma_coding_block_size_minus3: u8,
     pub log2_diff_max_min_luma_coding_block_size: u8,
     pub log2_min_luma_transform_block_size_minus2: u8,
@@ -4710,15 +4729,14 @@ pub struct StdVideoH265SequenceParameterSet {
     pub conf_win_right_offset: u32,
     pub conf_win_top_offset: u32,
     pub conf_win_bottom_offset: u32,
-    pub pDecPicBufMgr: *mut StdVideoH265DecPicBufMgr,
-    pub flags: StdVideoH265SpsFlags,
-    pub pScalingLists: *mut StdVideoH265ScalingLists,
-    pub pSequenceParameterSetVui: *mut StdVideoH265SequenceParameterSetVui,
+    pub pDecPicBufMgr: *const StdVideoH265DecPicBufMgr,
+    pub pScalingLists: *const StdVideoH265ScalingLists,
+    pub pSequenceParameterSetVui: *const StdVideoH265SequenceParameterSetVui,
     pub palette_max_size: u8,
     pub delta_palette_max_predictor_size: u8,
     pub motion_vector_resolution_control_idc: u8,
     pub sps_num_palette_predictor_initializer_minus1: u8,
-    pub pPredictorPaletteEntries: *mut StdVideoH265PredictorPaletteEntries,
+    pub pPredictorPaletteEntries: *const StdVideoH265PredictorPaletteEntries,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
@@ -4737,10 +4755,22 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH265SequenceParameterSet),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).profile_idc as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4753,7 +4783,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).level_idc as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4766,7 +4796,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).pic_width_in_luma_samples
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4779,7 +4809,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).pic_height_in_luma_samples
                 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4792,7 +4822,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).sps_video_parameter_set_id
                 as *const _ as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4805,7 +4835,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).sps_max_sub_layers_minus1
                 as *const _ as usize
         },
-        17usize,
+        21usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4818,7 +4848,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).sps_seq_parameter_set_id
                 as *const _ as usize
         },
-        18usize,
+        22usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4831,7 +4861,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).chroma_format_idc
                 as *const _ as usize
         },
-        19usize,
+        23usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4844,7 +4874,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).bit_depth_luma_minus8
                 as *const _ as usize
         },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4857,7 +4887,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).bit_depth_chroma_minus8
                 as *const _ as usize
         },
-        21usize,
+        25usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4870,7 +4900,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_max_pic_order_cnt_lsb_minus4 as *const _ as usize
         },
-        22usize,
+        26usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4883,7 +4913,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .sps_max_dec_pic_buffering_minus1 as *const _ as usize
         },
-        23usize,
+        27usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4896,7 +4926,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_min_luma_coding_block_size_minus3 as *const _ as usize
         },
-        24usize,
+        35usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4909,7 +4939,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_diff_max_min_luma_coding_block_size as *const _ as usize
         },
-        25usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4922,7 +4952,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_min_luma_transform_block_size_minus2 as *const _ as usize
         },
-        26usize,
+        37usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4935,7 +4965,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_diff_max_min_luma_transform_block_size as *const _ as usize
         },
-        27usize,
+        38usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4948,7 +4978,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .max_transform_hierarchy_depth_inter as *const _ as usize
         },
-        28usize,
+        39usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4961,7 +4991,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .max_transform_hierarchy_depth_intra as *const _ as usize
         },
-        29usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4974,7 +5004,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).num_short_term_ref_pic_sets
                 as *const _ as usize
         },
-        30usize,
+        41usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -4987,7 +5017,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).num_long_term_ref_pics_sps
                 as *const _ as usize
         },
-        31usize,
+        42usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5000,7 +5030,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .pcm_sample_bit_depth_luma_minus1 as *const _ as usize
         },
-        32usize,
+        43usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5013,7 +5043,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .pcm_sample_bit_depth_chroma_minus1 as *const _ as usize
         },
-        33usize,
+        44usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5026,7 +5056,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_min_pcm_luma_coding_block_size_minus3 as *const _ as usize
         },
-        34usize,
+        45usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5039,7 +5069,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>()))
                 .log2_diff_max_min_pcm_luma_coding_block_size as *const _ as usize
         },
-        35usize,
+        46usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5052,7 +5082,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).conf_win_left_offset
                 as *const _ as usize
         },
-        36usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5065,7 +5095,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).conf_win_right_offset
                 as *const _ as usize
         },
-        40usize,
+        52usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5078,7 +5108,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).conf_win_top_offset
                 as *const _ as usize
         },
-        44usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5091,7 +5121,7 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).conf_win_bottom_offset
                 as *const _ as usize
         },
-        48usize,
+        60usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
@@ -5104,24 +5134,12 @@ fn bindgen_test_layout_StdVideoH265SequenceParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).pDecPicBufMgr as *const _
                 as usize
         },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH265SequenceParameterSet),
-            "::",
-            stringify!(pDecPicBufMgr)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH265SequenceParameterSet>())).flags as *const _ as usize
-        },
         64usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265SequenceParameterSet),
             "::",
-            stringify!(flags)
+            stringify!(pDecPicBufMgr)
         )
     );
     assert_eq!(
@@ -5770,6 +5788,7 @@ impl StdVideoH265PpsFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoH265PictureParameterSet {
+    pub flags: StdVideoH265PpsFlags,
     pub pps_pic_parameter_set_id: u8,
     pub pps_seq_parameter_set_id: u8,
     pub num_extra_slice_header_bits: u8,
@@ -5786,8 +5805,7 @@ pub struct StdVideoH265PictureParameterSet {
     pub pps_beta_offset_div2: i8,
     pub pps_tc_offset_div2: i8,
     pub log2_parallel_merge_level_minus2: u8,
-    pub flags: StdVideoH265PpsFlags,
-    pub pScalingLists: *mut StdVideoH265ScalingLists,
+    pub pScalingLists: *const StdVideoH265ScalingLists,
     pub log2_max_transform_skip_block_size_minus2: u8,
     pub diff_cu_chroma_qp_offset_depth: u8,
     pub chroma_qp_offset_list_len_minus1: u8,
@@ -5801,7 +5819,7 @@ pub struct StdVideoH265PictureParameterSet {
     pub pps_num_palette_predictor_initializer: u8,
     pub luma_bit_depth_entry_minus8: u8,
     pub chroma_bit_depth_entry_minus8: u8,
-    pub pPredictorPaletteEntries: *mut StdVideoH265PredictorPaletteEntries,
+    pub pPredictorPaletteEntries: *const StdVideoH265PredictorPaletteEntries,
 }
 #[test]
 fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
@@ -5817,10 +5835,22 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoH265PictureParameterSet),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_pic_parameter_set_id
                 as *const _ as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5833,7 +5863,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_seq_parameter_set_id
                 as *const _ as usize
         },
-        1usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5846,7 +5876,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).num_extra_slice_header_bits
                 as *const _ as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5859,7 +5889,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>()))
                 .num_ref_idx_l0_default_active_minus1 as *const _ as usize
         },
-        3usize,
+        7usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5872,7 +5902,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>()))
                 .num_ref_idx_l1_default_active_minus1 as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5885,7 +5915,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).init_qp_minus26 as *const _
                 as usize
         },
-        5usize,
+        9usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5898,7 +5928,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).diff_cu_qp_delta_depth
                 as *const _ as usize
         },
-        6usize,
+        10usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5911,7 +5941,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_cb_qp_offset as *const _
                 as usize
         },
-        7usize,
+        11usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5924,7 +5954,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_cr_qp_offset as *const _
                 as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5937,7 +5967,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).num_tile_columns_minus1
                 as *const _ as usize
         },
-        9usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5950,7 +5980,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).num_tile_rows_minus1
                 as *const _ as usize
         },
-        10usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5963,7 +5993,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).column_width_minus1
                 as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5976,7 +6006,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).row_height_minus1
                 as *const _ as usize
         },
-        50usize,
+        54usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -5989,7 +6019,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_beta_offset_div2
                 as *const _ as usize
         },
-        92usize,
+        96usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -6002,7 +6032,7 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).pps_tc_offset_div2
                 as *const _ as usize
         },
-        93usize,
+        97usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
@@ -6015,24 +6045,12 @@ fn bindgen_test_layout_StdVideoH265PictureParameterSet() {
             &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>()))
                 .log2_parallel_merge_level_minus2 as *const _ as usize
         },
-        94usize,
+        98usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoH265PictureParameterSet),
             "::",
             stringify!(log2_parallel_merge_level_minus2)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoH265PictureParameterSet>())).flags as *const _ as usize
-        },
-        96usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoH265PictureParameterSet),
-            "::",
-            stringify!(flags)
         )
     );
     assert_eq!(
@@ -6331,8 +6349,9 @@ impl StdVideoDecodeH265PictureInfoFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoDecodeH265PictureInfo {
-    pub vps_video_parameter_set_id: u8,
-    pub sps_seq_parameter_set_id: u8,
+    pub flags: StdVideoDecodeH265PictureInfoFlags,
+    pub sps_video_parameter_set_id: u8,
+    pub pps_seq_parameter_set_id: u8,
     pub pps_pic_parameter_set_id: u8,
     pub num_short_term_ref_pic_sets: u8,
     pub PicOrderCntVal: i32,
@@ -6341,7 +6360,6 @@ pub struct StdVideoDecodeH265PictureInfo {
     pub RefPicSetStCurrBefore: [u8; 8usize],
     pub RefPicSetStCurrAfter: [u8; 8usize],
     pub RefPicSetLtCurr: [u8; 8usize],
-    pub flags: StdVideoDecodeH265PictureInfoFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
@@ -6357,28 +6375,40 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).vps_video_parameter_set_id
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).flags as *const _ as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
             "::",
-            stringify!(vps_video_parameter_set_id)
+            stringify!(flags)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).sps_seq_parameter_set_id
+            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).sps_video_parameter_set_id
                 as *const _ as usize
         },
-        1usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
             "::",
-            stringify!(sps_seq_parameter_set_id)
+            stringify!(sps_video_parameter_set_id)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).pps_seq_parameter_set_id
+                as *const _ as usize
+        },
+        5usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoDecodeH265PictureInfo),
+            "::",
+            stringify!(pps_seq_parameter_set_id)
         )
     );
     assert_eq!(
@@ -6386,7 +6416,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).pps_pic_parameter_set_id
                 as *const _ as usize
         },
-        2usize,
+        6usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6399,7 +6429,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).num_short_term_ref_pic_sets
                 as *const _ as usize
         },
-        3usize,
+        7usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6412,7 +6442,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).PicOrderCntVal as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6425,7 +6455,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).NumBitsForSTRefPicSetInSlice
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6438,7 +6468,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).NumDeltaPocsOfRefRpsIdx
                 as *const _ as usize
         },
-        10usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6451,7 +6481,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).RefPicSetStCurrBefore
                 as *const _ as usize
         },
-        11usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6464,7 +6494,7 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).RefPicSetStCurrAfter
                 as *const _ as usize
         },
-        19usize,
+        23usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
@@ -6477,24 +6507,12 @@ fn bindgen_test_layout_StdVideoDecodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).RefPicSetLtCurr as *const _
                 as usize
         },
-        27usize,
+        31usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265PictureInfo),
             "::",
             stringify!(RefPicSetLtCurr)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH265PictureInfo>())).flags as *const _ as usize
-        },
-        36usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoDecodeH265PictureInfo),
-            "::",
-            stringify!(flags)
         )
     );
 }
@@ -6527,38 +6545,55 @@ fn bindgen_test_layout_StdVideoDecodeH265ReferenceInfoFlags() {
 }
 impl StdVideoDecodeH265ReferenceInfoFlags {
     #[inline]
-    pub fn is_long_term(&self) -> u32 {
+    pub fn used_for_long_term_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_long_term(&mut self, val: u32) {
+    pub fn set_used_for_long_term_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(0usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_non_existing(&self) -> u32 {
+    pub fn unused_for_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_non_existing(&mut self, val: u32) {
+    pub fn set_unused_for_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(1usize, 1u8, val as u64)
         }
     }
     #[inline]
+    pub fn is_non_existing(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_is_non_existing(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
     pub fn new_bitfield_1(
-        is_long_term: u32,
+        used_for_long_term_reference: u32,
+        unused_for_reference: u32,
         is_non_existing: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let is_long_term: u32 = unsafe { ::std::mem::transmute(is_long_term) };
-            is_long_term as u64
+            let used_for_long_term_reference: u32 =
+                unsafe { ::std::mem::transmute(used_for_long_term_reference) };
+            used_for_long_term_reference as u64
         });
         __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let unused_for_reference: u32 = unsafe { ::std::mem::transmute(unused_for_reference) };
+            unused_for_reference as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
             let is_non_existing: u32 = unsafe { ::std::mem::transmute(is_non_existing) };
             is_non_existing as u64
         });
@@ -6568,8 +6603,8 @@ impl StdVideoDecodeH265ReferenceInfoFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoDecodeH265ReferenceInfo {
-    pub PicOrderCntVal: i32,
     pub flags: StdVideoDecodeH265ReferenceInfoFlags,
+    pub PicOrderCntVal: i32,
 }
 #[test]
 fn bindgen_test_layout_StdVideoDecodeH265ReferenceInfo() {
@@ -6585,10 +6620,22 @@ fn bindgen_test_layout_StdVideoDecodeH265ReferenceInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoDecodeH265ReferenceInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoDecodeH265ReferenceInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoDecodeH265ReferenceInfo>())).PicOrderCntVal as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoDecodeH265ReferenceInfo),
@@ -6596,16 +6643,250 @@ fn bindgen_test_layout_StdVideoDecodeH265ReferenceInfo() {
             stringify!(PicOrderCntVal)
         )
     );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH264WeightTableFlags {
+    pub luma_weight_l0_flag: u32,
+    pub chroma_weight_l0_flag: u32,
+    pub luma_weight_l1_flag: u32,
+    pub chroma_weight_l1_flag: u32,
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH264WeightTableFlags() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH264WeightTableFlags>(),
+        16usize,
+        concat!("Size of: ", stringify!(StdVideoEncodeH264WeightTableFlags))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH264WeightTableFlags>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(StdVideoEncodeH264WeightTableFlags)
+        )
+    );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoDecodeH265ReferenceInfo>())).flags as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTableFlags>())).luma_weight_l0_flag
+                as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTableFlags),
+            "::",
+            stringify!(luma_weight_l0_flag)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTableFlags>())).chroma_weight_l0_flag
+                as *const _ as usize
         },
         4usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoDecodeH265ReferenceInfo),
+            stringify!(StdVideoEncodeH264WeightTableFlags),
+            "::",
+            stringify!(chroma_weight_l0_flag)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTableFlags>())).luma_weight_l1_flag
+                as *const _ as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTableFlags),
+            "::",
+            stringify!(luma_weight_l1_flag)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTableFlags>())).chroma_weight_l1_flag
+                as *const _ as usize
+        },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTableFlags),
+            "::",
+            stringify!(chroma_weight_l1_flag)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH264WeightTable {
+    pub flags: StdVideoEncodeH264WeightTableFlags,
+    pub luma_log2_weight_denom: u8,
+    pub chroma_log2_weight_denom: u8,
+    pub luma_weight_l0: [i8; 32usize],
+    pub luma_offset_l0: [i8; 32usize],
+    pub chroma_weight_l0: [[i8; 2usize]; 32usize],
+    pub chroma_offset_l0: [[i8; 2usize]; 32usize],
+    pub luma_weight_l1: [i8; 32usize],
+    pub luma_offset_l1: [i8; 32usize],
+    pub chroma_weight_l1: [[i8; 2usize]; 32usize],
+    pub chroma_offset_l1: [[i8; 2usize]; 32usize],
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH264WeightTable() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH264WeightTable>(),
+        404usize,
+        concat!("Size of: ", stringify!(StdVideoEncodeH264WeightTable))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH264WeightTable>(),
+        4usize,
+        concat!("Alignment of ", stringify!(StdVideoEncodeH264WeightTable))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
             "::",
             stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).luma_log2_weight_denom
+                as *const _ as usize
+        },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(luma_log2_weight_denom)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).chroma_log2_weight_denom
+                as *const _ as usize
+        },
+        17usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(chroma_log2_weight_denom)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).luma_weight_l0 as *const _
+                as usize
+        },
+        18usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(luma_weight_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).luma_offset_l0 as *const _
+                as usize
+        },
+        50usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(luma_offset_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).chroma_weight_l0 as *const _
+                as usize
+        },
+        82usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(chroma_weight_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).chroma_offset_l0 as *const _
+                as usize
+        },
+        146usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(chroma_offset_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).luma_weight_l1 as *const _
+                as usize
+        },
+        210usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(luma_weight_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).luma_offset_l1 as *const _
+                as usize
+        },
+        242usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(luma_offset_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).chroma_weight_l1 as *const _
+                as usize
+        },
+        274usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(chroma_weight_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264WeightTable>())).chroma_offset_l1 as *const _
+                as usize
+        },
+        338usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264WeightTable),
+            "::",
+            stringify!(chroma_offset_l1)
         )
     );
 }
@@ -6635,122 +6916,90 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeaderFlags() {
 }
 impl StdVideoEncodeH264SliceHeaderFlags {
     #[inline]
-    pub fn idr_flag(&self) -> u32 {
+    pub fn direct_spatial_mv_pred_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_idr_flag(&mut self, val: u32) {
+    pub fn set_direct_spatial_mv_pred_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(0usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_reference_flag(&self) -> u32 {
+    pub fn num_ref_idx_active_override_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_reference_flag(&mut self, val: u32) {
+    pub fn set_num_ref_idx_active_override_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(1usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn num_ref_idx_active_override_flag(&self) -> u32 {
+    pub fn no_output_of_prior_pics_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_num_ref_idx_active_override_flag(&mut self, val: u32) {
+    pub fn set_no_output_of_prior_pics_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(2usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn no_output_of_prior_pics_flag(&self) -> u32 {
+    pub fn adaptive_ref_pic_marking_mode_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_no_output_of_prior_pics_flag(&mut self, val: u32) {
+    pub fn set_adaptive_ref_pic_marking_mode_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(3usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn long_term_reference_flag(&self) -> u32 {
+    pub fn no_prior_references_available_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_long_term_reference_flag(&mut self, val: u32) {
+    pub fn set_no_prior_references_available_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(4usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn adaptive_ref_pic_marking_mode_flag(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_adaptive_ref_pic_marking_mode_flag(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn no_prior_references_available_flag(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_no_prior_references_available_flag(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
     pub fn new_bitfield_1(
-        idr_flag: u32,
-        is_reference_flag: u32,
+        direct_spatial_mv_pred_flag: u32,
         num_ref_idx_active_override_flag: u32,
         no_output_of_prior_pics_flag: u32,
-        long_term_reference_flag: u32,
         adaptive_ref_pic_marking_mode_flag: u32,
         no_prior_references_available_flag: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let idr_flag: u32 = unsafe { ::std::mem::transmute(idr_flag) };
-            idr_flag as u64
+            let direct_spatial_mv_pred_flag: u32 =
+                unsafe { ::std::mem::transmute(direct_spatial_mv_pred_flag) };
+            direct_spatial_mv_pred_flag as u64
         });
         __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let is_reference_flag: u32 = unsafe { ::std::mem::transmute(is_reference_flag) };
-            is_reference_flag as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
             let num_ref_idx_active_override_flag: u32 =
                 unsafe { ::std::mem::transmute(num_ref_idx_active_override_flag) };
             num_ref_idx_active_override_flag as u64
         });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
             let no_output_of_prior_pics_flag: u32 =
                 unsafe { ::std::mem::transmute(no_output_of_prior_pics_flag) };
             no_output_of_prior_pics_flag as u64
         });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let long_term_reference_flag: u32 =
-                unsafe { ::std::mem::transmute(long_term_reference_flag) };
-            long_term_reference_flag as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
             let adaptive_ref_pic_marking_mode_flag: u32 =
                 unsafe { ::std::mem::transmute(adaptive_ref_pic_marking_mode_flag) };
             adaptive_ref_pic_marking_mode_flag as u64
         });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
             let no_prior_references_available_flag: u32 =
                 unsafe { ::std::mem::transmute(no_prior_references_available_flag) };
             no_prior_references_available_flag as u64
@@ -6806,11 +7055,11 @@ impl StdVideoEncodeH264PictureInfoFlags {
         }
     }
     #[inline]
-    pub fn long_term_reference_flag(&self) -> u32 {
+    pub fn used_for_long_term_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_long_term_reference_flag(&mut self, val: u32) {
+    pub fn set_used_for_long_term_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(2usize, 1u8, val as u64)
@@ -6820,7 +7069,7 @@ impl StdVideoEncodeH264PictureInfoFlags {
     pub fn new_bitfield_1(
         idr_flag: u32,
         is_reference_flag: u32,
-        long_term_reference_flag: u32,
+        used_for_long_term_reference: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -6832,9 +7081,61 @@ impl StdVideoEncodeH264PictureInfoFlags {
             is_reference_flag as u64
         });
         __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let long_term_reference_flag: u32 =
-                unsafe { ::std::mem::transmute(long_term_reference_flag) };
-            long_term_reference_flag as u64
+            let used_for_long_term_reference: u32 =
+                unsafe { ::std::mem::transmute(used_for_long_term_reference) };
+            used_for_long_term_reference as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH264ReferenceInfoFlags {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+    pub __bindgen_padding_0: [u8; 3usize],
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH264ReferenceInfoFlags() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH264ReferenceInfoFlags>(),
+        4usize,
+        concat!(
+            "Size of: ",
+            stringify!(StdVideoEncodeH264ReferenceInfoFlags)
+        )
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH264ReferenceInfoFlags>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(StdVideoEncodeH264ReferenceInfoFlags)
+        )
+    );
+}
+impl StdVideoEncodeH264ReferenceInfoFlags {
+    #[inline]
+    pub fn used_for_long_term_reference(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_used_for_long_term_reference(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        used_for_long_term_reference: u32,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let used_for_long_term_reference: u32 =
+                unsafe { ::std::mem::transmute(used_for_long_term_reference) };
+            used_for_long_term_reference as u64
         });
         __bindgen_bitfield_unit
     }
@@ -7062,11 +7363,11 @@ fn bindgen_test_layout_StdVideoEncodeH264RefPicMarkingEntry() {
 pub struct StdVideoEncodeH264RefMemMgmtCtrlOperations {
     pub flags: StdVideoEncodeH264RefMgmtFlags,
     pub refList0ModOpCount: u8,
-    pub pRefList0ModOperations: *mut StdVideoEncodeH264RefListModEntry,
+    pub pRefList0ModOperations: *const StdVideoEncodeH264RefListModEntry,
     pub refList1ModOpCount: u8,
-    pub pRefList1ModOperations: *mut StdVideoEncodeH264RefListModEntry,
+    pub pRefList1ModOperations: *const StdVideoEncodeH264RefListModEntry,
     pub refPicMarkingOpCount: u8,
-    pub pRefPicMarkingOperations: *mut StdVideoEncodeH264RefPicMarkingEntry,
+    pub pRefPicMarkingOperations: *const StdVideoEncodeH264RefPicMarkingEntry,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH264RefMemMgmtCtrlOperations() {
@@ -7182,11 +7483,11 @@ fn bindgen_test_layout_StdVideoEncodeH264RefMemMgmtCtrlOperations() {
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoEncodeH264PictureInfo {
     pub flags: StdVideoEncodeH264PictureInfoFlags,
+    pub seq_parameter_set_id: u8,
+    pub pic_parameter_set_id: u8,
     pub pictureType: StdVideoH264PictureType,
-    pub frameNum: u32,
-    pub pictureOrderCount: u32,
-    pub long_term_pic_num: u16,
-    pub long_term_frame_idx: u16,
+    pub frame_num: u32,
+    pub PicOrderCnt: i32,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH264PictureInfo() {
@@ -7214,10 +7515,36 @@ fn bindgen_test_layout_StdVideoEncodeH264PictureInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).seq_parameter_set_id
+                as *const _ as usize
+        },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264PictureInfo),
+            "::",
+            stringify!(seq_parameter_set_id)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).pic_parameter_set_id
+                as *const _ as usize
+        },
+        5usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264PictureInfo),
+            "::",
+            stringify!(pic_parameter_set_id)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).pictureType as *const _
                 as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264PictureInfo),
@@ -7227,32 +7554,19 @@ fn bindgen_test_layout_StdVideoEncodeH264PictureInfo() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).frameNum as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH264PictureInfo),
-            "::",
-            stringify!(frameNum)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).pictureOrderCount as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).frame_num as *const _ as usize
         },
         12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264PictureInfo),
             "::",
-            stringify!(pictureOrderCount)
+            stringify!(frame_num)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).long_term_pic_num as *const _
+            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).PicOrderCnt as *const _
                 as usize
         },
         16usize,
@@ -7260,18 +7574,91 @@ fn bindgen_test_layout_StdVideoEncodeH264PictureInfo() {
             "Offset of field: ",
             stringify!(StdVideoEncodeH264PictureInfo),
             "::",
+            stringify!(PicOrderCnt)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH264ReferenceInfo {
+    pub flags: StdVideoEncodeH264ReferenceInfoFlags,
+    pub FrameNum: u32,
+    pub PicOrderCnt: i32,
+    pub long_term_pic_num: u16,
+    pub long_term_frame_idx: u16,
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH264ReferenceInfo() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH264ReferenceInfo>(),
+        16usize,
+        concat!("Size of: ", stringify!(StdVideoEncodeH264ReferenceInfo))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH264ReferenceInfo>(),
+        4usize,
+        concat!("Alignment of ", stringify!(StdVideoEncodeH264ReferenceInfo))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264ReferenceInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264ReferenceInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264ReferenceInfo>())).FrameNum as *const _
+                as usize
+        },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264ReferenceInfo),
+            "::",
+            stringify!(FrameNum)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264ReferenceInfo>())).PicOrderCnt as *const _
+                as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264ReferenceInfo),
+            "::",
+            stringify!(PicOrderCnt)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264ReferenceInfo>())).long_term_pic_num
+                as *const _ as usize
+        },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264ReferenceInfo),
+            "::",
             stringify!(long_term_pic_num)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264PictureInfo>())).long_term_frame_idx
+            &(*(::std::ptr::null::<StdVideoEncodeH264ReferenceInfo>())).long_term_frame_idx
                 as *const _ as usize
         },
-        18usize,
+        14usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH264PictureInfo),
+            stringify!(StdVideoEncodeH264ReferenceInfo),
             "::",
             stringify!(long_term_frame_idx)
         )
@@ -7281,9 +7668,8 @@ fn bindgen_test_layout_StdVideoEncodeH264PictureInfo() {
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoEncodeH264SliceHeader {
     pub flags: StdVideoEncodeH264SliceHeaderFlags,
+    pub first_mb_in_slice: u32,
     pub slice_type: StdVideoH264SliceType,
-    pub seq_parameter_set_id: u8,
-    pub pic_parameter_set_id: u8,
     pub idr_pic_id: u16,
     pub num_ref_idx_l0_active_minus1: u8,
     pub num_ref_idx_l1_active_minus1: u8,
@@ -7291,7 +7677,7 @@ pub struct StdVideoEncodeH264SliceHeader {
     pub disable_deblocking_filter_idc: StdVideoH264DisableDeblockingFilterIdc,
     pub slice_alpha_c0_offset_div2: i8,
     pub slice_beta_offset_div2: i8,
-    pub pMemMgmtCtrlOperations: *mut StdVideoEncodeH264RefMemMgmtCtrlOperations,
+    pub pWeightTable: *const StdVideoEncodeH264WeightTable,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
@@ -7319,10 +7705,23 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).slice_type as *const _
+            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).first_mb_in_slice as *const _
                 as usize
         },
         4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH264SliceHeader),
+            "::",
+            stringify!(first_mb_in_slice)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).slice_type as *const _
+                as usize
+        },
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264SliceHeader),
@@ -7332,36 +7731,10 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).seq_parameter_set_id
-                as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH264SliceHeader),
-            "::",
-            stringify!(seq_parameter_set_id)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).pic_parameter_set_id
-                as *const _ as usize
-        },
-        9usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH264SliceHeader),
-            "::",
-            stringify!(pic_parameter_set_id)
-        )
-    );
-    assert_eq!(
-        unsafe {
             &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).idr_pic_id as *const _
                 as usize
         },
-        10usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264SliceHeader),
@@ -7374,7 +7747,7 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
             &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).num_ref_idx_l0_active_minus1
                 as *const _ as usize
         },
-        12usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264SliceHeader),
@@ -7387,7 +7760,7 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
             &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).num_ref_idx_l1_active_minus1
                 as *const _ as usize
         },
-        13usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264SliceHeader),
@@ -7449,98 +7822,292 @@ fn bindgen_test_layout_StdVideoEncodeH264SliceHeader() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).pMemMgmtCtrlOperations
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH264SliceHeader>())).pWeightTable as *const _
+                as usize
         },
         32usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH264SliceHeader),
             "::",
-            stringify!(pMemMgmtCtrlOperations)
+            stringify!(pWeightTable)
         )
     );
 }
 #[repr(C)]
-#[repr(align(4))]
 #[derive(Debug, Copy, Clone)]
-pub struct StdVideoEncodeH265SliceHeaderFlags {
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+pub struct StdVideoEncodeH265WeightTableFlags {
     pub luma_weight_l0_flag: u16,
     pub chroma_weight_l0_flag: u16,
     pub luma_weight_l1_flag: u16,
     pub chroma_weight_l1_flag: u16,
 }
 #[test]
-fn bindgen_test_layout_StdVideoEncodeH265SliceHeaderFlags() {
+fn bindgen_test_layout_StdVideoEncodeH265WeightTableFlags() {
     assert_eq!(
-        ::std::mem::size_of::<StdVideoEncodeH265SliceHeaderFlags>(),
-        12usize,
-        concat!("Size of: ", stringify!(StdVideoEncodeH265SliceHeaderFlags))
+        ::std::mem::size_of::<StdVideoEncodeH265WeightTableFlags>(),
+        8usize,
+        concat!("Size of: ", stringify!(StdVideoEncodeH265WeightTableFlags))
     );
     assert_eq!(
-        ::std::mem::align_of::<StdVideoEncodeH265SliceHeaderFlags>(),
-        4usize,
+        ::std::mem::align_of::<StdVideoEncodeH265WeightTableFlags>(),
+        2usize,
         concat!(
             "Alignment of ",
-            stringify!(StdVideoEncodeH265SliceHeaderFlags)
+            stringify!(StdVideoEncodeH265WeightTableFlags)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeaderFlags>())).luma_weight_l0_flag
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTableFlags>())).luma_weight_l0_flag
                 as *const _ as usize
         },
-        4usize,
+        0usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeaderFlags),
+            stringify!(StdVideoEncodeH265WeightTableFlags),
             "::",
             stringify!(luma_weight_l0_flag)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeaderFlags>())).chroma_weight_l0_flag
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTableFlags>())).chroma_weight_l0_flag
                 as *const _ as usize
         },
-        6usize,
+        2usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeaderFlags),
+            stringify!(StdVideoEncodeH265WeightTableFlags),
             "::",
             stringify!(chroma_weight_l0_flag)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeaderFlags>())).luma_weight_l1_flag
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTableFlags>())).luma_weight_l1_flag
                 as *const _ as usize
         },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeaderFlags),
+            stringify!(StdVideoEncodeH265WeightTableFlags),
             "::",
             stringify!(luma_weight_l1_flag)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeaderFlags>())).chroma_weight_l1_flag
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTableFlags>())).chroma_weight_l1_flag
                 as *const _ as usize
         },
-        10usize,
+        6usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeaderFlags),
+            stringify!(StdVideoEncodeH265WeightTableFlags),
             "::",
             stringify!(chroma_weight_l1_flag)
         )
     );
 }
-impl StdVideoEncodeH265SliceHeaderFlags {
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH265WeightTable {
+    pub flags: StdVideoEncodeH265WeightTableFlags,
+    pub luma_log2_weight_denom: u8,
+    pub delta_chroma_log2_weight_denom: i8,
+    pub delta_luma_weight_l0: [i8; 15usize],
+    pub luma_offset_l0: [i8; 15usize],
+    pub delta_chroma_weight_l0: [[i8; 2usize]; 15usize],
+    pub delta_chroma_offset_l0: [[i8; 2usize]; 15usize],
+    pub delta_luma_weight_l1: [i8; 15usize],
+    pub luma_offset_l1: [i8; 15usize],
+    pub delta_chroma_weight_l1: [[i8; 2usize]; 15usize],
+    pub delta_chroma_offset_l1: [[i8; 2usize]; 15usize],
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH265WeightTable() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH265WeightTable>(),
+        190usize,
+        concat!("Size of: ", stringify!(StdVideoEncodeH265WeightTable))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH265WeightTable>(),
+        2usize,
+        concat!("Alignment of ", stringify!(StdVideoEncodeH265WeightTable))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).luma_log2_weight_denom
+                as *const _ as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(luma_log2_weight_denom)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_chroma_log2_weight_denom
+                as *const _ as usize
+        },
+        9usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_chroma_log2_weight_denom)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_luma_weight_l0
+                as *const _ as usize
+        },
+        10usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_luma_weight_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).luma_offset_l0 as *const _
+                as usize
+        },
+        25usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(luma_offset_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_chroma_weight_l0
+                as *const _ as usize
+        },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_chroma_weight_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_chroma_offset_l0
+                as *const _ as usize
+        },
+        70usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_chroma_offset_l0)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_luma_weight_l1
+                as *const _ as usize
+        },
+        100usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_luma_weight_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).luma_offset_l1 as *const _
+                as usize
+        },
+        115usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(luma_offset_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_chroma_weight_l1
+                as *const _ as usize
+        },
+        130usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_chroma_weight_l1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265WeightTable>())).delta_chroma_offset_l1
+                as *const _ as usize
+        },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265WeightTable),
+            "::",
+            stringify!(delta_chroma_offset_l1)
+        )
+    );
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Copy, Clone)]
+pub struct StdVideoEncodeH265SliceSegmentHeaderFlags {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+    pub __bindgen_padding_0: u16,
+}
+#[test]
+fn bindgen_test_layout_StdVideoEncodeH265SliceSegmentHeaderFlags() {
+    assert_eq!(
+        ::std::mem::size_of::<StdVideoEncodeH265SliceSegmentHeaderFlags>(),
+        4usize,
+        concat!(
+            "Size of: ",
+            stringify!(StdVideoEncodeH265SliceSegmentHeaderFlags)
+        )
+    );
+    assert_eq!(
+        ::std::mem::align_of::<StdVideoEncodeH265SliceSegmentHeaderFlags>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(StdVideoEncodeH265SliceSegmentHeaderFlags)
+        )
+    );
+}
+impl StdVideoEncodeH265SliceSegmentHeaderFlags {
     #[inline]
     pub fn first_slice_segment_in_pic_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
@@ -7575,135 +8142,124 @@ impl StdVideoEncodeH265SliceHeaderFlags {
         }
     }
     #[inline]
-    pub fn short_term_ref_pic_set_sps_flag(&self) -> u32 {
+    pub fn pic_output_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_short_term_ref_pic_set_sps_flag(&mut self, val: u32) {
+    pub fn set_pic_output_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(3usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn slice_temporal_mvp_enable_flag(&self) -> u32 {
+    pub fn short_term_ref_pic_set_sps_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_slice_temporal_mvp_enable_flag(&mut self, val: u32) {
+    pub fn set_short_term_ref_pic_set_sps_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(4usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn slice_sao_luma_flag(&self) -> u32 {
+    pub fn slice_temporal_mvp_enable_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_slice_sao_luma_flag(&mut self, val: u32) {
+    pub fn set_slice_temporal_mvp_enable_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(5usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn slice_sao_chroma_flag(&self) -> u32 {
+    pub fn slice_sao_luma_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_slice_sao_chroma_flag(&mut self, val: u32) {
+    pub fn set_slice_sao_luma_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(6usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn num_ref_idx_active_override_flag(&self) -> u32 {
+    pub fn slice_sao_chroma_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_num_ref_idx_active_override_flag(&mut self, val: u32) {
+    pub fn set_slice_sao_chroma_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(7usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn mvd_l1_zero_flag(&self) -> u32 {
+    pub fn num_ref_idx_active_override_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_mvd_l1_zero_flag(&mut self, val: u32) {
+    pub fn set_num_ref_idx_active_override_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(8usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn cabac_init_flag(&self) -> u32 {
+    pub fn mvd_l1_zero_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_cabac_init_flag(&mut self, val: u32) {
+    pub fn set_mvd_l1_zero_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(9usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn slice_deblocking_filter_disable_flag(&self) -> u32 {
+    pub fn cabac_init_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_slice_deblocking_filter_disable_flag(&mut self, val: u32) {
+    pub fn set_cabac_init_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(10usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn collocated_from_l0_flag(&self) -> u32 {
+    pub fn slice_deblocking_filter_disable_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(11usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_collocated_from_l0_flag(&mut self, val: u32) {
+    pub fn set_slice_deblocking_filter_disable_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(11usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn slice_loop_filter_across_slices_enabled_flag(&self) -> u32 {
+    pub fn collocated_from_l0_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(12usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_slice_loop_filter_across_slices_enabled_flag(&mut self, val: u32) {
+    pub fn set_collocated_from_l0_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(12usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn bLastSliceInPic(&self) -> u32 {
+    pub fn slice_loop_filter_across_slices_enabled_flag(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(13usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_bLastSliceInPic(&mut self, val: u32) {
+    pub fn set_slice_loop_filter_across_slices_enabled_flag(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(13usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn reservedBits(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(14usize, 18u8) as u32) }
-    }
-    #[inline]
-    pub fn set_reservedBits(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(14usize, 18u8, val as u64)
         }
     }
     #[inline]
@@ -7711,6 +8267,7 @@ impl StdVideoEncodeH265SliceHeaderFlags {
         first_slice_segment_in_pic_flag: u32,
         no_output_of_prior_pics_flag: u32,
         dependent_slice_segment_flag: u32,
+        pic_output_flag: u32,
         short_term_ref_pic_set_sps_flag: u32,
         slice_temporal_mvp_enable_flag: u32,
         slice_sao_luma_flag: u32,
@@ -7721,10 +8278,8 @@ impl StdVideoEncodeH265SliceHeaderFlags {
         slice_deblocking_filter_disable_flag: u32,
         collocated_from_l0_flag: u32,
         slice_loop_filter_across_slices_enabled_flag: u32,
-        bLastSliceInPic: u32,
-        reservedBits: u32,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
             let first_slice_segment_in_pic_flag: u32 =
                 unsafe { ::std::mem::transmute(first_slice_segment_in_pic_flag) };
@@ -7741,68 +8296,64 @@ impl StdVideoEncodeH265SliceHeaderFlags {
             dependent_slice_segment_flag as u64
         });
         __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let pic_output_flag: u32 = unsafe { ::std::mem::transmute(pic_output_flag) };
+            pic_output_flag as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
             let short_term_ref_pic_set_sps_flag: u32 =
                 unsafe { ::std::mem::transmute(short_term_ref_pic_set_sps_flag) };
             short_term_ref_pic_set_sps_flag as u64
         });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
             let slice_temporal_mvp_enable_flag: u32 =
                 unsafe { ::std::mem::transmute(slice_temporal_mvp_enable_flag) };
             slice_temporal_mvp_enable_flag as u64
         });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
             let slice_sao_luma_flag: u32 = unsafe { ::std::mem::transmute(slice_sao_luma_flag) };
             slice_sao_luma_flag as u64
         });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
             let slice_sao_chroma_flag: u32 =
                 unsafe { ::std::mem::transmute(slice_sao_chroma_flag) };
             slice_sao_chroma_flag as u64
         });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
+        __bindgen_bitfield_unit.set(8usize, 1u8, {
             let num_ref_idx_active_override_flag: u32 =
                 unsafe { ::std::mem::transmute(num_ref_idx_active_override_flag) };
             num_ref_idx_active_override_flag as u64
         });
-        __bindgen_bitfield_unit.set(8usize, 1u8, {
+        __bindgen_bitfield_unit.set(9usize, 1u8, {
             let mvd_l1_zero_flag: u32 = unsafe { ::std::mem::transmute(mvd_l1_zero_flag) };
             mvd_l1_zero_flag as u64
         });
-        __bindgen_bitfield_unit.set(9usize, 1u8, {
+        __bindgen_bitfield_unit.set(10usize, 1u8, {
             let cabac_init_flag: u32 = unsafe { ::std::mem::transmute(cabac_init_flag) };
             cabac_init_flag as u64
         });
-        __bindgen_bitfield_unit.set(10usize, 1u8, {
+        __bindgen_bitfield_unit.set(11usize, 1u8, {
             let slice_deblocking_filter_disable_flag: u32 =
                 unsafe { ::std::mem::transmute(slice_deblocking_filter_disable_flag) };
             slice_deblocking_filter_disable_flag as u64
         });
-        __bindgen_bitfield_unit.set(11usize, 1u8, {
+        __bindgen_bitfield_unit.set(12usize, 1u8, {
             let collocated_from_l0_flag: u32 =
                 unsafe { ::std::mem::transmute(collocated_from_l0_flag) };
             collocated_from_l0_flag as u64
         });
-        __bindgen_bitfield_unit.set(12usize, 1u8, {
+        __bindgen_bitfield_unit.set(13usize, 1u8, {
             let slice_loop_filter_across_slices_enabled_flag: u32 =
                 unsafe { ::std::mem::transmute(slice_loop_filter_across_slices_enabled_flag) };
             slice_loop_filter_across_slices_enabled_flag as u64
-        });
-        __bindgen_bitfield_unit.set(13usize, 1u8, {
-            let bLastSliceInPic: u32 = unsafe { ::std::mem::transmute(bLastSliceInPic) };
-            bLastSliceInPic as u64
-        });
-        __bindgen_bitfield_unit.set(14usize, 18u8, {
-            let reservedBits: u32 = unsafe { ::std::mem::transmute(reservedBits) };
-            reservedBits as u64
         });
         __bindgen_bitfield_unit
     }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct StdVideoEncodeH265SliceHeader {
+pub struct StdVideoEncodeH265SliceSegmentHeader {
+    pub flags: StdVideoEncodeH265SliceSegmentHeaderFlags,
     pub slice_type: StdVideoH265SliceType,
-    pub slice_pic_parameter_set_id: u8,
     pub num_short_term_ref_pic_sets: u8,
     pub slice_segment_address: u32,
     pub short_term_ref_pic_set_idx: u8,
@@ -7811,18 +8362,7 @@ pub struct StdVideoEncodeH265SliceHeader {
     pub collocated_ref_idx: u8,
     pub num_ref_idx_l0_active_minus1: u8,
     pub num_ref_idx_l1_active_minus1: u8,
-    pub luma_log2_weight_denom: u8,
-    pub delta_chroma_log2_weight_denom: i8,
-    pub delta_luma_weight_l0: [i8; 15usize],
-    pub luma_offset_l0: [i8; 15usize],
-    pub delta_chroma_weight_l0: [[i8; 2usize]; 15usize],
-    pub delta_chroma_offset_l0: [[i8; 2usize]; 15usize],
-    pub delta_luma_weight_l1: [i8; 15usize],
-    pub luma_offset_l1: [i8; 15usize],
-    pub delta_chroma_weight_l1: [[i8; 2usize]; 15usize],
-    pub delta_chroma_offset_l1: [[i8; 2usize]; 15usize],
     pub MaxNumMergeCand: u8,
-    pub slice_qp_delta: i8,
     pub slice_cb_qp_offset: i8,
     pub slice_cr_qp_offset: i8,
     pub slice_beta_offset_div2: i8,
@@ -7830,407 +8370,271 @@ pub struct StdVideoEncodeH265SliceHeader {
     pub slice_act_y_qp_offset: i8,
     pub slice_act_cb_qp_offset: i8,
     pub slice_act_cr_qp_offset: i8,
-    pub flags: StdVideoEncodeH265SliceHeaderFlags,
+    pub pWeightTable: *const StdVideoEncodeH265WeightTable,
 }
 #[test]
-fn bindgen_test_layout_StdVideoEncodeH265SliceHeader() {
+fn bindgen_test_layout_StdVideoEncodeH265SliceSegmentHeader() {
     assert_eq!(
-        ::std::mem::size_of::<StdVideoEncodeH265SliceHeader>(),
-        224usize,
-        concat!("Size of: ", stringify!(StdVideoEncodeH265SliceHeader))
+        ::std::mem::size_of::<StdVideoEncodeH265SliceSegmentHeader>(),
+        40usize,
+        concat!(
+            "Size of: ",
+            stringify!(StdVideoEncodeH265SliceSegmentHeader)
+        )
     );
     assert_eq!(
-        ::std::mem::align_of::<StdVideoEncodeH265SliceHeader>(),
-        4usize,
-        concat!("Alignment of ", stringify!(StdVideoEncodeH265SliceHeader))
+        ::std::mem::align_of::<StdVideoEncodeH265SliceSegmentHeader>(),
+        8usize,
+        concat!(
+            "Alignment of ",
+            stringify!(StdVideoEncodeH265SliceSegmentHeader)
+        )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_type as *const _
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).flags as *const _
                 as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_type as *const _
+                as usize
+        },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_type)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_pic_parameter_set_id
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>()))
+                .num_short_term_ref_pic_sets as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(slice_pic_parameter_set_id)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).num_short_term_ref_pic_sets
-                as *const _ as usize
-        },
-        5usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(num_short_term_ref_pic_sets)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_segment_address
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_segment_address
                 as *const _ as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_segment_address)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).short_term_ref_pic_set_idx
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>()))
+                .short_term_ref_pic_set_idx as *const _ as usize
         },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(short_term_ref_pic_set_idx)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).num_long_term_sps as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).num_long_term_sps
+                as *const _ as usize
         },
-        13usize,
+        17usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(num_long_term_sps)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).num_long_term_pics as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).num_long_term_pics
+                as *const _ as usize
         },
-        14usize,
+        18usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(num_long_term_pics)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).collocated_ref_idx as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).collocated_ref_idx
+                as *const _ as usize
         },
-        15usize,
+        19usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(collocated_ref_idx)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).num_ref_idx_l0_active_minus1
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>()))
+                .num_ref_idx_l0_active_minus1 as *const _ as usize
         },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(num_ref_idx_l0_active_minus1)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).num_ref_idx_l1_active_minus1
-                as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>()))
+                .num_ref_idx_l1_active_minus1 as *const _ as usize
         },
-        17usize,
+        21usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(num_ref_idx_l1_active_minus1)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).luma_log2_weight_denom
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).MaxNumMergeCand
                 as *const _ as usize
         },
-        18usize,
+        22usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(luma_log2_weight_denom)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_chroma_log2_weight_denom
-                as *const _ as usize
-        },
-        19usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_chroma_log2_weight_denom)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_luma_weight_l0
-                as *const _ as usize
-        },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_luma_weight_l0)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).luma_offset_l0 as *const _
-                as usize
-        },
-        35usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(luma_offset_l0)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_chroma_weight_l0
-                as *const _ as usize
-        },
-        50usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_chroma_weight_l0)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_chroma_offset_l0
-                as *const _ as usize
-        },
-        80usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_chroma_offset_l0)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_luma_weight_l1
-                as *const _ as usize
-        },
-        110usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_luma_weight_l1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).luma_offset_l1 as *const _
-                as usize
-        },
-        125usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(luma_offset_l1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_chroma_weight_l1
-                as *const _ as usize
-        },
-        140usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_chroma_weight_l1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).delta_chroma_offset_l1
-                as *const _ as usize
-        },
-        170usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(delta_chroma_offset_l1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).MaxNumMergeCand as *const _
-                as usize
-        },
-        200usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(MaxNumMergeCand)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_qp_delta as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_cb_qp_offset
+                as *const _ as usize
         },
-        201usize,
+        23usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
-            "::",
-            stringify!(slice_qp_delta)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_cb_qp_offset as *const _
-                as usize
-        },
-        202usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_cb_qp_offset)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_cr_qp_offset as *const _
-                as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_cr_qp_offset
+                as *const _ as usize
         },
-        203usize,
+        24usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_cr_qp_offset)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_beta_offset_div2
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_beta_offset_div2
                 as *const _ as usize
         },
-        204usize,
+        25usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_beta_offset_div2)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_tc_offset_div2
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_tc_offset_div2
                 as *const _ as usize
         },
-        205usize,
+        26usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_tc_offset_div2)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_act_y_qp_offset
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_act_y_qp_offset
                 as *const _ as usize
         },
-        206usize,
+        27usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_act_y_qp_offset)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_act_cb_qp_offset
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_act_cb_qp_offset
                 as *const _ as usize
         },
-        207usize,
+        28usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_act_cb_qp_offset)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).slice_act_cr_qp_offset
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).slice_act_cr_qp_offset
                 as *const _ as usize
         },
-        208usize,
+        29usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
             stringify!(slice_act_cr_qp_offset)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265SliceHeader>())).flags as *const _ as usize
+            &(*(::std::ptr::null::<StdVideoEncodeH265SliceSegmentHeader>())).pWeightTable
+                as *const _ as usize
         },
-        212usize,
+        32usize,
         concat!(
             "Offset of field: ",
-            stringify!(StdVideoEncodeH265SliceHeader),
+            stringify!(StdVideoEncodeH265SliceSegmentHeader),
             "::",
-            stringify!(flags)
+            stringify!(pWeightTable)
         )
     );
 }
@@ -8308,9 +8712,9 @@ impl StdVideoEncodeH265ReferenceModificationFlags {
 pub struct StdVideoEncodeH265ReferenceModifications {
     pub flags: StdVideoEncodeH265ReferenceModificationFlags,
     pub referenceList0ModificationsCount: u8,
-    pub pReferenceList0Modifications: *mut u8,
+    pub pReferenceList0Modifications: *const u8,
     pub referenceList1ModificationsCount: u8,
-    pub pReferenceList1Modifications: *mut u8,
+    pub pReferenceList1Modifications: *const u8,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH265ReferenceModifications() {
@@ -8455,10 +8859,34 @@ impl StdVideoEncodeH265PictureInfoFlags {
         }
     }
     #[inline]
+    pub fn discardable_flag(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_discardable_flag(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn cross_layer_bla_flag(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_cross_layer_bla_flag(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
     pub fn new_bitfield_1(
         is_reference_flag: u32,
         IrapPicFlag: u32,
         long_term_flag: u32,
+        discardable_flag: u32,
+        cross_layer_bla_flag: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -8473,18 +8901,27 @@ impl StdVideoEncodeH265PictureInfoFlags {
             let long_term_flag: u32 = unsafe { ::std::mem::transmute(long_term_flag) };
             long_term_flag as u64
         });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let discardable_flag: u32 = unsafe { ::std::mem::transmute(discardable_flag) };
+            discardable_flag as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let cross_layer_bla_flag: u32 = unsafe { ::std::mem::transmute(cross_layer_bla_flag) };
+            cross_layer_bla_flag as u64
+        });
         __bindgen_bitfield_unit
     }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoEncodeH265PictureInfo {
+    pub flags: StdVideoEncodeH265PictureInfoFlags,
     pub PictureType: StdVideoH265PictureType,
     pub sps_video_parameter_set_id: u8,
     pub pps_seq_parameter_set_id: u8,
+    pub pps_pic_parameter_set_id: u8,
     pub PicOrderCntVal: i32,
     pub TemporalId: u8,
-    pub flags: StdVideoEncodeH265PictureInfoFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
@@ -8500,10 +8937,22 @@ fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265PictureInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).PictureType as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265PictureInfo),
@@ -8516,7 +8965,7 @@ fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).sps_video_parameter_set_id
                 as *const _ as usize
         },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265PictureInfo),
@@ -8529,7 +8978,7 @@ fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).pps_seq_parameter_set_id
                 as *const _ as usize
         },
-        5usize,
+        9usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265PictureInfo),
@@ -8539,10 +8988,23 @@ fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).pps_pic_parameter_set_id
+                as *const _ as usize
+        },
+        10usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265PictureInfo),
+            "::",
+            stringify!(pps_pic_parameter_set_id)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).PicOrderCntVal as *const _
                 as usize
         },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265PictureInfo),
@@ -8555,24 +9017,12 @@ fn bindgen_test_layout_StdVideoEncodeH265PictureInfo() {
             &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).TemporalId as *const _
                 as usize
         },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265PictureInfo),
-            "::",
-            stringify!(TemporalId)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265PictureInfo>())).flags as *const _ as usize
-        },
         16usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265PictureInfo),
             "::",
-            stringify!(flags)
+            stringify!(TemporalId)
         )
     );
 }
@@ -8605,22 +9055,22 @@ fn bindgen_test_layout_StdVideoEncodeH265ReferenceInfoFlags() {
 }
 impl StdVideoEncodeH265ReferenceInfoFlags {
     #[inline]
-    pub fn is_long_term(&self) -> u32 {
+    pub fn used_for_long_term_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_long_term(&mut self, val: u32) {
+    pub fn set_used_for_long_term_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(0usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn isUsedFlag(&self) -> u32 {
+    pub fn unused_for_reference(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_isUsedFlag(&mut self, val: u32) {
+    pub fn set_unused_for_reference(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(1usize, 1u8, val as u64)
@@ -8628,17 +9078,18 @@ impl StdVideoEncodeH265ReferenceInfoFlags {
     }
     #[inline]
     pub fn new_bitfield_1(
-        is_long_term: u32,
-        isUsedFlag: u32,
+        used_for_long_term_reference: u32,
+        unused_for_reference: u32,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let is_long_term: u32 = unsafe { ::std::mem::transmute(is_long_term) };
-            is_long_term as u64
+            let used_for_long_term_reference: u32 =
+                unsafe { ::std::mem::transmute(used_for_long_term_reference) };
+            used_for_long_term_reference as u64
         });
         __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let isUsedFlag: u32 = unsafe { ::std::mem::transmute(isUsedFlag) };
-            isUsedFlag as u64
+            let unused_for_reference: u32 = unsafe { ::std::mem::transmute(unused_for_reference) };
+            unused_for_reference as u64
         });
         __bindgen_bitfield_unit
     }
@@ -8646,9 +9097,9 @@ impl StdVideoEncodeH265ReferenceInfoFlags {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct StdVideoEncodeH265ReferenceInfo {
+    pub flags: StdVideoEncodeH265ReferenceInfoFlags,
     pub PicOrderCntVal: i32,
     pub TemporalId: u8,
-    pub flags: StdVideoEncodeH265ReferenceInfoFlags,
 }
 #[test]
 fn bindgen_test_layout_StdVideoEncodeH265ReferenceInfo() {
@@ -8664,10 +9115,22 @@ fn bindgen_test_layout_StdVideoEncodeH265ReferenceInfo() {
     );
     assert_eq!(
         unsafe {
+            &(*(::std::ptr::null::<StdVideoEncodeH265ReferenceInfo>())).flags as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(StdVideoEncodeH265ReferenceInfo),
+            "::",
+            stringify!(flags)
+        )
+    );
+    assert_eq!(
+        unsafe {
             &(*(::std::ptr::null::<StdVideoEncodeH265ReferenceInfo>())).PicOrderCntVal as *const _
                 as usize
         },
-        0usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265ReferenceInfo),
@@ -8680,24 +9143,12 @@ fn bindgen_test_layout_StdVideoEncodeH265ReferenceInfo() {
             &(*(::std::ptr::null::<StdVideoEncodeH265ReferenceInfo>())).TemporalId as *const _
                 as usize
         },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(StdVideoEncodeH265ReferenceInfo),
-            "::",
-            stringify!(TemporalId)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<StdVideoEncodeH265ReferenceInfo>())).flags as *const _ as usize
-        },
         8usize,
         concat!(
             "Offset of field: ",
             stringify!(StdVideoEncodeH265ReferenceInfo),
             "::",
-            stringify!(flags)
+            stringify!(TemporalId)
         )
     );
 }

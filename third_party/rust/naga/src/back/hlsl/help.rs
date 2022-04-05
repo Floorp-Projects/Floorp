@@ -1,28 +1,30 @@
-//! Helpers for the hlsl backend
-//!
-//! Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
-//!
-//! Due to implementation of `GetDimensions` function in hlsl (<https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-getdimensions>)
-//! backend can't work with it as an expression.
-//! Instead, it generates a unique wrapped function per `Expression::ImageQuery`, based on texure info and query function.
-//! See `WrappedImageQuery` struct that represents a unique function and will be generated before writing all statements and expressions.
-//! This allowed to works with `Expression::ImageQuery` as expression and write wrapped function.
-//!
-//! For example:
-//! ```wgsl
-//! let dim_1d = textureDimensions(image_1d);
-//! ```
-//!
-//! ```hlsl
-//! int NagaDimensions1D(Texture1D<float4>)
-//! {
-//!    uint4 ret;
-//!    image_1d.GetDimensions(ret.x);
-//!    return ret.x;
-//! }
-//!
-//! int dim_1d = NagaDimensions1D(image_1d);
-//! ```
+/*!
+Helpers for the hlsl backend
+
+Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
+
+Due to implementation of `GetDimensions` function in hlsl (<https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-getdimensions>)
+backend can't work with it as an expression.
+Instead, it generates a unique wrapped function per `Expression::ImageQuery`, based on texure info and query function.
+See `WrappedImageQuery` struct that represents a unique function and will be generated before writing all statements and expressions.
+This allowed to works with `Expression::ImageQuery` as expression and write wrapped function.
+
+For example:
+```wgsl
+let dim_1d = textureDimensions(image_1d);
+```
+
+```hlsl
+int NagaDimensions1D(Texture1D<float4>)
+{
+   uint4 ret;
+   image_1d.GetDimensions(ret.x);
+   return ret.x;
+}
+
+int dim_1d = NagaDimensions1D(image_1d);
+```
+*/
 
 use super::{super::FunctionCtx, BackendResult, Error};
 use crate::{arena::Handle, proc::NameKey};
@@ -97,13 +99,6 @@ impl From<crate::ImageQuery> for ImageQuery {
             Iq::NumSamples => ImageQuery::NumSamples,
         }
     }
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub(super) enum MipLevelCoordinate {
-    NotApplicable,
-    Zero,
-    Expression(Handle<crate::Expression>),
 }
 
 impl<'a, W: Write> super::Writer<'a, W> {
@@ -430,6 +425,7 @@ impl<'a, W: Write> super::Writer<'a, W> {
             match func_ctx.expressions[handle] {
                 crate::Expression::ArrayLength(expr) => {
                     let global_expr = match func_ctx.expressions[expr] {
+                        crate::Expression::GlobalVariable(_) => expr,
                         crate::Expression::AccessIndex { base, index: _ } => base,
                         ref other => unreachable!("Array length of {:?}", other),
                     };
@@ -439,8 +435,8 @@ impl<'a, W: Write> super::Writer<'a, W> {
                         }
                         ref other => unreachable!("Array length of base {:?}", other),
                     };
-                    let storage_access = match global_var.class {
-                        crate::StorageClass::Storage { access } => access,
+                    let storage_access = match global_var.space {
+                        crate::AddressSpace::Storage { access } => access,
                         _ => crate::StorageAccess::default(),
                     };
                     let wal = WrappedArrayLength {
@@ -494,13 +490,12 @@ impl<'a, W: Write> super::Writer<'a, W> {
         kind: &str,
         coordinate: Handle<crate::Expression>,
         array_index: Option<Handle<crate::Expression>>,
-        mip_level: MipLevelCoordinate,
+        mip_level: Option<Handle<crate::Expression>>,
         module: &crate::Module,
         func_ctx: &FunctionCtx,
     ) -> BackendResult {
         // HLSL expects the array index to be merged with the coordinate
-        let extra = array_index.is_some() as usize
-            + (mip_level != MipLevelCoordinate::NotApplicable) as usize;
+        let extra = array_index.is_some() as usize + (mip_level.is_some()) as usize;
         if extra == 0 {
             self.write_expr(module, coordinate, func_ctx)?;
         } else {
@@ -515,15 +510,9 @@ impl<'a, W: Write> super::Writer<'a, W> {
                 write!(self.out, ", ")?;
                 self.write_expr(module, expr, func_ctx)?;
             }
-            match mip_level {
-                MipLevelCoordinate::NotApplicable => {}
-                MipLevelCoordinate::Zero => {
-                    write!(self.out, ", 0")?;
-                }
-                MipLevelCoordinate::Expression(expr) => {
-                    write!(self.out, ", ")?;
-                    self.write_expr(module, expr, func_ctx)?;
-                }
+            if let Some(expr) = mip_level {
+                write!(self.out, ", ")?;
+                self.write_expr(module, expr, func_ctx)?;
             }
             write!(self.out, ")")?;
         }

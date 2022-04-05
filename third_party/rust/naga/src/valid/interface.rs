@@ -2,7 +2,7 @@ use super::{
     analyzer::{FunctionInfo, GlobalUse},
     Capabilities, Disalignment, FunctionError, ModuleInfo,
 };
-use crate::arena::{Handle, UniqueArena};
+use crate::arena::{BadHandle, Handle, UniqueArena};
 
 use crate::span::{AddSpan as _, MapErrWithSpan as _, SpanProvider as _, WithSpan};
 use bit_set::BitSet;
@@ -12,10 +12,12 @@ const MAX_WORKGROUP_SIZE: u32 = 0x4000;
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum GlobalVariableError {
-    #[error("Usage isn't compatible with the storage class")]
-    InvalidUsage,
-    #[error("Type isn't compatible with the storage class")]
-    InvalidType,
+    #[error(transparent)]
+    BadHandle(#[from] BadHandle),
+    #[error("Usage isn't compatible with address space {0:?}")]
+    InvalidUsage(crate::AddressSpace),
+    #[error("Type isn't compatible with address space {0:?}")]
+    InvalidType(crate::AddressSpace),
     #[error("Type flags {seen:?} do not meet the required {required:?}")]
     MissingTypeFlags {
         required: super::TypeFlags,
@@ -25,8 +27,12 @@ pub enum GlobalVariableError {
     UnsupportedCapability(Capabilities),
     #[error("Binding decoration is missing or not applicable")]
     InvalidBinding,
-    #[error("Alignment requirements for this storage class are not met by {0:?}")]
-    Alignment(Handle<crate::Type>, #[source] Disalignment),
+    #[error("Alignment requirements for address space {0:?} are not met by {1:?}")]
+    Alignment(
+        crate::AddressSpace,
+        Handle<crate::Type>,
+        #[source] Disalignment,
+    ),
 }
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -332,22 +338,35 @@ impl super::Validator {
         use super::TypeFlags;
 
         log::debug!("var {:?}", var);
-        let type_info = &self.types[var.ty.index()];
+        let type_info = self.types.get(var.ty.index()).ok_or_else(|| BadHandle {
+            kind: "type",
+            index: var.ty.index(),
+        })?;
 
-        let (required_type_flags, is_resource) = match var.class {
-            crate::StorageClass::Function => return Err(GlobalVariableError::InvalidUsage),
-            crate::StorageClass::Storage { .. } => {
+        let (required_type_flags, is_resource) = match var.space {
+            crate::AddressSpace::Function => {
+                return Err(GlobalVariableError::InvalidUsage(var.space))
+            }
+            crate::AddressSpace::Storage { .. } => {
                 if let Err((ty_handle, disalignment)) = type_info.storage_layout {
                     if self.flags.contains(super::ValidationFlags::STRUCT_LAYOUTS) {
-                        return Err(GlobalVariableError::Alignment(ty_handle, disalignment));
+                        return Err(GlobalVariableError::Alignment(
+                            var.space,
+                            ty_handle,
+                            disalignment,
+                        ));
                     }
                 }
                 (TypeFlags::DATA | TypeFlags::HOST_SHARED, true)
             }
-            crate::StorageClass::Uniform => {
+            crate::AddressSpace::Uniform => {
                 if let Err((ty_handle, disalignment)) = type_info.uniform_layout {
                     if self.flags.contains(super::ValidationFlags::STRUCT_LAYOUTS) {
-                        return Err(GlobalVariableError::Alignment(ty_handle, disalignment));
+                        return Err(GlobalVariableError::Alignment(
+                            var.space,
+                            ty_handle,
+                            disalignment,
+                        ));
                     }
                 }
                 (
@@ -355,11 +374,19 @@ impl super::Validator {
                     true,
                 )
             }
-            crate::StorageClass::Handle => (TypeFlags::empty(), true),
-            crate::StorageClass::Private | crate::StorageClass::WorkGroup => {
+            crate::AddressSpace::Handle => {
+                match types[var.ty].inner {
+                    crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => {}
+                    _ => {
+                        return Err(GlobalVariableError::InvalidType(var.space));
+                    }
+                };
+                (TypeFlags::empty(), true)
+            }
+            crate::AddressSpace::Private | crate::AddressSpace::WorkGroup => {
                 (TypeFlags::DATA | TypeFlags::SIZED, false)
             }
-            crate::StorageClass::PushConstant => {
+            crate::AddressSpace::PushConstant => {
                 if !self.capabilities.contains(Capabilities::PUSH_CONSTANT) {
                     return Err(GlobalVariableError::UnsupportedCapability(
                         Capabilities::PUSH_CONSTANT,
@@ -371,16 +398,6 @@ impl super::Validator {
                 )
             }
         };
-
-        let is_handle = var.class == crate::StorageClass::Handle;
-        let good_type = match types[var.ty].inner {
-            crate::TypeInner::Struct { .. } => !is_handle,
-            crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => is_handle,
-            _ => false,
-        };
-        if is_resource && !good_type {
-            return Err(GlobalVariableError::InvalidType);
-        }
 
         if !type_info.flags.contains(required_type_flags) {
             return Err(GlobalVariableError::MissingTypeFlags {
@@ -483,19 +500,19 @@ impl super::Validator {
                 continue;
             }
 
-            let allowed_usage = match var.class {
-                crate::StorageClass::Function => unreachable!(),
-                crate::StorageClass::Uniform => GlobalUse::READ | GlobalUse::QUERY,
-                crate::StorageClass::Storage { access } => storage_usage(access),
-                crate::StorageClass::Handle => match module.types[var.ty].inner {
+            let allowed_usage = match var.space {
+                crate::AddressSpace::Function => unreachable!(),
+                crate::AddressSpace::Uniform => GlobalUse::READ | GlobalUse::QUERY,
+                crate::AddressSpace::Storage { access } => storage_usage(access),
+                crate::AddressSpace::Handle => match module.types[var.ty].inner {
                     crate::TypeInner::Image {
                         class: crate::ImageClass::Storage { access, .. },
                         ..
                     } => storage_usage(access),
                     _ => GlobalUse::READ | GlobalUse::QUERY,
                 },
-                crate::StorageClass::Private | crate::StorageClass::WorkGroup => GlobalUse::all(),
-                crate::StorageClass::PushConstant => GlobalUse::READ,
+                crate::AddressSpace::Private | crate::AddressSpace::WorkGroup => GlobalUse::all(),
+                crate::AddressSpace::PushConstant => GlobalUse::READ,
             };
             if !allowed_usage.contains(usage) {
                 log::warn!("\tUsage error for: {:?}", var);

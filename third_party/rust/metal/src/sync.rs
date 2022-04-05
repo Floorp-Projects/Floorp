@@ -136,11 +136,21 @@ impl FenceRef {
     }
 }
 
-#[repr(u64)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub enum MTLRenderStages {
-    Vertex = 0,
-    Fragment = 1,
+bitflags! {
+    /// The render stages at which a synchronization command is triggered.
+    ///
+    /// Render stages provide finer control for specifying when synchronization must occur,
+    /// allowing for vertex and fragment processing to overlap in execution.
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlrenderstages>
+    pub struct MTLRenderStages: NSUInteger {
+        /// The vertex rendering stage.
+        const Vertex = 1 << 0;
+        /// The fragment rendering stage.
+        const Fragment = 1 << 1;
+        /// The tile rendering stage.
+        const Tile = 1 << 2;
+    }
 }
 
 const BLOCK_HAS_COPY_DISPOSE: i32 = 0x02000000;

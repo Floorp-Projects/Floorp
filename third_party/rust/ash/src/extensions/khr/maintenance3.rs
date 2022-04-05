@@ -18,17 +18,16 @@ impl Maintenance3 {
         Self { handle, fp }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDescriptorSetLayoutSupportKHR.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDescriptorSetLayoutSupportKHR.html>
     pub unsafe fn get_descriptor_set_layout_support(
         &self,
         create_info: &vk::DescriptorSetLayoutCreateInfo,
         out: &mut vk::DescriptorSetLayoutSupportKHR,
     ) {
-        self.fp
-            .get_descriptor_set_layout_support_khr(self.handle, create_info, out);
+        (self.fp.get_descriptor_set_layout_support_khr)(self.handle, create_info, out);
     }
 
-    pub fn name() -> &'static CStr {
+    pub const fn name() -> &'static CStr {
         vk::KhrMaintenance3Fn::name()
     }
 

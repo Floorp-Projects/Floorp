@@ -56,9 +56,10 @@ To address this, we invalidate the vertex buffers based on:
 
 */
 
-#[cfg(not(target_arch = "wasm32"))]
+///cbindgen:ignore
+#[cfg(any(not(target_arch = "wasm32"), feature = "emscripten"))]
 mod egl;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "emscripten")))]
 mod web;
 
 mod adapter;
@@ -67,10 +68,10 @@ mod conv;
 mod device;
 mod queue;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), feature = "emscripten"))]
 use self::egl::{AdapterContext, Instance, Surface};
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "emscripten")))]
 use self::web::{AdapterContext, Instance, Surface};
 
 use arrayvec::ArrayVec;
@@ -88,6 +89,7 @@ const MAX_TEXTURE_SLOTS: usize = 16;
 const MAX_SAMPLERS: usize = 16;
 const MAX_VERTEX_ATTRIBUTES: usize = 16;
 const ZERO_BUFFER_SIZE: usize = 256 << 10;
+const MAX_PUSH_CONSTANTS: usize = 16;
 
 impl crate::Api for Api {
     type Instance = Instance;
@@ -134,6 +136,8 @@ bitflags::bitflags! {
         const INDEX_BUFFER_ROLE_CHANGE = 1 << 5;
         /// Indicates that the device supports disabling draw buffers
         const CAN_DISABLE_DRAW_BUFFER = 1 << 6;
+        /// Supports `glGetBufferSubData`
+        const GET_BUFFER_SUB_DATA = 1 << 7;
     }
 }
 
@@ -179,6 +183,7 @@ struct AdapterShared {
     private_caps: PrivateCapabilities,
     workarounds: Workarounds,
     shading_language_version: naga::back::glsl::Version,
+    max_texture_size: u32,
 }
 
 pub struct Adapter {
@@ -392,13 +397,18 @@ struct VertexBufferDesc {
     stride: u32,
 }
 
-#[allow(unused)]
-#[derive(Clone)]
+#[derive(Clone, Debug, Default)]
 struct UniformDesc {
-    location: glow::UniformLocation,
-    offset: u32,
+    location: Option<glow::UniformLocation>,
+    size: u32,
     utype: u32,
 }
+
+// Safe: WASM doesn't have threads
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for UniformDesc {}
+#[cfg(target_arch = "wasm32")]
+unsafe impl Send for UniformDesc {}
 
 /// For each texture in the pipeline layout, store the index of the only
 /// sampler (in this layout) that the texture is used with.
@@ -407,7 +417,7 @@ type SamplerBindMap = [Option<u8>; MAX_TEXTURE_SLOTS];
 struct PipelineInner {
     program: glow::Program,
     sampler_map: SamplerBindMap,
-    uniforms: Box<[UniformDesc]>,
+    uniforms: [UniformDesc; MAX_PUSH_CONSTANTS],
 }
 
 #[derive(Clone, Debug)]
@@ -716,6 +726,11 @@ enum Command {
     InsertDebugMarker(Range<u32>),
     PushDebugGroup(Range<u32>),
     PopDebugGroup,
+    SetPushConstants {
+        uniform: UniformDesc,
+        /// Offset from the start of the `data_bytes`
+        offset: u32,
+    },
 }
 
 #[derive(Default)]

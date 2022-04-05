@@ -18,7 +18,7 @@ impl PhysicalDeviceDrm {
         props_drm
     }
 
-    pub fn name() -> &'static CStr {
+    pub const fn name() -> &'static CStr {
         vk::ExtPhysicalDeviceDrmFn::name()
     }
 }

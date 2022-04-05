@@ -25,6 +25,7 @@ pub struct PhysicalDeviceFeatures {
     robustness2: Option<vk::PhysicalDeviceRobustness2FeaturesEXT>,
     depth_clip_enable: Option<vk::PhysicalDeviceDepthClipEnableFeaturesEXT>,
     multiview: Option<vk::PhysicalDeviceMultiviewFeaturesKHR>,
+    astc_hdr: Option<vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT>,
 }
 
 // This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -57,6 +58,9 @@ impl PhysicalDeviceFeatures {
             info = info.push_next(feature);
         }
         if let Some(ref mut feature) = self.depth_clip_enable {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.astc_hdr {
             info = info.push_next(feature);
         }
         info
@@ -99,8 +103,10 @@ impl PhysicalDeviceFeatures {
             // Features is a bitfield so we need to map everything manually
             core: vk::PhysicalDeviceFeatures::builder()
                 .robust_buffer_access(private_caps.robust_buffer_access)
-                .independent_blend(true)
-                .sample_rate_shading(true)
+                .independent_blend(downlevel_flags.contains(wgt::DownlevelFlags::INDEPENDENT_BLEND))
+                .sample_rate_shading(
+                    downlevel_flags.contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING),
+                )
                 .image_cube_array(
                     downlevel_flags.contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
                 )
@@ -318,6 +324,15 @@ impl PhysicalDeviceFeatures {
             } else {
                 None
             },
+            astc_hdr: if enabled_extensions.contains(&vk::ExtTextureCompressionAstcHdrFn::name()) {
+                Some(
+                    vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::builder()
+                        .texture_compression_astc_hdr(true)
+                        .build(),
+                )
+            } else {
+                None
+            },
         }
     }
 
@@ -329,6 +344,7 @@ impl PhysicalDeviceFeatures {
             | F::MAPPABLE_PRIMARY_BUFFERS
             | F::PUSH_CONSTANTS
             | F::ADDRESS_MODE_CLAMP_TO_BORDER
+            | F::ADDRESS_MODE_CLAMP_TO_ZERO
             | F::TIMESTAMP_QUERY
             | F::PIPELINE_STATISTICS_QUERY
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
@@ -341,6 +357,8 @@ impl PhysicalDeviceFeatures {
             Df::FRAGMENT_WRITABLE_STORAGE,
             self.core.fragment_stores_and_atomics != 0,
         );
+        dl_flags.set(Df::MULTISAMPLED_SHADING, self.core.sample_rate_shading != 0);
+        dl_flags.set(Df::INDEPENDENT_BLEND, self.core.independent_blend != 0);
 
         features.set(
             F::INDIRECT_FIRST_INSTANCE,
@@ -519,6 +537,13 @@ impl PhysicalDeviceFeatures {
             is_format_16bit_norm_supported(caps),
         );
 
+        if let Some(ref astc_hdr) = self.astc_hdr {
+            features.set(
+                F::TEXTURE_COMPRESSION_ASTC_HDR,
+                astc_hdr.texture_compression_astc_hdr != 0,
+            );
+        }
+
         (features, dl_flags)
     }
 
@@ -624,6 +649,13 @@ impl PhysicalDeviceCapabilities {
 
         if requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
             extensions.push(vk::ExtDepthClipEnableFn::name());
+        }
+
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        extensions.push(vk::KhrPortabilitySubsetFn::name());
+
+        if requested_features.contains(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR) {
+            extensions.push(vk::ExtTextureCompressionAstcHdrFn::name())
         }
 
         extensions
@@ -858,6 +890,12 @@ impl super::InstanceShared {
                     .insert(vk::PhysicalDeviceDepthClipEnableFeaturesEXT::default());
                 builder = builder.push_next(next);
             }
+            if capabilities.supports_extension(vk::ExtTextureCompressionAstcHdrFn::name()) {
+                let next = features
+                    .astc_hdr
+                    .insert(vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::default());
+                builder = builder.push_next(next);
+            }
 
             let mut features2 = builder.build();
             unsafe {
@@ -928,16 +966,9 @@ impl super::Instance {
             );
             return None;
         }
-        if phd_features.core.sample_rate_shading == 0 {
-            log::warn!(
-                "sample_rate_shading feature is not supported, hiding adapter: {}",
-                info.name
-            );
-            return None;
-        }
         if !phd_capabilities.supports_extension(vk::AmdNegativeViewportHeightFn::name())
             && !phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name())
-            && phd_capabilities.properties.api_version < vk::API_VERSION_1_2
+            && phd_capabilities.properties.api_version < vk::API_VERSION_1_1
         {
             log::warn!(
                 "viewport Y-flip is not supported, hiding adapter: {}",
@@ -1401,7 +1432,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
         if !self.private_caps.can_present {
             return None;
         }
-
         let queue_family_index = 0; //TODO
         {
             profiling::scope!("vkGetPhysicalDeviceSurfaceSupportKHR");
@@ -1497,6 +1527,7 @@ impl crate::Adapter<super::Api> for super::Adapter {
             wgt::TextureFormat::Rgba8UnormSrgb,
             wgt::TextureFormat::Bgra8Unorm,
             wgt::TextureFormat::Bgra8UnormSrgb,
+            wgt::TextureFormat::Rgba16Float,
         ];
         let formats = supported_formats
             .iter()
@@ -1508,7 +1539,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     .any(|sf| sf.format == vk_format || sf.format == vk::Format::UNDEFINED)
             })
             .collect();
-
         Some(crate::SurfaceCapabilities {
             formats,
             swap_chain_sizes: caps.min_image_count..=max_image_count,
