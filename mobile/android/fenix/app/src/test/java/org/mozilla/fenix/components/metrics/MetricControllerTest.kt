@@ -167,41 +167,6 @@ class MetricControllerTest {
     }
 
     @Test
-    fun `tracking events should be sent to matching service`() {
-        val controller = ReleaseMetricController(
-            listOf(dataService1, marketingService1),
-            isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true },
-            mockk()
-        )
-        every { dataService1.shouldTrack(Event.TabMediaPause) } returns false
-        every { marketingService1.shouldTrack(Event.TabMediaPause) } returns true
-
-        controller.start(MetricServiceType.Marketing)
-        controller.track(Event.TabMediaPause)
-        verify { marketingService1.track(Event.TabMediaPause) }
-    }
-
-    @Test
-    fun `tracking events should be sent to enabled service`() {
-        var enabled = true
-        val controller = ReleaseMetricController(
-            listOf(dataService1, marketingService1),
-            isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { true },
-            mockk()
-        )
-        every { dataService1.shouldTrack(Event.TabMediaPause) } returns true
-        every { marketingService1.shouldTrack(Event.TabMediaPause) } returns true
-
-        controller.start(MetricServiceType.Marketing)
-        enabled = false
-
-        controller.track(Event.TabMediaPause)
-        verify { marketingService1.track(Event.TabMediaPause) }
-    }
-
-    @Test
     fun `topsites fact should set value in SharedPreference`() {
         val enabled = true
         val settings: Settings = mockk(relaxed = true)

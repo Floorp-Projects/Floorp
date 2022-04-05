@@ -28,8 +28,6 @@ sealed class Event {
     object AddBookmark : Event()
     object HistoryHighlightOpened : Event()
     object HistorySearchGroupOpened : Event()
-    object TabMediaPlay : Event()
-    object TabMediaPause : Event()
     object MediaPlayState : Event()
     object MediaPauseState : Event()
     object MediaStopState : Event()

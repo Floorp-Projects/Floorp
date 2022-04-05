@@ -32,9 +32,8 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
@@ -55,7 +54,6 @@ import org.mozilla.fenix.tabstray.ext.isSelect
  * @param trayStore [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  * @param store [BrowserStore] containing the complete state of the browser and methods to update that.
- * @param metrics [MetricController] used for handling telemetry events.
  */
 @Suppress("LongParameterList")
 abstract class AbstractBrowserTabViewHolder(
@@ -66,7 +64,6 @@ abstract class AbstractBrowserTabViewHolder(
     @VisibleForTesting
     internal val featureName: String,
     private val store: BrowserStore = itemView.context.components.core.store,
-    private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
 
     private val faviconView: ImageView? =
@@ -194,12 +191,12 @@ abstract class AbstractBrowserTabViewHolder(
             setOnClickListener {
                 when (sessionState?.mediaSessionState?.playbackState) {
                     MediaSession.PlaybackState.PLAYING -> {
-                        metrics.track(Event.TabMediaPause)
+                        Tab.mediaPause.record(NoExtras())
                         sessionState.mediaSessionState?.controller?.pause()
                     }
 
                     MediaSession.PlaybackState.PAUSED -> {
-                        metrics.track(Event.TabMediaPlay)
+                        Tab.mediaPlay.record(NoExtras())
                         sessionState.mediaSessionState?.controller?.play()
                     }
                     else -> throw AssertionError(

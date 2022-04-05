@@ -34,7 +34,6 @@ import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
-import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.Wallpapers
@@ -113,12 +112,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
             { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
-        )
-        is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
-            { Tab.mediaPlay.record(it) }
-        )
-        is Event.TabMediaPause -> EventWrapper<NoExtraKeys>(
-            { Tab.mediaPause.record(it) }
         )
         is Event.MediaPlayState -> EventWrapper<NoExtraKeys>(
             { MediaState.play.record(it) }
