@@ -18,7 +18,6 @@
     <!-- Privacy Notice positive button-->
     <string name="privacy_notice_positive_button">Agree and Continue</string>
     <!-- Privacy Notice neutral button-->
-    <string name="privacy_notice_neutral_button" moz:removedIn="96" tools:ignore="UnusedResources">Exit the App</string>
     <string name="privacy_notice_neutral_button_2">Disagree and Exit</string>
 
     <!-- Topsites-->
