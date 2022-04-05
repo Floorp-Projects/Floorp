@@ -3639,23 +3639,21 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
 
   MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
 
-  {
-    // Unfortunately, we need to split the text node at the offset.
-    SplitNodeResult splitTextNodeResult =
-        SplitNodeWithTransaction(aPointToInsert);
-    if (MOZ_UNLIKELY(splitTextNodeResult.Failed())) {
-      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return Err(splitTextNodeResult.Rv());
-    }
+  // Unfortunately, we need to split the text node at the offset.
+  SplitNodeResult splitTextNodeResult =
+      SplitNodeWithTransaction(aPointToInsert);
+  if (MOZ_UNLIKELY(splitTextNodeResult.Failed())) {
+    NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+    return Err(splitTextNodeResult.Rv());
   }
 
   // Insert new <br> before the right node.
-  EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-  if (!pointInContainer.IsSet()) {
-    NS_WARNING("Failed to climb up the tree");
+  auto atNextContent = splitTextNodeResult.AtNextContent<EditorDOMPoint>();
+  if (MOZ_UNLIKELY(!atNextContent.IsSet())) {
+    NS_WARNING("The next node seems not in the DOM tree");
     return Err(NS_ERROR_FAILURE);
   }
-  return pointInContainer;
+  return atNextContent;
 }
 
 Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
@@ -5186,11 +5184,10 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atRightContent.IsSetAndValid());
-  ErrorResult error;
-  SelectionRef().CollapseInLimiter(atRightContent.ToRawRangeBoundary(), error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
-  return error.StealNSResult();
+  nsresult rv = CollapseSelectionTo(atRightContent);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::CollapseSelectionTo() failed");
+  return rv;
 }
 
 bool HTMLEditor::IsEmpty() const {
