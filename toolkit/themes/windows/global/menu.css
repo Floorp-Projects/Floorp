@@ -83,6 +83,10 @@ menucaption {
   font-weight: bold;
 }
 
+menubar > menu:-moz-window-inactive {
+  color: ThreeDShadow;
+}
+
 /* ..... Internal content .... */
 
 .menu-accel,
