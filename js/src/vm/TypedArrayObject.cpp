@@ -1999,8 +1999,7 @@ const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
 static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto) {
   if (cx->options().changeArrayByCopy()) {
-    if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions,
-                             js::NotIntrinsic)) {
+    if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
       return false;
     }
   }

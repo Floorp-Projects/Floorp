@@ -229,7 +229,7 @@ class nsDeviceContext final {
   /**
    * True if this device context was created for printing.
    */
-  bool IsPrinterContext();
+  bool IsPrinterContext() const { return !!mPrintTarget; }
 
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale();
 

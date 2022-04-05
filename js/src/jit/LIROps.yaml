@@ -2814,14 +2814,6 @@
     input: WordSized
   mir_op: true
 
-- name: AssertResultT
-  operands:
-    input: WordSized
-
-- name: AssertResultV
-  operands:
-    input: BoxedValue
-
 - name: GuardValue
   operands:
     input: BoxedValue

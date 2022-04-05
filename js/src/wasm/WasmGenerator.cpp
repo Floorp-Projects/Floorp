@@ -621,7 +621,8 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     return false;
   }
 
-  auto codeRangeOp = [=](uint32_t codeRangeIndex, CodeRange* codeRange) {
+  auto codeRangeOp = [offsetInModule, this](uint32_t codeRangeIndex,
+                                            CodeRange* codeRange) {
     codeRange->offsetBy(offsetInModule);
     noteCodeRange(codeRangeIndex, *codeRange);
   };

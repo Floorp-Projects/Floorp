@@ -31,7 +31,7 @@ function handleRequest(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     // Prepare the cookie
-    aResponse.setHeader("Set-Cookie", "cookie=1234");
+    aResponse.setHeader("Set-Cookie", "cookie=1234; SameSite=None; Secure");
     aResponse.setHeader(
       "Access-Control-Allow-Origin",
       aRequest.getHeader("Origin"),

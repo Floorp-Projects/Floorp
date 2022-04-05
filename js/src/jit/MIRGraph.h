@@ -315,7 +315,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // Removes an instruction with the intention to discard it.
   void discard(MInstruction* ins);
   void discardLastIns();
-  void discardDef(MDefinition* def);
   void discardAllInstructions();
   void discardAllInstructionsStartingAt(MInstructionIterator iter);
   void discardAllPhis();

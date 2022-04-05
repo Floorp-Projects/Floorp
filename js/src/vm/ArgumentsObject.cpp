@@ -502,7 +502,7 @@ bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (id.isInt()) {
     unsigned arg = unsigned(id.toInt());
-    if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
+    if (argsobj.isElement(arg)) {
       if (!argsobj.markElementDeleted(cx, arg)) {
         return false;
       }
@@ -538,7 +538,7 @@ bool js::MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
      * prototype to point to another Arguments object with a bigger argc.
      */
     unsigned arg = unsigned(id.toInt());
-    if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
+    if (argsobj.isElement(arg)) {
       vp.set(argsobj.element(arg));
     }
   } else if (id.isAtom(cx->names().length)) {
@@ -569,7 +569,7 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
 
   if (id.isInt()) {
     unsigned arg = unsigned(id.toInt());
-    if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
+    if (argsobj->isElement(arg)) {
       argsobj->setElement(arg, v);
       return result.succeed();
     }
@@ -673,7 +673,7 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
                          PropertyFlag::Configurable, PropertyFlag::Writable};
   if (id.isInt()) {
     uint32_t arg = uint32_t(id.toInt());
-    if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
+    if (!argsobj->isElement(arg)) {
       return true;
     }
 
@@ -743,7 +743,7 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
   // don't need to mark elements as overridden or deleted.
 
   MOZ_ASSERT(id.isInt());
-  MOZ_ASSERT(!obj->isElementDeleted(id.toInt()));
+  MOZ_ASSERT(obj->isElement(id.toInt()));
   MOZ_ASSERT(!obj->containsDenseElement(id.toInt()));
 
   MOZ_ASSERT(!desc.isAccessorDescriptor());
@@ -808,8 +808,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
   bool isMapped = false;
   if (id.isInt()) {
     unsigned arg = unsigned(id.toInt());
-    isMapped =
-        arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg);
+    isMapped = argsobj->isElement(arg);
   }
 
   // Step 4.
@@ -879,7 +878,7 @@ bool js::UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
      * prototype to point to another Arguments object with a bigger argc.
      */
     unsigned arg = unsigned(id.toInt());
-    if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
+    if (argsobj.isElement(arg)) {
       vp.set(argsobj.element(arg));
     }
   } else {
@@ -965,7 +964,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
                          PropertyFlag::Configurable, PropertyFlag::Writable};
   if (id.isInt()) {
     uint32_t arg = uint32_t(id.toInt());
-    if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
+    if (!argsobj->isElement(arg)) {
       return true;
     }
 

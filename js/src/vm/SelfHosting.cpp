@@ -825,10 +825,8 @@ static bool intrinsic_ThisTimeValue(JSContext* cx, unsigned argc, Value* vp) {
 static bool intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].hasObjectPayload());
-  args.rval().setBoolean(
-      (args[0].isObject() && IsPackedArray(&args[0].toObject())) ||
-      IF_RECORD_TUPLE(IsTuple(args[0]), false));
+  MOZ_ASSERT(args[0].isObject());
+  args.rval().setBoolean(IsPackedArray(&args[0].toObject()));
   return true;
 }
 

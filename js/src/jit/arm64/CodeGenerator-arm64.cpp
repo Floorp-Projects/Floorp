@@ -1399,13 +1399,13 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
 }
 
 void CodeGenerator::visitDouble(LDouble* ins) {
-  ARMFPRegister output(ToFloatRegister(ins->getDef(0)), 64);
-  masm.Fmov(output, ins->value());
+  const LDefinition* out = ins->getDef(0);
+  masm.loadConstantDouble(ins->value(), ToFloatRegister(out));
 }
 
 void CodeGenerator::visitFloat32(LFloat32* ins) {
-  ARMFPRegister output(ToFloatRegister(ins->getDef(0)), 32);
-  masm.Fmov(output, ins->value());
+  const LDefinition* out = ins->getDef(0);
+  masm.loadConstantFloat32(ins->value(), ToFloatRegister(out));
 }
 
 void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {

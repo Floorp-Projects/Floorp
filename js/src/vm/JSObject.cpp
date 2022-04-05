@@ -2215,8 +2215,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
 }
 
 static bool DefineFunctionFromSpec(JSContext* cx, HandleObject obj,
-                                   const JSFunctionSpec* fs, unsigned flags,
-                                   DefineAsIntrinsic intrinsic) {
+                                   const JSFunctionSpec* fs) {
   RootedId id(cx);
   if (!PropertySpecNameToId(cx, fs->name, &id)) {
     return false;
@@ -2231,19 +2230,14 @@ static bool DefineFunctionFromSpec(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  if (intrinsic == AsIntrinsic) {
-    fun->setIsIntrinsic();
-  }
-
   RootedValue funVal(cx, ObjectValue(*fun));
-  return DefineDataProperty(cx, obj, id, funVal, flags & ~JSFUN_FLAGS_MASK);
+  return DefineDataProperty(cx, obj, id, funVal, fs->flags & ~JSFUN_FLAGS_MASK);
 }
 
 bool js::DefineFunctions(JSContext* cx, HandleObject obj,
-                         const JSFunctionSpec* fs,
-                         DefineAsIntrinsic intrinsic) {
+                         const JSFunctionSpec* fs) {
   for (; fs->name; fs++) {
-    if (!DefineFunctionFromSpec(cx, obj, fs, fs->flags, intrinsic)) {
+    if (!DefineFunctionFromSpec(cx, obj, fs)) {
       return false;
     }
   }

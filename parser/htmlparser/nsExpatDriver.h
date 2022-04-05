@@ -81,6 +81,12 @@ class nsExpatDriver : public nsIDTD {
                                           nsIInputStream** aStream,
                                           nsIURI** aAbsURI);
 
+  enum class ChunkOrBufferIsFinal {
+    None,
+    FinalChunk,
+    FinalChunkAndBuffer,
+  };
+
   /**
    * Pass a buffer to Expat. If Expat is blocked aBuffer should be null and
    * aLength should be 0. The result of the call will be stored in
@@ -91,23 +97,41 @@ class nsExpatDriver : public nsIDTD {
    * @param aLength the length of the buffer to pass to Expat (in number of
    *                char16_t's). Must be 0 if aBuffer is null and > 0 if
    *                aBuffer is not null.
+   * @param aIsFinal whether this is the last chunk in a row passed to
+   *                 ParseChunk, and if so whether it's the last chunk and
+   *                 buffer passed to ParseChunk (meaning there will be no more
+   *                 calls to ParseChunk for the document being parsed).
+   * @param aConsumed [out] the number of PRUnichars that Expat consumed. This
+   *                        doesn't include the PRUnichars that Expat stored in
+   *                        its buffer but didn't parse yet.
+   * @param aLastLineLength [out] the length of the last line that Expat has
+   *                              consumed. This will only be computed if
+   *                              aIsFinal is not None or mInternalState is set
+   *                              to a failure.
+   */
+  void ParseChunk(const char16_t* aBuffer, uint32_t aLength,
+                  ChunkOrBufferIsFinal aIsFinal, uint32_t* aConsumed,
+                  XML_Size* aLastLineLength);
+  /**
+   * Wrapper for ParseBuffer. If the buffer is too large to be copied into the
+   * sandbox all at once, splits it into chunks and invokes ParseBuffer in a
+   * loop.
+   *
+   * @param aBuffer the buffer to pass to Expat. May be null.
+   * @param aLength the length of the buffer to pass to Expat (in number of
+   *                char16_t's). Must be 0 if aBuffer is null and > 0 if
+   *                aBuffer is not null.
    * @param aIsFinal whether there will definitely not be any more new buffers
    *                 passed in to ParseBuffer
    * @param aConsumed [out] the number of PRUnichars that Expat consumed. This
    *                        doesn't include the PRUnichars that Expat stored in
    *                        its buffer but didn't parse yet.
-   */
-  void ParseBuffer(const char16_t* aBuffer, uint32_t aLength, bool aIsFinal,
-                   uint32_t* aConsumed);
-
-  /**
-   * Wrapper for ParseBuffer. If the buffer is too large to be copied into the
-   * sandbox all at once, splits it into chunks and invokes ParseBuffer in a
-   * loop.
+   * @param aLastLineLength [out] the length of the last line that Expat has
+   *                              consumed.
    */
   void ChunkAndParseBuffer(const char16_t* aBuffer, uint32_t aLength,
                            bool aIsFinal, uint32_t* aPassedToExpat,
-                           uint32_t* aConsumed);
+                           uint32_t* aConsumed, XML_Size* aLastLineLength);
 
   nsresult HandleError();
 

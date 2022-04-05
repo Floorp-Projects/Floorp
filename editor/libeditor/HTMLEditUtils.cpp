@@ -352,20 +352,16 @@ bool HTMLEditUtils::IsMozDiv(nsINode* aNode) {
 /**
  * IsMailCite() returns true if aNode is an html blockquote with |type=cite|.
  */
-bool HTMLEditUtils::IsMailCite(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-
+bool HTMLEditUtils::IsMailCite(const Element& aElement) {
   // don't ask me why, but our html mailcites are id'd by "type=cite"...
-  if (aNode->IsElement() &&
-      aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                      u"cite"_ns, eIgnoreCase)) {
+  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, u"cite"_ns,
+                           eIgnoreCase)) {
     return true;
   }
 
   // ... but our plaintext mailcites by "_moz_quote=true".  go figure.
-  if (aNode->IsElement() &&
-      aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozquote,
-                                      u"true"_ns, eIgnoreCase)) {
+  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozquote, u"true"_ns,
+                           eIgnoreCase)) {
     return true;
   }
 

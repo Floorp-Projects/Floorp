@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Cookie.h"
+#include "CookieStorage.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -56,14 +57,10 @@ already_AddRefed<Cookie> Cookie::Create(
     gLastCreationTime = cookie->mData.creationTime();
   }
 
-  // If sameSite is not a sensible value, assume strict
-  if (cookie->mData.sameSite() < 0 ||
-      cookie->mData.sameSite() > nsICookie::SAMESITE_STRICT) {
-    cookie->mData.sameSite() = nsICookie::SAMESITE_STRICT;
-  }
-
-  // If rawSameSite is not a sensible value, assume equal to sameSite.
-  if (!Cookie::ValidateRawSame(cookie->mData)) {
+  // If sameSite/rawSameSite values aren't sensible reset to Default
+  // cf. 5.4.7 in draft-ietf-httpbis-rfc6265bis-09
+  if (!Cookie::ValidateSameSite(cookie->mData)) {
+    cookie->mData.sameSite() = nsICookie::SAMESITE_LAX;
     cookie->mData.rawSameSite() = nsICookie::SAMESITE_NONE;
   }
 
@@ -204,9 +201,16 @@ Cookie::GetExpires(uint64_t* aExpires) {
 }
 
 // static
-bool Cookie::ValidateRawSame(const CookieStruct& aCookieData) {
-  return aCookieData.rawSameSite() == aCookieData.sameSite() ||
-         aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE;
+bool Cookie::ValidateSameSite(const CookieStruct& aCookieData) {
+  // For proper migration towards a laxByDefault world,
+  // sameSite is initialized to LAX even though the server
+  // has never sent it.
+  if (aCookieData.rawSameSite() == aCookieData.sameSite()) {
+    return aCookieData.rawSameSite() >= nsICookie::SAMESITE_NONE &&
+           aCookieData.rawSameSite() <= nsICookie::SAMESITE_STRICT;
+  }
+  return aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
+         aCookieData.sameSite() == nsICookie::SAMESITE_LAX;
 }
 
 already_AddRefed<Cookie> Cookie::Clone() const {

@@ -1130,7 +1130,7 @@ nsLocalFile::Remove(bool aRecursive) {
 
 #ifdef ANDROID
       // See bug 580434 - Bionic gives us just deleted files
-      if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      if (rv == NS_ERROR_FILE_NOT_FOUND) {
         continue;
       }
 #endif

@@ -14,18 +14,43 @@
   </head>
   <body>
     <div id="dynamic-test">
-      <xul:browser type="content" remote="true" src="about:blank" class="remote" />
+      <xul:browser type="content" remote="true" nodefaultsrc="true" class="remote" />
       <xul:browser type="content" src="about:blank" class="nonremote" />
     </div>
     <div id="light">
-      <xul:browser type="content" remote="true" src="about:blank" class="remote" />
+      <xul:browser type="content" remote="true" nodefaultsrc="true" class="remote" />
       <xul:browser type="content" src="about:blank" class="nonremote" />
     </div>
     <div id="dark">
-      <xul:browser type="content" remote="true" src="about:blank" class="remote" />
+      <xul:browser type="content" remote="true" nodefaultsrc="true" class="remote" />
       <xul:browser type="content" src="about:blank" class="nonremote" />
     </div>
     <script><![CDATA[
+      // FIXME: This shouldn't be needed if remote browsers would block the load event.
+      add_task(async function ensureBrowsersLoaded() {
+        const triggeringPrincipal = document.nodePrincipal;
+        for (let b of document.querySelectorAll("browser[remote=true]")) {
+          let loaded = new Promise(resolve => {
+            b.addProgressListener({
+              onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+                if (
+                  aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
+                  aStateFlags & Ci.nsIWebProgressListener.STATE_STOP
+                ) {
+                  resolve();
+                  b.removeProgressListener(this);
+                }
+              },
+              QueryInterface: ChromeUtils.generateQI([
+                "nsIWebProgressListener",
+                "nsISupportsWeakReference",
+              ]),
+            });
+          });
+          b.loadURI("about:blank", { triggeringPrincipal });
+          await loaded;
+        }
+      });
       async function getBrowserColorScheme(browser) {
         return SpecialPowers.spawn(browser, [], () => {
           return content.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";

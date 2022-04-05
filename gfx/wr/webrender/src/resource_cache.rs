@@ -29,11 +29,11 @@ use crate::internal_types::{
     CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList,
     FrameId, FrameStamp,
 };
-use crate::picture::SurfaceInfo;
 use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey, RenderTaskParent};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
+use crate::surface::SurfaceBuilder;
 use euclid::point2;
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
@@ -595,7 +595,7 @@ impl ResourceCache {
         user_data: Option<[f32; 4]>,
         is_opaque: bool,
         parent: RenderTaskParent,
-        surfaces: &[SurfaceInfo],
+        surface_builder: &mut SurfaceBuilder,
         f: F,
     ) -> RenderTaskId
     where
@@ -609,7 +609,7 @@ impl ResourceCache {
             user_data,
             is_opaque,
             parent,
-            surfaces,
+            surface_builder,
             |render_graph| Ok(f(render_graph))
         ).expect("Failed to request a render task from the resource cache!")
     }

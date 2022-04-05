@@ -2164,6 +2164,7 @@ class RestReplacer : public MDefinitionVisitorDefaultNoop {
 
   bool isRestElements(MDefinition* elements);
   void discardInstruction(MInstruction* ins, MDefinition* elements);
+  MDefinition* restLength(MInstruction* ins);
   void visitLength(MInstruction* ins, MDefinition* elements);
 
   void visitGuardToClass(MGuardToClass* ins);
@@ -2336,24 +2337,10 @@ bool RestReplacer::escapes(MElements* ins) {
 
       case MDefinition::Opcode::ApplyArray:
         MOZ_ASSERT(def->toApplyArray()->getElements() == ins);
-
-        // We don't yet support skipping initial formals when scalar replacing
-        // the rest array.
-        if (rest()->numFormals()) {
-          JitSpewDef(JitSpew_Escape, "has extra formals\n", def);
-          return true;
-        }
         break;
 
       case MDefinition::Opcode::ConstructArray:
         MOZ_ASSERT(def->toConstructArray()->getElements() == ins);
-
-        // We don't yet support skipping initial formals when scalar replacing
-        // the rest array.
-        if (rest()->numFormals()) {
-          JitSpewDef(JitSpew_Escape, "has extra formals\n", def);
-          return true;
-        }
         break;
 
       default:
@@ -2520,19 +2507,11 @@ void RestReplacer::visitLoadElement(MLoadElement* ins) {
   discardInstruction(ins, elements);
 }
 
-void RestReplacer::visitLength(MInstruction* ins, MDefinition* elements) {
-  MOZ_ASSERT(ins->isArrayLength() || ins->isInitializedLength());
-
-  // Skip other array objects.
-  if (!isRestElements(elements)) {
-    return;
-  }
-
+MDefinition* RestReplacer::restLength(MInstruction* ins) {
   // Compute |Math.max(numActuals - numFormals, 0)| for the rest array length.
 
   auto* numActuals = rest()->numActuals();
 
-  MDefinition* replacement;
   if (uint32_t formals = rest()->numFormals()) {
     auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
     ins->block()->insertBefore(ins, numFormals);
@@ -2548,10 +2527,21 @@ void RestReplacer::visitLength(MInstruction* ins, MDefinition* elements) {
     auto* minmax = MMinMax::New(alloc(), length, zero, MIRType::Int32, isMax);
     ins->block()->insertBefore(ins, minmax);
 
-    replacement = minmax;
-  } else {
-    replacement = numActuals;
+    return minmax;
   }
+
+  return numActuals;
+}
+
+void RestReplacer::visitLength(MInstruction* ins, MDefinition* elements) {
+  MOZ_ASSERT(ins->isArrayLength() || ins->isInitializedLength());
+
+  // Skip other array objects.
+  if (!isRestElements(elements)) {
+    return;
+  }
+
+  MDefinition* replacement = restLength(ins);
 
   ins->replaceAllUsesWith(replacement);
 
@@ -2575,14 +2565,11 @@ void RestReplacer::visitApplyArray(MApplyArray* ins) {
     return;
   }
 
-  // When no extra formals are present, the contents of the rest array are equal
-  // to the frame arguments.
-  MOZ_ASSERT(rest()->numFormals() == 0);
+  auto* numActuals = restLength(ins);
 
-  auto* numActuals = rest()->numActuals();
-
-  auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
-                                ins->getFunction(), numActuals, ins->getThis());
+  auto* apply =
+      MApplyArgs::New(alloc(), ins->getSingleTarget(), ins->getFunction(),
+                      numActuals, ins->getThis(), rest()->numFormals());
   apply->setBailoutKind(ins->bailoutKind());
   if (!ins->maybeCrossRealm()) {
     apply->setNotCrossRealm();
@@ -2607,15 +2594,11 @@ void RestReplacer::visitConstructArray(MConstructArray* ins) {
     return;
   }
 
-  // When no extra formals are present, the contents of the rest array are equal
-  // to the frame arguments.
-  MOZ_ASSERT(rest()->numFormals() == 0);
+  auto* numActuals = restLength(ins);
 
-  auto* numActuals = rest()->numActuals();
-
-  auto* construct =
-      MConstructArgs::New(alloc(), ins->getSingleTarget(), ins->getFunction(),
-                          numActuals, ins->getThis(), ins->getNewTarget());
+  auto* construct = MConstructArgs::New(
+      alloc(), ins->getSingleTarget(), ins->getFunction(), numActuals,
+      ins->getThis(), ins->getNewTarget(), rest()->numFormals());
   construct->setBailoutKind(ins->bailoutKind());
   if (!ins->maybeCrossRealm()) {
     construct->setNotCrossRealm();
