@@ -597,10 +597,11 @@ static void JsepCodecDescToAudioCodecConfig(
     return;
   }
 
-  *aConfig = Some(AudioCodecConfig(pt, aCodec.mName, aCodec.mClock,
-                                   aCodec.mForceMono ? 1 : aCodec.mChannels,
-                                   aCodec.mFECEnabled));
-  (*aConfig)->mMaxPlaybackRate = aCodec.mMaxPlaybackRate;
+  *aConfig = Some(AudioCodecConfig(
+      pt, aCodec.mName, static_cast<int>(aCodec.mClock),
+      aCodec.mForceMono ? 1 : static_cast<int>(aCodec.mChannels),
+      aCodec.mFECEnabled));
+  (*aConfig)->mMaxPlaybackRate = static_cast<int>(aCodec.mMaxPlaybackRate);
   (*aConfig)->mDtmfEnabled = aCodec.mDtmfEnabled;
   (*aConfig)->mDTXEnabled = aCodec.mDTXEnabled;
   (*aConfig)->mMaxAverageBitrate = aCodec.mMaxAverageBitrate;
@@ -720,8 +721,9 @@ static void JsepCodecDescToVideoCodecConfig(
     strncpy(h264Config->sprop_parameter_sets,
             aCodec.mSpropParameterSets.c_str(), spropSize);
     h264Config->sprop_parameter_sets[spropSize - 1] = '\0';
-    h264Config->packetization_mode = aCodec.mPacketizationMode;
-    h264Config->profile_level_id = aCodec.mProfileLevelId;
+    h264Config->packetization_mode =
+        static_cast<int>(aCodec.mPacketizationMode);
+    h264Config->profile_level_id = static_cast<int>(aCodec.mProfileLevelId);
     h264Config->tias_bw = 0;  // TODO(bug 1403206)
   }
 
