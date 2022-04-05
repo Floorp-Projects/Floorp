@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Importing a node should respect sandbox</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function imageHasLoaded() {
+      return fetch("bug1739957.sjs?loaded")
+        .then(response => response.text())
+        .then(loaded => Boolean(loaded));
+    }
+
+    async function test() {
+      let newDiv = document.createElement("div");
+      newDiv.innerHTML = `<img src="bug1739957.sjs" onload="parent.postMessage('handlerRuns', '*')">`;
+
+      let eventHandlerCalled = false;
+      window.addEventListener("message", () => { eventHandlerCalled = true; }, { once: true })
+
+      document.getElementById("frame").contentDocument.body.appendChild(newDiv);
+
+      await SimpleTest.promiseWaitForCondition(imageHasLoaded, "Wait for image to load");
+
+      ok(!eventHandlerCalled, "Event handlers on imported nodes shouldn't execute if sandbox doesn't allow script");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="test();">
+<p id="display"></p>
+<iframe id="frame" sandbox="allow-same-origin" src="about:blank"></iframe>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
