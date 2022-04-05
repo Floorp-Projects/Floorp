@@ -4272,8 +4272,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
   if (NS_FAILED(rv)) {
     // If the directory doesn't exist, then we have no reason to complain. We
     // loaded everything (and nothing) successfully.
-    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
       rv = NS_OK;
     }
     return rv;

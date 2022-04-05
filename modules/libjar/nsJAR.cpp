@@ -206,7 +206,7 @@ nsJAR::Extract(const nsACString& aEntryName, nsIFile* outFile) {
 
   LOG(("Extract[%p] %s", this, PromiseFlatCString(aEntryName).get()));
   nsZipItem* item = mZip->GetItem(PromiseFlatCString(aEntryName).get());
-  NS_ENSURE_TRUE(item, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
+  NS_ENSURE_TRUE(item, NS_ERROR_FILE_NOT_FOUND);
 
   // Remove existing file or directory so we set permissions correctly.
   // If it's a directory that already exists and contains files, throw
@@ -246,7 +246,7 @@ nsJAR::GetEntry(const nsACString& aEntryName, nsIZipEntry** result) {
     return NS_ERROR_FAILURE;
   }
   nsZipItem* zipItem = mZip->GetItem(PromiseFlatCString(aEntryName).get());
-  NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
+  NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_NOT_FOUND);
 
   nsJARItem* jarItem = new nsJARItem(zipItem);
 
@@ -310,7 +310,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   if (*entry.get()) {
     // First check if item exists in jar
     item = mZip->GetItem(entry.get());
-    if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+    if (!item) return NS_ERROR_FILE_NOT_FOUND;
   }
   nsJARInputStream* jis = new nsJARInputStream();
   // addref now so we can call InitFile/InitDirectory()
@@ -375,7 +375,7 @@ nsresult nsJAR::LoadEntry(const nsACString& aFilename, nsCString& aBuf) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> manifestStream;
   rv = GetInputStream(aFilename, getter_AddRefs(manifestStream));
-  if (NS_FAILED(rv)) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+  if (NS_FAILED(rv)) return NS_ERROR_FILE_NOT_FOUND;
 
   //-- Read the manifest file into memory
   char* buf;
@@ -438,7 +438,7 @@ nsJAREnumerator::HasMore(bool* aResult) {
   if (!mName) {
     NS_ASSERTION(mFind, "nsJAREnumerator: Missing zipFind.");
     nsresult rv = mFind->FindNext(&mName, &mNameLen);
-    if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
       *aResult = false;  // No more matches available
       return NS_OK;
     }

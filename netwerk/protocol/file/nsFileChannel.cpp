@@ -292,9 +292,6 @@ nsresult nsFileChannel::MakeFileInputStream(nsIFile* file,
   bool isDir;
   nsresult rv = file->IsDirectory(&isDir);
   if (NS_FAILED(rv)) {
-    // canonicalize error message
-    if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) rv = NS_ERROR_FILE_NOT_FOUND;
-
     if (rv == NS_ERROR_FILE_NOT_FOUND) {
       CheckForBrokenChromeURL(mLoadInfo, OriginalURI());
     }
@@ -455,8 +452,7 @@ nsresult nsFileChannel::FixupContentLength(bool async) {
   int64_t size;
   rv = file->GetFileSize(&size);
   if (NS_FAILED(rv)) {
-    if (async && (NS_ERROR_FILE_NOT_FOUND == rv ||
-                  NS_ERROR_FILE_TARGET_DOES_NOT_EXIST == rv)) {
+    if (async && NS_ERROR_FILE_NOT_FOUND == rv) {
       size = 0;
     } else {
       return rv;

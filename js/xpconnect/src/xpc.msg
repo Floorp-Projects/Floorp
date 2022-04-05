@@ -101,7 +101,6 @@ XPC_MSG_DEF(NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      , "File error: Unresolvable 
 XPC_MSG_DEF(NS_ERROR_FILE_EXECUTION_FAILED          , "File error: Execution failed")
 XPC_MSG_DEF(NS_ERROR_FILE_UNKNOWN_TYPE              , "File error: Unknown type")
 XPC_MSG_DEF(NS_ERROR_FILE_DESTINATION_NOT_DIR       , "File error: Destination not dir")
-XPC_MSG_DEF(NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     , "File error: Target does not exist")
 XPC_MSG_DEF(NS_ERROR_FILE_COPY_OR_MOVE_FAILED       , "File error: Copy or move failed")
 XPC_MSG_DEF(NS_ERROR_FILE_ALREADY_EXISTS            , "File error: Already exists")
 XPC_MSG_DEF(NS_ERROR_FILE_INVALID_PATH              , "File error: Invalid path")

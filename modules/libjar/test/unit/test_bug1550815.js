@@ -24,7 +24,7 @@ function run_test() {
     zipReader.test("modules/libjar/test/Makefile.in");
     Assert.ok(false, "Should not reach here.");
   } catch (e) {
-    Assert.equal(e.result, Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
+    Assert.equal(e.result, Cr.NS_ERROR_FILE_NOT_FOUND);
   }
 
   zipReader.close();

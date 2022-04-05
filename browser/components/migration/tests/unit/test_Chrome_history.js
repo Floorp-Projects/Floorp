@@ -135,7 +135,7 @@ function removeHistoryFile() {
     file.remove(false);
   } catch (ex) {
     // It is ok if this doesn't exist.
-    if (ex.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (ex.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
       throw ex;
     }
   }
