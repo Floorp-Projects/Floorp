@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for css-animations running on the compositor thread with scroll-timeline</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    @scroll-timeline scroll_timeline {
+      orientation: block;
+    }
+
+    @keyframes transform_anim {
+      from { transform: translate(50px) }
+      to { transform: translate(150px) }
+    }
+
+    @keyframes always_fifty {
+      from, to { transform: translate(50px) }
+    }
+
+    @keyframes geometry {
+      from { width: 50px; }
+      to { width: 100px; }
+    }
+
+    html {
+      min-height: 100%;
+      padding-bottom: 100px;
+    }
+
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: green;
+    }
+  </style>
+</head>
+<body>
+  <div id="display"></div>
+  <pre id="test"></pre>
+</body>
+<script type="application/javascript">
+"use strict";
+
+// Global state
+var gDiv = null;
+
+// Shortcut omta_is and friends by filling in the initial 'elem' argument
+// with gDiv.
+[ 'omta_is', 'omta_todo_is', 'omta_is_approx' ].forEach(function(fn) {
+  var origFn = window[fn];
+  window[fn] = function() {
+    var args = Array.from(arguments);
+    if (!(args[0] instanceof Element)) {
+      args.unshift(gDiv);
+    }
+    return origFn.apply(window, args);
+  };
+});
+
+// Shortcut new_div and done_div to update gDiv
+var originalNewDiv = window.new_div;
+window.new_div = function(style) {
+  [ gDiv ] = originalNewDiv(style);
+};
+var originalDoneDiv = window.done_div;
+window.done_div = function() {
+  originalDoneDiv();
+  gDiv = null;
+};
+
+// Bind the ok and todo to the opener, and close this window when we finish.
+var ok = opener.ok.bind(opener);
+var todo = opener.todo.bind(opener);
+function finish() {
+  var o = opener;
+  self.close();
+  o.SimpleTest.finish();
+}
+
+waitUntilApzStable().then(() => {
+  runOMTATest(function() {
+    var onAbort = function() {
+      if (gDiv) {
+        done_div();
+      }
+    };
+    runAllAsyncAnimTests(onAbort).then(finish);
+  }, finish);
+});
+
+//----------------------------------------------------------------------
+//
+// Test cases
+//
+//----------------------------------------------------------------------
+
+// The non-omta property with scroll-timeline together with an omta property
+// with document-timeline.
+addAsyncAnimTest(async function() {
+  new_div("animation: geometry 10s scroll_timeline, always_fifty 1s infinite;");
+  await waitForPaintsFlushed();
+
+  // Note: width is not a OMTA property, so it must be running on the main
+  // thread.
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "transform animations should runs on compositor thread");
+
+  done_div();
+});
+
+// transform property with scroll-linked animations.
+addAsyncAnimTest(async function() {
+  new_div("animation: transform_anim 1s linear scroll_timeline;");
+  await waitForPaintsFlushed();
+
+  document.scrollingElement.scrollTop = 50;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 100 }, 0.1, RunningOn.Compositor,
+                 "scroll transform animations should runs on compositor " +
+                 "thread");
+
+  document.scrollingElement.scrollTop = 0;
+  done_div();
+});
+
+addAsyncAnimTest(async function() {
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("style", "width: 200px; height: 200px");
+  iframe.setAttribute("scrolling", "no");
+  iframe.srcdoc =
+    "<!DOCTYPE HTML>" +
+    "<html style='min-height: 100%; padding-bottom: 100px;'>" +
+    "<style>" +
+    "@keyframes anim { from, to { transform: translate(50px) } }" +
+    "@scroll-timeline scroll_timeline { source: auto; }" +
+    "</style>" +
+    "<div id='target_in_iframe' " +
+    "     style='width:50px; height:50px; background:green;" +
+    "            animation: anim 10s linear scroll_timeline;'>" +
+    "</div>" +
+    "</html>";
+
+  await new Promise(resolve => {
+    iframe.onload = resolve;
+    document.body.appendChild(iframe);
+  });
+
+  gDiv = iframe.contentDocument.getElementById("target_in_iframe");
+
+  const root = iframe.contentDocument.scrollingElement;
+  const maxScroll = root.scrollHeight - root.clientHeight;
+  root.scrollTop = 0.5 * maxScroll;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 50 }, 0, RunningOn.MainThread,
+                 "scroll transform animations inside an iframe with " +
+                 "scrolling:no should run on the main thread");
+
+  gDiv = null;
+  iframe.remove();
+});
+
+</script>
+</html>
