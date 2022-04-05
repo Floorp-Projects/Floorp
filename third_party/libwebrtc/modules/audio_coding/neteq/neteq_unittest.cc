@@ -84,16 +84,16 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
   const std::string output_checksum =
-      PlatformChecksum("6ae9f643dc3e5f3452d28a772eef7e00e74158bc",
-                       "f4374430e870d66268c1b8e22fb700eb072d567e", "not used",
-                       "6ae9f643dc3e5f3452d28a772eef7e00e74158bc",
-                       "8d73c98645917cdeaaa01c20cf095ccc5a10b2b5");
+      PlatformChecksum("68ec266d2d152dfc0d938484e7936f6af4f803e3",
+                       "1c243feb35e3e9ab37039eddf5b3c3ecfca3c60c", "not used",
+                       "68ec266d2d152dfc0d938484e7936f6af4f803e3",
+                       "f68c546a43bb25743297c9c0c9027e8424b8e10b");
 
   const std::string network_stats_checksum =
-      PlatformChecksum("8e50f528f245b7957db20ab406a72d81be60f5f4",
-                       "4260b22ea6d2723b2d573e50d2c1476680c7fa4c", "not used",
-                       "8e50f528f245b7957db20ab406a72d81be60f5f4",
-                       "8e50f528f245b7957db20ab406a72d81be60f5f4");
+      PlatformChecksum("2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7",
+                       "e96a7f081ebc111f49c7373d3728274057012ae9", "not used",
+                       "2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7",
+                       "2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7");
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
@@ -113,13 +113,13 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
       "554ad4133934e3920f97575579a46f674683d77c"
       "|de316e2bfb15192edb820fe5fb579d11ff5a524b";
   const std::string output_checksum = PlatformChecksum(
-      maybe_sse, "459c356a0ef245ddff381f7d82d205d426ef2002",
-      "625055e5eb0e6de2c9d170b4494eadc5afab08c8", maybe_sse, maybe_sse);
+      maybe_sse, "b3fac4ad4f6ea384aff676ee1ea816bd70415490",
+      "373ccd99c147cd3fcef0e7dcad6f87d0f8e5a1c0", maybe_sse, maybe_sse);
 
   const std::string network_stats_checksum =
       PlatformChecksum("ec29e047b019a86ec06e2c40643143dc1975c69f",
-                       "0c24649824eb7147d4891b0767e86e732dd6ecc8",
-                       "10f3e0b66c6947f78d60301454f2841033a6fcc0",
+                       "ce6f519bc1220b003944ac5d9db077665a06834e",
+                       "abb686d3ac6fac0001ca8d45a6ca6f5aefb2f9d6",
                        "ec29e047b019a86ec06e2c40643143dc1975c69f",
                        "ec29e047b019a86ec06e2c40643143dc1975c69f");
 
@@ -138,14 +138,14 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusDtxBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_opus_dtx", "rtp");
 
   const std::string maybe_sse =
-      "df5d1d3019bf3764829b84f4fb315721f4adde29"
-      "|5935d2fad14a69a8b61dbc8e6f2d37c8c0814925";
+      "0fb0a3d6b3758ca6e108368bb777cd38d0a865af"
+      "|79cfb99a21338ba977eb0e15eb8464e2db9436f8";
   const std::string output_checksum = PlatformChecksum(
-      maybe_sse, "551df04e8f45cd99eff28503edf0cf92974898ac",
-      "709a3f0f380393d3a67bace10e2265b90a6ebbeb", maybe_sse, maybe_sse);
+      maybe_sse, "b6632690f8d7c2340c838df2821fc014f1cc8360",
+      "f890b9eb9bc5ab8313489230726b297f6a0825af", maybe_sse, maybe_sse);
 
   const std::string network_stats_checksum =
-      "80f5283ac71b27596204210152927666c1732de4";
+      "18983bb67a57628c604dbdefa99574c6e0c5bb48";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
@@ -737,8 +737,10 @@ TEST_F(NetEqDecodingTestWithMutedState, MutedStateOldPacket) {
   GetAudioUntilMuted();
 
   EXPECT_NE(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
-  // Insert packet which is older than the first packet.
-  InsertPacket(kSamples * (counter_ - 1000));
+  // Insert a few packets which are older than the first packet.
+  for (int i = 0; i < 5; ++i) {
+    InsertPacket(kSamples * (i - 1000));
+  }
   EXPECT_FALSE(GetAudioReturnMuted());
   EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
 }
@@ -853,9 +855,11 @@ TEST_F(NetEqDecodingTestTwoInstances, CompareMutedStateOnOff) {
 
   // Insert new data. Timestamp is corrected for the time elapsed since the last
   // packet.
-  PopulateRtpInfo(0, kSamples * 1000, &rtp_info);
-  EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
-  EXPECT_EQ(0, neteq2_->InsertPacket(rtp_info, payload));
+  for (int i = 0; i < 5; ++i) {
+    PopulateRtpInfo(0, kSamples * 1000 + kSamples * i, &rtp_info);
+    EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
+    EXPECT_EQ(0, neteq2_->InsertPacket(rtp_info, payload));
+  }
 
   int counter = 0;
   while (out_frame1.speech_type_ != AudioFrame::kNormalSpeech) {
@@ -1264,7 +1268,7 @@ TEST(NetEqOutputDelayTest, RunTestWithFieldTrial) {
 
   // The base delay values are taken from the resuts of the non-delayed case in
   // NetEqOutputDelayTest.RunTest above.
-  EXPECT_EQ(10 + kExpectedDelayMs, result.target_delay_ms);
+  EXPECT_EQ(20 + kExpectedDelayMs, result.target_delay_ms);
   EXPECT_EQ(24 + kExpectedDelayMs, result.filtered_current_delay_ms);
 }
 
@@ -1279,7 +1283,7 @@ TEST(NetEqOutputDelayTest, RunTestWithFieldTrialOddValue) {
 
   // The base delay values are taken from the resuts of the non-delayed case in
   // NetEqOutputDelayTest.RunTest above.
-  EXPECT_EQ(10 + kRoundedDelayMs, result.target_delay_ms);
+  EXPECT_EQ(20 + kRoundedDelayMs, result.target_delay_ms);
   EXPECT_EQ(24 + kRoundedDelayMs, result.filtered_current_delay_ms);
 }
 
