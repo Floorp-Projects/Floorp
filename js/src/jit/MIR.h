@@ -2320,12 +2320,16 @@ class MApplyArgs : public MTernaryInstruction,
                                     BoxPolicy<2>>::Data {
   // Single target from CacheIR, or nullptr
   WrappedFunction* target_;
+  // Number of extra initial formals to skip.
+  uint32_t numExtraFormals_;
   bool maybeCrossRealm_ = true;
   bool ignoresReturnValue_ = false;
 
   MApplyArgs(WrappedFunction* target, MDefinition* fun, MDefinition* argc,
-             MDefinition* self)
-      : MTernaryInstruction(classOpcode, fun, argc, self), target_(target) {
+             MDefinition* self, uint32_t numExtraFormals = 0)
+      : MTernaryInstruction(classOpcode, fun, argc, self),
+        target_(target),
+        numExtraFormals_(numExtraFormals) {
     MOZ_ASSERT(argc->type() == MIRType::Int32);
     setResultType(MIRType::Value);
   }
@@ -2336,6 +2340,8 @@ class MApplyArgs : public MTernaryInstruction,
   NAMED_OPERANDS((0, getFunction), (1, getArgc), (2, getThis))
 
   WrappedFunction* getSingleTarget() const { return target_; }
+
+  uint32_t numExtraFormals() const { return numExtraFormals_; }
 
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
@@ -2420,12 +2426,16 @@ class MConstructArgs : public MQuaternaryInstruction,
                                         BoxPolicy<2>, ObjectPolicy<3>>::Data {
   // Single target from CacheIR, or nullptr
   WrappedFunction* target_;
+  // Number of extra initial formals to skip.
+  uint32_t numExtraFormals_;
   bool maybeCrossRealm_ = true;
 
   MConstructArgs(WrappedFunction* target, MDefinition* fun, MDefinition* argc,
-                 MDefinition* thisValue, MDefinition* newTarget)
+                 MDefinition* thisValue, MDefinition* newTarget,
+                 uint32_t numExtraFormals = 0)
       : MQuaternaryInstruction(classOpcode, fun, argc, thisValue, newTarget),
-        target_(target) {
+        target_(target),
+        numExtraFormals_(numExtraFormals) {
     MOZ_ASSERT(argc->type() == MIRType::Int32);
     setResultType(MIRType::Value);
   }
@@ -2437,6 +2447,8 @@ class MConstructArgs : public MQuaternaryInstruction,
                  (3, getNewTarget))
 
   WrappedFunction* getSingleTarget() const { return target_; }
+
+  uint32_t numExtraFormals() const { return numExtraFormals_; }
 
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
