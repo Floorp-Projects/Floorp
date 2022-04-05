@@ -2693,6 +2693,19 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
   }
 
+  // XXX relax limitation to Windows 8.1
+  if (StaticPrefs::media_wmf_no_copy_nv12_textures() && IsWin10OrLater() &&
+      hasHardware) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
+    feature.EnableByDefault();
+    gfxVars::SetHwDecodedVideoNoCopy(true);
+  } else {
+    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+    feature.DisableByDefault(FeatureStatus::Disabled, "Disabled by default",
+                             "FEATURE_NO_COPY_DISABLED"_ns);
+  }
+
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
     if (UseWebRender() && gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderFlipSequentialWin(true);
