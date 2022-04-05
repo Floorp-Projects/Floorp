@@ -310,6 +310,7 @@ class ArgumentsObject : public NativeObject {
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
   }
 
+ private:
   /*
    * Because the arguments object is a real object, its elements may be
    * deleted. This is implemented by setting a 'deleted' flag for the arg
@@ -322,7 +323,7 @@ class ArgumentsObject : public NativeObject {
    *
    * This works because, once a property is deleted from an arguments object,
    * it gets regular properties with regular getters/setters that don't alias
-   * ArgumentsData::slots.
+   * ArgumentsData::args.
    */
   bool isElementDeleted(uint32_t i) const {
     MOZ_ASSERT(i < data()->numArgs);
@@ -335,7 +336,23 @@ class ArgumentsObject : public NativeObject {
     return result;
   }
 
+ protected:
   bool markElementDeleted(JSContext* cx, uint32_t i);
+
+ public:
+  /*
+   * Return true iff the index is a valid element index for this arguments
+   * object.
+   *
+   * Returning true here doesn't imply that the element value can be read
+   * through |ArgumentsObject::element()|. For example unmapped arguments
+   * objects can have an element index property redefined without having marked
+   * the element as deleted. Instead use |maybeGetElement()| or manually check
+   * for |hasOverriddenElement()|.
+   */
+  bool isElement(uint32_t i) const {
+    return i < initialLength() && !isElementDeleted(i);
+  }
 
   /*
    * An ArgumentsObject serves two roles:

@@ -17,7 +17,7 @@
 namespace js {
 
 inline const Value& ArgumentsObject::element(uint32_t i) const {
-  MOZ_ASSERT(!isElementDeleted(i));
+  MOZ_ASSERT(isElement(i));
   const Value& v = data()->args[i];
   if (IsMagicScopeSlotValue(v)) {
     CallObject& callobj =
@@ -28,7 +28,7 @@ inline const Value& ArgumentsObject::element(uint32_t i) const {
 }
 
 inline void ArgumentsObject::setElement(uint32_t i, const Value& v) {
-  MOZ_ASSERT(!isElementDeleted(i));
+  MOZ_ASSERT(isElement(i));
   GCPtrValue& lhs = data()->args[i];
   if (IsMagicScopeSlotValue(lhs)) {
     uint32_t slot = SlotFromMagicScopeSlotValue(lhs);
