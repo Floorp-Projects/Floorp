@@ -1,62 +1,61 @@
 use super::{BackendResult, Error, Version, Writer};
 use crate::{
-    AddressSpace, Binding, Bytes, Expression, Handle, ImageClass, ImageDimension, Interpolation,
-    MathFunction, Sampling, ScalarKind, ShaderStage, StorageFormat, Type, TypeInner,
+    Binding, Bytes, Expression, Handle, ImageClass, ImageDimension, Interpolation, MathFunction,
+    Sampling, ScalarKind, ShaderStage, StorageClass, StorageFormat, Type, TypeInner,
 };
 use std::fmt::Write;
 
 bitflags::bitflags! {
-    /// Structure used to encode additions to GLSL that aren't supported by all versions.
+    /// Structure used to encode a set of additions to glsl that aren't supported by all versions
     pub struct Features: u32 {
-        /// Buffer address space support.
+        /// Buffer storage class support
         const BUFFER_STORAGE = 1;
         const ARRAY_OF_ARRAYS = 1 << 1;
-        /// 8 byte floats.
+        /// 8 byte floats
         const DOUBLE_TYPE = 1 << 2;
-        /// More image formats.
+        /// Includes support for more image formats
         const FULL_IMAGE_FORMATS = 1 << 3;
         const MULTISAMPLED_TEXTURES = 1 << 4;
         const MULTISAMPLED_TEXTURE_ARRAYS = 1 << 5;
         const CUBE_TEXTURES_ARRAY = 1 << 6;
         const COMPUTE_SHADER = 1 << 7;
-        /// Image load and early depth tests.
+        /// Adds support for image load and early depth tests
         const IMAGE_LOAD_STORE = 1 << 8;
         const CONSERVATIVE_DEPTH = 1 << 9;
-        /// Interpolation and auxiliary qualifiers.
-        ///
-        /// Perspective, Flat, and Centroid are available in all GLSL versions we support.
+        /// Interpolation and auxiliary qualifiers. Perspective, Flat, and
+        /// Centroid are available in all GLSL versions we support.
         const NOPERSPECTIVE_QUALIFIER = 1 << 11;
         const SAMPLE_QUALIFIER = 1 << 12;
         const CLIP_DISTANCE = 1 << 13;
         const CULL_DISTANCE = 1 << 14;
-        /// Sample ID.
+        // Sample ID
         const SAMPLE_VARIABLES = 1 << 15;
-        /// Arrays with a dynamic length.
+        /// Arrays with a dynamic length
         const DYNAMIC_ARRAY_SIZE = 1 << 16;
         const MULTI_VIEW = 1 << 17;
-        /// Fused multiply-add.
+        /// Adds support for fused multiply-add
         const FMA = 1 << 18;
     }
 }
 
-/// Helper structure used to store the required [`Features`] needed to output a
+/// Helper structure used to store the required [`Features`](Features) needed to output a
 /// [`Module`](crate::Module)
 ///
 /// Provides helper methods to check for availability and writing required extensions
 pub struct FeaturesManager(Features);
 
 impl FeaturesManager {
-    /// Creates a new [`FeaturesManager`] instance
+    /// Creates a new [`FeaturesManager`](FeaturesManager) instance
     pub fn new() -> Self {
         Self(Features::empty())
     }
 
-    /// Adds to the list of required [`Features`]
+    /// Adds to the list of required [`Features`](Features)
     pub fn request(&mut self, features: Features) {
         self.0 |= features
     }
 
-    /// Checks that all required [`Features`] are available for the specified
+    /// Checks that all required [`Features`](Features) are available for the specified
     /// [`Version`](super::Version) otherwise returns an
     /// [`Error::MissingFeatures`](super::Error::MissingFeatures)
     pub fn check_availability(&self, version: Version) -> BackendResult {
@@ -215,10 +214,10 @@ impl FeaturesManager {
 }
 
 impl<'a, W> Writer<'a, W> {
-    /// Helper method that searches the module for all the needed [`Features`]
+    /// Helper method that searches the module for all the needed [`Features`](Features)
     ///
     /// # Errors
-    /// If the version doesn't support any of the needed [`Features`] a
+    /// If the version doesn't support any of the needed [`Features`](Features) a
     /// [`Error::MissingFeatures`](super::Error::MissingFeatures) will be returned
     pub(super) fn collect_required_features(&mut self) -> BackendResult {
         let ep_info = self.info.get_entry_point(self.entry_point_idx as usize);
@@ -344,21 +343,14 @@ impl<'a, W> Writer<'a, W> {
             }
         }
 
-        let mut push_constant_used = false;
-
         for (handle, global) in self.module.global_variables.iter() {
             if ep_info[handle].is_empty() {
                 continue;
             }
-            match global.space {
-                AddressSpace::WorkGroup => self.features.request(Features::COMPUTE_SHADER),
-                AddressSpace::Storage { .. } => self.features.request(Features::BUFFER_STORAGE),
-                AddressSpace::PushConstant => {
-                    if push_constant_used {
-                        return Err(Error::MultiplePushConstants);
-                    }
-                    push_constant_used = true;
-                }
+            match global.class {
+                StorageClass::WorkGroup => self.features.request(Features::COMPUTE_SHADER),
+                StorageClass::Storage { .. } => self.features.request(Features::BUFFER_STORAGE),
+                StorageClass::PushConstant => return Err(Error::PushConstantNotSupported),
                 _ => {}
             }
         }
@@ -387,7 +379,7 @@ impl<'a, W> Writer<'a, W> {
         self.features.check_availability(self.options.version)
     }
 
-    /// Helper method that checks the [`Features`] needed by a scalar
+    /// Helper method that checks the [`Features`](Features) needed by a scalar
     fn scalar_required_features(&mut self, kind: ScalarKind, width: Bytes) {
         if kind == ScalarKind::Float && width == 8 {
             self.features.request(Features::DOUBLE_TYPE);

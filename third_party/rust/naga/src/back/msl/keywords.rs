@@ -18,7 +18,6 @@ pub const RESERVED: &[&str] = &[
     "bool",
     "char",
     "int",
-    "uint",
     "long",
     "float",
     "double",
@@ -213,5 +212,4 @@ pub const RESERVED: &[&str] = &[
     "M_SQRT1_2",
     // Naga utilities
     "DefaultConstructible",
-    "clamped_lod_e",
 ];

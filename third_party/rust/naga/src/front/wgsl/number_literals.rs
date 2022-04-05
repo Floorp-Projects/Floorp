@@ -85,9 +85,10 @@ pub(super) fn _parse_uint_literal<'a>(
             Token::Number {
                 value,
                 ty: NumberType::Uint,
+                width: token_width,
             },
             span,
-        ) => get_u32_literal(value, span),
+        ) if token_width.unwrap_or(4) == width => get_u32_literal(value, span),
         other => Err(Error::Unexpected(
             other,
             ExpectedToken::Number {
@@ -116,9 +117,10 @@ pub(super) fn parse_non_negative_sint_literal<'a>(
             Token::Number {
                 value,
                 ty: NumberType::Sint,
+                width: token_width,
             },
             span,
-        ) => {
+        ) if token_width.unwrap_or(4) == width => {
             let i32_val = get_i32_literal(value, span.clone())?;
             u32::try_from(i32_val).map_err(|_| Error::NegativeInt(span))
         }
@@ -151,9 +153,10 @@ pub(super) fn parse_generic_non_negative_int_literal<'a>(
             Token::Number {
                 value,
                 ty: NumberType::Sint,
+                width: token_width,
             },
             span,
-        ) => {
+        ) if token_width.unwrap_or(4) == width => {
             let i32_val = get_i32_literal(value, span.clone())?;
             u32::try_from(i32_val).map_err(|_| Error::NegativeInt(span))
         }
@@ -161,9 +164,10 @@ pub(super) fn parse_generic_non_negative_int_literal<'a>(
             Token::Number {
                 value,
                 ty: NumberType::Uint,
+                width: token_width,
             },
             span,
-        ) => get_u32_literal(value, span),
+        ) if token_width.unwrap_or(4) == width => get_u32_literal(value, span),
         other => Err(Error::Unexpected(
             other,
             ExpectedToken::Number {
@@ -190,9 +194,10 @@ pub(super) fn _parse_float_literal<'a>(
             Token::Number {
                 value,
                 ty: NumberType::Float,
+                width: token_width,
             },
             span,
-        ) => get_f32_literal(value, span),
+        ) if token_width.unwrap_or(4) == width => get_f32_literal(value, span),
         other => Err(Error::Unexpected(
             other,
             ExpectedToken::Number {

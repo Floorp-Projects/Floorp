@@ -26,7 +26,7 @@ pub enum DrawError {
     MissingVertexBuffer { index: u32 },
     #[error("index buffer must be set")]
     MissingIndexBuffer,
-    #[error("the pipeline layout, associated with the current render pipeline, contains a bind group layout at index {index} which is incompatible with the bind group layout associated with the bind group at {index}")]
+    #[error("current render pipeline has a layout which is incompatible with a currently set bind group, first differing at entry index {index}")]
     IncompatibleBindGroup {
         index: u32,
         //expected: BindGroupLayoutId,

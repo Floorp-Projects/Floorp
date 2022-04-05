@@ -1,25 +1,21 @@
-/*!
-Backend for [HLSL][hlsl] (High-Level Shading Language).
-
-# Supported shader model versions:
-- 5.0
-- 5.1
-- 6.0
-
-All matrix construction/deconstruction is row based in HLSL. This means that when
-we construct a matrix from column vectors, our matrix will be implicitly transposed.
-The inverse transposition happens when we call `[0]` to get the zeroth column vector.
-
-Because all of our matrices are implicitly transposed, we flip arguments to `mul`. `mat * vec`
-becomes `vec * mat`, etc. This acts as the inverse transpose making the results identical.
-
-The only time we don't get this implicit transposition is when reading matrices from Uniforms/Push Constants.
-To deal with this, we add `row_major` to all declarations of matrices in Uniforms/Push Constants.
-
-Finally because all of our matrices are transposed, if you use `mat3x4`, it'll become `float4x3` in HLSL.
-
-[hlsl]: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl
-*/
+//! HLSL shading language backend
+//!
+//! # Supported shader model versions:
+//! - 5.0
+//! - 5.1
+//! - 6.0
+//!
+//! All matrix construction/deconstruction is row based in HLSL. This means that when
+//! we construct a matrix from column vectors, our matrix will be implicitly transposed.
+//! The inverse transposition happens when we call `[0]` to get the zeroth column vector.
+//!
+//! Because all of our matrices are implicitly transposed, we flip arguments to `mul`. `mat * vec`
+//! becomes `vec * mat`, etc. This acts as the inverse transpose making the results identical.
+//!
+//! The only time we don't get this implicit transposition is when reading matrices from Uniforms/Push Constants.
+//! To deal with this, we add `row_major` to all declarations of matrices in Uniforms/Push Constants.
+//!
+//! Finally because all of our matrices are transposed, if you use `mat3x4`, it'll become `float4x3` in HLSL.
 
 mod conv;
 mod help;
@@ -96,7 +92,7 @@ pub enum EntryPointError {
     MissingBinding(crate::ResourceBinding),
 }
 
-/// Configuration used in the [`Writer`].
+/// Structure that contains the configuration used in the [`Writer`](Writer)
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
@@ -139,15 +135,14 @@ impl Options {
     }
 }
 
-/// Reflection info for entry point names.
+/// Structure that contains a reflection info
 #[derive(Default)]
 pub struct ReflectionInfo {
-    /// Mapping of the entry point names.
-    ///
-    /// Each item in the array corresponds to an entry point index. The real entry point name may be different if one of the
+    /// Mapping of the entry point names. Each item in the array
+    /// corresponds to an entry point index. The real entry point name may be different if one of the
     /// reserved words are used.
     ///
-    /// Note: Some entry points may fail translation because of missing bindings.
+    ///Note: Some entry points may fail translation because of missing bindings.
     pub entry_point_names: Vec<Result<String, EntryPointError>>,
 }
 

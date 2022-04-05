@@ -230,17 +230,7 @@ impl<S: ResourceState> ResourceTracker<S> {
         }
     }
 
-    /// Remove the resource `id`, only if `self` is holding the last reference to it.
-    ///
-    /// Return `true` if we did remove the resource; the underlying hal resource
-    /// is ready to be freed.
-    ///
-    /// This is generally only meaningful to apply to members of
-    /// [`Device::trackers`], which holds all resources allocated with that
-    /// [`Device`]. Other trackers should never be the final reference.
-    ///
-    /// [`Device`]: crate::device::Device
-    /// [`Device::trackers`]: crate::device::Device::trackers
+    /// Removes the resource from the tracker if we are holding the last reference.
     pub(crate) fn remove_abandoned(&mut self, id: Valid<S::Id>) -> bool {
         let (index, epoch, backend) = id.0.unzip();
         debug_assert_eq!(backend, self.backend);
@@ -295,9 +285,7 @@ impl<S: ResourceState> ResourceTracker<S> {
         self.map.clear();
     }
 
-    /// Begin tracking a new resource `id` in state `state`.
-    ///
-    /// Hold `ref_count` in the tracker.
+    /// Initialize a resource to be used.
     ///
     /// Returns false if the resource is already registered.
     pub(crate) fn init(
@@ -334,18 +322,8 @@ impl<S: ResourceState> ResourceTracker<S> {
         res.state.query(selector)
     }
 
-    /// Make sure that a resource is tracked, and return a mutable reference to it.
-    ///
-    /// If the resource isn't tracked, start it in the default state, and take a
-    /// clone of `ref_count`.
-    ///
-    /// The `self_backend` and `map` arguments should be the `backend` and `map`
-    /// fields of a `ResourceTracker`. Ideally this function would just take
-    /// `&mut self` and access those from there, but that would upset the borrow
-    /// checker in some callers, who want to borrow `ResourceTracker::temp`
-    /// alongside our return value. The approach taken here has the caller
-    /// borrow both `map` and `temp`, so the borrow checker can see that they
-    /// don't alias.
+    /// Make sure that a resource is tracked, and return a mutable
+    /// reference to it.
     fn get_or_insert<'a>(
         self_backend: wgt::Backend,
         map: &'a mut FastHashMap<Index, Resource<S>>,
@@ -367,7 +345,6 @@ impl<S: ResourceState> ResourceTracker<S> {
         }
     }
 
-    /// Return a mutable reference to `id`'s state.
     fn get<'a>(
         self_backend: wgt::Backend,
         map: &'a mut FastHashMap<Index, Resource<S>>,
@@ -380,7 +357,7 @@ impl<S: ResourceState> ResourceTracker<S> {
         e
     }
 
-    /// Extend the usage of `id`, tracking it if necessary.
+    /// Extend the usage of a specified resource.
     ///
     /// Returns conflicting transition as an error.
     pub(crate) fn change_extend(
@@ -574,11 +551,6 @@ pub enum UsageConflict {
 }
 
 /// A set of trackers for all relevant resources.
-///
-/// `Device` uses this to track all resources allocated from that device.
-/// Resources like `BindGroup`, `CommandBuffer`, and so on that may own a
-/// variety of other resources also use a value of this type to keep track of
-/// everything they're depending on.
 #[derive(Debug)]
 pub(crate) struct TrackerSet {
     pub buffers: ResourceTracker<BufferState>,

@@ -18,15 +18,15 @@ impl BufferDeviceAddress {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddressEXT.html>"]
     pub unsafe fn get_buffer_device_address(
         &self,
         info: &vk::BufferDeviceAddressInfoEXT,
     ) -> vk::DeviceAddress {
-        (self.fp.get_buffer_device_address_ext)(self.handle, info)
+        self.fp.get_buffer_device_address_ext(self.handle, info)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::ExtBufferDeviceAddressFn::name()
     }
 

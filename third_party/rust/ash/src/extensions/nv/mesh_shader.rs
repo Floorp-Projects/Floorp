@@ -16,17 +16,18 @@ impl MeshShader {
         Self { fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksNV.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks(
         &self,
         command_buffer: vk::CommandBuffer,
         task_count: u32,
         first_task: u32,
     ) {
-        (self.fp.cmd_draw_mesh_tasks_nv)(command_buffer, task_count, first_task);
+        self.fp
+            .cmd_draw_mesh_tasks_nv(command_buffer, task_count, first_task);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks_indirect(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -35,16 +36,11 @@ impl MeshShader {
         draw_count: u32,
         stride: u32,
     ) {
-        (self.fp.cmd_draw_mesh_tasks_indirect_nv)(
-            command_buffer,
-            buffer,
-            offset,
-            draw_count,
-            stride,
-        );
+        self.fp
+            .cmd_draw_mesh_tasks_indirect_nv(command_buffer, buffer, offset, draw_count, stride);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>"]
     pub unsafe fn cmd_draw_mesh_tasks_indirect_count(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -55,7 +51,7 @@ impl MeshShader {
         max_draw_count: u32,
         stride: u32,
     ) {
-        (self.fp.cmd_draw_mesh_tasks_indirect_count_nv)(
+        self.fp.cmd_draw_mesh_tasks_indirect_count_nv(
             command_buffer,
             buffer,
             offset,
@@ -66,7 +62,7 @@ impl MeshShader {
         );
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::NvMeshShaderFn::name()
     }
 
