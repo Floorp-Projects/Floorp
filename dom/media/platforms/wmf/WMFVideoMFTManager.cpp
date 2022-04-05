@@ -39,10 +39,6 @@
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
 
-#ifdef MOZ_AV1
-#  include "AOMDecoder.h"
-#endif
-
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 using mozilla::layers::Image;
@@ -134,6 +130,8 @@ WMFVideoMFTManager::WMFVideoMFTManager(
     const CreateDecoderParams::OptionSet& aOptions, bool aDXVAEnabled)
     : mVideoInfo(aConfig),
       mImageSize(aConfig.mImage),
+      mStreamType(
+          WMFDecoderModule::GetStreamTypeFromMimeType(aConfig.mMimeType)),
       mDecodedImageSize(aConfig.mImage),
       mVideoStride(0),
       mColorSpace(aConfig.mColorSpace),
@@ -151,21 +149,6 @@ WMFVideoMFTManager::WMFVideoMFTManager(
 {
   MOZ_COUNT_CTOR(WMFVideoMFTManager);
 
-  // Need additional checks/params to check vp8/vp9
-  if (MP4Decoder::IsH264(aConfig.mMimeType)) {
-    mStreamType = H264;
-  } else if (VPXDecoder::IsVP8(aConfig.mMimeType)) {
-    mStreamType = VP8;
-  } else if (VPXDecoder::IsVP9(aConfig.mMimeType)) {
-    mStreamType = VP9;
-#ifdef MOZ_AV1
-  } else if (AOMDecoder::IsAV1(aConfig.mMimeType)) {
-    mStreamType = AV1;
-#endif
-  } else {
-    mStreamType = Unknown;
-  }
-
   // The V and U planes are stored 16-row-aligned, so we need to add padding
   // to the row heights to ensure the Y'CbCr planes are referenced properly.
   // This value is only used with software decoder.
@@ -178,16 +161,17 @@ WMFVideoMFTManager::~WMFVideoMFTManager() {
   MOZ_COUNT_DTOR(WMFVideoMFTManager);
 }
 
+/* static */
 const GUID& WMFVideoMFTManager::GetMediaSubtypeGUID() {
-  MOZ_ASSERT(mStreamType != Unknown);
+  MOZ_ASSERT(WMFDecoderModule::StreamTypeIsVideo(mStreamType));
   switch (mStreamType) {
-    case H264:
+    case WMFStreamType::H264:
       return MFVideoFormat_H264;
-    case VP8:
+    case WMFStreamType::VP8:
       return MFVideoFormat_VP80;
-    case VP9:
+    case WMFStreamType::VP9:
       return MFVideoFormat_VP90;
-    case AV1:
+    case WMFStreamType::AV1:
       return MFVideoFormat_AV1;
     default:
       return GUID_NULL;
@@ -238,8 +222,11 @@ bool WMFVideoMFTManager::InitializeDXVA() {
 }
 
 MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
+  NS_ENSURE_TRUE(WMFDecoderModule::StreamTypeIsVideo(mStreamType),
+                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                             RESULT_DETAIL("Invalid stream type")));
   switch (mStreamType) {
-    case H264:
+    case WMFStreamType::H264:
       if (!StaticPrefs::media_wmf_allow_unsupported_resolutions()) {
         // The WMF H.264 decoder is documented to have a minimum resolution
         // 48x48 pixels for resolution, but we won't enable hw decoding for the
@@ -264,7 +251,7 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
         }
       }
       break;
-    case VP9:
+    case WMFStreamType::VP9:
       if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
         // Read VP codec configuration to allow us to fail before decoding an
         // unsupported sample.
@@ -322,22 +309,13 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   static const int MIN_H264_HW_HEIGHT = 132;
 
   mUseHwAccel = false;  // default value; changed if D3D setup succeeds.
-  bool useDxva = (mStreamType != H264 ||
+  bool useDxva = (mStreamType != WMFStreamType::H264 ||
                   (mVideoInfo.ImageRect().width > MIN_H264_HW_WIDTH &&
                    mVideoInfo.ImageRect().height > MIN_H264_HW_HEIGHT)) &&
                  InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder = new MFTDecoder();
-  const GUID subtype = GetMediaSubtypeGUID();
-  HRESULT hr =
-      decoder->Create(MFT_CATEGORY_VIDEO_DECODER, subtype, MFVideoFormat_NV12);
-  if (FAILED(hr)) {
-    NS_WARNING(
-        "Hardware decoder MFT creation failed, trying software decoding");
-    hr = decoder->Create(
-        MFT_CATEGORY_VIDEO_DECODER, subtype,
-        mStreamType == H264 ? MFVideoFormat_YUY2 : MFVideoFormat_YV12);
-  }
+  HRESULT hr = WMFDecoderModule::CreateMFTDecoder(mStreamType, decoder);
   NS_ENSURE_TRUE(SUCCEEDED(hr),
                  MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                              RESULT_DETAIL("Can't create the MFT decoder.")));
@@ -404,7 +382,9 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       // MFT_MESSAGE_SET_D3D_MANAGER failed
       mDXVA2Manager.reset();
     }
-    if (mStreamType == VP9 || mStreamType == VP8 || mStreamType == AV1) {
+    if (mStreamType == WMFStreamType::VP9 ||
+        mStreamType == WMFStreamType::VP8 ||
+        mStreamType == WMFStreamType::AV1) {
       return MediaResult(
           NS_ERROR_DOM_MEDIA_FATAL_ERR,
           RESULT_DETAIL("Use VP8/VP9/AV1 MFT only if HW acceleration "
@@ -541,7 +521,7 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
     return E_FAIL;
   }
 
-  if (mStreamType == VP9 && aSample->mKeyframe) {
+  if (mStreamType == WMFStreamType::VP9 && aSample->mKeyframe) {
     // Check the VP9 profile. the VP9 MFT can only handle correctly profile 0
     // and 2 (yuv420 8/10/12 bits)
     int profile =
@@ -591,7 +571,7 @@ bool WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType, float aFramerate) {
   MOZ_ASSERT(mDXVA2Manager);
   // Check if we're able to use hardware decoding with H264 or AV1.
   // TODO: Do the same for VPX, if the VPX MFT has a slow software fallback?
-  if (mStreamType == H264 || mStreamType == AV1) {
+  if (mStreamType == WMFStreamType::H264 || mStreamType == WMFStreamType::AV1) {
     return mDXVA2Manager->SupportsConfig(aType, aFramerate);
   }
 
@@ -895,7 +875,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 
       // AV1 MFT fix: Sample duration after seeking is always equal to the
       // sample time, for some reason. Set it to last duration instead.
-      if (mStreamType == AV1 && duration == pts) {
+      if (mStreamType == WMFStreamType::AV1 && duration == pts) {
         LOG("Video sample duration (%" PRId64 ") matched timestamp (%" PRId64
             "), setting to previous sample duration (%" PRId64 ") instead.",
             pts.ToMicroseconds(), duration.ToMicroseconds(),
@@ -962,7 +942,8 @@ nsCString WMFVideoMFTManager::GetDescriptionName() const {
   nsCString failureReason;
   bool hw = IsHardwareAccelerated(failureReason);
   return nsPrintfCString("wmf %s codec %s video decoder - %s",
-                         StreamTypeString(), hw ? "hardware" : "software",
+                         WMFDecoderModule::StreamTypeToString(mStreamType),
+                         hw ? "hardware" : "software",
                          hw ? StaticPrefs::media_wmf_use_nv12_format() &&
                                       gfx::DeviceManagerDx::Get()->CanUseNV12()
                                   ? "nv12"
