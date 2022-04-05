@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function test_pwmanagerbutton() {
+add_task(async function test_pwmanager_blocked() {
   await setupPolicyEngineWithJson({
     policies: {
       PasswordManagerEnabled: false,
@@ -20,4 +20,6 @@ add_task(async function test_pwmanagerbutton() {
       );
     }
   );
+
+  await testPageBlockedByPolicy("about:logins");
 });

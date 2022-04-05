@@ -339,20 +339,6 @@ static nsresult ConvertWinError(DWORD aWinErr) {
   return rv;
 }
 
-// as suggested in the MSDN documentation on SetFilePointer
-static __int64 MyFileSeek64(HANDLE aHandle, __int64 aDistance,
-                            DWORD aMoveMethod) {
-  LARGE_INTEGER li;
-
-  li.QuadPart = aDistance;
-  li.LowPart = SetFilePointer(aHandle, li.LowPart, &li.HighPart, aMoveMethod);
-  if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
-    li.QuadPart = -1;
-  }
-
-  return li.QuadPart;
-}
-
 // Check whether a path is a volume root. Expects paths to be \-terminated.
 static bool IsRootPath(const nsAString& aPath) {
   // Easy cases first:
@@ -2646,8 +2632,10 @@ nsLocalFile::SetFileSize(int64_t aFileSize) {
   // seek the file pointer to the new, desired end of file
   // and then truncate the file at that position
   nsresult rv = NS_ERROR_FAILURE;
-  aFileSize = MyFileSeek64(hFile, aFileSize, FILE_BEGIN);
-  if (aFileSize != -1 && SetEndOfFile(hFile)) {
+  LARGE_INTEGER distance;
+  distance.QuadPart = aFileSize;
+  if (SetFilePointerEx(hFile, distance, nullptr, FILE_BEGIN) &&
+      SetEndOfFile(hFile)) {
     MakeDirty();
     rv = NS_OK;
   }

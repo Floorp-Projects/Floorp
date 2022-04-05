@@ -73,7 +73,14 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   // Force a new frame to be built, which will execute the
   // `CanvasContextType::WebGPU` switch case in `CreateWebRenderCommands` and
   // populate the WR user data.
-  mCanvasElement->InvalidateCanvas();
+  if (mCanvasElement) {
+    mCanvasElement->InvalidateCanvas();
+  } else if (mOffscreenCanvas) {
+    dom::OffscreenCanvasDisplayData data;
+    data.mSize = {mWidth, mHeight};
+    data.mHandle = mHandle;
+    mOffscreenCanvas->UpdateDisplayData(data);
+  }
 }
 
 void CanvasContext::Unconfigure() {

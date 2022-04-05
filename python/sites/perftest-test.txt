@@ -1,2 +1,2 @@
-pypi:pytest==4.6.6
+pypi:pytest==7.0.1
 pypi:coverage==5.1

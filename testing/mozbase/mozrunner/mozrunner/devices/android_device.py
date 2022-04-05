@@ -652,6 +652,7 @@ class AndroidEmulator(object):
         if os.path.exists(self.avd_path):
             _log_debug("AVD found at %s" % self.avd_path)
             return True
+        _log_warning("Could not find AVD at %s" % self.avd_path)
         return False
 
     def start(self, gpu_arg=None):

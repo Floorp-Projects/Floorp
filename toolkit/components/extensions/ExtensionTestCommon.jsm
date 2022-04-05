@@ -236,6 +236,12 @@ class MockExtension {
       return extension.terminateBackground();
     });
   }
+
+  wakeupBackground() {
+    return this._extensionPromise.then(extension => {
+      return extension.wakeupBackground();
+    });
+  }
 }
 
 function provide(obj, keys, value, override = false) {

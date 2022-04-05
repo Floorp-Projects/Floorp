@@ -244,8 +244,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                            const ConstantOrRegister& id,
                            const ConstantOrRegister& value, bool strict);
 
-  void emitLambdaInit(Register output, Register envChain);
-
   template <class IteratorObject, class OrderedHashTable>
   void emitGetNextEntryForIterator(LGetNextEntryForIterator* lir);
 

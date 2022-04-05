@@ -123,6 +123,7 @@ class ContextMenusClickPropHandler {
 
 this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
+    let { extension } = context;
     let onClickedProp = new ContextMenusClickPropHandler(context);
     let pendingMenuEvent;
 
@@ -131,10 +132,15 @@ this.menusInternal = class extends ExtensionAPI {
         create(createProperties, callback) {
           let caller = context.getCaller();
 
-          if (createProperties.id === null) {
+          if (extension.persistentBackground && createProperties.id === null) {
             createProperties.id = ++gNextMenuItemID;
           }
           let { onclick } = createProperties;
+          if (onclick && !context.extension.persistentBackground) {
+            throw new ExtensionError(
+              `Property "onclick" cannot be used in menus.create, replace with an "onClicked" event listener.`
+            );
+          }
           delete createProperties.onclick;
           context.childManager
             .callParentAsyncFunction("menusInternal.create", [createProperties])
@@ -158,6 +164,11 @@ this.menusInternal = class extends ExtensionAPI {
 
         update(id, updateProperties) {
           let { onclick } = updateProperties;
+          if (onclick && !context.extension.persistentBackground) {
+            throw new ExtensionError(
+              `Property "onclick" cannot be used in menus.update, replace with an "onClicked" event listener.`
+            );
+          }
           delete updateProperties.onclick;
           return context.childManager
             .callParentAsyncFunction("menusInternal.update", [

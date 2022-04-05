@@ -83,6 +83,33 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   RefPtr<TextureHandle> mSnapshotTexture;
 
+  // UsageProfile stores per-frame counters for significant profiling events
+  // that assist in determining whether acceleration should still be used for
+  // a Canvas2D user.
+  struct UsageProfile {
+    uint32_t mFailedFrames = 0;
+    uint32_t mFrameCount = 0;
+    uint32_t mCacheMisses = 0;
+    uint32_t mCacheHits = 0;
+    uint32_t mUncachedDraws = 0;
+    uint32_t mLayers = 0;
+    uint32_t mReadbacks = 0;
+    uint32_t mFallbacks = 0;
+
+    void BeginFrame();
+    void EndFrame();
+    bool RequiresRefresh() const;
+
+    void OnCacheMiss() { ++mCacheMisses; }
+    void OnCacheHit() { ++mCacheHits; }
+    void OnUncachedDraw() { ++mUncachedDraws; }
+    void OnLayer() { ++mLayers; }
+    void OnReadback() { ++mReadbacks; }
+    void OnFallback() { ++mFallbacks; }
+  };
+
+  UsageProfile mProfile;
+
   // SharedContext stores most of the actual WebGL state that may be used by
   // any number of DrawTargetWebgl's that use it. Foremost, it holds the actual
   // WebGL client context, programs, and buffers for mapping to WebGL.
@@ -248,6 +275,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   void BeginFrame(const IntRect& aPersistedRect);
   void EndFrame();
+  bool RequiresRefresh() const { return mProfile.RequiresRefresh(); }
 
   bool LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,
                 SurfaceFormat* aFormat, IntPoint* aOrigin = nullptr) override;

@@ -29,30 +29,6 @@ const policiesToTest = [
     },
     urls: ["about:support", "about:suPPort"],
   },
-  {
-    policies: {
-      DisableDeveloperTools: true,
-    },
-    urls: ["about:debugging", "about:devtools-toolbox", "about:profiling"],
-  },
-  {
-    policies: {
-      DisablePrivateBrowsing: true,
-    },
-    urls: ["about:privatebrowsing"],
-  },
-  {
-    policies: {
-      DisableTelemetry: true,
-    },
-    urls: ["about:telemetry"],
-  },
-  {
-    policies: {
-      PasswordManagerEnabled: false,
-    },
-    urls: ["about:logins"],
-  },
 ];
 
 add_task(async function testAboutTask() {
@@ -66,29 +42,9 @@ add_task(async function testAboutTask() {
           Ci.nsIAboutModule
         );
         let chromeURL = aboutModule.getChromeURI(Services.io.newURI(url)).spec;
-        await testPageBlockedByPolicy(policyJSON, chromeURL);
+        await testPageBlockedByPolicy(chromeURL, policyJSON);
       }
-      await testPageBlockedByPolicy(policyJSON, url);
+      await testPageBlockedByPolicy(url, policyJSON);
     }
   }
 });
-
-async function testPageBlockedByPolicy(policyJSON, page) {
-  await EnterprisePolicyTesting.setupPolicyEngineWithJson(policyJSON);
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:blank" },
-    async browser => {
-      BrowserTestUtils.loadURI(browser, page);
-      await BrowserTestUtils.browserLoaded(browser, false, page, true);
-      await SpecialPowers.spawn(browser, [page], async function(innerPage) {
-        ok(
-          content.document.documentURI.startsWith(
-            "about:neterror?e=blockedByPolicy"
-          ),
-          content.document.documentURI +
-            " should start with about:neterror?e=blockedByPolicy"
-        );
-      });
-    }
-  );
-}

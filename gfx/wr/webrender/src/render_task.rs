@@ -95,6 +95,12 @@ pub enum RenderTaskLocation {
     CacheRequest {
         size: DeviceIntSize,
     },
+    /// Same allocation as an existing task deeper in the dependency graph
+    Existing {
+        parent_task_id: RenderTaskId,
+        /// Requested size of this render task
+        size: DeviceIntSize,
+    },
 
     // Before batching begins, we expect that locations have been resolved to
     // one of the following variants:
@@ -131,6 +137,7 @@ impl RenderTaskLocation {
             RenderTaskLocation::Dynamic { rect, .. } => rect.size(),
             RenderTaskLocation::Static { rect, .. } => rect.size(),
             RenderTaskLocation::CacheRequest { size } => *size,
+            RenderTaskLocation::Existing { size, .. } => *size,
         }
     }
 }
@@ -309,6 +316,14 @@ pub enum RenderTaskKind {
 
 impl RenderTaskKind {
     pub fn is_a_rendering_operation(&self) -> bool {
+        match self {
+            &RenderTaskKind::Image(..) => false,
+            &RenderTaskKind::Cached(..) => false,
+            _ => true,
+        }
+    }
+
+    pub fn should_advance_pass(&self) -> bool {
         match self {
             &RenderTaskKind::Image(..) => false,
             &RenderTaskKind::Cached(..) => false,
@@ -746,6 +761,9 @@ pub struct RenderTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     uv_rect_kind: UvRectKind,
+
+    /// Whether this task can be allocated on a shared render target surface
+    pub can_use_shared_surface: bool,
 }
 
 impl RenderTask {
@@ -764,7 +782,12 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            can_use_shared_surface: true,
         }
+    }
+
+    pub fn disable_surface_sharing(&mut self) {
+        self.can_use_shared_surface = false;
     }
 
     pub fn new_dynamic(
@@ -803,6 +826,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            can_use_shared_surface: true,
         }
     }
 
@@ -821,6 +845,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            can_use_shared_surface: true,
         }
     }
 
@@ -1331,16 +1356,13 @@ impl RenderTask {
         gpu_cache.get_address(&self.uv_rect_handle)
     }
 
-    pub fn get_dynamic_size(&self) -> DeviceIntSize {
-        self.location.size()
-    }
-
     pub fn get_target_texture(&self) -> CacheTextureId {
         match self.location {
             RenderTaskLocation::Dynamic { texture_id, .. } => {
                 assert_ne!(texture_id, CacheTextureId::INVALID);
                 texture_id
             }
+            RenderTaskLocation::Existing { .. } |
             RenderTaskLocation::CacheRequest { .. } |
             RenderTaskLocation::Unallocated { .. } |
             RenderTaskLocation::Static { .. } => {
@@ -1361,6 +1383,7 @@ impl RenderTask {
             RenderTaskLocation::Static { surface: StaticRenderTaskSurface::TextureCache { texture, .. }, .. } => {
                 TextureSource::TextureCache(texture, Swizzle::default())
             }
+            RenderTaskLocation::Existing { .. } |
             RenderTaskLocation::Static { .. } |
             RenderTaskLocation::CacheRequest { .. } |
             RenderTaskLocation::Unallocated { .. } => {
@@ -1387,8 +1410,9 @@ impl RenderTask {
             //           would allow us to restore this debug check.
             RenderTaskLocation::Dynamic { rect, .. } => rect,
             RenderTaskLocation::Static { rect, .. } => rect,
-            RenderTaskLocation::CacheRequest { .. }
-            | RenderTaskLocation::Unallocated { .. } => {
+            RenderTaskLocation::Existing { .. } |
+            RenderTaskLocation::CacheRequest { .. } |
+            RenderTaskLocation::Unallocated { .. } => {
                 panic!("bug: get_target_rect called before allocating");
             }
         }

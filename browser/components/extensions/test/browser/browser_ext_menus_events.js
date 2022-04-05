@@ -41,6 +41,7 @@ add_setup(async function() {
 // menu is shown. Similarly, doCloseMenu must hide the menu.
 async function testShowHideEvent({
   menuCreateParams,
+  id,
   doOpenMenu,
   doCloseMenu,
   expectedShownEvent,
@@ -49,81 +50,106 @@ async function testShowHideEvent({
   manifest_version = 2,
 }) {
   async function background(menu_create_params) {
-    function awaitMessage(expectedId) {
-      return new Promise(resolve => {
-        browser.test.log(`Waiting for message: ${expectedId}`);
-        browser.test.onMessage.addListener(function listener(id, msg) {
-          // Temporary work-around for https://bugzil.la/1428213
-          // TODO Bug 1428213: remove workaround for onMessage.removeListener
-          if (listener._wasCalled) {
-            return;
-          }
-          listener._wasCalled = true;
-          browser.test.assertEq(expectedId, id, "Expected message");
-          browser.test.onMessage.removeListener(listener);
-          resolve(msg);
-        });
-      });
-    }
-
     const [tab] = await browser.tabs.query({
       active: true,
       currentWindow: true,
     });
+    if (browser.pageAction) {
+      await browser.pageAction.show(tab.id);
+    }
 
     let shownEvents = [];
     let hiddenEvents = [];
 
     browser.menus.onShown.addListener((...args) => {
-      if (args[0].targetElementId) {
+      browser.test.log(`==> onShown args ${JSON.stringify(args)}`);
+      let [info, shownTab] = args;
+      if (info.targetElementId) {
         // In this test, we aren't interested in the exact value,
         // only in whether it is set or not.
-        args[0].targetElementId = 13337; // = EXPECT_TARGET_ELEMENT
+        info.targetElementId = 13337; // = EXPECT_TARGET_ELEMENT
       }
-      shownEvents.push(args[0]);
+      shownEvents.push(info);
+
       if (menu_create_params.title.includes("TEST_EXPECT_NO_TAB")) {
-        browser.test.assertEq(undefined, args[1], "expect no tab");
+        browser.test.assertEq(undefined, shownTab, "expect no tab");
       } else {
-        browser.test.assertEq(tab.id, args[1].id, "expected tab");
+        browser.test.assertEq(tab.id, shownTab?.id, "expected tab");
       }
       browser.test.assertEq(2, args.length, "expected number of onShown args");
     });
     browser.menus.onHidden.addListener(event => hiddenEvents.push(event));
 
-    await browser.pageAction.show(tab.id);
-
-    let menuId;
-    await new Promise(resolve => {
-      menuId = browser.menus.create(menu_create_params, resolve);
+    browser.test.onMessage.addListener(async msg => {
+      switch (msg) {
+        case "register-menu":
+          let menuId;
+          await new Promise(resolve => {
+            menuId = browser.menus.create(menu_create_params, resolve);
+          });
+          browser.test.assertEq(
+            0,
+            shownEvents.length,
+            "no onShown before menu"
+          );
+          browser.test.assertEq(
+            0,
+            hiddenEvents.length,
+            "no onHidden before menu"
+          );
+          browser.test.sendMessage("menu-registered", menuId);
+          break;
+        case "assert-menu-shown":
+          browser.test.assertEq(1, shownEvents.length, "expected onShown");
+          browser.test.assertEq(
+            0,
+            hiddenEvents.length,
+            "no onHidden before closing"
+          );
+          browser.test.sendMessage("onShown-event-data", shownEvents[0]);
+          break;
+        case "assert-menu-hidden":
+          browser.test.assertEq(
+            1,
+            shownEvents.length,
+            "expected no more onShown"
+          );
+          browser.test.assertEq(1, hiddenEvents.length, "expected onHidden");
+          browser.test.sendMessage("onHidden-event-data", hiddenEvents[0]);
+          break;
+        case "optional-menu-shown-with-permissions":
+          browser.test.assertEq(
+            2,
+            shownEvents.length,
+            "expected second onShown"
+          );
+          browser.test.sendMessage("onShown-event-data2", shownEvents[1]);
+          break;
+      }
     });
-    browser.test.assertEq(0, shownEvents.length, "no onShown before menu");
-    browser.test.assertEq(0, hiddenEvents.length, "no onHidden before menu");
-    browser.test.sendMessage("menu-registered", menuId);
 
-    await awaitMessage("assert-menu-shown");
-    browser.test.assertEq(1, shownEvents.length, "expected onShown");
-    browser.test.assertEq(0, hiddenEvents.length, "no onHidden before closing");
-    browser.test.sendMessage("onShown-event-data", shownEvents[0]);
-
-    await awaitMessage("assert-menu-hidden");
-    browser.test.assertEq(1, shownEvents.length, "expected no more onShown");
-    browser.test.assertEq(1, hiddenEvents.length, "expected onHidden");
-    browser.test.sendMessage("onHidden-event-data", hiddenEvents[0]);
-
-    await awaitMessage("optional-menu-shown-with-permissions");
-    browser.test.assertEq(2, shownEvents.length, "expected second onShown");
-    browser.test.sendMessage("onShown-event-data2", shownEvents[1]);
+    browser.test.sendMessage("ready");
   }
 
   // Tab must initially open as a foreground tab, because the test extension
   // looks for the active tab.
-  gBrowser.selectedTab = testTab;
+  if (gBrowser.selectedTab != testTab) {
+    await BrowserTestUtils.switchTab(gBrowser, testTab);
+  }
 
+  let useAddonManager, applications;
   const action = manifest_version < 3 ? "browser_action" : "action";
+  // hook up AOM so event pages in MV3 work.
+  if (manifest_version > 2) {
+    applications = { gecko: { id } };
+    useAddonManager = "temporary";
+  }
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${background})(${JSON.stringify(menuCreateParams)})`,
+    useAddonManager,
     manifest: {
       manifest_version,
+      applications,
       page_action: {},
       [action]: {
         default_popup: "popup.html",
@@ -136,10 +162,13 @@ async function testShowHideEvent({
     },
   });
   await extension.startup();
+  await extension.awaitMessage("ready");
+  extension.sendMessage("register-menu");
   let menuId = await extension.awaitMessage("menu-registered");
+  info(`menu registered ${menuId}`);
 
-  if (forceTabToBackground) {
-    gBrowser.selectedTab = someOtherTab;
+  if (forceTabToBackground && gBrowser.selectedTab != someOtherTab) {
+    await BrowserTestUtils.switchTab(gBrowser, someOtherTab);
   }
 
   await doOpenMenu(extension, testTab);
@@ -328,7 +357,9 @@ add_task(async function test_show_hide_browserAction() {
 add_task(async function test_show_hide_browserAction_v3() {
   await testShowHideEvent({
     manifest_version: 3,
+    id: "browser-action@mochitest",
     menuCreateParams: {
+      id: "action_item",
       title: "Action item",
       contexts: ["action"],
     },
@@ -395,7 +426,9 @@ add_task(async function test_show_hide_browserAction_popup_v3() {
   let popupUrl;
   await testShowHideEvent({
     manifest_version: 3,
+    id: "browser-action-popup@mochitest",
     menuCreateParams: {
+      id: "action_popup",
       title: "Action popup - TEST_EXPECT_NO_TAB",
       contexts: ["all", "action"],
     },

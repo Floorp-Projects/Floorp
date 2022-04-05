@@ -2232,7 +2232,9 @@ class gfxFont {
   // so no guard is needed.
   RefPtr<gfxCharacterMap> mUnicodeRangeMap;
 
-  RefPtr<mozilla::gfx::UnscaledFont> mUnscaledFont GUARDED_BY(mLock);
+  // This is immutable once initialized by the constructor, so does not need
+  // locking.
+  RefPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
 
   mozilla::Atomic<mozilla::gfx::ScaledFont*> mAzureScaledFont;
 

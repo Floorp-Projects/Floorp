@@ -483,15 +483,6 @@ void LIRGenerator::visitImplicitThis(MImplicitThis* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitArrowNewTarget(MArrowNewTarget* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Value);
-  MOZ_ASSERT(ins->callee()->type() == MIRType::Object);
-
-  LArrowNewTarget* lir =
-      new (alloc()) LArrowNewTarget(useRegister(ins->callee()));
-  defineBox(lir, ins);
-}
-
 bool LIRGenerator::lowerCallArguments(MCall* call) {
   uint32_t argc = call->numStackArgs();
 
@@ -3009,19 +3000,10 @@ void LIRGenerator::visitDynamicImport(MDynamicImport* ins) {
 }
 
 void LIRGenerator::visitLambda(MLambda* ins) {
+  MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
+
   auto* lir =
       new (alloc()) LLambda(useRegister(ins->environmentChain()), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitLambdaArrow(MLambdaArrow* ins) {
-  MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->newTargetDef()->type() == MIRType::Value);
-
-  LLambdaArrow* lir =
-      new (alloc()) LLambdaArrow(useRegister(ins->environmentChain()),
-                                 useBox(ins->newTargetDef()), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

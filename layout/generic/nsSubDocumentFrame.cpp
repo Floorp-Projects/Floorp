@@ -203,6 +203,8 @@ void nsSubDocumentFrame::ShowViewer() {
       frameloader->UpdatePositionAndSize(this);
     }
 
+    MaybeUpdateEmbedderColorScheme();
+
     if (!weakThis.IsAlive()) {
       return;
     }
@@ -807,8 +809,49 @@ nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
   return NS_OK;
 }
 
+void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
+  if (!mContent->IsXULElement()) {
+    // We only do this for XUL <browser>s.
+    return;
+  }
+
+  nsFrameLoader* fl = mFrameLoader.get();
+  if (!fl) {
+    return;
+  }
+
+  BrowsingContext* bc = fl->GetExtantBrowsingContext();
+  if (!bc) {
+    return;
+  }
+
+  auto usedColorScheme = LookAndFeel::ColorSchemeForFrame(this);
+  bool needUpdate = [&] {
+    switch (bc->GetEmbedderColorScheme()) {
+      case PrefersColorSchemeOverride::Light:
+        return usedColorScheme != ColorScheme::Light;
+      case PrefersColorSchemeOverride::Dark:
+        return usedColorScheme != ColorScheme::Dark;
+      case PrefersColorSchemeOverride::None:
+      case PrefersColorSchemeOverride::EndGuard_:
+        break;
+    }
+    return true;
+  }();
+  if (!needUpdate) {
+    return;
+  }
+
+  auto value = usedColorScheme == ColorScheme::Dark
+                   ? PrefersColorSchemeOverride::Dark
+                   : PrefersColorSchemeOverride::Light;
+  Unused << bc->SetEmbedderColorScheme(value);
+}
+
 void nsSubDocumentFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsAtomicContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+
+  MaybeUpdateEmbedderColorScheme();
 
   // If this presshell has invisible ancestors, we don't need to propagate the
   // visibility style change to the subdocument since the subdocument should

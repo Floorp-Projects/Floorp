@@ -5121,6 +5121,24 @@
   value: 1024
   mirror: always
 
+# The minimum number of frames before acting on performance profile info
+- name: gfx.canvas.accelerated.profile-frames
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
+# The ratio of failed frames to total frames when to fall back from acceleration
+- name: gfx.canvas.accelerated.profile-fallback-ratio
+  type: AtomicFloat
+  value: 0.3
+  mirror: always
+
+# The ratio of cache misses at which to fail a profile frame
+- name: gfx.canvas.accelerated.profile-cache-miss-ratio
+  type: AtomicFloat
+  value: 0.66
+  mirror: always
+
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 - name: gfx.canvas.max-size
   type: RelaxedAtomicInt32

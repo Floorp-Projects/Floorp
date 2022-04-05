@@ -2657,6 +2657,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
       // - about:preferences (in Thunderbird only) so it can load remote
       //     extension options pages for FileLink providers
       // - DevTools webext panels if DevTools is loaded in a content frame
+      // - Chrome mochitests can also do this.
       //
       // Note that the new frame's message manager will not be a child of the
       // chrome window message manager, and, the values of window.top and
@@ -2672,16 +2673,37 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
         return false;
       }
 
-      if (!(specIgnoringRef.EqualsLiteral("about:addons") ||
-            specIgnoringRef.EqualsLiteral(
-                "chrome://mozapps/content/extensions/aboutaddons.html") ||
+      const bool allowed = [&] {
+        const nsLiteralCString kAllowedURIs[] = {
+            "about:addons"_ns,
+            "chrome://mozapps/content/extensions/aboutaddons.html"_ns,
 #ifdef MOZ_THUNDERBIRD
-            specIgnoringRef.EqualsLiteral("about:3pane") ||
-            specIgnoringRef.EqualsLiteral("about:message") ||
-            specIgnoringRef.EqualsLiteral("about:preferences") ||
+            "about:3pane"_ns,
+            "about:message"_ns,
+            "about:preferences"_ns,
 #endif
-            specIgnoringRef.EqualsLiteral(
-                "chrome://browser/content/webext-panels.xhtml"))) {
+            "chrome://browser/content/webext-panels.xhtml"_ns,
+        };
+
+        for (const auto& allowedURI : kAllowedURIs) {
+          if (specIgnoringRef.Equals(allowedURI)) {
+            return true;
+          }
+        }
+
+        if (xpc::IsInAutomation() &&
+            StringBeginsWith(specIgnoringRef,
+                             "chrome://mochitests/content/chrome/"_ns)) {
+          return true;
+        }
+        return false;
+      }();
+
+      if (!allowed) {
+        NS_WARNING(
+            nsPrintfCString("Forbidden remote frame from content docshell %s",
+                            specIgnoringRef.get())
+                .get());
         return false;
       }
     }

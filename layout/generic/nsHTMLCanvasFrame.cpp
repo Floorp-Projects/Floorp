@@ -108,27 +108,35 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     element->HandlePrintCallback(mFrame->PresContext());
 
     if (element->IsOffscreen()) {
-      // If we are offscreen, then we display via an ImageContainer which is
-      // updated asynchronously, likely from a worker thread. There is nothing
-      // to paint until the owner attaches it.
+      // If we are offscreen, then we either display via an ImageContainer
+      // which is updated asynchronously, likely from a worker thread, or a
+      // CompositableHandle managed inside the compositor process. There is
+      // nothing to paint until the owner attaches it.
+
+      nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
+      nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
+      IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+      AspectRatio intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+      nsRect area = mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+      nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+          area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
+      LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+          dest, mFrame->PresContext()->AppUnitsPerDevPixel());
+
       RefPtr<ImageContainer> container = element->GetImageContainer();
       if (container) {
-        nsHTMLCanvasFrame* canvasFrame =
-            static_cast<nsHTMLCanvasFrame*>(mFrame);
-        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-        IntrinsicSize intrinsicSize =
-            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-        AspectRatio intrinsicRatio =
-            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-        nsRect area =
-            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
         aManager->CommandBuilder().PushImage(this, container, aBuilder,
                                              aResources, aSc, bounds, bounds);
+        return true;
       }
+
+      CompositableHandle handle = element->GetCompositableHandle();
+      if (handle) {
+        aManager->CommandBuilder().PushInProcessImage(this, handle, aBuilder,
+                                                      aResources, aSc, bounds);
+        return true;
+      }
+
       return true;
     }
 

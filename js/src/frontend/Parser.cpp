@@ -2022,6 +2022,12 @@ PerHandlerParser<ParseHandler>::newThisName() {
 
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
+PerHandlerParser<ParseHandler>::newNewTargetName() {
+  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotNewTarget());
+}
+
+template <class ParseHandler>
+typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newDotGeneratorName() {
   return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotGenerator());
 }
@@ -2238,7 +2244,6 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
       break;
     case FunctionSyntaxKind::Arrow:
       flags = FunctionFlags::INTERPRETED_LAMBDA_ARROW;
-      allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Method:
     case FunctionSyntaxKind::FieldInitializer:
@@ -2473,9 +2478,9 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
-  // Declare the 'arguments' and 'this' bindings if necessary before
-  // finishing up the scope so these special bindings get marked as closed
-  // over if necessary. Arrow functions don't have these bindings.
+  // Declare the 'arguments', 'this', and 'new.target' bindings if necessary
+  // before finishing up the scope so these special bindings get marked as
+  // closed over if necessary. Arrow functions don't have these bindings.
   if (kind != FunctionSyntaxKind::Arrow) {
     bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
     if (!pc_->declareFunctionArgumentsObject(usedNames_,
@@ -2483,6 +2488,9 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       return null();
     }
     if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+      return null();
+    }
+    if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
       return null();
     }
   }
@@ -8312,12 +8320,12 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     return null();
   }
 
-  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
-  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
-  }
-
   if (hasHeritage == HasHeritage::Yes) {
+    // |super()| implicitly reads |new.target|.
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+      return null();
+    }
+
     NameNodeType thisName = newThisName();
     if (!thisName) {
       return null();
@@ -8368,6 +8376,14 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     }
 
     handler_.addStatementToList(stmtList, exprStatement);
+  }
+
+  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
   }
 
   auto initializerBody =
@@ -8448,11 +8464,6 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
     return null();
   }
 
-  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
-  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
-  }
-
   // Unlike field initializers, private method initializers are not created with
   // a body of synthesized AST nodes. Instead, the body is left empty and the
   // initializer is synthesized at the bytecode level.
@@ -8461,6 +8472,15 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   if (!stmtList) {
     return null();
   }
+
+  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+
   LexicalScopeNodeType initializerBody =
       finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
@@ -8783,11 +8803,6 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
 
-  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
-  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
-  }
-
   UnaryNodeType exprStatement =
       handler_.newExprStatement(initializerPropInit, wholeInitializerPos.end);
   if (!exprStatement) {
@@ -8799,6 +8814,14 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
   handler_.addStatementToList(statementList, exprStatement);
+
+  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
 
   // Set the function's body to the field assignment.
   LexicalScopeNodeType initializerBody = finishLexicalScope(
@@ -10436,7 +10459,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
   if (tt == TokenKind::New) {
     uint32_t newBegin = pos().begin;
     // Make sure this wasn't a |new.target| in disguise.
-    BinaryNodeType newTarget;
+    NewTargetNodeType newTarget;
     if (!tryNewTarget(&newTarget)) {
       return null();
     }
@@ -10701,6 +10724,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberSuperCall(
 
   CallNodeType superCall = handler_.newSuperCall(lhs, args, isSpread);
   if (!superCall) {
+    return null();
+  }
+
+  // |super()| implicitly reads |new.target|.
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
     return null();
   }
 
@@ -12167,7 +12195,7 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
-    BinaryNodeType* newTarget) {
+    NewTargetNodeType* newTarget) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::New));
 
   *newTarget = null();
@@ -12210,7 +12238,12 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
     return false;
   }
 
-  *newTarget = handler_.newNewTarget(newHolder, targetHolder);
+  NameNodeType newTargetName = newNewTargetName();
+  if (!newTargetName) {
+    return false;
+  }
+
+  *newTarget = handler_.newNewTarget(newHolder, targetHolder, newTargetName);
   return !!*newTarget;
 }
 

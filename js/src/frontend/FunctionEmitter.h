@@ -139,7 +139,6 @@ class MOZ_STACK_CLASS FunctionEmitter {
   [[nodiscard]] bool emitNonHoisted(GCThingIndex index);
   [[nodiscard]] bool emitHoisted(GCThingIndex index);
   [[nodiscard]] bool emitTopLevelFunction(GCThingIndex index);
-  [[nodiscard]] bool emitNewTargetForArrow();
 };
 
 // Class for emitting function script.

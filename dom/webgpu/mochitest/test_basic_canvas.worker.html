@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='utf-8'>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="worker_wrapper.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+
+const canvas = document.getElementById("canvas");
+const offscreen = canvas.transferControlToOffscreen();
+
+runWorkerTest('test_basic_canvas.worker.js', {offscreen}, [offscreen]);
+
+</script>
+</body>
+</html>
