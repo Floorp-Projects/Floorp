@@ -571,7 +571,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
                                        LayoutDeviceIntPoint aPoint,
                                        double aDeltaX, double aDeltaY,
-                                       int32_t aModifierFlags) override {
+                                       int32_t aModifierFlags,
+                                       nsIObserver* aObserver) override {
     MOZ_RELEASE_ASSERT(
         false, "This method is not implemented on the current platform");
     return NS_ERROR_UNEXPECTED;

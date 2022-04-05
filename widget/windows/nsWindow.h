@@ -265,7 +265,8 @@ class nsWindow final : public nsBaseWidget {
   nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
                                        LayoutDeviceIntPoint aPoint,
                                        double aDeltaX, double aDeltaY,
-                                       int32_t aModifierFlags) override;
+                                       int32_t aModifierFlagsn,
+                                       nsIObserver* aObserver) override;
 
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override;
