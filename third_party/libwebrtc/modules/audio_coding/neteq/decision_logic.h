@@ -84,6 +84,8 @@ class DecisionLogic : public NetEqController {
 
   void RegisterEmptyPacket() override { delay_manager_->RegisterEmptyPacket(); }
 
+  void NotifyMutedState() override {}
+
   bool SetMaximumDelay(int delay_ms) override {
     return delay_manager_->SetMaximumDelay(delay_ms);
   }

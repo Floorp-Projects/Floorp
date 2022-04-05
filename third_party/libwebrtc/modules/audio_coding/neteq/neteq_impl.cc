@@ -857,6 +857,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
                   static_cast<uint32_t>(audio_frame->samples_per_channel_);
     audio_frame->num_channels_ = sync_buffer_->Channels();
     stats_->ExpandedNoiseSamples(output_size_samples_, false);
+    controller_->NotifyMutedState();
     *muted = true;
     return 0;
   }
