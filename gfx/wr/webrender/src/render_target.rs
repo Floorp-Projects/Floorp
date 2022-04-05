@@ -6,7 +6,7 @@
 use api::units::*;
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
-use crate::batch::{ClipBatcher, BatchBuilder};
+use crate::batch::{ClipBatcher, BatchBuilder, CommandBufferList};
 use crate::spatial_tree::SpatialTree;
 use crate::clip::ClipStore;
 use crate::frame_builder::{FrameGlobalResources};
@@ -97,6 +97,7 @@ pub trait RenderTarget {
         _transforms: &mut TransformPalette,
         _z_generator: &mut ZBufferIdGenerator,
         _prim_instances: &[PrimitiveInstance],
+        _cmd_buffers: &CommandBufferList,
     ) {
     }
 
@@ -174,6 +175,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
+        cmd_buffers: &CommandBufferList,
     ) {
         if self.targets.is_empty() {
             return;
@@ -188,6 +190,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 transforms,
                 z_generator,
                 prim_instances,
+                cmd_buffers,
             );
         }
     }
@@ -251,6 +254,7 @@ impl RenderTarget for ColorRenderTarget {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
+        cmd_buffers: &CommandBufferList,
     ) {
         profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
@@ -283,8 +287,7 @@ impl RenderTarget for ColorRenderTarget {
                     );
 
                     let mut batch_builder = BatchBuilder::new(alpha_batch_builder);
-
-                    let cmd_buffer = pic_task.cmd_buffer.as_ref().expect("bug: no cmd buffer set for picture!");
+                    let cmd_buffer = cmd_buffers.get(pic_task.cmd_buffer_index);
 
                     cmd_buffer.iter_prims(&mut |prim_instance_index, spatial_node_index, gpu_address| {
                         let prim_instance = &prim_instances[prim_instance_index.0 as usize];
