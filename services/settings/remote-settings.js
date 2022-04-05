@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
+  SyncHistory: "resource://services-settings/SyncHistory.jsm",
   Utils: "resource://services-settings/Utils.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
@@ -36,6 +37,9 @@ const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";
 const PREF_SETTINGS_LAST_ETAG = "last_etag";
 const PREF_SETTINGS_CLOCK_SKEW_SECONDS = "clock_skew_seconds";
+const PREF_SETTINGS_SYNC_HISTORY_SIZE = "sync_history_size";
+const PREF_SETTINGS_SYNC_HISTORY_ERROR_THRESHOLD =
+  "sync_history_error_threshold";
 
 // Telemetry identifiers.
 const TELEMETRY_COMPONENT = "remotesettings";
@@ -52,6 +56,19 @@ XPCOMUtils.defineLazyGetter(this, "gPrefs", () => {
   return Services.prefs.getBranch(PREF_SETTINGS_BRANCH);
 });
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
+
+XPCOMUtils.defineLazyGetter(this, "gSyncHistory", () => {
+  const prefSize = gPrefs.getIntPref(PREF_SETTINGS_SYNC_HISTORY_SIZE, 100);
+  const size = Math.min(Math.max(prefSize, 1000), 10);
+  return new SyncHistory(TELEMETRY_SOURCE_SYNC, { size });
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gPrefBrokenSyncThreshold",
+  PREF_SETTINGS_BRANCH + PREF_SETTINGS_SYNC_HISTORY_ERROR_THRESHOLD,
+  10
+);
 
 /**
  * Default entry filtering function, in charge of excluding remote settings entries
@@ -146,6 +163,27 @@ function remoteSettingsFunction() {
     // completely unknown (ie. no database and no JSON dump).
     console.debug(`No known client for ${bucketName}/${collectionName}`);
     return null;
+  }
+
+  /**
+   * Helper to introspect the synchronization history and determine whether it is
+   * consistently failing and thus, broken.
+   * @returns {bool} true if broken.
+   */
+  async function isSynchronizationBroken() {
+    // The minimum number of errors is customizable, but with a maximum.
+    const threshold = Math.min(gPrefBrokenSyncThreshold, 20);
+    // Read history of synchronization past statuses.
+    const pastEntries = await gSyncHistory.list();
+    const lastSuccessIdx = pastEntries.findIndex(
+      e => e.status == UptakeTelemetry.STATUS_SUCCESS
+    );
+    return (
+      // Only errors since last success.
+      lastSuccessIdx >= threshold ||
+      // Or only errors with a minimum number of history entries.
+      (lastSuccessIdx < 0 && pastEntries.length >= threshold)
+    );
   }
 
   /**
@@ -337,31 +375,59 @@ function remoteSettingsFunction() {
 
     if (firstError) {
       // Report the global synchronization failure. Individual uptake reports will also have been sent for each collection.
+      const status = UptakeTelemetry.STATUS.SYNC_ERROR;
       await UptakeTelemetry.report(
         TELEMETRY_COMPONENT,
-        UptakeTelemetry.STATUS.SYNC_ERROR,
+        status,
         syncTelemetryArgs
       );
+      // Keep track of sync failure in history.
+      await gSyncHistory
+        .store(currentEtag, status, {
+          expectedTimestamp,
+          errorName: firstError.name,
+        })
+        .catch(error => Cu.reportError(error));
       // Notify potential observers of the error.
       Services.obs.notifyObservers(
         { wrappedJSObject: { error: firstError } },
         "remote-settings:sync-error"
       );
+
+      // If synchronization has been consistently failing, send a specific signal.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1729400
+      // and https://bugzilla.mozilla.org/show_bug.cgi?id=1658597
+      if (await isSynchronizationBroken()) {
+        await UptakeTelemetry.report(
+          TELEMETRY_COMPONENT,
+          UptakeTelemetry.STATUS.SYNC_BROKEN_ERROR,
+          syncTelemetryArgs
+        );
+
+        Services.obs.notifyObservers(
+          { wrappedJSObject: { error: firstError } },
+          "remote-settings:broken-sync-error"
+        );
+      }
+
       // Rethrow the first observed error
       throw firstError;
     }
 
     // Save current Etag for next poll.
-    if (currentEtag) {
-      gPrefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
-    }
+    gPrefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
 
     // Report the global synchronization success.
+    const status = UptakeTelemetry.STATUS.SUCCESS;
     await UptakeTelemetry.report(
       TELEMETRY_COMPONENT,
-      UptakeTelemetry.STATUS.SUCCESS,
+      status,
       syncTelemetryArgs
     );
+    // Keep track of sync success in history.
+    await gSyncHistory
+      .store(currentEtag, status)
+      .catch(error => Cu.reportError(error));
 
     console.info("Polling for changes done");
     Services.obs.notifyObservers(null, "remote-settings:changes-poll-end");
@@ -409,6 +475,9 @@ function remoteSettingsFunction() {
       mainBucket: Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET),
       defaultSigner: DEFAULT_SIGNER,
       collections: collections.filter(c => !!c),
+      history: {
+        [TELEMETRY_SOURCE_SYNC]: await gSyncHistory.list(),
+      },
     };
   };
 
