@@ -1579,21 +1579,42 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     }
   }
 
-  // Split any mailcites in the way.  Should we abort this if we encounter
-  // table cell boundaries?
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+
   if (IsMailEditor()) {
     EditorDOMPoint pointToSplit(EditorBase::GetStartPoint(SelectionRef()));
-    if (NS_WARN_IF(!pointToSplit.IsSet())) {
+    if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
       return EditActionIgnored(NS_ERROR_FAILURE);
     }
 
-    EditActionResult result = SplitMailCiteElements(pointToSplit);
-    if (result.Failed()) {
-      NS_WARNING("HTMLEditor::SplitMailCiteElements() failed");
-      return result;
-    }
-    if (result.Handled()) {
-      return result;
+    if (RefPtr<Element> mailCiteElement = GetMostDistantAncestorMailCiteElement(
+            *pointToSplit.ContainerAsContent())) {
+      // Split any mailcites in the way.  Should we abort this if we encounter
+      // table cell boundaries?
+      Result<EditorDOMPoint, nsresult> atNewBRElementOrError =
+          HandleInsertParagraphInMailCiteElement(*mailCiteElement, pointToSplit,
+                                                 *editingHost);
+      if (MOZ_UNLIKELY(atNewBRElementOrError.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::HandleInsertParagraphInMailCiteElement() failed");
+        return EditActionHandled(atNewBRElementOrError.unwrapErr());
+      }
+      MOZ_ASSERT(atNewBRElementOrError.inspect().IsSet());
+      IgnoredErrorResult ignoredError;
+      SelectionRef().SetInterlinePosition(true, ignoredError);
+      NS_WARNING_ASSERTION(
+          !ignoredError.Failed(),
+          "Selection::SetInterlinePosition(true) failed, but ignored");
+      MOZ_ASSERT(atNewBRElementOrError.inspect().GetChild());
+      MOZ_ASSERT(atNewBRElementOrError.inspect().GetChild()->IsHTMLElement(
+          nsGkAtoms::br));
+      nsresult rv = CollapseSelectionTo(atNewBRElementOrError.inspect());
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::CollapseSelectionTo() failed");
+      return EditActionHandled(rv);
     }
   }
 
@@ -1618,10 +1639,6 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // If the active editing host is an inline element, or if the active editing
   // host is the block parent itself and we're configured to use <br> as a
   // paragraph separator, just append a <br>.
-  RefPtr<Element> editingHost = GetActiveEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
   // If the editing host parent element is editable, it means that the editing
   // host must be a <body> element and the selection may be outside the body
   // element.  If the selection is outside the editing host, we should not
@@ -2159,83 +2176,88 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
   return NS_OK;
 }
 
-EditActionResult HTMLEditor::SplitMailCiteElements(
-    const EditorDOMPoint& aPointToSplit) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::HandleInsertParagraphInMailCiteElement(
+    Element& aMailCiteElement, const EditorDOMPoint& aPointToSplit,
+    Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToSplit.IsSet());
+  NS_ASSERTION(!HTMLEditUtils::IsEmptyNode(aMailCiteElement),
+               "The mail-cite element will be deleted, does it expected result "
+               "for you?");
 
-  RefPtr<Element> citeNode =
-      GetMostAncestorMailCiteElement(*aPointToSplit.GetContainer());
-  if (!citeNode) {
-    return EditActionIgnored();
+  SplitNodeResult splitCiteElementResult = [&]() MOZ_CAN_RUN_SCRIPT {
+    EditorDOMPoint pointToSplit(aPointToSplit);
+
+    // If our selection is just before a break, nudge it to be just after
+    // it. This does two things for us.  It saves us the trouble of having
+    // to add a break here ourselves to preserve the "blockness" of the
+    // inline span mailquote (in the inline case), and : it means the break
+    // won't end up making an empty line that happens to be inside a
+    // mailquote (in either inline or block case). The latter can confuse a
+    // user if they click there and start typing, because being in the
+    // mailquote may affect wrapping behavior, or font color, etc.
+    WSScanResult forwardScanFromPointToSplitResult =
+        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(&aEditingHost,
+                                                         pointToSplit);
+    if (forwardScanFromPointToSplitResult.Failed()) {
+      return SplitNodeResult(NS_ERROR_FAILURE);
+    }
+    // If selection start point is before a break and it's inside the
+    // mailquote, let's split it after the visible node.
+    if (forwardScanFromPointToSplitResult.ReachedBRElement() &&
+        forwardScanFromPointToSplitResult.BRElementPtr() != &aMailCiteElement &&
+        aMailCiteElement.Contains(
+            forwardScanFromPointToSplitResult.BRElementPtr())) {
+      pointToSplit = forwardScanFromPointToSplitResult.PointAfterContent();
+    }
+
+    if (NS_WARN_IF(!pointToSplit.GetContainerAsContent())) {
+      return SplitNodeResult(NS_ERROR_FAILURE);
+    }
+
+    SplitNodeResult result =
+        SplitNodeDeepWithTransaction(aMailCiteElement, pointToSplit,
+                                     SplitAtEdges::eDoNotCreateEmptyContainer);
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "HTMLEditor::SplitNodeDeepWithTransaction(aMailCiteElement, "
+        "SplitAtEdges::eDoNotCreateEmptyContainer) failed");
+    return result;
+  }();
+  if (MOZ_UNLIKELY(splitCiteElementResult.Failed())) {
+    NS_WARNING("Failed to split a mail-cite element");
+    return Err(splitCiteElementResult.Rv());
   }
 
-  EditorDOMPoint pointToSplit(aPointToSplit);
-
-  // If our selection is just before a break, nudge it to be just after it.
-  // This does two things for us.  It saves us the trouble of having to add
-  // a break here ourselves to preserve the "blockness" of the inline span
-  // mailquote (in the inline case), and :
-  // it means the break won't end up making an empty line that happens to be
-  // inside a mailquote (in either inline or block case).
-  // The latter can confuse a user if they click there and start typing,
-  // because being in the mailquote may affect wrapping behavior, or font
-  // color, etc.
-  RefPtr<Element> editingHost = GetActiveEditingHost();
-  WSScanResult forwardScanFromPointToSplitResult =
-      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
-                                                       pointToSplit);
-  if (forwardScanFromPointToSplitResult.Failed()) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
-  // If selection start point is before a break and it's inside the mailquote,
-  // let's split it after the visible node.
-  if (forwardScanFromPointToSplitResult.ReachedBRElement() &&
-      forwardScanFromPointToSplitResult.BRElementPtr() != citeNode &&
-      citeNode->Contains(forwardScanFromPointToSplitResult.BRElementPtr())) {
-    pointToSplit = forwardScanFromPointToSplitResult.PointAfterContent();
-  }
-
-  if (NS_WARN_IF(!pointToSplit.GetContainerAsContent())) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
-
-  SplitNodeResult splitCiteNodeResult = SplitNodeDeepWithTransaction(
-      *citeNode, pointToSplit, SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (MOZ_UNLIKELY(splitCiteNodeResult.Failed())) {
-    NS_WARNING(
-        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-        "eDoNotCreateEmptyContainer) failed");
-    return EditActionIgnored(splitCiteNodeResult.Rv());
-  }
-  pointToSplit.Clear();
-
-  // Add an invisible <br> to the end of current cite node (If new left cite
-  // has not been created, we're at the end of it.  Otherwise, we're still at
-  // the right node) if it was a <span> of style="display: block". This is
-  // important, since when serializing the cite to plain text, the span which
-  // caused the visual break is discarded.  So the added <br> will guarantee
-  // that the serializer will insert a break where the user saw one.
-  // FYI: splitCiteNodeResult grabs the previous node with nsCOMPtr.  So, it's
-  //      safe to access previousNodeOfSplitPoint even after changing the DOM
-  //      tree and/or selection even though it's raw pointer.
-  nsIContent* previousNodeOfSplitPoint =
-      splitCiteNodeResult.GetPreviousContent();
-  if (previousNodeOfSplitPoint &&
-      previousNodeOfSplitPoint->IsHTMLElement(nsGkAtoms::span) &&
-      previousNodeOfSplitPoint->GetPrimaryFrame() &&
-      previousNodeOfSplitPoint->GetPrimaryFrame()->IsBlockFrameOrSubclass()) {
-    nsCOMPtr<nsINode> lastChild = previousNodeOfSplitPoint->GetLastChild();
+  // Add an invisible <br> to the end of left cite node if it was a <span> of
+  // style="display: block".  This is important, since when serializing the cite
+  // to plain text, the span which caused the visual break is discarded.  So the
+  // added <br> will guarantee that the serializer will insert a break where the
+  // user saw one.
+  // FYI: splitCiteElementResult grabs the previous node and the next node with
+  //      nsCOMPtr or EditorDOMPoint.  So, it's safe to access leftCiteElement
+  //      and rightCiteElement even after changing the DOM tree and/or selection
+  //      even though it's raw pointer.
+  Element* const leftCiteElement =
+      Element::FromNodeOrNull(splitCiteElementResult.GetPreviousContent());
+  Element* const rightCiteElement =
+      Element::FromNodeOrNull(splitCiteElementResult.GetNextContent());
+  if (leftCiteElement && leftCiteElement->IsHTMLElement(nsGkAtoms::span) &&
+      // XXX Oh, this depends on layout information of new element, and it's
+      //     created by the hacky flush in DoSplitNode().  So we need to
+      //     redesign around this for bug 1710784.
+      leftCiteElement->GetPrimaryFrame() &&
+      leftCiteElement->GetPrimaryFrame()->IsBlockFrameOrSubclass()) {
+    nsIContent* lastChild = leftCiteElement->GetLastChild();
     if (lastChild && !lastChild->IsHTMLElement(nsGkAtoms::br)) {
       // We ignore the result here.
-      EditorDOMPoint endOfPreviousNodeOfSplitPoint;
-      endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
       Result<RefPtr<Element>, nsresult> resultOfInsertingInvisibleBRElement =
-          InsertBRElement(WithTransaction::Yes, endOfPreviousNodeOfSplitPoint);
-      if (resultOfInsertingInvisibleBRElement.isErr()) {
+          InsertBRElement(WithTransaction::Yes,
+                          EditorDOMPoint::AtEndOf(*leftCiteElement));
+      if (MOZ_UNLIKELY(resultOfInsertingInvisibleBRElement.isErr())) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return EditActionIgnored(
-            resultOfInsertingInvisibleBRElement.unwrapErr());
+        return Err(resultOfInsertingInvisibleBRElement.unwrapErr());
       }
       MOZ_ASSERT(resultOfInsertingInvisibleBRElement.inspect());
     }
@@ -2246,107 +2268,108 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   // cite node, <br> should be inserted before the current cite.
   Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
       InsertBRElement(WithTransaction::Yes,
-                      splitCiteNodeResult.AtSplitPoint<EditorDOMPoint>());
-  if (resultOfInsertingBRElement.isErr()) {
+                      splitCiteElementResult.AtSplitPoint<EditorDOMPoint>());
+  if (MOZ_UNLIKELY(resultOfInsertingBRElement.isErr())) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
+    return Err(resultOfInsertingBRElement.unwrapErr());
   }
   MOZ_ASSERT(resultOfInsertingBRElement.inspect());
 
-  // Want selection before the break, and on same line.
-  EditorDOMPoint atBRElement(resultOfInsertingBRElement.inspect());
-  {
-    AutoEditorDOMPointChildInvalidator lockOffset(atBRElement);
-    IgnoredErrorResult ignoredError;
-    SelectionRef().SetInterlinePosition(true, ignoredError);
-    NS_WARNING_ASSERTION(
-        !ignoredError.Failed(),
-        "Selection::SetInterlinePosition(true) failed, but ignored");
-    nsresult rv = CollapseSelectionTo(atBRElement);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-      return EditActionIgnored(rv);
-    }
-  }
+  // if aMailCiteElement wasn't a block, we might also want another break before
+  // it. We need to examine the content both before the br we just added and
+  // also just after it.  If we don't have another br or block boundary
+  // adjacent, then we will need a 2nd br added to achieve blank line that user
+  // expects.
+  if (HTMLEditUtils::IsInlineElement(aMailCiteElement)) {
+    nsresult rvOfInsertingBRElement = [&]() MOZ_CAN_RUN_SCRIPT {
+      EditorDOMPoint pointToCreateNewBRElement(
+          resultOfInsertingBRElement.inspect());
 
-  // if citeNode wasn't a block, we might also want another break before it.
-  // We need to examine the content both before the br we just added and also
-  // just after it.  If we don't have another br or block boundary adjacent,
-  // then we will need a 2nd br added to achieve blank line that user expects.
-  if (HTMLEditUtils::IsInlineElement(*citeNode)) {
-    // Use DOM point which we tried to collapse to.
-    EditorDOMPoint pointToCreateNewBRElement(atBRElement);
-
-    WSScanResult backwardScanFromPointToCreateNewBRElementResult =
-        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-            editingHost, pointToCreateNewBRElement);
-    if (backwardScanFromPointToCreateNewBRElementResult.Failed()) {
-      NS_WARNING(
-          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
-      return EditActionResult(NS_ERROR_FAILURE);
-    }
-    if (backwardScanFromPointToCreateNewBRElementResult
-            .InVisibleOrCollapsibleCharacters() ||
-        backwardScanFromPointToCreateNewBRElementResult
-            .ReachedSpecialContent()) {
-      EditorRawDOMPoint pointAfterNewBRElement(
-          EditorRawDOMPoint::After(pointToCreateNewBRElement));
-      NS_WARNING_ASSERTION(pointAfterNewBRElement.IsSet(),
-                           "Failed to set to after the <br> node");
+      // XXX Cannot we replace this complicated check with just a call of
+      //     HTMLEditUtils::IsVisibleBRElement with
+      //     resultOfInsertingBRElement.inspect()?
+      WSScanResult backwardScanFromPointToCreateNewBRElementResult =
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+              &aEditingHost, pointToCreateNewBRElement);
+      if (MOZ_UNLIKELY(
+              backwardScanFromPointToCreateNewBRElementResult.Failed())) {
+        NS_WARNING(
+            "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() "
+            "failed");
+        return NS_ERROR_FAILURE;
+      }
+      if (!backwardScanFromPointToCreateNewBRElementResult
+               .InVisibleOrCollapsibleCharacters() &&
+          !backwardScanFromPointToCreateNewBRElementResult
+               .ReachedSpecialContent()) {
+        return NS_SUCCESS_DOM_NO_OPERATION;
+      }
       WSScanResult forwardScanFromPointAfterNewBRElementResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              editingHost, pointAfterNewBRElement);
-      if (forwardScanFromPointAfterNewBRElementResult.Failed()) {
+              &aEditingHost,
+              EditorRawDOMPoint::After(pointToCreateNewBRElement));
+      if (MOZ_UNLIKELY(forwardScanFromPointAfterNewBRElementResult.Failed())) {
         NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
-        return EditActionResult(NS_ERROR_FAILURE);
+        return NS_ERROR_FAILURE;
       }
-      if (forwardScanFromPointAfterNewBRElementResult
-              .InVisibleOrCollapsibleCharacters() ||
-          forwardScanFromPointAfterNewBRElementResult.ReachedSpecialContent() ||
+      if (!forwardScanFromPointAfterNewBRElementResult
+               .InVisibleOrCollapsibleCharacters() &&
+          !forwardScanFromPointAfterNewBRElementResult
+               .ReachedSpecialContent() &&
           // In case we're at the very end.
-          forwardScanFromPointAfterNewBRElementResult
-              .ReachedCurrentBlockBoundary()) {
-        Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-            InsertBRElement(WithTransaction::Yes, pointToCreateNewBRElement);
-        if (resultOfInsertingBRElement.isErr()) {
-          NS_WARNING(
-              "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
-        }
-        MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-        // Now, those points may be invalid.
-        pointToCreateNewBRElement.Clear();
-        pointAfterNewBRElement.Clear();
+          !forwardScanFromPointAfterNewBRElementResult
+               .ReachedCurrentBlockBoundary()) {
+        return NS_SUCCESS_DOM_NO_OPERATION;
       }
+      Result<RefPtr<Element>, nsresult> result =
+          InsertBRElement(WithTransaction::Yes, pointToCreateNewBRElement);
+      if (MOZ_UNLIKELY(result.isErr())) {
+        NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+        return result.unwrapErr();
+      }
+      MOZ_ASSERT(result.inspect());
+      return NS_OK;
+    }();
+
+    if (MOZ_UNLIKELY(NS_FAILED(rvOfInsertingBRElement))) {
+      NS_WARNING(
+          "Failed to insert additional <br> element before the inline right "
+          "mail-cite element");
+      return Err(rvOfInsertingBRElement);
     }
   }
 
-  // delete any empty cites
-  if (previousNodeOfSplitPoint &&
-      HTMLEditUtils::IsEmptyNode(*previousNodeOfSplitPoint)) {
-    nsresult rv =
-        DeleteNodeWithTransaction(MOZ_KnownLive(*previousNodeOfSplitPoint));
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+  if (leftCiteElement && HTMLEditUtils::IsEmptyNode(*leftCiteElement)) {
+    // MOZ_KnownLive(leftCiteElement) because it's grabbed by
+    // splitCiteElementResult.
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*leftCiteElement));
+    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return EditActionIgnored(rv);
+      return Err(rv);
     }
   }
 
-  if (citeNode && HTMLEditUtils::IsEmptyNode(*citeNode)) {
-    nsresult rv = DeleteNodeWithTransaction(*citeNode);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+  if (rightCiteElement && HTMLEditUtils::IsEmptyNode(*rightCiteElement)) {
+    // MOZ_KnownLive(rightCiteElement) because it's grabbed by
+    // splitCiteElementResult.
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightCiteElement));
+    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return EditActionIgnored(rv);
+      return Err(rv);
     }
   }
 
-  return EditActionHandled();
+  if (MOZ_UNLIKELY(!resultOfInsertingBRElement.inspect()->GetParent())) {
+    NS_WARNING("Inserted <br> shouldn't become an orphan node");
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+  return EditorDOMPoint(resultOfInsertingBRElement.inspect());
 }
 
 HTMLEditor::CharPointData
@@ -8282,15 +8305,17 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   return NS_OK;
 }
 
-Element* HTMLEditor::GetMostAncestorMailCiteElement(nsINode& aNode) const {
+Element* HTMLEditor::GetMostDistantAncestorMailCiteElement(
+    const nsINode& aNode) const {
   Element* mailCiteElement = nullptr;
   const bool isPlaintextEditor = IsInPlaintextMode();
-  for (nsINode* node = &aNode; node; node = node->GetParentNode()) {
-    if ((isPlaintextEditor && node->IsHTMLElement(nsGkAtoms::pre)) ||
-        HTMLEditUtils::IsMailCite(node)) {
-      mailCiteElement = node->AsElement();
+  for (Element* element : aNode.InclusiveAncestorsOfType<Element>()) {
+    if ((isPlaintextEditor && element->IsHTMLElement(nsGkAtoms::pre)) ||
+        HTMLEditUtils::IsMailCite(*element)) {
+      mailCiteElement = element;
+      continue;
     }
-    if (node->IsHTMLElement(nsGkAtoms::body)) {
+    if (element->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
   }
@@ -8910,7 +8935,8 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
     if (content->IsElement()) {
       if (content->IsHTMLElement(nsGkAtoms::body)) {
         // Don't delete the body
-      } else if ((isMailCite = HTMLEditUtils::IsMailCite(content)) ||
+      } else if ((isMailCite =
+                      HTMLEditUtils::IsMailCite(*content->AsElement())) ||
                  content->IsHTMLElement(nsGkAtoms::a) ||
                  HTMLEditUtils::IsInlineStyle(content) ||
                  HTMLEditUtils::IsAnyListElement(content) ||
