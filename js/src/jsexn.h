@@ -71,18 +71,19 @@ extern JSObject* CopyErrorObject(JSContext* cx,
 
 static_assert(
     JSEXN_ERR == 0 &&
-        JSProto_Error + JSEXN_INTERNALERR == JSProto_InternalError &&
-        JSProto_Error + JSEXN_AGGREGATEERR == JSProto_AggregateError &&
-        JSProto_Error + JSEXN_EVALERR == JSProto_EvalError &&
-        JSProto_Error + JSEXN_RANGEERR == JSProto_RangeError &&
-        JSProto_Error + JSEXN_REFERENCEERR == JSProto_ReferenceError &&
-        JSProto_Error + JSEXN_SYNTAXERR == JSProto_SyntaxError &&
-        JSProto_Error + JSEXN_TYPEERR == JSProto_TypeError &&
-        JSProto_Error + JSEXN_URIERR == JSProto_URIError &&
-        JSProto_Error + JSEXN_DEBUGGEEWOULDRUN == JSProto_DebuggeeWouldRun &&
-        JSProto_Error + JSEXN_WASMCOMPILEERROR == JSProto_CompileError &&
-        JSProto_Error + JSEXN_WASMLINKERROR == JSProto_LinkError &&
-        JSProto_Error + JSEXN_WASMRUNTIMEERROR == JSProto_RuntimeError &&
+        JSProto_Error + int(JSEXN_INTERNALERR) == JSProto_InternalError &&
+        JSProto_Error + int(JSEXN_AGGREGATEERR) == JSProto_AggregateError &&
+        JSProto_Error + int(JSEXN_EVALERR) == JSProto_EvalError &&
+        JSProto_Error + int(JSEXN_RANGEERR) == JSProto_RangeError &&
+        JSProto_Error + int(JSEXN_REFERENCEERR) == JSProto_ReferenceError &&
+        JSProto_Error + int(JSEXN_SYNTAXERR) == JSProto_SyntaxError &&
+        JSProto_Error + int(JSEXN_TYPEERR) == JSProto_TypeError &&
+        JSProto_Error + int(JSEXN_URIERR) == JSProto_URIError &&
+        JSProto_Error + int(JSEXN_DEBUGGEEWOULDRUN) ==
+            JSProto_DebuggeeWouldRun &&
+        JSProto_Error + int(JSEXN_WASMCOMPILEERROR) == JSProto_CompileError &&
+        JSProto_Error + int(JSEXN_WASMLINKERROR) == JSProto_LinkError &&
+        JSProto_Error + int(JSEXN_WASMRUNTIMEERROR) == JSProto_RuntimeError &&
         JSEXN_WASMRUNTIMEERROR + 1 == JSEXN_WARN &&
         JSEXN_WARN + 1 == JSEXN_NOTE && JSEXN_NOTE + 1 == JSEXN_LIMIT,
     "GetExceptionProtoKey and ExnTypeFromProtoKey require that "
