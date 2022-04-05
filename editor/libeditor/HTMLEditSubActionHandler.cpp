@@ -6897,17 +6897,6 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
     Element& aHeadingElement, const EditorDOMPoint& aPointToSplit) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  // Remember where the header is
-  EditorDOMPoint atHeadingElement(&aHeadingElement);
-  if (MOZ_UNLIKELY(NS_WARN_IF(!atHeadingElement.IsInContentNode()))) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  {
-    // Forget child node.
-    AutoEditorDOMPointChildInvalidator rememberOnlyOffset(atHeadingElement);
-  }
-
   SplitNodeResult splitHeadingResult = [this, &aPointToSplit,
                                         &aHeadingElement]() MOZ_CAN_RUN_SCRIPT {
     // Get ws code to adjust any ws
@@ -6936,33 +6925,51 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
     NS_WARNING("Failed to splitting aHeadingElement");
     return Err(splitHeadingResult.Rv());
   }
+  if (MOZ_UNLIKELY(!splitHeadingResult.DidSplit())) {
+    NS_WARNING(
+        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+        "eAllowToCreateEmptyContainer) didn't split aHeadingElement");
+    return Err(NS_ERROR_FAILURE);
+  }
 
   // If the left heading element is empty, put a padding <br> element for empty
   // last line into it.
-  if (nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
-          aHeadingElement, {WalkTreeOption::IgnoreNonEditableNode})) {
-    MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
-    if (HTMLEditUtils::IsEmptyNode(
-            *prevItem, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
-      CreateElementResult createPaddingBRResult =
-          InsertPaddingBRElementForEmptyLastLineWithTransaction(
-              EditorDOMPoint(prevItem, 0u));
-      if (MOZ_UNLIKELY(createPaddingBRResult.Failed())) {
-        NS_WARNING(
-            "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
-            ") failed");
-        return Err(createPaddingBRResult.Rv());
-      }
+  // FYI: leftHeadingElement is grabbed by splitHeadingResult so that it's safe
+  //      to access anytime.
+  Element* leftHeadingElement =
+      Element::FromNode(splitHeadingResult.GetPreviousContent());
+  MOZ_ASSERT(leftHeadingElement,
+             "SplitNodeResult::GetPreviousContent() should return something if "
+             "DidSplit() returns true");
+  MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*leftHeadingElement));
+  if (HTMLEditUtils::IsEmptyNode(
+          *leftHeadingElement,
+          {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+    CreateElementResult createPaddingBRResult =
+        InsertPaddingBRElementForEmptyLastLineWithTransaction(
+            EditorDOMPoint(leftHeadingElement, 0u));
+    if (MOZ_UNLIKELY(createPaddingBRResult.Failed())) {
+      NS_WARNING(
+          "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
+          ") failed");
+      return Err(createPaddingBRResult.Rv());
     }
   }
 
   // Put caret at start of the right head element if it's not empty.
-  if (!HTMLEditUtils::IsEmptyBlockElement(aHeadingElement, {})) {
-    return EditorDOMPoint(&aHeadingElement, 0u);
+  Element* rightHeadingElement =
+      Element::FromNode(splitHeadingResult.GetNextContent());
+  MOZ_ASSERT(rightHeadingElement,
+             "SplitNodeResult::GetNextContent() should return something if "
+             "DidSplit() returns true");
+  if (!HTMLEditUtils::IsEmptyBlockElement(*rightHeadingElement, {})) {
+    return EditorDOMPoint(rightHeadingElement, 0u);
   }
 
   // If the right heading element is empty, delete it.
-  nsresult rv = DeleteNodeWithTransaction(aHeadingElement);
+  // MOZ_KnownLive(rightHeadingElement) because it's grabbed by
+  // splitHeadingResult.
+  nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
   if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
     return Err(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -6970,13 +6977,21 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
     NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
     return Err(rv);
   }
+
   // Layout tells the caret to blink in a weird place if we don't place a
   // break after the header.
-  if (aHeadingElement.GetNextSibling()) {
+  // XXX This block is dead code unless the removed right heading element is
+  //     reconnected by a mutation event listener.  This is a regression of
+  //     bug 1405751:
+  //     https://searchfox.org/mozilla-central/diff/879f3317d1331818718e18776caa47be7f426a22/editor/libeditor/HTMLEditRules.cpp#6389
+  //     However, the traditional behavior is different from the other browsers.
+  //     Chrome creates new paragraph in this case.  Therefore, we should just
+  //     drop this block in a follow up bug.
+  if (rightHeadingElement->GetNextSibling()) {
     // XXX Ignoring non-editable <br> element here is odd because non-editable
     //     <br> elements also work as <br> from point of view of layout.
     nsIContent* nextEditableSibling =
-        HTMLEditUtils::GetNextSibling(*aHeadingElement.GetNextSibling(),
+        HTMLEditUtils::GetNextSibling(*rightHeadingElement->GetNextSibling(),
                                       {WalkTreeOption::IgnoreNonEditableNode});
     if (nextEditableSibling &&
         nextEditableSibling->IsHTMLElement(nsGkAtoms::br)) {
@@ -6987,6 +7002,11 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
       // Put caret at the <br> element.
       return afterEditableBRElement;
     }
+  }
+
+  if (MOZ_UNLIKELY(!leftHeadingElement->IsInComposedDoc())) {
+    NS_WARNING("The left heading element was unexpectedly removed");
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
@@ -7003,7 +7023,7 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
       CreateAndInsertElement(
           WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
-          atHeadingElement.NextPoint(),
+          EditorDOMPoint::After(*leftHeadingElement),
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
           [](HTMLEditor& aHTMLEditor, Element& aDivOrParagraphElement,
              const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
