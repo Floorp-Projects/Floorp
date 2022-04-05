@@ -67,12 +67,6 @@ class PrintTarget {
    */
   virtual void Finish();
 
-  /**
-   * Returns true if to print landscape our consumers must apply a 90 degrees
-   * rotation to our DrawTarget.
-   */
-  virtual bool RotateNeededForLandscape() const { return false; }
-
   const IntSize& GetSize() const { return mSize; }
 
   /**
