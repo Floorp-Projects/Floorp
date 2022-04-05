@@ -3644,10 +3644,10 @@ nsresult PeerConnectionImpl::AddTransceiver(
         aSharedWebrtcState);
   }
 
-  RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
-      mWindow, PrivacyNeeded(), GetHandle(), mTransportHandler,
-      aJsepTransceiver, GetMainThreadSerialEventTarget(), mSTSThread.get(),
-      aSendTrack, mCall.get(), aIdGenerator);
+  RefPtr<TransceiverImpl> transceiver =
+      new TransceiverImpl(mWindow, PrivacyNeeded(), GetHandle(),
+                          mTransportHandler, aJsepTransceiver, mSTSThread.get(),
+                          aSendTrack, mCall.get(), aIdGenerator);
 
   if (!transceiver->IsValid()) {
     return NS_ERROR_FAILURE;

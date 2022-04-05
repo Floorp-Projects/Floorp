@@ -382,9 +382,8 @@ class TestAgentSend : public TestAgent {
     std::string test_pc;
 
     RefPtr<MediaPipelineTransmit> audio_pipeline = new MediaPipelineTransmit(
-        test_pc, transport_, GetMainThreadSerialEventTarget(),
-        AbstractThread::MainThread(), test_utils->sts_target(), false,
-        audio_conduit_);
+        test_pc, transport_, AbstractThread::MainThread(),
+        test_utils->sts_target(), false, audio_conduit_);
 
     audio_pipeline->SetSendTrackOverride(audio_track_);
     audio_pipeline->Start();
@@ -412,8 +411,8 @@ class TestAgentReceive : public TestAgent {
     std::string test_pc;
 
     audio_pipeline_ = new MediaPipelineReceiveAudio(
-        test_pc, transport_, GetMainThreadSerialEventTarget(),
-        AbstractThread::MainThread(), test_utils->sts_target(),
+        test_pc, transport_, AbstractThread::MainThread(),
+        test_utils->sts_target(),
         static_cast<AudioSessionConduit*>(audio_conduit_.get()), nullptr,
         PRINCIPAL_HANDLE_NONE);
 

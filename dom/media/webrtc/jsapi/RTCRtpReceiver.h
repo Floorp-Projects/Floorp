@@ -39,8 +39,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
                  const std::string& aPCHandle,
                  MediaTransportHandler* aTransportHandler,
-                 JsepTransceiver* aJsepTransceiver,
-                 nsISerialEventTarget* aMainThread, AbstractThread* aCallThread,
+                 JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                  nsISerialEventTarget* aStsThread,
                  MediaSessionConduit* aConduit,
                  TransceiverImpl* aTransceiverImpl);
@@ -132,7 +131,6 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   const RefPtr<JsepTransceiver> mJsepTransceiver;
   bool mHaveStartedReceiving = false;
   bool mHaveSetupTransport = false;
-  nsCOMPtr<nsISerialEventTarget> mMainThread;
   RefPtr<AbstractThread> mCallThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   RefPtr<dom::MediaStreamTrack> mTrack;
