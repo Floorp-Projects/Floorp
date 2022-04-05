@@ -947,7 +947,7 @@ JS_PUBLIC_API bool JS_DefineFunctions(JSContext* cx, JS::Handle<JSObject*> obj,
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  return js::DefineFunctions(cx, obj, fs, NotIntrinsic);
+  return js::DefineFunctions(cx, obj, fs);
 }
 
 JS_PUBLIC_API JSFunction* JS_DefineFunction(JSContext* cx,
