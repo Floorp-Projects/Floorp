@@ -1670,7 +1670,8 @@ class nsIWidget : public nsISupports {
   virtual nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
                                                LayoutDeviceIntPoint aPoint,
                                                double aDeltaX, double aDeltaY,
-                                               int32_t aModifierFlags) = 0;
+                                               int32_t aModifierFlags,
+                                               nsIObserver* aObserver) = 0;
 
   virtual void StartAsyncScrollbarDrag(
       const AsyncDragMetrics& aDragMetrics) = 0;

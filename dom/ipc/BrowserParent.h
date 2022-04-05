@@ -553,7 +553,8 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvSynthesizeNativeTouchpadPan(
       const TouchpadGesturePhase& aEventPhase,
       const LayoutDeviceIntPoint& aPoint, const double& aDeltaX,
-      const double& aDeltaY, const int32_t& aModifierFlags);
+      const double& aDeltaY, const int32_t& aModifierFlags,
+      const uint64_t& aObserverId);
 
   mozilla::ipc::IPCResult RecvLockNativePointer();
 

@@ -1182,8 +1182,8 @@ nsDOMWindowUtils::SendNativeTouchpadDoubleTap(int32_t aScreenX,
 NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeTouchpadPan(uint32_t aEventPhase, int32_t aScreenX,
                                         int32_t aScreenY, double aDeltaX,
-                                        double aDeltaY,
-                                        int32_t aModifierFlags) {
+                                        double aDeltaY, int32_t aModifierFlags,
+                                        nsIObserver* aObserver) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     return NS_ERROR_FAILURE;
@@ -1192,12 +1192,12 @@ nsDOMWindowUtils::SendNativeTouchpadPan(uint32_t aEventPhase, int32_t aScreenX,
   MOZ_ASSERT(aModifierFlags >= 0);
   NS_DispatchToMainThread(NativeInputRunnable::Create(
       NewRunnableMethod<nsIWidget::TouchpadGesturePhase, LayoutDeviceIntPoint,
-                        double, double, uint32_t>(
+                        double, double, uint32_t, nsIObserver*>(
           "nsIWidget::SynthesizeNativeTouchpadPan", widget,
           &nsIWidget::SynthesizeNativeTouchpadPan,
           (nsIWidget::TouchpadGesturePhase)aEventPhase,
           LayoutDeviceIntPoint(aScreenX, aScreenY), aDeltaX, aDeltaY,
-          aModifierFlags)));
+          aModifierFlags, aObserver)));
   return NS_OK;
 }
 

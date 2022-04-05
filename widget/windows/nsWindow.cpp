@@ -6692,7 +6692,9 @@ nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
 nsresult nsWindow::SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
                                                LayoutDeviceIntPoint aPoint,
                                                double aDeltaX, double aDeltaY,
-                                               int32_t aModifierFlags) {
+                                               int32_t aModifierFlags,
+                                               nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "touchpadpanevent");
   DirectManipulationOwner::SynthesizeNativeTouchpadPan(
       this, aEventPhase, aPoint, aDeltaX, aDeltaY, aModifierFlags);
   return NS_OK;

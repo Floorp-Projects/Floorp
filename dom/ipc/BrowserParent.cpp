@@ -1968,12 +1968,16 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchpadDoubleTap(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchpadPan(
     const TouchpadGesturePhase& aEventPhase, const LayoutDeviceIntPoint& aPoint,
-    const double& aDeltaX, const double& aDeltaY,
-    const int32_t& aModifierFlags) {
+    const double& aDeltaX, const double& aDeltaY, const int32_t& aModifierFlags,
+    const uint64_t& aObserverId) {
+  AutoSynthesizedEventResponder responder(this, aObserverId,
+                                          "touchpadpanevent");
+
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
     widget->SynthesizeNativeTouchpadPan(aEventPhase, aPoint, aDeltaX, aDeltaY,
-                                        aModifierFlags);
+                                        aModifierFlags,
+                                        responder.GetObserver());
   }
   return IPC_OK();
 }
