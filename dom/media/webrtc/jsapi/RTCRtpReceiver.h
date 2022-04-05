@@ -92,7 +92,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   // This is called when we set an answer (ie; when the transport is finalized).
   void UpdateTransport();
-  nsresult UpdateConduit();
+  void UpdateConduit();
 
   // This is called when we set a remote description; may be an offer or answer.
   void UpdateStreams(StreamAssociationChanges* aChanges);
@@ -122,8 +122,8 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
  private:
   virtual ~RTCRtpReceiver();
 
-  nsresult UpdateVideoConduit();
-  nsresult UpdateAudioConduit();
+  void UpdateVideoConduit();
+  void UpdateAudioConduit();
 
   std::string GetMid() const;
 
