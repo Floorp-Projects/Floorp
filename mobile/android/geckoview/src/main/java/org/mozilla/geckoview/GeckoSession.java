@@ -5528,15 +5528,6 @@ public class GeckoSession {
       public final @NonNull String id;
 
       /**
-       * A string giving a unique source identifier.
-       *
-       * @deprecated Instead use {@link #id}, which is the same string.
-       */
-      @Deprecated
-      @DeprecationSchedule(id = "media-source-rawId", version = 100)
-      public final @NonNull String rawId;
-
-      /**
        * A string giving the name of the video source from the system (for example, "Camera 0,
        * Facing back, Orientation 90"). May be empty.
        */
@@ -5585,7 +5576,6 @@ public class GeckoSession {
 
       /* package */ MediaSource(final GeckoBundle media) {
         id = media.getString("id");
-        rawId = id;
         name = media.getString("name");
         source = getSourceFromString(media.getString("mediaSource"));
         type = getTypeFromString(media.getString("type"));
@@ -5594,7 +5584,6 @@ public class GeckoSession {
       /** Empty constructor for tests. */
       protected MediaSource() {
         id = null;
-        rawId = null;
         name = null;
         source = SOURCE_CAMERA;
         type = TYPE_VIDEO;

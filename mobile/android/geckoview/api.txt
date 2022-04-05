@@ -42,7 +42,6 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
-import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -730,7 +729,6 @@ package org.mozilla.geckoview {
     field public static final String CRASHED_PROCESS_TYPE_FOREGROUND_CHILD = "FOREGROUND_CHILD";
     field public static final String CRASHED_PROCESS_TYPE_MAIN = "MAIN";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
-    field @Deprecated @DeprecationSchedule(id="crashreporter-fatal",version=100) public static final String EXTRA_CRASH_FATAL = "fatal";
     field public static final String EXTRA_CRASH_PROCESS_TYPE = "processType";
     field public static final String EXTRA_EXTRAS_PATH = "extrasPath";
     field public static final String EXTRA_MINIDUMP_PATH = "minidumpPath";
@@ -1145,7 +1143,6 @@ package org.mozilla.geckoview {
     field public static final int TYPE_VIDEO = 0;
     field @NonNull public final String id;
     field @Nullable public final String name;
-    field @Deprecated @DeprecationSchedule(id="media-source-rawId",version=100) @NonNull public final String rawId;
     field public final int source;
     field public final int type;
   }
