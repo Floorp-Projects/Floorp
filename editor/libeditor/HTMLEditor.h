@@ -1741,15 +1741,16 @@ class HTMLEditor final : public EditorBase,
   /**
    * HandleInsertParagraphInHeadingElement() handles insertParagraph command
    * (i.e., handling Enter key press) in a heading element.  This splits
-   * aHeader element at aPointToSplit.  Then, if right heading element is
-   * empty, it'll be removed and new paragraph is created (its type is decided
-   * with default paragraph separator).
+   * aHeadingElement element at aPointToSplit.  Then, if right heading element
+   * is empty, it'll be removed and new paragraph is created (its type is
+   * decided with default paragraph separator).
    *
-   * @param aHeader             The heading element to be split.
-   * @param aPointToSplit       The point to split aHeader.
+   * @param aHeadingElement     The heading element to be split.
+   * @param aPointToSplit       The point to split aHeadingElement.
+   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleInsertParagraphInHeadingElement(Element& aHeader,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  HandleInsertParagraphInHeadingElement(Element& aHeadingElement,
                                         const EditorDOMPoint& aPointToSplit);
 
   /**
