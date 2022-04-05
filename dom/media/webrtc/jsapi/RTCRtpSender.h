@@ -85,7 +85,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   // This is called when we set an answer (ie; when the transport is finalized).
   void UpdateTransport();
-  nsresult UpdateConduit();
+  void UpdateConduit();
 
   AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
   AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
@@ -111,12 +111,12 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
  private:
   virtual ~RTCRtpSender();
 
-  nsresult UpdateVideoConduit();
-  nsresult UpdateAudioConduit();
+  void UpdateVideoConduit();
+  void UpdateAudioConduit();
 
   std::string GetMid() const;
   void ApplyParameters(const RTCRtpParameters& aParameters);
-  nsresult ConfigureVideoCodecMode();
+  void ConfigureVideoCodecMode();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;

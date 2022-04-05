@@ -135,11 +135,11 @@ class TransceiverImpl : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransceiverImpl)
 
-  static nsresult NegotiatedDetailsToAudioCodecConfigs(
+  static void NegotiatedDetailsToAudioCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,
       std::vector<AudioCodecConfig>* aConfigs);
 
-  static nsresult NegotiatedDetailsToVideoCodecConfigs(
+  static void NegotiatedDetailsToVideoCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,
       std::vector<VideoCodecConfig>* aConfigs);
 

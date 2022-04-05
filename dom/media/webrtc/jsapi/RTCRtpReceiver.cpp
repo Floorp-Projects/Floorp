@@ -593,14 +593,15 @@ void RTCRtpReceiver::UpdateTransport() {
                                std::move(filter));
 }
 
-nsresult RTCRtpReceiver::UpdateConduit() {
+void RTCRtpReceiver::UpdateConduit() {
   if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
-    return UpdateVideoConduit();
+    UpdateVideoConduit();
+  } else {
+    UpdateAudioConduit();
   }
-  return UpdateAudioConduit();
 }
 
-nsresult RTCRtpReceiver::UpdateVideoConduit() {
+void RTCRtpReceiver::UpdateVideoConduit() {
   RefPtr<VideoSessionConduit> conduit =
       *mPipeline->mConduit->AsVideoSessionConduit();
 
@@ -648,25 +649,24 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
     }
 
     std::vector<VideoCodecConfig> configs;
-    nsresult rv = TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
-        details, &configs);
-
-    if (NS_FAILED(rv)) {
+    TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
+    if (configs.empty()) {
+      // TODO: Are we supposed to plumb this error back to JS? This does not
+      // seem like a failure to set an answer, it just means that codec
+      // negotiation failed. For now, we're just doing the same thing we do
+      // if negotiation as a whole failed.
       MOZ_LOG(gReceiverLog, LogLevel::Error,
-              ("%s[%s]: %s Failed to convert "
-               "JsepCodecDescriptions to VideoCodecConfigs (recv).",
+              ("%s[%s]: %s  No video codecs were negotiated (recv).",
                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
-      return rv;
+      return;
     }
 
     mVideoCodecs = configs;
     mVideoRtpRtcpConfig = Some(details.GetRtpRtcpConfig());
   }
-
-  return NS_OK;
 }
 
-nsresult RTCRtpReceiver::UpdateAudioConduit() {
+void RTCRtpReceiver::UpdateAudioConduit() {
   RefPtr<AudioSessionConduit> conduit =
       *mPipeline->mConduit->AsAudioSessionConduit();
 
@@ -695,15 +695,16 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
     std::vector<AudioCodecConfig> configs;
-    nsresult rv = TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
-        details, &configs);
-
-    if (NS_FAILED(rv)) {
+    TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
+    if (configs.empty()) {
+      // TODO: Are we supposed to plumb this error back to JS? This does not
+      // seem like a failure to set an answer, it just means that codec
+      // negotiation failed. For now, we're just doing the same thing we do
+      // if negotiation as a whole failed.
       MOZ_LOG(gReceiverLog, LogLevel::Error,
-              ("%s[%s]: %s Failed to convert "
-               "JsepCodecDescriptions to AudioCodecConfigs (recv).",
+              ("%s[%s]: %s No audio codecs were negotiated (recv)",
                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
-      return rv;
+      return;
     }
 
     // Ensure conduit knows about extensions prior to creating streams
@@ -719,8 +720,6 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
 
     mAudioCodecs = configs;
   }
-
-  return NS_OK;
 }
 
 void RTCRtpReceiver::Stop() {
