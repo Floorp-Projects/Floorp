@@ -30,6 +30,65 @@
 namespace mozilla {
 namespace layers {
 
+static dom::Nullable<TimeDuration> CalculateElapsedTime(
+    const PropertyAnimation& aAnimation, const TimeStamp aPreviousFrameTime,
+    const TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue) {
+  MOZ_ASSERT(
+      (!aAnimation.mOriginTime.IsNull() && aAnimation.mStartTime.isSome()) ||
+          aAnimation.mIsNotPlaying,
+      "If we are playing, we should have an origin time and a start time");
+
+  // Determine if the animation was play-pending and used a ready time later
+  // than the previous frame time.
+  //
+  // To determine this, _all_ of the following conditions need to hold:
+  //
+  // * There was no previous animation value (i.e. this is the first frame for
+  //   the animation since it was sent to the compositor), and
+  // * The animation is playing, and
+  // * There is a previous frame time, and
+  // * The ready time of the animation is ahead of the previous frame time.
+  //
+  bool hasFutureReadyTime = false;
+  if (!aPreviousValue && !aAnimation.mIsNotPlaying &&
+      !aPreviousFrameTime.IsNull()) {
+    // This is the inverse of the calculation performed in
+    // AnimationInfo::StartPendingAnimations to calculate the start time of
+    // play-pending animations.
+    // Note that we have to calculate (TimeStamp + TimeDuration) last to avoid
+    // underflow in the middle of the calulation.
+    const TimeStamp readyTime =
+        aAnimation.mOriginTime +
+        (aAnimation.mStartTime.ref() +
+         aAnimation.mHoldTime.MultDouble(1.0 / aAnimation.mPlaybackRate));
+    hasFutureReadyTime = !readyTime.IsNull() && readyTime > aPreviousFrameTime;
+  }
+  // Use the previous vsync time to make main thread animations and compositor
+  // more closely aligned.
+  //
+  // On the first frame where we have animations the previous timestamp will
+  // not be set so we simply use the current timestamp.  As a result we will
+  // end up painting the first frame twice.  That doesn't appear to be
+  // noticeable, however.
+  //
+  // Likewise, if the animation is play-pending, it may have a ready time that
+  // is *after* |aPreviousFrameTime| (but *before* |aCurrentFrameTime|).
+  // To avoid flicker we need to use |aCurrentFrameTime| to avoid temporarily
+  // jumping backwards into the range prior to when the animation starts.
+  const TimeStamp& timeStamp = aPreviousFrameTime.IsNull() || hasFutureReadyTime
+                                   ? aCurrentFrameTime
+                                   : aPreviousFrameTime;
+
+  // If the animation is not currently playing, e.g. paused or
+  // finished, then use the hold time to stay at the same position.
+  TimeDuration elapsedDuration =
+      aAnimation.mIsNotPlaying || aAnimation.mStartTime.isNothing()
+          ? aAnimation.mHoldTime
+          : (timeStamp - aAnimation.mOriginTime - aAnimation.mStartTime.ref())
+                .MultDouble(aAnimation.mPlaybackRate);
+  return elapsedDuration;
+}
+
 enum class CanSkipCompose {
   IfPossible,
   No,
@@ -51,64 +110,11 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 #endif
   // Process in order, since later animations override earlier ones.
   for (PropertyAnimation& animation : aPropertyAnimations) {
-    MOZ_ASSERT(
-        (!animation.mOriginTime.IsNull() && animation.mStartTime.isSome()) ||
-            animation.mIsNotPlaying,
-        "If we are playing, we should have an origin time and a start time");
-
-    // Determine if the animation was play-pending and used a ready time later
-    // than the previous frame time.
-    //
-    // To determine this, _all_ of the following conditions need to hold:
-    //
-    // * There was no previous animation value (i.e. this is the first frame for
-    //   the animation since it was sent to the compositor), and
-    // * The animation is playing, and
-    // * There is a previous frame time, and
-    // * The ready time of the animation is ahead of the previous frame time.
-    //
-    bool hasFutureReadyTime = false;
-    if (!aPreviousValue && !animation.mIsNotPlaying &&
-        !aPreviousFrameTime.IsNull()) {
-      // This is the inverse of the calculation performed in
-      // AnimationInfo::StartPendingAnimations to calculate the start time of
-      // play-pending animations.
-      // Note that we have to calculate (TimeStamp + TimeDuration) last to avoid
-      // underflow in the middle of the calulation.
-      const TimeStamp readyTime =
-          animation.mOriginTime +
-          (animation.mStartTime.ref() +
-           animation.mHoldTime.MultDouble(1.0 / animation.mPlaybackRate));
-      hasFutureReadyTime =
-          !readyTime.IsNull() && readyTime > aPreviousFrameTime;
-    }
-    // Use the previous vsync time to make main thread animations and compositor
-    // more closely aligned.
-    //
-    // On the first frame where we have animations the previous timestamp will
-    // not be set so we simply use the current timestamp.  As a result we will
-    // end up painting the first frame twice.  That doesn't appear to be
-    // noticeable, however.
-    //
-    // Likewise, if the animation is play-pending, it may have a ready time that
-    // is *after* |aPreviousFrameTime| (but *before* |aCurrentFrameTime|).
-    // To avoid flicker we need to use |aCurrentFrameTime| to avoid temporarily
-    // jumping backwards into the range prior to when the animation starts.
-    const TimeStamp& timeStamp =
-        aPreviousFrameTime.IsNull() || hasFutureReadyTime ? aCurrentFrameTime
-                                                          : aPreviousFrameTime;
-
-    // If the animation is not currently playing, e.g. paused or
-    // finished, then use the hold time to stay at the same position.
-    TimeDuration elapsedDuration =
-        animation.mIsNotPlaying || animation.mStartTime.isNothing()
-            ? animation.mHoldTime
-            : (timeStamp - animation.mOriginTime - animation.mStartTime.ref())
-                  .MultDouble(animation.mPlaybackRate);
+    dom::Nullable<TimeDuration> elapsedDuration = CalculateElapsedTime(
+        animation, aPreviousFrameTime, aCurrentFrameTime, aPreviousValue);
 
     ComputedTiming computedTiming = dom::AnimationEffect::GetComputedTimingAt(
-        dom::Nullable<TimeDuration>(elapsedDuration), animation.mTiming,
-        animation.mPlaybackRate);
+        elapsedDuration, animation.mTiming, animation.mPlaybackRate);
 
     if (computedTiming.mProgress.IsNull()) {
       continue;
