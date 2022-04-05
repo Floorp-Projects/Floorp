@@ -3390,15 +3390,15 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
       if (!def->isBoundsCheck()) {
         continue;
       }
+      auto* boundsCheck = def->toBoundsCheck();
 
       bool eliminated = false;
-      if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(),
-                                   &eliminated)) {
+      if (!TryEliminateBoundsCheck(checks, index, boundsCheck, &eliminated)) {
         return false;
       }
 
       if (eliminated) {
-        block->discardDef(def);
+        block->discard(boundsCheck);
       }
     }
     index++;
