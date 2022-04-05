@@ -351,13 +351,8 @@ nsresult TransceiverImpl::UpdateConduit() {
   mTransmitting = false;
   mSender->Stop();
 
-  if (nsresult rv = mReceiver->UpdateConduit(); NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (nsresult rv = mSender->UpdateConduit(); NS_FAILED(rv)) {
-    return rv;
-  }
+  mReceiver->UpdateConduit();
+  mSender->UpdateConduit();
 
   if ((mReceiving = mJsepTransceiver->mRecvTrack.GetActive())) {
     mReceiver->Start();
@@ -606,34 +601,29 @@ JSObject* TransceiverImpl::WrapObject(JSContext* aCx,
 
 nsPIDOMWindowInner* TransceiverImpl::GetParentObject() const { return mWindow; }
 
-static nsresult JsepCodecDescToAudioCodecConfig(
-    const JsepCodecDescription& aCodec, Maybe<AudioCodecConfig>* aConfig) {
-  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kAudio);
-  if (aCodec.Type() != SdpMediaSection::kAudio) return NS_ERROR_INVALID_ARG;
-
-  const JsepAudioCodecDescription& desc =
-      static_cast<const JsepAudioCodecDescription&>(aCodec);
-
+static void JsepCodecDescToAudioCodecConfig(
+    const JsepAudioCodecDescription& aCodec, Maybe<AudioCodecConfig>* aConfig) {
   uint16_t pt;
 
-  if (!desc.GetPtAsInt(&pt)) {
-    MOZ_MTLOG(ML_ERROR, "Invalid payload type: " << desc.mDefaultPt);
-    return NS_ERROR_INVALID_ARG;
+  // TODO(bug 1761272): Getting the pt for a JsepAudioCodecDescription should be
+  // infallible.
+  if (NS_WARN_IF(!aCodec.GetPtAsInt(&pt))) {
+    MOZ_MTLOG(ML_ERROR, "Invalid payload type: " << aCodec.mDefaultPt);
+    MOZ_ASSERT(false);
+    return;
   }
 
-  *aConfig = Some(AudioCodecConfig(pt, desc.mName, desc.mClock,
-                                   desc.mForceMono ? 1 : desc.mChannels,
-                                   desc.mFECEnabled));
-  (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
-  (*aConfig)->mDtmfEnabled = desc.mDtmfEnabled;
-  (*aConfig)->mDTXEnabled = desc.mDTXEnabled;
-  (*aConfig)->mMaxAverageBitrate = desc.mMaxAverageBitrate;
-  (*aConfig)->mFrameSizeMs = desc.mFrameSizeMs;
-  (*aConfig)->mMinFrameSizeMs = desc.mMinFrameSizeMs;
-  (*aConfig)->mMaxFrameSizeMs = desc.mMaxFrameSizeMs;
-  (*aConfig)->mCbrEnabled = desc.mCbrEnabled;
-
-  return NS_OK;
+  *aConfig = Some(AudioCodecConfig(pt, aCodec.mName, aCodec.mClock,
+                                   aCodec.mForceMono ? 1 : aCodec.mChannels,
+                                   aCodec.mFECEnabled));
+  (*aConfig)->mMaxPlaybackRate = aCodec.mMaxPlaybackRate;
+  (*aConfig)->mDtmfEnabled = aCodec.mDtmfEnabled;
+  (*aConfig)->mDTXEnabled = aCodec.mDTXEnabled;
+  (*aConfig)->mMaxAverageBitrate = aCodec.mMaxAverageBitrate;
+  (*aConfig)->mFrameSizeMs = aCodec.mFrameSizeMs;
+  (*aConfig)->mMinFrameSizeMs = aCodec.mMinFrameSizeMs;
+  (*aConfig)->mMaxFrameSizeMs = aCodec.mMaxFrameSizeMs;
+  (*aConfig)->mCbrEnabled = aCodec.mCbrEnabled;
 }
 
 Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
@@ -674,17 +664,21 @@ TransceiverImpl::GetNegotiatedRecvCodecs() const {
 
 // TODO: Maybe move this someplace else?
 /*static*/
-nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
+void TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
     const JsepTrackNegotiatedDetails& aDetails,
     std::vector<AudioCodecConfig>* aConfigs) {
   Maybe<AudioCodecConfig> telephoneEvent;
 
   if (aDetails.GetEncodingCount()) {
     for (const auto& codec : aDetails.GetEncoding(0).GetCodecs()) {
-      Maybe<AudioCodecConfig> config;
-      if (NS_FAILED(JsepCodecDescToAudioCodecConfig(*codec, &config))) {
-        return NS_ERROR_INVALID_ARG;
+      if (NS_WARN_IF(codec->Type() != SdpMediaSection::kAudio)) {
+        MOZ_ASSERT(false, "Codec is not audio! This is a JSEP bug.");
+        return;
       }
+      Maybe<AudioCodecConfig> config;
+      const JsepAudioCodecDescription& audio =
+          static_cast<const JsepAudioCodecDescription&>(*codec);
+      JsepCodecDescToAudioCodecConfig(audio, &config);
       if (config->mName == "telephone-event") {
         telephoneEvent = std::move(config);
       } else {
@@ -698,13 +692,6 @@ nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
   if (telephoneEvent) {
     aConfigs->push_back(std::move(*telephoneEvent));
   }
-
-  if (aConfigs->empty()) {
-    MOZ_MTLOG(ML_ERROR, "Can't set up a conduit with 0 codecs");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 auto TransceiverImpl::GetActivePayloadTypes() const
@@ -729,82 +716,79 @@ auto TransceiverImpl::GetActivePayloadTypes() const
                      });
 }
 
-static nsresult JsepCodecDescToVideoCodecConfig(
-    const JsepCodecDescription& aCodec, Maybe<VideoCodecConfig>* aConfig) {
-  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kVideo);
-  if (aCodec.Type() != SdpMediaSection::kVideo) {
-    MOZ_ASSERT(false, "JsepCodecDescription has wrong type");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  const JsepVideoCodecDescription& desc =
-      static_cast<const JsepVideoCodecDescription&>(aCodec);
-
+static void JsepCodecDescToVideoCodecConfig(
+    const JsepVideoCodecDescription& aCodec, Maybe<VideoCodecConfig>* aConfig) {
   uint16_t pt;
 
-  if (!desc.GetPtAsInt(&pt)) {
-    MOZ_MTLOG(ML_ERROR, "Invalid payload type: " << desc.mDefaultPt);
-    return NS_ERROR_INVALID_ARG;
+  // TODO(bug 1761272): Getting the pt for a JsepVideoCodecDescription should be
+  // infallible.
+  if (NS_WARN_IF(!aCodec.GetPtAsInt(&pt))) {
+    MOZ_MTLOG(ML_ERROR, "Invalid payload type: " << aCodec.mDefaultPt);
+    MOZ_ASSERT(false);
+    return;
   }
 
   UniquePtr<VideoCodecConfigH264> h264Config;
 
-  if (desc.mName == "H264") {
+  if (aCodec.mName == "H264") {
     h264Config = MakeUnique<VideoCodecConfigH264>();
     size_t spropSize = sizeof(h264Config->sprop_parameter_sets);
-    strncpy(h264Config->sprop_parameter_sets, desc.mSpropParameterSets.c_str(),
-            spropSize);
+    strncpy(h264Config->sprop_parameter_sets,
+            aCodec.mSpropParameterSets.c_str(), spropSize);
     h264Config->sprop_parameter_sets[spropSize - 1] = '\0';
-    h264Config->packetization_mode = desc.mPacketizationMode;
-    h264Config->profile_level_id = desc.mProfileLevelId;
+    h264Config->packetization_mode = aCodec.mPacketizationMode;
+    h264Config->profile_level_id = aCodec.mProfileLevelId;
     h264Config->tias_bw = 0;  // TODO(bug 1403206)
   }
 
-  *aConfig = Some(
-      VideoCodecConfig(pt, desc.mName, desc.mConstraints, h264Config.get()));
+  *aConfig = Some(VideoCodecConfig(pt, aCodec.mName, aCodec.mConstraints,
+                                   h264Config.get()));
 
-  (*aConfig)->mAckFbTypes = desc.mAckFbTypes;
-  (*aConfig)->mNackFbTypes = desc.mNackFbTypes;
-  (*aConfig)->mCcmFbTypes = desc.mCcmFbTypes;
-  (*aConfig)->mRembFbSet = desc.RtcpFbRembIsSet();
-  (*aConfig)->mFECFbSet = desc.mFECEnabled;
-  (*aConfig)->mTransportCCFbSet = desc.RtcpFbTransportCCIsSet();
-  if (desc.mFECEnabled) {
+  (*aConfig)->mAckFbTypes = aCodec.mAckFbTypes;
+  (*aConfig)->mNackFbTypes = aCodec.mNackFbTypes;
+  (*aConfig)->mCcmFbTypes = aCodec.mCcmFbTypes;
+  (*aConfig)->mRembFbSet = aCodec.RtcpFbRembIsSet();
+  (*aConfig)->mFECFbSet = aCodec.mFECEnabled;
+  (*aConfig)->mTransportCCFbSet = aCodec.RtcpFbTransportCCIsSet();
+  if (aCodec.mFECEnabled) {
     uint16_t pt;
-    if (SdpHelper::GetPtAsInt(desc.mREDPayloadType, &pt)) {
+    if (SdpHelper::GetPtAsInt(aCodec.mREDPayloadType, &pt)) {
       (*aConfig)->mREDPayloadType = pt;
     }
-    if (SdpHelper::GetPtAsInt(desc.mULPFECPayloadType, &pt)) {
+    if (SdpHelper::GetPtAsInt(aCodec.mULPFECPayloadType, &pt)) {
       (*aConfig)->mULPFECPayloadType = pt;
     }
   }
-  if (desc.mRtxEnabled) {
+  if (aCodec.mRtxEnabled) {
     uint16_t pt;
-    if (SdpHelper::GetPtAsInt(desc.mRtxPayloadType, &pt)) {
+    if (SdpHelper::GetPtAsInt(aCodec.mRtxPayloadType, &pt)) {
       (*aConfig)->mRTXPayloadType = pt;
     }
   }
-
-  return NS_OK;
 }
 
 // TODO: Maybe move this someplace else?
 /*static*/
-nsresult TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
+void TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
     const JsepTrackNegotiatedDetails& aDetails,
     std::vector<VideoCodecConfig>* aConfigs) {
   if (aDetails.GetEncodingCount()) {
     for (const auto& codec : aDetails.GetEncoding(0).GetCodecs()) {
-      Maybe<VideoCodecConfig> config;
-      if (NS_FAILED(JsepCodecDescToVideoCodecConfig(*codec, &config))) {
-        return NS_ERROR_INVALID_ARG;
+      if (NS_WARN_IF(codec->Type() != SdpMediaSection::kVideo)) {
+        MOZ_ASSERT(false, "Codec is not video! This is a JSEP bug.");
+        return;
       }
+      Maybe<VideoCodecConfig> config;
+      const JsepVideoCodecDescription& video =
+          static_cast<const JsepVideoCodecDescription&>(*codec);
+
+      JsepCodecDescToVideoCodecConfig(video, &config);
 
       config->mTias = aDetails.GetTias();
 
       for (size_t i = 0; i < aDetails.GetEncodingCount(); ++i) {
         const JsepTrackEncoding& jsepEncoding(aDetails.GetEncoding(i));
-        if (jsepEncoding.HasFormat(codec->mDefaultPt)) {
+        if (jsepEncoding.HasFormat(video.mDefaultPt)) {
           VideoCodecConfig::Encoding encoding;
           encoding.rid = jsepEncoding.mRid;
           encoding.constraints = jsepEncoding.mConstraints;
@@ -815,8 +799,6 @@ nsresult TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
       aConfigs->push_back(std::move(*config));
     }
   }
-
-  return NS_OK;
 }
 
 void TransceiverImpl::Stop() {
