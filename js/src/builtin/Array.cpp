@@ -3475,7 +3475,7 @@ static bool SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin,
 static JSObject* SliceArguments(JSContext* cx, Handle<ArgumentsObject*> argsobj,
                                 uint32_t begin, uint32_t count) {
   MOZ_ASSERT(!argsobj->hasOverriddenLength() &&
-             !argsobj->isAnyElementDeleted());
+             !argsobj->hasOverriddenElement());
   MOZ_ASSERT(begin + count <= argsobj->initialLength());
 
   ArrayObject* result = NewDenseFullyAllocatedArray(cx, count);
@@ -3532,7 +3532,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
 
   if (obj->is<ArgumentsObject>()) {
     Handle<ArgumentsObject*> argsobj = obj.as<ArgumentsObject>();
-    if (!argsobj->hasOverriddenLength() && !argsobj->isAnyElementDeleted()) {
+    if (!argsobj->hasOverriddenLength() && !argsobj->hasOverriddenElement()) {
       MOZ_ASSERT(begin <= UINT32_MAX, "begin is limited by |argsobj|'s length");
       JSObject* narr = SliceArguments(cx, argsobj, uint32_t(begin), count);
       if (!narr) {

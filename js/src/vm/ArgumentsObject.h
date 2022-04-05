@@ -40,9 +40,6 @@ class RareArgumentsData {
   static RareArgumentsData* create(JSContext* cx, ArgumentsObject* obj);
   static size_t bytesRequired(size_t numActuals);
 
-  bool isAnyElementDeleted(size_t len) const {
-    return IsAnyBitArrayElementSet(deletedBits_, len);
-  }
   bool isElementDeleted(size_t len, size_t i) const {
     MOZ_ASSERT(i < len);
     return IsBitArrayElementSet(deletedBits_, len, i);
@@ -338,13 +335,6 @@ class ArgumentsObject : public NativeObject {
     return result;
   }
 
-  bool isAnyElementDeleted() const {
-    bool result = maybeRareData() &&
-                  maybeRareData()->isAnyElementDeleted(initialLength());
-    MOZ_ASSERT_IF(result, hasOverriddenElement());
-    return result;
-  }
-
   bool markElementDeleted(JSContext* cx, uint32_t i);
 
   /*
@@ -412,7 +402,7 @@ class ArgumentsObject : public NativeObject {
    * NB: Returning false does not indicate error!
    */
   bool maybeGetElement(uint32_t i, MutableHandleValue vp) {
-    if (i >= initialLength() || isElementDeleted(i)) {
+    if (i >= initialLength() || hasOverriddenElement()) {
       return false;
     }
     vp.set(element(i));
