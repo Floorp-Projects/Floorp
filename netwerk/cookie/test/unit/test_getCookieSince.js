@@ -5,7 +5,7 @@ const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 const cm = cs.QueryInterface(Ci.nsICookieManager);
 
 function setCookie(name, url) {
-  let value = `${name}=${Math.random()}; Path=/; Max-Age=1000; sameSite=none`;
+  let value = `${name}=${Math.random()}; Path=/; Max-Age=1000; sameSite=none; Secure`;
   info(`Setting cookie ${value} for ${url.spec}`);
 
   let channel = NetUtil.newChannel({
@@ -36,9 +36,6 @@ add_task(async function() {
     "network.cookieJarSettings.unblocked_for_testing",
     true
   );
-
-  // Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
 
   await setCookie("A", Services.io.newURI("https://example.com/A/"));
   await sleep();
@@ -72,6 +69,4 @@ add_task(async function() {
 
   someCookies = cm.getCookiesSince(cookies[3].creationTime + 1);
   Assert.equal(someCookies.length, 0, "We retrieve some cookies");
-
-  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });

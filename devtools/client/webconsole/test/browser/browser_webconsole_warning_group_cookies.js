@@ -38,10 +38,10 @@ add_task(async function testSameSiteCookieMessage() {
       groupLabel:
         "Some cookies are misusing the recommended “SameSite“ attribute",
       message1:
-        "Cookie “a” will be soon rejected because it has the “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.",
+        "Cookie “a” does not have a proper “SameSite” attribute value. Soon, cookies without the “SameSite” attribute or with an invalid value will be treated as “Lax”. This means that the cookie will no longer be sent in third-party contexts. If your application depends on this cookie being available in such contexts, please add the “SameSite=None“ attribute to it. To know more about the “SameSite“ attribute, read https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite",
       typeMessage1: ".warn",
       message2:
-        "Cookie “b” will be soon rejected because it has the “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.",
+        "Cookie “b” does not have a proper “SameSite” attribute value. Soon, cookies without the “SameSite” attribute or with an invalid value will be treated as “Lax”. This means that the cookie will no longer be sent in third-party contexts. If your application depends on this cookie being available in such contexts, please add the “SameSite=None“ attribute to it. To know more about the “SameSite“ attribute, read https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite",
     },
   ];
 

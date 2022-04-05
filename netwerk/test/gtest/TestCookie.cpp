@@ -1024,7 +1024,7 @@ TEST(TestCookie, SameSiteLax)
 
   cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
-  EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_NONE);
+  EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_LAX);
 }
 
 TEST(TestCookie, OnionSite)

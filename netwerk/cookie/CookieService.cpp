@@ -1194,7 +1194,13 @@ bool CookieService::CanSetCookie(
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if ((aCookieData.sameSite() != nsICookie::SAMESITE_NONE) &&
+  bool laxByDefault =
+      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+      !nsContentUtils::IsURIInPrefList(
+          aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
+  auto effectiveSameSite =
+      laxByDefault ? aCookieData.sameSite() : aCookieData.rawSameSite();
+  if ((effectiveSameSite != nsICookie::SAMESITE_NONE) &&
       aIsForeignAndNotAddon) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the samesite tests");
@@ -1363,14 +1369,17 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
   return false;
 }
 
-static inline void SetSameSiteDefaultAttribute(CookieStruct& aCookieData,
-                                               bool laxByDefault) {
+static inline void SetSameSiteAttributeDefault(CookieStruct& aCookieData) {
+  // Set cookie with SameSite attribute that is treated as Default
+  // and doesn't requires changing the DB schema.
+  aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
   aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
-  if (laxByDefault) {
-    aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
-  } else {
-    aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
-  }
+}
+
+static inline void SetSameSiteAttribute(CookieStruct& aCookieData,
+                                        int32_t aValue) {
+  aCookieData.sameSite() = aValue;
+  aCookieData.rawSameSite() = aValue;
 }
 
 // Parses attributes from cookie header. expires/max-age attributes aren't
@@ -1403,11 +1412,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   aCookieData.isSecure() = false;
   aCookieData.isHttpOnly() = false;
 
-  bool laxByDefault =
-      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
-      !nsContentUtils::IsURIInPrefList(
-          aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
-  SetSameSiteDefaultAttribute(aCookieData, laxByDefault);
+  SetSameSiteAttributeDefault(aCookieData);
 
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
@@ -1457,17 +1462,14 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
 
     } else if (tokenString.LowerCaseEqualsLiteral(kSameSite)) {
       if (tokenValue.LowerCaseEqualsLiteral(kSameSiteLax)) {
-        aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
-        aCookieData.rawSameSite() = nsICookie::SAMESITE_LAX;
+        SetSameSiteAttribute(aCookieData, nsICookie::SAMESITE_LAX);
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteStrict)) {
-        aCookieData.sameSite() = nsICookie::SAMESITE_STRICT;
-        aCookieData.rawSameSite() = nsICookie::SAMESITE_STRICT;
+        SetSameSiteAttribute(aCookieData, nsICookie::SAMESITE_STRICT);
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteNone)) {
-        aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
-        aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
+        SetSameSiteAttribute(aCookieData, nsICookie::SAMESITE_NONE);
       } else {
-        // Reset to defaults if unknown token value (see Bug 1682450)
-        SetSameSiteDefaultAttribute(aCookieData, laxByDefault);
+        // Reset to Default if unknown token value (see Bug 1682450)
+        SetSameSiteAttributeDefault(aCookieData);
         CookieLogging::LogMessageToConsole(
             aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
             "CookieSameSiteValueInvalid2"_ns,
@@ -1479,29 +1481,32 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   // re-assign aCookieHeader, in case we need to process another cookie
   aCookieHeader.Assign(Substring(cookieStart, cookieEnd));
 
-  // If same-site is set to 'none' but this is not a secure context, let's abort
-  // the parsing.
+  // If same-site is explicitly set to 'none' but this is not a secure context,
+  // let's abort the parsing.
   if (!aCookieData.isSecure() &&
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
-    if (laxByDefault &&
-        StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
+    if (StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
       CookieLogging::LogMessageToConsole(
-          aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
+          aCRC, aHostURI, nsIScriptError::errorFlag, CONSOLE_SAMESITE_CATEGORY,
           "CookieRejectedNonRequiresSecure2"_ns,
           AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
       return newCookie;
     }
 
-    // if SameSite=Lax by default is disabled, we want to warn the user.
+    // Still warn about the missing Secure attribute when not enforcing.
     CookieLogging::LogMessageToConsole(
         aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_SAMESITE_CATEGORY,
-        "CookieRejectedNonRequiresSecureForBeta2"_ns,
+        "CookieRejectedNonRequiresSecureForBeta3"_ns,
         AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
                                 SAMESITE_MDN_URL});
   }
 
   if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
+    bool laxByDefault =
+        StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+        !nsContentUtils::IsURIInPrefList(
+            aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
     if (laxByDefault) {
       CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
@@ -1519,7 +1524,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   // Cookie accepted.
   aAcceptedByParser = true;
 
-  MOZ_ASSERT(Cookie::ValidateRawSame(aCookieData));
+  MOZ_ASSERT(Cookie::ValidateSameSite(aCookieData));
   return newCookie;
 }
 
