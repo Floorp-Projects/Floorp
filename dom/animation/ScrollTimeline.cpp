@@ -92,14 +92,19 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
 }
 
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
-  const nsIFrame* frame =
-      mSource ? mSource.mElement->GetPrimaryFrame() : nullptr;
-  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
-  if (!frame || !scrollFrame) {
+  // If no layout box, this timeline is inactive.
+  if (!mSource || !mSource.mElement->GetPrimaryFrame()) {
     return nullptr;
   }
 
-  const auto orientation = GetPhysicalOrientation(frame->GetWritingMode());
+  // if this is not a scroller container, this timeline is inactive.
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  if (!scrollFrame) {
+    return nullptr;
+  }
+
+  const auto orientation = Axis();
+
   // If this orientation is not ready for scrolling (i.e. the scroll range is
   // not larger than or equal to one device pixel), we make it 100%.
   if (!scrollFrame->GetAvailableScrollingDirections().contains(orientation)) {
@@ -122,6 +127,20 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
   double progress = position / range;
   return TimeDuration::FromMilliseconds(progress *
                                         SCROLL_TIMELINE_DURATION_MILLISEC);
+}
+
+layers::ScrollDirection ScrollTimeline::Axis() const {
+  MOZ_ASSERT(mSource && mSource.mElement->GetPrimaryFrame());
+
+  const WritingMode wm = mSource.mElement->GetPrimaryFrame()->GetWritingMode();
+  return mDirection == StyleScrollDirection::Horizontal ||
+                 (!wm.IsVertical() &&
+                  mDirection == StyleScrollDirection::Inline) ||
+                 (wm.IsVertical() &&
+                  (mDirection == StyleScrollDirection::Block ||
+                   mDirection == StyleScrollDirection::Auto))
+             ? layers::ScrollDirection::eHorizontal
+             : layers::ScrollDirection::eVertical;
 }
 
 void ScrollTimeline::UnregisterFromScrollSource() {

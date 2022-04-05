@@ -411,6 +411,8 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                      GetAdjustedFillMode(animation),
                      AnimationUtils::TimingFunctionToComputedTimingFunction(
                          animation.easingFunction())};
+    propertyAnimation->mScrollTimelineOptions =
+        animation.scrollTimelineOptions();
 
     nsTArray<PropertyAnimation::SegmentData>& segmentData =
         propertyAnimation->mSegments;

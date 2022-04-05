@@ -139,6 +139,28 @@ class ScrollTimeline final : public AnimationTimeline {
     Tick();
   }
 
+  // If the source of a ScrollTimeline is an element whose principal box does
+  // not exist or is not a scroll container, then its phase is the timeline
+  // inactive phase. It is otherwise in the active phase. This returns true if
+  // the timeline is in active phase.
+  // https://drafts.csswg.org/web-animations-1/#inactive-timeline
+  // Note: This function is called only for compositor animations, so we must
+  // have the primary frame (principal box) for the source element if it exists.
+  bool IsActive() const { return GetScrollFrame(); }
+
+  Element* SourceElement() const {
+    MOZ_ASSERT(mSource);
+    return mSource.mElement;
+  }
+
+  // A helper to get the physical orientation of this scroll-timeline.
+  //
+  // The spec defines auto, but there is a spec issue:
+  // "ISSUE 5 Define these values." in this section. The DOM interface removed
+  // auto and use block as default value, so we treat auto as block now.
+  // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
+  layers::ScrollDirection Axis() const;
+
   static constexpr const TimingParams& GetTiming() { return sTiming; }
 
  protected:
@@ -158,23 +180,6 @@ class ScrollTimeline final : public AnimationTimeline {
   void UnregisterFromScrollSource();
 
   const nsIScrollableFrame* GetScrollFrame() const;
-
-  // A helper to get the physical orientation of this scroll-timeline.
-  //
-  // The spec defines auto, but there is a spec issue:
-  // "ISSUE 5 Define these values." in this section. The DOM interface removed
-  // auto and use block as default value, so we treat auto as block now.
-  // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
-  layers::ScrollDirection GetPhysicalOrientation(WritingMode aWM) const {
-    return mDirection == StyleScrollDirection::Horizontal ||
-                   (!aWM.IsVertical() &&
-                    mDirection == StyleScrollDirection::Inline) ||
-                   (aWM.IsVertical() &&
-                    (mDirection == StyleScrollDirection::Block ||
-                     mDirection == StyleScrollDirection::Auto))
-               ? layers::ScrollDirection::eHorizontal
-               : layers::ScrollDirection::eVertical;
-  }
 
   RefPtr<Document> mDocument;
 
