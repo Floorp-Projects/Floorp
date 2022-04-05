@@ -991,7 +991,7 @@ bool PeerConnectionImpl::CheckNegotiationNeeded() {
 }
 
 bool PeerConnectionImpl::CreatedSender(const dom::RTCRtpSender& aSender) const {
-  return aSender.GetPcHandle() == mHandle;
+  return aSender.IsMyPc(this);
 }
 
 nsresult PeerConnectionImpl::InitializeDataChannel() {
@@ -3644,10 +3644,9 @@ nsresult PeerConnectionImpl::AddTransceiver(
         aSharedWebrtcState);
   }
 
-  RefPtr<TransceiverImpl> transceiver =
-      new TransceiverImpl(mWindow, PrivacyNeeded(), GetHandle(),
-                          mTransportHandler, aJsepTransceiver, mSTSThread.get(),
-                          aSendTrack, mCall.get(), aIdGenerator);
+  RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
+      mWindow, PrivacyNeeded(), this, mTransportHandler, aJsepTransceiver,
+      mSTSThread.get(), aSendTrack, mCall.get(), aIdGenerator);
 
   if (!transceiver->IsValid()) {
     return NS_ERROR_FAILURE;

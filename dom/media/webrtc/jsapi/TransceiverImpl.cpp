@@ -129,7 +129,7 @@ struct ConduitControlState : public AudioConduitControlInterface,
 
 MOZ_MTLOG_MODULE("TransceiverImpl")
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransceiverImpl, mWindow, mReceiver,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransceiverImpl, mWindow, mPc, mReceiver,
                                       mSender, mDtlsTransport,
                                       mLastStableDtlsTransport)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransceiverImpl)
@@ -144,13 +144,12 @@ NS_INTERFACE_MAP_END
        "TransceiverImpl::" #name " (Canonical)")
 
 TransceiverImpl::TransceiverImpl(
-    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-    const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aStsThread,
-    dom::MediaStreamTrack* aSendTrack, WebrtcCallWrapper* aCallWrapper,
-    RTCStatsIdGenerator* aIdGenerator)
+    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
+    MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
+    nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
+    WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator)
     : mWindow(aWindow),
-      mPCHandle(aPCHandle),
+      mPc(aPc),
       mTransportHandler(aTransportHandler),
       mJsepTransceiver(aJsepTransceiver),
       mStsThread(aStsThread),
@@ -171,12 +170,12 @@ TransceiverImpl::TransceiverImpl(
   }
 
   mReceiver = new RTCRtpReceiver(
-      aWindow, aPrivacyNeeded, aPCHandle, aTransportHandler, aJsepTransceiver,
+      aWindow, aPrivacyNeeded, aPc, aTransportHandler, aJsepTransceiver,
       mCallWrapper->mCallThread, aStsThread, mConduit, this);
 
-  mSender = new RTCRtpSender(aWindow, aPCHandle, aTransportHandler,
-                             aJsepTransceiver, mCallWrapper->mCallThread,
-                             aStsThread, mConduit, aSendTrack, this);
+  mSender = new RTCRtpSender(aWindow, aPc, aTransportHandler, aJsepTransceiver,
+                             mCallWrapper->mCallThread, aStsThread, mConduit,
+                             aSendTrack, this);
 
   if (mConduit) {
     InitConduitControl();
@@ -231,8 +230,9 @@ void TransceiverImpl::InitAudio() {
   mConduit = AudioSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
-    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid.Ref() << "]: " << __FUNCTION__
-                                  << ": Failed to create AudioSessionConduit");
+    MOZ_MTLOG(ML_ERROR, mPc->GetHandle()
+                            << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                            << ": Failed to create AudioSessionConduit");
     // TODO(bug 1422897): We need a way to record this when it happens in the
     // wild.
   }
@@ -278,11 +278,12 @@ void TransceiverImpl::InitVideo() {
       Preferences::GetBool("media.peerconnection.video.lock_scaling", false);
 
   mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread,
-                                         std::move(options), mPCHandle);
+                                         std::move(options), mPc->GetHandle());
 
   if (!mConduit) {
-    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid.Ref() << "]: " << __FUNCTION__
-                                  << ": Failed to create VideoSessionConduit");
+    MOZ_MTLOG(ML_ERROR, mPc->GetHandle()
+                            << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                            << ": Failed to create VideoSessionConduit");
     // TODO(bug 1422897): We need a way to record this when it happens in the
     // wild.
   }
@@ -378,9 +379,10 @@ nsresult TransceiverImpl::SyncWithMatchingVideoConduits(
   }
 
   if (IsVideo()) {
-    MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid.Ref() << "]: " << __FUNCTION__
-                                  << " called when transceiver is not "
-                                     "video! This should never happen.");
+    MOZ_MTLOG(ML_ERROR, mPc->GetHandle()
+                            << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                            << " called when transceiver is not "
+                               "video! This should never happen.");
     MOZ_CRASH();
     return NS_ERROR_UNEXPECTED;
   }
@@ -408,10 +410,10 @@ nsresult TransceiverImpl::SyncWithMatchingVideoConduits(
         mSyncGroup = streamId;
         transceiver->mSyncGroup = streamId;
 
-        MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid.Ref()
-                                      << "]: " << __FUNCTION__ << " Syncing "
-                                      << mConduit.get() << " to "
-                                      << transceiver->mConduit.get());
+        MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
+                                << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                                << " Syncing " << mConduit.get() << " to "
+                                << transceiver->mConduit.get());
 
         // The sync code in call.cc only permits sync between audio stream and
         // one video stream. They take the first match, so there's no point in
@@ -431,8 +433,9 @@ bool TransceiverImpl::ConduitHasPluginID(uint64_t aPluginID) {
 
 void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
                                  ErrorResult& aRv) {
-  MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid.Ref() << "]: " << __FUNCTION__
-                                << " Syncing with JS transceiver");
+  MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
+                          << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                          << " Syncing with JS transceiver");
   MOZ_ASSERT(!mSyncing);
   mSyncing = true;
 
@@ -846,13 +849,8 @@ bool TransceiverImpl::IsVideo() const {
 void TransceiverImpl::ChainToDomPromiseWithCodecStats(
     nsTArray<RefPtr<RTCStatsPromise>> aStats,
     const RefPtr<dom::Promise>& aDomPromise) {
-  PeerConnectionWrapper pcw(mPCHandle);
-  if (!pcw.impl()) {
-    return;
-  }
-
   nsTArray<RTCCodecStats> codecStats =
-      pcw.impl()->GetCodecStats(pcw.impl()->GetTimestampMaker().GetNow());
+      mPc->GetCodecStats(mPc->GetTimestampMaker().GetNow());
 
   AutoTArray<
       std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>, 1>

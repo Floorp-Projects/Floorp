@@ -26,6 +26,7 @@ class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
 class TransceiverImpl;
+class PeerConnectionImpl;
 
 namespace dom {
 class MediaStreamTrack;
@@ -37,7 +38,7 @@ struct RTCRtpSynchronizationSource;
 class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
  public:
   RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                 const std::string& aPCHandle,
+                 PeerConnectionImpl* aPc,
                  MediaTransportHandler* aTransportHandler,
                  JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                  nsISerialEventTarget* aStsThread,
@@ -127,7 +128,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   std::string GetMid() const;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  const std::string mPCHandle;
+  RefPtr<PeerConnectionImpl> mPc;
   const RefPtr<JsepTransceiver> mJsepTransceiver;
   bool mHaveStartedReceiving = false;
   bool mHaveSetupTransport = false;
