@@ -19,7 +19,6 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace rtc {
@@ -56,7 +55,7 @@ class BufferQueue final {
   }
 
  private:
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_;
+  webrtc::SequenceChecker sequence_checker_;
   const size_t capacity_;
   const size_t default_size_;
   std::deque<Buffer*> queue_ RTC_GUARDED_BY(sequence_checker_);

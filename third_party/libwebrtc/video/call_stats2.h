@@ -19,7 +19,6 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -133,8 +132,8 @@ class CallStats {
   // for the observers_ list, which makes the most common case lock free.
   std::list<CallStatsObserver*> observers_;
 
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker construction_thread_checker_;
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker process_thread_checker_;
+  SequenceChecker construction_thread_checker_;
+  SequenceChecker process_thread_checker_;
   TaskQueueBase* const task_queue_;
 
   // Used to signal destruction to potentially pending tasks.

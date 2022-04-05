@@ -19,7 +19,6 @@
 #include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_input_state.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -41,7 +40,7 @@ class BitrateConstraint : public AdaptationConstraint {
       const VideoSourceRestrictions& restrictions_after) const override;
 
  private:
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
+  SequenceChecker sequence_checker_;
   absl::optional<EncoderSettings> encoder_settings_
       RTC_GUARDED_BY(&sequence_checker_);
   absl::optional<uint32_t> encoder_target_bitrate_bps_
