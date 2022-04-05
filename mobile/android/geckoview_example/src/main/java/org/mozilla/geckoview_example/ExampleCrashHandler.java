@@ -47,8 +47,6 @@ public class ExampleCrashHandler extends Service {
       Log.d(LOGTAG, "Dump File: " + mCrashIntent.getStringExtra(GeckoRuntime.EXTRA_MINIDUMP_PATH));
       Log.d(LOGTAG, "Extras File: " + mCrashIntent.getStringExtra(GeckoRuntime.EXTRA_EXTRAS_PATH));
       Log.d(
-          LOGTAG, "Fatal: " + mCrashIntent.getBooleanExtra(GeckoRuntime.EXTRA_CRASH_FATAL, false));
-      Log.d(
           LOGTAG,
           "Process Type: " + mCrashIntent.getStringExtra(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE));
 

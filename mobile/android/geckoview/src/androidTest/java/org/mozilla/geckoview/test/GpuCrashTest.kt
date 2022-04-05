@@ -23,7 +23,7 @@ class GpuCrashTest : BaseSessionTest() {
     @Before
     fun setup() {
         assertTrue(client.connect(sessionRule.env.defaultTimeoutMillis))
-        client.setEvalNextCrashDump(/* expectFatal */ false, GeckoRuntime.CRASHED_PROCESS_TYPE_BACKGROUND_CHILD)
+        client.setEvalNextCrashDump(GeckoRuntime.CRASHED_PROCESS_TYPE_BACKGROUND_CHILD)
     }
 
     @IgnoreCrash

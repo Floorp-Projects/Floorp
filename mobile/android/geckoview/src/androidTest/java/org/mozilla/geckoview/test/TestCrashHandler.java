@@ -102,17 +102,15 @@ public class TestCrashHandler extends Service {
      * Tests should call this to notify the crash handler that the next crash it sees is intentional
      * and that its intent should be checked for correctness.
      *
-     * @param expectFatal Whether the incoming crash is expected to be fatal or not.
      * @param expectedProcessType The type of process the incoming crash is expected to be for.
      */
-    public void setEvalNextCrashDump(final boolean expectFatal, final String expectedProcessType) {
+    public void setEvalNextCrashDump(final String expectedProcessType) {
       setEvalResult(null);
       mReceiver.post(
           new Runnable() {
             @Override
             public void run() {
               final Bundle bundle = new Bundle();
-              bundle.putBoolean(GeckoRuntime.EXTRA_CRASH_FATAL, expectFatal);
               bundle.putString(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE, expectedProcessType);
               final Message msg = Message.obtain(null, MSG_EVAL_NEXT_CRASH_DUMP, bundle);
               msg.replyTo = mMessenger;
@@ -172,7 +170,6 @@ public class TestCrashHandler extends Service {
 
   private static final class MessageHandler extends Handler {
     private Messenger mReplyToMessenger;
-    private boolean mExpectFatal = false;
     private String mExpectedProcessType;
 
     MessageHandler() {}
@@ -182,7 +179,6 @@ public class TestCrashHandler extends Service {
       if (msg.what == MSG_EVAL_NEXT_CRASH_DUMP) {
         mReplyToMessenger = msg.replyTo;
         Bundle bundle = (Bundle) msg.obj;
-        mExpectFatal = bundle.getBoolean(GeckoRuntime.EXTRA_CRASH_FATAL);
         mExpectedProcessType = bundle.getString(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE);
         return;
       }
@@ -205,10 +201,6 @@ public class TestCrashHandler extends Service {
       }
 
       mReplyToMessenger = null;
-    }
-
-    public boolean getExpectFatal() {
-      return mExpectFatal;
     }
 
     public String getExpectedProcessType() {
@@ -240,11 +232,6 @@ public class TestCrashHandler extends Service {
 
     if (!extrasFileExists) {
       return new EvalResult(false, "Extras file should exist");
-    }
-
-    final boolean expectFatal = mMsgHandler.getExpectFatal();
-    if (intent.getBooleanExtra(GeckoRuntime.EXTRA_CRASH_FATAL, !expectFatal) != expectFatal) {
-      return new EvalResult(false, "Fatality should match");
     }
 
     final String expectedProcessType = mMsgHandler.getExpectedProcessType();
