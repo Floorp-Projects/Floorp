@@ -20,7 +20,6 @@
 #include "modules/pacing/paced_sender.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 // This is used to observe the network controller state and route calls to
@@ -47,7 +46,7 @@ class CongestionControlHandler {
   const bool disable_pacer_emergency_stop_;
   int64_t pacer_expected_queue_ms_ = 0;
 
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequenced_checker_;
+  SequenceChecker sequenced_checker_;
   RTC_DISALLOW_COPY_AND_ASSIGN(CongestionControlHandler);
 };
 }  // namespace webrtc

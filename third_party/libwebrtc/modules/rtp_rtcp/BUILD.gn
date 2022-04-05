@@ -296,7 +296,6 @@ rtc_library("rtp_rtcp") {
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/synchronization:sequence_checker",
-    "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:pending_task_safety_flag",
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/task_utils:to_queued_task",

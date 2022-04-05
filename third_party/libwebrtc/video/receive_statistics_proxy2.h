@@ -28,7 +28,6 @@
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
@@ -215,9 +214,9 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   ScopedTaskSafety task_safety_;
 
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker decode_queue_;
+  SequenceChecker decode_queue_;
   rtc::ThreadChecker main_thread_;
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker incoming_render_queue_;
+  SequenceChecker incoming_render_queue_;
 };
 
 }  // namespace internal

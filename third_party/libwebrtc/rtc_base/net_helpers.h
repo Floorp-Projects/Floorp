@@ -23,7 +23,6 @@
 #include "rtc_base/ip_address.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/sequence_checker.h"
-#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
@@ -63,7 +62,7 @@ class RTC_EXPORT AsyncResolver : public AsyncResolverInterface {
   bool recursion_check_ =
       false;  // Protects against SignalDone calling into Destroy.
   bool destroy_called_ = false;
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_;
+  webrtc::SequenceChecker sequence_checker_;
 };
 
 // rtc namespaced wrappers for inet_ntop and inet_pton so we can avoid
