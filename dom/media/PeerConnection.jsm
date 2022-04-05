@@ -372,7 +372,6 @@ class RTCPeerConnection {
     // canTrickle == null means unknown; when a remote description is received it
     // is set to true or false based on the presence of the "trickle" ice-option
     this._canTrickle = null;
-    this._localUfragsToReplace = new Set();
 
     // So we can record telemetry on state transitions
     this._iceConnectionState = "new";
@@ -492,14 +491,14 @@ class RTCPeerConnection {
   _checkIfIceRestartRequired(rtcConfig) {
     if (this._config) {
       if (rtcConfig.iceTransportPolicy != this._config.iceTransportPolicy) {
-        this._restartIceNoRenegotiationNeeded();
+        this._pc.restartIceNoRenegotiationNeeded();
         return;
       }
       if (
         JSON.stringify(this._config.iceServers) !=
         JSON.stringify(rtcConfig.iceServers)
       ) {
-        this._restartIceNoRenegotiationNeeded();
+        this._pc.restartIceNoRenegotiationNeeded();
       }
     }
   }
@@ -558,8 +557,6 @@ class RTCPeerConnection {
     this.makeGetterSetterEH("onidpvalidationerror");
 
     this._pc = new this._win.PeerConnectionImpl();
-    this._operations = [];
-    this._updateNegotiationNeededOnEmptyChain = false;
 
     this.__DOM_IMPL__._innerObject = this;
     const observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
@@ -639,31 +636,7 @@ class RTCPeerConnection {
   // Add a function to the internal operations chain.
 
   _chain(operation) {
-    let resolveP, rejectP;
-    const p = new Promise((r, e) => {
-      resolveP = r;
-      rejectP = e;
-    });
-    this._operations.push(() => {
-      operation().then(resolveP, rejectP);
-      const doNextOperation = () => {
-        if (this._closed) {
-          return;
-        }
-        this._operations.shift();
-        if (this._operations.length) {
-          this._operations[0]();
-        } else if (this._updateNegotiationNeededOnEmptyChain) {
-          this._updateNegotiationNeededOnEmptyChain = false;
-          this.updateNegotiationNeeded();
-        }
-      };
-      p.then(doNextOperation, doNextOperation);
-    });
-    if (this._operations.length == 1) {
-      this._operations[0]();
-    }
-    return p;
+    return this._pc.chain(operation);
   }
 
   // It's basically impossible to use async directly in JSImplemented code,
@@ -1022,9 +995,6 @@ class RTCPeerConnection {
           "InvalidStateError"
         );
     }
-    if (this._localUfragsToReplace.size > 0) {
-      options.iceRestart = true;
-    }
     let haveAssertion;
     if (this._localIdp.enabled) {
       haveAssertion = this._getIdentityAssertion();
@@ -1168,16 +1138,6 @@ class RTCPeerConnection {
         this._impl.setLocalDescription(this._actions[type], sdp);
       });
       await p;
-      this._negotiationNeeded = false;
-      if (type == "answer") {
-        if (this._localUfragsToReplace.size > 0) {
-          const ufrags = new Set(this._getUfragsWithPwds(sdp));
-          if (![...this._localUfragsToReplace].some(uf => ufrags.has(uf))) {
-            this._localUfragsToReplace.clear();
-          }
-        }
-      }
-      this.updateNegotiationNeeded();
     });
   }
 
@@ -1297,21 +1257,6 @@ class RTCPeerConnection {
         await this._validateIdentity(sdp);
       }
       await haveSetRemote;
-      if (this._closed) {
-        return;
-      }
-      this._negotiationNeeded = false;
-      if (type == "answer") {
-        if (this._localUfragsToReplace.size > 0) {
-          const ufrags = new Set(
-            this._getUfragsWithPwds(this._impl.currentLocalDescription)
-          );
-          if (![...this._localUfragsToReplace].some(uf => ufrags.has(uf))) {
-            this._localUfragsToReplace.clear();
-          }
-        }
-      }
-      this.updateNegotiationNeeded();
     });
   }
 
@@ -1417,37 +1362,8 @@ class RTCPeerConnection {
     });
   }
 
-  _restartIceNoRenegotiationNeeded() {
-    if (this._closed) {
-      return;
-    }
-    this._localUfragsToReplace = new Set([
-      ...this._getUfragsWithPwds(this._impl.currentLocalDescription),
-      ...this._getUfragsWithPwds(this._impl.pendingLocalDescription),
-    ]);
-  }
-
   restartIce() {
-    this._restartIceNoRenegotiationNeeded();
-    this.updateNegotiationNeeded();
-  }
-
-  _getUfragsWithPwds(sdp) {
-    return (
-      sdp
-        .split("\r\nm=")
-        .map(block => block.split("\r\n"))
-        .map(lines => [
-          lines.find(l => l.startsWith("a=ice-ufrag:")),
-          lines.find(l => l.startsWith("a=ice-pwd:")),
-        ])
-        // Even though our own SDP doesn't currently do this: JSEP says properties
-        // found in the session (array[0]) apply to all m-lines that don't specify
-        // them, like default values.
-        .map(([a, b], i, array) => [a || array[0][0], b || array[0][1]])
-        .filter(([a, b]) => a && b)
-        .map(array => array.join())
-    );
+    this._pc.restartIce();
   }
 
   addStream(stream) {
@@ -1570,34 +1486,7 @@ class RTCPeerConnection {
   }
 
   updateNegotiationNeeded() {
-    if (this._operations.length) {
-      this._updateNegotiationNeededOnEmptyChain = true;
-      return;
-    }
-    this._queueTaskWithClosedCheck(() => {
-      if (this._operations.length) {
-        this._updateNegotiationNeededOnEmptyChain = true;
-        return;
-      }
-      if (this.signalingState != "stable") {
-        return;
-      }
-
-      const negotiationNeeded =
-        this._impl.checkNegotiationNeeded() ||
-        this._localUfragsToReplace.size > 0;
-      if (!negotiationNeeded) {
-        this._negotiationNeeded = false;
-        return;
-      }
-
-      if (this._negotiationNeeded) {
-        return;
-      }
-
-      this._negotiationNeeded = true;
-      this.dispatchEvent(new this._win.Event("negotiationneeded"));
-    });
+    this._pc.updateNegotiationNeeded();
   }
 
   _replaceTrackNoRenegotiation(transceiverImpl, withTrack) {
@@ -2091,6 +1980,10 @@ class PeerConnectionObserver {
   fireStreamEvent(stream) {
     const ev = new this._win.MediaStreamEvent("addstream", { stream });
     this.dispatchEvent(ev);
+  }
+
+  fireNegotiationNeededEvent() {
+    this.dispatchEvent(new this._win.Event("negotiationneeded"));
   }
 
   onPacket(level, type, sending, packet) {

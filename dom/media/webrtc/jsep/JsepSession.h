@@ -171,6 +171,8 @@ class JsepSession {
   virtual Maybe<bool> IsPendingOfferer() const = 0;
   virtual Maybe<bool> IsCurrentOfferer() const = 0;
   virtual bool IsIceRestarting() const = 0;
+  virtual std::set<std::pair<std::string, std::string>> GetLocalIceCredentials()
+      const = 0;
 
   virtual const std::string GetLastError() const { return "Error"; }
 

@@ -15,6 +15,8 @@
 
 interface nsISupports;
 
+callback ChainedOperation = Promise<any> ();
+
 /* Must be created first. Observer events will be dispatched on the thread provided */
 [ChromeOnly,
  Exposed=Window]
@@ -43,9 +45,6 @@ interface PeerConnectionImpl  {
   [Throws]
   TransceiverImpl createTransceiverImpl(DOMString kind,
                                         MediaStreamTrack? track);
-  [Throws]
-  boolean checkNegotiationNeeded();
-
   [Throws]
   void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
                                    MediaStreamTrack? withTrack);
@@ -80,6 +79,9 @@ interface PeerConnectionImpl  {
   [Throws]
   void setConfiguration(optional RTCConfiguration config = {});
 
+  void restartIce();
+  void restartIceNoRenegotiationNeeded();
+
   /* Notify DOM window if this plugin crash is ours. */
   boolean pluginCrash(unsigned long long pluginId, DOMString name);
 
@@ -113,4 +115,7 @@ interface PeerConnectionImpl  {
     unsigned short type, boolean ordered,
     unsigned short maxTime, unsigned short maxNum,
     boolean externalNegotiated, unsigned short stream);
+
+  Promise<any> chain(ChainedOperation op);
+  void updateNegotiationNeeded(); 
 };
