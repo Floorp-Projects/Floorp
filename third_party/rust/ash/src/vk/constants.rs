@@ -22,5 +22,5 @@ pub const MAX_DEVICE_GROUP_SIZE: usize = 32;
 pub const MAX_DRIVER_NAME_SIZE: usize = 256;
 pub const MAX_DRIVER_INFO_SIZE: usize = 256;
 pub const SHADER_UNUSED_KHR: u32 = !0;
-pub const MAX_GLOBAL_PRIORITY_SIZE_EXT: usize = 16;
+pub const MAX_GLOBAL_PRIORITY_SIZE_KHR: usize = 16;
 pub const SHADER_UNUSED_NV: u32 = SHADER_UNUSED_KHR;

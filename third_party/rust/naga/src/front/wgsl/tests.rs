@@ -157,11 +157,11 @@ fn parse_type_cast() {
 fn parse_struct() {
     parse_str(
         "
-        struct Foo { x: i32; };
+        struct Foo { x: i32 };
         struct Bar {
-            [[size(16)]] x: vec2<i32>;
-            [[align(16)]] y: f32;
-            [[size(32), align(8)]] z: vec3<f32>;
+            @size(16) x: vec2<i32>,
+            @align(16) y: f32,
+            @size(32) @align(8) z: vec3<f32>,
         };
         struct Empty {};
         var<storage,read_write> s: Foo;
@@ -209,6 +209,26 @@ fn parse_if() {
     parse_str(
         "
         fn main() {
+            if true {
+                discard;
+            } else {}
+            if 0 != 1 {}
+            if false {
+                return;
+            } else if true {
+                return;
+            } else {}
+        }
+    ",
+    )
+    .unwrap();
+}
+
+#[test]
+fn parse_parentheses_if() {
+    parse_str(
+        "
+        fn main() {
             if (true) {
                 discard;
             } else {}
@@ -231,11 +251,11 @@ fn parse_loop() {
         fn main() {
             var i: i32 = 0;
             loop {
-                if (i == 1) { break; }
+                if i == 1 { break; }
                 continuing { i = 1; }
             }
             loop {
-                if (i == 0) { continue; }
+                if i == 0 { continue; }
                 break;
             }
         }
@@ -275,6 +295,21 @@ fn parse_switch() {
                 case 0, 1: { pos = 0.0; }
                 case 2: { pos = 1.0; fallthrough; }
                 case 3: {}
+                default: { pos = 3.0; }
+            }
+        }
+    ",
+    )
+    .unwrap();
+}
+
+#[test]
+fn parse_parentheses_switch() {
+    parse_str(
+        "
+        fn main() {
+            var pos: f32;
+            switch pos > 1.0 {
                 default: { pos = 3.0; }
             }
         }
@@ -380,11 +415,11 @@ fn parse_struct_instantiation() {
     parse_str(
         "
     struct Foo {
-        a: f32;
-        b: vec3<f32>;
+        a: f32,
+        b: vec3<f32>,
     };
     
-    [[stage(fragment)]]
+    @stage(fragment)
     fn fs_main() {
         var foo: Foo = Foo(0.0, vec3<f32>(0.0, 1.0, 42.0));
     }
@@ -398,13 +433,13 @@ fn parse_array_length() {
     parse_str(
         "
         struct Foo {
-            data: [[stride(4)]] array<u32>;
+            data: array<u32>
         }; // this is used as both input and output for convenience
 
-        [[group(0), binding(0)]]
+        @group(0) @binding(0)
         var<storage> foo: Foo;
 
-        [[group(0), binding(1)]]
+        @group(0) @binding(1)
         var<storage> bar: array<u32>;
 
         fn baz() {
@@ -420,28 +455,28 @@ fn parse_array_length() {
 fn parse_storage_buffers() {
     parse_str(
         "
-        [[group(0), binding(0)]]
+        @group(0) @binding(0)
         var<storage> foo: array<u32>;
         ",
     )
     .unwrap();
     parse_str(
         "
-        [[group(0), binding(0)]]
+        @group(0) @binding(0)
         var<storage,read> foo: array<u32>;
         ",
     )
     .unwrap();
     parse_str(
         "
-        [[group(0), binding(0)]]
+        @group(0) @binding(0)
         var<storage,write> foo: array<u32>;
         ",
     )
     .unwrap();
     parse_str(
         "
-        [[group(0), binding(0)]]
+        @group(0) @binding(0)
         var<storage,read_write> foo: array<u32>;
         ",
     )

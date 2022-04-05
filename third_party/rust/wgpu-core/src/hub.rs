@@ -16,21 +16,51 @@ use wgt::Backend;
 use std::cell::Cell;
 use std::{fmt::Debug, marker::PhantomData, mem, ops};
 
-/// A simple structure to manage identities of objects.
+/// A simple structure to allocate [`Id`] identifiers.
+///
+/// Calling [`alloc`] returns a fresh, never-before-seen id. Calling [`free`]
+/// marks an id as dead; it will never be returned again by `alloc`.
+///
+/// Use `IdentityManager::default` to construct new instances.
+///
+/// `IdentityManager` returns `Id`s whose index values are suitable for use as
+/// indices into a `Storage<T>` that holds those ids' referents:
+///
+/// - Every live id has a distinct index value. Each live id's index selects a
+///   distinct element in the vector.
+///
+/// - `IdentityManager` prefers low index numbers. If you size your vector to
+///   accommodate the indices produced here, the vector's length will reflect
+///   the highwater mark of actual occupancy.
+///
+/// - `IdentityManager` reuses the index values of freed ids before returning
+///   ids with new index values. Freed vector entries get reused.
+///
+/// [`Id`]: crate::id::Id
+/// [`Backend`]: wgt::Backend;
+/// [`alloc`]: IdentityManager::alloc
+/// [`free`]: IdentityManager::free
 #[derive(Debug, Default)]
 pub struct IdentityManager {
+    /// Available index values. If empty, then `epochs.len()` is the next index
+    /// to allocate.
     free: Vec<Index>,
+
+    /// The next or currently-live epoch value associated with each `Id` index.
+    ///
+    /// If there is a live id with index `i`, then `epochs[i]` is its epoch; any
+    /// id with the same index but an older epoch is dead.
+    ///
+    /// If index `i` is currently unused, `epochs[i]` is the epoch to use in its
+    /// next `Id`.
     epochs: Vec<Epoch>,
 }
 
 impl IdentityManager {
-    pub fn from_index(min_index: u32) -> Self {
-        Self {
-            free: (0..min_index).collect(),
-            epochs: vec![1; min_index as usize],
-        }
-    }
-
+    /// Allocate a fresh, never-before-seen id with the given `backend`.
+    ///
+    /// The backend is incorporated into the id, so that ids allocated with
+    /// different `backend` values are always distinct.
     pub fn alloc<I: id::TypedId>(&mut self, backend: Backend) -> I {
         match self.free.pop() {
             Some(index) => I::zip(index, self.epochs[index as usize], backend),
@@ -43,19 +73,34 @@ impl IdentityManager {
         }
     }
 
+    /// Free `id`. It will never be returned from `alloc` again.
     pub fn free<I: id::TypedId + Debug>(&mut self, id: I) {
         let (index, epoch, _backend) = id.unzip();
         let pe = &mut self.epochs[index as usize];
         assert_eq!(*pe, epoch);
-        *pe += 1;
-        self.free.push(index);
+        // If the epoch reaches EOL, the index doesn't go
+        // into the free list, will never be reused again.
+        if epoch < id::EPOCH_MASK {
+            *pe = epoch + 1;
+            self.free.push(index);
+        }
     }
 }
 
+/// An entry in a `Storage::map` table.
 #[derive(Debug)]
 enum Element<T> {
+    /// There are no live ids with this index.
     Vacant,
+
+    /// There is one live id with this index, allocated at the given
+    /// epoch.
     Occupied(T, Epoch),
+
+    /// Like `Occupied`, but an error occurred when creating the
+    /// resource.
+    ///
+    /// The given `String` is the resource's descriptor label.
     Error(Epoch, String),
 }
 
@@ -76,6 +121,11 @@ impl StorageReport {
 #[derive(Clone, Debug)]
 pub(crate) struct InvalidId;
 
+/// A table of `T` values indexed by the id type `I`.
+///
+/// The table is represented as a vector indexed by the ids' index
+/// values, so you should use an id allocator like `IdentityManager`
+/// that keeps the index values dense and close to zero.
 #[derive(Debug)]
 pub struct Storage<T, I: id::TypedId> {
     map: Vec<Element<T>>,
@@ -230,10 +280,10 @@ impl<T, I: id::TypedId> Storage<T, I> {
 }
 
 /// Type system for enforcing the lock order on shared HUB structures.
-/// If type A implements `Access<A>`, that means we are allowed to proceed
+/// If type A implements `Access<B>`, that means we are allowed to proceed
 /// with locking resource `B` after we lock `A`.
 ///
-/// The implenentations basically describe the edges in a directed graph
+/// The implementations basically describe the edges in a directed graph
 /// of lock transitions. As long as it doesn't have loops, we can have
 /// multiple concurrent paths on this graph (from multiple threads) without
 /// deadlocks, i.e. there is always a path whose next resource is not locked
@@ -361,7 +411,7 @@ impl<I: id::TypedId + Debug> IdentityHandler<I> for Mutex<IdentityManager> {
 
 pub trait IdentityHandlerFactory<I> {
     type Filter: IdentityHandler<I>;
-    fn spawn(&self, min_index: Index) -> Self::Filter;
+    fn spawn(&self) -> Self::Filter;
 }
 
 #[derive(Debug)]
@@ -369,8 +419,8 @@ pub struct IdentityManagerFactory;
 
 impl<I: id::TypedId + Debug> IdentityHandlerFactory<I> for IdentityManagerFactory {
     type Filter = Mutex<IdentityManager>;
-    fn spawn(&self, min_index: Index) -> Self::Filter {
-        Mutex::new(IdentityManager::from_index(min_index))
+    fn spawn(&self) -> Self::Filter {
+        Mutex::new(IdentityManager::default())
     }
 }
 
@@ -419,7 +469,7 @@ pub struct Registry<T: Resource, I: id::TypedId, F: IdentityHandlerFactory<I>> {
 impl<T: Resource, I: id::TypedId, F: IdentityHandlerFactory<I>> Registry<T, I, F> {
     fn new(backend: Backend, factory: &F) -> Self {
         Self {
-            identity: factory.spawn(0),
+            identity: factory.spawn(),
             data: RwLock::new(Storage {
                 map: Vec::new(),
                 kind: T::TYPE,
@@ -431,7 +481,7 @@ impl<T: Resource, I: id::TypedId, F: IdentityHandlerFactory<I>> Registry<T, I, F
 
     fn without_backend(factory: &F, kind: &'static str) -> Self {
         Self {
-            identity: factory.spawn(1),
+            identity: factory.spawn(),
             data: RwLock::new(Storage {
                 map: Vec::new(),
                 kind,
@@ -1006,10 +1056,16 @@ impl HalApi for hal::api::Dx12 {
     }
 }
 
-/*
 #[cfg(dx11)]
 impl HalApi for hal::api::Dx11 {
     const VARIANT: Backend = Backend::Dx11;
+    fn create_instance_from_hal(name: &str, hal_instance: Self::Instance) -> Instance {
+        Instance {
+            name: name.to_owned(),
+            dx11: Some(hal_instance),
+            ..Default::default()
+        }
+    }
     fn hub<G: GlobalIdentityHandlerFactory>(global: &Global<G>) -> &Hub<Self, G> {
         &global.hubs.dx11
     }
@@ -1020,7 +1076,6 @@ impl HalApi for hal::api::Dx11 {
         surface.dx11.as_mut().unwrap()
     }
 }
-*/
 
 #[cfg(gl)]
 impl HalApi for hal::api::Gles {
@@ -1048,4 +1103,18 @@ impl HalApi for hal::api::Gles {
 fn _test_send_sync(global: &Global<IdentityManagerFactory>) {
     fn test_internal<T: Send + Sync>(_: T) {}
     test_internal(global)
+}
+
+#[test]
+fn test_epoch_end_of_life() {
+    use id::TypedId as _;
+    let mut man = IdentityManager::default();
+    man.epochs.push(id::EPOCH_MASK);
+    man.free.push(0);
+    let id1 = man.alloc::<id::BufferId>(Backend::Empty);
+    assert_eq!(id1.unzip().0, 0);
+    man.free(id1);
+    let id2 = man.alloc::<id::BufferId>(Backend::Empty);
+    // confirm that the index 0 is no longer re-used
+    assert_eq!(id2.unzip().0, 1);
 }

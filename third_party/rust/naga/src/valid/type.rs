@@ -1,6 +1,6 @@
 use super::Capabilities;
 use crate::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, BadHandle, Handle, UniqueArena},
     proc::Alignment,
 };
 
@@ -72,6 +72,8 @@ pub enum Disalignment {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum TypeError {
+    #[error(transparent)]
+    BadHandle(#[from] BadHandle),
     #[error("The {0:?} scalar width {1} is not supported")]
     InvalidWidth(crate::ScalarKind, crate::Bytes),
     #[error("The {0:?} scalar width {1} is not supported for an atomic")]
@@ -80,10 +82,10 @@ pub enum TypeError {
     UnresolvedBase(Handle<crate::Type>),
     #[error("Invalid type for pointer target {0:?}")]
     InvalidPointerBase(Handle<crate::Type>),
-    #[error("Unsized types like {base:?} must be in the `Storage` storage class, not `{class:?}`")]
+    #[error("Unsized types like {base:?} must be in the `Storage` address space, not `{space:?}`")]
     InvalidPointerToUnsized {
         base: Handle<crate::Type>,
-        class: crate::StorageClass,
+        space: crate::AddressSpace,
     },
     #[error("Expected data type, found {0:?}")]
     InvalidData(Handle<crate::Type>),
@@ -95,8 +97,8 @@ pub enum TypeError {
     UnsupportedSpecializedArrayLength(Handle<crate::Constant>),
     #[error("Array type {0:?} must have a length of one or more")]
     NonPositiveArrayLength(Handle<crate::Constant>),
-    #[error("Array stride {stride} is smaller than the base element size {base_size}")]
-    InsufficientArrayStride { stride: u32, base_size: u32 },
+    #[error("Array stride {stride} does not match the expected {expected}")]
+    InvalidArrayStride { stride: u32, expected: u32 },
     #[error("Field '{0}' can't be dynamically-sized, has type {1:?}")]
     InvalidDynamicArray(String, Handle<crate::Type>),
     #[error("Structure member[{index}] at {offset} overlaps the previous member")]
@@ -255,8 +257,8 @@ impl super::Validator {
                     width as u32,
                 )
             }
-            Ti::Pointer { base, class } => {
-                use crate::StorageClass as Sc;
+            Ti::Pointer { base, space } => {
+                use crate::AddressSpace as As;
 
                 if base >= handle {
                     return Err(TypeError::UnresolvedBase(base));
@@ -268,8 +270,8 @@ impl super::Validator {
                 }
 
                 // Runtime-sized values can only live in the `Storage` storage
-                // class, so it's useless to have a pointer to such a type in
-                // any other class.
+                // space, so it's useless to have a pointer to such a type in
+                // any other space.
                 //
                 // Detecting this problem here prevents the definition of
                 // functions like:
@@ -279,25 +281,25 @@ impl super::Validator {
                 // which would otherwise be permitted, but uncallable. (They
                 // may also present difficulties in code generation).
                 if !base_info.flags.contains(TypeFlags::SIZED) {
-                    match class {
-                        Sc::Storage { .. } => {}
+                    match space {
+                        As::Storage { .. } => {}
                         _ => {
-                            return Err(TypeError::InvalidPointerToUnsized { base, class });
+                            return Err(TypeError::InvalidPointerToUnsized { base, space });
                         }
                     }
                 }
 
                 // Pointers passed as arguments to user-defined functions must
                 // be in the `Function`, `Private`, or `Workgroup` storage
-                // class. We only mark pointers in those classes as `ARGUMENT`.
+                // space. We only mark pointers in those spaces as `ARGUMENT`.
                 //
                 // `Validator::validate_function` actually checks the storage
-                // class of pointer arguments explicitly before checking the
+                // space of pointer arguments explicitly before checking the
                 // `ARGUMENT` flag, to give better error messages. But it seems
                 // best to set `ARGUMENT` accurately anyway.
-                let argument_flag = match class {
-                    Sc::Function | Sc::Private | Sc::WorkGroup => TypeFlags::ARGUMENT,
-                    Sc::Uniform | Sc::Storage { .. } | Sc::Handle | Sc::PushConstant => {
+                let argument_flag = match space {
+                    As::Function | As::Private | As::WorkGroup => TypeFlags::ARGUMENT,
+                    As::Uniform | As::Storage { .. } | As::Handle | As::PushConstant => {
                         TypeFlags::empty()
                     }
                 };
@@ -310,7 +312,7 @@ impl super::Validator {
                 size: _,
                 kind,
                 width,
-                class: _,
+                space: _,
             } => {
                 if !self.check_width(kind, width) {
                     return Err(TypeError::InvalidWidth(kind, width));
@@ -326,18 +328,20 @@ impl super::Validator {
                     return Err(TypeError::InvalidArrayBaseType(base));
                 }
 
-                let base_size = types[base].inner.span(constants);
-                if stride < base_size {
-                    return Err(TypeError::InsufficientArrayStride { stride, base_size });
+                let base_layout = self.layouter[base];
+                let expected_stride = base_layout.to_stride();
+                if stride != expected_stride {
+                    return Err(TypeError::InvalidArrayStride {
+                        stride,
+                        expected: expected_stride,
+                    });
                 }
 
-                let general_alignment = self.layouter[base].alignment;
+                let general_alignment = base_layout.alignment.get();
                 let uniform_layout = match base_info.uniform_layout {
                     Ok(base_alignment) => {
                         // combine the alignment requirements
-                        let align = ((base_alignment.unwrap().get() - 1)
-                            | (general_alignment.get() - 1))
-                            + 1;
+                        let align = base_alignment.unwrap().get().max(general_alignment);
                         if stride % align != 0 {
                             Err((
                                 handle,
@@ -354,9 +358,7 @@ impl super::Validator {
                 };
                 let storage_layout = match base_info.storage_layout {
                     Ok(base_alignment) => {
-                        let align = ((base_alignment.unwrap().get() - 1)
-                            | (general_alignment.get() - 1))
-                            + 1;
+                        let align = base_alignment.unwrap().get().max(general_alignment);
                         if stride % align != 0 {
                             Err((
                                 handle,
@@ -374,11 +376,12 @@ impl super::Validator {
 
                 let sized_flag = match size {
                     crate::ArraySize::Constant(const_handle) => {
-                        let length_is_positive = match constants.try_get(const_handle) {
-                            Some(&crate::Constant {
+                        let constant = constants.try_get(const_handle)?;
+                        let length_is_positive = match *constant {
+                            crate::Constant {
                                 specialization: Some(_),
                                 ..
-                            }) => {
+                            } => {
                                 // Many of our back ends don't seem to support
                                 // specializable array lengths. If you want to try to make
                                 // this work, be sure to address all uses of
@@ -388,28 +391,28 @@ impl super::Validator {
                                     const_handle,
                                 ));
                             }
-                            Some(&crate::Constant {
+                            crate::Constant {
                                 inner:
                                     crate::ConstantInner::Scalar {
                                         width: _,
                                         value: crate::ScalarValue::Uint(length),
                                     },
                                 ..
-                            }) => length > 0,
+                            } => length > 0,
                             // Accept a signed integer size to avoid
                             // requiring an explicit uint
                             // literal. Type inference should make
                             // this unnecessary.
-                            Some(&crate::Constant {
+                            crate::Constant {
                                 inner:
                                     crate::ConstantInner::Scalar {
                                         width: _,
                                         value: crate::ScalarValue::Sint(length),
                                     },
                                 ..
-                            }) => length > 0,
-                            other => {
-                                log::warn!("Array size {:?}", other);
+                            } => length > 0,
+                            _ => {
+                                log::warn!("Array size {:?}", constant);
                                 return Err(TypeError::InvalidArraySizeConstant(const_handle));
                             }
                         };
@@ -478,7 +481,9 @@ impl super::Validator {
                             });
                         }
                     }
-                    let base_size = types[member.ty].inner.span(constants);
+
+                    //Note: `unwrap()` is fine because `Layouter` goes first and checks this
+                    let base_size = types[member.ty].inner.size(constants);
                     min_offset = member.offset + base_size;
                     if min_offset > span {
                         return Err(TypeError::MemberOutOfBounds {

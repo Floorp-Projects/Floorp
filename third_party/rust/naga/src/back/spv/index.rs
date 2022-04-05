@@ -1,6 +1,11 @@
-//! Bounds-checking for SPIR-V output.
+/*!
+Bounds-checking for SPIR-V output.
+*/
 
-use super::{selection::Selection, Block, BlockContext, Error, IdGenerator, Instruction, Word};
+use super::{
+    helpers::global_needs_wrapper, selection::Selection, Block, BlockContext, Error, IdGenerator,
+    Instruction, Word,
+};
 use crate::{arena::Handle, proc::BoundsCheckPolicy};
 
 /// The results of performing a bounds check.
@@ -30,16 +35,18 @@ pub(super) enum MaybeKnown<T> {
 impl<'w> BlockContext<'w> {
     /// Emit code to compute the length of a run-time array.
     ///
-    /// Given `array`, an expression referring to the final member of a struct,
-    /// where the member in question is a runtime-sized array, return the
+    /// Given `array`, an expression referring a runtime-sized array, return the
     /// instruction id for the array's length.
     pub(super) fn write_runtime_array_length(
         &mut self,
         array: Handle<crate::Expression>,
         block: &mut Block,
     ) -> Result<Word, Error> {
-        // Look into the expression to find the value and type of the struct
-        // holding the dynamically-sized array.
+        // Naga IR permits runtime-sized arrays as global variables or as the
+        // final member of a struct that is a global variable. SPIR-V permits
+        // only the latter, so this back end wraps bare runtime-sized arrays
+        // in a made-up struct; see `helpers::global_needs_wrapper` and its uses.
+        // This code must handle both cases.
         let (structure_id, last_member_index) = match self.ir_function.expressions[array] {
             crate::Expression::AccessIndex { base, index } => {
                 match self.ir_function.expressions[base] {
@@ -49,6 +56,14 @@ impl<'w> BlockContext<'w> {
                     ),
                     _ => return Err(Error::Validation("array length expression")),
                 }
+            }
+            crate::Expression::GlobalVariable(handle) => {
+                let global = &self.ir_module.global_variables[handle];
+                if !global_needs_wrapper(self.ir_module, global) {
+                    return Err(Error::Validation("array length expression"));
+                }
+
+                (self.writer.global_variables[handle.index()].var_id, 0)
             }
             _ => return Err(Error::Validation("array length expression")),
         };
@@ -79,13 +94,17 @@ impl<'w> BlockContext<'w> {
         block: &mut Block,
     ) -> Result<MaybeKnown<u32>, Error> {
         let sequence_ty = self.fun_info[sequence].ty.inner_with(&self.ir_module.types);
-        match sequence_ty.indexable_length(self.ir_module)? {
-            crate::proc::IndexableLength::Known(known_length) => {
+        match sequence_ty.indexable_length(self.ir_module) {
+            Ok(crate::proc::IndexableLength::Known(known_length)) => {
                 Ok(MaybeKnown::Known(known_length))
             }
-            crate::proc::IndexableLength::Dynamic => {
+            Ok(crate::proc::IndexableLength::Dynamic) => {
                 let length_id = self.write_runtime_array_length(sequence, block)?;
                 Ok(MaybeKnown::Computed(length_id))
+            }
+            Err(err) => {
+                log::error!("Sequence length for {:?} failed: {}", sequence, err);
+                Err(Error::Validation("indexable length"))
             }
         }
     }
@@ -309,7 +328,7 @@ impl<'w> BlockContext<'w> {
     /// Emit code for bounds checks for an array, vector, or matrix access.
     ///
     /// This implements either `index_bounds_check_policy` or
-    /// `buffer_bounds_check_policy`, depending on the storage class of the
+    /// `buffer_bounds_check_policy`, depending on the address space of the
     /// pointer being accessed.
     ///
     /// Return a `BoundsCheckResult` indicating how the index should be

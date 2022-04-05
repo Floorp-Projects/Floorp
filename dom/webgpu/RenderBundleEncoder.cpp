@@ -40,7 +40,7 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
     desc.label = label.get();
   }
 
-  ffi::WGPUTextureFormat depthStencilFormat = ffi::WGPUTextureFormat_Sentinel;
+  ffi::WGPUTextureFormat depthStencilFormat = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mDepthStencilFormat.WasPassed()) {
     WebGPUChild::ConvertTextureFormatRef(aDesc.mDepthStencilFormat.Value(),
                                          depthStencilFormat);
@@ -49,7 +49,7 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
 
   std::vector<ffi::WGPUTextureFormat> colorFormats = {};
   for (const auto i : IntegerRange(aDesc.mColorFormats.Length())) {
-    ffi::WGPUTextureFormat format = ffi::WGPUTextureFormat_Sentinel;
+    ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
     WebGPUChild::ConvertTextureFormatRef(aDesc.mColorFormats[i], format);
     colorFormats.push_back(format);
   }

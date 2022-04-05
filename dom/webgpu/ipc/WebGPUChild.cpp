@@ -43,115 +43,174 @@ static ffi::WGPUCompareFunction ConvertCompareFunction(
 
 static ffi::WGPUTextureFormat ConvertTextureFormat(
     const dom::GPUTextureFormat& aFormat) {
+  ffi::WGPUTextureFormat result = {ffi::WGPUTextureFormat_Sentinel};
   switch (aFormat) {
     case dom::GPUTextureFormat::R8unorm:
-      return ffi::WGPUTextureFormat_R8Unorm;
+      result.tag = ffi::WGPUTextureFormat_R8Unorm;
+      break;
     case dom::GPUTextureFormat::R8snorm:
-      return ffi::WGPUTextureFormat_R8Snorm;
+      result.tag = ffi::WGPUTextureFormat_R8Snorm;
+      break;
     case dom::GPUTextureFormat::R8uint:
-      return ffi::WGPUTextureFormat_R8Uint;
+      result.tag = ffi::WGPUTextureFormat_R8Uint;
+      break;
     case dom::GPUTextureFormat::R8sint:
-      return ffi::WGPUTextureFormat_R8Sint;
+      result.tag = ffi::WGPUTextureFormat_R8Sint;
+      break;
     case dom::GPUTextureFormat::R16uint:
-      return ffi::WGPUTextureFormat_R16Uint;
+      result.tag = ffi::WGPUTextureFormat_R16Uint;
+      break;
     case dom::GPUTextureFormat::R16sint:
-      return ffi::WGPUTextureFormat_R16Sint;
+      result.tag = ffi::WGPUTextureFormat_R16Sint;
+      break;
     case dom::GPUTextureFormat::R16float:
-      return ffi::WGPUTextureFormat_R16Float;
+      result.tag = ffi::WGPUTextureFormat_R16Float;
+      break;
     case dom::GPUTextureFormat::Rg8unorm:
-      return ffi::WGPUTextureFormat_Rg8Unorm;
+      result.tag = ffi::WGPUTextureFormat_Rg8Unorm;
+      break;
     case dom::GPUTextureFormat::Rg8snorm:
-      return ffi::WGPUTextureFormat_Rg8Snorm;
+      result.tag = ffi::WGPUTextureFormat_Rg8Snorm;
+      break;
     case dom::GPUTextureFormat::Rg8uint:
-      return ffi::WGPUTextureFormat_Rg8Uint;
+      result.tag = ffi::WGPUTextureFormat_Rg8Uint;
+      break;
     case dom::GPUTextureFormat::Rg8sint:
-      return ffi::WGPUTextureFormat_Rg8Sint;
+      result.tag = ffi::WGPUTextureFormat_Rg8Sint;
+      break;
     case dom::GPUTextureFormat::R32uint:
-      return ffi::WGPUTextureFormat_R32Uint;
+      result.tag = ffi::WGPUTextureFormat_R32Uint;
+      break;
     case dom::GPUTextureFormat::R32sint:
-      return ffi::WGPUTextureFormat_R32Sint;
+      result.tag = ffi::WGPUTextureFormat_R32Sint;
+      break;
     case dom::GPUTextureFormat::R32float:
-      return ffi::WGPUTextureFormat_R32Float;
+      result.tag = ffi::WGPUTextureFormat_R32Float;
+      break;
     case dom::GPUTextureFormat::Rg16uint:
-      return ffi::WGPUTextureFormat_Rg16Uint;
+      result.tag = ffi::WGPUTextureFormat_Rg16Uint;
+      break;
     case dom::GPUTextureFormat::Rg16sint:
-      return ffi::WGPUTextureFormat_Rg16Sint;
+      result.tag = ffi::WGPUTextureFormat_Rg16Sint;
+      break;
     case dom::GPUTextureFormat::Rg16float:
-      return ffi::WGPUTextureFormat_Rg16Float;
+      result.tag = ffi::WGPUTextureFormat_Rg16Float;
+      break;
     case dom::GPUTextureFormat::Rgba8unorm:
-      return ffi::WGPUTextureFormat_Rgba8Unorm;
+      result.tag = ffi::WGPUTextureFormat_Rgba8Unorm;
+      break;
     case dom::GPUTextureFormat::Rgba8unorm_srgb:
-      return ffi::WGPUTextureFormat_Rgba8UnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Rgba8UnormSrgb;
+      break;
     case dom::GPUTextureFormat::Rgba8snorm:
-      return ffi::WGPUTextureFormat_Rgba8Snorm;
+      result.tag = ffi::WGPUTextureFormat_Rgba8Snorm;
+      break;
     case dom::GPUTextureFormat::Rgba8uint:
-      return ffi::WGPUTextureFormat_Rgba8Uint;
+      result.tag = ffi::WGPUTextureFormat_Rgba8Uint;
+      break;
     case dom::GPUTextureFormat::Rgba8sint:
-      return ffi::WGPUTextureFormat_Rgba8Sint;
+      result.tag = ffi::WGPUTextureFormat_Rgba8Sint;
+      break;
     case dom::GPUTextureFormat::Bgra8unorm:
-      return ffi::WGPUTextureFormat_Bgra8Unorm;
+      result.tag = ffi::WGPUTextureFormat_Bgra8Unorm;
+      break;
     case dom::GPUTextureFormat::Bgra8unorm_srgb:
-      return ffi::WGPUTextureFormat_Bgra8UnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Bgra8UnormSrgb;
+      break;
     case dom::GPUTextureFormat::Rgb10a2unorm:
-      return ffi::WGPUTextureFormat_Rgb10a2Unorm;
+      result.tag = ffi::WGPUTextureFormat_Rgb10a2Unorm;
+      break;
     case dom::GPUTextureFormat::Rg11b10float:
-      return ffi::WGPUTextureFormat_Rg11b10Float;
+      result.tag = ffi::WGPUTextureFormat_Rg11b10Float;
+      break;
     case dom::GPUTextureFormat::Rg32uint:
-      return ffi::WGPUTextureFormat_Rg32Uint;
+      result.tag = ffi::WGPUTextureFormat_Rg32Uint;
+      break;
     case dom::GPUTextureFormat::Rg32sint:
-      return ffi::WGPUTextureFormat_Rg32Sint;
+      result.tag = ffi::WGPUTextureFormat_Rg32Sint;
+      break;
     case dom::GPUTextureFormat::Rg32float:
-      return ffi::WGPUTextureFormat_Rg32Float;
+      result.tag = ffi::WGPUTextureFormat_Rg32Float;
+      break;
     case dom::GPUTextureFormat::Rgba16uint:
-      return ffi::WGPUTextureFormat_Rgba16Uint;
+      result.tag = ffi::WGPUTextureFormat_Rgba16Uint;
+      break;
     case dom::GPUTextureFormat::Rgba16sint:
-      return ffi::WGPUTextureFormat_Rgba16Sint;
+      result.tag = ffi::WGPUTextureFormat_Rgba16Sint;
+      break;
     case dom::GPUTextureFormat::Rgba16float:
-      return ffi::WGPUTextureFormat_Rgba16Float;
+      result.tag = ffi::WGPUTextureFormat_Rgba16Float;
+      break;
     case dom::GPUTextureFormat::Rgba32uint:
-      return ffi::WGPUTextureFormat_Rgba32Uint;
+      result.tag = ffi::WGPUTextureFormat_Rgba32Uint;
+      break;
     case dom::GPUTextureFormat::Rgba32sint:
-      return ffi::WGPUTextureFormat_Rgba32Sint;
+      result.tag = ffi::WGPUTextureFormat_Rgba32Sint;
+      break;
     case dom::GPUTextureFormat::Rgba32float:
-      return ffi::WGPUTextureFormat_Rgba32Float;
+      result.tag = ffi::WGPUTextureFormat_Rgba32Float;
+      break;
     case dom::GPUTextureFormat::Depth32float:
-      return ffi::WGPUTextureFormat_Depth32Float;
+      result.tag = ffi::WGPUTextureFormat_Depth32Float;
+      break;
     case dom::GPUTextureFormat::Bc1_rgba_unorm:
-      return ffi::WGPUTextureFormat_Bc1RgbaUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc1RgbaUnorm;
+      break;
     case dom::GPUTextureFormat::Bc1_rgba_unorm_srgb:
-      return ffi::WGPUTextureFormat_Bc1RgbaUnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Bc1RgbaUnormSrgb;
+      break;
     case dom::GPUTextureFormat::Bc4_r_unorm:
-      return ffi::WGPUTextureFormat_Bc4RUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc4RUnorm;
+      break;
     case dom::GPUTextureFormat::Bc4_r_snorm:
-      return ffi::WGPUTextureFormat_Bc4RSnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc4RSnorm;
+      break;
     case dom::GPUTextureFormat::Bc2_rgba_unorm:
-      return ffi::WGPUTextureFormat_Bc2RgbaUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc2RgbaUnorm;
+      break;
     case dom::GPUTextureFormat::Bc2_rgba_unorm_srgb:
-      return ffi::WGPUTextureFormat_Bc2RgbaUnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Bc2RgbaUnormSrgb;
+      break;
     case dom::GPUTextureFormat::Bc3_rgba_unorm:
-      return ffi::WGPUTextureFormat_Bc3RgbaUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc3RgbaUnorm;
+      break;
     case dom::GPUTextureFormat::Bc3_rgba_unorm_srgb:
-      return ffi::WGPUTextureFormat_Bc3RgbaUnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Bc3RgbaUnormSrgb;
+      break;
     case dom::GPUTextureFormat::Bc5_rg_unorm:
-      return ffi::WGPUTextureFormat_Bc5RgUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc5RgUnorm;
+      break;
     case dom::GPUTextureFormat::Bc5_rg_snorm:
-      return ffi::WGPUTextureFormat_Bc5RgSnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc5RgSnorm;
+      break;
     case dom::GPUTextureFormat::Bc6h_rgb_ufloat:
-      return ffi::WGPUTextureFormat_Bc6hRgbUfloat;
+      result.tag = ffi::WGPUTextureFormat_Bc6hRgbUfloat;
+      break;
     case dom::GPUTextureFormat::Bc6h_rgb_float:
-      return ffi::WGPUTextureFormat_Bc6hRgbSfloat;
+      result.tag = ffi::WGPUTextureFormat_Bc6hRgbSfloat;
+      break;
     case dom::GPUTextureFormat::Bc7_rgba_unorm:
-      return ffi::WGPUTextureFormat_Bc7RgbaUnorm;
+      result.tag = ffi::WGPUTextureFormat_Bc7RgbaUnorm;
+      break;
     case dom::GPUTextureFormat::Bc7_rgba_unorm_srgb:
-      return ffi::WGPUTextureFormat_Bc7RgbaUnormSrgb;
+      result.tag = ffi::WGPUTextureFormat_Bc7RgbaUnormSrgb;
+      break;
     case dom::GPUTextureFormat::Depth24plus:
-      return ffi::WGPUTextureFormat_Depth24Plus;
+      result.tag = ffi::WGPUTextureFormat_Depth24Plus;
+      break;
     case dom::GPUTextureFormat::Depth24plus_stencil8:
-      return ffi::WGPUTextureFormat_Depth24PlusStencil8;
+      result.tag = ffi::WGPUTextureFormat_Depth24PlusStencil8;
+      break;
     case dom::GPUTextureFormat::EndGuard_:
       MOZ_ASSERT_UNREACHABLE();
   }
-  MOZ_CRASH("unexpected texture format enum");
+
+  // Clang will check for us that the switch above is exhaustive,
+  // but not if we add a 'default' case. So, check this here.
+  MOZ_ASSERT(result.tag != ffi::WGPUTextureFormat_Sentinel,
+             "unexpected texture format enum");
+
+  return result;
 }
 
 void WebGPUChild::ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
@@ -357,7 +416,7 @@ RawId WebGPUChild::TextureCreateView(
     desc.label = label.get();
   }
 
-  ffi::WGPUTextureFormat format = ffi::WGPUTextureFormat_Sentinel;
+  ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mFormat.WasPassed()) {
     format = ConvertTextureFormat(aDesc.mFormat.Value());
     desc.format = &format;

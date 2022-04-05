@@ -9,9 +9,9 @@ use super::{
 };
 use crate::{
     front::{Emitter, Typifier},
-    Arena, BinaryOperator, Block, Constant, Expression, FastHashMap, FunctionArgument, Handle,
-    LocalVariable, RelationalFunction, ScalarKind, ScalarValue, Span, Statement, StorageClass,
-    Type, TypeInner, VectorSize,
+    AddressSpace, Arena, BinaryOperator, Block, Constant, Expression, FastHashMap,
+    FunctionArgument, Handle, LocalVariable, RelationalFunction, ScalarKind, ScalarValue, Span,
+    Statement, Type, TypeInner, VectorSize,
 };
 use std::{convert::TryFrom, ops::Index};
 
@@ -107,7 +107,7 @@ impl Context {
                 let span = parser.module.global_variables.get_span(v);
                 let res = (
                     self.expressions.append(Expression::GlobalVariable(v), span),
-                    parser.module.global_variables[v].class != StorageClass::Handle,
+                    parser.module.global_variables[v].space != AddressSpace::Handle,
                     None,
                 );
                 self.emit_start();
@@ -262,7 +262,7 @@ impl Context {
                     name: None,
                     inner: TypeInner::Pointer {
                         base: arg.ty,
-                        class: StorageClass::Function,
+                        space: AddressSpace::Function,
                     },
                 },
                 span,
@@ -540,7 +540,7 @@ impl Context {
 
                 if ExprPos::Rhs == pos {
                     let resolved = parser.resolve_type(self, pointer, meta)?;
-                    if resolved.pointer_class().is_some() {
+                    if resolved.pointer_space().is_some() {
                         return Ok((
                             Some(self.add_expression(Expression::Load { pointer }, meta, body)),
                             meta,
@@ -579,8 +579,165 @@ impl Context {
                 let right_inner = self.typifier.get(right, &parser.module.types);
 
                 match (left_inner, right_inner) {
-                    (&TypeInner::Vector { .. }, &TypeInner::Vector { .. })
-                    | (&TypeInner::Matrix { .. }, &TypeInner::Matrix { .. }) => match op {
+                    (
+                        &TypeInner::Matrix {
+                            columns: left_columns,
+                            rows: left_rows,
+                            width: left_width,
+                        },
+                        &TypeInner::Matrix {
+                            columns: right_columns,
+                            rows: right_rows,
+                            width: right_width,
+                        },
+                    ) => {
+                        // Check that the two arguments have the same dimensions
+                        if left_columns != right_columns
+                            || left_rows != right_rows
+                            || left_width != right_width
+                        {
+                            parser.errors.push(Error {
+                                kind: ErrorKind::SemanticError(
+                                    format!(
+                                        "Cannot apply operation to {:?} and {:?}",
+                                        left_inner, right_inner
+                                    )
+                                    .into(),
+                                ),
+                                meta,
+                            })
+                        }
+
+                        match op {
+                            BinaryOperator::Divide => {
+                                // Naga IR doesn't support matrix division so we need to
+                                // divide the columns individually and reassemble the matrix
+                                let mut components = Vec::with_capacity(left_columns as usize);
+
+                                for index in 0..left_columns as u32 {
+                                    // Get the column vectors
+                                    let left_vector = self.add_expression(
+                                        Expression::AccessIndex { base: left, index },
+                                        meta,
+                                        body,
+                                    );
+                                    let right_vector = self.add_expression(
+                                        Expression::AccessIndex { base: right, index },
+                                        meta,
+                                        body,
+                                    );
+
+                                    // Divide the vectors
+                                    let column = self.expressions.append(
+                                        Expression::Binary {
+                                            op,
+                                            left: left_vector,
+                                            right: right_vector,
+                                        },
+                                        meta,
+                                    );
+
+                                    components.push(column)
+                                }
+
+                                // Rebuild the matrix from the divided vectors
+                                self.expressions.append(
+                                    Expression::Compose {
+                                        ty: parser.module.types.insert(
+                                            Type {
+                                                name: None,
+                                                inner: TypeInner::Matrix {
+                                                    columns: left_columns,
+                                                    rows: left_rows,
+                                                    width: left_width,
+                                                },
+                                            },
+                                            Span::default(),
+                                        ),
+                                        components,
+                                    },
+                                    meta,
+                                )
+                            }
+                            BinaryOperator::Equal | BinaryOperator::NotEqual => {
+                                // Naga IR doesn't support matrix comparisons so we need to
+                                // compare the columns individually and then fold them together
+                                //
+                                // The folding is done using a logical and for equality and
+                                // a logical or for inequality
+                                let equals = op == BinaryOperator::Equal;
+
+                                let (op, combine, fun) = match equals {
+                                    true => (
+                                        BinaryOperator::Equal,
+                                        BinaryOperator::LogicalAnd,
+                                        RelationalFunction::All,
+                                    ),
+                                    false => (
+                                        BinaryOperator::NotEqual,
+                                        BinaryOperator::LogicalOr,
+                                        RelationalFunction::Any,
+                                    ),
+                                };
+
+                                let mut root = None;
+
+                                for index in 0..left_columns as u32 {
+                                    // Get the column vectors
+                                    let left_vector = self.add_expression(
+                                        Expression::AccessIndex { base: left, index },
+                                        meta,
+                                        body,
+                                    );
+                                    let right_vector = self.add_expression(
+                                        Expression::AccessIndex { base: right, index },
+                                        meta,
+                                        body,
+                                    );
+
+                                    let argument = self.expressions.append(
+                                        Expression::Binary {
+                                            op,
+                                            left: left_vector,
+                                            right: right_vector,
+                                        },
+                                        meta,
+                                    );
+
+                                    // The result of comparing two vectors is a boolean vector
+                                    // so use a relational function like all to get a single
+                                    // boolean value
+                                    let compare = self.add_expression(
+                                        Expression::Relational { fun, argument },
+                                        meta,
+                                        body,
+                                    );
+
+                                    // Fold the result
+                                    root = Some(match root {
+                                        Some(right) => self.add_expression(
+                                            Expression::Binary {
+                                                op: combine,
+                                                left: compare,
+                                                right,
+                                            },
+                                            meta,
+                                            body,
+                                        ),
+                                        None => compare,
+                                    });
+                                }
+
+                                root.unwrap()
+                            }
+                            _ => self.add_expression(
+                                Expression::Binary { left, op, right },
+                                meta,
+                                body,
+                            ),
+                        }
+                    }
+                    (&TypeInner::Vector { .. }, &TypeInner::Vector { .. }) => match op {
                         BinaryOperator::Equal | BinaryOperator::NotEqual => {
                             let equals = op == BinaryOperator::Equal;
 
@@ -659,6 +816,189 @@ impl Context {
                             self.add_expression(Expression::Binary { left, op, right }, meta, body)
                         }
                     },
+                    (
+                        &TypeInner::Scalar {
+                            width: left_width, ..
+                        },
+                        &TypeInner::Matrix {
+                            rows,
+                            columns,
+                            width: right_width,
+                        },
+                    ) => {
+                        // Check that the two arguments have the same width
+                        if left_width != right_width {
+                            parser.errors.push(Error {
+                                kind: ErrorKind::SemanticError(
+                                    format!(
+                                        "Cannot apply operation to {:?} and {:?}",
+                                        left_inner, right_inner
+                                    )
+                                    .into(),
+                                ),
+                                meta,
+                            })
+                        }
+
+                        match op {
+                            BinaryOperator::Divide
+                            | BinaryOperator::Add
+                            | BinaryOperator::Subtract => {
+                                // Naga IR doesn't support all matrix by scalar operations so
+                                // we need for some to turn the scalar into a vector by
+                                // splatting it and then for each column vector apply the
+                                // operation and finally reconstruct the matrix
+                                let scalar_vector = self.add_expression(
+                                    Expression::Splat {
+                                        size: rows,
+                                        value: left,
+                                    },
+                                    meta,
+                                    body,
+                                );
+
+                                let mut components = Vec::with_capacity(columns as usize);
+
+                                for index in 0..columns as u32 {
+                                    // Get the column vector
+                                    let matrix_column = self.add_expression(
+                                        Expression::AccessIndex { base: right, index },
+                                        meta,
+                                        body,
+                                    );
+
+                                    // Apply the operation to the splatted vector and
+                                    // the column vector
+                                    let column = self.expressions.append(
+                                        Expression::Binary {
+                                            op,
+                                            left: scalar_vector,
+                                            right: matrix_column,
+                                        },
+                                        meta,
+                                    );
+
+                                    components.push(column)
+                                }
+
+                                // Rebuild the matrix from the operation result vectors
+                                self.expressions.append(
+                                    Expression::Compose {
+                                        ty: parser.module.types.insert(
+                                            Type {
+                                                name: None,
+                                                inner: TypeInner::Matrix {
+                                                    columns,
+                                                    rows,
+                                                    width: left_width,
+                                                },
+                                            },
+                                            Span::default(),
+                                        ),
+                                        components,
+                                    },
+                                    meta,
+                                )
+                            }
+                            _ => self.add_expression(
+                                Expression::Binary { left, op, right },
+                                meta,
+                                body,
+                            ),
+                        }
+                    }
+                    (
+                        &TypeInner::Matrix {
+                            rows,
+                            columns,
+                            width: left_width,
+                        },
+                        &TypeInner::Scalar {
+                            width: right_width, ..
+                        },
+                    ) => {
+                        // Check that the two arguments have the same width
+                        if left_width != right_width {
+                            parser.errors.push(Error {
+                                kind: ErrorKind::SemanticError(
+                                    format!(
+                                        "Cannot apply operation to {:?} and {:?}",
+                                        left_inner, right_inner
+                                    )
+                                    .into(),
+                                ),
+                                meta,
+                            })
+                        }
+
+                        match op {
+                            BinaryOperator::Divide
+                            | BinaryOperator::Add
+                            | BinaryOperator::Subtract => {
+                                // Naga IR doesn't support all matrix by scalar operations so
+                                // we need for some to turn the scalar into a vector by
+                                // splatting it and then for each column vector apply the
+                                // operation and finally reconstruct the matrix
+
+                                let scalar_vector = self.add_expression(
+                                    Expression::Splat {
+                                        size: rows,
+                                        value: right,
+                                    },
+                                    meta,
+                                    body,
+                                );
+
+                                let mut components = Vec::with_capacity(columns as usize);
+
+                                for index in 0..columns as u32 {
+                                    // Get the column vector
+                                    let matrix_column = self.add_expression(
+                                        Expression::AccessIndex { base: left, index },
+                                        meta,
+                                        body,
+                                    );
+
+                                    // Apply the operation to the splatted vector and
+                                    // the column vector
+                                    let column = self.expressions.append(
+                                        Expression::Binary {
+                                            op,
+                                            left: matrix_column,
+                                            right: scalar_vector,
+                                        },
+                                        meta,
+                                    );
+
+                                    components.push(column)
+                                }
+
+                                // Rebuild the matrix from the operation result vectors
+                                self.expressions.append(
+                                    Expression::Compose {
+                                        ty: parser.module.types.insert(
+                                            Type {
+                                                name: None,
+                                                inner: TypeInner::Matrix {
+                                                    columns,
+                                                    rows,
+                                                    width: left_width,
+                                                },
+                                            },
+                                            Span::default(),
+                                        ),
+                                        components,
+                                    },
+                                    meta,
+                                )
+                            }
+                            _ => self.add_expression(
+                                Expression::Binary { left, op, right },
+                                meta,
+                                body,
+                            ),
+                        }
+                    }
                     _ => self.add_expression(Expression::Binary { left, op, right }, meta, body),
                 }
             }

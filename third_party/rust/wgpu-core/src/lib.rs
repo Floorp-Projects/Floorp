@@ -50,7 +50,11 @@ use atomic::{AtomicUsize, Ordering};
 
 use std::{borrow::Cow, os::raw::c_char, ptr, sync::atomic};
 
+/// The index of a queue submission.
+///
+/// These are the values stored in `Device::fence`.
 type SubmissionIndex = hal::FenceValue;
+
 type Index = u32;
 type Epoch = u32;
 
@@ -71,6 +75,15 @@ impl<'a> LabelHelpers<'a> for Label<'a> {
 }
 
 /// Reference count object that is 1:1 with each reference.
+///
+/// All the clones of a given `RefCount` point to the same
+/// heap-allocated atomic reference count. When the count drops to
+/// zero, only the count is freed. No other automatic cleanup takes
+/// place; this is just a reference count, not a smart pointer.
+///
+/// `RefCount` values are created only by [`LifeGuard::new`] and by
+/// `Clone`, so every `RefCount` is implicitly tied to some
+/// [`LifeGuard`].
 #[derive(Debug)]
 struct RefCount(ptr::NonNull<AtomicUsize>);
 
@@ -80,20 +93,14 @@ unsafe impl Sync for RefCount {}
 impl RefCount {
     const MAX: usize = 1 << 24;
 
-    fn load(&self) -> usize {
-        unsafe { self.0.as_ref() }.load(Ordering::Acquire)
+    /// Construct a new `RefCount`, with an initial count of 1.
+    fn new() -> RefCount {
+        let bx = Box::new(AtomicUsize::new(1));
+        Self(unsafe { ptr::NonNull::new_unchecked(Box::into_raw(bx)) })
     }
 
-    /// This function exists to allow `Self::rich_drop_outer` and `Drop::drop` to share the same
-    /// logic. To use this safely from outside of `Drop::drop`, the calling function must move
-    /// `Self` into a `ManuallyDrop`.
-    unsafe fn rich_drop_inner(&mut self) -> bool {
-        if self.0.as_ref().fetch_sub(1, Ordering::AcqRel) == 1 {
-            let _ = Box::from_raw(self.0.as_ptr());
-            true
-        } else {
-            false
-        }
+    fn load(&self) -> usize {
+        unsafe { self.0.as_ref() }.load(Ordering::Acquire)
     }
 }
 
@@ -108,7 +115,9 @@ impl Clone for RefCount {
 impl Drop for RefCount {
     fn drop(&mut self) {
         unsafe {
-            self.rich_drop_inner();
+            if self.0.as_ref().fetch_sub(1, Ordering::AcqRel) == 1 {
+                drop(Box::from_raw(self.0.as_ptr()));
+            }
         }
     }
 }
@@ -116,37 +125,64 @@ impl Drop for RefCount {
 /// Reference count object that tracks multiple references.
 /// Unlike `RefCount`, it's manually inc()/dec() called.
 #[derive(Debug)]
-struct MultiRefCount(ptr::NonNull<AtomicUsize>);
-
-unsafe impl Send for MultiRefCount {}
-unsafe impl Sync for MultiRefCount {}
+struct MultiRefCount(AtomicUsize);
 
 impl MultiRefCount {
     fn new() -> Self {
-        let bx = Box::new(AtomicUsize::new(1));
-        let ptr = Box::into_raw(bx);
-        Self(unsafe { ptr::NonNull::new_unchecked(ptr) })
+        Self(AtomicUsize::new(1))
     }
 
     fn inc(&self) {
-        unsafe { self.0.as_ref() }.fetch_add(1, Ordering::AcqRel);
+        self.0.fetch_add(1, Ordering::AcqRel);
     }
 
     fn dec_and_check_empty(&self) -> bool {
-        unsafe { self.0.as_ref() }.fetch_sub(1, Ordering::AcqRel) == 1
+        self.0.fetch_sub(1, Ordering::AcqRel) == 1
     }
 }
 
-impl Drop for MultiRefCount {
-    fn drop(&mut self) {
-        let _ = unsafe { Box::from_raw(self.0.as_ptr()) };
-    }
-}
-
+/// Information needed to decide when it's safe to free some wgpu-core
+/// resource.
+///
+/// Each type representing a `wgpu-core` resource, like [`Device`],
+/// [`Buffer`], etc., contains a `LifeGuard` which indicates whether
+/// it is safe to free.
+///
+/// A resource may need to be retained for any of several reasons:
+///
+/// - The user may hold a reference to it (via a `wgpu::Buffer`, say).
+///
+/// - Other resources may depend on it (a texture view's backing
+///   texture, for example).
+///
+/// - It may be used by commands sent to the GPU that have not yet
+///   finished execution.
+///
+/// [`Device`]: device::Device
+/// [`Buffer`]: resource::Buffer
 #[derive(Debug)]
 pub struct LifeGuard {
+    /// `RefCount` for the user's reference to this resource.
+    ///
+    /// When the user first creates a `wgpu-core` resource, this `RefCount` is
+    /// created along with the resource's `LifeGuard`. When the user drops the
+    /// resource, we swap this out for `None`. Note that the resource may
+    /// still be held alive by other resources.
+    ///
+    /// Any `Stored<T>` value holds a clone of this `RefCount` along with the id
+    /// of a `T` resource.
     ref_count: Option<RefCount>,
+
+    /// The index of the last queue submission in which the resource
+    /// was used.
+    ///
+    /// Each queue submission is fenced and assigned an index number
+    /// sequentially. Thus, when a queue submission completes, we know any
+    /// resources used in that submission and any lower-numbered submissions are
+    /// no longer in use by the GPU.
     submission_index: AtomicUsize,
+
+    /// The `label` from the descriptor used to create the resource.
     #[cfg(debug_assertions)]
     pub(crate) label: String,
 }
@@ -154,9 +190,8 @@ pub struct LifeGuard {
 impl LifeGuard {
     #[allow(unused_variables)]
     fn new(label: &str) -> Self {
-        let bx = Box::new(AtomicUsize::new(1));
         Self {
-            ref_count: ptr::NonNull::new(Box::into_raw(bx)).map(RefCount),
+            ref_count: Some(RefCount::new()),
             submission_index: AtomicUsize::new(0),
             #[cfg(debug_assertions)]
             label: label.to_string(),
@@ -167,7 +202,10 @@ impl LifeGuard {
         self.ref_count.clone().unwrap()
     }
 
-    /// Returns `true` if the resource is still needed by the user.
+    /// Record that this resource will be used by the queue submission with the
+    /// given index.
+    ///
+    /// Returns `true` if the resource is still held by the user.
     fn use_at(&self, submit_index: SubmissionIndex) -> bool {
         self.submission_index
             .store(submit_index as _, Ordering::Release);
@@ -196,20 +234,54 @@ If you are running this program on native and not in a browser and wish to work 
 Adapter::downlevel_properties or Device::downlevel_properties to get a listing of the features the current \
 platform supports.";
 
+/// Call a `Global` method, dispatching dynamically to the appropriate back end.
+///
+/// Uses of this macro have the form:
+///
+/// ```ignore
+///
+///     gfx_select!(id => global.method(args...))
+///
+/// ```
+///
+/// where `id` is some [`id::Id`] resource id, `global` is a [`hub::Global`],
+/// and `method` is any method on [`Global`] that takes a single generic
+/// parameter that implements [`hal::Api`] (for example,
+/// [`Global::device_create_buffer`]).
+///
+/// The `wgpu-core` crate can support multiple back ends simultaneously (Vulkan,
+/// Metal, etc.), depending on features and availability. Each [`Id`]'s value
+/// indicates which back end its resource belongs to. This macro does a switch
+/// on `id`'s back end, and calls the `Global` method specialized for that back
+/// end.
+///
+/// Internally to `wgpu-core`, most types take the back end (some type that
+/// implements `hal::Api`) as a generic parameter, so their methods are compiled
+/// with full knowledge of which back end they're working with. This macro
+/// serves as the boundary between dynamic `Id` values provided by `wgpu-core`'s
+/// users and the crate's mostly-monomorphized implementation, selecting the
+/// `hal::Api` implementation appropriate to the `Id` value's back end.
+///
+/// [`Global`]: hub::Global
+/// [`Global::device_create_buffer`]: hub::Global::device_create_buffer
+/// [`Id`]: id::Id
 #[macro_export]
 macro_rules! gfx_select {
     ($id:expr => $global:ident.$method:ident( $($param:expr),* )) => {
         // Note: For some reason the cfg aliases defined in build.rs don't succesfully apply in this
         // macro so we must specify their equivalents manually
         match $id.backend() {
-            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "ios"), not(target_os = "macos")))]
+            #[cfg(any(
+                all(not(target_arch = "wasm32"), not(target_os = "ios"), not(target_os = "macos")),
+                feature = "vulkan-portability"
+            ))]
             wgt::Backend::Vulkan => $global.$method::<$crate::api::Vulkan>( $($param),* ),
             #[cfg(all(not(target_arch = "wasm32"), any(target_os = "ios", target_os = "macos")))]
             wgt::Backend::Metal => $global.$method::<$crate::api::Metal>( $($param),* ),
             #[cfg(all(not(target_arch = "wasm32"), windows))]
             wgt::Backend::Dx12 => $global.$method::<$crate::api::Dx12>( $($param),* ),
-            //#[cfg(all(not(target_arch = "wasm32"), windows))]
-            //wgt::Backend::Dx11 => $global.$method::<$crate::api::Dx11>( $($param),* ),
+            #[cfg(all(not(target_arch = "wasm32"), windows))]
+            wgt::Backend::Dx11 => $global.$method::<$crate::api::Dx11>( $($param),* ),
             #[cfg(any(
                 all(unix, not(target_os = "macos"), not(target_os = "ios")),
                 feature = "angle",
@@ -249,14 +321,6 @@ pub(crate) fn get_greatest_common_divisor(mut a: u32, mut b: u32) -> u32 {
             a = b;
             b = c;
         }
-    }
-}
-
-#[inline]
-pub(crate) fn align_to(value: u32, alignment: u32) -> u32 {
-    match value % alignment {
-        0 => value,
-        other => value - other + alignment,
     }
 }
 
