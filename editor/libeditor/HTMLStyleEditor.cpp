@@ -484,6 +484,8 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return splitAtStartResult.Rv();
     }
+    textNodeForTheRange =
+        Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
   }
 
   if (aAttribute) {
@@ -2408,6 +2410,9 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return splitAtStartResult.Rv();
     }
+    textNodeForTheRange =
+        Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
+    MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
   }
 
   // Look for siblings that are correct type of node
