@@ -121,7 +121,7 @@ interface nsIFile : nsISupports
      *  This will copy this file to the specified newParentDir.
      *  If a newName is specified, the file will be renamed.
      *  If 'this' is not created we will return an error
-     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *  (NS_ERROR_FILE_NOT_FOUND).
      *
      *  copyTo may fail if the file already exists in the destination
      *  directory.
@@ -163,7 +163,7 @@ interface nsIFile : nsISupports
      *  A method to move this file or directory to newParentDir.
      *  If a newName is specified, the file or directory will be renamed.
      *  If 'this' is not created we will return an error
-     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *  (NS_ERROR_FILE_NOT_FOUND).
      *  If 'this' is a file, and the destination file already exists, moveTo
      *  will replace the old file.
      *  This object is updated to refer to the new file.

@@ -67,7 +67,7 @@ inline nsresult nsresultForErrno(int aErr) {
     case ENOEXEC: /*     Executable file format error. */
       return NS_ERROR_FILE_EXECUTION_FAILED;
     case ENOENT:
-      return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+      return NS_ERROR_FILE_NOT_FOUND;
     case ENOTDIR:
       return NS_ERROR_FILE_DESTINATION_NOT_DIR;
 #ifdef ELOOP
