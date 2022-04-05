@@ -24,9 +24,6 @@ static constexpr ValueOperand R2(rax);
 static constexpr Register ICTailCallReg = rsi;
 static constexpr Register ICStubReg = rdi;
 
-static constexpr Register ExtractTemp0 = r14;
-static constexpr Register ExtractTemp1 = r15;
-
 // FloatReg0 must be equal to ReturnFloatReg.
 static constexpr FloatRegister FloatReg0 = xmm0;
 static constexpr FloatRegister FloatReg1 = xmm1;

@@ -37,15 +37,6 @@ static constexpr ValueOperand R2(R2_);
 static constexpr Register ICTailCallReg = r30;
 static constexpr Register ICStubReg = r9;
 
-// ExtractTemps must be callee-save registers:
-// ICSetProp_Native::Compiler::generateStubCode() stores the object
-// in ExtractTemp0, but then calls callTypeUpdateIC(), which clobbers
-// caller-save registers.
-// They should also not be the scratch registers ip0 or ip1,
-// since those get clobbered all the time.
-static constexpr Register ExtractTemp0 = r24;
-static constexpr Register ExtractTemp1 = r25;
-
 // R7 - R9 are generally available for use within stubcode.
 
 // Note that BaselineTailCallReg is actually just the link

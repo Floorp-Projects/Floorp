@@ -24,9 +24,6 @@ static constexpr ValueOperand R2 = JSReturnOperand;
 static constexpr Register ICTailCallReg{Registers::invalid_reg};
 static constexpr Register ICStubReg{Registers::invalid_reg};
 
-static constexpr Register ExtractTemp0{Registers::invalid_reg};
-static constexpr Register ExtractTemp1{Registers::invalid_reg};
-
 static constexpr FloatRegister FloatReg0 = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister FloatReg1 = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister FloatReg2 = {FloatRegisters::invalid_reg};
