@@ -36,7 +36,6 @@ import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.autofill.AutofillUseCases
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
-import mozilla.components.feature.serviceworker.ServiceWorkerSupport
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -196,10 +195,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         setupLeakCanary()
         startMetricsIfEnabled()
-        ServiceWorkerSupport.install(
-            components.core.engine,
-            components.useCases.tabsUseCases.addTab
-        )
         setupPush()
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())

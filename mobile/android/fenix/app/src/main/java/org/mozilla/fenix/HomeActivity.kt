@@ -160,6 +160,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         WebExtensionPopupFeature(components.core.store, ::openPopup)
     }
 
+    private val serviceWorkerSupport by lazy {
+        ServiceWorkerSupportFeature(this)
+    }
+
     private var inflater: LayoutInflater? = null
 
     private val navHost by lazy {
@@ -264,7 +268,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
         supportActionBar?.hide()
 
-        lifecycle.addObservers(webExtensionPopupFeature)
+        lifecycle.addObservers(webExtensionPopupFeature, serviceWorkerSupport)
 
         if (shouldAddToRecentsScreen(intent)) {
             intent.removeExtra(START_IN_RECENTS_SCREEN)
