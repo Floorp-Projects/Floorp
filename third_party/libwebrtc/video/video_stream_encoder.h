@@ -192,8 +192,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   void TraceFrameDropEnd();
 
   // Returns a copy of |rate_settings| with the |bitrate| field updated using
-  // the current VideoBitrateAllocator.
-  EncoderRateSettings UpdateBitrateAllocation(
+  // the current VideoBitrateAllocator, and notifies any listeners of the new
+  // allocation.
+  EncoderRateSettings UpdateBitrateAllocationAndNotifyObserver(
       const EncoderRateSettings& rate_settings) RTC_RUN_ON(&encoder_queue_);
 
   uint32_t GetInputFramerateFps() RTC_RUN_ON(&encoder_queue_);
