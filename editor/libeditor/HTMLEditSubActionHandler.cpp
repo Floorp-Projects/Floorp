@@ -7280,7 +7280,7 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
   Result<EditorDOMPoint, nsresult> preparationResult =
       WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
           *this, aStartOfRightNode, aParentDivOrP);
-  if (preparationResult.isErr()) {
+  if (MOZ_UNLIKELY(preparationResult.isErr())) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
     return preparationResult.unwrapErr();
@@ -7301,25 +7301,39 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
     return NS_ERROR_FAILURE;
   }
 
+  Element* leftDivOrParagraphElement =
+      Element::FromNode(splitDivOrPResult.GetPreviousContent());
+  MOZ_ASSERT(leftDivOrParagraphElement,
+             "SplitNodeResult::GetPreviousContent() should return something if "
+             "DidSplit() returns true");
+  Element* rightDivOrParagraphElement =
+      Element::FromNode(splitDivOrPResult.GetNextContent());
+  MOZ_ASSERT(rightDivOrParagraphElement,
+             "SplitNodeResult::GetNextContent() should return something if "
+             "DidSplit() returns true");
+
   // Get rid of the break, if it is visible (otherwise it may be needed to
   // prevent an empty p).
   if (aNextBRNode && HTMLEditUtils::IsVisibleBRElement(*aNextBRNode)) {
     nsresult rv = DeleteNodeWithTransaction(*aNextBRNode);
-    if (NS_WARN_IF(Destroyed())) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return rv;
     }
   }
 
-  // Remove ID attribute on the paragraph from the existing right node.
-  nsresult rv = RemoveAttributeWithTransaction(aParentDivOrP, *nsGkAtoms::id);
-  if (NS_WARN_IF(Destroyed())) {
+  // Remove ID attribute on the paragraph from the right node.
+  // MOZ_KnownLive(rightDivOrParagraphElement) because it's grabbed by
+  // splitDivOrPResult.
+  nsresult rv = RemoveAttributeWithTransaction(
+      MOZ_KnownLive(*rightDivOrParagraphElement), *nsGkAtoms::id);
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     NS_WARNING(
         "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::id) failed");
     return rv;
@@ -7331,36 +7345,30 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
   // it'll be exposed as <br> with Element.innerHTML.  Therefore, we can use
   // normal <br> elements for placeholder in this case.  Note that Chromium
   // also behaves so.
-  if (Element* previousElementOfSplitPoint =
-          Element::FromNode(splitDivOrPResult.GetPreviousContent())) {
-    // MOZ_KnownLive(previousElementAtSplitPoint):
-    // It's grabbed by splitDivOrResult.
-    nsresult rv = InsertBRElementIfEmptyBlockElement(
-        MOZ_KnownLive(*previousElementOfSplitPoint));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
-      return rv;
-    }
+  // MOZ_KnownLive(leftDivOrParagraphElement) because it's grabbed by
+  // splitDivOrResult.
+  rv = InsertBRElementIfEmptyBlockElement(
+      MOZ_KnownLive(*leftDivOrParagraphElement));
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
+    return rv;
   }
-  if (Element* nextElementOfSplitPoint =
-          Element::FromNode(splitDivOrPResult.GetNextContent())) {
-    // MOZ_KnownLive(nextElementAtSplitPoint):
-    // It's grabbed by splitDivOrResult.
-    nsresult rv = InsertBRElementIfEmptyBlockElement(
-        MOZ_KnownLive(*nextElementOfSplitPoint));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
-      return rv;
-    }
+  // MOZ_KnownLive(rightDivOrParagraphElement) because it's grabbed by
+  // splitDivOrResult.
+  rv = InsertBRElementIfEmptyBlockElement(
+      MOZ_KnownLive(*rightDivOrParagraphElement));
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
+    return rv;
   }
 
   // selection to beginning of right hand para;
   // look inside any containers that are up front.
   nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstLeafContent(
-      aParentDivOrP, {LeafNodeType::LeafNodeOrChildBlock});
+      *rightDivOrParagraphElement, {LeafNodeType::LeafNodeOrChildBlock});
   if (child && (child->IsText() || HTMLEditUtils::IsContainerNode(*child))) {
     nsresult rv = CollapseSelectionToStartOf(*child);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
@@ -7368,7 +7376,7 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
         "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
   } else {
     nsresult rv = CollapseSelectionTo(EditorRawDOMPoint(child));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
