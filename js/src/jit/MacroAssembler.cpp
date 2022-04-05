@@ -4331,7 +4331,6 @@ void MacroAssembler::branchArrayIsNotPacked(Register array, Register temp1,
   loadPtr(Address(array, NativeObject::offsetOfElements()), temp1);
 
   // Test length == initializedLength.
-  Label done;
   Address initLength(temp1, ObjectElements::offsetOfInitializedLength());
   load32(Address(temp1, ObjectElements::offsetOfLength()), temp2);
   branch32(Assembler::NotEqual, initLength, temp2, label);
