@@ -301,3 +301,151 @@ impl StructureType {
     pub const MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO: Self = Self(1_000_257_003);
     pub const DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO: Self = Self(1_000_257_004);
 }
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl AccessFlags {
+    pub const NONE: Self = Self(0);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl AttachmentStoreOp {
+    pub const NONE: Self = Self(1_000_301_000);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl DescriptorType {
+    pub const INLINE_UNIFORM_BLOCK: Self = Self(1_000_138_000);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl DynamicState {
+    pub const CULL_MODE: Self = Self(1_000_267_000);
+    pub const FRONT_FACE: Self = Self(1_000_267_001);
+    pub const PRIMITIVE_TOPOLOGY: Self = Self(1_000_267_002);
+    pub const VIEWPORT_WITH_COUNT: Self = Self(1_000_267_003);
+    pub const SCISSOR_WITH_COUNT: Self = Self(1_000_267_004);
+    pub const VERTEX_INPUT_BINDING_STRIDE: Self = Self(1_000_267_005);
+    pub const DEPTH_TEST_ENABLE: Self = Self(1_000_267_006);
+    pub const DEPTH_WRITE_ENABLE: Self = Self(1_000_267_007);
+    pub const DEPTH_COMPARE_OP: Self = Self(1_000_267_008);
+    pub const DEPTH_BOUNDS_TEST_ENABLE: Self = Self(1_000_267_009);
+    pub const STENCIL_TEST_ENABLE: Self = Self(1_000_267_010);
+    pub const STENCIL_OP: Self = Self(1_000_267_011);
+    pub const RASTERIZER_DISCARD_ENABLE: Self = Self(1_000_377_001);
+    pub const DEPTH_BIAS_ENABLE: Self = Self(1_000_377_002);
+    pub const PRIMITIVE_RESTART_ENABLE: Self = Self(1_000_377_004);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl EventCreateFlags {
+    pub const DEVICE_ONLY: Self = Self(0b1);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl Format {
+    pub const G8_B8R8_2PLANE_444_UNORM: Self = Self(1_000_330_000);
+    pub const G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16: Self = Self(1_000_330_001);
+    pub const G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16: Self = Self(1_000_330_002);
+    pub const G16_B16R16_2PLANE_444_UNORM: Self = Self(1_000_330_003);
+    pub const A4R4G4B4_UNORM_PACK16: Self = Self(1_000_340_000);
+    pub const A4B4G4R4_UNORM_PACK16: Self = Self(1_000_340_001);
+    pub const ASTC_4X4_SFLOAT_BLOCK: Self = Self(1_000_066_000);
+    pub const ASTC_5X4_SFLOAT_BLOCK: Self = Self(1_000_066_001);
+    pub const ASTC_5X5_SFLOAT_BLOCK: Self = Self(1_000_066_002);
+    pub const ASTC_6X5_SFLOAT_BLOCK: Self = Self(1_000_066_003);
+    pub const ASTC_6X6_SFLOAT_BLOCK: Self = Self(1_000_066_004);
+    pub const ASTC_8X5_SFLOAT_BLOCK: Self = Self(1_000_066_005);
+    pub const ASTC_8X6_SFLOAT_BLOCK: Self = Self(1_000_066_006);
+    pub const ASTC_8X8_SFLOAT_BLOCK: Self = Self(1_000_066_007);
+    pub const ASTC_10X5_SFLOAT_BLOCK: Self = Self(1_000_066_008);
+    pub const ASTC_10X6_SFLOAT_BLOCK: Self = Self(1_000_066_009);
+    pub const ASTC_10X8_SFLOAT_BLOCK: Self = Self(1_000_066_010);
+    pub const ASTC_10X10_SFLOAT_BLOCK: Self = Self(1_000_066_011);
+    pub const ASTC_12X10_SFLOAT_BLOCK: Self = Self(1_000_066_012);
+    pub const ASTC_12X12_SFLOAT_BLOCK: Self = Self(1_000_066_013);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl ImageAspectFlags {
+    pub const NONE: Self = Self(0);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl ImageLayout {
+    pub const READ_ONLY_OPTIMAL: Self = Self(1_000_314_000);
+    pub const ATTACHMENT_OPTIMAL: Self = Self(1_000_314_001);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl ObjectType {
+    pub const PRIVATE_DATA_SLOT: Self = Self(1_000_295_000);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl PipelineCacheCreateFlags {
+    pub const EXTERNALLY_SYNCHRONIZED: Self = Self(0b1);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl PipelineCreateFlags {
+    pub const FAIL_ON_PIPELINE_COMPILE_REQUIRED: Self = Self(0b1_0000_0000);
+    pub const EARLY_RETURN_ON_FAILURE: Self = Self(0b10_0000_0000);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl PipelineShaderStageCreateFlags {
+    pub const ALLOW_VARYING_SUBGROUP_SIZE: Self = Self(0b1);
+    pub const REQUIRE_FULL_SUBGROUPS: Self = Self(0b10);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl PipelineStageFlags {
+    pub const NONE: Self = Self(0);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl Result {
+    pub const PIPELINE_COMPILE_REQUIRED: Self = Self(1_000_297_000);
+}
+#[doc = "Generated from 'VK_VERSION_1_3'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_VULKAN_1_3_FEATURES: Self = Self(53);
+    pub const PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES: Self = Self(54);
+    pub const PIPELINE_CREATION_FEEDBACK_CREATE_INFO: Self = Self(1_000_192_000);
+    pub const PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES: Self = Self(1_000_215_000);
+    pub const PHYSICAL_DEVICE_TOOL_PROPERTIES: Self = Self(1_000_245_000);
+    pub const PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES: Self =
+        Self(1_000_276_000);
+    pub const PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES: Self = Self(1_000_295_000);
+    pub const DEVICE_PRIVATE_DATA_CREATE_INFO: Self = Self(1_000_295_001);
+    pub const PRIVATE_DATA_SLOT_CREATE_INFO: Self = Self(1_000_295_002);
+    pub const PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES: Self = Self(1_000_297_000);
+    pub const MEMORY_BARRIER_2: Self = Self(1_000_314_000);
+    pub const BUFFER_MEMORY_BARRIER_2: Self = Self(1_000_314_001);
+    pub const IMAGE_MEMORY_BARRIER_2: Self = Self(1_000_314_002);
+    pub const DEPENDENCY_INFO: Self = Self(1_000_314_003);
+    pub const SUBMIT_INFO_2: Self = Self(1_000_314_004);
+    pub const SEMAPHORE_SUBMIT_INFO: Self = Self(1_000_314_005);
+    pub const COMMAND_BUFFER_SUBMIT_INFO: Self = Self(1_000_314_006);
+    pub const PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES: Self = Self(1_000_314_007);
+    pub const PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES: Self = Self(1_000_325_000);
+    pub const PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES: Self = Self(1_000_335_000);
+    pub const COPY_BUFFER_INFO_2: Self = Self(1_000_337_000);
+    pub const COPY_IMAGE_INFO_2: Self = Self(1_000_337_001);
+    pub const COPY_BUFFER_TO_IMAGE_INFO_2: Self = Self(1_000_337_002);
+    pub const COPY_IMAGE_TO_BUFFER_INFO_2: Self = Self(1_000_337_003);
+    pub const BLIT_IMAGE_INFO_2: Self = Self(1_000_337_004);
+    pub const RESOLVE_IMAGE_INFO_2: Self = Self(1_000_337_005);
+    pub const BUFFER_COPY_2: Self = Self(1_000_337_006);
+    pub const IMAGE_COPY_2: Self = Self(1_000_337_007);
+    pub const IMAGE_BLIT_2: Self = Self(1_000_337_008);
+    pub const BUFFER_IMAGE_COPY_2: Self = Self(1_000_337_009);
+    pub const IMAGE_RESOLVE_2: Self = Self(1_000_337_010);
+    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES: Self = Self(1_000_225_000);
+    pub const PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO: Self = Self(1_000_225_001);
+    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES: Self = Self(1_000_225_002);
+    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES: Self = Self(1_000_138_000);
+    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES: Self = Self(1_000_138_001);
+    pub const WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK: Self = Self(1_000_138_002);
+    pub const DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO: Self = Self(1_000_138_003);
+    pub const PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES: Self = Self(1_000_066_000);
+    pub const RENDERING_INFO: Self = Self(1_000_044_000);
+    pub const RENDERING_ATTACHMENT_INFO: Self = Self(1_000_044_001);
+    pub const PIPELINE_RENDERING_CREATE_INFO: Self = Self(1_000_044_002);
+    pub const PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES: Self = Self(1_000_044_003);
+    pub const COMMAND_BUFFER_INHERITANCE_RENDERING_INFO: Self = Self(1_000_044_004);
+    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES: Self = Self(1_000_280_000);
+    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES: Self = Self(1_000_280_001);
+    pub const PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES: Self = Self(1_000_281_001);
+    pub const FORMAT_PROPERTIES_3: Self = Self(1_000_360_000);
+    pub const PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES: Self = Self(1_000_413_000);
+    pub const PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES: Self = Self(1_000_413_001);
+    pub const DEVICE_BUFFER_MEMORY_REQUIREMENTS: Self = Self(1_000_413_002);
+    pub const DEVICE_IMAGE_MEMORY_REQUIREMENTS: Self = Self(1_000_413_003);
+}

@@ -73,3 +73,4 @@ bitflags = true
 "target_os = windows" = "XP_WIN"
 "target_os = macos" = "XP_MACOSX"
 "target_os = android" = "ANDROID"
+"feature = id32" = "WGPU_FEATURE_ID32"

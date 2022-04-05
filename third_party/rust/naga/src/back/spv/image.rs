@@ -1,4 +1,6 @@
-//! Generating SPIR-V for image operations.
+/*!
+Generating SPIR-V for image operations.
+*/
 
 use super::{
     selection::{MergeTuple, Selection},
@@ -33,16 +35,18 @@ struct ImageCoordinates {
 
 /// A trait for image access (load or store) code generators.
 ///
-/// When generating code for `ImageLoad` and `ImageStore` expressions, the image
-/// bounds checks policy can affect some operands of the image access
-/// instruction (the coordinates, level of detail, and sample index), but other
-/// aspects are unaffected: the image id, result type (if any), and the specific
-/// SPIR-V instruction used.
+/// Types implementing this trait hold information about an `ImageStore` or
+/// `ImageLoad` operation that is not affected by the bounds check policy. The
+/// `generate` method emits code for the access, given the results of bounds
+/// checking.
 ///
-/// This struct holds the latter category of information, saving us from passing
-/// a half-dozen parameters along the various code paths. The parts that are
-/// affected by bounds checks, are passed as parameters to the `generate`
-/// method.
+/// The [`image`] bounds checks policy affects access coordinates, level of
+/// detail, and sample index, but never the image id, result type (if any), or
+/// the specific SPIR-V instruction used. Types that implement this trait gather
+/// together the latter category, so we don't have to plumb them through the
+/// bounds-checking code.
+///
+/// [`image`]: crate::proc::BoundsCheckPolicies::index
 trait Access {
     /// The Rust type that represents SPIR-V values and types for this access.
     ///
@@ -126,7 +130,7 @@ impl Load {
                     vector_size: Some(crate::VectorSize::Quad),
                     kind: crate::ScalarKind::Float,
                     width: 4,
-                    pointer_class: None,
+                    pointer_space: None,
                 }))
             }
             _ => result_type_id,
@@ -318,7 +322,7 @@ impl<'w> BlockContext<'w> {
                 vector_size: None,
                 kind: component_kind,
                 width: 4,
-                pointer_class: None,
+                pointer_space: None,
             }));
 
             let reconciled_id = self.gen_id();
@@ -336,7 +340,7 @@ impl<'w> BlockContext<'w> {
             vector_size: size,
             kind: component_kind,
             width: 4,
-            pointer_class: None,
+            pointer_space: None,
         }));
 
         // Schmear the coordinates and index together.
@@ -505,7 +509,7 @@ impl<'w> BlockContext<'w> {
             vector_size: None,
             kind: crate::ScalarKind::Sint,
             width: 4,
-            pointer_class: None,
+            pointer_space: None,
         }));
 
         // If `level` is `Some`, clamp it to fall within bounds. This must
@@ -593,7 +597,7 @@ impl<'w> BlockContext<'w> {
             vector_size: None,
             kind: crate::ScalarKind::Sint,
             width: 4,
-            pointer_class: None,
+            pointer_space: None,
         }));
 
         let null_id = access.out_of_bounds_value(self);
@@ -661,7 +665,7 @@ impl<'w> BlockContext<'w> {
             vector_size: coordinates.size,
             kind: crate::ScalarKind::Bool,
             width: 1,
-            pointer_class: None,
+            pointer_space: None,
         }));
         let coords_conds_id = self.gen_id();
         selection.block().body.push(Instruction::binary(
@@ -705,13 +709,15 @@ impl<'w> BlockContext<'w> {
     /// Generate code for an `ImageLoad` expression.
     ///
     /// The arguments are the components of an `Expression::ImageLoad` variant.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn write_image_load(
         &mut self,
         result_type_id: Word,
         image: Handle<crate::Expression>,
         coordinate: Handle<crate::Expression>,
         array_index: Option<Handle<crate::Expression>>,
-        level_or_sample: Option<Handle<crate::Expression>>,
+        level: Option<Handle<crate::Expression>>,
+        sample: Option<Handle<crate::Expression>>,
         block: &mut Block,
     ) -> Result<Word, Error> {
         let image_id = self.get_image_id(image);
@@ -724,18 +730,8 @@ impl<'w> BlockContext<'w> {
         let access = Load::from_image_expr(self, image_id, image_class, result_type_id)?;
         let coordinates = self.write_image_coordinates(coordinate, array_index, block)?;
 
-        // Figure out what the `level_or_sample` operand really means.
-        let level_or_sample_id = level_or_sample.map(|i| self.cached[i]);
-        let (level_id, sample_id) = match image_class {
-            crate::ImageClass::Sampled { multi, .. } | crate::ImageClass::Depth { multi } => {
-                if multi {
-                    (None, level_or_sample_id)
-                } else {
-                    (level_or_sample_id, None)
-                }
-            }
-            crate::ImageClass::Storage { .. } => (None, None),
-        };
+        let level_id = level.map(|expr| self.cached[expr]);
+        let sample_id = sample.map(|expr| self.cached[expr]);
 
         // Perform the access, according to the bounds check policy.
         let access_id = match self.writer.bounds_check_policies.image {
@@ -825,7 +821,7 @@ impl<'w> BlockContext<'w> {
                 vector_size: Some(crate::VectorSize::Quad),
                 kind: crate::ScalarKind::Float,
                 width: 4,
-                pointer_class: None,
+                pointer_space: None,
             }))
         } else {
             result_type_id
@@ -1029,12 +1025,14 @@ impl<'w> BlockContext<'w> {
                         vector_size,
                         kind: crate::ScalarKind::Sint,
                         width: 4,
-                        pointer_class: None,
+                        pointer_space: None,
                     }))
                 };
 
                 let (query_op, level_id) = match class {
-                    Ic::Storage { .. } => (spirv::Op::ImageQuerySize, None),
+                    Ic::Sampled { multi: true, .. }
+                    | Ic::Depth { multi: true }
+                    | Ic::Storage { .. } => (spirv::Op::ImageQuerySize, None),
                     _ => {
                         let level_id = match level {
                             Some(expr) => self.cached[expr],
@@ -1097,7 +1095,7 @@ impl<'w> BlockContext<'w> {
                     vector_size: Some(vec_size),
                     kind: crate::ScalarKind::Sint,
                     width: 4,
-                    pointer_class: None,
+                    pointer_space: None,
                 }));
                 let id_extended = self.gen_id();
                 let mut inst = Instruction::image_query(

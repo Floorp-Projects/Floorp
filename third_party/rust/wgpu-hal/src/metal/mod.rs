@@ -87,12 +87,12 @@ impl crate::Instance<Api> for Instance {
             #[cfg(target_os = "ios")]
             raw_window_handle::RawWindowHandle::UiKit(handle) => {
                 let _ = &self.managed_metal_layer_delegate;
-                Ok(Surface::from_uiview(handle.ui_view))
+                Ok(Surface::from_view(handle.ui_view, None))
             }
             #[cfg(target_os = "macos")]
-            raw_window_handle::RawWindowHandle::AppKit(handle) => Ok(Surface::from_nsview(
+            raw_window_handle::RawWindowHandle::AppKit(handle) => Ok(Surface::from_view(
                 handle.ns_view,
-                &self.managed_metal_layer_delegate,
+                Some(&self.managed_metal_layer_delegate),
             )),
             _ => Err(crate::InstanceError),
         }
@@ -114,11 +114,7 @@ impl crate::Instance<Api> for Instance {
                         name,
                         vendor: 0,
                         device: 0,
-                        device_type: if shared.private_caps.low_power {
-                            wgt::DeviceType::IntegratedGpu
-                        } else {
-                            wgt::DeviceType::DiscreteGpu
-                        },
+                        device_type: shared.private_caps.device_type(),
                         backend: wgt::Backend::Metal,
                     },
                     features: shared.private_caps.features(),
@@ -170,6 +166,7 @@ struct PrivateCapabilities {
     format_bc: bool,
     format_eac_etc: bool,
     format_astc: bool,
+    format_astc_hdr: bool,
     format_any8_unorm_srgb_all: bool,
     format_any8_unorm_srgb_no_write: bool,
     format_any8_snorm_all: bool,
@@ -229,6 +226,8 @@ struct PrivateCapabilities {
     supports_arrays_of_textures_write: bool,
     supports_mutability: bool,
     supports_depth_clip_control: bool,
+    supports_preserve_invariance: bool,
+    has_unified_memory: Option<bool>,
 }
 
 #[derive(Clone, Debug)]

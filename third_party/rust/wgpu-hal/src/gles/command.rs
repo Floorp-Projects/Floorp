@@ -28,6 +28,8 @@ pub(super) struct State {
     has_pass_label: bool,
     instance_vbuf_mask: usize,
     dirty_vbuf_mask: usize,
+    active_first_instance: u32,
+    push_offset_to_uniform: ArrayVec<super::UniformDesc, { super::MAX_PUSH_CONSTANTS }>,
 }
 
 impl super::CommandBuffer {
@@ -42,6 +44,21 @@ impl super::CommandBuffer {
         let start = self.data_bytes.len() as u32;
         self.data_bytes.extend(marker.as_bytes());
         start..self.data_bytes.len() as u32
+    }
+
+    fn add_push_constant_data(&mut self, data: &[u32]) -> Range<u32> {
+        let data_raw = unsafe {
+            std::slice::from_raw_parts(
+                data.as_ptr() as *const _,
+                data.len() * mem::size_of::<u32>(),
+            )
+        };
+        let start = self.data_bytes.len();
+        assert!(start < u32::MAX as usize);
+        self.data_bytes.extend_from_slice(data_raw);
+        let end = self.data_bytes.len();
+        assert!(end < u32::MAX as usize);
+        (start as u32)..(end as u32)
     }
 }
 
@@ -75,34 +92,44 @@ impl super::CommandEncoder {
             .private_caps
             .contains(super::PrivateCapabilities::VERTEX_BUFFER_LAYOUT)
         {
-            for (index, &(ref vb_desc, ref vb)) in self.state.vertex_buffers.iter().enumerate() {
+            for (index, pair) in self.state.vertex_buffers.iter().enumerate() {
                 if self.state.dirty_vbuf_mask & (1 << index) == 0 {
                     continue;
                 }
-                let vb = vb.as_ref().unwrap();
-                let instance_offset = match vb_desc.step {
-                    wgt::VertexStepMode::Vertex => 0,
-                    wgt::VertexStepMode::Instance => first_instance * vb_desc.stride,
+                let (buffer_desc, vb) = match *pair {
+                    // Not all dirty bindings are necessarily filled. Some may be unused.
+                    (_, None) => continue,
+                    (ref vb_desc, Some(ref vb)) => (vb_desc.clone(), vb),
                 };
+                let instance_offset = match buffer_desc.step {
+                    wgt::VertexStepMode::Vertex => 0,
+                    wgt::VertexStepMode::Instance => first_instance * buffer_desc.stride,
+                };
+
                 self.cmd_buffer.commands.push(C::SetVertexBuffer {
                     index: index as u32,
                     buffer: super::BufferBinding {
                         raw: vb.raw,
                         offset: vb.offset + instance_offset as wgt::BufferAddress,
                     },
-                    buffer_desc: vb_desc.clone(),
+                    buffer_desc,
                 });
+                self.state.dirty_vbuf_mask ^= 1 << index;
             }
         } else {
+            let mut vbuf_mask = 0;
             for attribute in self.state.vertex_attributes.iter() {
                 if self.state.dirty_vbuf_mask & (1 << attribute.buffer_index) == 0 {
                     continue;
                 }
-                let (buffer_desc, buffer) =
-                    self.state.vertex_buffers[attribute.buffer_index as usize].clone();
+                let (buffer_desc, vb) =
+                    match self.state.vertex_buffers[attribute.buffer_index as usize] {
+                        // Not all dirty bindings are necessarily filled. Some may be unused.
+                        (_, None) => continue,
+                        (ref vb_desc, Some(ref vb)) => (vb_desc.clone(), vb),
+                    };
 
                 let mut attribute_desc = attribute.clone();
-                let vb = buffer.unwrap();
                 attribute_desc.offset += vb.offset as u32;
                 if buffer_desc.step == wgt::VertexStepMode::Instance {
                     attribute_desc.offset += buffer_desc.stride * first_instance;
@@ -113,7 +140,9 @@ impl super::CommandEncoder {
                     buffer_desc,
                     attribute_desc,
                 });
+                vbuf_mask |= 1 << attribute.buffer_index;
             }
+            self.state.dirty_vbuf_mask ^= vbuf_mask;
         }
     }
 
@@ -135,21 +164,23 @@ impl super::CommandEncoder {
     }
 
     fn prepare_draw(&mut self, first_instance: u32) {
-        if first_instance != 0 {
+        if first_instance != self.state.active_first_instance {
+            // rebind all per-instance buffers on first-instance change
             self.state.dirty_vbuf_mask |= self.state.instance_vbuf_mask;
+            self.state.active_first_instance = first_instance;
         }
         if self.state.dirty_vbuf_mask != 0 {
             self.rebind_vertex_data(first_instance);
-            let vertex_rate_mask = self.state.dirty_vbuf_mask & !self.state.instance_vbuf_mask;
-            self.state.dirty_vbuf_mask ^= vertex_rate_mask;
         }
     }
 
     fn set_pipeline_inner(&mut self, inner: &super::PipelineInner) {
         self.cmd_buffer.commands.push(C::SetProgram(inner.program));
 
-        //TODO: push constants
-        let _ = &inner.uniforms;
+        self.state.push_offset_to_uniform.clear();
+        self.state
+            .push_offset_to_uniform
+            .extend(inner.uniforms.iter().cloned());
 
         // rebind textures, if needed
         let mut dirty_textures = 0u32;
@@ -521,6 +552,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         }
         self.state.instance_vbuf_mask = 0;
         self.state.dirty_vbuf_mask = 0;
+        self.state.active_first_instance = 0;
         self.state.color_targets.clear();
         self.state.vertex_attributes.clear();
         self.state.primitive = super::PrimitiveState::default();
@@ -603,10 +635,25 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         &mut self,
         _layout: &super::PipelineLayout,
         _stages: wgt::ShaderStages,
-        _offset: u32,
-        _data: &[u32],
+        start_offset: u32,
+        data: &[u32],
     ) {
-        unimplemented!()
+        let range = self.cmd_buffer.add_push_constant_data(data);
+
+        let end = start_offset + data.len() as u32 * 4;
+        let mut offset = start_offset;
+        while offset < end {
+            let uniform = self.state.push_offset_to_uniform[offset as usize / 4].clone();
+            let size = uniform.size;
+            if uniform.location.is_none() {
+                panic!("No uniform for push constant");
+            }
+            self.cmd_buffer.commands.push(C::SetPushConstants {
+                uniform,
+                offset: range.start + offset,
+            });
+            offset += size;
+        }
     }
 
     unsafe fn insert_debug_marker(&mut self, label: &str) {

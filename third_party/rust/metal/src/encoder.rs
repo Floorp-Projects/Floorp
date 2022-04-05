@@ -674,15 +674,122 @@ impl RenderCommandEncoderRef {
     // fn setVertexBuffers_offsets_withRange(self, buffers: *const id, offsets: *const NSUInteger, range: NSRange);
     // fn setVertexSamplerStates_lodMinClamps_lodMaxClamps_withRange(self, samplers: *const id, lodMinClamps: *const f32, lodMaxClamps: *const f32, range: NSRange);
 
+    /// Adds an untracked resource to the render pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// # Arguments
+    /// * `resource`: A resource within an argument buffer.
+    /// * `usage`: Options for describing how a graphics function uses the resource.
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlrendercommandencoder/2866168-useresource?language=objc>
+    #[deprecated(note = "Use use_resource_at instead")]
     pub fn use_resource(&self, resource: &ResourceRef, usage: MTLResourceUsage) {
         unsafe {
-            msg_send![self, useResource:resource
-                                  usage:usage]
+            msg_send![self,
+                useResource:resource
+                usage:usage
+            ]
         }
     }
 
+    /// Adds an untracked resource to the render pass, specifying which render stages need it.
+    ///
+    /// Availability: iOS 13.0+, macOS 10.15+
+    ///
+    /// # Arguments
+    /// * `resource`: A resource within an argument buffer.
+    /// * `usage`: Options for describing how a graphics function uses the resource.
+    /// * `stages`: The render stages where the resource must be resident.
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlrendercommandencoder/3043404-useresource>
+    pub fn use_resource_at(
+        &self,
+        resource: &ResourceRef,
+        usage: MTLResourceUsage,
+        stages: MTLRenderStages,
+    ) {
+        unsafe {
+            msg_send![self,
+                useResource: resource
+                usage: usage
+                stages: stages
+            ]
+        }
+    }
+
+    /// Adds an array of untracked resources to the render pass, specifying which stages need them.
+    ///
+    /// When working with color render targets, call this method as late as possible to improve performance.
+    ///
+    /// Availability: iOS 13.0+, macOS 10.15+
+    ///
+    /// # Arguments
+    /// * `resources`: A slice of resources within an argument buffer.
+    /// * `usage`: Options for describing how a graphics function uses the resources.
+    /// * `stages`: The render stages where the resources must be resident.
+    pub fn use_resources(
+        &self,
+        resources: &[&ResourceRef],
+        usage: MTLResourceUsage,
+        stages: MTLRenderStages,
+    ) {
+        unsafe {
+            msg_send![self,
+                useResources: resources.as_ptr()
+                count: resources.len() as NSUInteger
+                usage: usage
+                stages: stages
+            ]
+        }
+    }
+
+    /// Adds the resources in a heap to the render pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// # Arguments:
+    /// * `heap`: A heap that contains resources within an argument buffer.
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlrendercommandencoder/2866163-useheap?language=objc>
+    #[deprecated(note = "Use use_heap_at instead")]
     pub fn use_heap(&self, heap: &HeapRef) {
         unsafe { msg_send![self, useHeap: heap] }
+    }
+
+    /// Adds the resources in a heap to the render pass, specifying which render stages need them.
+    ///
+    /// Availability: iOS 13.0+, macOS 10.15+
+    ///
+    /// # Arguments
+    /// * `heap`: A heap that contains resources within an argument buffer.
+    /// * `stages`: The render stages where the resources must be resident.
+    ///
+    pub fn use_heap_at(&self, heap: &HeapRef, stages: MTLRenderStages) {
+        unsafe {
+            msg_send![self,
+                useHeap: heap
+                stages: stages
+            ]
+        }
+    }
+
+    /// Adds the resources in an array of heaps to the render pass, specifying which render stages need them.
+    ///
+    /// Availability: iOS 13.0+, macOS 10.15+
+    ///
+    /// # Arguments
+    ///
+    /// * `heaps`: A slice of heaps that contains resources within an argument buffer.
+    /// * `stages`: The render stages where the resources must be resident.
+    pub fn use_heaps(&self, heaps: &[&HeapRef], stages: MTLRenderStages) {
+        unsafe {
+            msg_send![self,
+                useHeaps: heaps.as_ptr()
+                count: heaps.len() as NSUInteger
+                stages: stages
+            ]
+        }
     }
 
     pub fn update_fence(&self, fence: &FenceRef, after_stages: MTLRenderStages) {
@@ -1035,17 +1142,67 @@ impl ComputeCommandEncoderRef {
         }
     }
 
+    /// Specifies that a resource in an argument buffer can be safely used by a compute pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// # Arguments
+    /// * `resource`: A specific resource within an argument buffer.
+    /// * `usage`: The options that describe how the resource will be used by a compute function.
     pub fn use_resource(&self, resource: &ResourceRef, usage: MTLResourceUsage) {
         unsafe {
             msg_send![self,
-                useResource:resource
-                usage:usage
+                useResource: resource
+                usage: usage
             ]
         }
     }
 
+    /// Specifies that an array of resources in an argument buffer can be safely used by a compute pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/2866561-useresources>
+    ///
+    /// # Arguments
+    /// * `resources`: A slice of resources within an argument buffer.
+    /// * `usage`: The options that describe how the array of resources will be used by a compute function.
+    pub fn use_resources(&self, resources: &[&ResourceRef], usage: MTLResourceUsage) {
+        unsafe {
+            msg_send![self,
+                useResources: resources.as_ptr()
+                count: resources.len() as NSUInteger
+                usage: usage
+            ]
+        }
+    }
+
+    /// Specifies that a heap containing resources in an argument buffer can be safely used by a compute pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// See <https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/2866530-useheap>
+    ///
+    /// # Arguments
+    /// * `heap`: A heap that contains resources within an argument buffer.
     pub fn use_heap(&self, heap: &HeapRef) {
         unsafe { msg_send![self, useHeap: heap] }
+    }
+
+    /// Specifies that an array of heaps containing resources in an argument buffer can be safely
+    /// used by a compute pass.
+    ///
+    /// Availability: iOS 11.0+, macOS 10.13+
+    ///
+    /// # Arguments
+    /// * `heaps`: A slice of heaps that contains resources within an argument buffer.
+    pub fn use_heaps(&self, heaps: &[&HeapRef]) {
+        unsafe {
+            msg_send![self,
+                useHeaps: heaps.as_ptr()
+                count: heaps.len() as NSUInteger
+            ]
+        }
     }
 
     pub fn update_fence(&self, fence: &FenceRef) {

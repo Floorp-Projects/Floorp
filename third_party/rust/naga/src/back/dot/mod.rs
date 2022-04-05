@@ -1,8 +1,11 @@
-/*! GraphViz (DOT) backend
- *
- * This backend writes a graph in the DOT format, for the ease
- * of IR inspection and debugging.
-!*/
+/*!
+Backend for [DOT][dot] (Graphviz).
+
+This backend writes a graph in the DOT language, for the ease
+of IR inspection and debugging.
+
+[dot]: https://graphviz.org/doc/info/lang.html
+*/
 
 use crate::{
     arena::Handle,
@@ -271,15 +274,19 @@ fn write_fun(
                 image,
                 coordinate,
                 array_index,
-                index,
+                sample,
+                level,
             } => {
                 edges.insert("image", image);
                 edges.insert("coordinate", coordinate);
                 if let Some(expr) = array_index {
                     edges.insert("array_index", expr);
                 }
-                if let Some(expr) = index {
-                    edges.insert("index", expr);
+                if let Some(sample) = sample {
+                    edges.insert("sample", sample);
+                }
+                if let Some(level) = level {
+                    edges.insert("level", level);
                 }
                 ("ImageLoad".into(), 5)
             }
@@ -470,6 +477,7 @@ fn write_fun(
     Ok(())
 }
 
+/// Write shader module to a [`String`].
 pub fn write(module: &crate::Module, mod_info: Option<&ModuleInfo>) -> Result<String, FmtError> {
     use std::fmt::Write as _;
 
@@ -484,7 +492,7 @@ pub fn write(module: &crate::Module, mod_info: Option<&ModuleInfo>) -> Result<St
             "\t\tg{} [ shape=hexagon label=\"{:?} {:?}/'{}'\" ]",
             handle.index(),
             handle,
-            var.class,
+            var.space,
             name(&var.name),
         )?;
     }

@@ -76,6 +76,10 @@ impl super::Device {
         let options = mtl::CompileOptions::new();
         options.set_language_version(self.shared.private_caps.msl_version);
 
+        if self.shared.private_caps.supports_preserve_invariance {
+            options.set_preserve_invariance(true);
+        }
+
         let library = self
             .shared
             .device
@@ -112,43 +116,46 @@ impl super::Device {
         let mut sized_bindings = Vec::new();
         let mut immutable_buffer_mask = 0;
         for (var_handle, var) in module.global_variables.iter() {
-            if var.class == naga::StorageClass::WorkGroup {
-                let size = module.types[var.ty].inner.span(&module.constants);
-                wg_memory_sizes.push(size);
-            }
-
-            if let naga::TypeInner::Struct { ref members, .. } = module.types[var.ty].inner {
-                let br = match var.binding {
-                    Some(ref br) => br.clone(),
-                    None => continue,
-                };
-
-                if !ep_info[var_handle].is_empty() {
-                    let storage_access_store = match var.class {
-                        naga::StorageClass::Storage { access } => {
+            match var.space {
+                naga::AddressSpace::WorkGroup => {
+                    if !ep_info[var_handle].is_empty() {
+                        let size = module.types[var.ty].inner.size(&module.constants);
+                        wg_memory_sizes.push(size);
+                    }
+                }
+                naga::AddressSpace::Uniform | naga::AddressSpace::Storage { .. } => {
+                    let br = match var.binding {
+                        Some(ref br) => br.clone(),
+                        None => continue,
+                    };
+                    let storage_access_store = match var.space {
+                        naga::AddressSpace::Storage { access } => {
                             access.contains(naga::StorageAccess::STORE)
                         }
                         _ => false,
                     };
+
                     // check for an immutable buffer
-                    if !storage_access_store {
+                    if !ep_info[var_handle].is_empty() && !storage_access_store {
                         let psm = &layout.naga_options.per_stage_map[naga_stage];
                         let slot = psm.resources[&br].buffer.unwrap();
                         immutable_buffer_mask |= 1 << slot;
                     }
-                }
 
-                // check for the unsized buffer
-                if let Some(member) = members.last() {
+                    let mut dynamic_array_container_ty = var.ty;
+                    if let naga::TypeInner::Struct { ref members, .. } = module.types[var.ty].inner
+                    {
+                        dynamic_array_container_ty = members.last().unwrap().ty;
+                    }
                     if let naga::TypeInner::Array {
                         size: naga::ArraySize::Dynamic,
                         ..
-                    } = module.types[member.ty].inner
+                    } = module.types[dynamic_array_container_ty].inner
                     {
-                        // Note: unwraps are fine, since the MSL is already generated
                         sized_bindings.push(br);
                     }
                 }
+                _ => {}
             }
         }
 
@@ -388,14 +395,14 @@ impl crate::Device<super::Api> for super::Device {
             wgt::FilterMode::Linear => mtl::MTLSamplerMipFilter::Linear,
         });
 
-        if let Some(aniso) = desc.anisotropy_clamp {
-            descriptor.set_max_anisotropy(aniso.get() as _);
-        }
-
         let [s, t, r] = desc.address_modes;
         descriptor.set_address_mode_s(conv::map_address_mode(s));
         descriptor.set_address_mode_t(conv::map_address_mode(t));
         descriptor.set_address_mode_r(conv::map_address_mode(r));
+
+        if let Some(aniso) = desc.anisotropy_clamp {
+            descriptor.set_max_anisotropy(aniso.get() as _);
+        }
 
         if let Some(ref range) = desc.lod_clamp {
             descriptor.set_lod_min_clamp(range.start);
@@ -409,8 +416,23 @@ impl crate::Device<super::Api> for super::Device {
         if let Some(fun) = desc.compare {
             descriptor.set_compare_function(conv::map_compare_function(fun));
         }
+
         if let Some(border_color) = desc.border_color {
-            descriptor.set_border_color(conv::map_border_color(border_color));
+            if let wgt::SamplerBorderColor::Zero = border_color {
+                if s == wgt::AddressMode::ClampToBorder {
+                    descriptor.set_address_mode_s(mtl::MTLSamplerAddressMode::ClampToZero);
+                }
+
+                if t == wgt::AddressMode::ClampToBorder {
+                    descriptor.set_address_mode_t(mtl::MTLSamplerAddressMode::ClampToZero);
+                }
+
+                if r == wgt::AddressMode::ClampToBorder {
+                    descriptor.set_address_mode_r(mtl::MTLSamplerAddressMode::ClampToZero);
+                }
+            } else {
+                descriptor.set_border_color(conv::map_border_color(border_color));
+            }
         }
 
         if let Some(label) = desc.label {
@@ -622,6 +644,7 @@ impl crate::Device<super::Api> for super::Device {
                     mtl::MTLLanguageVersion::V2_1 => (2, 1),
                     mtl::MTLLanguageVersion::V2_2 => (2, 2),
                     mtl::MTLLanguageVersion::V2_3 => (2, 3),
+                    mtl::MTLLanguageVersion::V2_4 => (2, 4),
                 },
                 inline_samplers: Default::default(),
                 spirv_cross_compatibility: false,

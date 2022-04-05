@@ -5,6 +5,7 @@ impl super::PrivateCapabilities {
     pub fn map_texture_format(&self, format: wgt::TextureFormat) -> vk::Format {
         use ash::vk::Format as F;
         use wgt::TextureFormat as Tf;
+        use wgt::{AstcBlock, AstcChannel};
         match format {
             Tf::R8Unorm => F::R8_UNORM,
             Tf::R8Snorm => F::R8_SNORM,
@@ -87,34 +88,56 @@ impl super::PrivateCapabilities {
             Tf::EacR11Snorm => F::EAC_R11_SNORM_BLOCK,
             Tf::EacRg11Unorm => F::EAC_R11G11_UNORM_BLOCK,
             Tf::EacRg11Snorm => F::EAC_R11G11_SNORM_BLOCK,
-            Tf::Astc4x4RgbaUnorm => F::ASTC_4X4_UNORM_BLOCK,
-            Tf::Astc4x4RgbaUnormSrgb => F::ASTC_4X4_SRGB_BLOCK,
-            Tf::Astc5x4RgbaUnorm => F::ASTC_5X4_UNORM_BLOCK,
-            Tf::Astc5x4RgbaUnormSrgb => F::ASTC_5X4_SRGB_BLOCK,
-            Tf::Astc5x5RgbaUnorm => F::ASTC_5X5_UNORM_BLOCK,
-            Tf::Astc5x5RgbaUnormSrgb => F::ASTC_5X5_SRGB_BLOCK,
-            Tf::Astc6x5RgbaUnorm => F::ASTC_6X5_UNORM_BLOCK,
-            Tf::Astc6x5RgbaUnormSrgb => F::ASTC_6X5_SRGB_BLOCK,
-            Tf::Astc6x6RgbaUnorm => F::ASTC_6X6_UNORM_BLOCK,
-            Tf::Astc6x6RgbaUnormSrgb => F::ASTC_6X6_SRGB_BLOCK,
-            Tf::Astc8x5RgbaUnorm => F::ASTC_8X5_UNORM_BLOCK,
-            Tf::Astc8x5RgbaUnormSrgb => F::ASTC_8X5_SRGB_BLOCK,
-            Tf::Astc8x6RgbaUnorm => F::ASTC_8X6_UNORM_BLOCK,
-            Tf::Astc8x6RgbaUnormSrgb => F::ASTC_8X6_SRGB_BLOCK,
-            Tf::Astc10x5RgbaUnorm => F::ASTC_8X8_UNORM_BLOCK,
-            Tf::Astc10x5RgbaUnormSrgb => F::ASTC_8X8_SRGB_BLOCK,
-            Tf::Astc10x6RgbaUnorm => F::ASTC_10X5_UNORM_BLOCK,
-            Tf::Astc10x6RgbaUnormSrgb => F::ASTC_10X5_SRGB_BLOCK,
-            Tf::Astc8x8RgbaUnorm => F::ASTC_10X6_UNORM_BLOCK,
-            Tf::Astc8x8RgbaUnormSrgb => F::ASTC_10X6_SRGB_BLOCK,
-            Tf::Astc10x8RgbaUnorm => F::ASTC_10X8_UNORM_BLOCK,
-            Tf::Astc10x8RgbaUnormSrgb => F::ASTC_10X8_SRGB_BLOCK,
-            Tf::Astc10x10RgbaUnorm => F::ASTC_10X10_UNORM_BLOCK,
-            Tf::Astc10x10RgbaUnormSrgb => F::ASTC_10X10_SRGB_BLOCK,
-            Tf::Astc12x10RgbaUnorm => F::ASTC_12X10_UNORM_BLOCK,
-            Tf::Astc12x10RgbaUnormSrgb => F::ASTC_12X10_SRGB_BLOCK,
-            Tf::Astc12x12RgbaUnorm => F::ASTC_12X12_UNORM_BLOCK,
-            Tf::Astc12x12RgbaUnormSrgb => F::ASTC_12X12_SRGB_BLOCK,
+            Tf::Astc { block, channel } => match channel {
+                AstcChannel::Unorm => match block {
+                    AstcBlock::B4x4 => F::ASTC_4X4_UNORM_BLOCK,
+                    AstcBlock::B5x4 => F::ASTC_5X4_UNORM_BLOCK,
+                    AstcBlock::B5x5 => F::ASTC_5X5_UNORM_BLOCK,
+                    AstcBlock::B6x5 => F::ASTC_6X5_UNORM_BLOCK,
+                    AstcBlock::B6x6 => F::ASTC_6X6_UNORM_BLOCK,
+                    AstcBlock::B8x5 => F::ASTC_8X5_UNORM_BLOCK,
+                    AstcBlock::B8x6 => F::ASTC_8X6_UNORM_BLOCK,
+                    AstcBlock::B8x8 => F::ASTC_8X8_UNORM_BLOCK,
+                    AstcBlock::B10x5 => F::ASTC_10X5_UNORM_BLOCK,
+                    AstcBlock::B10x6 => F::ASTC_10X6_UNORM_BLOCK,
+                    AstcBlock::B10x8 => F::ASTC_10X8_UNORM_BLOCK,
+                    AstcBlock::B10x10 => F::ASTC_10X10_UNORM_BLOCK,
+                    AstcBlock::B12x10 => F::ASTC_12X10_UNORM_BLOCK,
+                    AstcBlock::B12x12 => F::ASTC_12X12_UNORM_BLOCK,
+                },
+                AstcChannel::UnormSrgb => match block {
+                    AstcBlock::B4x4 => F::ASTC_4X4_SRGB_BLOCK,
+                    AstcBlock::B5x4 => F::ASTC_5X4_SRGB_BLOCK,
+                    AstcBlock::B5x5 => F::ASTC_5X5_SRGB_BLOCK,
+                    AstcBlock::B6x5 => F::ASTC_6X5_SRGB_BLOCK,
+                    AstcBlock::B6x6 => F::ASTC_6X6_SRGB_BLOCK,
+                    AstcBlock::B8x5 => F::ASTC_8X5_SRGB_BLOCK,
+                    AstcBlock::B8x6 => F::ASTC_8X6_SRGB_BLOCK,
+                    AstcBlock::B8x8 => F::ASTC_8X8_SRGB_BLOCK,
+                    AstcBlock::B10x5 => F::ASTC_10X5_SRGB_BLOCK,
+                    AstcBlock::B10x6 => F::ASTC_10X6_SRGB_BLOCK,
+                    AstcBlock::B10x8 => F::ASTC_10X8_SRGB_BLOCK,
+                    AstcBlock::B10x10 => F::ASTC_10X10_SRGB_BLOCK,
+                    AstcBlock::B12x10 => F::ASTC_12X10_SRGB_BLOCK,
+                    AstcBlock::B12x12 => F::ASTC_12X12_SRGB_BLOCK,
+                },
+                AstcChannel::Hdr => match block {
+                    AstcBlock::B4x4 => F::ASTC_4X4_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B5x4 => F::ASTC_5X4_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B5x5 => F::ASTC_5X5_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B6x5 => F::ASTC_6X5_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B6x6 => F::ASTC_6X6_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B8x5 => F::ASTC_8X5_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B8x6 => F::ASTC_8X6_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B8x8 => F::ASTC_8X8_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B10x5 => F::ASTC_10X5_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B10x6 => F::ASTC_10X6_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B10x8 => F::ASTC_10X8_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B10x10 => F::ASTC_10X10_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B12x10 => F::ASTC_12X10_SFLOAT_BLOCK_EXT,
+                    AstcBlock::B12x12 => F::ASTC_12X12_SFLOAT_BLOCK_EXT,
+                },
+            },
         }
     }
 }
@@ -589,13 +612,15 @@ pub fn map_address_mode(mode: wgt::AddressMode) -> vk::SamplerAddressMode {
         wgt::AddressMode::Repeat => vk::SamplerAddressMode::REPEAT,
         wgt::AddressMode::MirrorRepeat => vk::SamplerAddressMode::MIRRORED_REPEAT,
         wgt::AddressMode::ClampToBorder => vk::SamplerAddressMode::CLAMP_TO_BORDER,
-        //wgt::AddressMode::MirrorClamp => vk::SamplerAddressMode::MIRROR_CLAMP_TO_EDGE,
+        // wgt::AddressMode::MirrorClamp => vk::SamplerAddressMode::MIRROR_CLAMP_TO_EDGE,
     }
 }
 
 pub fn map_border_color(border_color: wgt::SamplerBorderColor) -> vk::BorderColor {
     match border_color {
-        wgt::SamplerBorderColor::TransparentBlack => vk::BorderColor::FLOAT_TRANSPARENT_BLACK,
+        wgt::SamplerBorderColor::TransparentBlack | wgt::SamplerBorderColor::Zero => {
+            vk::BorderColor::FLOAT_TRANSPARENT_BLACK
+        }
         wgt::SamplerBorderColor::OpaqueBlack => vk::BorderColor::FLOAT_OPAQUE_BLACK,
         wgt::SamplerBorderColor::OpaqueWhite => vk::BorderColor::FLOAT_OPAQUE_WHITE,
     }
