@@ -49,32 +49,10 @@ def generate_partials_artifacts(job, release_history, platform, locale=None):
         {
             "taskId": {"task-reference": "<partials>"},
             "taskType": "partials",
-            "paths": [
-                f"{artifact_prefix}/{path}"
-                for path, version in artifacts
-                # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will
-                # be considered smaller than Firefox 56
-                if version is None or version >= "56"
-            ],
+            "paths": [f"{artifact_prefix}/{path}" for path, version in artifacts],
             "formats": ["autograph_hash_only_mar384"],
         }
     ]
-
-    old_mar_upstream_artifacts = {
-        "taskId": {"task-reference": "<partials>"},
-        "taskType": "partials",
-        "paths": [
-            f"{artifact_prefix}/{path}"
-            for path, version in artifacts
-            # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will be
-            # considered smaller than Firefox 56
-            if version is not None and version < "56"
-        ],
-        "formats": ["mar"],
-    }
-
-    if old_mar_upstream_artifacts["paths"]:
-        upstream_artifacts.append(old_mar_upstream_artifacts)
 
     return upstream_artifacts
 
