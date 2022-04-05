@@ -37,6 +37,10 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include",
 ]
 
+TEST_DIRS += [
+    "gtest",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
