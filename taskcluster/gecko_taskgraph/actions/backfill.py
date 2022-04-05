@@ -45,7 +45,7 @@ def input_for_support_action(revision, task, times=1, retrigger=True):
     }
 
     # Support tasks that are using manifest based scheduling
-    if task["payload"]["env"].get("MOZHARNESS_TEST_PATHS"):
+    if task["payload"].get("env", {}).get("MOZHARNESS_TEST_PATHS"):
         input["test_manifests"] = json.loads(
             task["payload"]["env"]["MOZHARNESS_TEST_PATHS"]
         )
