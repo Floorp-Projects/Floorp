@@ -670,14 +670,6 @@ void MBasicBlock::discardIgnoreOperands(MInstruction* ins) {
   instructions_.remove(ins);
 }
 
-void MBasicBlock::discardDef(MDefinition* at) {
-  if (at->isPhi()) {
-    at->block()->discardPhi(at->toPhi());
-  } else {
-    at->block()->discard(at->toInstruction());
-  }
-}
-
 void MBasicBlock::discardAllInstructions() {
   MInstructionIterator iter = begin();
   discardAllInstructionsStartingAt(iter);

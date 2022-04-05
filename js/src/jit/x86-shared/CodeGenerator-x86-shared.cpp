@@ -1546,7 +1546,6 @@ void CodeGenerator::visitModI(LModI* ins) {
     masm.bind(&negative);
 
     // Prevent an integer overflow exception from -2147483648 % -1
-    Label notmin;
     masm.cmp32(lhs, Imm32(INT32_MIN));
     overflow = new (alloc()) ModOverflowCheck(ins, rhs);
     masm.j(Assembler::Equal, overflow->entry());
@@ -2701,7 +2700,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.vpmaddubsw(rhs, lhs, dest);
       break;
     case wasm::SimdOp::MozWHPMADDWD:
-      masm.vpmaddwd(Operand(rhs), lhs, dest);
+      masm.widenDotInt16x8(lhs, rhs, dest);
       break;
 #  endif
     default:

@@ -127,7 +127,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
     mArray.AppendElement(nsCString(name, nameLen));
   }
 
-  if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST && NS_FAILED(rv)) {
+  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;  // no error translation
   }
 
@@ -317,7 +317,7 @@ nsresult nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount,
       const char* entryName = mArray[mArrPos].get();
       uint32_t entryNameLen = mArray[mArrPos].Length();
       nsZipItem* ze = mJar->mZip->GetItem(entryName);
-      NS_ENSURE_TRUE(ze, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
+      NS_ENSURE_TRUE(ze, NS_ERROR_FILE_NOT_FOUND);
 
       // Last Modified Time
       PRExplodedTime tm;

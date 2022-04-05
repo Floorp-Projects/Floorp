@@ -6,6 +6,8 @@ Support for running jobs that are invoked via the `run-task` script.
 """
 
 
+import os
+
 from mozpack import path
 
 from gecko_taskgraph.transforms.task import taskref_or_string
@@ -91,9 +93,11 @@ worker_defaults = {
 
 
 def script_url(config, script):
-    return config.params.file_url(
-        f"taskcluster/scripts/{script}",
-    )
+    if "MOZ_AUTOMATION" in os.environ and "TASK_ID" not in os.environ:
+        raise Exception("TASK_ID must be defined to use run-task on generic-worker")
+    task_id = os.environ.get("TASK_ID", "<TASK_ID>")
+    tc_url = "http://firefox-ci-tc.services.mozilla.com"
+    return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 
 
 @run_job_using(
@@ -198,7 +202,7 @@ def generic_worker_run_task(config, job, taskdesc):
         worker["mounts"].append(
             {
                 "content": {
-                    "url": script_url(config, "misc/fetch-content"),
+                    "url": script_url(config, "fetch-content"),
                 },
                 "file": "./fetch-content",
             }

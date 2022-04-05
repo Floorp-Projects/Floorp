@@ -125,17 +125,16 @@ function applyBail(...rest) {
   return rest.length;
 }
 
-// Extra formals currently not supported.
 function applyExtraFormals(i, ...rest) {
   empty.apply(null, rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
 function applyExtraFormalsBail(i, ...rest) {
   resumeHere(i);
   empty.apply(null, rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
@@ -153,17 +152,16 @@ function spreadBail(...rest) {
   return rest.length;
 }
 
-// Extra formals currently not supported.
 function spreadExtraFormals(i, ...rest) {
   empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
 function spreadExtraFormalsBail(i, ...rest) {
   resumeHere(i);
   empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
@@ -195,17 +193,16 @@ function newSpreadBail(...rest) {
   return rest.length;
 }
 
-// Extra formals currently not supported.
 function newSpreadExtraFormals(i, ...rest) {
   new empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
 function newSpreadExtraFormalsBail(i, ...rest) {
   resumeHere(i);
   new empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 

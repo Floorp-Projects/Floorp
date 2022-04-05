@@ -34,9 +34,6 @@ static constexpr ValueOperand R2(r1, r0);
 static constexpr Register ICTailCallReg = r14;
 static constexpr Register ICStubReg = r9;
 
-static constexpr Register ExtractTemp0 = InvalidReg;
-static constexpr Register ExtractTemp1 = InvalidReg;
-
 // Register used internally by MacroAssemblerARM.
 static constexpr Register BaselineSecondScratchReg = r6;
 

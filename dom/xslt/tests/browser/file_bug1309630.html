@@ -1,0 +1,19 @@
+<script>
+  let styleDoc = fetch("bug1309630.sjs")
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      }
+      return Promise.reject();
+    }).then(xslt => {
+      let styleDoc = new DOMParser().parseFromString(xslt, "text/xml");
+      let originalDoc = new DOMParser().parseFromString(
+        "<root/>",
+        "text/xml"
+      );
+
+      let processor = new XSLTProcessor();
+      processor.importStylesheet(styleDoc);
+      processor.transformToDocument(originalDoc);
+    });
+</script>>

@@ -40,10 +40,14 @@ namespace js {
 #  define JS_HAS_PROTECTED_DATA_CHECKS
 #endif
 
-#define DECLARE_ONE_BOOL_OPERATOR(OP, T)   \
-  template <typename U>                    \
-  bool operator OP(const U& other) const { \
-    return ref() OP static_cast<T>(other); \
+#define DECLARE_ONE_BOOL_OPERATOR(OP, T)     \
+  template <typename U>                      \
+  bool operator OP(const U& other) const {   \
+    if constexpr (std::is_integral_v<T>) {   \
+      return ref() OP static_cast<T>(other); \
+    } else {                                 \
+      return ref() OP other;                 \
+    }                                        \
   }
 
 #define DECLARE_BOOL_OPERATORS(T)  \

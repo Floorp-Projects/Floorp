@@ -11,7 +11,7 @@ use crate::device::TextureFilter;
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
-use crate::picture::{SurfaceIndex, SurfaceInfo};
+use crate::picture::SurfaceIndex;
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{
     FastLinearGradientCacheKey, LinearGradientCacheKey, RadialGradientCacheKey,
@@ -20,11 +20,11 @@ use crate::prim_store::gradient::{
 use crate::prim_store::line_dec::LineDecorationCacheKey;
 use crate::resource_cache::CacheItem;
 use std::{mem, usize, f32, i32};
+use crate::surface::SurfaceBuilder;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, StaticRenderTaskSurface, RenderTaskLocation, RenderTaskKind, CachedTask};
 use crate::render_task_graph::{RenderTaskGraphBuilder, RenderTaskId};
-use crate::frame_builder::add_child_render_task;
 use euclid::Scale;
 
 const MAX_CACHE_TASK_SIZE: f32 = 4096.0;
@@ -161,13 +161,13 @@ impl RenderTaskCache {
     }
 
     fn alloc_render_task(
+        size: DeviceIntSize,
         render_task: &mut RenderTask,
         entry: &mut RenderTaskCacheEntry,
         gpu_cache: &mut GpuCache,
         texture_cache: &mut TextureCache,
     ) {
         // Find out what size to alloc in the texture cache.
-        let size = render_task.location.size();
         let target_kind = render_task.target_kind();
 
         // Select the right texture page to allocate from.
@@ -231,7 +231,7 @@ impl RenderTaskCache {
         user_data: Option<[f32; 4]>,
         is_opaque: bool,
         parent: RenderTaskParent,
-        surfaces: &[SurfaceInfo],
+        surface_builder: &mut SurfaceBuilder,
         f: F,
     ) -> Result<RenderTaskId, ()>
     where
@@ -267,11 +267,13 @@ impl RenderTaskCache {
             cache_entry.render_task_id = Some(render_task_id);
 
             let render_task = rg_builder.get_task_mut(render_task_id);
+            let task_size = render_task.location.size();
 
             render_task.mark_cached(entry_handle.weak());
             cache_entry.target_kind = render_task.kind.target_kind();
 
             RenderTaskCache::alloc_render_task(
+                task_size,
                 render_task,
                 cache_entry,
                 gpu_cache,
@@ -284,15 +286,15 @@ impl RenderTaskCache {
         // an input source.
         if let Some(render_task_id) = cache_entry.render_task_id {
             match parent {
-                RenderTaskParent::Surface(surface_index) => {
+                // TODO(gw): Remove surface from here as a follow up patch, as it's now implicit
+                //           due to using SurfaceBuilder
+                RenderTaskParent::Surface(_surface_index) => {
                     // If parent is a surface, use helper fn to add this dependency,
                     // which correctly takes account of the render task configuration
                     // of the surface.
-                    add_child_render_task(
-                        surface_index,
+                    surface_builder.add_child_render_task(
                         render_task_id,
-                        surfaces,
-                        rg_builder
+                        rg_builder,
                     );
                 }
                 RenderTaskParent::RenderTask(parent_render_task_id) => {

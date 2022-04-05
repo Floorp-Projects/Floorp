@@ -7178,8 +7178,7 @@ void QuotaManager::DeleteFilesForOrigin(PersistenceType aPersistenceType,
                  GetDirectoryForOrigin(aPersistenceType, aOrigin), QM_VOID);
 
   nsresult rv = directory->Remove(true);
-  if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-      rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
+  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
     // This should never fail if we've closed all storage connections
     // correctly...
     NS_ERROR("Failed to remove directory!");
@@ -7245,23 +7244,21 @@ Result<Ok, nsresult> QuotaManager::ArchiveOrigins(
                                          fullOriginMetadata.mOrigin));
 
     // The origin could have been removed, for example due to corruption.
-    QM_TRY_INSPECT(const auto& moved,
-                   QM_OR_ELSE_WARN_IF(
-                       // Expression.
-                       MOZ_TO_RESULT(directory->MoveTo(
-                                         fullOriginMetadata.mPersistenceType ==
-                                                 PERSISTENCE_TYPE_DEFAULT
-                                             ? defaultStorageArchiveDir
-                                             : temporaryStorageArchiveDir,
-                                         u""_ns))
-                           .map([](Ok) { return true; }),
-                       // Predicate.
-                       ([](const nsresult rv) {
-                         return rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                                rv == NS_ERROR_FILE_NOT_FOUND;
-                       }),
-                       // Fallback.
-                       ErrToOk<false>));
+    QM_TRY_INSPECT(
+        const auto& moved,
+        QM_OR_ELSE_WARN_IF(
+            // Expression.
+            MOZ_TO_RESULT(
+                directory->MoveTo(fullOriginMetadata.mPersistenceType ==
+                                          PERSISTENCE_TYPE_DEFAULT
+                                      ? defaultStorageArchiveDir
+                                      : temporaryStorageArchiveDir,
+                                  u""_ns))
+                .map([](Ok) { return true; }),
+            // Predicate.
+            ([](const nsresult rv) { return rv == NS_ERROR_FILE_NOT_FOUND; }),
+            // Fallback.
+            ErrToOk<false>));
 
     if (moved) {
       RemoveQuotaForOrigin(fullOriginMetadata.mPersistenceType,
@@ -9255,8 +9252,7 @@ void ResetOrClearOp::DeleteFiles(QuotaManager& aQuotaManager) {
   nsCOMPtr<nsIFile> directory = directoryOrErr.unwrap();
 
   rv = directory->Remove(true);
-  if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-      rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
+  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
     // This should never fail if we've closed all storage connections
     // correctly...
     MOZ_ASSERT(false, "Failed to remove storage directory!");
@@ -9274,8 +9270,7 @@ void ResetOrClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
          QM_VOID);
 
   const nsresult rv = storageFile->Remove(true);
-  if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-      rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
+  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
     // This should never fail if we've closed the storage connection
     // correctly...
     MOZ_ASSERT(false, "Failed to remove storage file!");

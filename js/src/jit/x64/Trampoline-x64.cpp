@@ -1053,7 +1053,6 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   Label handle_Rectifier;
   Label handle_IonICCall;
   Label handle_Entry;
-  Label end;
 
   masm.branch32(Assembler::Equal, scratch2, Imm32(FrameType::IonJS),
                 &handle_IonJS);

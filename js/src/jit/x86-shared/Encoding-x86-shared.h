@@ -7,6 +7,8 @@
 #ifndef jit_x86_shared_Encoding_x86_shared_h
 #define jit_x86_shared_Encoding_x86_shared_h
 
+#include <type_traits>
+
 #include "jit/x86-shared/Constants-x86-shared.h"
 
 namespace js {
@@ -418,16 +420,18 @@ enum ThreeByteEscape { ESCAPE_38 = 0x38, ESCAPE_3A = 0x3A };
 enum VexOperandType { VEX_PS = 0, VEX_PD = 1, VEX_SS = 2, VEX_SD = 3 };
 
 inline OneByteOpcodeID jccRel8(Condition cond) {
-  return OneByteOpcodeID(OP_JCC_rel8 + cond);
+  return OneByteOpcodeID(OP_JCC_rel8 + std::underlying_type_t<Condition>(cond));
 }
 inline TwoByteOpcodeID jccRel32(Condition cond) {
-  return TwoByteOpcodeID(OP2_JCC_rel32 + cond);
+  return TwoByteOpcodeID(OP2_JCC_rel32 +
+                         std::underlying_type_t<Condition>(cond));
 }
 inline TwoByteOpcodeID setccOpcode(Condition cond) {
-  return TwoByteOpcodeID(OP_SETCC + cond);
+  return TwoByteOpcodeID(OP_SETCC + std::underlying_type_t<Condition>(cond));
 }
 inline TwoByteOpcodeID cmovccOpcode(Condition cond) {
-  return TwoByteOpcodeID(OP2_CMOVCC_GvEv + cond);
+  return TwoByteOpcodeID(OP2_CMOVCC_GvEv +
+                         std::underlying_type_t<Condition>(cond));
 }
 
 enum GroupOpcodeID {

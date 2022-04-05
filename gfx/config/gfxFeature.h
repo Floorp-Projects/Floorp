@@ -41,6 +41,7 @@ namespace gfx {
   _(WINDOW_OCCLUSION, Feature, "WINDOW_OCCLUSION")                       \
   _(VAAPI, Feature, "VA-API video decoding")                             \
   _(VIDEO_OVERLAY, Feature, "video overlay")                             \
+  _(HW_DECODED_VIDEO_NO_COPY, Feature, "Hardware decoded video no copy") \
   _(VP8_HW_DECODE, Feature, "VP8 hardware decoding")                     \
   _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")
 /* Add new entries above this comment */

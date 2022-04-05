@@ -2953,9 +2953,9 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
     return NS_OK;
   }
 
-  Element* startCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
+  Element* startCiteNode = aHTMLEditor.GetMostDistantAncestorMailCiteElement(
       *aRangesToDelete.FirstRangeRef()->GetStartContainer());
-  Element* endCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
+  Element* endCiteNode = aHTMLEditor.GetMostDistantAncestorMailCiteElement(
       *aRangesToDelete.FirstRangeRef()->GetEndContainer());
 
   if (startCiteNode && !endCiteNode) {
@@ -3087,10 +3087,12 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
   }
 
   // Figure out mailcite ancestors
-  RefPtr<Element> startCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
-      *aRangesToDelete.FirstRangeRef()->GetStartContainer());
-  RefPtr<Element> endCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
-      *aRangesToDelete.FirstRangeRef()->GetEndContainer());
+  RefPtr<Element> startCiteNode =
+      aHTMLEditor.GetMostDistantAncestorMailCiteElement(
+          *aRangesToDelete.FirstRangeRef()->GetStartContainer());
+  RefPtr<Element> endCiteNode =
+      aHTMLEditor.GetMostDistantAncestorMailCiteElement(
+          *aRangesToDelete.FirstRangeRef()->GetEndContainer());
 
   // If we only have a mailcite at one of the two endpoints, set the
   // directionality of the deletion so that the selection will end up
@@ -5060,7 +5062,8 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
 
   // The element must be `<blockquote type="cite">` or
   // `<span _moz_quote="true">`.
-  RefPtr<Element> mailCiteElement = GetMostAncestorMailCiteElement(aContent);
+  RefPtr<Element> mailCiteElement =
+      GetMostDistantAncestorMailCiteElement(aContent);
   if (!mailCiteElement) {
     return NS_OK;
   }

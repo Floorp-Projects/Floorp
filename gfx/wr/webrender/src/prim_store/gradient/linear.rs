@@ -509,7 +509,7 @@ impl LinearGradientTemplate {
                 None,
                 false,
                 RenderTaskParent::Surface(parent_surface),
-                frame_state.surfaces,
+                &mut frame_state.surface_builder,
                 |rg_builder| {
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,
@@ -538,7 +538,7 @@ impl LinearGradientTemplate {
                 None,
                 false,
                 RenderTaskParent::Surface(parent_surface),
-                frame_state.surfaces,
+                &mut frame_state.surface_builder,
                 |rg_builder| {
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,

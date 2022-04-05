@@ -30,13 +30,6 @@ static constexpr ValueOperand R2(a0);
 static constexpr Register ICTailCallReg = ra;
 static constexpr Register ICStubReg = t0;
 
-// ExtractTemps must be callee-save registers:
-// ICSetProp_Native::Compiler::generateStubCode() stores the object
-// in ExtractTemp0, but then calls callTypeUpdateIC(), which clobbers
-// caller-save registers.
-static constexpr Register ExtractTemp0 = s7;
-static constexpr Register ExtractTemp1 = s8;
-
 // Note that ICTailCallReg is actually just the link register.
 // In LoongArch code emission, we do not clobber ICTailCallReg since we keep
 // the return address for calls there.

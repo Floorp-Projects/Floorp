@@ -3661,8 +3661,7 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
 
   file->SetNativeLeafName("startupCache"_ns);
   nsresult rv = file->Remove(true);
-  return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-         rv == NS_ERROR_FILE_NOT_FOUND;
+  return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_NOT_FOUND;
 }
 
 // When we first initialize the crash reporter we don't have a profile,

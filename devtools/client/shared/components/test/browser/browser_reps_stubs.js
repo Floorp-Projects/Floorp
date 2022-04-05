@@ -34,6 +34,10 @@ const EXPRESSIONS_BY_FILE = {
     }`,
     ],
   ]),
+  "date-time.js": new Map([
+    ["DateTime", `new Date(1459372644859)`],
+    ["InvalidDateTime", `new Date("invalid")`],
+  ]),
   "infinity.js": new Map([
     ["Infinity", `Infinity`],
     ["NegativeInfinity", `-Infinity`],
@@ -53,7 +57,6 @@ const EXPRESSIONS_BY_FILE = {
   // "accessible.js",
   // "accessor.js",
   // "big-int.js",
-  // "date-time.js",
   // "document-type.js",
   // "document.js",
   // "element-node.js",

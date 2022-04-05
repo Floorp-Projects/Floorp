@@ -6,7 +6,7 @@ use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimit
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace};
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
-use crate::batch::CommandBuffer;
+use crate::batch::CommandBufferIndex;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
@@ -14,7 +14,7 @@ use crate::frame_builder::{FrameBuilderConfig};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
-use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo, TileKey};
+use crate::picture::ResolvedSurfaceTexture;
 use crate::prim_store::ClipData;
 use crate::prim_store::gradient::{
     FastLinearGradientTask, RadialGradientTask,
@@ -25,6 +25,7 @@ use std::{usize, f32, i32, u32};
 use crate::render_target::RenderTargetKind;
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
+use crate::surface::SurfaceBuilder;
 use smallvec::SmallVec;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
@@ -178,11 +179,10 @@ pub struct PictureTask {
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,
     pub device_pixel_scale: DevicePixelScale,
-    pub tile_key: Option<TileKey>,
     pub clear_color: Option<ColorF>,
     pub scissor_rect: Option<DeviceIntRect>,
     pub valid_rect: Option<DeviceIntRect>,
-    pub cmd_buffer: Option<CommandBuffer>,
+    pub cmd_buffer_index: CommandBufferIndex,
 }
 
 #[derive(Debug)]
@@ -401,10 +401,10 @@ impl RenderTaskKind {
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
-        tile_key: Option<TileKey>,
         scissor_rect: Option<DeviceIntRect>,
         valid_rect: Option<DeviceIntRect>,
         clear_color: Option<ColorF>,
+        cmd_buffer_index: CommandBufferIndex,
     ) -> Self {
         render_task_sanity_check(&size);
 
@@ -417,11 +417,10 @@ impl RenderTaskKind {
             surface_spatial_node_index,
             raster_spatial_node_index,
             device_pixel_scale,
-            tile_key,
             scissor_rect,
             valid_rect,
-            cmd_buffer: None,
             clear_color,
+            cmd_buffer_index,
         })
     }
 
@@ -482,7 +481,7 @@ impl RenderTaskKind {
         clip_data_store: &mut ClipDataStore,
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
-        surfaces: &[SurfaceInfo],
+        surface_builder: &mut SurfaceBuilder,
     ) -> RenderTaskId {
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
@@ -536,7 +535,7 @@ impl RenderTaskKind {
                         None,
                         false,
                         RenderTaskParent::RenderTask(clip_task_id),
-                        surfaces,
+                        surface_builder,
                         |rg_builder| {
                             let clip_data = ClipData::rounded_rect(
                                 source.minimal_shadow_rect.size(),

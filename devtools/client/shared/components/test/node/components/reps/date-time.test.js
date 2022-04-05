@@ -20,7 +20,7 @@ const { DateTime, Rep } = REPS;
 const stubs = require("devtools/client/shared/components/test/node/stubs/reps/date-time");
 
 describe("test DateTime", () => {
-  const stub = stubs.get("DateTime");
+  const stub = stubs.get("DateTime")._grip;
 
   it("selects DateTime as expected", () => {
     expect(getRep(stub)).toBe(DateTime.rep);
@@ -45,7 +45,7 @@ describe("test DateTime", () => {
 });
 
 describe("test invalid DateTime", () => {
-  const stub = stubs.get("InvalidDateTime");
+  const stub = stubs.get("InvalidDateTime")._grip;
 
   it("renders expected text for invalid date", () => {
     const renderedComponent = shallow(
