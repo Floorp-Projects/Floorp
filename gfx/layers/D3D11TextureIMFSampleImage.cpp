@@ -57,7 +57,8 @@ D3D11TextureIMFSampleImage::GetAsSourceSurface() {
     return nullptr;
   }
 
-  return gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(src);
+  return gfx::Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(src,
+                                                                   mArrayIndex);
 }
 
 ID3D11Texture2D* D3D11TextureIMFSampleImage::GetTexture() const {
