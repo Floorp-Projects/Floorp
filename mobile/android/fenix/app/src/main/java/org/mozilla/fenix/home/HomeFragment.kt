@@ -28,7 +28,6 @@ import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -37,7 +36,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -1069,9 +1067,6 @@ class HomeFragment : Fragment() {
         }
 
         binding.tabButton.setCountWithAnimation(tabCount)
-        // The add_tabs_to_collections_button is added at runtime. We need to search for it in the same way.
-        sessionControlView?.view?.findViewById<MaterialButton>(R.id.add_tabs_to_collections_button)
-            ?.isVisible = tabCount > 0
     }
 
     private fun displayWallpaperIfEnabled() {

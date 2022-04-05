@@ -171,7 +171,8 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
     object PocketStoriesItem : AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
     object PocketCategoriesItem : AdapterItem(PocketCategoriesViewHolder.LAYOUT_ID)
-    object PocketRecommendationsFooterItem : AdapterItem(PocketRecommendationsHeaderViewHolder.LAYOUT_ID)
+    object PocketRecommendationsFooterItem :
+        AdapterItem(PocketRecommendationsHeaderViewHolder.LAYOUT_ID)
 
     object BottomSpacer : AdapterItem(BottomSpacerViewHolder.LAYOUT_ID)
 
@@ -272,19 +273,21 @@ class SessionControlAdapter(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner
             )
+            NoCollectionsMessageViewHolder.LAYOUT_ID -> return NoCollectionsMessageViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner = viewLifecycleOwner,
+                interactor = interactor
+            )
         }
 
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             TopPlaceholderViewHolder.LAYOUT_ID -> TopPlaceholderViewHolder(view)
-            TopSitePagerViewHolder.LAYOUT_ID -> TopSitePagerViewHolder(view, viewLifecycleOwner, interactor)
-            NoCollectionsMessageViewHolder.LAYOUT_ID ->
-                NoCollectionsMessageViewHolder(
-                    view,
-                    viewLifecycleOwner,
-                    components.core.store,
-                    interactor
-                )
+            TopSitePagerViewHolder.LAYOUT_ID -> TopSitePagerViewHolder(
+                view = view,
+                viewLifecycleOwner = viewLifecycleOwner,
+                interactor = interactor
+            )
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(
                 view as WidgetSiteItemView,
@@ -315,6 +318,7 @@ class SessionControlAdapter(
         when (holder) {
             is CollectionHeaderViewHolder,
             is CustomizeHomeButtonViewHolder,
+            is NoCollectionsMessageViewHolder,
             is RecentlyVisitedViewHolder,
             is RecentVisitsHeaderViewHolder,
             is RecentBookmarksViewHolder,

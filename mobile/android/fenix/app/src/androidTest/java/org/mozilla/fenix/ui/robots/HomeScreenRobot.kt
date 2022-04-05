@@ -33,7 +33,6 @@ import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import mozilla.components.browser.state.state.searchEngines
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matchers
@@ -141,7 +140,11 @@ class HomeScreenRobot {
     fun verifyRecentBookmarksSectionIsDisplayed() = assertRecentBookmarksSectionIsDisplayed()
     fun verifyRecentBookmarksSectionIsNotDisplayed() = assertRecentBookmarksSectionIsNotDisplayed()
 
-    fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
+    fun verifyRecentlyVisitedSearchGroupDisplayed(
+        shouldBeDisplayed: Boolean,
+        searchTerm: String,
+        groupSize: Int
+    ) {
         // checks if the search group exists in the Recently visited section
         if (shouldBeDisplayed) {
             recentlyVisitedList.waitForExists(waitingTime)
@@ -162,7 +165,11 @@ class HomeScreenRobot {
         }
     }
 
-    fun verifyCurrentSearchGroupIsDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int = 0) {
+    fun verifyCurrentSearchGroupIsDisplayed(
+        shouldBeDisplayed: Boolean,
+        searchTerm: String,
+        groupSize: Int = 0
+    ) {
         // checks search group in the Jump back in section
         if (shouldBeDisplayed) {
             assertTrue(
@@ -392,7 +399,10 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
-        fun expandCollection(title: String, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+        fun expandCollection(
+            title: String,
+            interact: CollectionRobot.() -> Unit
+        ): CollectionRobot.Transition {
             // Depending on the screen dimensions collections might report as visible on screen
             // but actually have the bottom toolbar above so interactions with collections might fail.
             // As a quick solution we'll try scrolling to the element below collection on the homescreen
@@ -405,8 +415,12 @@ class HomeScreenRobot {
             return CollectionRobot.Transition()
         }
 
-        fun openRecentlyVisitedSearchGroupHistoryList(title: String, interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
-            val searchGroup = recentlyVisitedList.getChildByText(UiSelector().text(title), title, true)
+        fun openRecentlyVisitedSearchGroupHistoryList(
+            title: String,
+            interact: HistoryRobot.() -> Unit
+        ): HistoryRobot.Transition {
+            val searchGroup =
+                recentlyVisitedList.getChildByText(UiSelector().text(title), title, true)
             searchGroup.waitForExists(waitingTimeShort)
             searchGroup.click()
 
@@ -438,7 +452,8 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
             .contains("mInputShown=true")
     )
 
-private fun navigationToolbar() = mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
+private fun navigationToolbar() =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
 
 private fun assertNavigationToolbar() = assertTrue(navigationToolbar().waitForExists(waitingTime))
 
@@ -447,7 +462,8 @@ private fun assertFocusedNavigationToolbar() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertHomeScreen() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout")).waitForExists(waitingTime)
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
+        .waitForExists(waitingTime)
     onView(ViewMatchers.withResourceName("homeLayout"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -471,18 +487,23 @@ private fun assertTabButton() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertCollectionsHeader() =
-    onView(allOf(withText("Collections")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains(
+                "Collections"
+            )
+        ).waitForExists(waitingTime)
+    )
 
 private fun assertNoCollectionsText() =
-    onView(
-        withText(
-            containsString(
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains(
                 "Collect the things that matter to you.\n" +
                     "Group together similar searches, sites, and tabs for quick access later."
             )
-        )
-    ).check(matches(isDisplayed()))
+        ).waitForExists(waitingTime)
+    )
 
 private fun assertHomeComponent() =
     onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
@@ -521,6 +542,7 @@ private fun assertStartSyncHeader() {
     onView(allOf(withText(R.string.onboarding_account_sign_in_header_1)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertAccountsSignInButton() =
     onView(ViewMatchers.withResourceName("fxa_sign_in_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -530,6 +552,7 @@ private fun assertChooseThemeHeader() {
     onView(withText("Choose your theme"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertChooseThemeText() {
     scrollToElementByText("Choose your theme")
     onView(allOf(withText("Save some battery and your eyesight with dark mode.")))
@@ -559,6 +582,7 @@ private fun assertDarkThemeDescription() {
     onView(allOf(withText("Dark theme")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertAutomaticThemeToggle() {
     scrollToElementByText("Choose your theme")
     onView(withId(R.id.theme_automatic_radio_button))
@@ -686,9 +710,11 @@ private fun assertTopSiteContextMenuItems() {
     )
 }
 
-private fun assertJumpBackInSectionIsDisplayed() = assertTrue(jumpBackInSection().waitForExists(waitingTime))
+private fun assertJumpBackInSectionIsDisplayed() =
+    assertTrue(jumpBackInSection().waitForExists(waitingTime))
 
-private fun assertJumpBackInSectionIsNotDisplayed() = assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
+private fun assertJumpBackInSectionIsNotDisplayed() =
+    assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
 
 private fun assertRecentBookmarksSectionIsDisplayed() =
     assertTrue(recentBookmarksSection().waitForExists(waitingTime))
@@ -698,7 +724,8 @@ private fun assertRecentBookmarksSectionIsNotDisplayed() =
 
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
-private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
+private fun saveTabsToCollectionButton() =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.tabs_menu_save_to_collection1)))
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
 
@@ -709,7 +736,8 @@ private fun recentBookmarksSection() =
     mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_bookmarks_title)))
 
 private fun startBrowsingButton(): UiObject {
-    val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
+    val startBrowsingButton =
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
     homeScreenList()
         .scrollIntoView(startBrowsingButton)
     homeScreenList()
