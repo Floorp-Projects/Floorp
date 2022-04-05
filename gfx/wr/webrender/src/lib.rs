@@ -120,6 +120,7 @@ mod scene_building;
 mod screen_capture;
 mod segment;
 mod spatial_node;
+mod surface;
 mod texture_pack;
 mod texture_cache;
 mod tile_cache;
