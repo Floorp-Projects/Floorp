@@ -22,7 +22,7 @@ namespace mozilla::dom {
 
 class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PromiseNativeThenHandlerBase)
 
   PromiseNativeThenHandlerBase(Promise* aPromise) : mPromise(aPromise) {}
 
@@ -45,6 +45,7 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
 
   virtual void Traverse(nsCycleCollectionTraversalCallback&) = 0;
   virtual void Unlink() = 0;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void* aClosure) = 0;
 
   RefPtr<Promise> mPromise;
 };
@@ -71,6 +72,11 @@ struct StorageTypeHelper<nsCOMPtr<T>, true, true> {
 template <typename T>
 struct StorageTypeHelper<T*, true, false> {
   using Type = RefPtr<T>;
+};
+
+template <typename T>
+struct StorageTypeHelper<JS::Handle<T>, false, false> {
+  using Type = JS::Heap<T>;
 };
 
 template <template <typename> class SmartPtr, typename T>
@@ -102,8 +108,15 @@ T&& ArgType(T& aVal) {
 
 using ::ImplCycleCollectionUnlink;
 
-template <typename ResolveCallback, typename RejectCallback, typename... Args>
-class NativeThenHandler final : public PromiseNativeThenHandlerBase {
+template <typename ResolveCallback, typename RejectCallback, typename ArgsTuple,
+          typename JSArgsTuple>
+class NativeThenHandler;
+
+template <typename ResolveCallback, typename RejectCallback, typename... Args,
+          typename... JSArgs>
+class NativeThenHandler<ResolveCallback, RejectCallback, std::tuple<Args...>,
+                        std::tuple<JSArgs...>>
+    final : public PromiseNativeThenHandlerBase {
  public:
   /**
    * @param aPromise A promise that will be settled by the result of the
@@ -115,19 +128,35 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
    * @param aArgs The custom arguments to be passed to the both callbacks. The
    * handler class will grab them to make them live long enough and to allow
    * cycle collection.
+   * @param aJSArgs The JS arguments to be passed to the both callbacks, after
+   * native arguments. The handler will also grab them and allow garbage
+   * collection.
    *
    * XXX(krosylight): ideally there should be two signatures, with or without a
    * promise parameter. Unfortunately doing so confuses the compiler and errors
    * out, because nothing prevents promise from being ResolveCallback.
    */
   NativeThenHandler(Promise* aPromise, Maybe<ResolveCallback>&& aOnResolve,
-                    Maybe<RejectCallback>&& aOnReject, Args&&... aArgs)
+                    Maybe<RejectCallback>&& aOnReject,
+                    std::tuple<std::remove_reference_t<Args>...>&& aArgs,
+                    std::tuple<std::remove_reference_t<JSArgs>...>&& aJSArgs)
       : PromiseNativeThenHandlerBase(aPromise),
         mOnResolve(std::forward<Maybe<ResolveCallback>>(aOnResolve)),
         mOnReject(std::forward<Maybe<RejectCallback>>(aOnReject)),
-        mArgs(std::forward<Args>(aArgs)...) {}
+        mArgs(std::forward<decltype(aArgs)>(aArgs)),
+        mJSArgs(std::forward<decltype(aJSArgs)>(aJSArgs)) {
+    if constexpr (std::tuple_size<decltype(mJSArgs)>::value > 0) {
+      mozilla::HoldJSObjects(this);
+    }
+  }
 
  protected:
+  ~NativeThenHandler() override {
+    if constexpr (std::tuple_size<decltype(mJSArgs)>::value > 0) {
+      mozilla::DropJSObjects(this);
+    }
+  }
+
   void Traverse(nsCycleCollectionTraversalCallback& cb) override {
     auto* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArgs)
@@ -136,6 +165,15 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
   void Unlink() override {
     auto* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgs)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mJSArgs)
+  }
+
+  void Trace(const TraceCallbacks& aCallbacks, void* aClosure) override {
+    std::apply(
+        [&aCallbacks, aClosure](auto&&... aArgs) {
+          (aCallbacks.Trace(&aArgs, "mJSArgs[]", aClosure), ...);
+        },
+        mJSArgs);
   }
 
   bool HasResolvedCallback() override { return mOnResolve.isSome(); }
@@ -152,26 +190,39 @@ class NativeThenHandler final : public PromiseNativeThenHandlerBase {
     return CallCallback(aCx, *mOnReject, aValue, aRv);
   }
 
-  template <typename TCallback, size_t... Indices>
+  // mJSArgs are marked with Trace() above, so they can be safely converted to
+  // Handles.
+  template <typename T>
+  static JS::Handle<T> GetJSArgHandle(JS::Heap<T>& aArg) {
+    return JS::Handle<T>::fromMarkedLocation(aArg.address());
+  }
+
+  template <typename TCallback, size_t... Indices, size_t... JSIndices>
   already_AddRefed<Promise> CallCallback(JSContext* aCx,
                                          const TCallback& aHandler,
                                          JS::Handle<JS::Value> aValue,
                                          ErrorResult& aRv,
-                                         std::index_sequence<Indices...>) {
-    return aHandler(aCx, aValue, aRv, ArgType(std::get<Indices>(mArgs))...);
+                                         std::index_sequence<Indices...>,
+                                         std::index_sequence<JSIndices...>) {
+    return aHandler(aCx, aValue, aRv, ArgType(std::get<Indices>(mArgs))...,
+                    GetJSArgHandle(std::get<JSIndices>(mJSArgs))...);
   }
 
   template <typename TCallback>
-  auto CallCallback(JSContext* aCx, const TCallback& aHandler,
-                    JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+  already_AddRefed<Promise> CallCallback(JSContext* aCx,
+                                         const TCallback& aHandler,
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv) {
     return CallCallback(aCx, aHandler, aValue, aRv,
-                        std::index_sequence_for<Args...>{});
+                        std::index_sequence_for<Args...>{},
+                        std::index_sequence_for<JSArgs...>{});
   }
 
   Maybe<ResolveCallback> mOnResolve;
   Maybe<RejectCallback> mOnReject;
 
   std::tuple<StorageType<Args>...> mArgs;
+  std::tuple<StorageType<JSArgs>...> mJSArgs;
 };
 
 }  // anonymous namespace
@@ -181,8 +232,8 @@ Promise::ThenResult<ResolveCallback, Args...>
 Promise::ThenCatchWithCycleCollectedArgsImpl(
     Maybe<ResolveCallback>&& aOnResolve, Maybe<RejectCallback>&& aOnReject,
     Args&&... aArgs) {
-  using HandlerType =
-      NativeThenHandler<ResolveCallback, RejectCallback, Args...>;
+  using HandlerType = NativeThenHandler<ResolveCallback, RejectCallback,
+                                        std::tuple<Args...>, std::tuple<>>;
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
@@ -190,10 +241,10 @@ Promise::ThenCatchWithCycleCollectedArgsImpl(
     return Err(rv.StealNSResult());
   }
 
-  auto* handler = new (fallible)
-      HandlerType(promise, std::forward<Maybe<ResolveCallback>>(aOnResolve),
-                  std::forward<Maybe<RejectCallback>>(aOnReject),
-                  std::forward<Args>(aArgs)...);
+  auto* handler = new (fallible) HandlerType(
+      promise, std::forward<Maybe<ResolveCallback>>(aOnResolve),
+      std::forward<Maybe<RejectCallback>>(aOnReject),
+      std::make_tuple(std::forward<Args>(aArgs)...), std::make_tuple());
 
   if (!handler) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
@@ -228,6 +279,30 @@ Promise::ThenResult<Callback, Args...> Promise::CatchWithCycleCollectedArgs(
                                              std::forward<Args>(aArgs)...);
 }
 
+template <typename Callback, typename ArgsTuple, typename JSArgsTuple>
+Result<RefPtr<Promise>, nsresult> Promise::ThenWithCycleCollectedArgsJS(
+    Callback&& aOnResolve, ArgsTuple&& aArgs, JSArgsTuple&& aJSArgs) {
+  using HandlerType =
+      NativeThenHandler<Callback, Callback, ArgsTuple, JSArgsTuple>;
+
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
+  if (rv.Failed()) {
+    return Err(rv.StealNSResult());
+  }
+
+  auto* handler = new (fallible) HandlerType(
+      promise, Some(aOnResolve), Maybe<Callback>(Nothing()),
+      std::forward<ArgsTuple>(aArgs), std::forward<JSArgsTuple>(aJSArgs));
+
+  if (!handler) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  AppendNativeHandler(handler);
+  return std::move(promise);
+}
+
 template <typename ResolveCallback, typename RejectCallback, typename... Args>
 void Promise::AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
                                                  RejectCallback&& aOnReject,
@@ -248,9 +323,10 @@ void Promise::AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
   // Note: explicit template parameters for clang<7/gcc<8 without "Template
   // argument deduction for class templates" support
   AppendNativeHandler(
-      new NativeThenHandler<decltype(onResolve), decltype(onReject), Args...>(
+      new NativeThenHandler<decltype(onResolve), decltype(onReject),
+                            std::tuple<Args...>, std::tuple<>>(
           nullptr, Some(onResolve), Some(onReject),
-          std::forward<Args>(aArgs)...));
+          std::make_tuple(std::forward<Args>(aArgs)...), std::make_tuple()));
 }
 
 }  // namespace mozilla::dom
