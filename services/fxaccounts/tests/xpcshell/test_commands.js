@@ -392,7 +392,7 @@ add_task(async function test_commands_handleCommands() {
   commands.sendTab.handle = (sender, data, reason) => {
     return {
       title: "testTitle",
-      uri: "testURI",
+      uri: "https://testURI",
     };
   };
   commands._fxai.device = {
@@ -408,6 +408,57 @@ add_task(async function test_commands_handleCommands() {
     .expects("_getReason")
     .once()
     .withExactArgs(pushIndexReceived, remoteMessageIndex);
+  mockCommands.expects("_notifyFxATabsReceived").once();
+  await commands._handleCommands(remoteMessages, pushIndexReceived);
+  mockCommands.verify();
+});
+
+add_task(async function test_commands_handleCommands_invalid_tab() {
+  // This test ensures that `_getReason` is being called by
+  // `_handleCommands` with the expected parameters.
+  const pushIndexReceived = 12;
+  const senderID = "6d09f6c4-89b2-41b3-a0ac-e4c2502b5485";
+  const remoteMessageIndex = 8;
+  const remoteMessages = [
+    {
+      index: remoteMessageIndex,
+      data: {
+        command: COMMAND_SENDTAB,
+        payload: {
+          encrypted: {},
+        },
+        sender: senderID,
+      },
+    },
+  ];
+
+  const fxAccounts = {
+    async withCurrentAccountState(cb) {
+      await cb({});
+    },
+  };
+  const commands = new FxAccountsCommands(fxAccounts);
+  commands.sendTab.handle = (sender, data, reason) => {
+    return {
+      title: "badUriTab",
+      uri: "file://path/to/pdf",
+    };
+  };
+  commands._fxai.device = {
+    refreshDeviceList: () => {},
+    recentDeviceList: [
+      {
+        id: senderID,
+      },
+    ],
+  };
+  const mockCommands = sinon.mock(commands);
+  mockCommands
+    .expects("_getReason")
+    .once()
+    .withExactArgs(pushIndexReceived, remoteMessageIndex);
+  // We shouldn't have tried to open a tab with an invalid uri
+  mockCommands.expects("_notifyFxATabsReceived").never();
 
   await commands._handleCommands(remoteMessages, pushIndexReceived);
   mockCommands.verify();
