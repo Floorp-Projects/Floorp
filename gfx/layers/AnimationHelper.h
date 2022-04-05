@@ -21,6 +21,7 @@
 namespace mozilla {
 namespace layers {
 class Animation;
+class APZSampler;
 class CompositorAnimationStorage;
 struct AnimatedValue;
 
@@ -74,8 +75,9 @@ class AnimationHelper {
    * result of the various transform properties into a final matrix.
    */
   static SampleResult SampleAnimationForEachNode(
-      TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
-      const AnimatedValue* aPreviousValue,
+      const APZSampler* aAPZSampler, const LayersId& aLayersId,
+      const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
+      TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
       nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
       nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
 

@@ -1223,6 +1223,12 @@ class AsyncPanZoomController {
   // Returns the delta for the given InputData.
   ParentLayerPoint GetDeltaForEvent(const InputData& aEvent) const;
 
+  /**
+   * Get the current scroll range of the scrollable frame coreesponding to this
+   * APZC.
+   */
+  CSSRect GetCurrentScrollRangeInCssPixels() const;
+
  private:
   /**
    * Advances to the next sample, if there is one, the list of sampled states

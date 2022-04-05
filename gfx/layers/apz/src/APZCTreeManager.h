@@ -537,6 +537,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
       const LayersId& aLayersId,
       const ScrollableLayerGuid::ViewID& aScrollId) const;
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
+      const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+      const MutexAutoLock& aProofOfMapLock) const;
   ScreenToParentLayerMatrix4x4 GetScreenToApzcTransform(
       const AsyncPanZoomController* aApzc) const;
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(
@@ -567,6 +570,12 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // mutex for this counter.
     MutexAutoLock lock(mScrollGenerationLock);
     return mScrollGenerationCounter.NewAPZGeneration();
+  }
+
+  template <typename Callback>
+  void CallWithMapLock(Callback& aCallback) {
+    MutexAutoLock lock(mMapLock);
+    aCallback(lock);
   }
 
  private:
