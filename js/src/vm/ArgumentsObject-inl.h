@@ -50,7 +50,7 @@ inline bool ArgumentsObject::maybeGetElements(uint32_t start, uint32_t count,
   MOZ_ASSERT(start + count >= start);
 
   uint32_t length = initialLength();
-  if (start > length || start + count > length || isAnyElementDeleted()) {
+  if (start > length || start + count > length || hasOverriddenElement()) {
     return false;
   }
 
