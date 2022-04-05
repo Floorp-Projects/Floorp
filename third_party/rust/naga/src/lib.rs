@@ -92,7 +92,7 @@ Naga's rules for when `Expression`s are evaluated are as follows:
         does not.
 
     -   A `GlobalVariable` expression referring to a global in the
-        [`AddressSpace::Handle`] address space produces the value directly, not
+        [`StorageClass::Handle`] storage class produces the value directly, not
         a pointer. Such global variables hold opaque types like shaders or
         images, and cannot be assigned to.
 
@@ -182,7 +182,8 @@ tree.
 
 [`Validator::validate`]: valid::Validator::validate
 [`ModuleInfo`]: valid::ModuleInfo
-*/
+
+!*/
 
 // TODO: use `strip_prefix` instead when Rust 1.45 <= MSRV
 #![allow(
@@ -216,8 +217,6 @@ pub mod valid;
 pub use crate::arena::{Arena, Handle, Range, UniqueArena};
 
 pub use crate::span::{Span, SpanContext, WithSpan};
-#[cfg(feature = "arbitrary")]
-use arbitrary::Arbitrary;
 #[cfg(feature = "deserialize")]
 use serde::Deserialize;
 #[cfg(feature = "serialize")]
@@ -234,48 +233,39 @@ pub type FastHashSet<K> = rustc_hash::FxHashSet<K>;
 /// Map of expressions that have associated variable names
 pub(crate) type NamedExpressions = FastHashMap<Handle<Expression>, String>;
 
-/// Early fragment tests.
-///
-/// In a standard situation, if a driver determines that it is possible to switch on early depth test, it will.
-///
-/// Typical situations when early depth test is switched off:
-///   - Calling `discard` in a shader.
+/// Early fragment tests. In a standard situation if a driver determines that it is possible to
+/// switch on early depth test it will. Typical situations when early depth test is switched off:
+///   - Calling ```discard``` in a shader.
 ///   - Writing to the depth buffer, unless ConservativeDepth is enabled.
 ///
-/// To use in a shader:
-///   - GLSL: `layout(early_fragment_tests) in;`
-///   - HLSL: `Attribute earlydepthstencil`
-///   - SPIR-V: `ExecutionMode EarlyFragmentTests`
+/// SPIR-V: ExecutionMode EarlyFragmentTests
+/// In GLSL: layout(early_fragment_tests) in;
+/// HLSL: Attribute earlydepthstencil
 ///
 /// For more, see:
 ///   - <https://www.khronos.org/opengl/wiki/Early_Fragment_Test#Explicit_specification>
 ///   - <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-earlydepthstencil>
-///   - <https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode>
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct EarlyDepthTest {
     conservative: Option<ConservativeDepth>,
 }
 /// Enables adjusting depth without disabling early Z.
 ///
-/// To use in a shader:
-///   - GLSL: `layout (depth_<greater/less/unchanged/any>) out float gl_FragDepth;`
-///     - `depth_any` option behaves as if the layout qualifier was not present.
-///   - HLSL: `SV_DepthGreaterEqual`/`SV_DepthLessEqual`/`SV_Depth`
-///   - SPIR-V: `ExecutionMode Depth<Greater/Less/Unchanged>`
+/// SPIR-V: ExecutionMode DepthGreater/DepthLess/DepthUnchanged
+/// GLSL: layout (depth_<greater/less/unchanged/any>) out float gl_FragDepth;
+///   - ```depth_any``` option behaves as if the layout qualifier was not present.
+/// HLSL: SV_Depth/SV_DepthGreaterEqual/SV_DepthLessEqual
 ///
 /// For more, see:
 ///   - <https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt>
 ///   - <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics>
-///   - <https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode>
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ConservativeDepth {
-    /// Shader may rewrite depth only with a value greater than calculated.
+    /// Shader may rewrite depth only with a value greater than calculated;
     GreaterEqual,
 
     /// Shader may rewrite depth smaller than one that would have been written without the modification.
@@ -289,7 +279,6 @@ pub enum ConservativeDepth {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[allow(missing_docs)] // The names are self evident
 pub enum ShaderStage {
     Vertex,
@@ -297,12 +286,11 @@ pub enum ShaderStage {
     Compute,
 }
 
-/// Addressing space of variables.
+/// Class of storage for variables.
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum AddressSpace {
+pub enum StorageClass {
     /// Function locals.
     Function,
     /// Private data, per invocation, mutable.
@@ -323,7 +311,6 @@ pub enum AddressSpace {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BuiltIn {
     Position,
     ViewIndex,
@@ -358,7 +345,6 @@ pub type Bytes = u8;
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum VectorSize {
     /// 2D vector
     Bi = 2,
@@ -373,7 +359,6 @@ pub enum VectorSize {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ScalarKind {
     /// Signed integer type.
     Sint,
@@ -390,7 +375,6 @@ pub enum ScalarKind {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ArraySize {
     /// The array size is constant.
     Constant(Handle<Constant>),
@@ -402,7 +386,6 @@ pub enum ArraySize {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Interpolation {
     /// The value will be interpolated in a perspective-correct fashion.
     /// Also known as "smooth" in glsl.
@@ -419,7 +402,6 @@ pub enum Interpolation {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Sampling {
     /// Interpolate the value at the center of the pixel.
     Center,
@@ -439,7 +421,6 @@ pub enum Sampling {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct StructMember {
     pub name: Option<String>,
     /// Type of the field.
@@ -454,7 +435,6 @@ pub struct StructMember {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ImageDimension {
     /// 1D image
     D1,
@@ -470,7 +450,6 @@ bitflags::bitflags! {
     /// Flags describing an image.
     #[cfg_attr(feature = "serialize", derive(Serialize))]
     #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-    #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
     #[derive(Default)]
     pub struct StorageAccess: u32 {
         /// Storage can be used as a source for load ops.
@@ -480,11 +459,10 @@ bitflags::bitflags! {
     }
 }
 
-/// Image storage format.
+// Storage image format.
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum StorageFormat {
     // 8-bit formats
     R8Unorm,
@@ -535,7 +513,6 @@ pub enum StorageFormat {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ImageClass {
     /// Regular sampled image.
     Sampled {
@@ -563,7 +540,6 @@ pub enum ImageClass {
 #[derive(Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Type {
     /// The name of the type, if any.
     pub name: Option<String>,
@@ -575,7 +551,6 @@ pub struct Type {
 #[derive(Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum TypeInner {
     /// Number of integral or floating-point kind.
     Scalar { kind: ScalarKind, width: Bytes },
@@ -621,7 +596,7 @@ pub enum TypeInner {
     /// [`AccessIndex`]: Expression::AccessIndex
     Pointer {
         base: Handle<Type>,
-        space: AddressSpace,
+        class: StorageClass,
     },
 
     /// Pointer to a scalar or vector.
@@ -640,7 +615,7 @@ pub enum TypeInner {
         size: Option<VectorSize>,
         kind: ScalarKind,
         width: Bytes,
-        space: AddressSpace,
+        class: StorageClass,
     },
 
     /// Homogenous list of elements.
@@ -652,8 +627,7 @@ pub enum TypeInner {
     /// An `Array` is [`SIZED`] unless its `size` is [`Dynamic`].
     /// Dynamically-sized arrays may only appear in a few situations:
     ///
-    /// -   They may appear as the type of a [`GlobalVariable`], or as the last
-    ///     member of a [`Struct`].
+    /// -   They may appear as the last member of a [`Struct`].
     ///
     /// -   They may appear as the base type of a [`Pointer`]. An
     ///     [`AccessIndex`] expression referring to a struct's final
@@ -706,7 +680,6 @@ pub enum TypeInner {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Constant {
     pub name: Option<String>,
     pub specialization: Option<u32>,
@@ -717,7 +690,6 @@ pub struct Constant {
 #[derive(Debug, Clone, Copy, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ScalarValue {
     Sint(i64),
     Uint(u64),
@@ -729,7 +701,6 @@ pub enum ScalarValue {
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ConstantInner {
     Scalar {
         width: Bytes,
@@ -745,7 +716,6 @@ pub enum ConstantInner {
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Binding {
     /// Built-in shader variable.
     BuiltIn(BuiltIn),
@@ -777,7 +747,6 @@ pub enum Binding {
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct ResourceBinding {
     /// The bind group index.
     pub group: u32,
@@ -789,12 +758,11 @@ pub struct ResourceBinding {
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct GlobalVariable {
     /// Name of the variable, if any.
     pub name: Option<String>,
     /// How this variable is to be stored.
-    pub space: AddressSpace,
+    pub class: StorageClass,
     /// For resources, defines the binding point.
     pub binding: Option<ResourceBinding>,
     /// The type of this variable.
@@ -807,7 +775,6 @@ pub struct GlobalVariable {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct LocalVariable {
     /// Name of the variable, if any.
     pub name: Option<String>,
@@ -821,7 +788,6 @@ pub struct LocalVariable {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum UnaryOperator {
     Negate,
     Not,
@@ -831,7 +797,6 @@ pub enum UnaryOperator {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BinaryOperator {
     Add,
     Subtract,
@@ -862,7 +827,6 @@ pub enum BinaryOperator {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum AtomicFunction {
     Add,
     Subtract,
@@ -878,7 +842,6 @@ pub enum AtomicFunction {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum DerivativeAxis {
     X,
     Y,
@@ -889,7 +852,6 @@ pub enum DerivativeAxis {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum RelationalFunction {
     All,
     Any,
@@ -903,7 +865,6 @@ pub enum RelationalFunction {
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum MathFunction {
     // comparison
     Abs,
@@ -987,7 +948,6 @@ pub enum MathFunction {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum SampleLevel {
     Auto,
     Zero,
@@ -1003,7 +963,6 @@ pub enum SampleLevel {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum ImageQuery {
     /// Get the size at the specified level.
     Size {
@@ -1023,7 +982,6 @@ pub enum ImageQuery {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum SwizzleComponent {
     ///
     X = 0,
@@ -1039,12 +997,11 @@ bitflags::bitflags! {
     /// Memory barrier flags.
     #[cfg_attr(feature = "serialize", derive(Serialize))]
     #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-    #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
     #[derive(Default)]
     pub struct Barrier: u32 {
-        /// Barrier affects all `AddressSpace::Storage` accesses.
+        /// Barrier affects all `StorageClass::Storage` accesses.
         const STORAGE = 0x1;
-        /// Barrier affects all `AddressSpace::WorkGroup` accesses.
+        /// Barrier affects all `StorageClass::WorkGroup` accesses.
         const WORK_GROUP = 0x2;
     }
 }
@@ -1056,7 +1013,6 @@ bitflags::bitflags! {
 #[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Expression {
     /// Array access with a computed index.
     ///
@@ -1072,7 +1028,7 @@ pub enum Expression {
     /// Indexing a [`Matrix`] produces a [`Vector`].
     ///
     /// Indexing a [`Pointer`] to any of the above produces a pointer to the
-    /// element/component type, in the same [`space`]. In the case of [`Array`],
+    /// element/component type, in the same [`class`]. In the case of [`Array`],
     /// the result is an actual [`Pointer`], but for vectors and matrices, there
     /// may not be any type in the arena representing the component's type, so
     /// those produce [`ValuePointer`] types equivalent to the appropriate
@@ -1101,7 +1057,7 @@ pub enum Expression {
     /// [`Matrix`]: TypeInner::Matrix
     /// [`Array`]: TypeInner::Array
     /// [`Pointer`]: TypeInner::Pointer
-    /// [`space`]: TypeInner::Pointer::space
+    /// [`class`]: TypeInner::Pointer::class
     /// [`ValuePointer`]: TypeInner::ValuePointer
     /// [`Float`]: ScalarKind::Float
     Access {
@@ -1146,16 +1102,16 @@ pub enum Expression {
 
     /// Reference a global variable.
     ///
-    /// If the given `GlobalVariable`'s [`space`] is [`AddressSpace::Handle`],
+    /// If the given `GlobalVariable`'s [`class`] is [`StorageClass::Handle`],
     /// then the variable stores some opaque type like a sampler or an image,
     /// and a `GlobalVariable` expression referring to it produces the
     /// variable's value directly.
     ///
-    /// For any other address space, a `GlobalVariable` expression produces a
+    /// For any other storage class, a `GlobalVariable` expression produces a
     /// pointer to the variable's value. You must use a [`Load`] expression to
     /// retrieve its value, or a [`Store`] statement to assign it a new value.
     ///
-    /// [`space`]: GlobalVariable::space
+    /// [`class`]: GlobalVariable::class
     /// [`Load`]: Expression::Load
     /// [`Store`]: Statement::Store
     GlobalVariable(Handle<GlobalVariable>),
@@ -1234,22 +1190,37 @@ pub enum Expression {
         /// [`Sint`]: ScalarKind::Sint
         array_index: Option<Handle<Expression>>,
 
-        /// A sample index, for multisampled [`Sampled`] and [`Depth`] images.
+        /// The sample within a particular texel.
         ///
+        /// The meaning of this value depends on the [`class`] of `image`:
+        ///
+        /// -   [`Storage`] images hold exactly one sample per texel, so `index` must
+        ///     be `None`.
+        ///
+        /// -   [`Depth`] and [`Sampled`] images may be multisampled or have
+        ///     mipmaps, but not both. Which one is indicated by the variant's
+        ///     [`multi`] field:
+        ///
+        ///     - If `multi` is `true`, then the image has multiple samples per
+        ///       texel, and `index` must be `Some(sample)`, where `sample` is
+        ///       the index of the sample to retrieve.
+        ///
+        ///     - If `multi` is `false`, then the image may have mipmaps. In
+        ///       this case, `index` must be `Some(level)`, where `level`
+        ///       identifies the level of detail. Even if the image has only the
+        ///       full-sized version, `level` must still be present; its only
+        ///       in-range value is zero.
+        ///
+        /// When `index` is `Some` the value must be a `Sint` scalar value. If
+        /// it identifes a level of detail, zero represents the full resolution
+        /// mipmap.
+        ///
+        /// [`class`]: TypeInner::Image::class
         /// [`Sampled`]: ImageClass::Sampled
+        /// [`Storage`]: ImageClass::Storage
         /// [`Depth`]: ImageClass::Depth
-        sample: Option<Handle<Expression>>,
-
-        /// A level of detail, for mipmapped images.
-        ///
-        /// This must be present when accessing non-multisampled
-        /// [`Sampled`] and [`Depth`] images, even if only the
-        /// full-resolution level is present (in which case the only
-        /// valid level is zero).
-        ///
-        /// [`Sampled`]: ImageClass::Sampled
-        /// [`Depth`]: ImageClass::Depth
-        level: Option<Handle<Expression>>,
+        /// [`multi`]: ImageClass::Sampled::multi
+        index: Option<Handle<Expression>>,
     },
 
     /// Query information from an image.
@@ -1325,12 +1296,11 @@ pub enum Expression {
 
 pub use block::Block;
 
-/// The value of the switch case.
+/// The value of the switch case
 // Clone is used only for error reporting and is not intended for end users
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum SwitchValue {
     Integer(i32),
     Default,
@@ -1341,7 +1311,6 @@ pub enum SwitchValue {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct SwitchCase {
     /// Value, upon which the case is considered true.
     pub value: SwitchValue,
@@ -1358,7 +1327,6 @@ pub struct SwitchCase {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Statement {
     /// Emit a range of expressions, visible to all statements that follow in this block.
     ///
@@ -1461,8 +1429,7 @@ pub enum Statement {
     /// The `image`, `coordinate`, and `array_index` fields have the same
     /// meanings as the corresponding operands of an [`ImageLoad`] expression;
     /// see that documentation for details. Storing into multisampled images or
-    /// images with mipmaps is not supported, so there are no `level` or
-    /// `sample` operands.
+    /// images with mipmaps is not supported, so there is no `index`operand.
     ///
     /// This statement is a barrier for any operations on the corresponding
     /// [`Expression::GlobalVariable`] for this image.
@@ -1503,7 +1470,6 @@ pub enum Statement {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct FunctionArgument {
     /// Name of the argument, if any.
     pub name: Option<String>,
@@ -1514,11 +1480,9 @@ pub struct FunctionArgument {
     pub binding: Option<Binding>,
 }
 
-/// A function result.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct FunctionResult {
     /// Type of the result.
     pub ty: Handle<Type>,
@@ -1531,7 +1495,6 @@ pub struct FunctionResult {
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Function {
     /// Name of the function, if any.
     pub name: Option<String>,
@@ -1595,7 +1558,6 @@ pub struct Function {
 #[derive(Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct EntryPoint {
     /// Name of this entry point, visible externally.
     ///
@@ -1625,15 +1587,14 @@ pub struct EntryPoint {
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Module {
-    /// Arena for the types defined in this module.
+    /// Storage for the types defined in this module.
     pub types: UniqueArena<Type>,
-    /// Arena for the constants defined in this module.
+    /// Storage for the constants defined in this module.
     pub constants: Arena<Constant>,
-    /// Arena for the global variables defined in this module.
+    /// Storage for the global variables defined in this module.
     pub global_variables: Arena<GlobalVariable>,
-    /// Arena for the functions defined in this module.
+    /// Storage for the functions defined in this module.
     ///
     /// Each function must appear in this arena strictly before all its callers.
     /// Recursion is not supported.

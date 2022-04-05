@@ -20,23 +20,24 @@ impl AndroidSurface {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAndroidSurfaceKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateAndroidSurfaceKHR.html>"]
     pub unsafe fn create_android_surface(
         &self,
         create_info: &vk::AndroidSurfaceCreateInfoKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        (self.fp.create_android_surface_khr)(
-            self.handle,
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut surface,
-        )
-        .result_with_success(surface)
+        self.fp
+            .create_android_surface_khr(
+                self.handle,
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut surface,
+            )
+            .result_with_success(surface)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::KhrAndroidSurfaceFn::name()
     }
 

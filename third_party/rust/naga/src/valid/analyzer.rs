@@ -10,7 +10,7 @@ use super::{CallError, ExpressionError, FunctionError, ModuleInfo, ShaderStages,
 use crate::span::{AddSpan as _, WithSpan};
 use crate::{
     arena::{Arena, Handle},
-    proc::{ResolveContext, ResolveError, TypeResolution},
+    proc::{ResolveContext, TypeResolution},
 };
 use std::ops;
 
@@ -199,51 +199,17 @@ pub struct FunctionInfo {
     pub uniformity: Uniformity,
     /// Function may kill the invocation.
     pub may_kill: bool,
-
-    /// All pairs of (texture, sampler) globals that may be used together in
-    /// sampling operations by this function and its callees. This includes
-    /// pairings that arise when this function passes textures and samplers as
-    /// arguments to its callees.
-    ///
-    /// This table does not include uses of textures and samplers passed as
-    /// arguments to this function itself, since we do not know which globals
-    /// those will be. However, this table *is* exhaustive when computed for an
-    /// entry point function: entry points never receive textures or samplers as
-    /// arguments, so all an entry point's sampling can be reported in terms of
-    /// globals.
-    ///
-    /// The GLSL back end uses this table to construct reflection info that
-    /// clients need to construct texture-combined sampler values.
+    /// Set of image-sampler pais used with sampling.
     pub sampling_set: crate::FastHashSet<SamplingKey>,
-
-    /// How this function and its callees use this module's globals.
+    /// Vector of global variable usages.
     ///
-    /// This is indexed by `Handle<GlobalVariable>` indices. However,
-    /// `FunctionInfo` implements `std::ops::Index<Handle<Globalvariable>>`,
-    /// so you can simply index this struct with a global handle to retrieve
-    /// its usage information.
+    /// Each item corresponds to a global variable in the module.
     global_uses: Box<[GlobalUse]>,
-
-    /// Information about each expression in this function's body.
+    /// Vector of expression infos.
     ///
-    /// This is indexed by `Handle<Expression>` indices. However, `FunctionInfo`
-    /// implements `std::ops::Index<Handle<Expression>>`, so you can simply
-    /// index this struct with an expression handle to retrieve its
-    /// `ExpressionInfo`.
+    /// Each item corresponds to an expression in the function.
     expressions: Box<[ExpressionInfo]>,
-
-    /// All (texture, sampler) pairs that may be used together in sampling
-    /// operations by this function and its callees, whether they are accessed
-    /// as globals or passed as arguments.
-    ///
-    /// Participants are represented by [`GlobalVariable`] handles whenever
-    /// possible, and otherwise by indices of this function's arguments.
-    ///
-    /// When analyzing a function call, we combine this data about the callee
-    /// with the actual arguments being passed to produce the callers' own
-    /// `sampling_set` and `sampling` tables.
-    ///
-    /// [`GlobalVariable`]: crate::GlobalVariable
+    /// HashSet with information about sampling realized by the function
     sampling: crate::FastHashSet<Sampling>,
 }
 
@@ -300,10 +266,7 @@ impl FunctionInfo {
         handle: Handle<crate::Expression>,
         global_use: GlobalUse,
     ) -> NonUniformResult {
-        //Note: if the expression doesn't exist, this function
-        // will return `None`, but the later validation of
-        // expressions should detect this and error properly.
-        let info = self.expressions.get_mut(handle.index())?;
+        let info = &mut self.expressions[handle.index()];
         info.ref_count += 1;
         // mark the used global as read
         if let Some(global) = info.assignable_global {
@@ -327,8 +290,7 @@ impl FunctionInfo {
         handle: Handle<crate::Expression>,
         assignable_global: &mut Option<Handle<crate::GlobalVariable>>,
     ) -> NonUniformResult {
-        //Note: similarly to `add_ref_impl`, this ignores invalid expressions.
-        let info = self.expressions.get_mut(handle.index())?;
+        let info = &mut self.expressions[handle.index()];
         info.ref_count += 1;
         // propagate the assignable global up the chain, till it either hits
         // a value-type expression, or the assignment statement.
@@ -343,15 +305,14 @@ impl FunctionInfo {
     /// Inherit information from a called function.
     fn process_call(
         &mut self,
-        callee: &Self,
+        info: &Self,
         arguments: &[Handle<crate::Expression>],
         expression_arena: &Arena<crate::Expression>,
     ) -> Result<FunctionUniformity, WithSpan<FunctionError>> {
-        self.sampling_set
-            .extend(callee.sampling_set.iter().cloned());
-        for sampling in callee.sampling.iter() {
-            // If the callee was passed the texture or sampler as an argument,
-            // we may now be able to determine which globals those referred to.
+        for key in info.sampling_set.iter() {
+            self.sampling_set.insert(key.clone());
+        }
+        for sampling in info.sampling.iter() {
             let image_storage = match sampling.image {
                 GlobalOrArgument::Global(var) => GlobalOrArgument::Global(var),
                 GlobalOrArgument::Argument(i) => {
@@ -378,10 +339,6 @@ impl FunctionInfo {
                 }
             };
 
-            // If we've managed to pin both the image and sampler down to
-            // specific globals, record that in our `sampling_set`. Otherwise,
-            // record as much as we do know in our own `sampling` table, for our
-            // callers to sort out.
             match (image_storage, sampler_storage) {
                 (GlobalOrArgument::Global(image), GlobalOrArgument::Global(sampler)) => {
                     self.sampling_set.insert(SamplingKey { image, sampler });
@@ -391,15 +348,12 @@ impl FunctionInfo {
                 }
             }
         }
-
-        // Inherit global use from our callees.
-        for (mine, other) in self.global_uses.iter_mut().zip(callee.global_uses.iter()) {
+        for (mine, other) in self.global_uses.iter_mut().zip(info.global_uses.iter()) {
             *mine |= *other;
         }
-
         Ok(FunctionUniformity {
-            result: callee.uniformity.clone(),
-            exit: if callee.may_kill {
+            result: info.uniformity.clone(),
+            exit: if info.may_kill {
                 ExitFlags::MAY_KILL
             } else {
                 ExitFlags::empty()
@@ -476,21 +430,21 @@ impl FunctionInfo {
                     requirements: UniformityRequirements::empty(),
                 }
             }
-            // depends on the address space
+            // depends on the storage class
             E::GlobalVariable(gh) => {
-                use crate::AddressSpace as As;
+                use crate::StorageClass as Sc;
                 assignable_global = Some(gh);
                 let var = &resolve_context.global_vars[gh];
-                let uniform = match var.space {
+                let uniform = match var.class {
                     // local data is non-uniform
-                    As::Function | As::Private => false,
+                    Sc::Function | Sc::Private => false,
                     // workgroup memory is exclusively accessed by the group
-                    As::WorkGroup => true,
+                    Sc::WorkGroup => true,
                     // uniform data
-                    As::Uniform | As::PushConstant => true,
+                    Sc::Uniform | Sc::PushConstant => true,
                     // storage data is only uniform when read-only
-                    As::Storage { access } => !access.contains(crate::StorageAccess::STORE),
-                    As::Handle => false,
+                    Sc::Storage { access } => !access.contains(crate::StorageAccess::STORE),
+                    Sc::Handle => false,
                 };
                 Uniformity {
                     non_uniform_result: if uniform { None } else { Some(handle) },
@@ -557,19 +511,16 @@ impl FunctionInfo {
                 image,
                 coordinate,
                 array_index,
-                sample,
-                level,
+                index,
             } => {
                 let array_nur = array_index.and_then(|h| self.add_ref(h));
-                let sample_nur = sample.and_then(|h| self.add_ref(h));
-                let level_nur = level.and_then(|h| self.add_ref(h));
+                let index_nur = index.and_then(|h| self.add_ref(h));
                 Uniformity {
                     non_uniform_result: self
                         .add_ref(image)
                         .or(self.add_ref(coordinate))
                         .or(array_nur)
-                        .or(sample_nur)
-                        .or(level_nur),
+                        .or(index_nur),
                     requirements: UniformityRequirements::empty(),
                 }
             }
@@ -643,12 +594,7 @@ impl FunctionInfo {
             },
         };
 
-        let ty = resolve_context.resolve(expression, |h| {
-            self.expressions
-                .get(h.index())
-                .map(|ei| &ei.ty)
-                .ok_or(ResolveError::ExpressionForwardDependency(h))
-        })?;
+        let ty = resolve_context.resolve(expression, |h| &self.expressions[h.index()].ty)?;
         self.expressions[handle.index()] = ExpressionInfo {
             uniformity,
             ref_count: 0,
@@ -683,10 +629,7 @@ impl FunctionInfo {
                 S::Emit(ref range) => {
                     let mut requirements = UniformityRequirements::empty();
                     for expr in range.clone() {
-                        let req = match self.expressions.get(expr.index()) {
-                            Some(expr) => expr.uniformity.requirements,
-                            None => UniformityRequirements::empty(),
-                        };
+                        let req = self.expressions[expr.index()].uniformity.requirements;
                         #[cfg(feature = "validate")]
                         if self
                             .flags
@@ -950,7 +893,7 @@ fn uniform_control_flow() {
             name: None,
             init: None,
             ty,
-            space: crate::AddressSpace::Handle,
+            class: crate::StorageClass::Handle,
             binding: None,
         },
         Default::default(),
@@ -961,7 +904,7 @@ fn uniform_control_flow() {
             init: None,
             ty,
             binding: None,
-            space: crate::AddressSpace::Uniform,
+            class: crate::StorageClass::Uniform,
         },
         Default::default(),
     );

@@ -4,8 +4,8 @@ use super::{compose::validate_compose, FunctionInfo, ShaderStages, TypeFlags};
 use crate::arena::UniqueArena;
 
 use crate::{
-    arena::{BadHandle, Handle},
-    proc::{IndexableLengthError, ResolveError},
+    arena::Handle,
+    proc::{ProcError, ResolveError},
 };
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -17,8 +17,6 @@ pub enum ExpressionError {
     NotInScope,
     #[error("Depends on {0:?}, which has not been processed yet")]
     ForwardDependency(Handle<crate::Expression>),
-    #[error(transparent)]
-    BadDependency(#[from] BadHandle),
     #[error("Base type {0:?} is not compatible with this expression")]
     InvalidBaseType(Handle<crate::Expression>),
     #[error("Accessing with index {0:?} can't be done")]
@@ -29,6 +27,12 @@ pub enum ExpressionError {
     IndexMustBeConstant(Handle<crate::Expression>),
     #[error("Function argument {0:?} doesn't exist")]
     FunctionArgumentDoesntExist(u32),
+    #[error("Constant {0:?} doesn't exist")]
+    ConstantDoesntExist(Handle<crate::Constant>),
+    #[error("Global variable {0:?} doesn't exist")]
+    GlobalVarDoesntExist(Handle<crate::GlobalVariable>),
+    #[error("Local variable {0:?} doesn't exist")]
+    LocalVarDoesntExist(Handle<crate::LocalVariable>),
     #[error("Loading of {0:?} can't be done")]
     InvalidPointerType(Handle<crate::Expression>),
     #[error("Array length of {0:?} can't be done")]
@@ -42,7 +46,7 @@ pub enum ExpressionError {
     #[error(transparent)]
     Compose(#[from] super::ComposeError),
     #[error(transparent)]
-    IndexableLength(#[from] IndexableLengthError),
+    Proc(#[from] ProcError),
     #[error("Operation {0:?} can't work with {1:?}")]
     InvalidUnaryOperandType(crate::UnaryOperator, Handle<crate::Expression>),
     #[error("Operation {0:?} can't work with {1:?} and {2:?}")]
@@ -75,11 +79,11 @@ pub enum ExpressionError {
     InvalidDerivative,
     #[error("Image array index parameter is misplaced")]
     InvalidImageArrayIndex,
-    #[error("Inappropriate sample or level-of-detail index for texel access")]
+    #[error("Image other index parameter is misplaced")]
     InvalidImageOtherIndex,
     #[error("Image array index type of {0:?} is not an integer scalar")]
     InvalidImageArrayIndexType(Handle<crate::Expression>),
-    #[error("Image sample or level-of-detail index's type of {0:?} is not an integer scalar")]
+    #[error("Image other index type of {0:?} is not an integer scalar")]
     InvalidImageOtherIndexType(Handle<crate::Expression>),
     #[error("Image coordinate type of {1:?} does not match dimension {0:?}")]
     InvalidImageCoordinateType(crate::ImageDimension, Handle<crate::Expression>),
@@ -262,7 +266,10 @@ impl super::Validator {
                 ShaderStages::all()
             }
             E::Constant(handle) => {
-                let _ = module.constants.try_get(handle)?;
+                let _ = module
+                    .constants
+                    .try_get(handle)
+                    .ok_or(ExpressionError::ConstantDoesntExist(handle))?;
                 ShaderStages::all()
             }
             E::Splat { size: _, value } => match *resolver.resolve(value)? {
@@ -312,11 +319,17 @@ impl super::Validator {
                 ShaderStages::all()
             }
             E::GlobalVariable(handle) => {
-                let _ = module.global_variables.try_get(handle)?;
+                let _ = module
+                    .global_variables
+                    .try_get(handle)
+                    .ok_or(ExpressionError::GlobalVarDoesntExist(handle))?;
                 ShaderStages::all()
             }
             E::LocalVariable(handle) => {
-                let _ = function.local_variables.try_get(handle)?;
+                let _ = function
+                    .local_variables
+                    .try_get(handle)
+                    .ok_or(ExpressionError::LocalVarDoesntExist(handle))?;
                 ShaderStages::all()
             }
             E::Load { pointer } => {
@@ -537,8 +550,7 @@ impl super::Validator {
                 image,
                 coordinate,
                 array_index,
-                sample,
-                level,
+                index,
             } => {
                 let ty = match function.expressions[image] {
                     crate::Expression::GlobalVariable(var_handle) => {
@@ -561,8 +573,15 @@ impl super::Validator {
                                 ))
                             }
                         };
+                        let needs_index = match class {
+                            crate::ImageClass::Storage { .. } => false,
+                            _ => true,
+                        };
                         if arrayed != array_index.is_some() {
                             return Err(ExpressionError::InvalidImageArrayIndex);
+                        }
+                        if needs_index != index.is_some() {
+                            return Err(ExpressionError::InvalidImageOtherIndex);
                         }
                         if let Some(expr) = array_index {
                             match *resolver.resolve(expr)? {
@@ -573,30 +592,13 @@ impl super::Validator {
                                 _ => return Err(ExpressionError::InvalidImageArrayIndexType(expr)),
                             }
                         }
-
-                        match (sample, class.is_multisampled()) {
-                            (None, false) => {}
-                            (Some(sample), true) => {
-                                if resolver.resolve(sample)?.scalar_kind() != Some(Sk::Sint) {
-                                    return Err(ExpressionError::InvalidImageOtherIndexType(
-                                        sample,
-                                    ));
-                                }
-                            }
-                            _ => {
-                                return Err(ExpressionError::InvalidImageOtherIndex);
-                            }
-                        }
-
-                        match (level, class.is_mipmapped()) {
-                            (None, false) => {}
-                            (Some(level), true) => {
-                                if resolver.resolve(level)?.scalar_kind() != Some(Sk::Sint) {
-                                    return Err(ExpressionError::InvalidImageOtherIndexType(level));
-                                }
-                            }
-                            _ => {
-                                return Err(ExpressionError::InvalidImageOtherIndex);
+                        if let Some(expr) = index {
+                            match *resolver.resolve(expr)? {
+                                Ti::Scalar {
+                                    kind: Sk::Sint,
+                                    width: _,
+                                } => {}
+                                _ => return Err(ExpressionError::InvalidImageOtherIndexType(expr)),
                             }
                         }
                     }
@@ -614,12 +616,18 @@ impl super::Validator {
                 };
                 match module.types[ty].inner {
                     Ti::Image { class, arrayed, .. } => {
+                        let can_level = match class {
+                            crate::ImageClass::Sampled { multi, .. } => !multi,
+                            crate::ImageClass::Depth { multi } => !multi,
+                            crate::ImageClass::Storage { .. } => false,
+                        };
                         let good = match query {
                             crate::ImageQuery::NumLayers => arrayed,
                             crate::ImageQuery::Size { level: None } => true,
                             crate::ImageQuery::Size { level: Some(_) }
-                            | crate::ImageQuery::NumLevels => class.is_mipmapped(),
-                            crate::ImageQuery::NumSamples => class.is_multisampled(),
+                            | crate::ImageQuery::NumLevels => can_level,
+                            //TODO: forbid on storage images
+                            crate::ImageQuery::NumSamples => !can_level,
                         };
                         if !good {
                             return Err(ExpressionError::InvalidImageClass(class));
@@ -1047,12 +1055,12 @@ impl super::Validator {
                             _ => return Err(ExpressionError::InvalidArgumentType(fun, 0, arg)),
                         };
                         let good = match *arg1_ty {
-                            Ti::Pointer { base, space: _ } => module.types[base].inner == *arg_ty,
+                            Ti::Pointer { base, class: _ } => module.types[base].inner == *arg_ty,
                             Ti::ValuePointer {
                                 size,
                                 kind: Sk::Float,
                                 width,
-                                space: _,
+                                class: _,
                             } => size == size0 && width == width0,
                             _ => false,
                         };
@@ -1064,28 +1072,7 @@ impl super::Validator {
                             ));
                         }
                     }
-                    Mf::Dot => {
-                        let arg1_ty = match (arg1_ty, arg2_ty, arg3_ty) {
-                            (Some(ty1), None, None) => ty1,
-                            _ => return Err(ExpressionError::WrongArgumentCount(fun)),
-                        };
-                        match *arg_ty {
-                            Ti::Vector {
-                                kind: Sk::Float, ..
-                            }
-                            | Ti::Vector { kind: Sk::Sint, .. }
-                            | Ti::Vector { kind: Sk::Uint, .. } => {}
-                            _ => return Err(ExpressionError::InvalidArgumentType(fun, 0, arg)),
-                        }
-                        if arg1_ty != arg_ty {
-                            return Err(ExpressionError::InvalidArgumentType(
-                                fun,
-                                1,
-                                arg1.unwrap(),
-                            ));
-                        }
-                    }
-                    Mf::Outer | Mf::Cross | Mf::Reflect => {
+                    Mf::Dot | Mf::Outer | Mf::Cross | Mf::Reflect => {
                         let arg1_ty = match (arg1_ty, arg2_ty, arg3_ty) {
                             (Some(ty1), None, None) => ty1,
                             _ => return Err(ExpressionError::WrongArgumentCount(fun)),
@@ -1409,11 +1396,10 @@ impl super::Validator {
             }
             E::ArrayLength(expr) => match *resolver.resolve(expr)? {
                 Ti::Pointer { base, .. } => {
-                    let base_ty = resolver.types.get_handle(base)?;
-                    if let Ti::Array {
+                    if let Some(&Ti::Array {
                         size: crate::ArraySize::Dynamic,
                         ..
-                    } = base_ty.inner
+                    }) = resolver.types.get_handle(base).map(|ty| &ty.inner)
                     {
                         ShaderStages::all()
                     } else {

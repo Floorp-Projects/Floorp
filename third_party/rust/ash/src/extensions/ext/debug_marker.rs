@@ -19,38 +19,42 @@ impl DebugMarker {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDebugMarkerSetObjectNameEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDebugMarkerSetObjectNameEXT.html>"]
     pub unsafe fn debug_marker_set_object_name(
         &self,
         name_info: &vk::DebugMarkerObjectNameInfoEXT,
     ) -> VkResult<()> {
-        (self.fp.debug_marker_set_object_name_ext)(self.handle, name_info).result()
+        self.fp
+            .debug_marker_set_object_name_ext(self.handle, name_info)
+            .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerBeginEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerBeginEXT.html>"]
     pub unsafe fn cmd_debug_marker_begin(
         &self,
         command_buffer: vk::CommandBuffer,
         marker_info: &vk::DebugMarkerMarkerInfoEXT,
     ) {
-        (self.fp.cmd_debug_marker_begin_ext)(command_buffer, marker_info);
+        self.fp
+            .cmd_debug_marker_begin_ext(command_buffer, marker_info);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerEndEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerEndEXT.html>"]
     pub unsafe fn cmd_debug_marker_end(&self, command_buffer: vk::CommandBuffer) {
-        (self.fp.cmd_debug_marker_end_ext)(command_buffer);
+        self.fp.cmd_debug_marker_end_ext(command_buffer);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerInsertEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerInsertEXT.html>"]
     pub unsafe fn cmd_debug_marker_insert(
         &self,
         command_buffer: vk::CommandBuffer,
         marker_info: &vk::DebugMarkerMarkerInfoEXT,
     ) {
-        (self.fp.cmd_debug_marker_insert_ext)(command_buffer, marker_info);
+        self.fp
+            .cmd_debug_marker_insert_ext(command_buffer, marker_info);
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::ExtDebugMarkerFn::name()
     }
 

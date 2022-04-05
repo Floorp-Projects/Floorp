@@ -1,5 +1,4 @@
-/*!
-Backend for [MSL][msl] (Metal Shading Language).
+/*! Metal Shading Language (MSL) backend
 
 ## Binding model
 
@@ -22,9 +21,7 @@ pretend that MSL doesn't have all the restrictions it has.
 
 For the result type, if it's a structure, we re-compose it with a temporary value
 holding the result.
-
-[msl]: https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf
-*/
+!*/
 
 use crate::{arena::Handle, proc::index, valid::ModuleInfo};
 use std::{
@@ -144,8 +141,6 @@ pub enum Error {
     UnsupportedBuiltIn(crate::BuiltIn),
     #[error("capability {0:?} is not supported")]
     CapabilityNotSupported(crate::valid::Capabilities),
-    #[error("address space {0:?} is not supported for target MSL version")]
-    UnsupportedAddressSpace(crate::AddressSpace),
 }
 
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
@@ -190,7 +185,7 @@ pub struct Options {
 impl Default for Options {
     fn default() -> Self {
         Options {
-            lang_version: (2, 0),
+            lang_version: (1, 1),
             per_stage_map: PerStageMap::default(),
             inline_samplers: Vec::new(),
             spirv_cross_compatibility: false,
@@ -200,15 +195,22 @@ impl Default for Options {
     }
 }
 
-/// A subset of options that are meant to be changed per pipeline.
-#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+// A subset of options that are meant to be changed per pipeline.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct PipelineOptions {
     /// Allow `BuiltIn::PointSize` in the vertex shader.
-    ///
     /// Metal doesn't like this for non-point primitive topologies.
     pub allow_point_size: bool,
+}
+
+impl Default for PipelineOptions {
+    fn default() -> Self {
+        PipelineOptions {
+            allow_point_size: true,
+        }
+    }
 }
 
 impl Options {
@@ -387,10 +389,11 @@ impl ResolvedBinding {
         Ok(())
     }
 
-    fn try_fmt_decorated<W: Write>(&self, out: &mut W) -> Result<(), Error> {
+    fn try_fmt_decorated<W: Write>(&self, out: &mut W, terminator: &str) -> Result<(), Error> {
         write!(out, " [[")?;
         self.try_fmt(out)?;
         write!(out, "]]")?;
+        write!(out, "{}", terminator)?;
         Ok(())
     }
 }

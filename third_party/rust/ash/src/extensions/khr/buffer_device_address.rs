@@ -18,31 +18,33 @@ impl BufferDeviceAddress {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddressKHR.html>"]
     pub unsafe fn get_buffer_device_address(
         &self,
         info: &vk::BufferDeviceAddressInfoKHR,
     ) -> vk::DeviceAddress {
-        (self.fp.get_buffer_device_address_khr)(self.handle, info)
+        self.fp.get_buffer_device_address_khr(self.handle, info)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferOpaqueCaptureAddressKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferOpaqueCaptureAddressKHR.html>"]
     pub unsafe fn get_buffer_opaque_capture_address(
         &self,
         info: &vk::BufferDeviceAddressInfoKHR,
     ) -> u64 {
-        (self.fp.get_buffer_opaque_capture_address_khr)(self.handle, info)
+        self.fp
+            .get_buffer_opaque_capture_address_khr(self.handle, info)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceMemoryOpaqueCaptureAddressKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceMemoryOpaqueCaptureAddressKHR.html>"]
     pub unsafe fn get_device_memory_opaque_capture_address(
         &self,
         info: &vk::DeviceMemoryOpaqueCaptureAddressInfoKHR,
     ) -> u64 {
-        (self.fp.get_device_memory_opaque_capture_address_khr)(self.handle, info)
+        self.fp
+            .get_device_memory_opaque_capture_address_khr(self.handle, info)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::KhrBufferDeviceAddressFn::name()
     }
 

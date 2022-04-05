@@ -1,5 +1,4 @@
-/*!
-Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
+/*! SPIR-V frontend
 
 ## ID lookups
 
@@ -24,9 +23,7 @@ Instead, we detect when such matrix is accessed in the `OpAccessChain`,
 and we generate a parallel expression that loads the value, but transposed.
 This value then gets used instead of `OpLoad` result later on.
 
-[spv]: https://www.khronos.org/registry/SPIR-V/
-*/
-
+!*/
 mod convert;
 mod error;
 mod function;
@@ -333,7 +330,7 @@ enum LookupLoadOverride {
 
 #[derive(PartialEq)]
 enum ExtendedClass {
-    Global(crate::AddressSpace),
+    Global(crate::StorageClass),
     Input,
     Output,
 }
@@ -4007,19 +4004,19 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let decor = self.future_decor.remove(&id);
         let base_lookup_ty = self.lookup_type.lookup(type_id)?;
         let base_inner = &module.types[base_lookup_ty.handle].inner;
-        let space = if let Some(space) = base_inner.pointer_space() {
-            space
+        let class = if let Some(class) = base_inner.pointer_class() {
+            class
         } else if self
             .lookup_storage_buffer_types
             .contains_key(&base_lookup_ty.handle)
         {
-            crate::AddressSpace::Storage {
+            crate::StorageClass::Storage {
                 access: crate::StorageAccess::default(),
             }
         } else {
             match map_storage_class(storage_class)? {
-                ExtendedClass::Global(space) => space,
-                ExtendedClass::Input | ExtendedClass::Output => crate::AddressSpace::Private,
+                ExtendedClass::Global(class) => class,
+                ExtendedClass::Input | ExtendedClass::Output => crate::StorageClass::Private,
             }
         };
 
@@ -4031,8 +4028,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             ..
         } = *base_inner
         {
-            match space {
-                crate::AddressSpace::Storage { .. } => {}
+            match class {
+                crate::StorageClass::Storage { .. } => {}
                 _ => {
                     return Err(Error::UnsupportedRuntimeArrayStorageClass);
                 }
@@ -4040,7 +4037,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
 
         // Don't bother with pointer stuff for `Handle` types.
-        let lookup_ty = if space == crate::AddressSpace::Handle {
+        let lookup_ty = if class == crate::StorageClass::Handle {
             base_lookup_ty.clone()
         } else {
             LookupType {
@@ -4049,7 +4046,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         name: decor.and_then(|dec| dec.name),
                         inner: crate::TypeInner::Pointer {
                             base: base_lookup_ty.handle,
-                            space,
+                            class,
                         },
                     },
                     self.span_from_with_op(start),
@@ -4076,15 +4073,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         let decor = self.future_decor.remove(&id).unwrap_or_default();
         let base = self.lookup_type.lookup(type_id)?.handle;
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
         let inner = crate::TypeInner::Array {
             base,
             size: crate::ArraySize::Constant(length_const.handle),
             stride: match decor.array_stride {
                 Some(stride) => stride.get(),
-                None => self.layouter[base].to_stride(),
+                None => module.types[base].inner.span(&module.constants),
             },
         };
         self.lookup_type.insert(
@@ -4116,15 +4110,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         let decor = self.future_decor.remove(&id).unwrap_or_default();
         let base = self.lookup_type.lookup(type_id)?.handle;
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
         let inner = crate::TypeInner::Array {
             base: self.lookup_type.lookup(type_id)?.handle,
             size: crate::ArraySize::Dynamic,
             stride: match decor.array_stride {
                 Some(stride) => stride.get(),
-                None => self.layouter[base].to_stride(),
+                None => module.types[base].inner.span(&module.constants),
             },
         };
         self.lookup_type.insert(
@@ -4585,7 +4576,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         let original_ty = self.lookup_type.lookup(type_id)?.handle;
         let mut effective_ty = original_ty;
-        if let crate::TypeInner::Pointer { base, space: _ } = module.types[original_ty].inner {
+        if let crate::TypeInner::Pointer { base, class: _ } = module.types[original_ty].inner {
             effective_ty = base;
         };
         if let crate::TypeInner::Image {
@@ -4610,7 +4601,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
 
         let ext_class = match self.lookup_storage_buffer_types.get(&effective_ty) {
-            Some(&access) => ExtendedClass::Global(crate::AddressSpace::Storage { access }),
+            Some(&access) => ExtendedClass::Global(crate::StorageClass::Storage { access }),
             None => map_storage_class(storage_class)?,
         };
 
@@ -4626,14 +4617,14 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
 
         let (inner, var) = match ext_class {
-            ExtendedClass::Global(mut space) => {
-                if let crate::AddressSpace::Storage { ref mut access } = space {
+            ExtendedClass::Global(mut class) => {
+                if let crate::StorageClass::Storage { ref mut access } = class {
                     *access &= dec.flags.to_storage_access();
                 }
                 let var = crate::GlobalVariable {
                     binding: dec.resource_binding(),
                     name: dec.name,
-                    space,
+                    class,
                     ty: effective_ty,
                     init,
                 };
@@ -4676,7 +4667,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                 let var = crate::GlobalVariable {
                     name: dec.name.clone(),
-                    space: crate::AddressSpace::Private,
+                    class: crate::StorageClass::Private,
                     binding: None,
                     ty: effective_ty,
                     init: None,
@@ -4754,7 +4745,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                 let var = crate::GlobalVariable {
                     name: dec.name,
-                    space: crate::AddressSpace::Private,
+                    class: crate::StorageClass::Private,
                     binding: None,
                     ty: effective_ty,
                     init,

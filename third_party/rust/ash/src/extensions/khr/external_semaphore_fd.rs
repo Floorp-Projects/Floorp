@@ -19,21 +19,25 @@ impl ExternalSemaphoreFd {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkImportSemaphoreFdKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportSemaphoreFdKHR.html>"]
     pub unsafe fn import_semaphore_fd(
         &self,
         import_info: &vk::ImportSemaphoreFdInfoKHR,
     ) -> VkResult<()> {
-        (self.fp.import_semaphore_fd_khr)(self.handle, import_info).result()
+        self.fp
+            .import_semaphore_fd_khr(self.handle, import_info)
+            .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetSemaphoreFdKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreFdKHR.html>"]
     pub unsafe fn get_semaphore_fd(&self, get_info: &vk::SemaphoreGetFdInfoKHR) -> VkResult<i32> {
         let mut fd = -1;
-        (self.fp.get_semaphore_fd_khr)(self.handle, get_info, &mut fd).result_with_success(fd)
+        self.fp
+            .get_semaphore_fd_khr(self.handle, get_info, &mut fd)
+            .result_with_success(fd)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::KhrExternalSemaphoreFdFn::name()
     }
 

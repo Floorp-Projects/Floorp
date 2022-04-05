@@ -1,7 +1,3 @@
-/*!
-Shader validator.
-*/
-
 mod analyzer;
 mod compose;
 mod expression;
@@ -13,8 +9,8 @@ mod r#type;
 use crate::arena::{Arena, UniqueArena};
 
 use crate::{
-    arena::{BadHandle, Handle},
-    proc::{LayoutError, Layouter},
+    arena::Handle,
+    proc::{InvalidBaseType, Layouter},
     FastHashSet,
 };
 use bit_set::BitSet;
@@ -67,7 +63,7 @@ bitflags::bitflags! {
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
     pub struct Capabilities: u8 {
-        /// Support for `AddressSpace:PushConstant`.
+        /// Support for `StorageClass:PushConstant`.
         const PUSH_CONSTANT = 0x1;
         /// Float values with width = 8.
         const FLOAT64 = 0x2;
@@ -118,8 +114,6 @@ pub struct Validator {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ConstantError {
-    #[error(transparent)]
-    BadHandle(#[from] BadHandle),
     #[error("The type doesn't match the constant")]
     InvalidType,
     #[error("The component handle {0:?} can not be resolved")]
@@ -133,7 +127,7 @@ pub enum ConstantError {
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ValidationError {
     #[error(transparent)]
-    Layouter(#[from] LayoutError),
+    Layouter(#[from] InvalidBaseType),
     #[error("Type {handle:?} '{name}' is invalid")]
     Type {
         handle: Handle<crate::Type>,
@@ -231,17 +225,6 @@ impl Validator {
         }
     }
 
-    /// Reset the validator internals
-    pub fn reset(&mut self) {
-        self.types.clear();
-        self.layouter.clear();
-        self.location_mask.clear();
-        self.bind_group_masks.clear();
-        self.select_cases.clear();
-        self.valid_expression_list.clear();
-        self.valid_expression_set.clear();
-    }
-
     #[cfg(feature = "validate")]
     fn validate_constant(
         &self,
@@ -257,7 +240,7 @@ impl Validator {
                 }
             }
             crate::ConstantInner::Composite { ty, ref components } => {
-                match types.get_handle(ty)?.inner {
+                match types[ty].inner {
                     crate::TypeInner::Array {
                         size: crate::ArraySize::Constant(size_handle),
                         ..
@@ -287,13 +270,11 @@ impl Validator {
         &mut self,
         module: &crate::Module,
     ) -> Result<ModuleInfo, WithSpan<ValidationError>> {
-        self.reset();
         self.reset_types(module.types.len());
-
         self.layouter
             .update(&module.types, &module.constants)
             .map_err(|e| {
-                let handle = e.ty;
+                let InvalidBaseType(handle) = e;
                 ValidationError::from(e).with_span_handle(handle, &module.types)
             })?;
 

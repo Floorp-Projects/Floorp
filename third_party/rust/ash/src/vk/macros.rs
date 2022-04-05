@@ -20,17 +20,17 @@ macro_rules! vk_bitflags_wrapped {
                 self.0
             }
             #[inline]
-            pub const fn is_empty(self) -> bool {
-                self.0 == Self::empty().0
+            pub fn is_empty(self) -> bool {
+                self == Self::empty()
             }
             #[inline]
-            pub const fn intersects(self, other: Self) -> bool {
-                !Self(self.0 & other.0).is_empty()
+            pub fn intersects(self, other: Self) -> bool {
+                self & other != Self::empty()
             }
             #[doc = r" Returns whether `other` is a subset of `self`"]
             #[inline]
-            pub const fn contains(self, other: Self) -> bool {
-                self.0 & other.0 == other.0
+            pub fn contains(self, other: Self) -> bool {
+                self & other == other
             }
         }
         impl ::std::ops::BitOr for $name {
@@ -94,10 +94,10 @@ macro_rules! handle_nondispatchable {
         impl Handle for $name {
             const TYPE: ObjectType = ObjectType::$ty;
             fn as_raw(self) -> u64 {
-                self.0
+                self.0 as u64
             }
             fn from_raw(x: u64) -> Self {
-                Self(x)
+                Self(x as _)
             }
         }
         impl $name {
