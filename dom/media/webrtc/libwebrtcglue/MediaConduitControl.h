@@ -31,7 +31,7 @@ class MediaConduitControlInterface {
   virtual AbstractCanonical<bool>* CanonicalTransmitting() = 0;
   virtual AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() = 0;
   virtual AbstractCanonical<std::string>* CanonicalLocalCname() = 0;
-  virtual AbstractCanonical<std::string>* CanonicalLocalMid() = 0;
+  virtual AbstractCanonical<std::string>* CanonicalMid() = 0;
   virtual AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() = 0;
   virtual AbstractCanonical<std::string>* CanonicalSyncGroup() = 0;
   virtual AbstractCanonical<RtpExtList>* CanonicalLocalRecvRtpExtensions() = 0;

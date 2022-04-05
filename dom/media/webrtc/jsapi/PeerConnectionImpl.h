@@ -166,8 +166,7 @@ struct PeerConnectionAutoTimer {
 class PeerConnectionImpl final
     : public nsISupports,
       public nsWrapperCache,
-      public mozilla::DataChannelConnection::DataConnectionListener,
-      public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
+      public mozilla::DataChannelConnection::DataConnectionListener {
   struct Internal;  // Avoid exposing c includes to bindings
 
  public:
@@ -282,12 +281,7 @@ class PeerConnectionImpl final
       ErrorResult& rv);
 
   bool CheckNegotiationNeeded();
-
-  NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrackNoRenegotiation, ErrorResult& rv,
-                               TransceiverImpl& aTransceiver,
-                               mozilla::dom::MediaStreamTrack* aWithTrack) {
-    rv = ReplaceTrackNoRenegotiation(aTransceiver, aWithTrack);
-  }
+  bool CreatedSender(const dom::RTCRtpSender& aSender) const;
 
   // test-only
   NS_IMETHODIMP_TO_ERRORRESULT(EnablePacketDump, ErrorResult& rv,
@@ -470,10 +464,8 @@ class PeerConnectionImpl final
 
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
-  void CollectConduitTelemetryData();
 
-  // for monitoring changes in track ownership
-  virtual void PrincipalChanged(dom::MediaStreamTrack* aTrack) override;
+  void CollectConduitTelemetryData();
 
   void OnMediaError(const std::string& aError);
 
@@ -510,8 +502,6 @@ class PeerConnectionImpl final
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
 
-  nsTArray<RefPtr<dom::RTCStatsPromise>> GetSenderStats(
-      const RefPtr<TransceiverImpl>& aTransceiver);
   RefPtr<dom::RTCStatsPromise> GetDataChannelStats(
       const RefPtr<DataChannelConnection>& aDataChannelConnection,
       const DOMHighResTimeStamp aTimestamp);
@@ -738,13 +728,6 @@ class PeerConnectionImpl final
   std::string GetTransportIdMatchingSendTrack(
       const dom::MediaStreamTrack& aTrack) const;
 
-  // In cases where the peer isn't yet identified, we disable the pipeline (not
-  // the stream, that would potentially affect others), so that it sends
-  // black/silence.  Once the peer is identified, re-enable those streams.
-  // aTrack will be set if this update came from a principal change on aTrack.
-  void UpdateSinkIdentity_m(const dom::MediaStreamTrack* aTrack,
-                            nsIPrincipal* aPrincipal,
-                            const PeerIdentity* aSinkIdentity);
   // this determines if any track is peerIdentity constrained
   bool AnyLocalTrackHasPeerIdentity() const;
 

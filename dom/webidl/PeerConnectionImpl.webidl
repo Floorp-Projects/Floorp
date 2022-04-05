@@ -46,9 +46,6 @@ interface PeerConnectionImpl  {
   TransceiverImpl createTransceiverImpl(DOMString kind,
                                         MediaStreamTrack? track);
   [Throws]
-  void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
-                                   MediaStreamTrack? withTrack);
-  [Throws]
   void closeStreams();
 
   [Throws]
@@ -118,4 +115,6 @@ interface PeerConnectionImpl  {
 
   Promise<any> chain(ChainedOperation op);
   void updateNegotiationNeeded(); 
+
+  boolean createdSender(RTCRtpSender sender);
 };

@@ -355,7 +355,7 @@ WebrtcVideoConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
       INIT_MIRROR(mLocalSsrcs, Ssrcs()),
       INIT_MIRROR(mLocalRtxSsrcs, Ssrcs()),
       INIT_MIRROR(mLocalCname, std::string()),
-      INIT_MIRROR(mLocalMid, std::string()),
+      INIT_MIRROR(mMid, std::string()),
       INIT_MIRROR(mRemoteSsrc, 0),
       INIT_MIRROR(mRemoteRtxSsrc, 0),
       INIT_MIRROR(mSyncGroup, std::string()),
@@ -424,7 +424,7 @@ void WebrtcVideoConduit::InitControl(VideoConduitControlInterface* aControl) {
   CONNECT(aControl->CanonicalLocalSsrcs(), mControl.mLocalSsrcs);
   CONNECT(aControl->CanonicalLocalVideoRtxSsrcs(), mControl.mLocalRtxSsrcs);
   CONNECT(aControl->CanonicalLocalCname(), mControl.mLocalCname);
-  CONNECT(aControl->CanonicalLocalMid(), mControl.mLocalMid);
+  CONNECT(aControl->CanonicalMid(), mControl.mMid);
   CONNECT(aControl->CanonicalRemoteSsrc(), mControl.mRemoteSsrc);
   CONNECT(aControl->CanonicalRemoteVideoRtxSsrc(), mControl.mRemoteRtxSsrc);
   CONNECT(aControl->CanonicalSyncGroup(), mControl.mSyncGroup);
@@ -632,8 +632,8 @@ void WebrtcVideoConduit::OnControlConfigChange() {
       sendStreamRecreationNeeded = true;
     }
 
-    if (mControl.mLocalMid.Ref() != mSendStreamConfig.rtp.mid) {
-      mSendStreamConfig.rtp.mid = mControl.mLocalMid;
+    if (mControl.mMid.Ref() != mSendStreamConfig.rtp.mid) {
+      mSendStreamConfig.rtp.mid = mControl.mMid;
       sendStreamRecreationNeeded = true;
     }
 
@@ -1227,7 +1227,7 @@ RefPtr<GenericPromise> WebrtcVideoConduit::Shutdown() {
         mControl.mLocalSsrcs.DisconnectIfConnected();
         mControl.mLocalRtxSsrcs.DisconnectIfConnected();
         mControl.mLocalCname.DisconnectIfConnected();
-        mControl.mLocalMid.DisconnectIfConnected();
+        mControl.mMid.DisconnectIfConnected();
         mControl.mRemoteSsrc.DisconnectIfConnected();
         mControl.mRemoteRtxSsrc.DisconnectIfConnected();
         mControl.mSyncGroup.DisconnectIfConnected();

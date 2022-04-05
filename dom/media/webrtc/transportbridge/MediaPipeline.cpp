@@ -39,12 +39,14 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "transport/runnable_utils.h"
 #include "jsapi/MediaTransportHandler.h"
+#include "jsapi/PeerConnectionImpl.h"
 #include "Tracing.h"
 #include "libwebrtcglue/WebrtcImageBuffer.h"
 #include "common_video/include/video_frame_buffer.h"
@@ -810,7 +812,10 @@ void MediaPipelineTransmit::Shutdown() {
   MediaPipeline::Shutdown();
   MOZ_ASSERT(!mActive);
   mWatchManager.Shutdown();
-  mDomTrack = nullptr;
+  if (mDomTrack.Ref()) {
+    mDomTrack.Ref()->RemovePrincipalChangeObserver(this);
+    mDomTrack = nullptr;
+  }
   mUnsettingSendTrack = false;
   UpdateSendState();
   MOZ_ASSERT(!mTransmitting);
@@ -958,18 +963,24 @@ bool MediaPipelineTransmit::Transmitting() const {
 
 bool MediaPipelineTransmit::IsVideo() const { return mIsVideo; }
 
-void MediaPipelineTransmit::UpdateSinkIdentity_m(
-    const MediaStreamTrack* aTrack, nsIPrincipal* aPrincipal,
-    const PeerIdentity* aSinkIdentity) {
-  ASSERT_ON_THREAD(mMainThread);
+void MediaPipelineTransmit::PrincipalChanged(dom::MediaStreamTrack* aTrack) {
+  MOZ_ASSERT(aTrack && aTrack == mDomTrack.Ref());
 
-  if (aTrack != nullptr && aTrack != mDomTrack.Ref()) {
-    // If a track is specified, then it might not be for this pipeline,
-    // since we receive notifications for all tracks on the PC.
-    // nullptr means that the PeerIdentity has changed and shall be applied
-    // to all tracks of the PC.
-    return;
+  PeerConnectionWrapper pcw(mPc);
+  if (pcw.impl()) {
+    Document* doc = pcw.impl()->GetParentObject()->GetExtantDoc();
+    if (doc) {
+      UpdateSinkIdentity(doc->NodePrincipal(), pcw.impl()->GetPeerIdentity());
+    } else {
+      MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
+              ("Can't update sink principal; document gone"));
+    }
   }
+}
+
+void MediaPipelineTransmit::UpdateSinkIdentity(
+    nsIPrincipal* aPrincipal, const PeerIdentity* aSinkIdentity) {
+  ASSERT_ON_THREAD(mMainThread);
 
   if (!mDomTrack.Ref()) {
     // Nothing to do here
@@ -999,6 +1010,9 @@ void MediaPipelineTransmit::TransportReady_s() {
 
 nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mDomTrack.Ref()) {
+    mDomTrack.Ref()->RemovePrincipalChangeObserver(this);
+  }
 
   if (aDomTrack) {
     nsString nsTrackId;
@@ -1011,6 +1025,10 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
 
   mDescriptionInvalidated = true;
   mDomTrack = std::move(aDomTrack);
+  if (mDomTrack.Ref()) {
+    mDomTrack.Ref()->AddPrincipalChangeObserver(this);
+    PrincipalChanged(mDomTrack.Ref());
+  }
 
   return NS_OK;
 }

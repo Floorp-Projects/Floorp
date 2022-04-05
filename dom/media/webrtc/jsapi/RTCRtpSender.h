@@ -1,0 +1,146 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef _RTCRtpSender_h_
+#define _RTCRtpSender_h_
+
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/StateMirroring.h"
+#include "mozilla/Maybe.h"
+#include "js/RootingAPI.h"
+#include "libwebrtcglue/MediaConduitInterface.h"
+#include "libwebrtcglue/RtpRtcpConfig.h"
+#include "nsTArray.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
+#include "mozilla/dom/RTCRtpParametersBinding.h"
+#include "RTCStatsReport.h"
+
+class nsPIDOMWindowInner;
+
+namespace mozilla {
+class MediaPipelineTransmit;
+class MediaSessionConduit;
+class MediaTransportHandler;
+class JsepTransceiver;
+class TransceiverImpl;
+class DOMMediaStream;
+
+namespace dom {
+class MediaStreamTrack;
+class Promise;
+class RTCDtlsTransport;
+class RTCDTMFSender;
+
+class RTCRtpSender : public nsISupports, public nsWrapperCache {
+ public:
+  RTCRtpSender(nsPIDOMWindowInner* aWindow, const std::string& aPCHandle,
+               MediaTransportHandler* aTransportHandler,
+               JsepTransceiver* aJsepTransceiver,
+               nsISerialEventTarget* aMainThread, AbstractThread* aCallThread,
+               nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
+               dom::MediaStreamTrack* aTrack,
+               TransceiverImpl* aTransceiverImpl);
+
+  // nsISupports
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCRtpSender)
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  // webidl
+  MediaStreamTrack* GetTrack() const { return mSenderTrack; }
+  RTCDtlsTransport* GetTransport() const;
+  RTCDTMFSender* GetDtmf() const;
+  MOZ_CAN_RUN_SCRIPT
+  already_AddRefed<Promise> ReplaceTrack(MediaStreamTrack* aWithTrack);
+  already_AddRefed<Promise> GetStats();
+  already_AddRefed<Promise> SetParameters(
+      const dom::RTCRtpParameters& aParameters);
+  void GetParameters(RTCRtpParameters& aParameters) const;
+
+  nsPIDOMWindowInner* GetParentObject() const;
+  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
+
+  // This would just be stream ids, except PeerConnection.jsm uses GetStreams
+  // to implement the non-standard RTCPeerConnection.getLocalStreams. We might
+  // be able to simplify this later.
+  // ChromeOnly webidl
+  void SetStreams(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams);
+  // ChromeOnly webidl
+  void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
+  void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
+  void Shutdown();
+  void Stop();
+  void Start();
+  bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
+  const std::string& GetPcHandle() const { return mPCHandle; }
+  RefPtr<MediaPipelineTransmit> GetPipeline() const;
+  already_AddRefed<dom::Promise> MakePromise() const;
+  bool SeamlessTrackSwitch(const RefPtr<MediaStreamTrack>& aWithTrack);
+  bool SetSenderTrackWithClosedCheck(const RefPtr<MediaStreamTrack>& aTrack);
+
+  // This is called when we set an answer (ie; when the transport is finalized).
+  void UpdateTransport();
+  nsresult UpdateConduit();
+
+  AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
+  AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
+  AbstractCanonical<RtpExtList>* CanonicalLocalRtpExtensions() {
+    return &mLocalRtpExtensions;
+  }
+
+  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioCodec() {
+    return &mAudioCodec;
+  }
+
+  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoCodec() {
+    return &mVideoCodec;
+  }
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
+    return &mVideoRtpRtcpConfig;
+  }
+  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode() {
+    return &mVideoCodecMode;
+  }
+  AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
+
+ private:
+  virtual ~RTCRtpSender();
+
+  nsresult UpdateVideoConduit();
+  nsresult UpdateAudioConduit();
+
+  std::string GetMid() const;
+  void ApplyParameters(const RTCRtpParameters& aParameters);
+  nsresult ConfigureVideoCodecMode();
+
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  const std::string mPCHandle;
+  const RefPtr<JsepTransceiver> mJsepTransceiver;
+  RefPtr<dom::MediaStreamTrack> mSenderTrack;
+  RTCRtpParameters mParameters;
+  RefPtr<MediaPipelineTransmit> mPipeline;
+  RefPtr<TransceiverImpl> mTransceiverImpl;
+  nsTArray<RefPtr<DOMMediaStream>> mStreams;
+  bool mHaveSetupTransport = false;
+
+  RefPtr<dom::RTCDTMFSender> mDtmf;
+
+  Canonical<Ssrcs> mSsrcs;
+  Canonical<Ssrcs> mVideoRtxSsrcs;
+  Canonical<RtpExtList> mLocalRtpExtensions;
+
+  Canonical<Maybe<AudioCodecConfig>> mAudioCodec;
+  Canonical<Maybe<VideoCodecConfig>> mVideoCodec;
+  Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
+  Canonical<webrtc::VideoCodecMode> mVideoCodecMode;
+  Canonical<std::string> mCname;
+};
+
+}  // namespace dom
+}  // namespace mozilla
+#endif  // _RTCRtpSender_h_
