@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 
+#include "apz/src/APZCTreeManager.h"
 #include "base/platform_thread.h"  // for PlatformThreadId
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/SampleTime.h"
@@ -30,7 +31,6 @@ struct WrWindowId;
 
 namespace layers {
 
-class APZCTreeManager;
 struct ScrollbarData;
 
 /**
@@ -72,15 +72,31 @@ class APZSampler {
    */
   AsyncTransform GetCurrentAsyncTransform(
       const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
-      AsyncTransformComponents aComponents) const;
+      AsyncTransformComponents aComponents,
+      const MutexAutoLock& aProofOfMapLock) const;
 
   /**
-   * Returns the composition bounds of the APZC correspoinding to the pair of
+   * Returns the composition bounds of the APZC corresponding to the pair of
    * |aLayersId| and |aScrollId|.
    */
   ParentLayerRect GetCompositionBounds(
-      const LayersId& aLayersId,
-      const ScrollableLayerGuid::ViewID& aScrollId) const;
+      const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+      const MutexAutoLock& aProofOfMapLock) const;
+
+  struct ScrollOffsetAndRange {
+    CSSPoint mOffset;
+    CSSRect mRange;
+  };
+  /**
+   * Returns the scroll offset and scroll range of the APZC corresponding to the
+   * pair of |aLayersId| and |aScrollId|
+   *
+   * Note: This is called from OMTA Sampler thread, or Compositor thread for
+   * testing.
+   */
+  Maybe<ScrollOffsetAndRange> GetCurrentScrollOffsetAndRange(
+      const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+      const MutexAutoLock& aProofOfMapLock) const;
 
   /**
    * This can be used to assert that the current thread is the
@@ -93,6 +109,11 @@ class APZSampler {
    * Returns true if currently on the APZSampler's "sampler thread".
    */
   bool IsSamplerThread() const;
+
+  template <typename Callback>
+  void CallWithMapLock(Callback& aCallback) {
+    mApz->CallWithMapLock(aCallback);
+  }
 
  protected:
   virtual ~APZSampler();

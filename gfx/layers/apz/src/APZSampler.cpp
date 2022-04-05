@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/APZSampler.h"
 
-#include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -103,12 +102,13 @@ void APZSampler::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
 
 AsyncTransform APZSampler::GetCurrentAsyncTransform(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
-    AsyncTransformComponents aComponents) const {
+    AsyncTransformComponents aComponents,
+    const MutexAutoLock& aProofOfMapLock) const {
   MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   RefPtr<AsyncPanZoomController> apzc =
-      mApz->GetTargetAPZC(aLayersId, aScrollId);
+      mApz->GetTargetAPZC(aLayersId, aScrollId, aProofOfMapLock);
   if (!apzc) {
     // It's possible that this function can get called even after the target
     // APZC has been already destroyed because destroying the animation which
@@ -123,14 +123,14 @@ AsyncTransform APZSampler::GetCurrentAsyncTransform(
 }
 
 ParentLayerRect APZSampler::GetCompositionBounds(
-    const LayersId& aLayersId,
-    const ScrollableLayerGuid::ViewID& aScrollId) const {
+    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const MutexAutoLock& aProofOfMapLock) const {
   // This function can get called on the compositor in case of non WebRender
   // get called on the sampler thread in case of WebRender.
   AssertOnSamplerThread();
 
   RefPtr<AsyncPanZoomController> apzc =
-      mApz->GetTargetAPZC(aLayersId, aScrollId);
+      mApz->GetTargetAPZC(aLayersId, aScrollId, aProofOfMapLock);
   if (!apzc) {
     // On WebRender it's possible that this function can get called even after
     // the target APZC has been already destroyed because destroying the
@@ -142,6 +142,28 @@ ParentLayerRect APZSampler::GetCompositionBounds(
   }
 
   return apzc->GetCompositionBounds();
+}
+
+Maybe<APZSampler::ScrollOffsetAndRange>
+APZSampler::GetCurrentScrollOffsetAndRange(
+    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const MutexAutoLock& aProofOfMapLock) const {
+  // Note: This is called from OMTA Sampler thread, or Compositor thread for
+  // testing.
+
+  RefPtr<AsyncPanZoomController> apzc =
+      mApz->GetTargetAPZC(aLayersId, aScrollId, aProofOfMapLock);
+  if (!apzc) {
+    return Nothing();
+  }
+
+  return Some(ScrollOffsetAndRange{
+      // FIXME: Use the one-frame delayed offset now. This doesn't take
+      // scroll-linked effets into accounts, so we have to fix this in the
+      // future.
+      apzc->GetCurrentAsyncScrollOffsetInCssPixels(
+          AsyncPanZoomController::AsyncTransformConsumer::eForCompositing),
+      apzc->GetCurrentScrollRangeInCssPixels()});
 }
 
 void APZSampler::AssertOnSamplerThread() const {

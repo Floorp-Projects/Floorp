@@ -17,8 +17,8 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"   // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffect.h"       // for dom::KeyFrameEffectReadOnly
 #include "mozilla/dom/Nullable.h"             // for dom::Nullable
+#include "mozilla/layers/APZSampler.h"        // for APZSampler
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
-#include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
 #include "mozilla/LayerAnimationInfo.h"  // for GetCSSPropertiesFor()
 #include "mozilla/MotionPathUtils.h"     // for ResolveMotionPath()
@@ -30,9 +30,67 @@
 namespace mozilla {
 namespace layers {
 
+static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
+    const Maybe<APZSampler::ScrollOffsetAndRange> aScrollMeta,
+    const ScrollTimelineOptions& aOptions,
+    const Maybe<TimeDuration>& aDuration) {
+  MOZ_ASSERT(aDuration);
+
+  // We return Nothing If the associated APZ controller is not available
+  // (because it may be destroyed but this animation is still alive).
+  if (!aScrollMeta) {
+    // This may happen after we reload a page. There may be a race condition
+    // because the animation is still alive but the APZ is destroyed. In this
+    // case, this animation is invalid, so we return nullptr.
+    return nullptr;
+  }
+
+  const bool isHorizontal =
+      aOptions.axis() == layers::ScrollDirection::eHorizontal;
+  double range =
+      isHorizontal ? aScrollMeta->mRange.width : aScrollMeta->mRange.height;
+  MOZ_ASSERT(
+      range > 0,
+      "We don't expect to get a zero or negative range on the compositor");
+
+  // The offset may be negative if the writing mode is from right to left.
+  // Use std::abs() here to avoid getting a negative progress.
+  double position =
+      std::abs(isHorizontal ? aScrollMeta->mOffset.x : aScrollMeta->mOffset.y);
+  double progress = position / range;
+  // Just in case to avoid getting a progress more than 100%, for overscrolling.
+  progress = std::min(progress, 1.0);
+
+  // FIXME: Bug 1744850: should we take the playback rate into account? For now
+  // it is always 1.0 from ScrollTimeline::Timing(). We may have to update here
+  // in Bug 1744850.
+  return TimeDuration::FromMilliseconds(progress * aDuration->ToMilliseconds());
+}
+
 static dom::Nullable<TimeDuration> CalculateElapsedTime(
-    const PropertyAnimation& aAnimation, const TimeStamp aPreviousFrameTime,
-    const TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue) {
+    const APZSampler* aAPZSampler, const LayersId& aLayersId,
+    const MutexAutoLock& aProofOfMapLock, const PropertyAnimation& aAnimation,
+    const TimeStamp aPreviousFrameTime, const TimeStamp aCurrentFrameTime,
+    const AnimatedValue* aPreviousValue) {
+  // -------------------------------------
+  // Case 1: scroll-timeline animations.
+  // -------------------------------------
+  if (aAnimation.mScrollTimelineOptions) {
+    MOZ_ASSERT(
+        aAPZSampler,
+        "We don't send scroll animations to the compositor if APZ is disabled");
+
+    return CalculateElapsedTimeForScrollTimeline(
+        aAPZSampler->GetCurrentScrollOffsetAndRange(
+            aLayersId, aAnimation.mScrollTimelineOptions.value().source(),
+            aProofOfMapLock),
+        aAnimation.mScrollTimelineOptions.value(),
+        aAnimation.mTiming.Duration());
+  }
+
+  // -------------------------------------
+  // Case 2: document-timeline animations.
+  // -------------------------------------
   MOZ_ASSERT(
       (!aAnimation.mOriginTime.IsNull() && aAnimation.mStartTime.isSome()) ||
           aAnimation.mIsNotPlaying,
@@ -94,8 +152,10 @@ enum class CanSkipCompose {
   No,
 };
 static AnimationHelper::SampleResult SampleAnimationForProperty(
-    TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
-    const AnimatedValue* aPreviousValue, CanSkipCompose aCanSkipCompose,
+    const APZSampler* aAPZSampler, const LayersId& aLayersId,
+    const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
+    TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
+    CanSkipCompose aCanSkipCompose,
     nsTArray<PropertyAnimation>& aPropertyAnimations,
     RefPtr<RawServoAnimationValue>& aAnimationValue) {
   MOZ_ASSERT(!aPropertyAnimations.IsEmpty(), "Should have animations");
@@ -111,7 +171,8 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
   // Process in order, since later animations override earlier ones.
   for (PropertyAnimation& animation : aPropertyAnimations) {
     dom::Nullable<TimeDuration> elapsedDuration = CalculateElapsedTime(
-        animation, aPreviousFrameTime, aCurrentFrameTime, aPreviousValue);
+        aAPZSampler, aLayersId, aProofOfMapLock, animation, aPreviousFrameTime,
+        aCurrentFrameTime, aPreviousValue);
 
     ComputedTiming computedTiming = dom::AnimationEffect::GetComputedTimingAt(
         elapsedDuration, animation.mTiming, animation.mPlaybackRate);
@@ -212,8 +273,9 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 }
 
 AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
-    TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
-    const AnimatedValue* aPreviousValue,
+    const APZSampler* aAPZSampler, const LayersId& aLayersId,
+    const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
+    TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
     nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
     nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues /* out */) {
   MOZ_ASSERT(!aPropertyAnimationGroups.IsEmpty(),
@@ -249,8 +311,9 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
     }
 
     SampleResult result = SampleAnimationForProperty(
-        aPreviousFrameTime, aCurrentFrameTime, aPreviousValue, canSkipCompose,
-        group.mAnimations, currValue);
+        aAPZSampler, aLayersId, aProofOfMapLock, aPreviousFrameTime,
+        aCurrentFrameTime, aPreviousValue, canSkipCompose, group.mAnimations,
+        currValue);
 
     // FIXME: Bug 1455476: Do optimization for multiple properties. For now,
     // the result is skipped only if the property count == 1.
