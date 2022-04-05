@@ -20,36 +20,37 @@ impl DebugReport {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyDebugReportCallbackEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDebugReportCallbackEXT.html>"]
     pub unsafe fn destroy_debug_report_callback(
         &self,
         debug: vk::DebugReportCallbackEXT,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) {
-        (self.fp.destroy_debug_report_callback_ext)(
+        self.fp.destroy_debug_report_callback_ext(
             self.handle,
             debug,
             allocation_callbacks.as_raw_ptr(),
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateDebugReportCallbackEXT.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDebugReportCallbackEXT.html>"]
     pub unsafe fn create_debug_report_callback(
         &self,
         create_info: &vk::DebugReportCallbackCreateInfoEXT,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DebugReportCallbackEXT> {
         let mut debug_cb = mem::zeroed();
-        (self.fp.create_debug_report_callback_ext)(
-            self.handle,
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut debug_cb,
-        )
-        .result_with_success(debug_cb)
+        self.fp
+            .create_debug_report_callback_ext(
+                self.handle,
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut debug_cb,
+            )
+            .result_with_success(debug_cb)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::ExtDebugReportFn::name()
     }
 

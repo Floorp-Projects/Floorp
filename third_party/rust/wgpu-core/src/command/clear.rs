@@ -3,6 +3,7 @@ use std::{num::NonZeroU32, ops::Range};
 #[cfg(feature = "trace")]
 use crate::device::trace::Command as TraceCommand;
 use crate::{
+    align_to,
     command::CommandBuffer,
     device::Device,
     get_lowest_common_denom,
@@ -13,7 +14,7 @@ use crate::{
     track::{ResourceTracker, TextureSelector, TextureState},
 };
 
-use hal::{auxil::align_to, CommandEncoder as _};
+use hal::CommandEncoder as _;
 use thiserror::Error;
 use wgt::{BufferAddress, BufferSize, BufferUsages, ImageSubresourceRange, TextureAspect};
 

@@ -240,16 +240,11 @@ impl<'a> ::std::ops::Deref for PhysicalDeviceGpaPropertiesAmdBuilder<'a> {
     }
 }
 impl<'a> PhysicalDeviceGpaPropertiesAmdBuilder<'a> {
-    pub fn push_next<T>(mut self, next: &'a mut T) -> PhysicalDeviceGpaPropertiesAmdBuilder<'a>
+    pub fn next<T>(mut self, next: &'a mut T) -> PhysicalDeviceGpaPropertiesAmdBuilder<'a>
     where
         T: ExtendsPhysicalDeviceGpaPropertiesAmd,
     {
-        unsafe {
-            let next_ptr = <*const T>::cast(next);
-            let last_next = ptr_chain_iter(next).last().unwrap();
-            (*last_next).p_next = self.inner.p_next as _;
-            self.inner.p_next = next_ptr;
-        }
+        self.inner.p_next = next as *mut T as *mut c_void;
         self
     }
     pub fn build(self) -> PhysicalDeviceGpaPropertiesAmd {
@@ -414,9 +409,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(create_gpa_session_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCreateGpaSessionAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCreateGpaSessionAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     create_gpa_session_amd
                 } else {
@@ -434,9 +429,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(destroy_gpa_session_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkDestroyGpaSessionAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkDestroyGpaSessionAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     destroy_gpa_session_amd
                 } else {
@@ -453,10 +448,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(set_gpa_device_clock_mode_amd)
                     ))
                 }
-                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
-                    b"vkSetGpaDeviceClockModeAMD\0",
-                );
-                let val = _f(cname);
+                let raw_name = stringify!(vkSetGpaDeviceClockModeAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     set_gpa_device_clock_mode_amd
                 } else {
@@ -473,9 +467,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(cmd_begin_gpa_session_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdBeginGpaSessionAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdBeginGpaSessionAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     cmd_begin_gpa_session_amd
                 } else {
@@ -492,9 +486,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(cmd_end_gpa_session_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdEndGpaSessionAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdEndGpaSessionAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     cmd_end_gpa_session_amd
                 } else {
@@ -513,9 +507,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(cmd_begin_gpa_sample_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdBeginGpaSampleAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdBeginGpaSampleAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     cmd_begin_gpa_sample_amd
                 } else {
@@ -533,9 +527,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(cmd_end_gpa_sample_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdEndGpaSampleAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdEndGpaSampleAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     cmd_end_gpa_sample_amd
                 } else {
@@ -552,9 +546,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(get_gpa_session_status_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkGetGpaSessionStatusAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkGetGpaSessionStatusAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     get_gpa_session_status_amd
                 } else {
@@ -574,9 +568,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(get_gpa_session_results_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkGetGpaSessionResultsAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkGetGpaSessionResultsAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     get_gpa_session_results_amd
                 } else {
@@ -593,9 +587,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(reset_gpa_session_amd)
                     ))
                 }
-                let cname =
-                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdEndGpaSampleAMD\0");
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdEndGpaSampleAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     reset_gpa_session_amd
                 } else {
@@ -612,10 +606,9 @@ impl AmdGpaInterfaceFn {
                         stringify!(cmd_copy_gpa_session_results_amd)
                     ))
                 }
-                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
-                    b"vkCmdCopyGpaSessionResultsAMD\0",
-                );
-                let val = _f(cname);
+                let raw_name = stringify!(vkCmdCopyGpaSessionResultsAMD);
+                let cname = ::std::ffi::CString::new(raw_name).unwrap();
+                let val = _f(&cname);
                 if val.is_null() {
                     cmd_copy_gpa_session_results_amd
                 } else {
@@ -699,10 +692,10 @@ impl<'a> PhysicalDeviceWaveLimitPropertiesAmdBuilder<'a> {
         T: ExtendsPhysicalDeviceWaveLimitPropertiesAmd,
     {
         unsafe {
-            let next_ptr = <*const T>::cast(next);
+            let next_ptr = next as *mut T as *mut BaseOutStructure;
             let last_next = ptr_chain_iter(next).last().unwrap();
             (*last_next).p_next = self.inner.p_next as _;
-            self.inner.p_next = next_ptr;
+            self.inner.p_next = next_ptr as _;
         }
         self
     }

@@ -39,15 +39,13 @@ impl super::CommandEncoder {
         }
     }
 
-    fn enter_any(&mut self) -> Option<&mtl::CommandEncoderRef> {
+    fn enter_any(&mut self) -> &mtl::CommandEncoderRef {
         if let Some(ref encoder) = self.state.render {
-            Some(encoder)
+            encoder
         } else if let Some(ref encoder) = self.state.compute {
-            Some(encoder)
-        } else if let Some(ref encoder) = self.state.blit {
-            Some(encoder)
+            encoder
         } else {
-            None
+            self.enter_blit()
         }
     }
 
@@ -629,23 +627,13 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
     }
 
     unsafe fn insert_debug_marker(&mut self, label: &str) {
-        if let Some(encoder) = self.enter_any() {
-            encoder.insert_debug_signpost(label);
-        }
+        self.enter_any().insert_debug_signpost(label);
     }
     unsafe fn begin_debug_marker(&mut self, group_label: &str) {
-        if let Some(encoder) = self.enter_any() {
-            encoder.push_debug_group(group_label);
-        } else if let Some(ref buf) = self.raw_cmd_buf {
-            buf.push_debug_group(group_label);
-        }
+        self.enter_any().push_debug_group(group_label);
     }
     unsafe fn end_debug_marker(&mut self) {
-        if let Some(encoder) = self.enter_any() {
-            encoder.pop_debug_group();
-        } else if let Some(ref buf) = self.raw_cmd_buf {
-            buf.pop_debug_group();
-        }
+        self.enter_any().pop_debug_group();
     }
 
     unsafe fn set_render_pipeline(&mut self, pipeline: &super::RenderPipeline) {

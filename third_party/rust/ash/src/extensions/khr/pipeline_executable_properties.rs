@@ -19,43 +19,40 @@ impl PipelineExecutableProperties {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutableInternalRepresentationsKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutableInternalRepresentationsKHR.html>"]
     pub unsafe fn get_pipeline_executable_internal_representations(
         &self,
         executable_info: &vk::PipelineExecutableInfoKHR,
     ) -> VkResult<Vec<vk::PipelineExecutableInternalRepresentationKHR>> {
         read_into_defaulted_vector(|count, data| {
-            (self.fp.get_pipeline_executable_internal_representations_khr)(
-                self.handle,
-                executable_info,
-                count,
-                data,
-            )
+            self.fp
+                .get_pipeline_executable_internal_representations_khr(
+                    self.handle,
+                    executable_info,
+                    count,
+                    data,
+                )
         })
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutablePropertiesKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutablePropertiesKHR.html>"]
     pub unsafe fn get_pipeline_executable_properties(
         &self,
         pipeline_info: &vk::PipelineInfoKHR,
     ) -> VkResult<Vec<vk::PipelineExecutablePropertiesKHR>> {
         read_into_defaulted_vector(|count, data| {
-            (self.fp.get_pipeline_executable_properties_khr)(
-                self.handle,
-                pipeline_info,
-                count,
-                data,
-            )
+            self.fp
+                .get_pipeline_executable_properties_khr(self.handle, pipeline_info, count, data)
         })
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutableStatisticsKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutableStatisticsKHR.html>"]
     pub unsafe fn get_pipeline_executable_statistics(
         &self,
         executable_info: &vk::PipelineExecutableInfoKHR,
     ) -> VkResult<Vec<vk::PipelineExecutableStatisticKHR>> {
         read_into_defaulted_vector(|count, data| {
-            (self.fp.get_pipeline_executable_statistics_khr)(
+            self.fp.get_pipeline_executable_statistics_khr(
                 self.handle,
                 executable_info,
                 count,
@@ -64,7 +61,7 @@ impl PipelineExecutableProperties {
         })
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::KhrPipelineExecutablePropertiesFn::name()
     }
 

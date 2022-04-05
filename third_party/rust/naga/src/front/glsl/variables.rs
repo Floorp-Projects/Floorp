@@ -5,28 +5,41 @@ use super::{
     Parser, Result, Span,
 };
 use crate::{
-    AddressSpace, Binding, Block, BuiltIn, Constant, Expression, GlobalVariable, Handle,
-    Interpolation, LocalVariable, ResourceBinding, ScalarKind, ShaderStage, SwizzleComponent, Type,
-    TypeInner, VectorSize,
+    Binding, Block, BuiltIn, Constant, Expression, GlobalVariable, Handle, Interpolation,
+    LocalVariable, ResourceBinding, ScalarKind, ShaderStage, StorageAccess, StorageClass,
+    SwizzleComponent, Type, TypeInner, VectorSize,
 };
 
-pub struct VarDeclaration<'a, 'key> {
-    pub qualifiers: &'a mut TypeQualifiers<'key>,
+macro_rules! qualifier_arm {
+    ($src:expr, $tgt:expr, $meta:expr, $msg:literal, $errors:expr $(,)?) => {{
+        if $tgt.is_some() {
+            $errors.push(Error {
+                kind: ErrorKind::SemanticError($msg.into()),
+                meta: $meta,
+            })
+        }
+
+        $tgt = Some($src);
+    }};
+}
+
+pub struct VarDeclaration<'a> {
+    pub qualifiers: &'a [(TypeQualifier, Span)],
     pub ty: Handle<Type>,
     pub name: Option<String>,
     pub init: Option<Handle<Constant>>,
     pub meta: Span,
 }
 
-/// Information about a builtin used in [`add_builtin`](Parser::add_builtin).
+/// Information about a builtin used in [`add_builtin`](Parser::add_builtin)
 struct BuiltInData {
-    /// The type of the builtin.
+    /// The type of the builtin
     inner: TypeInner,
-    /// The associated builtin class.
+    /// The builtin class associated with
     builtin: BuiltIn,
-    /// Whether the builtin can be written to or not.
+    /// Wether it should be allowed to write to the builtin or not
     mutable: bool,
-    /// The storage used for the builtin.
+    /// The storage used for the builtin
     storage: StorageQualifier,
 }
 
@@ -56,7 +69,7 @@ impl Parser {
         let handle = self.module.global_variables.append(
             GlobalVariable {
                 name: Some(name.into()),
-                space: AddressSpace::Private,
+                class: StorageClass::Private,
                 binding: None,
                 ty,
                 init: None,
@@ -393,234 +406,318 @@ impl Parser {
         body: &mut Block,
         VarDeclaration {
             qualifiers,
-            mut ty,
+            ty,
             name,
             init,
             meta,
         }: VarDeclaration,
     ) -> Result<GlobalOrConstant> {
-        let storage = qualifiers.storage.0;
-        let (ret, lookup) = match storage {
-            StorageQualifier::Input | StorageQualifier::Output => {
-                let input = storage == StorageQualifier::Input;
-                // TODO: glslang seems to use a counter for variables without
-                // explicit location (even if that causes collisions)
-                let location = qualifiers
-                    .uint_layout_qualifier("location", &mut self.errors)
-                    .unwrap_or(0);
-                let interpolation = qualifiers.interpolation.take().map(|(i, _)| i).or_else(|| {
-                    let kind = self.module.types[ty].inner.scalar_kind()?;
-                    Some(match kind {
-                        ScalarKind::Float => Interpolation::Perspective,
-                        _ => Interpolation::Flat,
-                    })
-                });
-                let sampling = qualifiers.sampling.take().map(|(s, _)| s);
+        let mut storage = StorageQualifier::StorageClass(StorageClass::Private);
+        let mut interpolation = None;
+        let mut set = None;
+        let mut binding = None;
+        let mut location = None;
+        let mut sampling = None;
+        let mut layout = None;
+        let mut precision = None;
+        let mut access = StorageAccess::all();
 
-                let handle = self.module.global_variables.append(
-                    GlobalVariable {
-                        name: name.clone(),
-                        space: AddressSpace::Private,
-                        binding: None,
-                        ty,
-                        init,
-                    },
+        for &(ref qualifier, meta) in qualifiers {
+            match *qualifier {
+                TypeQualifier::StorageQualifier(s) => {
+                    if StorageQualifier::StorageClass(StorageClass::PushConstant) == storage
+                        && s == StorageQualifier::StorageClass(StorageClass::Uniform)
+                    {
+                        // Ignore the Uniform qualifier if the class was already set to PushConstant
+                        continue;
+                    } else if StorageQualifier::StorageClass(StorageClass::Private) != storage {
+                        self.errors.push(Error {
+                            kind: ErrorKind::SemanticError(
+                                "Cannot use more than one storage qualifier per declaration".into(),
+                            ),
+                            meta,
+                        });
+                    }
+
+                    storage = s;
+                }
+                TypeQualifier::Interpolation(i) => qualifier_arm!(
+                    i,
+                    interpolation,
                     meta,
-                );
+                    "Cannot use more than one interpolation qualifier per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Binding(r) => qualifier_arm!(
+                    r,
+                    binding,
+                    meta,
+                    "Cannot use more than one binding per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Set(s) => qualifier_arm!(
+                    s,
+                    set,
+                    meta,
+                    "Cannot use more than one binding per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Location(l) => qualifier_arm!(
+                    l,
+                    location,
+                    meta,
+                    "Cannot use more than one binding per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Sampling(s) => qualifier_arm!(
+                    s,
+                    sampling,
+                    meta,
+                    "Cannot use more than one sampling qualifier per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Layout(ref l) => qualifier_arm!(
+                    l,
+                    layout,
+                    meta,
+                    "Cannot use more than one layout qualifier per declaration",
+                    self.errors
+                ),
+                TypeQualifier::Precision(ref p) => qualifier_arm!(
+                    p,
+                    precision,
+                    meta,
+                    "Cannot use more than one precision qualifier per declaration",
+                    self.errors
+                ),
+                TypeQualifier::StorageAccess(a) => access &= a,
+                _ => {
+                    self.errors.push(Error {
+                        kind: ErrorKind::SemanticError("Qualifier not supported in globals".into()),
+                        meta,
+                    });
+                }
+            }
+        }
 
-                let idx = self.entry_args.len();
-                self.entry_args.push(EntryArg {
+        match storage {
+            StorageQualifier::StorageClass(StorageClass::PushConstant) => {
+                if set.is_some() {
+                    self.errors.push(Error {
+                        kind: ErrorKind::SemanticError(
+                            "set cannot be used to decorate push constant".into(),
+                        ),
+                        meta,
+                    })
+                }
+            }
+            StorageQualifier::StorageClass(StorageClass::Uniform)
+            | StorageQualifier::StorageClass(StorageClass::Storage { .. }) => {
+                if binding.is_none() {
+                    self.errors.push(Error {
+                        kind: ErrorKind::SemanticError(
+                            "uniform/buffer blocks require layout(binding=X)".into(),
+                        ),
+                        meta,
+                    })
+                }
+            }
+            _ => {
+                if set.is_some() || binding.is_some() {
+                    self.errors.push(Error {
+                        kind: ErrorKind::SemanticError(
+                            "set/binding can only be applied to uniform/buffer blocks".into(),
+                        ),
+                        meta,
+                    })
+                }
+            }
+        }
+
+        if (sampling.is_some() || interpolation.is_some()) && location.is_none() {
+            return Err(Error {
+                kind: ErrorKind::SemanticError(
+                    "Sampling and interpolation qualifiers can only be used in in/out variables"
+                        .into(),
+                ),
+                meta,
+            });
+        }
+
+        if let Some(location) = location {
+            let input = storage == StorageQualifier::Input;
+            let interpolation = interpolation.or_else(|| {
+                let kind = self.module.types[ty].inner.scalar_kind()?;
+                Some(match kind {
+                    ScalarKind::Float => Interpolation::Perspective,
+                    _ => Interpolation::Flat,
+                })
+            });
+
+            let handle = self.module.global_variables.append(
+                GlobalVariable {
                     name: name.clone(),
-                    binding: Binding::Location {
-                        location,
-                        interpolation,
-                        sampling,
-                    },
-                    handle,
-                    storage,
-                });
+                    class: StorageClass::Private,
+                    binding: None,
+                    ty,
+                    init,
+                },
+                meta,
+            );
 
+            let idx = self.entry_args.len();
+            self.entry_args.push(EntryArg {
+                name: name.clone(),
+                binding: Binding::Location {
+                    location,
+                    interpolation,
+                    sampling,
+                },
+                handle,
+                storage,
+            });
+
+            if let Some(name) = name {
                 let lookup = GlobalLookup {
                     kind: GlobalLookupKind::Variable(handle),
                     entry_arg: Some(idx),
                     mutable: !input,
                 };
+                ctx.add_global(self, &name, lookup, body);
 
-                (GlobalOrConstant::Global(handle), lookup)
+                self.global_variables.push((name, lookup));
             }
-            StorageQualifier::Const => {
-                let init = init.ok_or_else(|| Error {
-                    kind: ErrorKind::SemanticError("const values must have an initializer".into()),
-                    meta,
-                })?;
 
+            return Ok(GlobalOrConstant::Global(handle));
+        } else if let StorageQualifier::Const = storage {
+            let init = init.ok_or_else(|| Error {
+                kind: ErrorKind::SemanticError("const values must have an initializer".into()),
+                meta,
+            })?;
+            if let Some(name) = name {
                 let lookup = GlobalLookup {
                     kind: GlobalLookupKind::Constant(init, ty),
                     entry_arg: None,
                     mutable: false,
                 };
+                ctx.add_global(self, &name, lookup, body);
 
-                (GlobalOrConstant::Constant(init), lookup)
+                self.global_variables.push((name, lookup));
             }
-            StorageQualifier::AddressSpace(mut space) => {
-                match space {
-                    AddressSpace::Storage { ref mut access } => {
-                        if let Some((restricted_access, _)) = qualifiers.storage_acess.take() {
-                            access.remove(restricted_access);
-                        }
+            return Ok(GlobalOrConstant::Constant(init));
+        }
+
+        let class = match self.module.types[ty].inner {
+            TypeInner::Image { .. } => StorageClass::Handle,
+            TypeInner::Sampler { .. } => StorageClass::Handle,
+            _ => {
+                if let StorageQualifier::StorageClass(StorageClass::Storage { .. }) = storage {
+                    StorageClass::Storage { access }
+                } else {
+                    match storage {
+                        StorageQualifier::StorageClass(class) => class,
+                        _ => StorageClass::Private,
                     }
-                    AddressSpace::Uniform => match self.module.types[ty].inner {
-                        TypeInner::Image {
-                            class,
-                            dim,
-                            arrayed,
-                        } => {
-                            if let crate::ImageClass::Storage {
-                                mut access,
-                                mut format,
-                            } = class
-                            {
-                                if let Some((restricted_access, _)) =
-                                    qualifiers.storage_acess.take()
-                                {
-                                    access.remove(restricted_access);
-                                }
-
-                                match qualifiers.layout_qualifiers.remove(&QualifierKey::Format) {
-                                    Some((QualifierValue::Format(f), _)) => format = f,
-                                    // TODO: glsl supports images without format qualifier
-                                    // if they are `writeonly`
-                                    None => self.errors.push(Error {
-                                        kind: ErrorKind::SemanticError(
-                                            "image types require a format layout qualifier".into(),
-                                        ),
-                                        meta,
-                                    }),
-                                    _ => unreachable!(),
-                                }
-
-                                ty = self.module.types.insert(
-                                    Type {
-                                        name: None,
-                                        inner: TypeInner::Image {
-                                            dim,
-                                            arrayed,
-                                            class: crate::ImageClass::Storage { format, access },
-                                        },
-                                    },
-                                    meta,
-                                );
-                            }
-
-                            space = AddressSpace::Handle
-                        }
-                        TypeInner::Sampler { .. } => space = AddressSpace::Handle,
-                        _ => {
-                            if qualifiers.none_layout_qualifier("push_constant", &mut self.errors) {
-                                space = AddressSpace::PushConstant
-                            }
-                        }
-                    },
-                    AddressSpace::Function => space = AddressSpace::Private,
-                    _ => {}
-                };
-
-                let binding = match space {
-                    AddressSpace::Uniform | AddressSpace::Storage { .. } | AddressSpace::Handle => {
-                        let binding = qualifiers.uint_layout_qualifier("binding", &mut self.errors);
-                        if binding.is_none() {
-                            self.errors.push(Error {
-                                kind: ErrorKind::SemanticError(
-                                    "uniform/buffer blocks require layout(binding=X)".into(),
-                                ),
-                                meta,
-                            });
-                        }
-                        let set = qualifiers.uint_layout_qualifier("set", &mut self.errors);
-                        binding.map(|binding| ResourceBinding {
-                            group: set.unwrap_or(0),
-                            binding,
-                        })
-                    }
-                    _ => None,
-                };
-
-                let handle = self.module.global_variables.append(
-                    GlobalVariable {
-                        name: name.clone(),
-                        space,
-                        binding,
-                        ty,
-                        init,
-                    },
-                    meta,
-                );
-
-                let lookup = GlobalLookup {
-                    kind: GlobalLookupKind::Variable(handle),
-                    entry_arg: None,
-                    mutable: true,
-                };
-
-                (GlobalOrConstant::Global(handle), lookup)
+                }
             }
         };
 
+        let handle = self.module.global_variables.append(
+            GlobalVariable {
+                name: name.clone(),
+                class,
+                binding: binding.map(|binding| ResourceBinding {
+                    group: set.unwrap_or(0),
+                    binding,
+                }),
+                ty,
+                init,
+            },
+            meta,
+        );
+
         if let Some(name) = name {
+            let lookup = GlobalLookup {
+                kind: GlobalLookupKind::Variable(handle),
+                entry_arg: None,
+                mutable: true,
+            };
             ctx.add_global(self, &name, lookup, body);
 
             self.global_variables.push((name, lookup));
         }
 
-        qualifiers.unused_errors(&mut self.errors);
-
-        Ok(ret)
+        Ok(GlobalOrConstant::Global(handle))
     }
 
     pub(crate) fn add_local_var(
         &mut self,
         ctx: &mut Context,
         body: &mut Block,
-        decl: VarDeclaration,
+        #[cfg_attr(not(feature = "glsl-validate"), allow(unused_variables))]
+        VarDeclaration {
+            qualifiers,
+            ty,
+            name,
+            init,
+            meta,
+        }: VarDeclaration,
     ) -> Result<Handle<Expression>> {
         #[cfg(feature = "glsl-validate")]
-        if let Some(ref name) = decl.name {
+        if let Some(ref name) = name {
             if ctx.lookup_local_var_current_scope(name).is_some() {
                 self.errors.push(Error {
                     kind: ErrorKind::VariableAlreadyDeclared(name.clone()),
-                    meta: decl.meta,
+                    meta,
                 })
             }
         }
 
-        let storage = decl.qualifiers.storage;
-        let mutable = match storage.0 {
-            StorageQualifier::AddressSpace(AddressSpace::Function) => true,
-            StorageQualifier::Const => false,
-            _ => {
-                self.errors.push(Error {
-                    kind: ErrorKind::SemanticError("Locals cannot have a storage qualifier".into()),
-                    meta: storage.1,
-                });
-                true
+        let mut mutable = true;
+        let mut precision = None;
+
+        for &(ref qualifier, meta) in qualifiers {
+            match *qualifier {
+                TypeQualifier::StorageQualifier(StorageQualifier::Const) => {
+                    if !mutable {
+                        self.errors.push(Error {
+                            kind: ErrorKind::SemanticError(
+                                "Cannot use more than one constant qualifier per declaration"
+                                    .into(),
+                            ),
+                            meta,
+                        })
+                    }
+
+                    mutable = false;
+                }
+                TypeQualifier::Precision(ref p) => qualifier_arm!(
+                    p,
+                    precision,
+                    meta,
+                    "Cannot use more than one precision qualifier per declaration",
+                    self.errors
+                ),
+                _ => self.errors.push(Error {
+                    kind: ErrorKind::SemanticError("Qualifier not supported in locals".into()),
+                    meta,
+                }),
             }
-        };
+        }
 
         let handle = ctx.locals.append(
             LocalVariable {
-                name: decl.name.clone(),
-                ty: decl.ty,
-                init: decl.init,
+                name: name.clone(),
+                ty,
+                init,
             },
-            decl.meta,
+            meta,
         );
-        let expr = ctx.add_expression(Expression::LocalVariable(handle), decl.meta, body);
+        let expr = ctx.add_expression(Expression::LocalVariable(handle), meta, body);
 
-        if let Some(name) = decl.name {
+        if let Some(name) = name {
             ctx.add_local_var(name, expr, mutable);
         }
-
-        decl.qualifiers.unused_errors(&mut self.errors);
 
         Ok(expr)
     }

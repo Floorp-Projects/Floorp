@@ -19,29 +19,27 @@ impl ExternalMemoryFd {
         Self { handle, fp }
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetMemoryFdKHR.html>
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryFdKHR.html>"]
     pub unsafe fn get_memory_fd(&self, create_info: &vk::MemoryGetFdInfoKHR) -> VkResult<i32> {
         let mut fd = -1;
-        (self.fp.get_memory_fd_khr)(self.handle, create_info, &mut fd).result_with_success(fd)
+        self.fp
+            .get_memory_fd_khr(self.handle, create_info, &mut fd)
+            .result_with_success(fd)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetMemoryFdPropertiesKHR.html>
-    pub unsafe fn get_memory_fd_properties(
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryFdPropertiesKHR.html>"]
+    pub unsafe fn get_memory_fd_properties_khr(
         &self,
         handle_type: vk::ExternalMemoryHandleTypeFlags,
         fd: i32,
     ) -> VkResult<vk::MemoryFdPropertiesKHR> {
         let mut memory_fd_properties = Default::default();
-        (self.fp.get_memory_fd_properties_khr)(
-            self.handle,
-            handle_type,
-            fd,
-            &mut memory_fd_properties,
-        )
-        .result_with_success(memory_fd_properties)
+        self.fp
+            .get_memory_fd_properties_khr(self.handle, handle_type, fd, &mut memory_fd_properties)
+            .result_with_success(memory_fd_properties)
     }
 
-    pub const fn name() -> &'static CStr {
+    pub fn name() -> &'static CStr {
         vk::KhrExternalMemoryFdFn::name()
     }
 

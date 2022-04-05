@@ -1,5 +1,5 @@
 use super::{
-    help::{WrappedArrayLength, WrappedConstructor, WrappedImageQuery},
+    help::{MipLevelCoordinate, WrappedArrayLength, WrappedConstructor, WrappedImageQuery},
     storage::StoreValue,
     BackendResult, Error, Options,
 };
@@ -540,25 +540,25 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         }
 
         // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-variable-register
-        let register_ty = match global.space {
-            crate::AddressSpace::Function => unreachable!("Function address space"),
-            crate::AddressSpace::Private => {
+        let register_ty = match global.class {
+            crate::StorageClass::Function => unreachable!("Function storage class"),
+            crate::StorageClass::Private => {
                 write!(self.out, "static ")?;
                 self.write_type(module, global.ty)?;
                 ""
             }
-            crate::AddressSpace::WorkGroup => {
+            crate::StorageClass::WorkGroup => {
                 write!(self.out, "groupshared ")?;
                 self.write_type(module, global.ty)?;
                 ""
             }
-            crate::AddressSpace::Uniform => {
+            crate::StorageClass::Uniform => {
                 // constant buffer declarations are expected to be inlined, e.g.
                 // `cbuffer foo: register(b0) { field1: type1; }`
                 write!(self.out, "cbuffer")?;
                 "b"
             }
-            crate::AddressSpace::Storage { access } => {
+            crate::StorageClass::Storage { access } => {
                 let (prefix, register) = if access.contains(crate::StorageAccess::STORE) {
                     ("RW", "u")
                 } else {
@@ -567,7 +567,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 write!(self.out, "{}ByteAddressBuffer", prefix)?;
                 register
             }
-            crate::AddressSpace::Handle => {
+            crate::StorageClass::Handle => {
                 let register = match *inner {
                     TypeInner::Sampler { .. } => "s",
                     // all storage textures are UAV, unconditionally
@@ -580,11 +580,14 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 self.write_type(module, global.ty)?;
                 register
             }
-            crate::AddressSpace::PushConstant => unimplemented!("Push constants"),
+            crate::StorageClass::PushConstant => unimplemented!("Push constants"),
         };
 
         let name = &self.names[&NameKey::GlobalVariable(handle)];
         write!(self.out, " {}", name)?;
+        if let TypeInner::Array { size, .. } = module.types[global.ty].inner {
+            self.write_array_size(module, size)?;
+        }
 
         if let Some(ref binding) = global.binding {
             // this was already resolved earlier when we started evaluating an entry point.
@@ -594,31 +597,20 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 write!(self.out, ", space{}", bt.space)?;
             }
             write!(self.out, ")")?;
-        } else {
-            // need to write the array size if the type was emitted with `write_type`
-            if let TypeInner::Array { size, .. } = module.types[global.ty].inner {
-                self.write_array_size(module, size)?;
-            }
-            if global.space == crate::AddressSpace::Private {
-                write!(self.out, " = ")?;
-                if let Some(init) = global.init {
-                    self.write_constant(module, init)?;
-                } else {
-                    self.write_default_init(module, global.ty)?;
-                }
+        } else if global.class == crate::StorageClass::Private {
+            write!(self.out, " = ")?;
+            if let Some(init) = global.init {
+                self.write_constant(module, init)?;
+            } else {
+                self.write_default_init(module, global.ty)?;
             }
         }
 
-        if global.space == crate::AddressSpace::Uniform {
+        if global.class == crate::StorageClass::Uniform {
             write!(self.out, " {{ ")?;
             self.write_type(module, global.ty)?;
-            let sub_name = &self.names[&NameKey::GlobalVariable(handle)];
-            write!(self.out, " {}", sub_name)?;
-            // need to write the array size if the type was emitted with `write_type`
-            if let TypeInner::Array { size, .. } = module.types[global.ty].inner {
-                self.write_array_size(module, size)?;
-            }
-            writeln!(self.out, "; }}")?;
+            let name = &self.names[&NameKey::GlobalVariable(handle)];
+            writeln!(self.out, " {}; }}", name)?;
         } else {
             writeln!(self.out, ";")?;
         }
@@ -1036,7 +1028,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             Statement::Emit(ref range) => {
                 for handle in range.clone() {
                     let info = &func_ctx.info[handle];
-                    let ptr_class = info.ty.inner_with(&module.types).pointer_space();
+                    let ptr_class = info.ty.inner_with(&module.types).pointer_class();
                     let expr_name = if ptr_class.is_some() {
                         // HLSL can't save a pointer-valued expression in a variable,
                         // but we shouldn't ever need to: they should never be named expressions,
@@ -1111,7 +1103,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             Statement::Return { value: Some(expr) } => {
                 let base_ty_res = &func_ctx.info[expr].ty;
                 let mut resolved = base_ty_res.inner_with(&module.types);
-                if let TypeInner::Pointer { base, space: _ } = *resolved {
+                if let TypeInner::Pointer { base, class: _ } = *resolved {
                     resolved = &module.types[base].inner;
                 }
 
@@ -1175,7 +1167,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     _ => None,
                 };
 
-                if let Some(crate::AddressSpace::Storage { .. }) = ty_inner.pointer_space() {
+                if let Some(crate::StorageClass::Storage { .. }) = ty_inner.pointer_class() {
                     let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
                     self.write_storage_store(
                         module,
@@ -1520,10 +1512,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 write!(self.out, ")")?;
             }
             Expression::Access { base, index } => {
-                if let Some(crate::AddressSpace::Storage { .. }) = func_ctx.info[expr]
+                if let Some(crate::StorageClass::Storage { .. }) = func_ctx.info[expr]
                     .ty
                     .inner_with(&module.types)
-                    .pointer_space()
+                    .pointer_class()
                 {
                     // do nothing, the chain is written on `Load`/`Store`
                 } else {
@@ -1534,10 +1526,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 }
             }
             Expression::AccessIndex { base, index } => {
-                if let Some(crate::AddressSpace::Storage { .. }) = func_ctx.info[expr]
+                if let Some(crate::StorageClass::Storage { .. }) = func_ctx.info[expr]
                     .ty
                     .inner_with(&module.types)
-                    .pointer_space()
+                    .pointer_class()
                 {
                     // do nothing, the chain is written on `Load`/`Store`
                 } else {
@@ -1546,7 +1538,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     let base_ty_res = &func_ctx.info[base].ty;
                     let mut resolved = base_ty_res.inner_with(&module.types);
                     let base_ty_handle = match *resolved {
-                        TypeInner::Pointer { base, space: _ } => {
+                        TypeInner::Pointer { base, class: _ } => {
                             resolved = &module.types[base].inner;
                             Some(base)
                         }
@@ -1629,7 +1621,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     "float",
                     coordinate,
                     array_index,
-                    None,
+                    MipLevelCoordinate::NotApplicable,
                     module,
                     func_ctx,
                 )?;
@@ -1694,25 +1686,42 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 image,
                 coordinate,
                 array_index,
-                sample,
-                level,
+                index,
             } => {
                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
+                let (ms, storage) = match *func_ctx.info[image].ty.inner_with(&module.types) {
+                    TypeInner::Image { class, .. } => match class {
+                        crate::ImageClass::Sampled { multi, .. }
+                        | crate::ImageClass::Depth { multi } => (multi, false),
+                        crate::ImageClass::Storage { .. } => (false, true),
+                    },
+                    _ => (false, false),
+                };
+
                 self.write_expr(module, image, func_ctx)?;
                 write!(self.out, ".Load(")?;
+
+                let mip_level = if ms || storage {
+                    MipLevelCoordinate::NotApplicable
+                } else {
+                    match index {
+                        Some(expr) => MipLevelCoordinate::Expression(expr),
+                        None => MipLevelCoordinate::Zero,
+                    }
+                };
 
                 self.write_texture_coordinates(
                     "int",
                     coordinate,
                     array_index,
-                    level,
+                    mip_level,
                     module,
                     func_ctx,
                 )?;
 
-                if let Some(sample) = sample {
+                if ms {
                     write!(self.out, ", ")?;
-                    self.write_expr(module, sample, func_ctx)?;
+                    self.write_expr(module, index.unwrap(), func_ctx)?;
                 }
 
                 // close bracket for Load function
@@ -1724,8 +1733,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     write!(self.out, ".x")?;
                 }
             }
-            Expression::GlobalVariable(handle) => match module.global_variables[handle].space {
-                crate::AddressSpace::Storage { .. } => {}
+            Expression::GlobalVariable(handle) => match module.global_variables[handle].class {
+                crate::StorageClass::Storage { .. } => {}
                 _ => {
                     let name = &self.names[&NameKey::GlobalVariable(handle)];
                     write!(self.out, "{}", name)?;
@@ -1738,9 +1747,9 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 match func_ctx.info[pointer]
                     .ty
                     .inner_with(&module.types)
-                    .pointer_space()
+                    .pointer_class()
                 {
-                    Some(crate::AddressSpace::Storage { .. }) => {
+                    Some(crate::StorageClass::Storage { .. }) => {
                         let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
                         let result_ty = func_ctx.info[expr].ty.clone();
                         self.write_storage_load(module, var_handle, result_ty, func_ctx)?;
@@ -1751,21 +1760,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 }
             }
             Expression::Unary { op, expr } => {
-                use crate::{ScalarKind as Sk, UnaryOperator as Uo};
                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-operators#unary-operators
                 let op_str = match op {
-                    Uo::Negate => "-",
-                    Uo::Not => match *func_ctx.info[expr].ty.inner_with(&module.types) {
-                        TypeInner::Scalar { kind: Sk::Sint, .. } => "~",
-                        TypeInner::Scalar { kind: Sk::Uint, .. } => "~",
-                        TypeInner::Scalar { kind: Sk::Bool, .. } => "!",
-                        ref other => {
-                            return Err(Error::Custom(format!(
-                                "Cannot apply not to type {:?}",
-                                other
-                            )))
-                        }
-                    },
+                    crate::UnaryOperator::Negate => "-",
+                    crate::UnaryOperator::Not => "!",
                 };
                 write!(self.out, "{}", op_str)?;
                 self.write_expr(module, expr, func_ctx)?;
@@ -1948,8 +1946,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     _ => unreachable!(),
                 };
 
-                let storage_access = match var.space {
-                    crate::AddressSpace::Storage { access } => access,
+                let storage_access = match var.class {
+                    crate::StorageClass::Storage { access } => access,
                     _ => crate::StorageAccess::default(),
                 };
                 let wrapped_array_length = WrappedArrayLength {
