@@ -135,15 +135,14 @@ struct LargeNonTrivial {
 TEST(RoboCaller, LargeNonTrivialTest) {
   RoboCaller<int&> c;
   int i = 0;
-  static_assert(sizeof(LargeNonTrivial) > 16, "");
+  static_assert(sizeof(LargeNonTrivial) > UntypedFunction::kInlineStorageSize,
+                "");
   c.AddReceiver(LargeNonTrivial());
   c.Send(i);
 
   EXPECT_EQ(i, 1);
 }
 
-/* sizeof(LargeTrivial) = 20bytes which is greater than
- * the size check (16bytes) of the CSC library */
 struct LargeTrivial {
   int a[17];
   void operator()(int& x) { x = 1; }
@@ -154,7 +153,7 @@ TEST(RoboCaller, LargeTrivial) {
   LargeTrivial lt;
   int i = 0;
 
-  static_assert(sizeof(lt) > 16, "");
+  static_assert(sizeof(lt) > UntypedFunction::kInlineStorageSize, "");
   c.AddReceiver(lt);
   c.Send(i);
 
