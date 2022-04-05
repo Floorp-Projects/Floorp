@@ -23,4 +23,6 @@ add_task(async function test_policy_disable_telemetry() {
     false,
     "Telemetry archive should be disabled."
   );
+
+  await testPageBlockedByPolicy("about:telemetry");
 });

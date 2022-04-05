@@ -166,7 +166,7 @@ class FunctionBox;
   F(ClassField, ClassField)                                      \
   F(ClassMemberList, ListNode)                                   \
   F(ClassNames, ClassNames)                                      \
-  F(NewTargetExpr, BinaryNode)                                   \
+  F(NewTargetExpr, NewTargetNode)                                \
   F(PosHolder, NullaryNode)                                      \
   F(SuperBase, UnaryNode)                                        \
   F(SuperCallExpr, BinaryNode)                                   \
@@ -619,6 +619,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(PrivateMemberAccess, PrivateMemberAccessType, asPrivateMemberAccess) \
   MACRO(OptionalPrivateMemberAccess, OptionalPrivateMemberAccessType,        \
         asOptionalPrivateMemberAccess)                                       \
+  MACRO(NewTargetNode, NewTargetNodeType, asNewTargetNode)                   \
   MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
                                                                              \
   MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
@@ -2120,6 +2121,24 @@ class OptionalPrivateMemberAccess : public PrivateMemberAccessBase {
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::OptionalPrivateMemberExpr);
   }
+};
+
+class NewTargetNode : public TernaryNode {
+ public:
+  NewTargetNode(NullaryNode* newHolder, NullaryNode* targetHolder,
+                NameNode* newTargetName)
+      : TernaryNode(ParseNodeKind::NewTargetExpr, newHolder, targetHolder,
+                    newTargetName) {}
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::NewTargetExpr);
+    MOZ_ASSERT_IF(match, node.is<TernaryNode>());
+    return match;
+  }
+
+  auto* newHolder() const { return &kid1()->as<NullaryNode>(); }
+  auto* targetHolder() const { return &kid2()->as<NullaryNode>(); }
+  auto* newTargetName() const { return &kid3()->as<NameNode>(); }
 };
 
 /*

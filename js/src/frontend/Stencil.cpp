@@ -3486,6 +3486,9 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::HasMappedArgsObj:
           json.value("HasMappedArgsObj");
           break;
+        case ImmutableScriptFlagsEnum::FunctionHasNewTargetBinding:
+          json.value("FunctionHasNewTargetBinding");
+          break;
         default:
           json.value("Unknown(%x)", i);
           break;

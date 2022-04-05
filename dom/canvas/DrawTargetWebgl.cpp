@@ -658,6 +658,7 @@ already_AddRefed<DataSourceSurface> DrawTargetWebgl::ReadSnapshot() {
   if (!PrepareContext(false)) {
     return nullptr;
   }
+  mProfile.OnReadback();
   return mSharedContext->ReadSnapshot();
 }
 
@@ -1228,6 +1229,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
   // Now try to actually draw the pattern...
   switch (aPattern.GetType()) {
     case PatternType::COLOR: {
+      mCurrentTarget->mProfile.OnUncachedDraw();
       auto color = static_cast<const ColorPattern&>(aPattern).mColor;
       if (((color.a * aOptions.mAlpha == 1.0f &&
             aOptions.mCompositionOp == CompositionOp::OP_OVER) ||
@@ -1345,6 +1347,8 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       } else if ((tex = GetCompatibleSnapshot(surfacePattern.mSurface))) {
         backingSize = surfacePattern.mSurface->GetSize();
         bounds = IntRect(offset, texSize);
+        // Count reusing a snapshot texture (no readback) as a cache hit.
+        mCurrentTarget->mProfile.OnCacheHit();
       } else {
         // If we get here, we need a data surface for a texture upload.
         data = surfacePattern.mSurface->GetDataSurface();
@@ -1479,6 +1483,11 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (data) {
         UploadSurface(data, format, IntRect(offset, texSize), bounds.TopLeft(),
                       texSize == backingSize);
+        // Signal that we had to upload new data to the texture cache.
+        mCurrentTarget->mProfile.OnCacheMiss();
+      } else {
+        // Signal that we are reusing data from the texture cache.
+        mCurrentTarget->mProfile.OnCacheHit();
       }
 
       // Set up the texture coordinate matrix to map from the input rectangle to
@@ -2427,6 +2436,8 @@ void DrawTargetWebgl::ReadIntoSkia() {
       // and then copying that to Skia.
       mSkia->CopySurface(snapshot, GetRect(), IntPoint(0, 0));
     }
+    // Signal that we've hit a complete software fallback.
+    mProfile.OnFallback();
   }
   mSkiaValid = true;
   // The Skia data is flat after reading, so disable any layering.
@@ -2486,6 +2497,47 @@ bool DrawTargetWebgl::FlushFromSkia() {
   return true;
 }
 
+void DrawTargetWebgl::UsageProfile::BeginFrame() {
+  // Reset the usage profile counters for the new frame.
+  mFallbacks = 0;
+  mLayers = 0;
+  mCacheMisses = 0;
+  mCacheHits = 0;
+  mUncachedDraws = 0;
+  mReadbacks = 0;
+}
+
+void DrawTargetWebgl::UsageProfile::EndFrame() {
+  bool failed = false;
+  // If we hit a complete fallback to software rendering, or if cache misses
+  // were more than cutoff ratio of all requests, then we consider the frame as
+  // having failed performance profiling.
+  float cacheRatio =
+      StaticPrefs::gfx_canvas_accelerated_profile_cache_miss_ratio();
+  if (mFallbacks > 0 ||
+      mCacheMisses + mReadbacks > cacheRatio * (mCacheMisses + mCacheHits +
+                                                mUncachedDraws + mReadbacks)) {
+    failed = true;
+  }
+  if (failed) {
+    ++mFailedFrames;
+  }
+  ++mFrameCount;
+}
+
+bool DrawTargetWebgl::UsageProfile::RequiresRefresh() const {
+  // If we've rendered at least the required number of frames for a profile and
+  // more than the cutoff ratio of frames did not meet performance criteria,
+  // then we should stop using an accelerated canvas.
+  uint32_t profileFrames = StaticPrefs::gfx_canvas_accelerated_profile_frames();
+  if (!profileFrames || mFrameCount < profileFrames) {
+    return false;
+  }
+  float failRatio =
+      StaticPrefs::gfx_canvas_accelerated_profile_fallback_ratio();
+  return mFailedFrames > failRatio * mFrameCount;
+}
+
 // For use within CanvasRenderingContext2D, called on BorrowDrawTarget.
 void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
   if (mNeedsPresent) {
@@ -2501,10 +2553,12 @@ void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
       }
     }
   }
+  mProfile.BeginFrame();
 }
 
 // For use within CanvasRenderingContext2D, called on ReturnDrawTarget.
 void DrawTargetWebgl::EndFrame() {
+  mProfile.EndFrame();
   //  Ensure we're not somehow using more than the allowed texture memory.
   mSharedContext->PruneTextureMemory();
   // Signal that we're done rendering the frame in case no present occurs.

@@ -84,13 +84,8 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   } else {
     numActualArgs = 0;
     constructing = false;
-    if (script->isDirectEvalInFunction()) {
-      maxArgc = 1;
-      maxArgv = state.asExecute()->addressOfNewTarget();
-    } else {
-      maxArgc = 0;
-      maxArgv = nullptr;
-    }
+    maxArgc = 0;
+    maxArgv = nullptr;
     envChain = state.asExecute()->environmentChain();
     calleeToken = CalleeToToken(state.script());
   }

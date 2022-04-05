@@ -31,7 +31,7 @@ const FOO_FAKE_FEATURE_MANIFEST = {
   isEarlyStartup: true,
   variables: {
     remoteValue: {
-      type: "boolean",
+      type: "int",
     },
     enabled: {
       type: "boolean",
@@ -43,7 +43,7 @@ const BAR_FAKE_FEATURE_MANIFEST = {
   isEarlyStartup: true,
   variables: {
     remoteValue: {
-      type: "boolean",
+      type: "int",
     },
     enabled: {
       type: "boolean",

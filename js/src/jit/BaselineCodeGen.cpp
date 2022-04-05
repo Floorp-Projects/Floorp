@@ -2630,31 +2630,6 @@ bool BaselineCodeGen<Handler>::emit_Lambda() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_LambdaArrow() {
-  // Keep pushed newTarget in R0.
-  frame.popRegsAndSync(1);
-
-  prepareVMCall();
-  masm.loadPtr(frame.addressOfEnvironmentChain(), R2.scratchReg());
-
-  pushArg(R0);
-  pushArg(R2.scratchReg());
-  pushScriptGCThingArg(ScriptGCThingType::Function, R0.scratchReg(),
-                       R1.scratchReg());
-
-  using Fn =
-      JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
-  if (!callVM<Fn, js::LambdaArrow>()) {
-    return false;
-  }
-
-  // Box and push return value.
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SetFunName() {
   frame.popRegsAndSync(2);
 
@@ -4250,7 +4225,31 @@ void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
 }
 
 template <typename Handler>
-void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
+bool BaselineCodeGen<Handler>::emit_NewTarget() {
+  MOZ_ASSERT_IF(handler.maybeFunction(), !handler.maybeFunction()->isArrow());
+
+  frame.syncStack(0);
+
+#ifdef DEBUG
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  Label isFunction;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &isFunction);
+  masm.assumeUnreachable("Unexpected non-function script");
+  masm.bind(&isFunction);
+
+  Label notArrow;
+  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+  masm.branchFunctionKind(Assembler::NotEqual,
+                          FunctionFlags::FunctionKind::Arrow, scratch1,
+                          scratch2, &notArrow);
+  masm.assumeUnreachable("Unexpected arrow function");
+  masm.bind(&notArrow);
+#endif
+
   // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
   Label notConstructing, done;
   masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
@@ -4277,68 +4276,6 @@ void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
 
   masm.bind(&done);
   frame.push(R0);
-}
-
-template <>
-bool BaselineCompilerCodeGen::emit_NewTarget() {
-  if (handler.script()->isForEval()) {
-    frame.pushEvalNewTarget();
-    return true;
-  }
-
-  MOZ_ASSERT(handler.function());
-  frame.syncStack(0);
-
-  if (handler.function()->isArrow()) {
-    // Arrow functions store their |new.target| value in an
-    // extended slot.
-    Register scratch = R0.scratchReg();
-    masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
-    masm.loadValue(
-        Address(scratch, FunctionExtended::offsetOfArrowNewTargetSlot()), R0);
-    frame.push(R0);
-    return true;
-  }
-
-  emitPushNonArrowFunctionNewTarget();
-  return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_NewTarget() {
-  Register scratch1 = R0.scratchReg();
-  Register scratch2 = R1.scratchReg();
-
-  Label isFunction, done;
-  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
-  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
-                     &isFunction);
-  {
-    // Case 1: eval.
-    frame.pushEvalNewTarget();
-    masm.jump(&done);
-  }
-
-  masm.bind(&isFunction);
-
-  Label notArrow;
-  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-  masm.branchFunctionKind(Assembler::NotEqual,
-                          FunctionFlags::FunctionKind::Arrow, scratch1,
-                          scratch2, &notArrow);
-  {
-    // Case 2: arrow function.
-    masm.pushValue(
-        Address(scratch1, FunctionExtended::offsetOfArrowNewTargetSlot()));
-    masm.jump(&done);
-  }
-
-  masm.bind(&notArrow);
-
-  // Case 3: non-arrow function.
-  emitPushNonArrowFunctionNewTarget();
-
-  masm.bind(&done);
   return true;
 }
 

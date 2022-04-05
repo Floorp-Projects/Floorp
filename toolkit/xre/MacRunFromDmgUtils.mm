@@ -38,8 +38,7 @@
 // https://developer.apple.com/documentation/iokit
 // https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/
 
-namespace mozilla {
-namespace MacRunFromDmgUtils {
+namespace mozilla::MacRunFromDmgUtils {
 
 /**
  * Opens a dialog to ask the user whether the existing app in the Applications
@@ -322,7 +321,7 @@ bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
 
 // Note: both arguments are expected to contain the app name (to end with
 // '.app').
-static bool InstallFromDmg(NSString* aBundlePath, NSString* aDestPath) {
+static bool InstallFromPath(NSString* aBundlePath, NSString* aDestPath) {
   bool installSuccessful = false;
   NSFileManager* fileManager = [NSFileManager defaultManager];
   if ([fileManager copyItemAtPath:aBundlePath toPath:aDestPath error:nil]) {
@@ -456,15 +455,24 @@ bool IsAppRunningFromDmg() {
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
-bool MaybeInstallFromDmgAndRelaunch() {
+bool MaybeInstallAndRelaunch() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   @autoreleasepool {
     bool isFromDmg = IsAppRunningFromDmg();
+    bool isTranslocated = false;
+    if (!isFromDmg) {
+      NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+      if ([bundlePath containsString:@"/AppTranslocation/"]) {
+        isTranslocated = true;
+      }
+    }
 
     Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_DMG, isFromDmg);
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_APP_TRANSLOCATED_LOCATION,
+                         isTranslocated);
 
-    if (!isFromDmg) {
+    if (!isFromDmg && !isTranslocated) {
       if (getenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG")) {
         unsetenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG");
         glean::startup::run_from_dmg_install_outcome.Get("installed_and_relaunched"_ns).Set(true);
@@ -498,6 +506,7 @@ bool MaybeInstallFromDmgAndRelaunch() {
     // a more sophisticated user intentionally running from .dmg.
     if ([fileManager fileExistsAtPath:destPath]) {
       if (AskUserIfWeShouldLaunchExistingInstall()) {
+        StripQuarantineBit(destPath);
         LaunchInstalledApp(destPath);
         glean::startup::run_from_dmg_install_outcome.Get("user_accepted_launch_existing"_ns)
             .Set(true);
@@ -513,7 +522,7 @@ bool MaybeInstallFromDmgAndRelaunch() {
       return false;
     }
 
-    if (!InstallFromDmg(bundlePath, destPath)) {
+    if (!InstallFromPath(bundlePath, destPath)) {
       ShowInstallFailedDialog();
       return false;
     }
@@ -526,5 +535,4 @@ bool MaybeInstallFromDmgAndRelaunch() {
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
-}  // namespace MacRunFromDmgUtils
-}  // namespace mozilla
+}  // namespace mozilla::MacRunFromDmgUtils

@@ -115,6 +115,7 @@ add_task(async function test_v3_action_context_menu() {
 
       browser.contextMenus.create(
         {
+          id: "open_action",
           title: "open_action",
           contexts: ["all"],
           command: "_execute_action",

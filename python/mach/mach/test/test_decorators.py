@@ -101,10 +101,8 @@ def test_register_command_sets_up_class_at_runtime(registrar):
             "",
             virtualenv_name,
             virtualenv_name,
-            MozSiteMetadata(
-                0, "mach", SitePackagesSource.VENV, SitePackagesSource.VENV, "", ""
-            ),
-            SitePackagesSource.VENV,
+            MozSiteMetadata(0, "mach", SitePackagesSource.VENV, "", ""),
+            True,
             MachEnvRequirements(),
         )
 

@@ -306,6 +306,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetBrowserId(GetBrowserId());
   txn.SetHistoryID(GetHistoryID());
   txn.SetExplicitActive(GetExplicitActive());
+  txn.SetEmbedderColorScheme(GetEmbedderColorScheme());
   txn.SetHasRestoreData(GetHasRestoreData());
   txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
   // As this is a different BrowsingContext, set InitialSandboxFlags to the

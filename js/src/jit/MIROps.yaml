@@ -854,16 +854,6 @@
   result_type: Value
   possibly_calls: true
 
-# Load an arrow function's |new.target| value.
-- name: ArrowNewTarget
-  operands:
-    callee: Object
-  result_type: Value
-  movable: true
-  congruent_to: if_operands_equal
-  # An arrow function's lexical |this| value is immutable.
-  alias_set: none
-
 - name: Phi
   gen_boilerplate: false
 
@@ -1004,9 +994,6 @@
   result_type: Object
 
 - name: Lambda
-  gen_boilerplate: false
-
-- name: LambdaArrow
   gen_boilerplate: false
 
 - name: FunctionWithProto

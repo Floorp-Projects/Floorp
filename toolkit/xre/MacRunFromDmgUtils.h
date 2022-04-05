@@ -9,8 +9,7 @@
 #ifndef MacRunFromDmgUtils_h_
 #define MacRunFromDmgUtils_h_
 
-namespace mozilla {
-namespace MacRunFromDmgUtils {
+namespace mozilla::MacRunFromDmgUtils {
 
 /**
  * Returns true if the app is running from the read-only filesystem of a
@@ -20,16 +19,15 @@ namespace MacRunFromDmgUtils {
 bool IsAppRunningFromDmg();
 
 /**
- * Checks whether the app is running from a read-only .dmg image and, if so,
- * asks the user for permission before attempting to install the app and launch
- * it.
+ * Checks whether the app is running from a read-only .dmg image or a read-only
+ * app translocated location and, if so, asks the user for permission before
+ * attempting to install the app and launch it.
  *
  * Returns true if the app has been installed and relaunched, in which case
  * this instance of the app should exit.
  */
-bool MaybeInstallFromDmgAndRelaunch();
+bool MaybeInstallAndRelaunch();
 
-}  // namespace MacRunFromDmgUtils
-}  // namespace mozilla
+}  // namespace mozilla::MacRunFromDmgUtils
 
 #endif

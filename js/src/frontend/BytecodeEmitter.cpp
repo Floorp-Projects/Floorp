@@ -1100,8 +1100,14 @@ restart:
       *answer = sc->needsThisTDZChecks();
       return true;
 
+    // |new.target| doesn't have any side-effects.
+    case ParseNodeKind::NewTargetExpr: {
+      MOZ_ASSERT(pn->is<NewTargetNode>());
+      *answer = false;
+      return true;
+    }
+
     // Trivial binary nodes with more token pos holders.
-    case ParseNodeKind::NewTargetExpr:
     case ParseNodeKind::ImportMetaExpr: {
       MOZ_ASSERT(pn->as<BinaryNode>().left()->isKind(ParseNodeKind::PosHolder));
       MOZ_ASSERT(
@@ -1661,15 +1667,50 @@ bool BytecodeEmitter::emitSuperBase() {
   return emit1(JSOp::SuperBase);
 }
 
-void BytecodeEmitter::reportNeedMoreArgsError(ParseNode* pn,
-                                              const char* errorName,
-                                              const char* requiredArgs,
-                                              const char* pluralizer,
-                                              const ListNode* argsList) {
+bool BytecodeEmitter::ensureAtLeastArgs(CallNode* callNode,
+                                        uint32_t requiredArgs) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+  if (argsList->count() < requiredArgs) {
+    reportNeedMoreArgsError(callNode, requiredArgs);
+    return false;
+  }
+  return true;
+}
+
+bool BytecodeEmitter::ensureArgs(CallNode* callNode, uint32_t requiredArgs) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+  if (argsList->count() != requiredArgs) {
+    reportNeedMoreArgsError(callNode, requiredArgs);
+    return false;
+  }
+  return true;
+}
+
+static const char* SelfHostedCallFunctionName(TaggedParserAtomIndex name) {
+  if (name.isWellKnownAtomId()) {
+    auto atomId = name.toWellKnownAtomId();
+    return GetWellKnownAtomInfo(atomId).content;
+  }
+  MOZ_CRASH("Unknown self-hosted call function name");
+}
+
+void BytecodeEmitter::reportNeedMoreArgsError(CallNode* callNode,
+                                              uint32_t requiredArgs) {
+  NameNode* calleeNode = &callNode->left()->as<NameNode>();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  const char* errorName = SelfHostedCallFunctionName(calleeNode->name());
+
+  char requiredArgsStr[40];
+  SprintfLiteral(requiredArgsStr, "%u", requiredArgs);
+
+  const char* pluralizer = requiredArgs > 1 ? "s" : "";
+
   char actualArgsStr[40];
   SprintfLiteral(actualArgsStr, "%u", argsList->count());
-  reportError(pn, JSMSG_MORE_ARGS_NEEDED, errorName, requiredArgs, pluralizer,
-              actualArgsStr);
+
+  reportError(callNode, JSMSG_MORE_ARGS_NEEDED, errorName, requiredArgsStr,
+              pluralizer, actualArgsStr);
 }
 
 void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
@@ -6188,6 +6229,32 @@ bool BytecodeEmitter::emitCheckDerivedClassConstructorReturn() {
   return true;
 }
 
+bool BytecodeEmitter::emitNewTarget() {
+  MOZ_ASSERT(sc->allowNewTarget());
+
+  if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+    //              [stack] NEW.TARGET
+    return false;
+  }
+  return true;
+}
+
+bool BytecodeEmitter::emitNewTarget(NewTargetNode* pn) {
+  MOZ_ASSERT(pn->newTargetName()->isName(
+      TaggedParserAtomIndex::WellKnown::dotNewTarget()));
+
+  return emitNewTarget();
+}
+
+bool BytecodeEmitter::emitNewTarget(CallNode* pn) {
+  MOZ_ASSERT(pn->callOp() == JSOp::SuperCall ||
+             pn->callOp() == JSOp::SpreadSuperCall);
+
+  // The parser is responsible for marking the "new.target" binding as being
+  // implicitly used in super() calls.
+  return emitNewTarget();
+}
+
 bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
     return false;
@@ -7292,21 +7359,6 @@ bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
   return true;
 }
 
-static const char* SelfHostedCallFunctionName(TaggedParserAtomIndex name,
-                                              JSContext* cx) {
-  if (name == TaggedParserAtomIndex::WellKnown::callFunction()) {
-    return "callFunction";
-  }
-  if (name == TaggedParserAtomIndex::WellKnown::callContentFunction()) {
-    return "callContentFunction";
-  }
-  if (name == TaggedParserAtomIndex::WellKnown::constructContentFunction()) {
-    return "constructContentFunction";
-  }
-
-  MOZ_CRASH("Unknown self-hosted call function name");
-}
-
 bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   // Special-casing of callFunction to emit bytecode that directly
   // invokes the callee with the correct |this| object and arguments.
@@ -7320,18 +7372,12 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   NameNode* calleeNode = &callNode->left()->as<NameNode>();
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  const char* errorName = SelfHostedCallFunctionName(calleeNode->name(), cx);
-
-  if (argsList->count() < 2) {
-    reportNeedMoreArgsError(calleeNode, errorName, "2", "s", argsList);
+  if (!ensureAtLeastArgs(callNode, 2)) {
     return false;
   }
 
   JSOp callOp = callNode->callOp();
-  if (callOp != JSOp::Call) {
-    reportError(callNode, JSMSG_NOT_CONSTRUCTOR, errorName);
-    return false;
-  }
+  MOZ_ASSERT(callOp == JSOp::Call);
 
   bool constructing =
       calleeNode->name() ==
@@ -7389,12 +7435,11 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   return true;
 }
 
-bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedResumeGenerator(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'return')
-  if (argsList->count() != 3) {
-    reportNeedMoreArgsError(callNode, "resumeGenerator", "3", "s", argsList);
+  if (!ensureArgs(callNode, 3)) {
     return false;
   }
 
@@ -7444,11 +7489,10 @@ bool BytecodeEmitter::emitSelfHostedForceInterpreter() {
   return true;
 }
 
-bool BytecodeEmitter::emitSelfHostedAllowContentIter(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedAllowContentIter(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "allowContentIter", "1", "", argsList);
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
@@ -7456,7 +7500,7 @@ bool BytecodeEmitter::emitSelfHostedAllowContentIter(BinaryNode* callNode) {
   return emitTree(argsList->head());
 }
 
-bool BytecodeEmitter::emitSelfHostedDefineDataProperty(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedDefineDataProperty(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   // Only optimize when 3 arguments are passed.
@@ -7483,11 +7527,10 @@ bool BytecodeEmitter::emitSelfHostedDefineDataProperty(BinaryNode* callNode) {
   return emit1(JSOp::InitElem);
 }
 
-bool BytecodeEmitter::emitSelfHostedHasOwn(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedHasOwn(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 2) {
-    reportNeedMoreArgsError(callNode, "hasOwn", "2", "s", argsList);
+  if (!ensureArgs(callNode, 2)) {
     return false;
   }
 
@@ -7504,11 +7547,10 @@ bool BytecodeEmitter::emitSelfHostedHasOwn(BinaryNode* callNode) {
   return emit1(JSOp::HasOwn);
 }
 
-bool BytecodeEmitter::emitSelfHostedGetPropertySuper(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedGetPropertySuper(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 3) {
-    reportNeedMoreArgsError(callNode, "getPropertySuper", "3", "s", argsList);
+  if (!ensureArgs(callNode, 3)) {
     return false;
   }
 
@@ -7531,11 +7573,10 @@ bool BytecodeEmitter::emitSelfHostedGetPropertySuper(BinaryNode* callNode) {
   return emitElemOpBase(JSOp::GetElemSuper);
 }
 
-bool BytecodeEmitter::emitSelfHostedToNumeric(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedToNumeric(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "ToNumeric", "1", "", argsList);
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
@@ -7548,11 +7589,10 @@ bool BytecodeEmitter::emitSelfHostedToNumeric(BinaryNode* callNode) {
   return emit1(JSOp::ToNumeric);
 }
 
-bool BytecodeEmitter::emitSelfHostedToString(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedToString(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "ToString", "1", "", argsList);
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
@@ -7566,13 +7606,10 @@ bool BytecodeEmitter::emitSelfHostedToString(BinaryNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
-    BinaryNode* callNode, bool isConstructor) {
+    CallNode* callNode, bool isConstructor) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 1) {
-    const char* name =
-        isConstructor ? "GetBuiltinConstructor" : "GetBuiltinPrototype";
-    reportNeedMoreArgsError(callNode, name, "1", "", argsList);
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
@@ -7602,13 +7639,12 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
   return emitBuiltinObject(kind);
 }
 
-bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructor(
-    BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructor(CallNode* callNode) {
   return emitSelfHostedGetBuiltinConstructorOrPrototype(
       callNode, /* isConstructor = */ true);
 }
 
-bool BytecodeEmitter::emitSelfHostedGetBuiltinPrototype(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedGetBuiltinPrototype(CallNode* callNode) {
   return emitSelfHostedGetBuiltinConstructorOrPrototype(
       callNode, /* isConstructor = */ false);
 }
@@ -7626,11 +7662,10 @@ JS::SymbolCode ParserAtomToSymbolCode(TaggedParserAtomIndex atom) {
   return JS::SymbolCode::Limit;
 }
 
-bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "GetBuiltinSymbol", "1", "", argsList);
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
@@ -7655,7 +7690,7 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(BinaryNode* callNode) {
 }
 
 #ifdef DEBUG
-bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(BinaryNode* callNode,
+bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(CallNode* callNode,
                                                       ParseNode* node) {
   // The function argument is expected to be a simple binding/function name.
   // Eg. `function foo() { }; SpecialIntrinsic(foo)`
@@ -7683,16 +7718,13 @@ bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(BinaryNode* callNode,
 #endif
 
 bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
-    BinaryNode* callNode) {
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-
-  if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "SetIsInlinableLargeFunction", "1", "",
-                            argsList);
+    CallNode* callNode) {
+  if (!ensureArgs(callNode, 1)) {
     return false;
   }
 
 #ifdef DEBUG
+  ListNode* argsList = &callNode->right()->as<ListNode>();
   if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {
     return false;
   }
@@ -7705,11 +7737,10 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
   return emit1(JSOp::Undefined);
 }
 
-bool BytecodeEmitter::emitSelfHostedSetCanonicalName(BinaryNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedSetCanonicalName(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 2) {
-    reportNeedMoreArgsError(callNode, "SetCanonicalName", "2", "s", argsList);
+  if (!ensureArgs(callNode, 2)) {
     return false;
   }
 
@@ -7734,13 +7765,10 @@ bool BytecodeEmitter::emitSelfHostedSetCanonicalName(BinaryNode* callNode) {
 }
 
 #ifdef DEBUG
-bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
-    BinaryNode* callNode) {
+bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 2) {
-    reportNeedMoreArgsError(callNode, "UnsafeGetReservedSlot", "2", "",
-                            argsList);
+  if (!ensureArgs(callNode, 2)) {
     return false;
   }
 
@@ -7757,13 +7785,10 @@ bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
   return true;
 }
 
-bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(
-    BinaryNode* callNode) {
+bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (argsList->count() != 3) {
-    reportNeedMoreArgsError(callNode, "UnsafeSetReservedSlot", "3", "",
-                            argsList);
+  if (!ensureArgs(callNode, 3)) {
     return false;
   }
 
@@ -8108,6 +8133,11 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
         return false;
       }
     }
+
+    if (!cone.emitSpreadArgumentsTestEnd()) {
+      //            [stack] CALLEE THIS ARR
+      return false;
+    }
   } else {
     if (!cone.prepareForSpreadArguments()) {
       //            [stack] CALLEE THIS
@@ -8191,10 +8221,10 @@ bool BytecodeEmitter::emitCallOrNew(
                 callNode->isKind(ParseNodeKind::TaggedTemplateExpr);
   ParseNode* calleeNode = callNode->left();
   ListNode* argsList = &callNode->right()->as<ListNode>();
-  bool isSpread = IsSpreadOp(callNode->callOp());
+  JSOp op = callNode->callOp();
 
   if (calleeNode->isKind(ParseNodeKind::Name) &&
-      emitterMode == BytecodeEmitter::SelfHosting && !isSpread) {
+      emitterMode == BytecodeEmitter::SelfHosting && op == JSOp::Call) {
     // Calls to "forceInterpreter", "callFunction",
     // "callContentFunction", or "resumeGenerator" in self-hosted
     // code generate inline bytecode.
@@ -8275,8 +8305,8 @@ bool BytecodeEmitter::emitCallOrNew(
     // Fall through
   }
 
-  JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
+  bool isSpread = IsSpreadOp(op);
   bool isOptimizableSpread = isSpread && argc == 1;
   bool isDefaultDerivedClassConstructor =
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor() &&
@@ -8298,6 +8328,23 @@ bool BytecodeEmitter::emitCallOrNew(
   if (!emitArguments(argsList, isCall, isSpread, cone)) {
     //              [stack] CALLEE THIS ARGS...
     return false;
+  }
+
+  // Push new.target for construct calls.
+  if (IsConstructOp(op)) {
+    if (op == JSOp::SuperCall || op == JSOp::SpreadSuperCall) {
+      if (!emitNewTarget(callNode)) {
+        //          [stack] CALLEE THIS ARGS.. NEW.TARGET
+        return false;
+      }
+    } else {
+      // Repush the callee as new.target
+      uint32_t effectiveArgc = isSpread ? 1 : argc;
+      if (!emitDupAt(effectiveArgc + 1)) {
+        //          [stack] CALLEE THIS ARGS.. CALLEE
+        return false;
+      }
+    }
   }
 
   ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
@@ -10763,11 +10810,11 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
           return false;
         }
         if (!bce->emit1(op)) {
-          //        [stack] THIS/ARGUMENTS
+          //        [stack] THIS/ARGUMENTS/NEW.TARGET
           return false;
         }
         if (!noe.emitAssignment()) {
-          //        [stack] THIS/ARGUMENTS
+          //        [stack] THIS/ARGUMENTS/NEW.TARGET
           return false;
         }
         if (!bce->emit1(JSOp::Pop)) {
@@ -10795,6 +10842,17 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
     if (!emitInitializeFunctionSpecialName(
             this, TaggedParserAtomIndex::WellKnown::dotThis(),
             JSOp::FunctionThis)) {
+      return false;
+    }
+  }
+
+  // Do nothing if the function doesn't have a new.target-binding (this happens
+  // for instance if it doesn't use new.target/eval or if it's an arrow
+  // function).
+  if (funbox->functionHasNewTargetBinding()) {
+    if (!emitInitializeFunctionSpecialName(
+            this, TaggedParserAtomIndex::WellKnown::dotNewTarget(),
+            JSOp::NewTarget)) {
       return false;
     }
   }
@@ -11723,7 +11781,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::NewTargetExpr:
-      if (!emit1(JSOp::NewTarget)) {
+      if (!emitNewTarget(&pn->as<NewTargetNode>())) {
         return false;
       }
       break;

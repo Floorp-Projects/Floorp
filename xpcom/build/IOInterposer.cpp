@@ -298,13 +298,13 @@ class MasterList {
   }
 
  private:
-  RefPtr<ObserverLists> mObserverLists;
+  RefPtr<ObserverLists> mObserverLists GUARDED_BY(mLock);
   // Note, we cannot use mozilla::Mutex here as the ObserverLists may be leaked
   // (We want to monitor IO during shutdown). Furthermore, as we may have to
   // unregister observers during shutdown an OffTheBooksMutex is not an option
   // either, as its base calls into sDeadlockDetector which may be nullptr
   // during shutdown.
-  mozilla::IOInterposer::Mutex mLock MOZ_UNANNOTATED;
+  mozilla::IOInterposer::Mutex mLock;
   // Flags tracking which operations are being observed
   mozilla::Atomic<mozilla::IOInterposeObserver::Operation,
                   mozilla::MemoryOrdering::Relaxed>

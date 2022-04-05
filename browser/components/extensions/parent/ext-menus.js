@@ -1189,7 +1189,7 @@ const menuTracker = {
   },
 };
 
-this.menusInternal = class extends ExtensionAPI {
+this.menusInternal = class extends ExtensionAPIPersistent {
   constructor(extension) {
     super(extension);
 
@@ -1213,6 +1213,98 @@ this.menusInternal = class extends ExtensionAPI {
     }
   }
 
+  PERSISTENT_EVENTS = {
+    onShown({ fire }) {
+      let { extension } = this;
+      let listener = (event, menuIds, contextData) => {
+        let info = {
+          menuIds,
+          contexts: Array.from(getMenuContexts(contextData)),
+        };
+
+        let nativeTab = contextData.tab;
+
+        // The menus.onShown event is fired before the user has consciously
+        // interacted with an extension, so we require permissions before
+        // exposing sensitive contextual data.
+        let contextUrl = contextData.inFrame
+          ? contextData.frameUrl
+          : contextData.pageUrl;
+        let includeSensitiveData =
+          (nativeTab &&
+            extension.tabManager.hasActiveTabPermission(nativeTab)) ||
+          (contextUrl && extension.allowedOrigins.matches(contextUrl));
+
+        addMenuEventInfo(info, contextData, extension, includeSensitiveData);
+
+        let tab = nativeTab && extension.tabManager.convert(nativeTab);
+        fire.sync(info, tab);
+      };
+      gOnShownSubscribers.get(extension).add(listener);
+      extension.on("webext-menu-shown", listener);
+      return {
+        unregister() {
+          const listeners = gOnShownSubscribers.get(extension);
+          listeners.delete(listener);
+          if (listeners.size === 0) {
+            gOnShownSubscribers.delete(extension);
+          }
+          extension.off("webext-menu-shown", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onHidden({ fire }) {
+      let { extension } = this;
+      let listener = () => {
+        fire.sync();
+      };
+      extension.on("webext-menu-hidden", listener);
+      return {
+        unregister() {
+          extension.off("webext-menu-hidden", listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    onClicked({ context, fire }) {
+      let { extension } = this;
+      let listener = async (event, info, nativeTab) => {
+        let { linkedBrowser } = nativeTab || tabTracker.activeTab;
+        let tab = nativeTab && extension.tabManager.convert(nativeTab);
+        if (fire.wakeup) {
+          // force the wakeup, thus the call to convert to get the context.
+          await fire.wakeup();
+          // If while waiting the tab disappeared we bail out.
+          if (
+            !linkedBrowser.ownerGlobal.gBrowser.getTabForBrowser(linkedBrowser)
+          ) {
+            Cu.reportError(
+              `menus.onClicked: target tab closed during background startup.`
+            );
+            return;
+          }
+        }
+        context.withPendingBrowser(linkedBrowser, () => fire.sync(info, tab));
+      };
+
+      extension.on("webext-menu-menuitem-click", listener);
+      return {
+        unregister() {
+          extension.off("webext-menu-menuitem-click", listener);
+        },
+        convert(_fire, _context) {
+          fire = _fire;
+          context = _context;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     let { extension } = context;
 
@@ -1223,61 +1315,17 @@ this.menusInternal = class extends ExtensionAPI {
 
       onShown: new EventManager({
         context,
+        module: "menusInternal",
+        event: "onShown",
         name: "menus.onShown",
-        register: fire => {
-          let listener = (event, menuIds, contextData) => {
-            let info = {
-              menuIds,
-              contexts: Array.from(getMenuContexts(contextData)),
-            };
-
-            let nativeTab = contextData.tab;
-
-            // The menus.onShown event is fired before the user has consciously
-            // interacted with an extension, so we require permissions before
-            // exposing sensitive contextual data.
-            let contextUrl = contextData.inFrame
-              ? contextData.frameUrl
-              : contextData.pageUrl;
-            let includeSensitiveData =
-              (nativeTab &&
-                extension.tabManager.hasActiveTabPermission(nativeTab)) ||
-              (contextUrl && extension.allowedOrigins.matches(contextUrl));
-
-            addMenuEventInfo(
-              info,
-              contextData,
-              extension,
-              includeSensitiveData
-            );
-
-            let tab = nativeTab && extension.tabManager.convert(nativeTab);
-            fire.sync(info, tab);
-          };
-          gOnShownSubscribers.get(extension).add(context);
-          extension.on("webext-menu-shown", listener);
-          return () => {
-            const contexts = gOnShownSubscribers.get(extension);
-            contexts.delete(context);
-            if (contexts.size === 0) {
-              gOnShownSubscribers.delete(extension);
-            }
-            extension.off("webext-menu-shown", listener);
-          };
-        },
+        extensionApi: this,
       }).api(),
       onHidden: new EventManager({
         context,
+        module: "menusInternal",
+        event: "onHidden",
         name: "menus.onHidden",
-        register: fire => {
-          let listener = () => {
-            fire.sync();
-          };
-          extension.on("webext-menu-hidden", listener);
-          return () => {
-            extension.off("webext-menu-hidden", listener);
-          };
-        },
+        extensionApi: this,
       }).api(),
     };
 
@@ -1286,6 +1334,20 @@ this.menusInternal = class extends ExtensionAPI {
       menus,
       menusInternal: {
         create: function(createProperties) {
+          // event pages require id
+          if (!extension.persistentBackground) {
+            if (!createProperties.id) {
+              throw new ExtensionError(
+                "menus.create requires an id for non-persistent background scripts."
+              );
+            }
+            if (gMenuMap.get(extension).has(createProperties.id)) {
+              throw new ExtensionError(
+                `The menu id ${createProperties.id} already exists in menus.create.`
+              );
+            }
+          }
+
           // Note that the id is required by the schema. If the addon did not set
           // it, the implementation of menus.create in the child should
           // have added it.
@@ -1316,21 +1378,10 @@ this.menusInternal = class extends ExtensionAPI {
 
         onClicked: new EventManager({
           context,
-          name: "menusInternal.onClicked",
-          register: fire => {
-            let listener = (event, info, nativeTab) => {
-              let { linkedBrowser } = nativeTab || tabTracker.activeTab;
-              let tab = nativeTab && extension.tabManager.convert(nativeTab);
-              context.withPendingBrowser(linkedBrowser, () =>
-                fire.sync(info, tab)
-              );
-            };
-
-            extension.on("webext-menu-menuitem-click", listener);
-            return () => {
-              extension.off("webext-menu-menuitem-click", listener);
-            };
-          },
+          module: "menusInternal",
+          event: "onClicked",
+          name: "menus.onClicked",
+          extensionApi: this,
         }).api(),
       },
     };

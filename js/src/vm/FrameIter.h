@@ -353,8 +353,6 @@ class FrameIter {
   // primitives).
   JS::Value thisArgument(JSContext* cx) const;
 
-  JS::Value newTarget() const;
-
   JS::Value returnValue() const;
   void setReturnValue(const JS::Value& v);
 

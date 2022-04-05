@@ -3447,7 +3447,27 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::ClassDecl:
       return classDefinition(&pn->as<ClassNode>(), true, dst);
 
-    case ParseNodeKind::NewTargetExpr:
+    case ParseNodeKind::NewTargetExpr: {
+      auto* node = &pn->as<NewTargetNode>();
+      ParseNode* firstNode = node->newHolder();
+      MOZ_ASSERT(firstNode->isKind(ParseNodeKind::PosHolder));
+      MOZ_ASSERT(node->pn_pos.encloses(firstNode->pn_pos));
+
+      ParseNode* secondNode = node->targetHolder();
+      MOZ_ASSERT(secondNode->isKind(ParseNodeKind::PosHolder));
+      MOZ_ASSERT(node->pn_pos.encloses(secondNode->pn_pos));
+
+      RootedValue firstIdent(cx);
+      RootedValue secondIdent(cx);
+
+      RootedAtom firstStr(cx, cx->names().new_);
+      RootedAtom secondStr(cx, cx->names().target);
+
+      return identifier(firstStr, &firstNode->pn_pos, &firstIdent) &&
+             identifier(secondStr, &secondNode->pn_pos, &secondIdent) &&
+             builder.metaProperty(firstIdent, secondIdent, &node->pn_pos, dst);
+    }
+
     case ParseNodeKind::ImportMetaExpr: {
       BinaryNode* node = &pn->as<BinaryNode>();
       ParseNode* firstNode = node->left();
@@ -3461,16 +3481,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       RootedValue firstIdent(cx);
       RootedValue secondIdent(cx);
 
-      RootedAtom firstStr(cx);
-      RootedAtom secondStr(cx);
-
-      if (node->getKind() == ParseNodeKind::NewTargetExpr) {
-        firstStr = cx->names().new_;
-        secondStr = cx->names().target;
-      } else {
-        firstStr = cx->names().import;
-        secondStr = cx->names().meta;
-      }
+      RootedAtom firstStr(cx, cx->names().import);
+      RootedAtom secondStr(cx, cx->names().meta);
 
       return identifier(firstStr, &firstNode->pn_pos, &firstIdent) &&
              identifier(secondStr, &secondNode->pn_pos, &secondIdent) &&

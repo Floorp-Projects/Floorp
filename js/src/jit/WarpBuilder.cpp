@@ -2628,14 +2628,7 @@ bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
 bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
   MOZ_ASSERT(script_->isFunction());
   MOZ_ASSERT(info().hasFunMaybeLazy());
-
-  if (scriptSnapshot()->isArrowFunction()) {
-    MDefinition* callee = getCallee();
-    MArrowNewTarget* ins = MArrowNewTarget::New(alloc(), callee);
-    current->add(ins);
-    current->push(ins);
-    return true;
-  }
+  MOZ_ASSERT(!scriptSnapshot()->isArrowFunction());
 
   if (inlineCallInfo()) {
     if (inlineCallInfo()->constructing()) {
@@ -2807,21 +2800,6 @@ bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
   MConstant* funConst = constant(ObjectValue(*fun));
 
   auto* ins = MLambda::New(alloc(), env, funConst);
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins, loc);
-}
-
-bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
-  MOZ_ASSERT(usesEnvironmentChain());
-
-  MDefinition* env = current->environmentChain();
-  MDefinition* newTarget = current->pop();
-
-  JSFunction* fun = loc.getFunction(script_);
-  MConstant* funConst = constant(ObjectValue(*fun));
-
-  auto* ins = MLambdaArrow::New(alloc(), env, newTarget, funConst);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);
