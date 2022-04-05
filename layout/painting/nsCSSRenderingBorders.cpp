@@ -3098,6 +3098,10 @@ void nsCSSBorderRenderer::DrawBorders() {
     }
     mOuterRect = ToRect(outerRect);
 
+    if (MOZ_UNLIKELY(!mDirtyRect.Intersects(mOuterRect))) {
+      return;
+    }
+
     gfxRect innerRect = ThebesRect(mInnerRect);
     gfxUtils::ConditionRect(innerRect);
     mInnerRect = ToRect(innerRect);
