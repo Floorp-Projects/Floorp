@@ -1585,9 +1585,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   void loadConstantDouble(double d, FloatRegister dest) {
+    // Note, for -0.0 this will turn into a pc-relative load from memory, not a
+    // `fmov + fneg` sequence.  The former is believed to be better, as gcc,
+    // clang, and vixl all choose it.
     Fmov(ARMFPRegister(dest, 64), d);
   }
   void loadConstantFloat32(float f, FloatRegister dest) {
+    // See comment in loadConstantDouble.
     Fmov(ARMFPRegister(dest, 32), f);
   }
 

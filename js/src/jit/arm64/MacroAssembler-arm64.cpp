@@ -3112,9 +3112,8 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister output) {
   ScratchDoubleScope scratch(*this);
 
-  // Double with only the sign bit set (= negative zero).
-  loadConstantDouble(0, scratch);
-  negateDouble(scratch);
+  // Double with only the sign bit set
+  loadConstantDouble(-0.0, scratch);
 
   if (lhs != output) {
     moveDouble(lhs, output);
@@ -3129,9 +3128,8 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
                                      FloatRegister output) {
   ScratchFloat32Scope scratch(*this);
 
-  // Float with only the sign bit set (= negative zero).
-  loadConstantFloat32(0, scratch);
-  negateFloat(scratch);
+  // Float with only the sign bit set
+  loadConstantFloat32(-0.0f, scratch);
 
   if (lhs != output) {
     moveFloat32(lhs, output);
