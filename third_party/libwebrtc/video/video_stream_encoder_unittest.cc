@@ -58,6 +58,7 @@ namespace webrtc {
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::AtLeast;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::Ge;
@@ -3950,9 +3951,9 @@ TEST_F(VideoStreamEncoderTest, CallsBitrateObserver) {
 
   // Called after a process interval.
   EXPECT_CALL(bitrate_observer, OnBitrateAllocationUpdated(expected_bitrate))
-      .Times(1);
+      .Times(AtLeast(3));
   const int64_t start_time_ms = CurrentTimeMs();
-  while (CurrentTimeMs() - start_time_ms < kProcessIntervalMs) {
+  while (CurrentTimeMs() - start_time_ms < 5 * kProcessIntervalMs) {
     video_source_.IncomingCapturedFrame(
         CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
     WaitForEncodedFrame(CurrentTimeMs());
