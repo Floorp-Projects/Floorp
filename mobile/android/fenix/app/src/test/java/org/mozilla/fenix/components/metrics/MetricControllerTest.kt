@@ -12,6 +12,7 @@ import io.mockk.verify
 import io.mockk.verifyAll
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
+import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
@@ -30,6 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.LoginDialog
+import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -442,6 +444,26 @@ class MetricControllerTest {
 
         itemsToEvents.forEach { (item, event) ->
             val fact = Fact(Component.FEATURE_PROMPTS, action, item)
+            controller.run {
+                fact.process()
+            }
+
+            assertEquals(true, event.testHasValue())
+            assertEquals(1, event.testGetValue().size)
+            assertEquals(null, event.testGetValue().single().extra)
+        }
+    }
+
+    @Test
+    fun `WHEN processing a FEATURE_MEDIA NOTIFICATION fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val itemsToEvents = listOf(
+            Action.PLAY to MediaNotification.play,
+            Action.PAUSE to MediaNotification.pause,
+        )
+
+        itemsToEvents.forEach { (action, event) ->
+            val fact = Fact(Component.FEATURE_MEDIA, action, MediaFacts.Items.NOTIFICATION)
             controller.run {
                 fact.process()
             }

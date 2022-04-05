@@ -37,6 +37,7 @@ import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
+import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
@@ -115,7 +116,13 @@ internal class ReleaseMetricController(
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.SAVE -> {
             LoginDialog.saved.record(NoExtras())
         }
-
+        Component.FEATURE_MEDIA to MediaFacts.Items.NOTIFICATION -> {
+            when (action) {
+                Action.PLAY -> MediaNotification.play.record(NoExtras())
+                Action.PAUSE -> MediaNotification.pause.record(NoExtras())
+                else -> Unit
+            }
+        }
         Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
             Events.toolbarMenuVisible.record(NoExtras())
         }
@@ -215,13 +222,6 @@ internal class ReleaseMetricController(
         Component.FEATURE_CUSTOMTABS == component && CustomTabsFacts.Items.CLOSE == item -> Event.CustomTabsClosed
         Component.FEATURE_CUSTOMTABS == component && CustomTabsFacts.Items.ACTION_BUTTON == item -> Event.CustomTabsActionTapped
 
-        Component.FEATURE_MEDIA == component && MediaFacts.Items.NOTIFICATION == item -> {
-            when (action) {
-                Action.PLAY -> Event.NotificationMediaPlay
-                Action.PAUSE -> Event.NotificationMediaPause
-                else -> null
-            }
-        }
         Component.FEATURE_MEDIA == component && MediaFacts.Items.STATE == item -> {
             when (action) {
                 Action.PLAY -> Event.MediaPlayState

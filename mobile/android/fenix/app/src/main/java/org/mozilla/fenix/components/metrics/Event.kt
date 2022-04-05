@@ -42,8 +42,6 @@ sealed class Event {
     object MediaStopState : Event()
     object MediaFullscreenState : Event()
     object MediaPictureInPictureState : Event()
-    object NotificationMediaPlay : Event()
-    object NotificationMediaPause : Event()
     object TopSiteOpenDefault : Event()
     object TopSiteOpenGoogle : Event()
     object TopSiteOpenBaidu : Event()
