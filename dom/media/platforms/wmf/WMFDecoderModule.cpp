@@ -16,7 +16,6 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
-#include "WMF.h"
 #include "WMFAudioMFTManager.h"
 #include "WMFMediaDataDecoder.h"
 #include "WMFVideoMFTManager.h"
@@ -55,8 +54,18 @@ static void MOZ_FORMAT_PRINTF(2, 3)
   LOG("%s", markerString.get());
 }
 
+static const GUID CLSID_CMSVPXDecMFT = {
+    0xe3aaf548,
+    0xc9a4,
+    0x4c6e,
+    {0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00}};
+static const GUID CLSID_CMSAACDecMFT = {
+    0x32D186A7,
+    0x218F,
+    0x4C75,
+    {0x88, 0x76, 0xDD, 0x77, 0x27, 0x3A, 0x89, 0x99}};
+
 static Atomic<bool> sDXVAEnabled(false);
-static Atomic<bool> sUsableVPXMFT(false);
 
 /* static */
 already_AddRefed<PlatformDecoderModule> WMFDecoderModule::Create() {
@@ -80,36 +89,7 @@ static bool IsRemoteAcceleratedCompositor(
          ident.mParentProcessType == GeckoProcessType_GPU;
 }
 
-static bool CanCreateMFTDecoder(const GUID& aCategory, const GUID& aInSubtype) {
-  const GUID outSubtype = [&]() {
-    if (aCategory == MFT_CATEGORY_VIDEO_DECODER) {
-      // H264 decoder MFT doesn't always support NV12
-      if (aInSubtype == MFVideoFormat_H264) {
-        return GUID_NULL;
-      }
-      return MFVideoFormat_NV12;
-    } else {
-      return MFAudioFormat_PCM;
-    }
-  }();
-
-  // The IMFTransform interface used by MFTDecoder is documented to require to
-  // run on an MTA thread.
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/ee892371(v=vs.85).aspx#components
-  // Note: our normal SharedThreadPool task queues are initialized to MTA, but
-  // the main thread (which calls in here from our CanPlayType implementation)
-  // is not.
-  bool canCreateDecoder = false;
-  mozilla::mscom::EnsureMTA([&]() -> void {
-    if (!wmf::MediaFoundationInitializer::HasInitialized()) {
-      return;
-    }
-    RefPtr<MFTDecoder> decoder(new MFTDecoder());
-    canCreateDecoder =
-        SUCCEEDED(decoder->Create(aCategory, aInSubtype, outSubtype));
-  });
-  return canCreateDecoder;
-}
+static EnumSet<WMFStreamType> sSupportedTypes;
 
 /* static */
 void WMFDecoderModule::Init() {
@@ -131,39 +111,43 @@ void WMFDecoderModule::Init() {
     sDXVAEnabled = !mozilla::BrowserTabsRemoteAutostart();
   }
 
-  // We have heavy logging below to help diagnose issue around hardware decoding
-  // failures. Due to these failures often relating to driver level problems
-  // they're hard to nail down, so we want lots of info. We may be able to relax
-  // this in future if we're not seeing such problems (see bug 1673007 for
-  // references to the bugs motivating this).
-  sDXVAEnabled = sDXVAEnabled && gfx::gfxVars::CanUseHardwareVideoDecoding();
-  bool testForVPx = gfx::gfxVars::CanUseHardwareVideoDecoding();
-  if (testForVPx && StaticPrefs::media_wmf_vp9_enabled_AtStartup()) {
-    gfx::WMFVPXVideoCrashGuard guard;
-    if (!guard.Crashed()) {
-      WmfDecoderModuleMarkerAndLog("WMFInit VPx Pending",
-                                   "Attempting to create MFT decoder for VPx");
-
-      sUsableVPXMFT =
-          CanCreateMFTDecoder(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP80) &&
-          CanCreateMFTDecoder(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP90);
-
-      WmfDecoderModuleMarkerAndLog("WMFInit VPx Initialized",
-                                   "CanCreateMFTDecoder returned %s for VPx",
-                                   sUsableVPXMFT ? "true" : "false");
-    } else {
-      WmfDecoderModuleMarkerAndLog(
-          "WMFInit VPx Failure",
-          "Will not use MFT VPx due to crash guard reporting a crash");
-    }
-  }
-
+  // We have heavy logging below to help diagnose issue around hardware
+  // decoding failures. Due to these failures often relating to driver level
+  // problems they're hard to nail down, so we want lots of info. We may be
+  // able to relax this in future if we're not seeing such problems (see bug
+  // 1673007 for references to the bugs motivating this).
   WmfDecoderModuleMarkerAndLog(
-      "WMFInit Result",
-      "WMFDecoderModule::Init finishing with sDXVAEnabled=%s testForVPx=%s "
-      "sUsableVPXMFT=%s",
-      sDXVAEnabled ? "true" : "false", testForVPx ? "true" : "false",
-      sUsableVPXMFT ? "true" : "false");
+      "WMFInit DXVA Status",
+      "sDXVAEnabled: %s, CanUseHardwareVideoDecoding: %s",
+      sDXVAEnabled ? "true" : "false",
+      gfx::gfxVars::CanUseHardwareVideoDecoding() ? "true" : "false");
+  sDXVAEnabled = sDXVAEnabled && gfx::gfxVars::CanUseHardwareVideoDecoding();
+
+  mozilla::mscom::EnsureMTA([&]() {
+    // Store the supported MFT decoders.
+    sSupportedTypes.clear();
+    // i = 1 to skip Unknown.
+    for (uint32_t i = 1; i < static_cast<uint32_t>(WMFStreamType::SENTINEL);
+         i++) {
+      WMFStreamType type = static_cast<WMFStreamType>(i);
+      RefPtr<MFTDecoder> decoder = new MFTDecoder();
+      HRESULT hr = CreateMFTDecoder(type, decoder);
+      if (SUCCEEDED(hr)) {
+        sSupportedTypes += type;
+        WmfDecoderModuleMarkerAndLog("WMFInit Decoder Supported",
+                                     "%s is enabled", StreamTypeToString(type));
+      } else if (hr != E_FAIL) {
+        // E_FAIL should be logged by CreateMFTDecoder. Skipping those codes
+        // will help to keep the logs readable.
+        WmfDecoderModuleMarkerAndLog("WMFInit Decoder Failed",
+                                     "%s failed with code 0x%x",
+                                     StreamTypeToString(type), hr);
+      }
+    }
+  });
+
+  WmfDecoderModuleMarkerAndLog("WMFInit Result",
+                               "WMFDecoderModule::Init finishing");
 }
 
 /* static */
@@ -177,6 +161,153 @@ int WMFDecoderModule::GetNumDecoderThreads() {
     return WMF_DECODER_DEFAULT;
   }
   return std::max(numCores - 1, 1);
+}
+
+/* static */
+HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
+                                           RefPtr<MFTDecoder>& aDecoder) {
+  switch (aType) {
+    case WMFStreamType::H264:
+      return aDecoder->Create(CLSID_CMSH264DecoderMFT);
+    case WMFStreamType::VP8:
+      static const uint32_t VP8_USABLE_BUILD = 16287;
+      if (!IsWindowsBuildOrLater(VP8_USABLE_BUILD)) {
+        WmfDecoderModuleMarkerAndLog("WMFInit VP8 Failure",
+                                     "VP8 MFT requires Windows build %" PRId32
+                                     " or later",
+                                     VP8_USABLE_BUILD);
+        return E_FAIL;
+      }
+      [[fallthrough]];
+    case WMFStreamType::VP9:
+      if (!sDXVAEnabled) {
+        WmfDecoderModuleMarkerAndLog("WMFInit VPx Disabled",
+                                     "%s MFT requires DXVA",
+                                     StreamTypeToString(aType));
+        return E_FAIL;
+      }
+
+      {
+        gfx::WMFVPXVideoCrashGuard guard;
+        if (guard.Crashed()) {
+          WmfDecoderModuleMarkerAndLog(
+              "WMFInit VPx Failure",
+              "Will not use VPx MFT due to crash guard reporting a crash");
+          return E_FAIL;
+        }
+        return aDecoder->Create(CLSID_CMSVPXDecMFT);
+      }
+#ifdef MOZ_AV1
+    case WMFStreamType::AV1:
+      // If this process cannot use DXVA, the AV1 decoder will not be used.
+      // Also, upon startup, init will be called both before and after
+      // layers acceleration is setup. This prevents creating the AV1 decoder
+      // twice.
+      if (!sDXVAEnabled) {
+        WmfDecoderModuleMarkerAndLog("WMFInit AV1 Disabled",
+                                     "AV1 MFT requires DXVA");
+        return E_FAIL;
+      }
+      // TODO: MFTEnumEx is slower than creating by CLSID, it may be worth
+      // investigating other ways to instantiate the AV1 decoder.
+      return aDecoder->Create(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_AV1,
+                              MFVideoFormat_NV12);
+#endif
+    case WMFStreamType::MP3:
+      return aDecoder->Create(CLSID_CMP3DecMediaObject);
+    case WMFStreamType::AAC:
+      return aDecoder->Create(CLSID_CMSAACDecMFT);
+    default:
+      return E_FAIL;
+  }
+}
+
+/* static */
+bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
+  MOZ_ASSERT(WMFStreamType::Unknown < aType && aType < WMFStreamType::SENTINEL);
+
+  // Check prefs here rather than CreateMFTDecoder so that prefs aren't baked
+  // into sSupportedTypes
+  switch (aType) {
+    case WMFStreamType::VP8:
+    case WMFStreamType::VP9:
+      if (!StaticPrefs::media_wmf_vp9_enabled()) {
+        return false;
+      }
+      break;
+#ifdef MOZ_AV1
+    case WMFStreamType::AV1:
+      if (!StaticPrefs::media_av1_enabled() ||
+          !StaticPrefs::media_wmf_av1_enabled()) {
+        return false;
+      }
+      break;
+#endif
+    case WMFStreamType::MP3:
+      // Prefer ffvpx mp3 decoder over WMF.
+      if (StaticPrefs::media_ffvpx_mp3_enabled()) {
+        return false;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return sSupportedTypes.contains(aType);
+}
+
+/* static */
+WMFStreamType WMFDecoderModule::GetStreamTypeFromMimeType(
+    const nsCString& aMimeType) {
+  if (MP4Decoder::IsH264(aMimeType)) {
+    return WMFStreamType::H264;
+  }
+  if (VPXDecoder::IsVP8(aMimeType)) {
+    return WMFStreamType::VP8;
+  }
+  if (VPXDecoder::IsVP9(aMimeType)) {
+    return WMFStreamType::VP9;
+  }
+#ifdef MOZ_AV1
+  if (AOMDecoder::IsAV1(aMimeType)) {
+    return WMFStreamType::AV1;
+  }
+#endif
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+      aMimeType.EqualsLiteral("audio/mp4")) {
+    return WMFStreamType::AAC;
+  }
+  if (aMimeType.EqualsLiteral("audio/mpeg")) {
+    return WMFStreamType::MP3;
+  }
+  return WMFStreamType::Unknown;
+}
+
+bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
+                                DecoderDoctorDiagnostics* aDiagnostics) const {
+  // In GPU process, only support decoding if video. This only gives a hint of
+  // what the GPU decoder *may* support. The actual check will occur in
+  // CreateVideoDecoder.
+  const auto& trackInfo = aParams.mConfig;
+  if (XRE_IsGPUProcess() && !trackInfo.GetAsVideoInfo()) {
+    return false;
+  }
+
+  const auto* videoInfo = trackInfo.GetAsVideoInfo();
+  // Temporary - forces use of VPXDecoder when alpha is present.
+  // Bug 1263836 will handle alpha scenario once implemented. It will shift
+  // the check for alpha to PDMFactory but not itself remove the need for a
+  // check.
+  if (videoInfo && (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics) ||
+                    videoInfo->HasAlpha())) {
+    return false;
+  }
+
+  WMFStreamType type = GetStreamTypeFromMimeType(aParams.MimeType());
+  if (type == WMFStreamType::Unknown) {
+    return false;
+  }
+  return CanCreateMFTDecoder(type);
 }
 
 nsresult WMFDecoderModule::Startup() {
@@ -249,51 +380,6 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
-template <const GUID& aCategory, const GUID& aInSubtype>
-static bool CanCreateWMFDecoder() {
-  static StaticMutex sMutex MOZ_UNANNOTATED;
-  StaticMutexAutoLock lock(sMutex);
-  static Maybe<bool> result;
-  if (result.isNothing()) {
-    result.emplace(CanCreateMFTDecoder(aCategory, aInSubtype));
-  }
-  return result.value();
-}
-
-/* static */
-bool WMFDecoderModule::HasH264() {
-  return CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_H264>();
-}
-
-/* static */
-bool WMFDecoderModule::HasVP8() {
-  // Some Intel HW MFTs would crash on VP8 decoding.
-  return sUsableVPXMFT && gfx::gfxVars::UseVP8HwDecode() &&
-         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP80>();
-}
-
-/* static */
-bool WMFDecoderModule::HasVP9() {
-  return sUsableVPXMFT &&
-         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_VP90>();
-}
-
-/* static */
-bool WMFDecoderModule::HasAV1() {
-  return StaticPrefs::media_wmf_av1_enabled() &&
-         CanCreateWMFDecoder<MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_AV1>();
-}
-
-/* static */
-bool WMFDecoderModule::HasAAC() {
-  return CanCreateWMFDecoder<MFT_CATEGORY_AUDIO_DECODER, MFAudioFormat_AAC>();
-}
-
-/* static */
-bool WMFDecoderModule::HasMP3() {
-  return CanCreateWMFDecoder<MFT_CATEGORY_AUDIO_DECODER, MFAudioFormat_MP3>();
-}
-
 bool WMFDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
@@ -301,57 +387,6 @@ bool WMFDecoderModule::SupportsMimeType(
     return false;
   }
   return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
-}
-
-bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
-                                DecoderDoctorDiagnostics* aDiagnostics) const {
-  // In GPU process, only support decoding if video. This only gives a hint of
-  // what the GPU decoder *may* support. The actual check will occur in
-  // CreateVideoDecoder.
-  const auto& trackInfo = aParams.mConfig;
-  if (XRE_IsGPUProcess() && !trackInfo.GetAsVideoInfo()) {
-    return false;
-  }
-
-  const auto* videoInfo = trackInfo.GetAsVideoInfo();
-  // Temporary - forces use of VPXDecoder when alpha is present.
-  // Bug 1263836 will handle alpha scenario once implemented. It will shift
-  // the check for alpha to PDMFactory but not itself remove the need for a
-  // check.
-  if (videoInfo && (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics) ||
-                    videoInfo->HasAlpha())) {
-    return false;
-  }
-
-  if ((trackInfo.mMimeType.EqualsLiteral("audio/mp4a-latm") ||
-       trackInfo.mMimeType.EqualsLiteral("audio/mp4")) &&
-      WMFDecoderModule::HasAAC()) {
-    return true;
-  }
-  if (MP4Decoder::IsH264(trackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
-    return true;
-  }
-  if (trackInfo.mMimeType.EqualsLiteral("audio/mpeg") &&
-      !StaticPrefs::media_ffvpx_mp3_enabled() && WMFDecoderModule::HasMP3()) {
-    return true;
-  }
-  static const uint32_t VP8_USABLE_BUILD = 16287;
-  if (VPXDecoder::IsVP8(trackInfo.mMimeType) &&
-      IsWindowsBuildOrLater(VP8_USABLE_BUILD) && WMFDecoderModule::HasVP8()) {
-    return true;
-  }
-  if (VPXDecoder::IsVP9(trackInfo.mMimeType) && WMFDecoderModule::HasVP9()) {
-    return true;
-  }
-
-#ifdef MOZ_AV1
-  if (AOMDecoder::IsAV1(trackInfo.mMimeType) && WMFDecoderModule::HasAV1()) {
-    return true;
-  }
-#endif
-
-  // Some unsupported codec.
-  return false;
 }
 
 }  // namespace mozilla

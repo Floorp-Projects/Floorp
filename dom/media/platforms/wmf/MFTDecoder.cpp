@@ -19,7 +19,23 @@ MFTDecoder::MFTDecoder() {
   memset(&mOutputStreamInfo, 0, sizeof(MFT_OUTPUT_STREAM_INFO));
 }
 
-MFTDecoder::~MFTDecoder() {}
+MFTDecoder::~MFTDecoder() {
+  if (mActivate) {
+    // Releases all internal references to the created IMFTransform.
+    // https://docs.microsoft.com/en-us/windows/win32/api/mfobjects/nf-mfobjects-imfactivate-shutdownobject
+    mActivate->ShutdownObject();
+  }
+}
+
+HRESULT MFTDecoder::Create(const GUID& aCLSID) {
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+
+  HRESULT hr = CoCreateInstance(
+      aCLSID, nullptr, CLSCTX_INPROC_SERVER,
+      IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
+  NS_WARNING_ASSERTION(SUCCEEDED(hr), "Failed to create MFT by CLSID");
+  return hr;
+}
 
 HRESULT
 MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
@@ -56,22 +72,34 @@ MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
                       &acts, &actsNum);
   delete inInfo;
   delete outInfo;
-  NS_ENSURE_TRUE(actsNum > 0, WINCODEC_ERR_COMPONENTNOTFOUND);
-
+  if (FAILED(hr)) {
+    NS_WARNING(nsPrintfCString("MFTEnumEx failed with code %x", hr).get());
+    return hr;
+  }
+  if (actsNum == 0) {
+    NS_WARNING("MFTEnumEx returned no IMFActivate instances");
+    return WINCODEC_ERR_COMPONENTNOTFOUND;
+  }
   auto guard = MakeScopeExit([&] {
-    for (int i = 0; i < actsNum; i++) {
+    // Start from index 1, acts[0] will be stored as a RefPtr to release later.
+    for (int i = 1; i < actsNum; i++) {
       acts[i]->Release();
     }
+    CoTaskMemFree(acts);
   });
 
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
   // Create the IMFTransform to do the decoding.
-  hr = acts[0]->ActivateObject(
+  // Note: Ideally we would cache the IMFActivate and call
+  // IMFActivate::DetachObject, but doing so causes the MFTs to fail on
+  // MFT_MESSAGE_SET_D3D_MANAGER.
+  mActivate = RefPtr<IMFActivate>(acts[0]);
+  hr = mActivate->ActivateObject(
       IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  return S_OK;
+  NS_WARNING_ASSERTION(
+      SUCCEEDED(hr),
+      nsPrintfCString("IMFActivate::ActivateObject failed with code %x", hr)
+          .get());
+  return hr;
 }
 
 HRESULT

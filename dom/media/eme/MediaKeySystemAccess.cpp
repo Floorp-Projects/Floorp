@@ -312,7 +312,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       }
 #if defined(XP_WIN)
       // Clearkey CDM uses WMF's H.264 decoder on Windows.
-      if (WMFDecoderModule::HasH264()) {
+      if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::H264)) {
         clearkey.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       } else {
         clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
@@ -413,7 +413,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       // decode AAC, and a codec wasn't specified, be conservative
       // and reject the MediaKeys request, since we assume Widevine
       // will be used with AAC.
-      if (WMFDecoderModule::HasAAC()) {
+      if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
         widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       }
 #  else
@@ -490,7 +490,7 @@ static bool CanDecryptAndDecode(
     // and reject the MediaKeys request, since we assume Widevine
     // will be used with AAC.
     if (codec == EME_CODEC_AAC && IsWidevineKeySystem(aKeySystem) &&
-        !WMFDecoderModule::HasAAC()) {
+        !WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
       if (aDiagnostics) {
         aDiagnostics->SetKeySystemIssue(
             DecoderDoctorDiagnostics::eWidevineWithNoWMF);
@@ -1170,7 +1170,7 @@ static bool GetSupportedConfig(
   if (IsWidevineKeySystem(aKeySystem.mKeySystem) &&
       (aCandidate.mAudioCapabilities.IsEmpty() ||
        aCandidate.mVideoCapabilities.IsEmpty()) &&
-      !WMFDecoderModule::HasAAC()) {
+      !WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
     if (aDiagnostics) {
       aDiagnostics->SetKeySystemIssue(
           DecoderDoctorDiagnostics::eWidevineWithNoWMF);

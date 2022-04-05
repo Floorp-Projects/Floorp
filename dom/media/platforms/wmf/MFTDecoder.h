@@ -22,6 +22,12 @@ class MFTDecoder final {
 
   MFTDecoder();
 
+  // Creates the MFT by COM class ID.
+  //
+  // Params:
+  //  - aCLSID The COM class ID of the decoder.
+  HRESULT Create(const GUID& aCLSID);
+
   // Creates the MFT by querying a category and media subtype.
   // First thing to do as part of setup.
   //
@@ -108,6 +114,7 @@ class MFTDecoder final {
   MFT_INPUT_STREAM_INFO mInputStreamInfo;
   MFT_OUTPUT_STREAM_INFO mOutputStreamInfo;
 
+  RefPtr<IMFActivate> mActivate;
   RefPtr<IMFTransform> mDecoder;
 
   RefPtr<IMFMediaType> mOutputType;
