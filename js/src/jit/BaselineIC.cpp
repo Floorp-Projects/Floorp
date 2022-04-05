@@ -127,10 +127,6 @@ AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
 #endif
   regs.take(BaselineFrameReg);
   regs.take(ICStubReg);
-#ifdef JS_CODEGEN_X64
-  regs.take(ExtractTemp0);
-  regs.take(ExtractTemp1);
-#endif
 
   switch (numInputs) {
     case 0:
