@@ -51,11 +51,15 @@ class OperationWithFunctor final : public Operation {
       : functor_(std::forward<FunctorT>(functor)),
         callback_(std::move(callback)) {}
 
-  ~OperationWithFunctor() override { RTC_DCHECK(has_run_); }
+  ~OperationWithFunctor() override {
+#if RTC_DCHECK_IS_ON
+    RTC_DCHECK(has_run_);
+#endif  // RTC_DCHECK_IS_ON
+  }
 
   void Run() override {
+#if RTC_DCHECK_IS_ON
     RTC_DCHECK(!has_run_);
-#ifdef RTC_DCHECK_IS_ON
     has_run_ = true;
 #endif  // RTC_DCHECK_IS_ON
     // The functor being executed may invoke the callback synchronously,
@@ -71,7 +75,7 @@ class OperationWithFunctor final : public Operation {
  private:
   typename std::remove_reference<FunctorT>::type functor_;
   std::function<void()> callback_;
-#ifdef RTC_DCHECK_IS_ON
+#if RTC_DCHECK_IS_ON
   bool has_run_ = false;
 #endif  // RTC_DCHECK_IS_ON
 };
@@ -168,7 +172,7 @@ class OperationsChain final : public RefCountedObject<RefCountInterface> {
 
    private:
     scoped_refptr<OperationsChain> operations_chain_;
-#ifdef RTC_DCHECK_IS_ON
+#if RTC_DCHECK_IS_ON
     bool has_run_ = false;
 #endif  // RTC_DCHECK_IS_ON
 
