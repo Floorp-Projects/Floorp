@@ -129,5 +129,10 @@ const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION = 0x20000;
  */
 const unsigned long SANDBOXED_ALLOW_DOWNLOADS = 0x10000;
 
+/**
+ * This flag prevents content from navigating to custom protocols.
+ */
+const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION_CUSTOM_PROTOCOLS = 0x40000;
+
 const unsigned long SANDBOX_ALL_FLAGS = 0xFFFFF;
 #endif
