@@ -490,7 +490,37 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Wilujeng sumping di %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Nyungsi canggih luyu jeung kahayang</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Nalika nyaru tepung jeung nyamuni</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s téh panyungsi anu ngaheulakeun pripasi kalayan panyalindungan palacak jeung réréméh anu wedel.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Nyungsi kawas teu kungsi kajadian</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ngahapus jujutan nyungsi jeung réréméh sakali toél — sarta ngeureunan iklan nunutur anjeun.</string>
+    <string name="onboarding_history_description2">Ngahapus jujutan nyungsi jeung réréméh sakali toél — sarta ngeureunan iklan nunutur anjeun.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Pripasi anu cocog pikeun sagala kaayaan</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Upama perlu dirobah, kari ngatur setélan pripasi nyungsi anjeun.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Mitembeyan nyungsi</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Bedaskeun salindungan anjeun</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Cokot langlangan nyalindung ka undakan saterusna. Peungpeuk iklan jeung kontén lianna nu bisa ngalacak anjeun di sakuliah loka sarta ngalaunan waktu muka kaca.</string>
@@ -795,6 +825,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mode Ngan-HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Otomatis nyoba nyambung maké HTTPS sangkan leuwih aman. Sambungan HTTPS ka raramatloka anu dianjangan aman jeung diénkripsi.</string>
+
+    <string name="preference_https_only_summary3">Otomatis nyoba nyambung ka loka maké protokol énkripsi HTTPS pikeun ngaronjatkeun kaamanan.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Iwal</string>
     <!-- Description for the exceptions preference screen-->
@@ -884,6 +919,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_follow_device_theme">Tuturkeun téma alat</string>
 
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Loka anu dipénta henteu ngadukung HTTPS</string>
+
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tutup tab</string>
@@ -894,5 +932,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Anjeun kajaga!</string>
+
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Tutup</string>
 
     </resources>

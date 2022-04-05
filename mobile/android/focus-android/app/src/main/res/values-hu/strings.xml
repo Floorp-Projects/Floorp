@@ -174,7 +174,7 @@
     <string name="preference_show_search_suggestions">Keresési javaslatok kérése</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">A %1$s elküldi a címsávba írt szöget a keresőszolgáltatásának</string>
+    <string name="preference_show_search_suggestions_summary">A %1$s elküldi a címsávba írt szöveget a keresőszolgáltatásának</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Alapértelmezett</string>

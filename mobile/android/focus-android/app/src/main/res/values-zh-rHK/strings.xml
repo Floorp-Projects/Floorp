@@ -363,6 +363,8 @@
     <string name="your_rights">你嘅權利</string>
 
     <string name="external_app_prompt_title">用另一個 app 開啟連結</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">搵個可以開啟連結嘅 app</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">係咪要離開私隱瀏覽？</string>
 
@@ -441,8 +443,14 @@
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site2">桌面版</string>
 
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">已複製網址</string>
+
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">開發者工具</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">以其他 apps 開啟連結</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>

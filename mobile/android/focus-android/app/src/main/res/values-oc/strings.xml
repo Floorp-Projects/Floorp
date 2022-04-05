@@ -493,14 +493,28 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">La benvenguda a %1$s !</string>
 
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Navegacion privada de nivèl avançat quand o volètz</string>
+
     <!-- Onboarding: Incognito Title -->
     <string name="onboarding_incognito_title">Quand Incognito rescontra Invisible</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s es un navegador dedicat a la confidencialitat amb una proteccion renfortida integrada contra lo seguiment e los cookies.</string>
 
     <!-- Onboarding: History Title -->
     <string name="onboarding_history_title">Navegatz coma se vos agachavan pas</string>
 
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Escafatz vòstre istoric de navegacion e los cookies d’una sola tòca — e empachatz las reclamas de sègre vòstra navegacion.</string>
+    <string name="onboarding_history_description2">Escafatz vòstre istoric de navegacion e los cookies d’una sola tòca — e empachatz las reclamas de sègre vòstra navegacion.</string>
+
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Una confidencialitat adaptada a cada situacion</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Se vòstres besonhs de navegacion càmbian, es facil d’adaptar vòstres paramètres de confidencialitat.</string>
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Començar de navegar</string>
@@ -912,13 +926,21 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tampar l’onglet</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Sembla qu’aqueste site ensajava de vos pistar. Clicatz l’escut per accedir als paramètres del site e a las estatisticas de blocatge dels traçadors.</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Tampar lo fenestron</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Sètz protegit !</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Aqueste paramètres per defaut ofrisson una proteccion renfortida. Mas es facil de modificar los paramètres per los far correspondre a vòstres besonhs.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Ignorar</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Suprimissètz las donadas personalas, l’istoric de navegacion e encara mai d’aquesta session en tocant lo boton de l’escobilhièr. Ensajatz !</string>
+
+</resources>

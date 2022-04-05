@@ -1,152 +1,414 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Nuligi</string>
-  <string name="action_ok">Akcepti</string>
-  <string name="action_save">Konservi</string>
-  <string name="urlbar_hint">Serĉu ion aŭ tajpu adreson</string>
-  <string name="teaser">Aŭtomata privata retumo.\nRetumu. Viŝu. Ripetu.</string>
-  <string name="feedback_erase">Via retuma historio estis viŝita.</string>
-  <string name="feedback_erase_custom_tab">La retuma historio de la langeto estis viŝita.</string>
-  <string name="search_hint">Serĉi %1$s</string>
-  <string name="menu_share">Dividi…</string>
-  <string name="menu_report_site_issue">Raporti problemon en retejo</string>
-  <string name="menu_open_with_default_browser2">Malfermi per %1$s</string>
-  <string name="menu_open_with_a_browser2">Malfermi per…</string>
-  <string name="menu_add_to_home_screen">Aldoni al hejmekrano</string>
-  <string name="menu_whats_new">Novaĵoj</string>
-  <string name="menu_settings">Agordoj</string>
-  <string name="menu_about">Pri</string>
-  <string name="menu_help">Helpo</string>
-  <string name="menu_rights">Viaj rajtoj</string>
-  <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
-  <string name="menu_trackers_blocked_subtitle">Malŝalto de tio ĉi povus solvi kelkajn retejajn problemojn</string>
-  <string name="menu_content_blocking">Blokado de enhavo</string>
-  <string name="menu_content_blocking_subtitle">Malŝalti por ripari kelkajn retejojn</string>
-  <string name="menu_custom_tab_branding">Kun teknologio de %1$s</string>
-  <string name="share_dialog_title">Dividi per</string>
-  <string name="notification_erase_text">Forviŝi retuman historion</string>
-  <string name="notification_action_open">Malfermi</string>
-  <string name="notification_action_erase_and_open">Forigi kaj malfermi</string>
-  <string name="shortcut_erase_short_label">Forviŝi</string>
-  <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
-  <string name="shortcut_erase_and_open_short_label">Forigi kaj malfermi</string>
-  <string name="shortcut_erase_and_open_long_label">Forigi kaj malfermi %1$s</string>
-  <string name="text_selection_search_action">Serĉi private</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privateco kaj sekureco</string>
-  <string name="preference_privacy_and_security_summary">Spurado, kuketoj, elekto de datumoj</string>
-  <string name="preference_search_summary">Difini kiel norman, aŭtomata kompletigo</string>
-  <string name="preference_mozilla_summary">Pri %1$s, helpo</string>
-  <string name="preference_category_tracking_protection">Protekto kontraŭ spurado</string>
-  <string name="preference_category_web_content">Teksaĵa enhavo</string>
-  <string name="preference_category_switching_apps">Ŝanĝo de programoj</string>
-  <string name="preference_category_general">Ĝenerala</string>
-  <string name="preference_general_summary">Norma retumilo, langetoj, lingvo</string>
-  <string name="preference_category_data_collection_use">Kolekto kaj uzo de datumoj</string>
-  <string name="preference_category_search">Serĉi</string>
-  <string name="preference_show_search_suggestions">Ricevi serĉajn sugestojn</string>
-  <string name="preference_show_search_suggestions_summary">%1$s sendos tion, kion vi tajpas en la adresa strio, al via serĉilo</string>
-  <string name="preference_search_engine_default">Norma</string>
-  <string name="preference_search_engine_label">Serĉilo</string>
-  <string name="preference_state_on">Ŝaltita</string>
-  <string name="preference_state_off">Malŝaltita</string>
-  <string name="preference_subitem_autocomplete">Aŭtomata kompletigo de adresoj</string>
-  <string name="preference_switch_autocomplete_topsites">Por la plej vizititaj retejoj</string>
-  <string name="preference_autocomplete_topsite_summary">Aktivigu por aŭtomate plenigi en la adresa strio pli da 450 popularaj retadresoj.</string>
-  <string name="preference_switch_autocomplete_user_list">Por retejoj, kiujn vi aldonas</string>
-  <string name="preference_autocomplete_user_list_summary">Aktivigu por aŭtomate plenigi en la adresa strio pli da 450 popularaj retadresoj.</string>
-  <string name="preference_category_autocomplete_manage_sites">Administri retejojn</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Administri retejojn</string>
-  <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
-  <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
-  <string name="custom_autocomplete_quick_add">Aldoni personecigitan adreson</string>
-  <string name="add_custom_autocomplete_label">Aldoni aŭtomate plenigendan ligilon</string>
-  <string name="preference_category_cookies">Kuketoj kaj retejaj datumoj</string>
-  <string name="preference_category_data_choices">Elekto de datumoj</string>
-  <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
-  <string name="preference_autocomplete_learn_more">Pli da informo</string>
-  <string name="preference_autocomplete_custom_summary">Aldoni kaj administri aŭtomatan kompletigon de personecigitaj adresoj.</string>
-  <string name="preference_autocomplete_add_title">Aldonota adreso</string>
-  <string name="preference_autocomplete_add_hint">Alglui aŭ tajpi adreson</string>
-  <string name="preference_autocomplete_add_example2">Ekzemplo: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Ekzemplo: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Nova personecigita adreso aldonita.</string>
-  <string name="preference_autocomplete_menu_remove">Forigi</string>
-  <string name="preference_autocomplete_action_remove_content_description">Forigi</string>
-  <string name="preference_autocomplete_add_error">Kontrolu denove la tajpitan adreson.</string>
-  <string name="preference_language">Lingvo</string>
-  <string name="preference_language_systemdefault">Sistema normo</string>
-  <string name="preference_category_privacy">Privateco</string>
-  <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
-  <string name="preference_privacy_block_ads_summary">Kelkaj reklamoj spuras viajn vizitojn, eĉ se vi ne alklakas ilin</string>
-  <string name="preference_privacy_block_analytics">Bloki analizajn spurilojn</string>
-  <string name="preference_privacy_block_analytics_summary">Ili estas uzataj por kolekti, analizi kaj mezuri agojn, kiel tuŝetojn kaj ŝovojn</string>
-  <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
-  <string name="preference_privacy_block_social_summary">Inkluzivitaj en retejoj por spuri viajn vizitojn kaj montri funkciojn, kiel dividajn butonojn</string>
-  <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
-  <string name="preference_privacy_block_content_summary2">Se vi ŝaltas tion ĉi, kelkaj paĝoj povus neatendite konduti</string>
-  <string name="preference_privacy_category_cookies">Bloki kuketojn</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloki nur nerektajn spurajn kuketojn</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloki nur nerektajn kuketojn</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Jes</string>
-  <string name="preference_security_biometric">Uzi fingrospuron por malbloki programon</string>
-  <string name="preference_security_biometric_summary">Via fingrospuro povas malbloki %1$s se readreso jam estas malfermita en la programo. La kaŝreĝimo estos ŝaltita.</string>
-  <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
-  <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo kaj bloki la faradon de ekrankopioj.</string>
-  <string name="preference_category_security">Sekureco</string>
-  <string name="preference_category_performance">Efikeco</string>
-  <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
-  <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
-  <string name="preference_performance_block_javascript">Bloki JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Paĝoj povas aperi pli rapide, sed ankaŭ povas konduti neatendite</string>
-  <string name="preference_default_browser2">Igi %1$s via norma retumilo</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Sendi datumojn pri uzo</string>
-  <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla penas kolekti nur la datumojn nepre bezonatajn por provizi kaj plibonigi %1$s por ĉiuj.</string>
-  <string name="preference_privacy_notice">Rimarko pri privateco</string>
-  <string name="preference_about">Pri %1$s</string>
-  <string name="preference_search_installed_search_engines">Instalitaj serĉiloj</string>
-  <string name="preference_search_restore">Remeti normajn serĉilojn</string>
-  <string name="preference_search_add2">+ Aldoni alian serĉilon</string>
-  <string name="preference_search_remove_title">Forigi serĉilojn</string>
-  <string name="preference_search_remove">Forigi</string>
-  <string name="preference_homescreen_tips">Montri konsiletojn en la hejmekrano</string>
-  <string name="action_option_add_search_engine">Aldoni serĉilon</string>
-  <string name="search_add_manually_name_hint">Nomo de serĉilo</string>
-  <string name="search_add_manually_string">Teksto por serĉi</string>
-  <string name="search_add_manually_save">Konservi</string>
-  <string name="search_add_manually_example">Ekzemplo: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Nova serĉilo aldonita.</string>
-  <string name="search_add_error_empty_name">Tajpu nomon de serĉilo</string>
-  <string name="search_add_error_duplicate_name">Tiu nomo jam estas uzita de instalita serĉilo.</string>
-  <string name="search_add_error_empty_search">Tajpu serĉan tekston</string>
-  <string name="search_add_error_format">Kontrolu ĉu la serĉa teksto kongruas kun la formo de la ekzemplo</string>
-  <string name="content_description_clear_input">Viŝi kampon</string>
-  <string name="content_description_dismiss_input">Ignori</string>
-  <string name="content_description_erase">Viŝi retuman historion</string>
-  <string name="content_description_tab_counter">Malfermitaj langetoj: %1$s</string>
-  <string name="content_description_lock">Sekura konekto</string>
-  <string name="accessibility_announcement_loading">Ŝargado</string>
-  <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
-  <string name="content_description_menu">Pli da elektebloj</string>
-  <string name="indicator_content_description_menu">Butono por montri pli da elektebloj</string>
-  <string name="content_description_forward">Iri antaŭen</string>
-  <string name="content_description_reload">Reŝargi retejon</string>
-  <string name="content_description_back">Iri reen</string>
-  <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
-  <string name="content_description_customtab_exit">Reen al antaŭa programo</string>
-  <string name="content_description_trackers_blocked">Nombro de blokitaj spuriloj</string>
-  <string name="content_description_blocking_switch">Bloki spurilojn</string>
-  <string name="your_rights">Viaj rajtoj</string>
-  <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
-  <string name="external_app_prompt">Vi povas forlasi %1$s por malfermi tiun ĉi ligilon en %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Serĉi programon, kiu povas malfermi ligilon</string>
-  <string name="external_app_prompt_no_app">Neniu programo en via aparato povas malfermi tiun ĉi ligilon. Vi povas forlasi %1$s por serĉi en %2$s programon kiu povas fari tion.</string>
-  <string name="external_multiple_apps_matched_exit">Ĉu eliri el privata retumo?</string>
-  <string name="download_snackbar_finished">%1$s finiĝis</string>
-  <string name="download_snackbar_open">Malfermi</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Nuligi</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Akcepti</string>
+
+    <string name="action_save">Konservi</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Serĉu ion aŭ tajpu adreson</string>
+
+    <string name="teaser">Aŭtomata privata retumo.\nRetumu. Viŝu. Ripetu.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Via retuma historio estis viŝita.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">La retuma historio de la langeto estis viŝita.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Serĉi %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Dividi…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Raporti problemon en retejo</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Malfermi per %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Malfermi per…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Aldoni al hejmekrano</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Novaĵoj</string>
+    <string name="menu_settings">Agordoj</string>
+    <string name="menu_about">Pri</string>
+    <string name="menu_help">Helpo</string>
+    <string name="menu_rights">Viaj rajtoj</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Malŝalto de tio ĉi povus solvi kelkajn retejajn problemojn</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blokado de enhavo</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Malŝalti por ripari kelkajn retejojn</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Kun teknologio de %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Dividi per</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Forviŝi retuman historion</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Malfermi</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Forigi kaj malfermi</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Forviŝi</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Forigi kaj malfermi</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Forigi kaj malfermi %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Serĉi private</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privateco kaj sekureco</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Spurado, kuketoj, elekto de datumoj</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Difini kiel norman, aŭtomata kompletigo</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Pri %1$s, helpo</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Teksaĵa enhavo</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Ŝanĝo de programoj</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Ĝenerala</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Kolekto kaj uzo de datumoj</string>
+
+    <string name="preference_category_search">Serĉi</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Ricevi serĉajn sugestojn</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s sendos tion, kion vi tajpas en la adresa strio, al via serĉilo</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Norma</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Serĉilo</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Ŝaltita</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Malŝaltita</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Aŭtomata kompletigo de adresoj</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Por la plej vizititaj retejoj</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Por retejoj, kiujn vi aldonas</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Administri retejojn</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Administri retejojn</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Aldoni personecigitan adreson</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Aldoni aŭtomate plenigendan ligilon</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Kuketoj kaj retejaj datumoj</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Elekto de datumoj</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Pli da informo</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Aldoni kaj administri aŭtomatan kompletigon de personecigitaj adresoj.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Aldonota adreso</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Alglui aŭ tajpi adreson</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Ekzemplo: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Ekzemplo: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Nova personecigita adreso aldonita.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Forigi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Forigi</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Kontrolu denove la tajpitan adreson.</string>
+
+    <string name="preference_language">Lingvo</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Sistema normo</string>
+
+    <string name="preference_category_privacy">Privateco</string>
+    <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
+    <string name="preference_privacy_block_ads_summary">Kelkaj reklamoj spuras viajn vizitojn, eĉ se vi ne alklakas ilin</string>
+    <string name="preference_privacy_block_analytics">Bloki analizajn spurilojn</string>
+    <string name="preference_privacy_block_analytics_summary">Ili estas uzataj por kolekti, analizi kaj mezuri agojn, kiel tuŝetojn kaj ŝovojn</string>
+    <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
+    <string name="preference_privacy_block_social_summary">Inkluzivitaj en retejoj por spuri viajn vizitojn kaj montri funkciojn, kiel dividajn butonojn</string>
+    <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
+    <string name="preference_privacy_block_content_summary2">Se vi ŝaltas tion ĉi, kelkaj paĝoj povus neatendite konduti</string>
+    <string name="preference_privacy_category_cookies">Bloki kuketojn</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloki nur nerektajn spurajn kuketojn</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloki nur nerektajn kuketojn</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Uzi fingrospuron por malbloki programon</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Via fingrospuro povas malbloki %1$s se readreso jam estas malfermita en la programo. La kaŝreĝimo estos ŝaltita.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo kaj bloki la faradon de ekrankopioj.</string>
+
+    <string name="preference_category_security">Sekureco</string>
+
+    <string name="preference_category_performance">Efikeco</string>
+    <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
+
+    <string name="preference_performance_block_javascript">Bloki JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Paĝoj povas aperi pli rapide, sed ankaŭ povas konduti neatendite</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Igi %1$s via norma retumilo</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Sendi datumojn pri uzo</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla penas kolekti nur la datumojn nepre bezonatajn por provizi kaj plibonigi %1$s por ĉiuj.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Rimarko pri privateco</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Pri %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Instalitaj serĉiloj</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Remeti normajn serĉilojn</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Aldoni alian serĉilon</string>
+    <string name="preference_search_remove_title">Forigi serĉilojn</string>
+    <string name="preference_search_remove">Forigi</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Montri konsiletojn en la hejmekrano</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Aldoni serĉilon</string>
+
+    <string name="search_add_manually_name_hint">Nomo de serĉilo</string>
+    <string name="search_add_manually_string">Teksto por serĉi</string>
+    <string name="search_add_manually_save">Konservi</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Ekzemplo: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Nova serĉilo aldonita.</string>
+
+    <string name="search_add_error_empty_name">Tajpu nomon de serĉilo</string>
+    <string name="search_add_error_duplicate_name">Tiu nomo jam estas uzita de instalita serĉilo.</string>
+
+    <string name="search_add_error_empty_search">Tajpu serĉan tekston</string>
+
+    <string name="search_add_error_format">Kontrolu ĉu la serĉa teksto kongruas kun la formo de la ekzemplo</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Viŝi kampon</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Ignori</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Viŝi retuman historion</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Malfermitaj langetoj: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Sekura konekto</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Ŝargado</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Pli da elektebloj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Butono por montri pli da elektebloj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Iri antaŭen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Reŝargi retejon</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Iri reen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Reen al antaŭa programo</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Nombro de blokitaj spuriloj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Bloki spurilojn</string>
+
+    <string name="your_rights">Viaj rajtoj</string>
+
+    <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Vi povas forlasi %1$s por malfermi tiun ĉi ligilon en %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Serĉi programon, kiu povas malfermi ligilon</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Neniu programo en via aparato povas malfermi tiun ĉi ligilon. Vi povas forlasi %1$s por serĉi en %2$s programon kiu povas fari tion.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Ĉu eliri el privata retumo?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s finiĝis</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Malfermi</string>
 
 
 
@@ -176,91 +438,255 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
-  <string name="firstrun_defaultbrowser_text2">Privata retumo pli altnivela, kun blokado de reklamoj kaj aliaj enhavoj, kiuj povas spuri vin trans retejoj kaj malrapidigi la ŝargon de paĝoj.</string>
-  <string name="firstrun_search_title">Via serĉo laŭ via maniero</string>
-  <string name="firstrun_search_text">Ĉu vi serĉas ion alian, malsaman? Elektu alian norman serĉilon en la agordoj.</string>
-  <string name="firstrun_shortcut_title">Aldoni rektajn alirojn al via hejmekrano</string>
-  <string name="firstrun_shortcut_text">En %1$s, por reiri rapide al viaj plej ŝatataj retejoj, elektu \"Aldoni al hejmekrano\" en la menuo.</string>
-  <string name="firstrun_privacy_title">Alkutimiĝu al la privateco</string>
-  <string name="firstrun_privacy_text">Elektu %1$s kiel via normal retumilo kaj ricevu ĉiujn avantaĝojn de la privata retumo, kiam vi malfermas paĝojn el aliaj programoj.</string>
-  <string name="firstrun_close_button">En ordo, mi komprenis!</string>
-  <string name="firstrun_skip_button">Ignori</string>
-  <string name="firstrun_next_button">Sekva</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Aldoni</string>
-  <string name="dialog_addtohomescreen_action_cancel">Nuligi</string>
-  <string name="dialog_addtohomescreen_tracking_protection">La ŝparvojo estos malfermita sen protekto kontraŭ spurado</string>
-  <string name="notification_browsing_session_channel_name">Privata retuma seanco</string>
-  <string name="notification_browsing_session_channel_description">Sciigoj permesas al vi viŝi vian seancon de %1$s per tuŝeto. Vi ne bezonas malfermi la programon aŭ vidi kio estas en via retumilo.</string>
-  <string name="tabs_tray_action_erase">Viŝi retuman historion</string>
-  <string name="download_firefox">Elŝuti Firefox</string>
-  <string name="your_rights_content1">"%1$s estas libera kaj malfermitkoda programaro, farita de Mozilla kaj aliaj kontribuintoj. "</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Privata retumo pli altnivela, kun blokado de reklamoj kaj aliaj enhavoj, kiuj povas spuri vin trans retejoj kaj malrapidigi la ŝargon de paĝoj.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Via serĉo laŭ via maniero</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Ĉu vi serĉas ion alian, malsaman? Elektu alian norman serĉilon en la agordoj.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Aldoni rektajn alirojn al via hejmekrano</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">En %1$s, por reiri rapide al viaj plej ŝatataj retejoj, elektu \&quot;Aldoni al hejmekrano\&quot; en la menuo.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Alkutimiĝu al la privateco</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Elektu %1$s kiel via normal retumilo kaj ricevu ĉiujn avantaĝojn de la privata retumo, kiam vi malfermas paĝojn el aliaj programoj.</string>
+
+    <string name="firstrun_close_button">En ordo, mi komprenis!</string>
+    <string name="firstrun_skip_button">Ignori</string>
+    <string name="firstrun_next_button">Sekva</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Aldoni</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">JES</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Nuligi</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NE</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Privata retuma seanco</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Sciigoj permesas al vi viŝi vian seancon de %1$s per tuŝeto. Vi ne bezonas malfermi la programon aŭ vidi kio estas en via retumilo.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Viŝi retuman historion</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Elŝuti Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA["%1$s estas libera kaj malfermitkoda programaro, farita de Mozilla kaj aliaj kontribuintoj. "]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Nomo de uzanto</string>
-  <string name="gv_prompt_password_hint">Pasvorto</string>
-  <string name="gv_prompt_clear">Viŝi</string>
-  <string name="security_popup_secure_connection">Sekura konekto</string>
-  <string name="security_popup_insecure_connection">Nesekura konekto</string>
-  <string name="security_popup_security_verified">Kontrolita de: %1$s</string>
-  <string name="site_security_icon_content_description">Sekureco de retejo</string>
-  <string name="preference_autocomplete_duplicate_url_error">Retadreso jam ekzistas</string>
-  <string name="find_in_page">Serĉi en paĝo</string>
-  <string name="find_in_page_input">Serĉi en paĝo</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d el %2$d</string>
-  <string name="accessibility_next_result">Trovi venontan rezulton</string>
-  <string name="accessibility_previous_result">Trovi antaŭan rezulton</string>
-  <string name="accessibility_dismiss_find_in_page">Fermi serĉon en paĝo</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Nomo de uzanto</string>
+    <string name="gv_prompt_password_hint">Pasvorto</string>
+    <string name="gv_prompt_clear">Viŝi</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Sekura konekto</string>
+    <string name="security_popup_insecure_connection">Nesekura konekto</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Kontrolita de: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Sekureco de retejo</string>
+    <string name="preference_autocomplete_duplicate_url_error">Retadreso jam ekzistas</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Serĉi en paĝo</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Serĉi en paĝo</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d el %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Trovi venontan rezulton</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Trovi antaŭan rezulton</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Fermi serĉon en paĝo</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
-  <string name="custom_tab_copy_url_action">Retadreso kopiita</string>
-  <string name="preference_advanced_summary">Iloj por programistoj</string>
-  <string name="preference_category_advanced">Spertula</string>
-  <string name="preference_remote_debugging">Fora senerarigo per USB aŭ sendrata reto</string>
-  <string name="biometric_auth_title">Malbloki %1$s</string>
-  <string name="biometric_auth_description">Tuŝu la fingrospuran sensilon por daŭrigi.</string>
-  <string name="biometric_auth_new_session">Nova seanco</string>
-  <string name="biometric_auth_image_description">Emblemo de fingrospuro</string>
-  <string name="biometric_auth_not_recognized_error">Fingrospuro nerekonita. Provu denove.</string>
-  <string name="biometric_auth_moved_too_quickly">La fingro moviĝis tro rapide. Provu denove.</string>
-  <string name="enable_search_suggestion_title">Ĉu vi ŝatus ŝalti serĉajn sugestojn?</string>
-  <string name="enable_search_suggestion_subtitle">Por ricev serĉajn sugestojn, %1$s bezonas sendi tion, kion vi tajpas en la adresa strio, al la serĉilo kiun vi elektis. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Pli da informo</string>
-  <string name="enable_search_suggestions_no">Ne</string>
-  <string name="enable_search_suggestions_yes">Jes</string>
-  <string name="no_suggestions_message">Kelkaj serĉiloj ne povas montri serĉajn sugestojn.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Ignori</string>
-  <string name="tip_disable_tracking_protection">Ĉu la retejo neatendite kondutas?\n Provu malŝalti la protekton kontraŭ spurado</string>
-  <string name="tip_add_to_homescreen">Atingu viajn plej vizititajn retejojn per nura tuŝeto%1$s Menuo &gt; Aldoni al hejmekrano</string>
-  <string name="tip_set_default_browser">Malfermi ĉiun ligilon per %1$s\n Igu %1$s via norma retumilo</string>
-  <string name="tip_autocomplete_url">Aŭtomate kompletigi restadresojn por la retejoj, kiujn vi plej multe uzas\n Longe premu iun ajn retadreson en la adresa strio</string>
-  <string name="tip_open_in_new_tab">Malfermu ligilon en nova langeto\n Longe premu iun ajn ligilon en paĝo</string>
-  <string name="tip_request_desktop">Ĉu vi preferus vidi la version de la retejo por komputiloj?%1$s Menuo &gt; Peti version por komputiloj</string>
-  <string name="tip_disable_tips2">Malŝalti konsilojn en la komenca ekrano</string>
-  <string name="tip_explain_allowlist">Ĉu fidinda retejo?\n La listo de permesataj retejoj malŝaltas la protekton kontraŭ spurado en viaj konataj kaj fidataj retejoj.</string>
-  <string name="new_tab_opened_snackbar">Nova langeto malfermita</string>
-  <string name="open_new_tab_snackbar">Ŝanĝi</string>
-  <string name="preference_open_new_tab">Iri tuj al la ligilo en nova langeto</string>
-  <string name="preference_category_safe_browsing">Sekura retumo</string>
-  <string name="preference_safe_browsing_title">Bloki verŝajne danĝeran kaj trompan enhavon</string>
-  <string name="preference_safe_browsing_summary">Bloki raportitajn trompajn, atakajn, fiprogramajn kaj trudprogramajn retejojn.</string>
-  <string name="preference_exceptions">Esceptoj</string>
-  <string name="preference_exceptions_description">Vi malaktvigis la blokadon de enhavo por tiuj ĉi retejoj.</string>
-  <string name="preference_exceptions_menu_remove">Forigi</string>
-  <string name="preference_exceptions_remove_all_button_label">Forigi ĉiujn retejojn</string>
-  <string name="tab_crash_report_title">Langeto paneis</string>
-  <string name="tab_crash_report_headline">Bedaŭrinde ni havas problemojn kun tiu ĉi langeto.</string>
-  <string name="tab_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi tiun ĉi langeton.</string>
-  <string name="tab_crash_report_close_tab_button_label">Fermi langeton</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Peti version por komputiloj</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Retadreso kopiita</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Iloj por programistoj</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Spertula</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Forigi</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiva</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Fora senerarigo per USB aŭ sendrata reto</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Malbloki %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Tuŝu la fingrospuran sensilon por daŭrigi.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Nova seanco</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Emblemo de fingrospuro</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Fingrospuro nerekonita. Provu denove.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">La fingro moviĝis tro rapide. Provu denove.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ne</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Jes</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Kelkaj serĉiloj ne povas montri serĉajn sugestojn.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Ignori</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Ĉu la retejo neatendite kondutas?\n Provu malŝalti la protekton kontraŭ spurado</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Atingu viajn plej vizititajn retejojn per nura tuŝeto%1$s Menuo > Aldoni al hejmekrano]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Malfermi ĉiun ligilon per %1$s\n Igu %1$s via norma retumilo</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Aŭtomate kompletigi restadresojn por la retejoj, kiujn vi plej multe uzas\n Longe premu iun ajn retadreson en la adresa strio</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Malfermu ligilon en nova langeto\n Longe premu iun ajn ligilon en paĝo</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Malŝalti konsilojn en la komenca ekrano</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Nova langeto malfermita</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Ŝanĝi</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Iri tuj al la ligilo en nova langeto</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Sekura retumo</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Bloki verŝajne danĝeran kaj trompan enhavon</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Bloki raportitajn trompajn, atakajn, fiprogramajn kaj trudprogramajn retejojn.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Esceptoj</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Vi malaktvigis la blokadon de enhavo por tiuj ĉi retejoj.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Forigi</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Forigi ĉiujn retejojn</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Langeto paneis</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Bedaŭrinde ni havas problemojn kun tiu ĉi langeto.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi tiun ĉi langeton.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Fermi langeton</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Sendi raporton pri paneo al Mozilla</string>
-</resources>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Sendi raporton pri paneo al Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Enhavo</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Forigi</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Renomi</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Renomi</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Etoso</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Hela</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Malhela</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Fermi langeton</string>
+
+    </resources>

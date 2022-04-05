@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -478,7 +478,27 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s-ка рәхим итегез!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Киләсе дәрәҗәдәге хосусый гизү, Сез теләгән вакытта</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Инкогнито режимы күзгә күренмәс режим белән очрашканда</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s — хосусыйлыкны беренче урынга куючы браузер. Ул күзәтелүдән һәм кукилардан иң югары дәрәҗә саклауга ия.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Һич эз калдырмыйча гизегез</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Бер басу сезнең гизү тарихын һәм кукиларны бетерә — һәм рекламалар Сезне эзәрлекләмәз.</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Хосусыйлыгызны көчәйтегез</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Хосусый гизүне яңа дәрәҗәгә күтәрегез. Сайтлар аша Сезне күзәтүче һәм сәхифәләрнең йөкләнү вакытын арттыручы рекламаларны һәм башка эчтәлекләрне блоклагыз.</string>
@@ -857,4 +877,5 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Табны ябу</string>
-</resources>
+
+    </resources>

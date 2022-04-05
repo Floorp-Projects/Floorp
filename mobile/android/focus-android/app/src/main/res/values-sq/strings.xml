@@ -491,7 +491,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Mirë se vini te %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Shkalla pasuese në shfletim privat, kur e doni</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Fuqizoni privatësinë tuaj</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat një shkallë më sipër. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
@@ -899,4 +906,5 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Mbylle skedën</string>
-</resources>
+
+    </resources>

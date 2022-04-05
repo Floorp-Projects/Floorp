@@ -492,7 +492,14 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">ยินดีต้อนรับสู่ %1$s!</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">เริ่มการเรียกดู</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">นำการท่องเว็บแบบส่วนตัวไปสู่ระดับถัดไป ปิดกั้นโฆษณาและเนื้อหาอื่น ๆ ที่สามารถติดตามคุณในไซต์ต่าง ๆ และลดเวลาในการโหลดหน้า</string>
