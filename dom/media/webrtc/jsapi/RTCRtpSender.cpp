@@ -55,7 +55,8 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
       INIT_CANONICAL(mVideoCodec, Nothing()),
       INIT_CANONICAL(mVideoRtpRtcpConfig, Nothing()),
       INIT_CANONICAL(mVideoCodecMode, webrtc::VideoCodecMode::kRealtimeVideo),
-      INIT_CANONICAL(mCname, std::string()) {
+      INIT_CANONICAL(mCname, std::string()),
+      INIT_CANONICAL(mTransmitting, false) {
   mPipeline = new MediaPipelineTransmit(
       mPc->GetHandle(), aTransportHandler, aCallThread, aStsThread,
       aConduit->type() == MediaSessionConduit::VIDEO, aConduit);
@@ -649,14 +650,11 @@ bool RTCRtpSender::SeamlessTrackSwitch(
     if (aWithTrack) {
       newType = Some(aWithTrack->GetSource().GetMediaSource());
     }
-    // TODO: These UpdateConduit calls are probably overkill. Need to figure
-    // out the minimal work we need to do to handle this. I _think_ we have
-    // test-cases that cover these scenarios...
     if (oldType != newType) {
-      mTransceiverImpl->UpdateConduit();
+      UpdateConduit();
     }
   } else if (!mSenderTrack != !aWithTrack) {
-    mTransceiverImpl->UpdateConduit();
+    UpdateConduit();
   }
 
   // There may eventually be cases where a renegotiation is necessary to switch.
@@ -708,6 +706,9 @@ void RTCRtpSender::UpdateConduit() {
     return;
   }
 
+  mTransmitting = false;
+  Stop();
+
   mSsrcs = mJsepTransceiver->mSendTrack.GetSsrcs();
   mVideoRtxSsrcs = mJsepTransceiver->mSendTrack.GetRtxSsrcs();
   mCname = mJsepTransceiver->mSendTrack.GetCNAME();
@@ -716,6 +717,9 @@ void RTCRtpSender::UpdateConduit() {
     UpdateVideoConduit();
   } else {
     UpdateAudioConduit();
+  }
+  if ((mTransmitting = mJsepTransceiver->mSendTrack.GetActive())) {
+    Start();
   }
 }
 

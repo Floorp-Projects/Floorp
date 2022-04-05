@@ -105,7 +105,8 @@ RTCRtpReceiver::RTCRtpReceiver(
       INIT_CANONICAL(mLocalRtpExtensions, RtpExtList()),
       INIT_CANONICAL(mAudioCodecs, std::vector<AudioCodecConfig>()),
       INIT_CANONICAL(mVideoCodecs, std::vector<VideoCodecConfig>()),
-      INIT_CANONICAL(mVideoRtpRtcpConfig, Nothing()) {
+      INIT_CANONICAL(mVideoRtpRtcpConfig, Nothing()),
+      INIT_CANONICAL(mReceiving, false) {
   PrincipalHandle principalHandle = GetPrincipalHandle(aWindow, aPrivacyNeeded);
   mTrack = CreateTrack(aWindow, aConduit->type() == MediaSessionConduit::AUDIO,
                        principalHandle.get());
@@ -594,10 +595,17 @@ void RTCRtpReceiver::UpdateTransport() {
 }
 
 void RTCRtpReceiver::UpdateConduit() {
+  mReceiving = false;
+  Stop();
+
   if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
     UpdateVideoConduit();
   } else {
     UpdateAudioConduit();
+  }
+
+  if ((mReceiving = mJsepTransceiver->mRecvTrack.GetActive())) {
+    Start();
   }
 }
 
