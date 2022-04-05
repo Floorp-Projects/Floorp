@@ -564,23 +564,13 @@ class RTCPeerConnection {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    this._impl.initialize(observer, this._win);
+    this._pc.initialize(observer, this._win);
 
     this.setConfiguration(rtcConfig);
 
     this._certificateReady = this._initCertificate(certificate);
     this._initIdp();
     _globalPCList.notifyLifecycleObservers(this, "initialized");
-  }
-
-  get _impl() {
-    if (!this._pc) {
-      throw new this._win.DOMException(
-        "RTCPeerConnection is gone (did you enter Offline mode?)",
-        "InvalidStateError"
-      );
-    }
-    return this._pc;
   }
 
   getConfiguration() {
@@ -598,7 +588,7 @@ class RTCPeerConnection {
     // of that from JS.
     const configWithPrefTweaks = Object.assign({}, rtcConfig);
     this._applyPrefsToConfig(configWithPrefTweaks);
-    this._impl.setConfiguration(configWithPrefTweaks);
+    this._pc.setConfiguration(configWithPrefTweaks);
 
     this._config = Object.assign({}, rtcConfig);
   }
@@ -612,7 +602,7 @@ class RTCPeerConnection {
     }
     // Is the PC still around after the await?
     if (!this._closed) {
-      this._impl.certificate = certificate;
+      this._pc.certificate = certificate;
     }
   }
 
@@ -1004,7 +994,7 @@ class RTCPeerConnection {
     let sdp = await new Promise((resolve, reject) => {
       this._onCreateOfferSuccess = resolve;
       this._onCreateOfferFailure = reject;
-      this._impl.createOffer(options);
+      this._pc.createOffer(options);
     });
     if (haveAssertion) {
       await haveAssertion;
@@ -1043,7 +1033,7 @@ class RTCPeerConnection {
     let sdp = await new Promise((resolve, reject) => {
       this._onCreateAnswerSuccess = resolve;
       this._onCreateAnswerFailure = reject;
-      this._impl.createAnswer();
+      this._pc.createAnswer();
     });
     if (haveAssertion) {
       await haveAssertion;
@@ -1135,7 +1125,7 @@ class RTCPeerConnection {
       await new Promise((resolve, reject) => {
         this._onSetDescriptionSuccess = resolve;
         this._onSetDescriptionFailure = reject;
-        this._impl.setLocalDescription(this._actions[type], sdp);
+        this._pc.setLocalDescription(this._actions[type], sdp);
       });
       await p;
     });
@@ -1146,8 +1136,8 @@ class RTCPeerConnection {
     // avoid problems with the fact that identity validation doesn't block the
     // resolution of setRemoteDescription().
     const validate = async () => {
-      // Access this._impl synchronously in case pc is closed later
-      const identity = this._impl.peerIdentity;
+      // Access this._pc synchronously in case pc is closed later
+      const identity = this._pc.peerIdentity;
       await this._lastIdentityValidation;
       const msg = await this._remoteIdp.verifyIdentityFromSDP(sdp, origin);
       // If this pc has an identity already, then the identity in sdp must match
@@ -1162,7 +1152,7 @@ class RTCPeerConnection {
       }
       if (msg) {
         // Set new identity and generate an event.
-        this._impl.peerIdentity = msg.identity;
+        this._pc.peerIdentity = msg.identity;
         this._resolvePeerIdentity(
           Cu.cloneInto(
             {
@@ -1192,7 +1182,7 @@ class RTCPeerConnection {
       // If we don't expect a specific peer identity, failure to get a valid
       // peer identity is not a terminal state, so replace the promise to
       // allow another attempt.
-      if (!this._impl.peerIdentity) {
+      if (!this._pc.peerIdentity) {
         this._resetPeerIdentityPromise();
       }
     });
@@ -1201,7 +1191,7 @@ class RTCPeerConnection {
       return;
     }
     // Only wait for IdP validation if we need identity matching
-    if (this._impl.peerIdentity) {
+    if (this._pc.peerIdentity) {
       await haveValidation;
     }
   }
@@ -1229,7 +1219,7 @@ class RTCPeerConnection {
           await new Promise((resolve, reject) => {
             this._onSetDescriptionSuccess = resolve;
             this._onSetDescriptionFailure = reject;
-            this._impl.setLocalDescription(
+            this._pc.setLocalDescription(
               Ci.IPeerConnection.kActionRollback,
               ""
             );
@@ -1245,7 +1235,7 @@ class RTCPeerConnection {
         await new Promise((resolve, reject) => {
           this._onSetDescriptionSuccess = resolve;
           this._onSetDescriptionFailure = reject;
-          this._impl.setRemoteDescription(this._actions[type], sdp);
+          this._pc.setRemoteDescription(this._actions[type], sdp);
         });
         await p;
         this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
@@ -1262,7 +1252,7 @@ class RTCPeerConnection {
 
   setIdentityProvider(provider, { protocol, usernameHint, peerIdentity } = {}) {
     this._checkClosed();
-    peerIdentity = peerIdentity || this._impl.peerIdentity;
+    peerIdentity = peerIdentity || this._pc.peerIdentity;
     this._localIdp.setIdentityProvider(
       provider,
       protocol,
@@ -1274,7 +1264,7 @@ class RTCPeerConnection {
   async _getIdentityAssertion() {
     await this._certificateReady;
     return this._localIdp.getIdentityAssertion(
-      this._impl.fingerprint,
+      this._pc.fingerprint,
       this._documentPrincipal.origin
     );
   }
@@ -1341,8 +1331,8 @@ class RTCPeerConnection {
     this._checkClosed();
     return this._chain(async () => {
       if (
-        !this._impl.pendingRemoteDescription.length &&
-        !this._impl.currentRemoteDescription.length
+        !this._pc.pendingRemoteDescription.length &&
+        !this._pc.currentRemoteDescription.length
       ) {
         throw new this._win.DOMException(
           "No remoteDescription.",
@@ -1352,7 +1342,7 @@ class RTCPeerConnection {
       return new Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
         this._onAddIceCandidateError = reject;
-        this._impl.addIceCandidate(
+        this._pc.addIceCandidate(
           candidate,
           sdpMid || "",
           usernameFragment || "",
@@ -1454,7 +1444,7 @@ class RTCPeerConnection {
       kind = sendTrack.kind;
     }
 
-    let transceiverImpl = this._impl.createTransceiverImpl(kind, sendTrack);
+    let transceiverImpl = this._pc.createTransceiverImpl(kind, sendTrack);
     let transceiver = this._win.RTCRtpTransceiver._create(
       this._win,
       new RTCRtpTransceiver(this, transceiverImpl, init, kind, sendTrack)
@@ -1490,7 +1480,7 @@ class RTCPeerConnection {
   }
 
   _replaceTrackNoRenegotiation(transceiverImpl, withTrack) {
-    this._impl.replaceTrackNoRenegotiation(transceiverImpl, withTrack);
+    this._pc.replaceTrackNoRenegotiation(transceiverImpl, withTrack);
   }
 
   close() {
@@ -1508,9 +1498,8 @@ class RTCPeerConnection {
     if (!this._suppressEvents) {
       this._transceivers.forEach(t => t.setStopped());
     }
-    this._impl.close();
+    this._pc.close();
     this._suppressEvents = true;
-    delete this._pc;
   }
 
   getLocalStreams() {
@@ -1526,7 +1515,7 @@ class RTCPeerConnection {
 
   getRemoteStreams() {
     this._checkClosed();
-    return this._impl.getRemoteStreams();
+    return this._pc.getRemoteStreams();
   }
 
   getSenders() {
@@ -1546,11 +1535,11 @@ class RTCPeerConnection {
   }
 
   mozEnablePacketDump(level, type, sending) {
-    this._impl.enablePacketDump(level, type, sending);
+    this._pc.enablePacketDump(level, type, sending);
   }
 
   mozDisablePacketDump(level, type, sending) {
-    this._impl.disablePacketDump(level, type, sending);
+    this._pc.disablePacketDump(level, type, sending);
   }
 
   getTransceivers() {
@@ -1563,21 +1552,21 @@ class RTCPeerConnection {
 
   get currentLocalDescription() {
     this._checkClosed();
-    const sdp = this._impl.currentLocalDescription;
+    const sdp = this._pc.currentLocalDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._impl.currentOfferer ? "offer" : "answer";
+    const type = this._pc.currentOfferer ? "offer" : "answer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingLocalDescription() {
     this._checkClosed();
-    const sdp = this._impl.pendingLocalDescription;
+    const sdp = this._pc.pendingLocalDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._impl.pendingOfferer ? "offer" : "answer";
+    const type = this._pc.pendingOfferer ? "offer" : "answer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
@@ -1587,21 +1576,21 @@ class RTCPeerConnection {
 
   get currentRemoteDescription() {
     this._checkClosed();
-    const sdp = this._impl.currentRemoteDescription;
+    const sdp = this._pc.currentRemoteDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._impl.currentOfferer ? "answer" : "offer";
+    const type = this._pc.currentOfferer ? "answer" : "offer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingRemoteDescription() {
     this._checkClosed();
-    const sdp = this._impl.pendingRemoteDescription;
+    const sdp = this._pc.pendingRemoteDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._impl.pendingOfferer ? "answer" : "offer";
+    const type = this._pc.pendingOfferer ? "answer" : "offer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
@@ -1612,10 +1601,10 @@ class RTCPeerConnection {
     return this._localIdp.idpLoginUrl;
   }
   get id() {
-    return this._impl.id;
+    return this._pc.id;
   }
   set id(s) {
-    this._impl.id = s;
+    this._pc.id = s;
   }
   get iceGatheringState() {
     return this._pc.iceGatheringState;
@@ -1630,7 +1619,7 @@ class RTCPeerConnection {
     if (this._closed) {
       return "closed";
     }
-    return this._impl.signalingState;
+    return this._pc.signalingState;
   }
 
   handleIceGatheringStateChange() {
@@ -1675,7 +1664,7 @@ class RTCPeerConnection {
       }
     }
 
-    return this._auto(onSucc, onErr, () => this._impl.getStats(selector));
+    return this._auto(onSucc, onErr, () => this._pc.getStats(selector));
   }
 
   createDataChannel(
@@ -1753,7 +1742,7 @@ class RTCPeerConnection {
     // Synchronous since it doesn't block.
     let dataChannel;
     try {
-      dataChannel = this._impl.createDataChannel(
+      dataChannel = this._pc.createDataChannel(
         label,
         protocol,
         type,
@@ -2147,7 +2136,7 @@ class RTCRtpSender {
 
   getStats() {
     if (this.track) {
-      return this._pc._async(async () => this._pc._impl.getStats(this.track));
+      return this._pc._async(async () => this._pc._pc.getStats(this.track));
     }
     return this._pc._win.Promise.resolve().then(
       () => new this._pc._win.RTCStatsReport()
