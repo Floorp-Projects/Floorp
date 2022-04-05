@@ -161,8 +161,8 @@ class BodyStream final : public nsIInputStreamCallback,
  private:
   // Fills a buffer with bytes from the stream.
   void WriteIntoReadRequestBuffer(JSContext* aCx, ReadableStream* aStream,
-                                  JS::Handle<JSObject*> aBuffer, size_t aLength,
-                                  size_t* aByteWritten);
+                                  JS::Handle<JSObject*> aBuffer,
+                                  uint32_t aLength, uint32_t* aByteWritten);
 
   // This is a script boundary until Bug 1750605 is resolved and allows us
   // to replace this with MOZ_CAN_RUN_SCRIPT.
