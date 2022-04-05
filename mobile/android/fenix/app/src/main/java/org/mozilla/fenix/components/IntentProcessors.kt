@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.intent.processing.TabIntentProcessor
@@ -16,6 +17,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.webnotifications.WebNotificationIntentProcessor
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
@@ -35,7 +37,8 @@ class IntentProcessors(
     private val searchUseCases: SearchUseCases,
     private val relationChecker: RelationChecker,
     private val customTabsStore: CustomTabsServiceStore,
-    private val manifestStorage: ManifestStorage
+    private val manifestStorage: ManifestStorage,
+    private val engine: Engine,
 ) {
     /**
      * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents.
@@ -78,5 +81,9 @@ class IntentProcessors(
 
     val fennecPageShortcutIntentProcessor by lazyMonitored {
         FennecBookmarkShortcutsIntentProcessor(tabsUseCases.addTab)
+    }
+
+    val webNotificationsIntentProcessor by lazyMonitored {
+        WebNotificationIntentProcessor(engine)
     }
 }

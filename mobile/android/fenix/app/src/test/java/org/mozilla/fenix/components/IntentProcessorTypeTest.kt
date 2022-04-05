@@ -67,6 +67,15 @@ class IntentProcessorTypeTest {
     }
 
     @Test
+    fun `get type for web notifications intent processor`() {
+        val processor = testContext.components.intentProcessors.webNotificationsIntentProcessor
+        val type = testContext.components.intentProcessors.getType(processor)
+
+        assertEquals(IntentProcessorType.NEW_TAB, type)
+        assertEquals(HomeActivity::class.java.name, type.activityClassName)
+    }
+
+    @Test
     fun `get type for custom tab intent processor`() {
         val processor = testContext.components.intentProcessors.customTabIntentProcessor
         val type = testContext.components.intentProcessors.getType(processor)

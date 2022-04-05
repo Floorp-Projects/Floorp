@@ -98,7 +98,8 @@ class Components(private val context: Context) {
             useCases.searchUseCases,
             core.relationChecker,
             core.customTabsStore,
-            core.webAppManifestStorage
+            core.webAppManifestStorage,
+            core.engine,
         )
     }
 

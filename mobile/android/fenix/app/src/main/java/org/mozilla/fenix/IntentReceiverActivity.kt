@@ -71,7 +71,8 @@ class IntentReceiverActivity : Activity() {
         launch(intent, intentProcessorType)
     }
 
-    private fun launch(intent: Intent, intentProcessorType: IntentProcessorType) {
+    @VisibleForTesting
+    internal fun launch(intent: Intent, intentProcessorType: IntentProcessorType) {
         intent.setClassName(applicationContext, intentProcessorType.activityClassName)
 
         if (!intent.hasExtra(HomeActivity.OPEN_TO_BROWSER)) {
@@ -104,6 +105,7 @@ class IntentReceiverActivity : Activity() {
         return components.intentProcessors.externalAppIntentProcessors +
             components.intentProcessors.fennecPageShortcutIntentProcessor +
             components.intentProcessors.externalDeepLinkIntentProcessor +
+            components.intentProcessors.webNotificationsIntentProcessor +
             modeDependentProcessors +
             NewTabShortcutIntentProcessor()
     }

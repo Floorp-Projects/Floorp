@@ -8,11 +8,14 @@ import android.app.Activity
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
 import android.net.Uri
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.runBlockingTest
@@ -27,6 +30,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.components.IntentProcessors
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
@@ -62,6 +66,7 @@ class IntentReceiverActivityTest {
         every { intentProcessors.externalAppIntentProcessors } returns emptyList()
         every { intentProcessors.fennecPageShortcutIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.externalDeepLinkIntentProcessor } returns mockIntentProcessor()
+        every { intentProcessors.webNotificationsIntentProcessor } returns mockIntentProcessor()
 
         coEvery { intentProcessors.intentProcessor.process(any()) } returns true
     }
@@ -244,6 +249,19 @@ class IntentReceiverActivityTest {
         assertEquals(ExternalAppBrowserActivity::class.java.name, intent.component!!.className)
         assertTrue(intent.getBooleanExtra(HomeActivity.OPEN_TO_BROWSER, false))
         assertTrue(Events.openedLink.testHasValue())
+    }
+
+    @Test
+    fun `process web notifications click intent`() {
+        val intent = Intent()
+        every { intentProcessors.webNotificationsIntentProcessor.process(intent) } returns true
+        val activity = spyk(Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get())
+        attachMocks(activity)
+        every { activity.launch(any(), any()) } just Runs
+        activity.processIntent(intent)
+
+        verify { intentProcessors.webNotificationsIntentProcessor.process(intent) }
+        verify { activity.launch(intent, IntentProcessorType.NEW_TAB) }
     }
 
     private fun attachMocks(activity: Activity) {

@@ -70,7 +70,7 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
@@ -243,7 +243,7 @@ class Core(
 
             WebNotificationFeature(
                 context, engine, icons, R.drawable.ic_status_logo,
-                permissionStorage.permissionsStorage, HomeActivity::class.java
+                permissionStorage.permissionsStorage, IntentReceiverActivity::class.java
             )
 
             MediaSessionFeature(context, MediaSessionService::class.java, this).start()

@@ -40,7 +40,8 @@ fun IntentProcessors.getType(processor: IntentProcessor?) = when {
         privateCustomTabIntentProcessor == processor -> IntentProcessorType.EXTERNAL_APP
     intentProcessor == processor ||
         privateIntentProcessor == processor ||
-        fennecPageShortcutIntentProcessor == processor -> IntentProcessorType.NEW_TAB
+        fennecPageShortcutIntentProcessor == processor ||
+        webNotificationsIntentProcessor == processor -> IntentProcessorType.NEW_TAB
     externalDeepLinkIntentProcessor == processor -> IntentProcessorType.EXTERNAL_DEEPLINK
     else -> IntentProcessorType.OTHER
 }
