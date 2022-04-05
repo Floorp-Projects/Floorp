@@ -696,7 +696,7 @@ class AutocompleteTest : BaseSessionTest() {
     @Test
     fun creditCardSaveAccept() {
         val ccName = "MyCard"
-        val ccNumber = "5105-1051-0510-5100"
+        val ccNumber = "5105105105105100"
         val ccExpMonth = "06"
         val ccExpYear = "24"
 
@@ -769,7 +769,7 @@ class AutocompleteTest : BaseSessionTest() {
     @Test
     fun creditCardSaveDismiss() {
         val ccName = "MyCard"
-        val ccNumber = "5105-1051-0510-5100"
+        val ccNumber = "5105105105105100"
         val ccExpMonth = "06"
         val ccExpYear = "24"
 
@@ -839,7 +839,7 @@ class AutocompleteTest : BaseSessionTest() {
     @Test
     fun creditCardSaveModifyAccept() {
         val ccName = "MyCard"
-        val ccNumber = "5105-1051-0510-5100"
+        val ccNumber = "5105105105105100"
         val ccExpMonth = "06"
         val ccExpYearNew = "26"
         val ccExpYear = "24"
@@ -920,10 +920,10 @@ class AutocompleteTest : BaseSessionTest() {
     @Test
     fun creditCardUpdateAccept() {
         val ccName = "MyCard"
-        val ccNumber1 = "5105-1051-0510-5100"
+        val ccNumber1 = "5105105105105100"
         val ccExpMonth1 = "06"
         val ccExpYear1 = "24"
-        val ccNumber2 = "4111-1111-1111-1111"
+        val ccNumber2 = "4111111111111111"
         val ccExpMonth2 = "11"
         val ccExpYear2 = "21"
         val savedCreditCards = mutableListOf<CreditCard>()
