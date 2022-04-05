@@ -107,6 +107,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
     return &mVideoCodecMode;
   }
   AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
+  AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
 
  private:
   virtual ~RTCRtpSender();
@@ -139,6 +140,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
   Canonical<webrtc::VideoCodecMode> mVideoCodecMode;
   Canonical<std::string> mCname;
+  Canonical<bool> mTransmitting;
 };
 
 }  // namespace dom

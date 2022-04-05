@@ -118,6 +118,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
     return &mVideoRtpRtcpConfig;
   }
+  AbstractCanonical<bool>* CanonicalReceiving() { return &mReceiving; }
 
  private:
   virtual ~RTCRtpReceiver();
@@ -155,6 +156,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   Canonical<std::vector<VideoCodecConfig>> mVideoCodecs;
   Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
+  Canonical<bool> mReceiving;
 };
 
 }  // namespace dom
