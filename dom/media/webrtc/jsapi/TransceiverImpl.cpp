@@ -57,10 +57,10 @@ struct ConduitControlState : public AudioConduitControlInterface,
 
   // MediaConduitControlInterface
   AbstractCanonical<bool>* CanonicalReceiving() override {
-    return mTransceiver->CanonicalReceiving();
+    return mReceiver->CanonicalReceiving();
   }
   AbstractCanonical<bool>* CanonicalTransmitting() override {
-    return mTransceiver->CanonicalTransmitting();
+    return mSender->CanonicalTransmitting();
   }
   AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() override {
     return mSender->CanonicalSsrcs();
@@ -155,8 +155,6 @@ TransceiverImpl::TransceiverImpl(
       mStsThread(aStsThread),
       mCallWrapper(aCallWrapper),
       mIdGenerator(aIdGenerator),
-      INIT_CANONICAL(mReceiving, false),
-      INIT_CANONICAL(mTransmitting, false),
       INIT_CANONICAL(mMid, std::string()),
       INIT_CANONICAL(mSyncGroup, std::string()) {
   if (IsVideo()) {
@@ -345,22 +343,8 @@ nsresult TransceiverImpl::UpdateConduit() {
     mMid = std::string();
   }
 
-  mReceiving = false;
-  mReceiver->Stop();
-
-  mTransmitting = false;
-  mSender->Stop();
-
   mReceiver->UpdateConduit();
   mSender->UpdateConduit();
-
-  if ((mReceiving = mJsepTransceiver->mRecvTrack.GetActive())) {
-    mReceiver->Start();
-  }
-
-  if ((mTransmitting = mJsepTransceiver->mSendTrack.GetActive())) {
-    mSender->Start();
-  }
 
   return NS_OK;
 }

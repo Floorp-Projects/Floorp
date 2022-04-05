@@ -162,8 +162,6 @@ class TransceiverImpl : public nsISupports,
                           RefPtr<dom::RTCStatsPromise::AllPromiseType>>>
           aTransceiverStatsPromises);
 
-  AbstractCanonical<bool>* CanonicalReceiving() { return &mReceiving; }
-  AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
   AbstractCanonical<std::string>* CanonicalMid() { return &mMid; }
   AbstractCanonical<std::string>* CanonicalSyncGroup() { return &mSyncGroup; }
 
@@ -196,9 +194,6 @@ class TransceiverImpl : public nsISupports,
   bool mStopped = false;
   bool mShutdown = false;
   bool mSyncing = false;
-
-  Canonical<bool> mReceiving;
-  Canonical<bool> mTransmitting;
 
   Canonical<std::string> mMid;
   Canonical<std::string> mSyncGroup;
