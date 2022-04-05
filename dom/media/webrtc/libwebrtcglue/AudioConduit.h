@@ -261,7 +261,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
     Mirror<bool> mTransmitting;
     Mirror<Ssrcs> mLocalSsrcs;
     Mirror<std::string> mLocalCname;
-    Mirror<std::string> mLocalMid;
+    Mirror<std::string> mMid;
     Mirror<Ssrc> mRemoteSsrc;
     Mirror<std::string> mSyncGroup;
     Mirror<RtpExtList> mLocalRecvRtpExtensions;

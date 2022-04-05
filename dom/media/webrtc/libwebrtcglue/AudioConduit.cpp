@@ -65,7 +65,7 @@ WebrtcAudioConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
       INIT_MIRROR(mTransmitting, false),
       INIT_MIRROR(mLocalSsrcs, Ssrcs()),
       INIT_MIRROR(mLocalCname, std::string()),
-      INIT_MIRROR(mLocalMid, std::string()),
+      INIT_MIRROR(mMid, std::string()),
       INIT_MIRROR(mRemoteSsrc, 0),
       INIT_MIRROR(mSyncGroup, std::string()),
       INIT_MIRROR(mLocalRecvRtpExtensions, RtpExtList()),
@@ -83,7 +83,7 @@ RefPtr<GenericPromise> WebrtcAudioConduit::Shutdown() {
                        mControl.mTransmitting.DisconnectIfConnected();
                        mControl.mLocalSsrcs.DisconnectIfConnected();
                        mControl.mLocalCname.DisconnectIfConnected();
-                       mControl.mLocalMid.DisconnectIfConnected();
+                       mControl.mMid.DisconnectIfConnected();
                        mControl.mRemoteSsrc.DisconnectIfConnected();
                        mControl.mSyncGroup.DisconnectIfConnected();
                        mControl.mLocalRecvRtpExtensions.DisconnectIfConnected();
@@ -147,7 +147,7 @@ void WebrtcAudioConduit::InitControl(AudioConduitControlInterface* aControl) {
   CONNECT(aControl->CanonicalTransmitting(), mControl.mTransmitting);
   CONNECT(aControl->CanonicalLocalSsrcs(), mControl.mLocalSsrcs);
   CONNECT(aControl->CanonicalLocalCname(), mControl.mLocalCname);
-  CONNECT(aControl->CanonicalLocalMid(), mControl.mLocalMid);
+  CONNECT(aControl->CanonicalMid(), mControl.mMid);
   CONNECT(aControl->CanonicalRemoteSsrc(), mControl.mRemoteSsrc);
   CONNECT(aControl->CanonicalSyncGroup(), mControl.mSyncGroup);
   CONNECT(aControl->CanonicalLocalRecvRtpExtensions(),
@@ -200,8 +200,8 @@ void WebrtcAudioConduit::OnControlConfigChange() {
     sendStreamReconfigureNeeded = true;
   }
 
-  if (mControl.mLocalMid.Ref() != mSendStreamConfig.rtp.mid) {
-    mSendStreamConfig.rtp.mid = mControl.mLocalMid.Ref();
+  if (mControl.mMid.Ref() != mSendStreamConfig.rtp.mid) {
+    mSendStreamConfig.rtp.mid = mControl.mMid.Ref();
     sendStreamReconfigureNeeded = true;
   }
 

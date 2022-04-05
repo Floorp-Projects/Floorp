@@ -27,7 +27,6 @@
 #include "PeerConnectionCtx.h"
 #include "TransceiverImpl.h"
 #include "libwebrtcglue/AudioConduit.h"
-#include "RTCStatsIdGenerator.h"
 
 namespace mozilla::dom {
 
@@ -94,8 +93,7 @@ RTCRtpReceiver::RTCRtpReceiver(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
     JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
     AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, RTCStatsIdGenerator* aIdGenerator,
-    TransceiverImpl* aTransceiverImpl)
+    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mJsepTransceiver(aJsepTransceiver),
@@ -103,7 +101,6 @@ RTCRtpReceiver::RTCRtpReceiver(
       mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
-      mIdGenerator(aIdGenerator),
       mTransceiverImpl(aTransceiverImpl),
       INIT_CANONICAL(mSsrc, 0),
       INIT_CANONICAL(mVideoRtxSsrc, 0),
@@ -170,43 +167,8 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
     return promise.forget();
   }
 
-  nsTArray<RTCCodecStats> codecStats;
-  if (PeerConnectionCtx::isActive()) {
-    PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
-    if (PeerConnectionImpl* pc = ctx->GetPeerConnection(mPCHandle); pc) {
-      codecStats = pc->GetCodecStats(pc->GetTimestampMaker().GetNow());
-    }
-  }
-
-  AutoTArray<
-      std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>, 1>
-      statsPromises;
-  nsTArray<RefPtr<RTCStatsPromise>> stats = GetStatsInternal();
-  statsPromises.AppendElement(std::make_tuple(
-      mTransceiverImpl.get(), RTCStatsPromise::All(mMainThread, stats)));
-
-  TransceiverImpl::ApplyCodecStats(std::move(codecStats),
-                                   std::move(statsPromises))
-      ->Then(
-          mMainThread, __func__,
-          [promise, window = mWindow,
-           idGen = mIdGenerator](UniquePtr<RTCStatsCollection> aStats) mutable {
-            // Rewrite ids and merge stats collections into the final report.
-            AutoTArray<UniquePtr<RTCStatsCollection>, 1> stats;
-            stats.AppendElement(std::move(aStats));
-
-            RTCStatsCollection opaqueStats;
-            idGen->RewriteIds(std::move(stats), &opaqueStats);
-
-            RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
-            report->Incorporate(opaqueStats);
-
-            promise->MaybeResolve(std::move(report));
-          },
-          [promise](nsresult aError) {
-            promise->MaybeReject(NS_ERROR_FAILURE);
-          });
-
+  mTransceiverImpl->ChainToDomPromiseWithCodecStats(GetStatsInternal(),
+                                                    promise);
   return promise.forget();
 }
 

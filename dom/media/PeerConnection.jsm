@@ -16,7 +16,6 @@ const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
-const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_TRANSCEIVER_CONTRACT = "@mozilla.org/dom/rtptransceiver;1";
 const PC_COREQUEST_CONTRACT = "@mozilla.org/dom/createofferrequest;1";
 
@@ -26,7 +25,6 @@ const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
-const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
 const PC_TRANSCEIVER_CID = Components.ID(
   "{09475754-103a-41f5-a2d0-e1f27eb0b537}"
 );
@@ -1405,7 +1403,12 @@ class RTCPeerConnection {
   removeTrack(sender) {
     this._checkClosed();
 
-    sender.checkWasCreatedByPc(this.__DOM_IMPL__);
+    if (!this._pc.createdSender(sender)) {
+      throw new this._win.DOMException(
+        "This sender was not created by this PeerConnection",
+        "InvalidAccessError"
+      );
+    }
 
     let transceiver = this._transceivers.find(
       transceiver => !transceiver.stopped && transceiver.sender == sender
@@ -1477,10 +1480,6 @@ class RTCPeerConnection {
 
   updateNegotiationNeeded() {
     this._pc.updateNegotiationNeeded();
-  }
-
-  _replaceTrackNoRenegotiation(transceiverImpl, withTrack) {
-    this._pc.replaceTrackNoRenegotiation(transceiverImpl, withTrack);
   }
 
   close() {
@@ -2007,165 +2006,12 @@ setupPrototype(RTCPeerConnectionStatic, {
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 });
 
-class RTCRtpSender {
-  constructor(pc, transceiverImpl, transceiver, track, kind, streams) {
-    let dtmf = null;
-    if (kind == "audio") {
-      dtmf = transceiverImpl.dtmf;
-    }
-
-    Object.assign(this, {
-      _pc: pc,
-      _transceiverImpl: transceiverImpl,
-      _transceiver: transceiver,
-      track,
-      _streams: streams,
-      dtmf,
-    });
-  }
-
-  replaceTrack(withTrack) {
-    // async functions in here return a chrome promise, which is not something
-    // content can use. This wraps that promise in something content can use.
-    return this._pc._win.Promise.resolve(this._replaceTrack(withTrack));
-  }
-
-  async _replaceTrack(withTrack) {
-    let pc = this._pc;
-    if (withTrack && withTrack.kind != this._transceiver.getKind()) {
-      throw new pc._win.TypeError("Cannot replaceTrack with a different kind!");
-    }
-
-    pc._checkClosed();
-
-    await pc._chain(async () => {
-      if (this._transceiver.stopped) {
-        throw new pc._win.DOMException(
-          "Cannot call replaceTrack when transceiver is stopped",
-          "InvalidStateError"
-        );
-      }
-
-      await pc._queueTaskWithClosedCheck(() => {
-        // Updates the track on the MediaPipeline, will throw on failure.
-        try {
-          pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
-        } catch (e) {
-          throw new pc._win.DOMException(
-            "Track could not be replaced without renegotiation",
-            "InvalidModificationError"
-          );
-        }
-        this.track = withTrack;
-        this._transceiver.sync();
-      });
-    });
-  }
-
-  setParameters(parameters) {
-    return this._pc._win.Promise.resolve(this._setParameters(parameters));
-  }
-
-  async _setParameters(parameters) {
-    this._pc._checkClosed();
-
-    if (this._transceiver.stopped) {
-      throw new this._pc._win.DOMException(
-        "This sender's transceiver is stopped",
-        "InvalidStateError"
-      );
-    }
-
-    if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
-      return;
-    }
-
-    parameters.encodings = parameters.encodings || [];
-
-    parameters.encodings.reduce(
-      (uniqueRids, { rid, scaleResolutionDownBy }) => {
-        if (scaleResolutionDownBy < 1.0) {
-          throw new this._pc._win.RangeError(
-            "scaleResolutionDownBy must be >= 1.0"
-          );
-        }
-        if (!rid && parameters.encodings.length > 1) {
-          throw new this._pc._win.TypeError("Missing rid");
-        }
-        if (uniqueRids[rid]) {
-          throw new this._pc._win.TypeError("Duplicate rid");
-        }
-        uniqueRids[rid] = true;
-        return uniqueRids;
-      },
-      {}
-    );
-
-    // TODO(bug 1401592): transaction ids, timing changes
-
-    await this._pc._queueTaskWithClosedCheck(() => {
-      this.parameters = parameters;
-      this._transceiver.sync();
-    });
-  }
-
-  getParameters() {
-    // TODO(bug 1401592): transaction ids
-
-    // All the other stuff that the spec says to update is handled when
-    // transceivers are synced.
-    return this.parameters;
-  }
-
-  setStreams(streams) {
-    this._streams = streams;
-  }
-
-  getStreams() {
-    return this._streams;
-  }
-
-  setTrack(track) {
-    this._pc._replaceTrackNoRenegotiation(this._transceiverImpl, track);
-    this.track = track;
-  }
-
-  get transport() {
-    return this._transceiverImpl.dtlsTransport;
-  }
-
-  getStats() {
-    if (this.track) {
-      return this._pc._async(async () => this._pc._pc.getStats(this.track));
-    }
-    return this._pc._win.Promise.resolve().then(
-      () => new this._pc._win.RTCStatsReport()
-    );
-  }
-
-  checkWasCreatedByPc(pc) {
-    if (pc != this._pc.__DOM_IMPL__) {
-      throw new this._pc._win.DOMException(
-        "This sender was not created by this PeerConnection",
-        "InvalidAccessError"
-      );
-    }
-  }
-}
-setupPrototype(RTCRtpSender, {
-  classID: PC_SENDER_CID,
-  contractID: PC_SENDER_CONTRACT,
-  QueryInterface: ChromeUtils.generateQI([]),
-});
-
 class RTCRtpTransceiver {
   constructor(pc, transceiverImpl, init, kind, sendTrack) {
     let receiver = transceiverImpl.receiver;
+    let sender = transceiverImpl.sender;
     let streams = (init && init.streams) || [];
-    let sender = pc._win.RTCRtpSender._create(
-      pc._win,
-      new RTCRtpSender(pc, transceiverImpl, this, sendTrack, kind, streams)
-    );
+    sender.setStreams(streams);
 
     let direction = (init && init.direction) || "sendrecv";
     Object.assign(this, {
@@ -2301,7 +2147,6 @@ var EXPORTED_SYMBOLS = [
   "RTCSessionDescription",
   "RTCPeerConnection",
   "RTCPeerConnectionStatic",
-  "RTCRtpSender",
   "RTCRtpTransceiver",
   "PeerConnectionObserver",
   "CreateOfferRequest",

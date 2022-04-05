@@ -297,7 +297,7 @@ class WebrtcVideoConduit
     Mirror<Ssrcs> mLocalSsrcs;
     Mirror<Ssrcs> mLocalRtxSsrcs;
     Mirror<std::string> mLocalCname;
-    Mirror<std::string> mLocalMid;
+    Mirror<std::string> mMid;
     Mirror<Ssrc> mRemoteSsrc;
     Mirror<Ssrc> mRemoteRtxSsrc;
     Mirror<std::string> mSyncGroup;
