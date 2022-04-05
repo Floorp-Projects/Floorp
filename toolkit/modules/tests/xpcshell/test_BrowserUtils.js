@@ -186,3 +186,23 @@ add_task(async function test_shouldShowFocusPromo() {
 
   Preferences.resetBranch("browser.promo.focus");
 });
+
+add_task(function test_isShareableURL() {
+  // Some test suites, specifically android, don't have this setup properly -- so we add it manually
+  if (!Preferences.get("services.sync.engine.tabs.filteredSchemes")) {
+    Preferences.set(
+      "services.sync.engine.tabs.filteredSchemes",
+      "about|resource|chrome|file|blob|moz-extension"
+    );
+  }
+  // Empty shouldn't be sendable
+  Assert.ok(!BrowserUtils.isShareableURL(""));
+  // Valid
+  Assert.ok(
+    BrowserUtils.isShareableURL(Services.io.newURI("https://mozilla.org"))
+  );
+  // Invalid
+  Assert.ok(
+    !BrowserUtils.isShareableURL(Services.io.newURI("file://path/to/pdf.pdf"))
+  );
+});
