@@ -567,6 +567,8 @@ class LApplyArgsGeneric
   bool hasSingleTarget() const { return getSingleTarget() != nullptr; }
   WrappedFunction* getSingleTarget() const { return mir()->getSingleTarget(); }
 
+  uint32_t numExtraFormals() const { return mir()->numExtraFormals(); }
+
   const LAllocation* getFunction() { return getOperand(0); }
   const LAllocation* getArgc() { return getOperand(1); }
   static const size_t ThisIndex = 2;
@@ -660,6 +662,8 @@ class LConstructArgsGeneric
 
   bool hasSingleTarget() const { return getSingleTarget() != nullptr; }
   WrappedFunction* getSingleTarget() const { return mir()->getSingleTarget(); }
+
+  uint32_t numExtraFormals() const { return mir()->numExtraFormals(); }
 
   const LAllocation* getFunction() { return getOperand(0); }
   const LAllocation* getArgc() { return getOperand(1); }

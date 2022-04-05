@@ -192,7 +192,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                               size_t argvDstOffset);
   void emitPopArguments(Register extraStackSize);
   void emitPushArguments(Register argcreg, Register extraStackSpace,
-                         Register copyreg);
+                         Register copyreg, uint32_t extraFormals);
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,
                                 Register scratch, size_t argvSrcOffset);
   void emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace);
