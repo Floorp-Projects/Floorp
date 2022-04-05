@@ -87,7 +87,7 @@ object FeatureFlags {
     /**
      * Enables history improvement features.
      */
-    val historyImprovementFeatures = Config.channel.isNightlyOrDebug
+    const val historyImprovementFeatures = true
 
     /**
      * Enables themed wallpapers feature.
