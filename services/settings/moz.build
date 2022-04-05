@@ -24,6 +24,7 @@ EXTRA_JS_MODULES["services-settings"] += [
     "RemoteSettingsWorker.js",
     "RemoteSettingsWorker.jsm",
     "SharedUtils.jsm",
+    "SyncHistory.jsm",
     "Utils.jsm",
 ]
 
