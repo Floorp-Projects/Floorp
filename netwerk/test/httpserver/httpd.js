@@ -2876,6 +2876,9 @@ ServerHandler.prototype = {
       );
 
       try {
+        // If you update the list of imports, please update the list in
+        // tools/lint/eslint/eslint-plugin-mozilla/lib/environments/sjs.js
+        // as well.
         var s = Cu.Sandbox(gGlobalObject);
         s.importFunction(dump, "dump");
         s.importFunction(atob, "atob");
