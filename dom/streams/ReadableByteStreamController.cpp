@@ -682,10 +682,15 @@ MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerFillReadRequestFromQueue(
     ReadRequest* aReadRequest, ErrorResult& aRv) {
   // Step 1. Assert: controller.[[queueTotalSize]] > 0.
   MOZ_ASSERT(aController->QueueTotalSize() > 0);
+  // Also assert that the queue has a non-zero length;
+  MOZ_ASSERT(aController->Queue().length() > 0);
 
   // Step 2. Let entry be controller.[[queue]][0].
   // Step 3. Remove entry from controller.[[queue]].
   RefPtr<ReadableByteStreamQueueEntry> entry = aController->Queue().popFirst();
+
+  // Assert that we actually got an entry.
+  MOZ_ASSERT(entry);
 
   // Step 4. Set controller.[[queueTotalSize]] to controller.[[queueTotalSize]]
   // − entry’s byte length.
