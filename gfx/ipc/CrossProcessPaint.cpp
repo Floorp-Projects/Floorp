@@ -135,6 +135,11 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   {
     nsRect r = CSSPixel::ToAppUnits(rect);
 
+    // This matches what nsDeviceContext::CreateRenderingContext does.
+    if (presContext->IsPrintingOrPrintPreview()) {
+      dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
+    }
+
     RefPtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
     thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
     RefPtr<PresShell> presShell = presContext->PresShell();
