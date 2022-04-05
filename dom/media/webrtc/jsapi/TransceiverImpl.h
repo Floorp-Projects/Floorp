@@ -32,6 +32,7 @@ class MediaTransportHandler;
 class RTCStatsIdGenerator;
 class WebrtcCallWrapper;
 class JsepTrackNegotiatedDetails;
+class PeerConnectionImpl;
 
 namespace dom {
 class RTCDtlsTransport;
@@ -58,7 +59,7 @@ class TransceiverImpl : public nsISupports,
    * |aSendTrack| might or might not be set.
    */
   TransceiverImpl(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                  const std::string& aPCHandle,
+                  PeerConnectionImpl* aPc,
                   MediaTransportHandler* aTransportHandler,
                   JsepTransceiver* aJsepTransceiver,
                   nsISerialEventTarget* aStsThread,
@@ -174,7 +175,7 @@ class TransceiverImpl : public nsISupports,
   void Stop();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  const std::string mPCHandle;
+  RefPtr<PeerConnectionImpl> mPc;
   RefPtr<MediaTransportHandler> mTransportHandler;
   const RefPtr<JsepTransceiver> mJsepTransceiver;
   nsCOMPtr<nsISerialEventTarget> mStsThread;

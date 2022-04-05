@@ -21,7 +21,7 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpSender, mWindow, mSenderTrack,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpSender, mWindow, mPc, mSenderTrack,
                                       mTransceiverImpl, mStreams, mDtmf)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpSender)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpSender)
@@ -35,14 +35,16 @@ LazyLogModule gSenderLog("RTCRtpSender");
 #define INIT_CANONICAL(name, val) \
   name(AbstractThread::MainThread(), val, "RTCRtpSender::" #name " (Canonical)")
 
-RTCRtpSender::RTCRtpSender(
-    nsPIDOMWindowInner* aWindow, const std::string& aPCHandle,
-    MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
-    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
-    TransceiverImpl* aTransceiverImpl)
+RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
+                           MediaTransportHandler* aTransportHandler,
+                           JsepTransceiver* aJsepTransceiver,
+                           AbstractThread* aCallThread,
+                           nsISerialEventTarget* aStsThread,
+                           MediaSessionConduit* aConduit,
+                           dom::MediaStreamTrack* aTrack,
+                           TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
-      mPCHandle(aPCHandle),
+      mPc(aPc),
       mJsepTransceiver(aJsepTransceiver),
       mSenderTrack(aTrack),
       mTransceiverImpl(aTransceiverImpl),
@@ -55,7 +57,7 @@ RTCRtpSender::RTCRtpSender(
       INIT_CANONICAL(mVideoCodecMode, webrtc::VideoCodecMode::kRealtimeVideo),
       INIT_CANONICAL(mCname, std::string()) {
   mPipeline = new MediaPipelineTransmit(
-      mPCHandle, aTransportHandler, aCallThread, aStsThread,
+      mPc->GetHandle(), aTransportHandler, aCallThread, aStsThread,
       aConduit->type() == MediaSessionConduit::VIDEO, aConduit);
 
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
@@ -388,8 +390,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     const dom::RTCRtpParameters& aParameters) {
   // TODO(bug 1401592): transaction ids and other spec fixes
   RefPtr<dom::Promise> p = MakePromise();
-  PeerConnectionWrapper pcw(mPCHandle);
-  if (!pcw.impl() || pcw.impl()->IsClosed()) {
+  if (mPc->IsClosed()) {
     p->MaybeRejectWithInvalidStateError("Peer connection is closed");
     return p.forget();
   }
@@ -435,8 +436,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<RTCRtpSender>(this), p, parameters] {
         // p never resolves if the pc is closed. That's what the spec wants.
-        PeerConnectionWrapper pcw(mPCHandle);
-        if (pcw.impl() && !pcw.impl()->IsClosed()) {
+        if (!mPc->IsClosed()) {
           ApplyParameters(parameters);
           p->MaybeResolveWithUndefined();
         }
@@ -612,30 +612,23 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
     }
   }
 
-  PeerConnectionWrapper pcw(mPCHandle);
-  if (NS_WARN_IF(!pcw.impl())) {
-    // Smile and nod
-    return MakePromise();
-  }
-
   MOZ_LOG(gSenderLog, LogLevel::Debug,
-          ("%s[%s]: %s (%p)", mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__,
-           aWithTrack));
+          ("%s[%s]: %s (%p)", mPc->GetHandle().c_str(), GetMid().c_str(),
+           __FUNCTION__, aWithTrack));
 
   // Return the result of chaining the following steps to connection's
   // operations chain:
-  RefPtr<PeerConnectionImpl> pc = pcw.impl();
   RefPtr<PeerConnectionImpl::Operation> op =
-      new ReplaceTrackOperation(pc, mTransceiverImpl, aWithTrack);
+      new ReplaceTrackOperation(mPc, mTransceiverImpl, aWithTrack);
+  // Static analysis forces us to use a temporary.
+  auto pc = mPc;
   return do_AddRef(pc->Chain(op));
 }
 
 nsPIDOMWindowInner* RTCRtpSender::GetParentObject() const { return mWindow; }
 
-// TODO: Remove this awkward handle stuff
 already_AddRefed<dom::Promise> RTCRtpSender::MakePromise() const {
-  PeerConnectionWrapper pcw(mPCHandle);
-  return pcw.impl()->MakePromise();
+  return mPc->MakePromise();
 }
 
 bool RTCRtpSender::SeamlessTrackSwitch(
@@ -665,16 +658,16 @@ bool RTCRtpSender::SeamlessTrackSwitch(
     if (oldType != newType) {
       if (NS_WARN_IF(NS_FAILED(mTransceiverImpl->UpdateConduit()))) {
         MOZ_LOG(gSenderLog, LogLevel::Error,
-                ("%s[%s]: %s Error Updating VideoConduit", mPCHandle.c_str(),
-                 GetMid().c_str(), __FUNCTION__));
+                ("%s[%s]: %s Error Updating VideoConduit",
+                 mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
         return false;
       }
     }
   } else if (!mSenderTrack != !aWithTrack) {
     if (NS_WARN_IF(NS_FAILED(mTransceiverImpl->UpdateConduit()))) {
       MOZ_LOG(gSenderLog, LogLevel::Error,
-              ("%s[%s]: %s Error Updating AudioConduit", mPCHandle.c_str(),
-               GetMid().c_str(), __FUNCTION__));
+              ("%s[%s]: %s Error Updating AudioConduit",
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return false;
     }
   }
@@ -690,8 +683,7 @@ void RTCRtpSender::SetTrack(const RefPtr<MediaStreamTrack>& aTrack) {
 
 bool RTCRtpSender::SetSenderTrackWithClosedCheck(
     const RefPtr<MediaStreamTrack>& aTrack) {
-  PeerConnectionWrapper pcw(mPCHandle);
-  if (pcw.impl() && !pcw.impl()->IsClosed()) {
+  if (!mPc->IsClosed()) {
     mSenderTrack = aTrack;
     return true;
   }
@@ -724,7 +716,7 @@ nsresult RTCRtpSender::UpdateConduit() {
     MOZ_LOG(gSenderLog, LogLevel::Error,
             ("%s[%s]: %s No local SSRC set! (Should be set regardless of "
              "whether we're sending RTP; we need a local SSRC in all cases)",
-             mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
     return NS_ERROR_FAILURE;
   }
 
@@ -750,7 +742,7 @@ nsresult RTCRtpSender::ConfigureVideoCodecMode() {
   if (!videotrack) {
     MOZ_LOG(gSenderLog, LogLevel::Error,
             ("%s[%s]: %s mSenderTrack is not video! This should never happen!",
-             mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
     MOZ_CRASH();
     return NS_ERROR_FAILURE;
   }
@@ -805,14 +797,14 @@ nsresult RTCRtpSender::UpdateVideoConduit() {
       MOZ_LOG(gSenderLog, LogLevel::Error,
               ("%s[%s]: %s Failed to convert JsepCodecDescriptions to "
                "VideoCodecConfigs (send).",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return rv;
     }
 
     if (configs.empty()) {
       MOZ_LOG(gSenderLog, LogLevel::Info,
               ("%s[%s]: %s  No codecs were negotiated (send).",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return NS_OK;
     }
 
@@ -835,7 +827,7 @@ nsresult RTCRtpSender::UpdateAudioConduit() {
       MOZ_LOG(gSenderLog, LogLevel::Error,
               ("%s[%s]: %s   Failed to convert JsepCodecDescriptions to "
                "AudioCodecConfigs (send).",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return rv;
     }
 
@@ -890,7 +882,7 @@ void RTCRtpSender::Start() {
   if (!mSenderTrack) {
     MOZ_LOG(gSenderLog, LogLevel::Debug,
             ("%s[%s]: %s Starting transmit conduit without send track!",
-             mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
   }
   mPipeline->Start();
 }

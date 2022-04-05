@@ -30,7 +30,7 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpReceiver, mWindow, mTrack)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpReceiver, mWindow, mPc, mTrack)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpReceiver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpReceiver)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpReceiver)
@@ -88,16 +88,13 @@ static already_AddRefed<dom::MediaStreamTrack> CreateTrack(
   name(AbstractThread::MainThread(), val, \
        "RTCRtpReceiver::" #name " (Canonical)")
 
-RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                               const std::string& aPCHandle,
-                               MediaTransportHandler* aTransportHandler,
-                               JsepTransceiver* aJsepTransceiver,
-                               AbstractThread* aCallThread,
-                               nsISerialEventTarget* aStsThread,
-                               MediaSessionConduit* aConduit,
-                               TransceiverImpl* aTransceiverImpl)
+RTCRtpReceiver::RTCRtpReceiver(
+    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
+    MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
+    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
+    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
-      mPCHandle(aPCHandle),
+      mPc(aPc),
       mJsepTransceiver(aJsepTransceiver),
       mCallThread(aCallThread),
       mStsThread(aStsThread),
@@ -123,11 +120,11 @@ RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
   }
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
-        mPCHandle, aTransportHandler, aCallThread, mStsThread.get(),
+        mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
         *aConduit->AsAudioSessionConduit(), mTrack, principalHandle);
   } else {
     mPipeline = new MediaPipelineReceiveVideo(
-        mPCHandle, aTransportHandler, aCallThread, mStsThread.get(),
+        mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
         *aConduit->AsVideoSessionConduit(), mTrack, principalHandle);
   }
 }
@@ -613,7 +610,7 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
   // by the far-end sender.
   if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
-            ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
+            ("%s[%s]: %s Setting remote SSRC %u", mPc->GetHandle().c_str(),
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
     uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
@@ -658,7 +655,7 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
       MOZ_LOG(gReceiverLog, LogLevel::Error,
               ("%s[%s]: %s Failed to convert "
                "JsepCodecDescriptions to VideoCodecConfigs (recv).",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return rv;
     }
 
@@ -675,7 +672,7 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
 
   if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
-            ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
+            ("%s[%s]: %s Setting remote SSRC %u", mPc->GetHandle().c_str(),
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
     mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
@@ -705,7 +702,7 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
       MOZ_LOG(gReceiverLog, LogLevel::Error,
               ("%s[%s]: %s Failed to convert "
                "JsepCodecDescriptions to AudioCodecConfigs (recv).",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__));
+               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
       return rv;
     }
 
