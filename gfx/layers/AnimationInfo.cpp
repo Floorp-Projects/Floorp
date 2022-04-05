@@ -349,6 +349,25 @@ static TimingFunction ToTimingFunction(
       aCTF->GetSteps().mSteps, static_cast<uint8_t>(aCTF->GetSteps().mPos)));
 }
 
+static Maybe<ScrollTimelineOptions> GetScrollTimelineOptions(
+    dom::AnimationTimeline* aTimeline) {
+  if (!aTimeline || !aTimeline->IsScrollTimeline()) {
+    return Nothing();
+  }
+
+  const dom::ScrollTimeline* timeline = aTimeline->AsScrollTimeline();
+  MOZ_ASSERT(timeline->IsActive(),
+             "We send scroll animation to the compositor only if its timeline "
+             "is active");
+
+  ScrollableLayerGuid::ViewID source = ScrollableLayerGuid::NULL_SCROLL_ID;
+  DebugOnly<bool> success =
+      nsLayoutUtils::FindIDFor(timeline->SourceElement(), &source);
+  MOZ_ASSERT(success, "We should have a valid ViewID for the scroller");
+
+  return Some(ScrollTimelineOptions(source, timeline->Axis()));
+}
+
 // FIXME: Bug 1489392: We don't have to normalize the path here if we accept
 // the spec issue which would like to normalize svg paths at computed time.
 static StyleOffsetPath NormalizeOffsetPath(const StyleOffsetPath& aOffsetPath) {
@@ -491,6 +510,8 @@ void AnimationInfo::AddAnimationForProperty(
       aAnimation->GetEffect()->AsKeyframeEffect()->IterationComposite());
   animation->isNotPlaying() = !aAnimation->IsPlaying();
   animation->isNotAnimating() = false;
+  animation->scrollTimelineOptions() =
+      GetScrollTimelineOptions(aAnimation->GetTimeline());
 
   TransformReferenceBox refBox(aFrame);
 

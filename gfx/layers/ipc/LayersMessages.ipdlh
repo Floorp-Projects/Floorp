@@ -50,6 +50,7 @@ using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
+using mozilla::layers::ScrollDirection from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
@@ -170,6 +171,14 @@ struct AnimationSegment {
   PartialPrerenderData? partialPrerenderData;
 };
 
+// The scroll timeline information.
+struct ScrollTimelineOptions {
+  // The source of the scroll-timeline.
+  ViewID source;
+  // The physical direction.
+  ScrollDirection axis;
+};
+
 struct Animation {
   // The zero time of this Animation's timeline. May be null if isNotPlaying is
   // true.
@@ -232,6 +241,9 @@ struct Animation {
   Animatable baseStyle;
   // An optional data specific for transform like properies.
   TransformData? transformData;
+  // If this is present, the animation is driven by a ScrollTimeline, and
+  // this structure contains information about that timeline.
+  ScrollTimelineOptions? scrollTimelineOptions;
 };
 
 struct CompositorAnimations {
