@@ -334,6 +334,9 @@ HTMLVideoElement::GetVideoPlaybackQuality() {
           }
         }
       }
+      if (!StaticPrefs::media_video_dropped_frame_stats_enabled()) {
+        droppedFrames = 0;
+      }
     }
   }
 
