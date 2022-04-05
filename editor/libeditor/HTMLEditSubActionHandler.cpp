@@ -7477,35 +7477,43 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
-  nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
-      aListItemElement, {WalkTreeOption::IgnoreNonEditableNode});
-
-  // If there is no previous list item, put caret into the given list item.
-  if (!prevItem || !HTMLEditUtils::IsListItem(prevItem)) {
-    return EditorDOMPoint(&aListItemElement);
+  // If aListItemElement is not replaced, we should not do anything anymore.
+  if (MOZ_UNLIKELY(!splitListItemResult.DidSplit()) ||
+      NS_WARN_IF(!splitListItemResult.GetNewContent()->IsElement()) ||
+      NS_WARN_IF(!splitListItemResult.GetOriginalContent()->IsElement())) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() didn't split");
+    return Err(NS_ERROR_FAILURE);
   }
+
+  // FYI: They are grabbed by splitListItemResult so that they are known live
+  //      things.
+  Element& leftListItemElement =
+      *splitListItemResult.GetPreviousContent()->AsElement();
+  Element& rightListItemElement =
+      *splitListItemResult.GetNextContent()->AsElement();
 
   // Hack: until I can change the damaged doc range code back to being
   // extra-inclusive, I have to manually detect certain list items that may be
   // left empty.
   if (HTMLEditUtils::IsEmptyNode(
-          *prevItem, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+          leftListItemElement,
+          {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     CreateElementResult createPaddingBRResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
-            EditorDOMPoint(prevItem, 0));
+            EditorDOMPoint(&leftListItemElement, 0u));
     if (MOZ_UNLIKELY(createPaddingBRResult.Failed())) {
       NS_WARNING(
           "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
           ") failed");
       return Err(createPaddingBRResult.Rv());
     }
-    return EditorDOMPoint(&aListItemElement, 0u);
+    return EditorDOMPoint(&rightListItemElement, 0u);
   }
 
-  if (HTMLEditUtils::IsEmptyNode(aListItemElement)) {
-    // If aListItemElement is a <dd> or a <dt> and becomes empty or a direct
-    // child of the editing host, replace the right list item element with a
-    // new list item element whose type is the other one.
+  if (HTMLEditUtils::IsEmptyNode(rightListItemElement)) {
+    // If aListItemElement is a <dd> or a <dt> and the right list item is empty
+    // or a direct child of the editing host, replace it a new list item element
+    // whose type is the other one.
     if (aListItemElement.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
       nsStaticAtom& nextDefinitionListItemTagName =
           aListItemElement.IsHTMLElement(nsGkAtoms::dt) ? *nsGkAtoms::dd
@@ -7515,7 +7523,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
           CreateAndInsertElement(WithTransaction::Yes,
                                  MOZ_KnownLive(nextDefinitionListItemTagName),
-                                 EditorDOMPoint::After(aListItemElement));
+                                 EditorDOMPoint::After(rightListItemElement));
       if (MOZ_UNLIKELY(maybeNewListItemElement.isErr())) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -7523,7 +7531,10 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
         return Err(maybeNewListItemElement.unwrapErr());
       }
       MOZ_ASSERT(maybeNewListItemElement.inspect());
-      nsresult rv = DeleteNodeWithTransaction(aListItemElement);
+      // MOZ_KnownLive(rightListItemElement) because it's grabbed by
+      // splitListItemResult.
+      nsresult rv =
+          DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
       if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
         return Err(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -7534,12 +7545,15 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       return EditorDOMPoint(maybeNewListItemElement.unwrap(), 0u);
     }
 
-    // If aListItemElement is a <li> and becomes empty or a direct child of
-    // the editing host, copy all inline elements affecting to the style at
-    // end of the left list item element to the right list item element.
+    // If aListItemElement is a <li> and the right list item becomes empty or a
+    // direct child of the editing host, copy all inline elements affecting to
+    // the style at end of the left list item element to the right list item
+    // element.
     RefPtr<Element> brElement;
+    // MOZ_KnownLive(*ListItemElement) because they are grabbed by
+    // splitListItemResult.
     nsresult rv = CopyLastEditableChildStylesWithTransaction(
-        MOZ_KnownLive(*prevItem->AsElement()), aListItemElement,
+        MOZ_KnownLive(leftListItemElement), MOZ_KnownLive(rightListItemElement),
         address_of(brElement));
     if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
@@ -7551,15 +7565,15 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       return Err(NS_ERROR_FAILURE);
     }
     return brElement ? EditorDOMPoint(brElement)
-                     : EditorDOMPoint(&aListItemElement, 0u);
+                     : EditorDOMPoint(&rightListItemElement, 0u);
   }
 
-  // If aListItemElement is not empty, we need to consider where to put caret.
-  // If it has non-container inline elements, <br> or <hr>, at the element is
-  // proper position.
+  // If the right list item element is not empty, we need to consider where to
+  // put caret in it. If it has non-container inline elements, <br> or <hr>, at
+  // the element is proper position.
   WSScanResult forwardScanFromStartOfListItemResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-          &aEditingHost, EditorRawDOMPoint(&aListItemElement, 0u));
+          &aEditingHost, EditorRawDOMPoint(&rightListItemElement, 0u));
   if (MOZ_UNLIKELY(forwardScanFromStartOfListItemResult.Failed())) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
     return Err(NS_ERROR_FAILURE);
