@@ -168,6 +168,7 @@ if (rtc_include_tests) {
     testonly = true
     sources = [
       "performance_stats_unittest.cc",
+      "probing_test.cc",
       "scenario_unittest.cc",
       "stats_collection_unittest.cc",
       "video_stream_unittest.cc",
