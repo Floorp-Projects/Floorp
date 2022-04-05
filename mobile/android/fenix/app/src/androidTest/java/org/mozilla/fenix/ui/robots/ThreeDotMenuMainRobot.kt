@@ -494,13 +494,13 @@ private fun assertReaderViewAppearanceButton(visible: Boolean) {
 }
 
 private fun addToTopSitesButton() =
-    onView(allOf(withText(R.string.browser_menu_add_to_top_sites)))
+    onView(allOf(withText(R.string.browser_menu_add_to_shortcuts)))
 
 private fun assertAddToTopSitesButton() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_add_to_top_sites))
+                hasDescendant(withText(R.string.browser_menu_add_to_shortcuts))
             )
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

@@ -11,11 +11,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -65,7 +67,7 @@ class TopSitesTest {
             expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
@@ -83,7 +85,7 @@ class TopSitesTest {
             expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
@@ -111,7 +113,7 @@ class TopSitesTest {
             expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
@@ -134,7 +136,7 @@ class TopSitesTest {
             expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
@@ -157,7 +159,7 @@ class TopSitesTest {
             expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
-            verifySnackBarText("Added to top sites!")
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)

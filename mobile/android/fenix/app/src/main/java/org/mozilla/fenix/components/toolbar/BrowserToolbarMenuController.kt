@@ -256,8 +256,8 @@ class DefaultBrowserToolbarMenuController(
 
                     if (numPinnedSites >= settings.topSitesMaxLimit) {
                         AlertDialog.Builder(swipeRefresh.context).apply {
-                            setTitle(R.string.top_sites_max_limit_title)
-                            setMessage(R.string.top_sites_max_limit_content_2)
+                            setTitle(R.string.shortcut_max_limit_title)
+                            setMessage(R.string.shortcut_max_limit_content)
                             setPositiveButton(R.string.top_sites_max_limit_confirmation_button) { dialog, _ ->
                                 dialog.dismiss()
                             }
@@ -278,7 +278,7 @@ class DefaultBrowserToolbarMenuController(
                             isDisplayedWithBrowserToolbar = true
                         )
                             .setText(
-                                context.getString(R.string.snackbar_added_to_top_sites)
+                                context.getString(R.string.snackbar_added_to_shortcuts)
                             )
                             .show()
                     }

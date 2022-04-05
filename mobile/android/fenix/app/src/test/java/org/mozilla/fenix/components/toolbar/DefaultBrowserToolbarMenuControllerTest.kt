@@ -414,25 +414,25 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun `WHEN Add To Top Sites menu item is pressed THEN add site AND show snackbar`() = runBlockingTest {
+    fun `WHEN add to shortcuts menu item is pressed THEN add site AND show snackbar`() = runBlockingTest {
         val item = ToolbarMenu.Item.AddToTopSites
         val addPinnedSiteUseCase: TopSitesUseCases.AddPinnedSiteUseCase = mockk(relaxed = true)
 
         every { topSitesUseCase.addPinnedSites } returns addPinnedSiteUseCase
         every {
-            swipeRefreshLayout.context.getString(R.string.snackbar_added_to_top_sites)
-        } returns "Added to top sites!"
+            swipeRefreshLayout.context.getString(R.string.snackbar_added_to_shortcuts)
+        } returns "Added to shorcuts!"
 
         val controller = createController(scope = this, store = browserStore)
         controller.handleToolbarItemInteraction(item)
 
         verify { addPinnedSiteUseCase.invoke(selectedTab.content.title, selectedTab.content.url) }
-        verify { snackbar.setText("Added to top sites!") }
+        verify { snackbar.setText("Added to shorcuts!") }
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES)) }
     }
 
     @Test
-    fun `GIVEN a top site page is open WHEN Remove from top sites is pressed THEN show snackbar`() = runBlockingTest {
+    fun `GIVEN a shortcut page is open WHEN remove from shortcuts is pressed THEN show snackbar`() = runBlockingTest {
         val snackbarMessage = "Site removed"
         val item = ToolbarMenu.Item.RemoveFromTopSites
         val removePinnedSiteUseCase: TopSitesUseCases.RemoveTopSiteUseCase =
