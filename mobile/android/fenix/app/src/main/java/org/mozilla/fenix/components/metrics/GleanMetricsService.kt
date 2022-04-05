@@ -20,7 +20,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
-import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
@@ -109,21 +108,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
             { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
-        )
-        is Event.MediaPlayState -> EventWrapper<NoExtraKeys>(
-            { MediaState.play.record(it) }
-        )
-        is Event.MediaPauseState -> EventWrapper<NoExtraKeys>(
-            { MediaState.pause.record(it) }
-        )
-        is Event.MediaStopState -> EventWrapper<NoExtraKeys>(
-            { MediaState.stop.record(it) }
-        )
-        is Event.MediaFullscreenState -> EventWrapper<NoExtraKeys>(
-            { MediaState.fullscreen.record(it) }
-        )
-        is Event.MediaPictureInPictureState -> EventWrapper<NoExtraKeys>(
-            { MediaState.pictureInPicture.record(it) }
         )
         is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
             { Pocket.pocketTopSiteClicked.record(it) }
