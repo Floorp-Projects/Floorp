@@ -3374,8 +3374,6 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
     }
   }
 
-  MDefinitionVector eliminateList(graph.alloc());
-
   // Starting from each self-dominating block, traverse the CFG in pre-order.
   while (!worklist.empty()) {
     MBasicBlock* block = worklist.popCopy();
@@ -3407,11 +3405,6 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
   }
 
   MOZ_ASSERT(index == graph.numBlocks());
-
-  for (size_t i = 0; i < eliminateList.length(); i++) {
-    MDefinition* def = eliminateList[i];
-    def->block()->discardDef(def);
-  }
 
   return true;
 }
