@@ -874,7 +874,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     last_encoder_rate_settings_.reset();
     rate_settings.rate_control.framerate_fps = GetInputFramerateFps();
 
-    SetEncoderRates(UpdateBitrateAllocation(rate_settings));
+    SetEncoderRates(UpdateBitrateAllocationAndNotifyObserver(rate_settings));
   }
 
   encoder_stats_observer_->OnEncoderReconfigured(encoder_config_, streams);
@@ -1053,7 +1053,7 @@ void VideoStreamEncoder::TraceFrameDropEnd() {
 }
 
 VideoStreamEncoder::EncoderRateSettings
-VideoStreamEncoder::UpdateBitrateAllocation(
+VideoStreamEncoder::UpdateBitrateAllocationAndNotifyObserver(
     const EncoderRateSettings& rate_settings) {
   VideoBitrateAllocation new_allocation;
   // Only call allocators if bitrate > 0 (ie, not suspended), otherwise they
@@ -1064,8 +1064,24 @@ VideoStreamEncoder::UpdateBitrateAllocation(
         rate_settings.rate_control.framerate_fps));
   }
 
+  if (bitrate_observer_ && new_allocation.get_sum_bps() > 0) {
+    if (encoder_ && encoder_initialized_) {
+      // Avoid too old encoder_info_.
+      const int64_t kMaxDiffMs = 100;
+      const bool updated_recently =
+          (last_encode_info_ms_ && ((clock_->TimeInMilliseconds() -
+                                     *last_encode_info_ms_) < kMaxDiffMs));
+      // Update allocation according to info from encoder.
+      bitrate_observer_->OnBitrateAllocationUpdated(
+          UpdateAllocationFromEncoderInfo(
+              new_allocation,
+              updated_recently ? encoder_info_ : encoder_->GetEncoderInfo()));
+    } else {
+      bitrate_observer_->OnBitrateAllocationUpdated(new_allocation);
+    }
+  }
+
   EncoderRateSettings new_rate_settings = rate_settings;
-  new_rate_settings.rate_control.target_bitrate = new_allocation;
   new_rate_settings.rate_control.bitrate = new_allocation;
   // VideoBitrateAllocator subclasses may allocate a bitrate higher than the
   // target in order to sustain the min bitrate of the video codec. In this
@@ -1085,6 +1101,9 @@ VideoStreamEncoder::UpdateBitrateAllocation(
                         << adjusted_allocation.ToString();
     new_rate_settings.rate_control.bitrate = adjusted_allocation;
   }
+
+  encoder_stats_observer_->OnBitrateAllocationUpdated(
+      send_codec_, new_rate_settings.rate_control.bitrate);
 
   return new_rate_settings;
 }
@@ -1109,7 +1128,7 @@ void VideoStreamEncoder::SetEncoderRates(
     last_encoder_rate_settings_ = rate_settings;
   }
 
-  if (!encoder_ || !rate_control_changed) {
+  if (!encoder_) {
     return;
   }
 
@@ -1126,22 +1145,13 @@ void VideoStreamEncoder::SetEncoderRates(
     return;
   }
 
+  if (rate_control_changed) {
     encoder_->SetRates(rate_settings.rate_control);
-
-    encoder_stats_observer_->OnBitrateAllocationUpdated(
-        send_codec_, rate_settings.rate_control.bitrate);
     frame_encode_metadata_writer_.OnSetRates(
         rate_settings.rate_control.bitrate,
         static_cast<uint32_t>(rate_settings.rate_control.framerate_fps + 0.5));
     stream_resource_manager_.SetEncoderRates(rate_settings.rate_control);
-    if (bitrate_observer_) {
-      bitrate_observer_->OnBitrateAllocationUpdated(
-          // Update allocation according to info from encoder. An encoder may
-          // choose to not use all layers due to for example HW.
-          UpdateAllocationFromEncoderInfo(
-              rate_settings.rate_control.target_bitrate,
-              encoder_->GetEncoderInfo()));
-    }
+  }
 }
 
 void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
@@ -1192,7 +1202,8 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
       EncoderRateSettings new_rate_settings = *last_encoder_rate_settings_;
       new_rate_settings.rate_control.framerate_fps =
           static_cast<double>(framerate_fps);
-      SetEncoderRates(UpdateBitrateAllocation(new_rate_settings));
+      SetEncoderRates(
+          UpdateBitrateAllocationAndNotifyObserver(new_rate_settings));
     }
     last_parameters_update_ms_.emplace(now_ms);
   }
@@ -1727,7 +1738,7 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   EncoderRateSettings new_rate_settings{
       VideoBitrateAllocation(), static_cast<double>(framerate_fps),
       link_allocation, target_bitrate, stable_target_bitrate};
-  SetEncoderRates(UpdateBitrateAllocation(new_rate_settings));
+  SetEncoderRates(UpdateBitrateAllocationAndNotifyObserver(new_rate_settings));
 
   if (target_bitrate.bps() != 0)
     encoder_target_bitrate_bps_ = target_bitrate.bps();
