@@ -2700,7 +2700,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.vpmaddubsw(rhs, lhs, dest);
       break;
     case wasm::SimdOp::MozWHPMADDWD:
-      masm.vpmaddwd(Operand(rhs), lhs, dest);
+      masm.widenDotInt16x8(lhs, rhs, dest);
       break;
 #  endif
     default:
