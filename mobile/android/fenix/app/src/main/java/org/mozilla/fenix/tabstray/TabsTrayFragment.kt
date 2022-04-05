@@ -66,6 +66,14 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
 
+/**
+ * The action or screen that was used to navigate to the Tabs Tray.
+ */
+enum class TabsTrayAccessPoint {
+    None,
+    HomeRecentSyncedTab
+}
+
 @Suppress("TooManyFunctions", "LargeClass")
 class TabsTrayFragment : AppCompatDialogFragment() {
 
@@ -127,6 +135,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         )
 
         val args by navArgs<TabsTrayFragmentArgs>()
+        args.accessPoint.takeIf { it != TabsTrayAccessPoint.None }?.let {
+            TabsTray.accessPoint[it.name].add()
+        }
         val initialMode = if (args.enterMultiselect) {
             TabsTrayState.Mode.Select(emptySet())
         } else {

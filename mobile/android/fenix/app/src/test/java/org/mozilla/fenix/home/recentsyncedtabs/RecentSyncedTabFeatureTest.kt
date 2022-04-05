@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recentsyncedtabs
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -14,12 +15,25 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 
+@RunWith(AndroidJUnit4::class)
 class RecentSyncedTabFeatureTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
+
     private val earliestTime = 100L
     private val earlierTime = 250L
     private val timeNow = 500L
@@ -168,6 +182,46 @@ class RecentSyncedTabFeatureTest {
         verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
+    @Test
+    fun `WHEN synced tab displayed THEN labeled counter metric recorded with device type`() {
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+
+        feature.displaySyncedTabs(listOf(tab))
+
+        assertEquals(1, RecentSyncedTabs.recentSyncedTabShown[deviceAccessed1.deviceType.name].testGetValue())
+    }
+
+    @Test
+    fun `GIVEN that tab previously started loading WHEN synced tab displayed THEN load time metric recorded`() {
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+
+        feature.startLoading()
+        feature.displaySyncedTabs(listOf(tab))
+
+        assertTrue(RecentSyncedTabs.recentSyncedTabTimeToLoad.testHasValue())
+    }
+
+    @Test
+    fun `GIVEN that the displayed tab was the last displayed tab WHEN displayed THEN recorded as stale`() {
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+
+        feature.displaySyncedTabs(listOf(tab))
+        feature.displaySyncedTabs(listOf(tab))
+
+        assertEquals(1, RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN that the displayed tab was not the last displayed tab WHEN displayed THEN not recorded as stale`() {
+        val tab1 = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+        val tab2 = SyncedDeviceTabs(deviceAccessed2, listOf(createActiveTab()))
+
+        feature.displaySyncedTabs(listOf(tab1))
+        feature.displaySyncedTabs(listOf(tab2))
+
+        assertFalse(RecentSyncedTabs.latestSyncedTabIsStale.testHasValue())
+    }
+
     private fun createActiveTab(
         title: String = "title",
         url: String = "url",
@@ -181,6 +235,7 @@ class RecentSyncedTabFeatureTest {
 
     private fun Tab.toRecentSyncedTab(device: Device) = RecentSyncedTab(
         deviceDisplayName = device.displayName,
+        deviceType = device.deviceType,
         title = this.active().title,
         url = this.active().url,
         iconUrl = this.active().iconUrl

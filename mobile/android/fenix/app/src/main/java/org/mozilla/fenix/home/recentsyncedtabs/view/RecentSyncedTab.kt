@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
@@ -206,6 +207,7 @@ private fun TextLinePlaceHolder() {
 private fun LoadedRecentSyncedTab() {
     val tab = RecentSyncedTab(
         deviceDisplayName = "Firefox on MacBook",
+        deviceType = DeviceType.DESKTOP,
         title = "This is a long site title",
         url = "https://mozilla.org",
         iconUrl = "https://mozilla.org",

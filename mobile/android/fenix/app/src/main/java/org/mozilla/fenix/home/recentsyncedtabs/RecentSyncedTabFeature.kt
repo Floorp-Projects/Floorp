@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.recentsyncedtabs
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
@@ -14,6 +15,8 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
+import mozilla.telemetry.glean.GleanTimerId
+import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 
 /**
  * Delegate to handle layout updates and dispatch actions related to the recent synced tab.
@@ -45,7 +48,12 @@ class RecentSyncedTabFeature(
 
     override var listener: SyncedTabsView.Listener? = null
 
+    private var syncStartId: GleanTimerId? = null
+    private var lastSyncedTab: RecentSyncedTab? = null
+
     override fun startLoading() {
+        syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.cancel(it) }
+        syncStartId = RecentSyncedTabs.recentSyncedTabTimeToLoad.start()
         store.dispatch(
             AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)
         )
@@ -59,14 +67,17 @@ class RecentSyncedTabFeature(
                 val tab = it.tabs.firstOrNull()?.active() ?: return
                 RecentSyncedTab(
                     deviceDisplayName = it.device.displayName,
+                    deviceType = it.device.deviceType,
                     title = tab.title,
                     url = tab.url,
                     iconUrl = tab.iconUrl
                 )
             } ?: return
+        recordMetrics(syncedTab, lastSyncedTab, syncStartId)
         store.dispatch(
             AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTab))
         )
+        lastSyncedTab = syncedTab
     }
 
     // UI will either not be displayed if not authenticated (DefaultPresenter.start),
@@ -83,6 +94,18 @@ class RecentSyncedTabFeature(
 
     override fun stop() {
         syncedTabsFeature.stop()
+    }
+
+    private fun recordMetrics(
+        tab: RecentSyncedTab,
+        lastSyncedTab: RecentSyncedTab?,
+        syncStartId: GleanTimerId?
+    ) {
+        RecentSyncedTabs.recentSyncedTabShown[tab.deviceType.name].add()
+        RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(syncStartId)
+        if (tab == lastSyncedTab) {
+            RecentSyncedTabs.latestSyncedTabIsStale.add()
+        }
     }
 }
 
@@ -116,6 +139,7 @@ sealed class RecentSyncedTabState {
  */
 data class RecentSyncedTab(
     val deviceDisplayName: String,
+    val deviceType: DeviceType,
     val title: String,
     val url: String,
     val iconUrl: String?,

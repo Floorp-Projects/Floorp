@@ -123,6 +123,7 @@ import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
@@ -175,7 +176,7 @@ class HomeFragment : Fragment() {
             context = requireContext(),
             storage = requireComponents.backgroundServices.syncedTabsStorage,
             accountManager = requireComponents.backgroundServices.accountManager,
-            lifecycleOwner = viewLifecycleOwner
+            lifecycleOwner = viewLifecycleOwner,
         )
     }
 
@@ -364,6 +365,7 @@ class HomeFragment : Fragment() {
             recentSyncedTabController = DefaultRecentSyncedTabController(
                 addNewTabUseCase = requireComponents.useCases.tabsUseCases.addTab,
                 navController = findNavController(),
+                accessPoint = TabsTrayAccessPoint.HomeRecentSyncedTab,
             ),
             recentBookmarksController = DefaultRecentBookmarksController(
                 activity = activity,

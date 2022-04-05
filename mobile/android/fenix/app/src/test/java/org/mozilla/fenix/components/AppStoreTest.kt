@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -164,7 +165,7 @@ class AppStoreTest {
         appStore.dispatch(AppAction.RecentSyncedTabStateChange(loading)).join()
         assertEquals(loading, appStore.state.recentSyncedTabState)
 
-        val recentSyncedTab = RecentSyncedTab("device name", "title", "url", null)
+        val recentSyncedTab = RecentSyncedTab("device name", DeviceType.DESKTOP, "title", "url", null)
         val success = RecentSyncedTabState.Success(recentSyncedTab)
         appStore.dispatch(AppAction.RecentSyncedTabStateChange(success)).join()
         assertEquals(success, appStore.state.recentSyncedTabState)
