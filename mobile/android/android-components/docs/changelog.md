@@ -4,12 +4,19 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 100.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v99.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/147?closed=1)
+# 101.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v100.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/148?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 100.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v99.0.0...v100.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/147?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v100.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v100.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v100.0.0/.config.yml)
 
 * **browser-errorpages**
   * 🌟 The https-only error page will now show also an image.
