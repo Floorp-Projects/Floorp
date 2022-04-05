@@ -332,6 +332,8 @@ p {
 
 .promo-visible {
   display: flex;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .promo-dismiss {
@@ -343,6 +345,12 @@ p {
   cursor: pointer;
   -moz-context-properties: fill;
   fill: currentColor;
+  position: relative;
+  top: -90px;
+}
+
+.promo-dismiss:hover {
+  background-color: var(--in-content-button-background) !important;
 }
 
 @media not (prefers-contrast) {
@@ -407,7 +415,8 @@ p {
 }
 
 .promo.below-search {
-  padding: 50px 22px 0;
+  padding: 25px 22px 10px;
+  margin-top: 25px;
 }
 
 .promo.bottom {
