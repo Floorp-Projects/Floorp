@@ -9179,6 +9179,12 @@
   value: true
   mirror: always
 
+# forces the number of dropped frames to 0
+- name: media.video.dropped_frame_stats.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Opus
 - name: media.opus.enabled
   type: RelaxedAtomicBool
