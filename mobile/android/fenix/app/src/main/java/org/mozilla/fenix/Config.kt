@@ -42,18 +42,6 @@ enum class ReleaseChannel {
         get() = this == Debug || this == Nightly
 
     /**
-     * Is this a build for a release channel that we used to ship Fennec on?
-     */
-    val isFennec: Boolean
-        get() = this in fennecChannels
-
-    /**
-     * Is this build for a "pure" Fenix channel that we never shipped Fennec on?
-     */
-    val isFenix: Boolean
-        get() = !isFennec
-
-    /**
      * Is this a "Mozilla Online" build of Fenix? "Mozilla Online" is the Chinese branch of Mozilla
      * and this flag will be `true` for builds shipping to Chinese app stores.
      */
@@ -72,8 +60,3 @@ object Config {
         }
     }
 }
-
-private val fennecChannels: List<ReleaseChannel> = listOf(
-    ReleaseChannel.Beta,
-    ReleaseChannel.Release
-)
