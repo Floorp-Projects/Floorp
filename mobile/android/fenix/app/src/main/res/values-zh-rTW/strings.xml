@@ -660,9 +660,9 @@
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
-    <string name="preferences_inactive_tabs">將舊分頁移動到閒置分頁</string>
+    <string name="preferences_inactive_tabs">將舊分頁移動到獨立區塊</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">超過兩週沒有檢視過的分頁，將移動至「閒置分頁」區塊。</string>
+    <string name="preferences_inactive_tabs_title">將超過兩週沒有檢視過的分頁，移動至「閒置分頁」區塊。</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
