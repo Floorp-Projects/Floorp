@@ -1478,4 +1478,11 @@ webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
   return static_cast<webgpu::CanvasContext*>(GetCurrentContext());
 }
 
+CompositableHandle HTMLCanvasElement::GetCompositableHandle() const {
+  if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetCompositableHandle();
+  }
+  return CompositableHandle();
+}
+
 }  // namespace mozilla::dom

@@ -320,8 +320,8 @@ InterpreterFrame* InvokeState::pushInterpreterFrame(JSContext* cx) {
 }
 
 InterpreterFrame* ExecuteState::pushInterpreterFrame(JSContext* cx) {
-  return cx->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
-                                                 envChain_, evalInFrame_);
+  return cx->interpreterStack().pushExecuteFrame(cx, script_, envChain_,
+                                                 evalInFrame_);
 }
 
 InterpreterFrame* RunState::pushInterpreterFrame(JSContext* cx) {
@@ -726,8 +726,7 @@ bool js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
 }
 
 bool js::ExecuteKernel(JSContext* cx, HandleScript script,
-                       HandleObject envChainArg, HandleValue newTargetValue,
-                       AbstractFramePtr evalInFrame,
+                       HandleObject envChainArg, AbstractFramePtr evalInFrame,
                        MutableHandleValue result) {
   MOZ_ASSERT_IF(script->isGlobalCode(),
                 IsGlobalLexicalEnvironment(envChainArg) ||
@@ -757,8 +756,7 @@ bool js::ExecuteKernel(JSContext* cx, HandleScript script,
   }
 
   probes::StartExecution(script);
-  ExecuteState state(cx, script, newTargetValue, envChainArg, evalInFrame,
-                     result);
+  ExecuteState state(cx, script, envChainArg, evalInFrame, result);
   bool ok = RunScript(cx, state);
   probes::StopExecution(script);
 
@@ -791,8 +789,8 @@ bool js::Execute(JSContext* cx, HandleScript script, HandleObject envChain,
   } while ((s = s->enclosingEnvironment()));
 #endif
 
-  return ExecuteKernel(cx, script, envChain, NullHandleValue,
-                       NullFramePtr() /* evalInFrame */, rval);
+  return ExecuteKernel(cx, script, envChain, NullFramePtr() /* evalInFrame */,
+                       rval);
 }
 
 /*
@@ -3748,22 +3746,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(Lambda)
 
-    CASE(LambdaArrow) {
-      /* Load the specified function object literal. */
-      ReservedRooted<JSFunction*> fun(&rootFunction0,
-                                      script->getFunction(REGS.pc));
-      ReservedRooted<Value> newTarget(&rootValue1, REGS.sp[-1]);
-      JSObject* obj =
-          LambdaArrow(cx, fun, REGS.fp()->environmentChain(), newTarget);
-      if (!obj) {
-        goto error;
-      }
-
-      MOZ_ASSERT(obj->staticPrototype());
-      REGS.sp[-1].setObject(*obj);
-    }
-    END_CASE(LambdaArrow)
-
     CASE(ToAsyncIter) {
       ReservedRooted<Value> nextMethod(&rootValue0, REGS.sp[-1]);
       ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-2].toObject());
@@ -4677,8 +4659,6 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 }
 
 JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
-  MOZ_ASSERT(!fun->isArrow());
-
   JSFunction* clone;
   if (fun->isNativeFun()) {
     MOZ_ASSERT(IsAsmJSModule(fun));
@@ -4690,23 +4670,6 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
   if (!clone) {
     return nullptr;
   }
-
-  MOZ_ASSERT(fun->global() == clone->global());
-  return clone;
-}
-
-JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
-                          HandleObject parent, HandleValue newTargetv) {
-  MOZ_ASSERT(fun->isArrow());
-
-  RootedObject proto(cx, fun->staticPrototype());
-  JSFunction* clone = CloneFunctionReuseScript(cx, fun, parent, proto);
-  if (!clone) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(clone->isArrow());
-  clone->setExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT, newTargetv);
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;

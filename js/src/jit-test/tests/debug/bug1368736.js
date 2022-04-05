@@ -2,7 +2,7 @@ g = newGlobal({newCompartment: true});
 hits = 0;
 Debugger(g).onDebuggerStatement = function(frame) {
     // Set a breakpoint at the JSOP_AFTERYIELD op.
-    frame.script.setBreakpoint(113, {hit: function() { hits++; }});
+    frame.script.setBreakpoint(120, {hit: function() { hits++; }});
 }
 g.eval(`
 function* range() {

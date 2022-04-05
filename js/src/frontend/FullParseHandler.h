@@ -382,10 +382,10 @@ class FullParseHandler {
   ClassNamesType newClassNames(Node outer, Node inner, const TokenPos& pos) {
     return new_<ClassNames>(outer, inner, pos);
   }
-  BinaryNodeType newNewTarget(NullaryNodeType newHolder,
-                              NullaryNodeType targetHolder) {
-    return new_<BinaryNode>(ParseNodeKind::NewTargetExpr, newHolder,
-                            targetHolder);
+  NewTargetNodeType newNewTarget(NullaryNodeType newHolder,
+                                 NullaryNodeType targetHolder,
+                                 NameNodeType newTargetName) {
+    return new_<NewTargetNode>(newHolder, targetHolder, newTargetName);
   }
   NullaryNodeType newPosHolder(const TokenPos& pos) {
     return new_<NullaryNode>(ParseNodeKind::PosHolder, pos);

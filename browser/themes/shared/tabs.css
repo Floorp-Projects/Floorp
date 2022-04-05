@@ -17,6 +17,10 @@
   --tabpanel-background-color: #F9F9FB;
 }
 
+#tabbrowser-tabpanels browser {
+  color-scheme: env(-moz-content-preferred-color-scheme);
+}
+
 @media (-moz-content-prefers-color-scheme: dark) {
   :root {
     /* --tabpanel-background-color matches $in-content-page-background in newtab

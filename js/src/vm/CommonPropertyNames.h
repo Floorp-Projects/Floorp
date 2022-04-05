@@ -132,6 +132,7 @@
   MACRO_(dotFieldKeys, dotFieldKeys, ".fieldKeys")                             \
   MACRO_(dotGenerator, dotGenerator, ".generator")                             \
   MACRO_(dotInitializers, dotInitializers, ".initializers")                    \
+  MACRO_(dotNewTarget, dotNewTarget, ".newTarget")                             \
   MACRO_(dotPrivateBrand, dotPrivateBrand, ".privateBrand")                    \
   MACRO_(dotStaticFieldKeys, dotStaticFieldKeys, ".staticFieldKeys")           \
   MACRO_(dotStaticInitializers, dotStaticInitializers, ".staticInitializers")  \

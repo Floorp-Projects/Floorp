@@ -591,7 +591,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
                                const gfx::IntRect& aRegion,
                                layers::Image** aOutImage) override;
 
-  HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
+  HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture, uint32_t aArrayIndex,
                             ID3D11Texture2D** aOutTexture) override;
 
   HRESULT ConfigureForSize(IMFMediaType* aInputType,
@@ -1039,6 +1039,7 @@ HRESULT D3D11DXVA2Manager::WrapTextureWithImage(IMFSample* aVideoSample,
 
 HRESULT
 D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
+                                     uint32_t aArrayIndex,
                                      ID3D11Texture2D** aOutTexture) {
   NS_ENSURE_TRUE(aInTexture, E_POINTER);
   NS_ENSURE_TRUE(aOutTexture, E_POINTER);
@@ -1124,8 +1125,9 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
   inputSample->SetSampleDuration(10000);
 
   RefPtr<IMFMediaBuffer> inputBuffer;
-  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), inTexture, 0,
-                                      FALSE, getter_AddRefs(inputBuffer));
+  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), inTexture,
+                                      aArrayIndex, FALSE,
+                                      getter_AddRefs(inputBuffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   inputSample->AddBuffer(inputBuffer);

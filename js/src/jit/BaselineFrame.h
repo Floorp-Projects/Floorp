@@ -192,31 +192,7 @@ class BaselineFrame {
   [[nodiscard]] bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
                                         ArrayObject* dest) const;
 
- private:
-  Value* evalNewTargetAddress() const {
-    MOZ_ASSERT(isEvalFrame());
-    MOZ_ASSERT(script()->isDirectEvalInFunction());
-    return (Value*)(reinterpret_cast<const uint8_t*>(this) +
-                    BaselineFrame::Size() + offsetOfEvalNewTarget());
-  }
-
  public:
-  Value newTarget() const {
-    if (isEvalFrame()) {
-      return *evalNewTargetAddress();
-    }
-    MOZ_ASSERT(isFunctionFrame());
-    if (callee()->isArrow()) {
-      return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
-    }
-    if (isConstructing()) {
-      return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
-                       BaselineFrame::Size() +
-                       offsetOfArg(std::max(numFormalArgs(), numActualArgs())));
-    }
-    return UndefinedValue();
-  }
-
   void prepareForBaselineInterpreterToJitOSR() {
     // Clearing the RUNNING_IN_INTERPRETER flag is sufficient, but we also null
     // out the interpreter fields to ensure we don't use stale values.
@@ -364,10 +340,6 @@ class BaselineFrame {
   }
   static size_t offsetOfThis() {
     return FramePointerOffset + js::jit::JitFrameLayout::offsetOfThis();
-  }
-  static size_t offsetOfEvalNewTarget() {
-    return FramePointerOffset +
-           js::jit::JitFrameLayout::offsetOfEvalNewTarget();
   }
   static size_t offsetOfArg(size_t index) {
     return FramePointerOffset +

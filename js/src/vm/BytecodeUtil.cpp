@@ -2158,7 +2158,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("ITER");
 
       case JSOp::Lambda:
-      case JSOp::LambdaArrow:
         return write("FUN");
 
       case JSOp::ToAsyncIter:
@@ -2284,6 +2283,9 @@ bool ExpressionDecompiler::write(const char* s) { return sprinter.put(s); }
 bool ExpressionDecompiler::write(JSString* str) {
   if (str == cx->names().dotThis) {
     return write("this");
+  }
+  if (str == cx->names().dotNewTarget) {
+    return write("new.target");
   }
   return sprinter.putString(str);
 }

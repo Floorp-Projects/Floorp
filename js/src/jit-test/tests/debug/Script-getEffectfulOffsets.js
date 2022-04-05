@@ -28,6 +28,6 @@ test("a[b]++", 2);
 test("return a[b]", 1);
 test("a = 0", 1);
 test("d = 0", 2);
-test("with (a) { b = 0; }", 4);
+test("with (a) { b = 0; }", 5);
 test("let o = {}; ({x: o.x} = { x: 10 })", 2);
 test("var x", 1);

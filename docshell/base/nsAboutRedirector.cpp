@@ -166,10 +166,6 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT},
     {"webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.html",
      nsIAboutModule::ALLOW_SCRIPT},
-    {"printpreview", "about:blank",
-     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-         nsIAboutModule::URI_CAN_LOAD_IN_CHILD},
     {"crashparent", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"crashcontent", "about:blank",
      nsIAboutModule::HIDE_FROM_ABOUTABOUT |

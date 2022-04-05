@@ -1397,6 +1397,8 @@ RefPtr<MediaFormatReader::VideoDataPromise> MediaFormatReader::RequestVideoData(
 
   if (Maybe<TimeUnit> target =
           ShouldSkip(aTimeThreshold, aRequestNextVideoKeyFrame)) {
+    PROFILER_MARKER_UNTYPED("RequestVideoData SkipVideoDemuxToNextKeyFrame",
+                            MEDIA_PLAYBACK);
     RefPtr<VideoDataPromise> p = mVideo.EnsurePromise(__func__);
     SkipVideoDemuxToNextKeyFrame(*target);
     return p;

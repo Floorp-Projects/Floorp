@@ -20,16 +20,29 @@ function snapshotsEqual() {
   return compareSnapshots(s1, s2, true)[0];
 }
 
+function waitForColorSchemeToBe(scheme) {
+  return new Promise(resolve => {
+    let mq = matchMedia(`(prefers-color-scheme: ${scheme})`);
+    if (mq.matches) {
+      resolve();
+    } else {
+      mq.addEventListener("change", resolve, { once: true });
+    }
+  });
+}
+
 async function run() {
   let loadedFrame1 = new Promise(resolve => f1.onload = resolve);
   let loadedFrame2 = new Promise(resolve => f2.onload = resolve);
   await SpecialPowers.pushPrefEnv({ set: [["layout.css.prefers-color-scheme.content-override", 1]] });
+  await waitForColorSchemeToBe("light");
   f1.src = "mq_dynamic_svg_test.html";
   f2.src = "mq_dynamic_svg_ref.html";
   await loadedFrame1;
   await loadedFrame2;
   ok(!snapshotsEqual(), "In light mode snapshot comparison should be false");
   await SpecialPowers.pushPrefEnv({ set: [["layout.css.prefers-color-scheme.content-override", 0]] });
+  await waitForColorSchemeToBe("dark");
   ok(snapshotsEqual(), "In dark mode snapshot comparison should be true");
   SimpleTest.finish();
 }

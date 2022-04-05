@@ -432,7 +432,9 @@ static constexpr struct {
 } kMediaQueryPrefs[] = {
     {"browser.display.windows.native_menus"_ns},
     {"browser.proton.places-tooltip.enabled"_ns},
-    {"layout.css.prefers-color-scheme.content-override"_ns},
+    // Affects env().
+    {"layout.css.prefers-color-scheme.content-override"_ns,
+     widget::ThemeChangeKind::Style},
     // Affects media queries and scrollbar sizes, so gotta relayout.
     {"widget.gtk.overlay-scrollbars.enabled"_ns,
      widget::ThemeChangeKind::StyleAndLayout},
@@ -693,6 +695,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
                                      // --in-content-item-selected-text
       color = NS_RGB(43, 42, 51);
       break;
+    case ColorID::Buttonshadow:
     case ColorID::Threeddarkshadow:  // Same as Threedlightshadow but with the
                                      // background.
     case ColorID::MozDisabledfield:  // opacity: 0.4 of the face above blended

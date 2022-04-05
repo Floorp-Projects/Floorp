@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 const { TelemetryTestUtils } = ChromeUtils.import(
@@ -13,6 +12,7 @@ const CC_NUM_USES_HISTOGRAM = "CREDITCARD_NUM_USES";
 function ccFormArgsv1(method, extra) {
   return ["creditcard", method, "cc_form", undefined, extra];
 }
+
 function ccFormArgsv2(method, extra) {
   return ["creditcard", method, "cc_form_v2", undefined, extra];
 }
@@ -107,7 +107,11 @@ function assertHistogram(histogramId, expectedNonZeroRanges) {
   );
 }
 
-async function autofillCreditCard(idx) {
+async function openTabAndUseCreditCard(
+  idx,
+  creditCard,
+  { closeTab = true, submitForm = true } = {}
+) {
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -117,55 +121,27 @@ async function autofillCreditCard(idx) {
   let browser = tab.linkedBrowser;
 
   await openPopupOn(browser, "form #cc-name");
-  for (let i = 0; i < idx; i++) {
+  for (let i = 0; i <= idx; i++) {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   }
   await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
   await osKeyStoreLoginShown;
-  await SpecialPowers.spawn(browser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      let form = content.document.getElementById("form");
-      let number = form.querySelector("#cc-number");
-      return !!number.value.length;
-    }, "Credit card detail never fills");
-  });
-
-  return tab;
-}
-
-async function useCreditCard(idx) {
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
+  await waitForAutofill(browser, "#cc-number", creditCard["cc-number"]);
+  await focusUpdateSubmitForm(
+    browser,
+    {
+      focusSelector: "#cc-number",
+      newValues: {},
+    },
+    submitForm
   );
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
-      await openPopupOn(browser, "form #cc-name");
-      for (let i = 0; i < idx; i++) {
-        await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      }
-      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await osKeyStoreLoginShown;
-      await SpecialPowers.spawn(browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let number = form.querySelector("#cc-number");
-          return !!number.value.length;
-        }, "Credit card detail never fills");
-        let form = content.document.getElementById("form");
 
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
-        form.querySelector("input[type=submit]").click();
-      });
+  if (!closeTab) {
+    return tab;
+  }
 
-      await sleep(1000);
-      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
-    }
-  );
-  await onUsed;
+  await BrowserTestUtils.removeTab(tab);
+  return null;
 }
 
 add_task(async function test_popup_opened() {
@@ -236,21 +212,15 @@ add_task(async function test_submit_creditCard_new() {
         let promiseShown = promiseNotificationShown();
         let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
 
-        await SpecialPowers.spawn(browser, [], async function() {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-
-          name.focus();
-          name.setUserInput("User 1");
-
-          form.querySelector("#cc-number").setUserInput("5038146897157463");
-          form.querySelector("#cc-exp-month").setUserInput("12");
-          form.querySelector("#cc-exp-year").setUserInput("2017");
-          form.querySelector("#cc-type").value = "mastercard";
-
-          // Wait 1000ms before submission to make sure the input value applied
-          await new Promise(resolve => content.setTimeout(resolve, 1000));
-          form.querySelector("input[type=submit]").click();
+        await focusUpdateSubmitForm(browser, {
+          focusSelector: "#cc-name",
+          newValues: {
+            "#cc-name": "User 1",
+            "#cc-number": "5038146897157463",
+            "#cc-exp-month": "12",
+            "#cc-exp-year": "2017",
+            "#cc-type": "mastercard",
+          },
         });
 
         await promiseShown;
@@ -267,8 +237,7 @@ add_task(async function test_submit_creditCard_new() {
       }
     );
 
-    SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
-    SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+    SpecialPowers.popPrefEnv();
 
     assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
 
@@ -347,7 +316,7 @@ add_task(async function test_submit_creditCard_autofill() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  await useCreditCard(1);
+  await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1);
 
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     1: 1,
@@ -420,19 +389,13 @@ add_task(async function test_submit_creditCard_update() {
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
         await osKeyStoreLoginShown;
-        await SpecialPowers.spawn(browser, [], async function() {
-          await ContentTaskUtils.waitForCondition(() => {
-            let form = content.document.getElementById("form");
-            let name = form.querySelector("#cc-name");
-            return name.value == "John Doe";
-          }, "Credit card detail never fills");
-          let form = content.document.getElementById("form");
-          let year = form.querySelector("#cc-exp-year");
-          year.setUserInput("2019");
 
-          // Wait 1000ms before submission to make sure the input value applied
-          await new Promise(resolve => content.setTimeout(resolve, 1000));
-          form.querySelector("input[type=submit]").click();
+        await waitForAutofill(browser, "#cc-name", "John Doe");
+        await focusUpdateSubmitForm(browser, {
+          focusSelector: "#cc-name",
+          newValues: {
+            "#cc-exp-year": "2019",
+          },
         });
         await promiseShown;
         await clickDoorhangerButton(command, idx);
@@ -647,32 +610,32 @@ add_task(async function test_histogram() {
     0: 3,
   });
 
-  await useCreditCard(1);
+  await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1);
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     0: 2,
     1: 1,
   });
 
-  await useCreditCard(2);
+  await openTabAndUseCreditCard(1, TEST_CREDIT_CARD_2);
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     0: 1,
     1: 2,
   });
 
-  await useCreditCard(1);
+  await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_2);
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     0: 1,
     1: 1,
     2: 1,
   });
 
-  await useCreditCard(2);
+  await openTabAndUseCreditCard(1, TEST_CREDIT_CARD_1);
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     0: 1,
     2: 2,
   });
 
-  await useCreditCard(3);
+  await openTabAndUseCreditCard(2, TEST_CREDIT_CARD_5);
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     1: 1,
     2: 2,
@@ -718,21 +681,15 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
 
       is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
 
-      await SpecialPowers.spawn(browser, [], async function() {
-        let form = content.document.getElementById("form");
-        let name = form.querySelector("#cc-name");
-
-        name.focus();
-        name.setUserInput("User 1");
-
-        form.querySelector("#cc-number").setUserInput("5038146897157463");
-        form.querySelector("#cc-exp-month").setUserInput("12");
-        form.querySelector("#cc-exp-year").setUserInput("2017");
-        form.querySelector("#cc-type").value = "mastercard";
-
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
-        form.querySelector("input[type=submit]").click();
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#cc-name",
+        newValues: {
+          "#cc-name": "User 1",
+          "#cc-number": "5038146897157463",
+          "#cc-exp-month": "12",
+          "#cc-exp-year": "2017",
+          "#cc-type": "mastercard",
+        },
       });
 
       await sleep(1000);
@@ -802,7 +759,10 @@ add_task(async function test_clear_creditCard_autofill() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let tab = await autofillCreditCard(1);
+  let tab = await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1, {
+    closeTab: false,
+    submitForm: false,
+  });
 
   let expected_content = [
     ccFormArgsv1("detected"),
@@ -824,18 +784,18 @@ add_task(async function test_clear_creditCard_autofill() {
     browser.autoCompletePopup,
     "shown"
   );
-  // Already focus in "cc-name" field, press 'down' to bring to popup.
+  // Already focus in "cc-number" field, press 'down' to bring to popup.
   await BrowserTestUtils.synthesizeKey("KEY_ArrowDown", {}, browser);
   await popupshown;
 
   expected_content = [
     ccFormArgsv1("popup_shown"),
-    ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
+    ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
   ];
   await assertTelemetry(expected_content, []);
   Services.telemetry.clearEvents();
 
-  // Press Clear Form.
+  // kPress Clear Form.
   await BrowserTestUtils.synthesizeKey("KEY_ArrowDown", {}, browser);
   await BrowserTestUtils.synthesizeKey("KEY_Enter", {}, browser);
 
@@ -850,11 +810,11 @@ add_task(async function test_clear_creditCard_autofill() {
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-year" }),
     ccFormArgsv1("filled_modified", { field_name: "cc-type" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-type" }),
-    ccFormArgsv2("cleared", { field_name: "cc-name" }),
+    ccFormArgsv2("cleared", { field_name: "cc-number" }),
     // popup is shown again because when the field is cleared and is focused,
     // we automatically triggers the popup.
     ccFormArgsv1("popup_shown"),
-    ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
+    ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
   ];
 
   await assertTelemetry(expected_content, []);

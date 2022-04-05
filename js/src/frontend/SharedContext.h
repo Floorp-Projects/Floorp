@@ -491,6 +491,8 @@ class FunctionBox : public SuspendableContext {
   IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)
   IMMUTABLE_FLAG_GETTER_SETTER(funHasExtensibleScope, FunHasExtensibleScope)
   IMMUTABLE_FLAG_GETTER_SETTER(functionHasThisBinding, FunctionHasThisBinding)
+  IMMUTABLE_FLAG_GETTER_SETTER(functionHasNewTargetBinding,
+                               FunctionHasNewTargetBinding)
   // NeedsHomeObject: custom logic below.
   // IsDerivedClassConstructor: custom logic below.
   // IsFieldInitializer: custom logic below.

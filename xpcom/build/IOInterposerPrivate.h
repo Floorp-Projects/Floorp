@@ -14,6 +14,8 @@
 #include <prcvar.h>
 #include <prlock.h>
 
+#include "mozilla/ThreadSafety.h"
+
 namespace mozilla {
 namespace IOInterposer {
 
@@ -26,7 +28,7 @@ namespace IOInterposer {
  * positives.
  */
 
-class Monitor {
+class CAPABILITY Monitor {
  public:
   Monitor() : mLock(PR_NewLock()), mCondVar(PR_NewCondVar(mLock)) {}
 
@@ -37,11 +39,11 @@ class Monitor {
     mLock = nullptr;
   }
 
-  void Lock() { PR_Lock(mLock); }
+  void Lock() CAPABILITY_ACQUIRE() { PR_Lock(mLock); }
 
-  void Unlock() { PR_Unlock(mLock); }
+  void Unlock() CAPABILITY_RELEASE() { PR_Unlock(mLock); }
 
-  bool Wait(PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT) {
+  bool Wait(PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT) REQUIRES(this) {
     return PR_WaitCondVar(mCondVar, aTimeout) == PR_SUCCESS;
   }
 
@@ -52,37 +54,33 @@ class Monitor {
   PRCondVar* mCondVar;
 };
 
-class MonitorAutoLock {
+class SCOPED_CAPABILITY MonitorAutoLock {
  public:
-  explicit MonitorAutoLock(Monitor& aMonitor) : mMonitor(aMonitor) {
+  explicit MonitorAutoLock(Monitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
+      : mMonitor(aMonitor) {
     mMonitor.Lock();
   }
 
-  ~MonitorAutoLock() { mMonitor.Unlock(); }
-
-  bool Wait(PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT) {
-    return mMonitor.Wait(aTimeout);
-  }
-
-  bool Notify() { return mMonitor.Notify(); }
+  ~MonitorAutoLock() CAPABILITY_RELEASE() { mMonitor.Unlock(); }
 
  private:
   Monitor& mMonitor;
 };
 
-class MonitorAutoUnlock {
+class SCOPED_CAPABILITY MonitorAutoUnlock {
  public:
-  explicit MonitorAutoUnlock(Monitor& aMonitor) : mMonitor(aMonitor) {
+  explicit MonitorAutoUnlock(Monitor& aMonitor) SCOPED_UNLOCK_RELEASE(aMonitor)
+      : mMonitor(aMonitor) {
     mMonitor.Unlock();
   }
 
-  ~MonitorAutoUnlock() { mMonitor.Lock(); }
+  ~MonitorAutoUnlock() SCOPED_UNLOCK_REACQUIRE() { mMonitor.Lock(); }
 
  private:
   Monitor& mMonitor;
 };
 
-class Mutex {
+class CAPABILITY Mutex {
  public:
   Mutex() : mPRLock(PR_NewLock()) {}
 
@@ -91,19 +89,21 @@ class Mutex {
     mPRLock = nullptr;
   }
 
-  void Lock() { PR_Lock(mPRLock); }
+  void Lock() CAPABILITY_ACQUIRE() { PR_Lock(mPRLock); }
 
-  void Unlock() { PR_Unlock(mPRLock); }
+  void Unlock() CAPABILITY_RELEASE() { PR_Unlock(mPRLock); }
 
  private:
   PRLock* mPRLock;
 };
 
-class AutoLock {
+class SCOPED_CAPABILITY AutoLock {
  public:
-  explicit AutoLock(Mutex& aLock) : mLock(aLock) { mLock.Lock(); }
+  explicit AutoLock(Mutex& aLock) CAPABILITY_ACQUIRE(aLock) : mLock(aLock) {
+    mLock.Lock();
+  }
 
-  ~AutoLock() { mLock.Unlock(); }
+  ~AutoLock() CAPABILITY_RELEASE() { mLock.Unlock(); }
 
  private:
   Mutex& mLock;

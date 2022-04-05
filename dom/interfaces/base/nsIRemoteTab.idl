@@ -26,6 +26,12 @@ interface nsIRemoteTab : nsISupports
   readonly attribute boolean hasLayers;
 
   /**
+   * When set to true, this priority hint indicates that the content
+   * processes of this tab should be set to a higher process priority.
+   */
+  attribute boolean priorityHint;
+
+  /**
    * Adjusts the tab's active state in the process priority manager,
    * allowing its process to be given a lower priority.
    */

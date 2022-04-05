@@ -182,7 +182,7 @@ function OnRefTestLoad(win)
     g.browser.setAttribute("remote", g.browserIsRemote ? "true" : "false");
     // Make sure the browser element is exactly 800x1000, no matter
     // what size our window is
-    g.browser.setAttribute("style", "padding: 0px; margin: 0px; border:none; min-width: 800px; min-height: 1000px; max-width: 800px; max-height: 1000px");
+    g.browser.setAttribute("style", "padding: 0px; margin: 0px; border:none; min-width: 800px; min-height: 1000px; max-width: 800px; max-height: 1000px; color-scheme: env(-moz-content-preferred-color-scheme)");
 
     if (Services.appinfo.OS == "Android") {
       let doc = g.containingWindow.document.getElementById('main-window');

@@ -2089,13 +2089,15 @@ class GFX2D_API Factory {
   static void SetSystemTextQuality(uint8_t aQuality);
 
   static already_AddRefed<DataSourceSurface>
-  CreateBGRA8DataSourceSurfaceForD3D11Texture(ID3D11Texture2D* aSrcTexture);
+  CreateBGRA8DataSourceSurfaceForD3D11Texture(ID3D11Texture2D* aSrcTexture,
+                                              uint32_t aArrayIndex = 0);
 
   static bool ReadbackTexture(layers::TextureData* aDestCpuTexture,
                               ID3D11Texture2D* aSrcTexture);
 
   static bool ReadbackTexture(DataSourceSurface* aDestCpuTexture,
-                              ID3D11Texture2D* aSrcTexture);
+                              ID3D11Texture2D* aSrcTexture,
+                              uint32_t aArrayIndex = 0);
 
  private:
   static StaticRefPtr<ID2D1Device> mD2D1Device;
@@ -2112,7 +2114,8 @@ class GFX2D_API Factory {
   // DestTextureT can be TextureData or DataSourceSurface.
   template <typename DestTextureT>
   static bool ConvertSourceAndRetryReadback(DestTextureT* aDestCpuTexture,
-                                            ID3D11Texture2D* aSrcTexture);
+                                            ID3D11Texture2D* aSrcTexture,
+                                            uint32_t aArrayIndex = 0);
 
  protected:
   // This guards access to the singleton devices above, as well as the
