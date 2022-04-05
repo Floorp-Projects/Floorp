@@ -61,7 +61,7 @@ add_task(async function testPrintToStream() {
     // We see one byte difference in Windows and Linux on automation sometimes,
     // though files are consistently the same locally, that needs
     // investigation, but it's probably harmless.
-    const maxSizeDifference = AppConstants.platform == "macosx" ? 100 : 1;
+    const maxSizeDifference = AppConstants.platform == "macosx" ? 100 : 2;
 
     // Buffering shenanigans? Wait for sizes to match... There's no great
     // IOUtils methods to force a flush without writing anything...
