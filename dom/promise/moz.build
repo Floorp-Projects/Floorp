@@ -27,6 +27,10 @@ LOCAL_INCLUDES += [
     "/js/xpconnect/src",
 ]
 
+TEST_DIRS += [
+    "gtest",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
