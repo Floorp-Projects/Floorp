@@ -1815,14 +1815,28 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
 
   if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
     // Headers: close (or split) header
-    nsresult rv = HandleInsertParagraphInHeadingElement(*editableBlockElement,
-                                                        atStartOfSelection);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+        HandleInsertParagraphInHeadingElement(*editableBlockElement,
+                                              atStartOfSelection);
+    if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+      if (NS_WARN_IF(pointToPutCaretOrError.unwrapErr() ==
+                     NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING(
+          "HTMLEditor::HandleInsertParagraphInHeadingElement() failed, but "
+          "ignored");
+      return EditActionHandled();
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::HandleInsertParagraphInHeadingElement() "
-                         "failed, but ignored");
+    nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.unwrap());
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "HTMLEditor::CollapseSelectionTo() caused destroying the editor");
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
     return EditActionHandled();
   }
 
@@ -6878,148 +6892,149 @@ void HTMLEditor::MakeTransitionList(
   }
 }
 
-nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
-    Element& aHeader, const EditorDOMPoint& aPointToSplit) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::HandleInsertParagraphInHeadingElement(
+    Element& aHeadingElement, const EditorDOMPoint& aPointToSplit) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // Remember where the header is
-  EditorDOMPoint atHeader(&aHeader);
-  if (NS_WARN_IF(!atHeader.IsInContentNode())) {
-    return NS_ERROR_FAILURE;
+  EditorDOMPoint atHeadingElement(&aHeadingElement);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!atHeadingElement.IsInContentNode()))) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   {
     // Forget child node.
-    AutoEditorDOMPointChildInvalidator rememberOnlyOffset(atHeader);
+    AutoEditorDOMPointChildInvalidator rememberOnlyOffset(atHeadingElement);
   }
 
-  {
+  SplitNodeResult splitHeadingResult = [this, &aPointToSplit,
+                                        &aHeadingElement]() MOZ_CAN_RUN_SCRIPT {
     // Get ws code to adjust any ws
     Result<EditorDOMPoint, nsresult> preparationResult =
         WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-            *this, aPointToSplit, aHeader);
-    if (preparationResult.isErr()) {
+            *this, aPointToSplit, aHeadingElement);
+    if (MOZ_UNLIKELY(preparationResult.isErr())) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
-      return preparationResult.unwrapErr();
+      return SplitNodeResult(preparationResult.unwrapErr());
     }
     EditorDOMPoint pointToSplit = preparationResult.unwrap();
     MOZ_ASSERT(pointToSplit.IsInContentNode());
 
     // Split the header
-    SplitNodeResult splitHeaderResult = SplitNodeDeepWithTransaction(
-        aHeader, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (MOZ_UNLIKELY(splitHeaderResult.Failed())) {
-      NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return NS_ERROR_FAILURE;
-    }
+    SplitNodeResult result = SplitNodeDeepWithTransaction(
+        aHeadingElement, pointToSplit,
+        SplitAtEdges::eAllowToCreateEmptyContainer);
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "HTMLEditor::SplitNodeDeepWithTransaction(aHeadingElement, "
+        "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
+    return result;
+  }();
+  if (MOZ_UNLIKELY(splitHeadingResult.Failed())) {
+    NS_WARNING("Failed to splitting aHeadingElement");
+    return Err(splitHeadingResult.Rv());
   }
 
-  // If the previous heading of split point is empty, put a padding <br>
-  // element for empty last line into it.
-  nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
-      aHeader, {WalkTreeOption::IgnoreNonEditableNode});
-  if (prevItem) {
+  // If the left heading element is empty, put a padding <br> element for empty
+  // last line into it.
+  if (nsCOMPtr<nsIContent> prevItem = HTMLEditUtils::GetPreviousSibling(
+          aHeadingElement, {WalkTreeOption::IgnoreNonEditableNode})) {
     MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
     if (HTMLEditUtils::IsEmptyNode(
             *prevItem, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
       CreateElementResult createPaddingBRResult =
           InsertPaddingBRElementForEmptyLastLineWithTransaction(
-              EditorDOMPoint(prevItem, 0));
-      if (createPaddingBRResult.Failed()) {
+              EditorDOMPoint(prevItem, 0u));
+      if (MOZ_UNLIKELY(createPaddingBRResult.Failed())) {
         NS_WARNING(
             "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
             ") failed");
-        return createPaddingBRResult.Rv();
+        return Err(createPaddingBRResult.Rv());
       }
     }
   }
 
-  // If the new (righthand) header node is empty, delete it
-  if (HTMLEditUtils::IsEmptyBlockElement(aHeader, {})) {
-    nsresult rv = DeleteNodeWithTransaction(aHeader);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return rv;
-    }
-    // Layout tells the caret to blink in a weird place if we don't place a
-    // break after the header.
-    nsCOMPtr<nsIContent> sibling;
-    if (aHeader.GetNextSibling()) {
-      sibling = HTMLEditUtils::GetNextSibling(
-          *aHeader.GetNextSibling(), {WalkTreeOption::IgnoreNonEditableNode});
-    }
-    if (!sibling || !sibling->IsHTMLElement(nsGkAtoms::br)) {
-      TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
-      mTypeInState->ClearAllProps();
-
-      // Create a paragraph
-      nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
-      // We want a wrapper element even if we separate with <br>
-      Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
-          CreateAndInsertElement(
-              WithTransaction::Yes,
-              &paraAtom == nsGkAtoms::br ? *nsGkAtoms::p
-                                         : MOZ_KnownLive(paraAtom),
-              atHeader.NextPoint(),
-              // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-              [](HTMLEditor& aHTMLEditor, Element& aDivOrParagraphElement,
-                 const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                // We don't make inserting new <br> element undoable
-                // because removing the new element from the DOM tree
-                // gets same result for the user if aDivOrParagraphElement
-                // has not been connected yet.
-                const auto withTransaction =
-                    aDivOrParagraphElement.IsInComposedDoc()
-                        ? WithTransaction::Yes
-                        : WithTransaction::No;
-                Result<RefPtr<Element>, nsresult> brElementOrError =
-                    aHTMLEditor.InsertBRElement(
-                        withTransaction,
-                        EditorDOMPoint(&aDivOrParagraphElement, 0u));
-                if (brElementOrError.isErr()) {
-                  NS_WARNING(
-                      nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
-                                      ToString(withTransaction).c_str())
-                          .get());
-                  return brElementOrError.unwrapErr();
-                }
-                return NS_OK;
-              });
-      if (maybeNewParagraphElement.isErr()) {
-        NS_WARNING(
-            "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-        return maybeNewParagraphElement.unwrapErr();
-      }
-      MOZ_ASSERT(maybeNewParagraphElement.inspect());
-
-      // Set selection to before the break
-      nsresult rv = CollapseSelectionToStartOf(
-          MOZ_KnownLive(*maybeNewParagraphElement.inspect()));
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionToStartOf() failed");
-      return rv;
-    }
-
-    EditorRawDOMPoint afterSibling(EditorRawDOMPoint::After(*sibling));
-    if (NS_WARN_IF(!afterSibling.IsSet())) {
-      return NS_ERROR_FAILURE;
-    }
-    // Put selection after break
-    rv = CollapseSelectionTo(afterSibling);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionTo() failed");
-    return rv;
+  // Put caret at start of the right head element if it's not empty.
+  if (!HTMLEditUtils::IsEmptyBlockElement(aHeadingElement, {})) {
+    return EditorDOMPoint(&aHeadingElement, 0u);
   }
 
-  // Put selection at front of righthand heading
-  nsresult rv = CollapseSelectionToStartOf(aHeader);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionToStartOf() failed");
-  return rv;
+  // If the right heading element is empty, delete it.
+  nsresult rv = DeleteNodeWithTransaction(aHeadingElement);
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    return Err(rv);
+  }
+  // Layout tells the caret to blink in a weird place if we don't place a
+  // break after the header.
+  if (aHeadingElement.GetNextSibling()) {
+    // XXX Ignoring non-editable <br> element here is odd because non-editable
+    //     <br> elements also work as <br> from point of view of layout.
+    nsIContent* nextEditableSibling =
+        HTMLEditUtils::GetNextSibling(*aHeadingElement.GetNextSibling(),
+                                      {WalkTreeOption::IgnoreNonEditableNode});
+    if (nextEditableSibling &&
+        nextEditableSibling->IsHTMLElement(nsGkAtoms::br)) {
+      auto afterEditableBRElement = EditorDOMPoint::After(*nextEditableSibling);
+      if (MOZ_UNLIKELY(NS_WARN_IF(!afterEditableBRElement.IsSet()))) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      // Put caret at the <br> element.
+      return afterEditableBRElement;
+    }
+  }
+
+  TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
+  mTypeInState->ClearAllProps();
+
+  // Create a paragraph if the right heading element is not followed by an
+  // editable <br> element.
+  nsStaticAtom& newParagraphTagName =
+      &DefaultParagraphSeparatorTagName() == nsGkAtoms::br
+          ? *nsGkAtoms::p
+          : DefaultParagraphSeparatorTagName();
+  // We want a wrapper element even if we separate with a <br>.
+  // MOZ_KnownLive(newParagraphTagName) because it's available until shutdown.
+  Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
+      CreateAndInsertElement(
+          WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
+          atHeadingElement.NextPoint(),
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          [](HTMLEditor& aHTMLEditor, Element& aDivOrParagraphElement,
+             const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            // We don't make inserting new <br> element undoable because
+            // removing the new element from the DOM tree gets same result for
+            // the user if aDivOrParagraphElement has not been connected yet.
+            const auto withTransaction =
+                aDivOrParagraphElement.IsInComposedDoc() ? WithTransaction::Yes
+                                                         : WithTransaction::No;
+            Result<RefPtr<Element>, nsresult> brElementOrError =
+                aHTMLEditor.InsertBRElement(
+                    withTransaction,
+                    EditorDOMPoint(&aDivOrParagraphElement, 0u));
+            if (brElementOrError.isErr()) {
+              NS_WARNING(
+                  nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
+                                  ToString(withTransaction).c_str())
+                      .get());
+              return brElementOrError.unwrapErr();
+            }
+            return NS_OK;
+          });
+  if (MOZ_UNLIKELY(maybeNewParagraphElement.isErr())) {
+    NS_WARNING(
+        "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
+    return Err(maybeNewParagraphElement.unwrapErr());
+  }
+  MOZ_ASSERT(maybeNewParagraphElement.inspect());
+
+  // Put caret at the <br> element in the following paragraph.
+  return EditorDOMPoint(maybeNewParagraphElement.unwrap().get(), 0u);
 }
 
 EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
