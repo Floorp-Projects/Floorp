@@ -10209,7 +10209,7 @@
 #if defined(ANDROID) || defined(MOZ_THUNDERBIRD)
   value: false # see bug 1641427
 #else
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
 #endif
 
 # Whether we can send OnDataAvailable to content process directly.
