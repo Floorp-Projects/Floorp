@@ -2657,6 +2657,7 @@ pictureinpicture.settings:
     bug_numbers:
       - 1639774
     expiry_version: "never"
+    release_channel_collection: opt-out
   disable:
     objects: ["player"]
     description: Recorded when Picture-in-Picture is disabled.
@@ -2669,6 +2670,7 @@ pictureinpicture.settings:
     bug_numbers:
       - 1639774
     expiry_version: "never"
+    release_channel_collection: opt-out
 
 doh:
   evaluate_v2:
