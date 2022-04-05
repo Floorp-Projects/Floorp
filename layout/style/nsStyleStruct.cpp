@@ -2478,7 +2478,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // FIXME(mrobinson): Depending on how this is implemented this may need a
   // different set of change hints. See bug 1758490.
   if (mContentVisibility != aNewData.mContentVisibility) {
-    hint |= nsChangeHint_NeedReflow;
+    hint |= nsChangeHint_RepaintFrame;
   }
 
   if (mScrollbarGutter != aNewData.mScrollbarGutter) {
