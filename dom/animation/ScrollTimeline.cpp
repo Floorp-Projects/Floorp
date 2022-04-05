@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/AnimationTarget.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
@@ -141,6 +142,32 @@ layers::ScrollDirection ScrollTimeline::Axis() const {
                    mDirection == StyleScrollDirection::Auto))
              ? layers::ScrollDirection::eHorizontal
              : layers::ScrollDirection::eVertical;
+}
+
+StyleOverflow ScrollTimeline::SourceScrollStyle() const {
+  MOZ_ASSERT(mSource && mSource.mElement->GetPrimaryFrame());
+
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  MOZ_ASSERT(scrollFrame);
+
+  const ScrollStyles scrollStyles = scrollFrame->GetScrollStyles();
+
+  return Axis() == layers::ScrollDirection::eHorizontal
+             ? scrollStyles.mHorizontal
+             : scrollStyles.mVertical;
+}
+
+bool ScrollTimeline::APZIsActiveForSource() const {
+  MOZ_ASSERT(mSource);
+  return gfxPlatform::AsyncPanZoomEnabled() &&
+         !nsLayoutUtils::ShouldDisableApzForElement(mSource.mElement) &&
+         DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(mSource.mElement);
+}
+
+bool ScrollTimeline::ScrollingDirectionIsAvailable() const {
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  MOZ_ASSERT(scrollFrame);
+  return scrollFrame->GetAvailableScrollingDirections().contains(Axis());
 }
 
 void ScrollTimeline::UnregisterFromScrollSource() {
