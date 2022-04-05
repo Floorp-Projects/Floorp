@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><!-- TODO: insert title here --></title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    function getExpectedError(string, filename=location.href) {
+      let lines = string.split(/\r\n|\r|\n/);
+      let line, column;
+      let errorLine;
+      for (line = 0; line < lines.length; ++line) {
+        errorLine = lines[line];
+        // The error starts at the opening '<' of '<b>'.
+        column = errorLine.search("<<b>") + 1;
+        if (column > 0) {
+          // Line and column are 1-based.
+          line += 1;
+          column += 1;
+          break;
+        }
+      }
+
+      let expectedError = `XML Parsing Error: not well-formed
+Location: ${filename}
+Line Number ${line}, Column ${column}:${errorLine}
+${"^".padStart(column, "-")}`;
+      return expectedError;
+    }
+
+    function getParseError(string) {
+      let error = new window.DOMParser()
+        .parseFromString(string, "text/xml")
+        .getElementsByTagName("parsererror")[0].textContent;
+      return [error, getExpectedError(string)];
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      let [error, expectedError] = getParseError("<p>Not a <<b>well-formed</b> xml string</p>");
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError("<p>Not \na <<b>well-formed</b> xml string</p>");
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError("<p>Not \na <<b>well-formed</b> xml string</p>");
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError("<p>Not a <<b>well-fo\nrmed</b> xml string</p>");
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError(`<p>Not ${' '.repeat(512)} a <<b>well-formed</b> xml string</p>`);
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError(`<p>${' '.repeat(505)}<br>${' '.repeat(512)}<<b>Not a well-formed</b> xml string</p>`);
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      [error, expectedError] = getParseError(`<p>${' '.repeat(2048)}<br>${' '.repeat(512)}<<b>Not a well-formed</b> xml string</p>`);
+      is(error, expectedError, "Check that parsererror contains the right data.");
+
+      fetch("file_xml_parse_error.xml").then(response => response.text()).then(string => {
+        let doc = document.getElementById("frame").contentDocument;
+        error = doc.documentElement.textContent;
+        expectedError = getExpectedError(string, doc.location);
+        is(error, expectedError, "Check that parsererror contains the right data.");
+
+        SimpleTest.finish();
+      });
+    }
+  </script>
+</head>
+<body onload="runTest()">
+<p id="display"><iframe id="frame" src="file_xml_parse_error.xml"></iframe></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
