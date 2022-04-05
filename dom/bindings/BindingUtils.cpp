@@ -2553,8 +2553,17 @@ bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   bool isInstance = domClass && domClass->mInterfaceChain[clasp->mDepth] ==
                                     clasp->mPrototypeID;
+  if (isInstance) {
+    args.rval().setBoolean(true);
+    return true;
+  }
 
-  args.rval().setBoolean(isInstance);
+  if (IsRemoteObjectProxy(instance, clasp->mPrototypeID)) {
+    args.rval().setBoolean(true);
+    return true;
+  }
+
+  args.rval().setBoolean(false);
   return true;
 }
 
