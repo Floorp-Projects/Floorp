@@ -1099,7 +1099,7 @@ void Factory::CopyDataSourceSurface(DataSourceSurface* aSource,
 /* static */
 already_AddRefed<DataSourceSurface>
 Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
-    ID3D11Texture2D* aSrcTexture) {
+    ID3D11Texture2D* aSrcTexture, uint32_t aArrayIndex) {
   D3D11_TEXTURE2D_DESC srcDesc = {0};
   aSrcTexture->GetDesc(&srcDesc);
 
@@ -1109,7 +1109,7 @@ Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
   if (NS_WARN_IF(!destTexture)) {
     return nullptr;
   }
-  if (!ReadbackTexture(destTexture, aSrcTexture)) {
+  if (!ReadbackTexture(destTexture, aSrcTexture, aArrayIndex)) {
     return nullptr;
   }
   return destTexture.forget();
@@ -1118,7 +1118,8 @@ Factory::CreateBGRA8DataSourceSurfaceForD3D11Texture(
 /* static */
 template <typename DestTextureT>
 bool Factory::ConvertSourceAndRetryReadback(DestTextureT* aDestCpuTexture,
-                                            ID3D11Texture2D* aSrcTexture) {
+                                            ID3D11Texture2D* aSrcTexture,
+                                            uint32_t aArrayIndex) {
   RefPtr<ID3D11Device> device;
   aSrcTexture->GetDevice(getter_AddRefs(device));
   if (!device) {
@@ -1135,8 +1136,8 @@ bool Factory::ConvertSourceAndRetryReadback(DestTextureT* aDestCpuTexture,
   }
 
   RefPtr<ID3D11Texture2D> newSrcTexture;
-  HRESULT hr =
-      manager->CopyToBGRATexture(aSrcTexture, getter_AddRefs(newSrcTexture));
+  HRESULT hr = manager->CopyToBGRATexture(aSrcTexture, aArrayIndex,
+                                          getter_AddRefs(newSrcTexture));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to copy to BGRA texture.";
     return false;
@@ -1175,7 +1176,8 @@ bool Factory::ReadbackTexture(layers::TextureData* aDestCpuTexture,
 
 /* static */
 bool Factory::ReadbackTexture(DataSourceSurface* aDestCpuTexture,
-                              ID3D11Texture2D* aSrcTexture) {
+                              ID3D11Texture2D* aSrcTexture,
+                              uint32_t aArrayIndex) {
   D3D11_TEXTURE2D_DESC srcDesc = {0};
   aSrcTexture->GetDesc(&srcDesc);
 
@@ -1183,7 +1185,8 @@ bool Factory::ReadbackTexture(DataSourceSurface* aDestCpuTexture,
   // destination is B8G8R8A8 then convert the source to B8G8R8A8 and readback.
   if ((srcDesc.Format != DXGIFormat(aDestCpuTexture->GetFormat())) &&
       (aDestCpuTexture->GetFormat() == SurfaceFormat::B8G8R8A8)) {
-    return ConvertSourceAndRetryReadback(aDestCpuTexture, aSrcTexture);
+    return ConvertSourceAndRetryReadback(aDestCpuTexture, aSrcTexture,
+                                         aArrayIndex);
   }
 
   if ((IntSize(srcDesc.Width, srcDesc.Height) != aDestCpuTexture->GetSize()) ||
@@ -1196,6 +1199,8 @@ bool Factory::ReadbackTexture(DataSourceSurface* aDestCpuTexture,
   if (!aDestCpuTexture->Map(gfx::DataSourceSurface::WRITE, &mappedSurface)) {
     return false;
   }
+
+  MOZ_ASSERT(aArrayIndex == 0);
 
   bool ret =
       ReadbackTexture(mappedSurface.mData, mappedSurface.mStride, aSrcTexture);
