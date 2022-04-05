@@ -223,6 +223,13 @@ interface Engine : WebExtensionRuntime, DataCleanable {
     ): Unit = throw UnsupportedOperationException("Service workers support not available in this engine")
 
     /**
+     * Un-registers the attached [ServiceWorkerDelegate] if one was added with
+     * [registerServiceWorkerDelegate].
+     */
+    fun unregisterServiceWorkerDelegate(): Unit =
+        throw UnsupportedOperationException("Service workers support not available in this engine")
+
+    /**
      * Handles user interacting with a web notification.
      *
      * @param webNotification [Parcelable] representing a web notification.

@@ -2112,6 +2112,19 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `unregisterServiceWorkerDelegate sets delegate to null`() {
+        val runtime = GeckoRuntime.getDefault(testContext)
+        val settings = DefaultSettings()
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = settings)
+
+        engine.registerServiceWorkerDelegate(mock())
+        assertNotNull(runtime.serviceWorkerDelegate)
+
+        engine.unregisterServiceWorkerDelegate()
+        assertNull(runtime.serviceWorkerDelegate)
+    }
+
+    @Test
     fun `handleWebNotificationClick calls click on the WebNotification`() {
         val runtime = GeckoRuntime.getDefault(testContext)
         val settings = DefaultSettings()

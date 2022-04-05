@@ -534,6 +534,10 @@ class GeckoEngine(
         )
     }
 
+    override fun unregisterServiceWorkerDelegate() {
+        runtime.serviceWorkerDelegate = null
+    }
+
     override fun handleWebNotificationClick(webNotification: Parcelable) {
         (webNotification as? WebNotification)?.click()
     }
