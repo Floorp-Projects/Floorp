@@ -1751,7 +1751,7 @@ Value SnapshotIterator::maybeRead(const RValueAllocation& a,
     MOZ_ASSERT_UNREACHABLE("All allocations should be readable.");
   }
 
-  return fallback.unreadablePlaceholder();
+  return UndefinedValue();
 }
 
 void SnapshotIterator::writeAllocationValuePayload(
@@ -2002,7 +2002,7 @@ Value SnapshotIterator::maybeReadAllocByIndex(size_t index) {
   {
     // This MaybeReadFallback method cannot GC.
     JS::AutoSuppressGCAnalysis nogc;
-    MaybeReadFallback fallback(UndefinedValue());
+    MaybeReadFallback fallback;
     s = maybeRead(fallback);
   }
 
@@ -2321,7 +2321,7 @@ struct DumpOp {
 };
 
 void InlineFrameIterator::dump() const {
-  MaybeReadFallback fallback(UndefinedValue());
+  MaybeReadFallback fallback;
 
   if (more()) {
     fprintf(stderr, " JS frame (inlined)\n");
