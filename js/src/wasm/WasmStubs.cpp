@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <type_traits>
 
 #include "jit/ABIArgGenerator.h"
 #include "jit/JitFrames.h"
@@ -2662,7 +2663,8 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
 #elif defined(JS_CODEGEN_X86)
   // x86 passes the return value on the x87 FP stack.
   Operand op(esp, 0);
-  MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+  MIRType retType = ToMIRType(ABIArgType(
+      std::underlying_type_t<ABIFunctionType>(abiType) & ArgType_Mask));
   if (retType == MIRType::Float32) {
     masm.fstp32(op);
     masm.loadFloat32(op, ReturnFloat32Reg);
@@ -2672,7 +2674,8 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   }
 #elif defined(JS_CODEGEN_ARM)
   // Non hard-fp passes the return values in GPRs.
-  MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+  MIRType retType = ToMIRType(ABIArgType(
+      std::underlying_type_t<ABIFunctionType>(abiType) & ArgType_Mask));
   if (!UseHardFpABI() && IsFloatingPointType(retType)) {
     masm.ma_vxfer(r0, r1, d0);
   }
