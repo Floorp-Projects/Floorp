@@ -8449,6 +8449,7 @@ class MResumePoint final : public MNode
   jsbytecode* pc_;
   MInstruction* instruction_;
   ResumeMode mode_;
+  bool isDiscarded_ = false;
 
   MResumePoint(MBasicBlock* block, jsbytecode* pc, ResumeMode mode);
   void inherit(MBasicBlock* state);
@@ -8541,6 +8542,9 @@ class MResumePoint final : public MNode
 
   MStoresToRecoverList::iterator storesBegin() const { return stores_.begin(); }
   MStoresToRecoverList::iterator storesEnd() const { return stores_.end(); }
+
+  void setDiscarded() { isDiscarded_ = true; }
+  bool isDiscarded() const { return isDiscarded_; }
 
 #ifdef JS_JITSPEW
   virtual void dump(GenericPrinter& out) const override;
