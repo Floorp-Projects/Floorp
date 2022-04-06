@@ -66,6 +66,9 @@ permalink: /changelog/
   
 * **site-permission-feature**
   * 🆕 New Add to SitePermissionsFeature a property to set visibility for NotAskAgainCheckBox
+
+* **feature-search**
+  * 🆕 Update search Engines and Search Engine Icons
   
 # 99.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v98.0.0...v99.0.0)

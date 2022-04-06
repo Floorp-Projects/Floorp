@@ -237,7 +237,7 @@
     "en-US": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazondotcom", "ddg", "wikipedia", "ebay"
+          "google-b-m", "bing", "amazondotcom", "ddg", "ebay", "wikipedia"
         ]
       },
       "BY": {
