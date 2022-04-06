@@ -40,7 +40,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Markah anyar</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Anyar dicirian</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Anyar dicirian</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Témbongkeun sadayana</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -328,6 +328,24 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Lamun diidinan, tab pribadi bakal katémbong nalika sababaraha aplikasi muka</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahan tarabas nyungsi nyamuni</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Mode HTTPS-Hungkul</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Otomatis nyoba nyambung ka loka maké protokol énkripsi HTTPS pikeun ngaronjatkeun kaamanan.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Hurung</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Pareum</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Lenyepan</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Aktipkeun dina sadaya tab</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Aktipkeun dina tab nyamuni hungkul</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Situs aman teu sayaga</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Sigana, raramatlokana teu ngarojong HTTPs.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aksésibilitas</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1629,18 +1647,18 @@
     <string name="search_delete_search_engine_success_message">Mupus %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Wilujeng sumping ka %s anyar</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Wilujeng sumping ka %s anyar</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Pamaluruh wanda anyar geus nungguan, kalawan kinerja anu ngaronjat sarta pitur anu mantuan jering anjeun leuwih loba.\n\nMangga tungguan sabot kami ngapdét %s anjeun</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Pamaluruh wanda anyar geus nungguan, kalawan kinerja anu ngaronjat sarta pitur anu mantuan jering anjeun leuwih loba.\n\nMangga tungguan sabot kami ngapdét %s anjeun</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Mutahirkeun %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Mutahirkeun %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Mimitan %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Mimitan %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migrasi réngsé</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migrasi réngsé</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Kecap sandi</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Kecap sandi</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Ngarah bisa:</string>
@@ -1840,4 +1858,7 @@
     <string name="pocket_stories_feature_caption">Bagéan ti kulawarga Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Lenyepan</string>
+
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Buka setélan</string>
 </resources>

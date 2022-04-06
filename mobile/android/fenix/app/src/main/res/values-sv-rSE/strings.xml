@@ -40,7 +40,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Senaste bokmärken</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Nyligen sparade bokmärken</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Nyligen sparade bokmärken</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Visa alla</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -335,6 +335,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Om tillåtet kommer privata flikar också att visas när flera appar är öppna</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lägg till genväg för privat surfning</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Endast HTTPS-läge</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Försöker automatiskt ansluta till webbplatser med HTTPS-krypteringsprotokollet för ökad säkerhet.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">På</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Av</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Läs mer</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Aktivera i alla flikar</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Aktivera endast i privata flikar</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Säker webbplats är inte tillgänglig</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Troligtvis stöder webbplatsen helt enkelt inte HTTPs.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Men det är också möjligt att en angripare är inblandad. Om du fortsätter till webbplatsen ska du inte ange någon känslig information. Om du fortsätter kommer endast HTTPS-läget att stängas av tillfälligt för webbplatsen.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Hjälpmedel</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1633,17 +1653,17 @@
     <string name="search_delete_search_engine_success_message">%s borttagen</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Välkommen till en helt ny %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Välkommen till en helt ny %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">En helt ny omgjord webbläsare väntar med förbättrad prestanda och funktioner som hjälper dig att göra mer online.\n\nVänta medan vi uppdaterar %s med dina</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">En helt ny omgjord webbläsare väntar med förbättrad prestanda och funktioner som hjälper dig att göra mer online.\n\nVänta medan vi uppdaterar %s med dina</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Uppdaterar %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Uppdaterar %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Starta %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Starta %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migrationen slutförd</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migrationen slutförd</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Lösenord</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Lösenord</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">För att tillåta det:</string>
@@ -1842,4 +1862,9 @@
     <string name="pocket_stories_feature_caption">Del av Firefox-familjen. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Läs mer</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Aktivera telemetri för att skicka data.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Gå till inställningar</string>
 </resources>

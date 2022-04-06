@@ -41,7 +41,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Viimeisimmät kirjanmerkit</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Äskettäin tallennetut kirjanmerkit</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Äskettäin tallennetut kirjanmerkit</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Näytä kaikki</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -334,6 +334,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Jos sallittu, yksityiset välilehdet ovat näkyvissä kun useita sovelluksia on avoinna</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Vain HTTPS -tila</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Yrittää muodostaa automaattisesti yhteyden sivustoihin käyttämällä salattua HTTPS-protokollaa turvallisuuden parantamiseksi.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Päällä</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Pois</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Lue lisää</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Käytä kaikissa välilehdissä</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Käytä vain yksityisissä välilehdissä</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Suojattu sivusto ei saatavilla</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Todennäköisesti sivusto ei tue HTTPS:ää.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">On kuitenkin myös mahdollista, että hyökkäävä taho on läsnä. Jos jatkat verkkosivustolle, älä anna arkaluonteisia tietoja. Jos jatkat, &quot;Vain HTTPS&quot;-tila poistetaan väliaikaisesti käytöstä sivustolta.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Saavutettavuus</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1633,17 +1653,17 @@
     <string name="search_delete_search_engine_success_message">Poistettiin %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Tervetuloa, käytössäsi on täysin uudistunut %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Tervetuloa, käytössäsi on täysin uudistunut %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Täysin uudistettu selain odottaa sinua. Paranneltu suorityskyky ja ominaisuudet auttavat sinua tekemään aiempaa enemmän verkossa.\n\nOdota kunnes %s päivitetään</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Täysin uudistettu selain odottaa sinua. Paranneltu suorityskyky ja ominaisuudet auttavat sinua tekemään aiempaa enemmän verkossa.\n\nOdota kunnes %s päivitetään</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Päivitetään %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Päivitetään %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Käynnistä %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Käynnistä %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migraatio valmistui</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migraatio valmistui</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Salasanat</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Salasanat</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Salliaksesi sen:</string>
@@ -1843,4 +1863,9 @@
     <string name="pocket_stories_feature_caption">Osa Firefox-perhettä. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Lue lisää</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Ota telemetria käyttöön tietojen lähettämiseksi.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Siirry asetuksiin</string>
 </resources>

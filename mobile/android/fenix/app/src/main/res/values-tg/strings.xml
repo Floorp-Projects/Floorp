@@ -40,7 +40,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Хатбаракҳои охирин</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Хатбаракҳои нигоҳдошташудаи охирин</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Хатбаракҳои нигоҳдошташудаи охирин</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Ҳамаро намоиш додан</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -332,6 +332,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Агар иҷозат дода шавад, варақаҳои хусусӣ низ ҳангоми кушода будани якчанд барнома намоён мешаванд</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Илова кардани миёнбури тамошокунии хусусӣ</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Реҷаи «Танҳо HTTPS»</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Ба таври худкор кӯшиш мекунад, ки ба сомонаҳо бо истифода аз протоколи рамзгузории HTTPS барои баланд бардоштани амният пайваст шавад.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Фаъол</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Ғайрифаъол</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Маълумоти бештар</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Фаъол кардан дар ҳамаи варақаҳо</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Фаъол кардан танҳо дар варақаҳои хусусӣ</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Сомонаи бехатар дастрас нест</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Эҳтимол, сомона танҳо пайвасти «HTTP»-ро дастгирӣ намекунад.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Бо вуҷуди ин, инчунин мумкин аст, ки ҳамлакунанда дахолат мекунад. Агар шумо кори худро бо сомона идома диҳед, шумо набояд ягон маълумоти ҳассоси шахсиро ворид намоед. Агар шумо идома диҳед, реҷаи «Танҳо HTTPS» барои сомона муваққатан ғайрифаъол мешавад.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Қобилияти дастрасӣ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1622,17 +1642,17 @@
     <string name="search_delete_search_engine_success_message">%s нест карда шуд</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Хуш омадед ба барномаи комилан нави %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Хуш омадед ба барномаи комилан нави %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Шуморо браузери комилан аз нав тарҳрезишуда интизор аст, ки ба шумо бо самаранокӣ ва хусусиятҳои такмилёфта барои кори бештар дар Интернет кумак мерасонад.\n\nЛутфан, интизор шавед, то мо %s-ро навсозӣ кунем, аз он ҷумла</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Шуморо браузери комилан аз нав тарҳрезишуда интизор аст, ки ба шумо бо самаранокӣ ва хусусиятҳои такмилёфта барои кори бештар дар Интернет кумак мерасонад.\n\nЛутфан, интизор шавед, то мо %s-ро навсозӣ кунем, аз он ҷумла</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s нав шуда истодааст...</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s нав шуда истодааст...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Оғоз кардани %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Оғоз кардани %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Интиқол анҷом ёфт</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Интиқол анҷом ёфт</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Ниҳонвожаҳо</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Ниҳонвожаҳо</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Барои иҷозат додан:</string>
@@ -1832,4 +1852,9 @@
     <string name="pocket_stories_feature_caption">Қисми оилаи Firefox.%s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Маълумоти бештар</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Барои фиристодани маълумот дурисанҷро фаъол созед.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Гузариш ба танзимот</string>
 </resources>

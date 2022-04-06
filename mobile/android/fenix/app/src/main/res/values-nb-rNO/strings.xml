@@ -40,7 +40,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nylige bokmerker</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Nylig lagrede bokmerker</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Nylig lagrede bokmerker</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Vis alle</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -332,6 +332,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Hvis tillatt, vil private faner også være synlige når flere apper er åpne</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Legg til snarvei for privat nettlesing</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Kun-HTTPS-modus</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Forsøker automatisk å koble til nettsteder ved hjelp av HTTPS-krypteringsprotokollen for økt sikkerhet.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">På</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Av</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Les mer</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Aktiver i alle faner</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Aktiver bare i private faner</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Sikkert nettsted ikke tilgjengelig</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Mest sannsynlig støtter nettstedet ganske enkelt ikke HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Det er imidlertid også mulig at en angriper er involvert. Hvis du fortsetter til nettstedet, bør du ikke oppgi noen sensitiv informasjon. Hvis du fortsetter, vil bare HTTPS-modus bli slått av midlertidig for nettstedet.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Tilgjengelighet</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1211,7 +1231,7 @@
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox stopper selskaper automatisk fra å spore aktivitetene dine på nettet i det skjulte.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s stopper selskaper automatisk fra å spore aktivitetene dine på nettet det i skjulte.</string>
+    <string name="onboarding_tracking_protection_description_4">%1$s stopper selskaper automatisk fra å spore aktivitetene dine på nettet i det skjulte.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (standard)</string>
     <!-- text for standard blocking option button description -->
@@ -1637,17 +1657,17 @@
     <string name="search_delete_search_engine_success_message">%s ble slettet</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Velkommen til en helt ny %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Velkommen til en helt ny %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">En helt redesignet nettleser venter på deg, med forbedret ytelse og funksjoner som hjelper deg å gjøre mer på nettet.\n\nVent mens vi oppdaterer %s med dine</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">En helt redesignet nettleser venter på deg, med forbedret ytelse og funksjoner som hjelper deg å gjøre mer på nettet.\n\nVent mens vi oppdaterer %s med dine</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Oppdaterer %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Oppdaterer %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Start %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Start %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migreringen er ferdig</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migreringen er ferdig</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Passord</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Passord</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">For å tillate det:</string>
@@ -1846,4 +1866,9 @@
     <string name="pocket_stories_feature_caption">Del av Firefox-familien. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Les mer</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Aktiver telemetri for å sende data.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Gå til innstillinger</string>
 </resources>

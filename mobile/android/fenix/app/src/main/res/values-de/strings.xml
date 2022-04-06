@@ -42,7 +42,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Neueste Lesezeichen</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Kürzlich gespeicherte Lesezeichen</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Kürzlich gespeicherte Lesezeichen</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Alle anzeigen</string>
 
@@ -335,6 +335,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Wenn erlaubt, sind auch private Tabs sichtbar, wenn mehrere Apps geöffnet sind</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Verknüpfung zum privaten Modus hinzufügen</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Nur-HTTPS-Modus</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Automatisch versuchen, eine Verbindung zu Websites herzustellen, die das HTTPS-Verschlüsselungsprotokoll verwenden, um die Sicherheit zu erhöhen.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Ein</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Aus</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Weitere Informationen</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">In allen Tabs aktivieren</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Nur in privaten Tabs aktivieren</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Sichere Website nicht verfügbar</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Höchstwahrscheinlich unterstützt die Website HTTPS einfach nicht.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Möglicherweise handelt es sich aber auch um einen Angriff. Wenn Sie die Website trotzdem besuchen, sollten Sie keine sensiblen Informationen eingeben. Wenn Sie fortfahren, wird der Nur-HTTPS-Modus vorübergehend für die Webseite deaktiviert.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Barrierefreiheit</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1651,17 +1671,17 @@
     <string name="search_delete_search_engine_success_message">%s gelöscht</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Willkommen zu einem brandneuen %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Willkommen zu einem brandneuen %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Es wartet ein komplett überarbeiteter Browser mit verbesserter Leistung und Funktionen auf Sie, der Ihnen im Internet noch mehr Möglichkeiten bietet.\n\nBitte warten Sie, wir aktualisieren %s mit Ihren</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Es wartet ein komplett überarbeiteter Browser mit verbesserter Leistung und Funktionen auf Sie, der Ihnen im Internet noch mehr Möglichkeiten bietet.\n\nBitte warten Sie, wir aktualisieren %s mit Ihren</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s wird aktualisiert…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s wird aktualisiert…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s starten</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s starten</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migration abgeschlossen</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migration abgeschlossen</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Passwörter</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Passwörter</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Zum Erlauben:</string>
@@ -1859,4 +1879,9 @@
     <string name="pocket_stories_feature_caption">Teil der Firefox-Familie. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Weitere Informationen</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Telemetrie aktivieren, um Daten zu senden.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Einstellungen öffnen</string>
 </resources>

@@ -43,7 +43,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">最近加入的書籤</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">最近加入的書籤</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">最近加入的書籤</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">顯示全部</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -333,6 +333,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">若允許，隱私分頁內容將在切換應用程式時顯示</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">新增隱私瀏覽模式捷徑</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">純 HTTPS 模式</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">自動嘗試使用加密過的 HTTPS 通訊協定連線到網站，以增加安全性。</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">開啟</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">關閉</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">了解更多</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">對所有分頁都開啟</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">只對隱私瀏覽分頁開啟</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">無法使用安全網站</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">很有可能只是網站不支援 HTTPS。</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">然而也可能是有攻擊者正嘗試攔截您的網路連線。若您決定繼續開啟網站，就不該輸入任何敏感資訊。若繼續，將暫時針對此網站關閉純 HTTPS 模式。</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">輔助功能</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1646,17 +1666,17 @@
     <string name="search_delete_search_engine_success_message">已刪除 %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">歡迎使用全新 %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">歡迎使用全新 %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">完全重新打造的瀏覽器有改善的效能與新功能，讓您在線上可以做好更多事。\n\n請稍候，我們正在更新 %s 的</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">完全重新打造的瀏覽器有改善的效能與新功能，讓您在線上可以做好更多事。\n\n請稍候，我們正在更新 %s 的</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">正在更新 %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">正在更新 %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">啟動 %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">啟動 %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">資料移轉完成</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">資料移轉完成</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">密碼</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">密碼</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">若要允許:</string>
@@ -1854,4 +1874,9 @@
     <string name="pocket_stories_feature_caption">Firefox 系列產品。%s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">了解更多</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">開啟 Telemetry 功能即可傳送資料。</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">開啟設定</string>
 </resources>

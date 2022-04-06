@@ -43,7 +43,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Recente bladwijzers</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Recent opgeslagen bladwijzers</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Recent opgeslagen bladwijzers</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Alles tonen</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -336,6 +336,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Indien toegestaan, zijn privétabbladen ook zichtbaar wanneer meerdere apps zijn geopend</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Snelkoppeling naar privénavigatie toevoegen</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Alleen-HTTPS-modus</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Probeert voor een betere beveiliging automatisch middels het HTTPS-versleutelingsprotocol verbinding te maken met websites.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Aan</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Uit</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Meer info</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">In alle tabbladen inschakelen</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Alleen in privétabbladen inschakelen</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Beveiligde website niet beschikbaar</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Hoogstwaarschijnlijk ondersteunt de website simpelweg geen HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Het is echter ook mogelijk dat er een aanvaller bij betrokken is. Als u doorgaat naar de website, voer dan geen gevoelige informatie in. Als u doorgaat, wordt de Alleen-HTTPS-modus tijdelijk uitgeschakeld voor de website.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Toegankelijkheid</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1627,17 +1647,17 @@
     <string name="search_delete_search_engine_success_message">%s verwijderd</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Welkom bij een geheel nieuw %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Welkom bij een geheel nieuw %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Een volledige opnieuw ontworpen browser wacht op u, met verbeterde prestaties en functies die u helpen meer online te doen.\n\nEen ogenblik, we werken %s bij met uw</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Een volledige opnieuw ontworpen browser wacht op u, met verbeterde prestaties en functies die u helpen meer online te doen.\n\nEen ogenblik, we werken %s bij met uw</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s bijwerken…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s bijwerken…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s starten</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s starten</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migratie voltooid</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migratie voltooid</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Wachtwoorden</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Wachtwoorden</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Toestaan:</string>
@@ -1836,4 +1856,9 @@
     <string name="pocket_stories_feature_caption">Onderdeel van de Firefox-familie. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Meer info</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Schakel telemetrie in om gegevens te verzenden.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Naar Instellingen</string>
 </resources>

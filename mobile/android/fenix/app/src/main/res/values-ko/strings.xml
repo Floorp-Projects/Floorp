@@ -44,9 +44,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">최근 북마크</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">최근에 저장된 북마크</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">최근에 저장된 북마크</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">모두 표시</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">모두 표시</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">저장된 북마크 모두 표시</string>
 
@@ -67,9 +67,9 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">홈 화면에서 사생활 보호 탭을 열기 위한 바로가기 추가.</string>
+    <string name="cfr_message">홈 화면에서 사생활 보호 탭을 열기 위한 바로 가기 추가.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">바로가기 추가</string>
+    <string name="cfr_pos_button_text">바로 가기 추가</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">아니요</string>
 
@@ -184,8 +184,6 @@
     <string name="browser_menu_add_to_homescreen">홈 화면에 추가</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">설치</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">동기화된 탭</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">다시 동기화</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -219,8 +217,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">편집</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">홈 사용자 지정</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">홈페이지 개인화</string>
     <!-- Browser Toolbar -->
@@ -336,6 +332,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">HTTPS 전용 모드</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">켜짐</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">꺼짐</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">더 알아보기</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">모든 탭에서 사용</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">사생활 보호 탭에서만 사용</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">보안 사이트를 사용할 수 없음</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">웹 사이트가 HTTPS를 지원하지 않는 것 같습니다.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">그러나, 공격자가 연루되었을 가능성도 있습니다. 웹 사이트를 방문하는 경우, 민감한 정보는 입력하지 않아야 합니다. 계속 진행하면, 사이트에 대해 HTTPS 전용 모드가 일시적으로 꺼집니다.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">접근성</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1101,7 +1117,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">북마크가 저장되었습니다!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">상위 사이트에 추가됨!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">상위 사이트에 추가되었습니다!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">바로 가기에 추가되었습니다!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">사생활 보호 탭 닫힘</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1662,18 +1680,18 @@
     <string name="search_delete_search_engine_success_message">%s 삭제됨</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">완전히 새로워진 %s에 오신 것을 환영합니다</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">완전히 새로워진 %s에 오신 것을 환영합니다</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">온라인에서 더 많은 작업을 할 수 있도록 향상된 성능과 기능으로 완전히 새롭게 디자인 된 브라우저가 기다리고 있습니다.\n\n%s를 마이그레이션 및 업데이트하는 동안 기다려주세요</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">온라인에서 더 많은 작업을 할 수 있도록 향상된 성능과 기능으로 완전히 새롭게 디자인 된 브라우저가 기다리고 있습니다.\n\n%s를 마이그레이션 및 업데이트하는 동안 기다려주세요</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s 업데이트 중…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s 업데이트 중…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s 시작</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s 시작</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">마이그레이션 완료</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">마이그레이션 완료</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">비밀번호</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">비밀번호</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">허용하려면:</string>
@@ -1704,9 +1722,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">이 북마크를 삭제하시겠습니까?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">상위 사이트에 추가</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">상위 사이트에 추가</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">상위 사이트에서 삭제</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">상위 사이트에서 삭제</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">바로 가기에 추가</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">바로 가기에서 삭제</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">인증 기관: %1$s</string>
@@ -1782,23 +1804,26 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">상위 사이트 제한에 도달</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">상위 사이트 제한에 도달</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">바로 가기 한도에 도달됨</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">새 상위 사이트를 추가하려면 하나를 삭제하세요. 사이트를 길게 터치하고 삭제를 선택하세요.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">새 상위 사이트를 추가하려면 하나를 삭제하세요. 사이트를 길게 터치하고 삭제를 선택하세요.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">새 바로 가기를 추가하려면 하나를 삭제하세요. 사이트를 길게 터치하고 삭제를 선택하세요.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">확인</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">자주 방문한 상위 사이트</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">바로 가기</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">이름</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">상위 사이트 이름</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">상위 사이트 이름</string>
 
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">바로 가기 이름</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">확인</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">취소</string>
@@ -1874,4 +1899,9 @@
     <string name="pocket_stories_feature_caption">Firefox 제품군의 일부입니다. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">더 알아보기</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">데이터를 보내려면 원격 분석을 활성화하세요.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">설정으로 이동</string>
 </resources>
