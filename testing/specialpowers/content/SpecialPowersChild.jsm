@@ -1933,7 +1933,7 @@ class SpecialPowersChild extends JSWindowActorChild {
   }
 
   cleanUpSTSData(origin, flags) {
-    return this.sendQuery("SPCleanUpSTSData", { origin, flags: flags || 0 });
+    return this.sendQuery("SPCleanUpSTSData", { origin });
   }
 
   async requestDumpCoverageCounters(cb) {

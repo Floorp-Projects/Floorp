@@ -939,8 +939,8 @@ class ContentParent final
       const uint32_t& chromeFlags);
 
   mozilla::ipc::IPCResult RecvIsSecureURI(
-      nsIURI* aURI, const uint32_t& aFlags,
-      const OriginAttributes& aOriginAttributes, bool* aIsSecureURI);
+      nsIURI* aURI, const OriginAttributes& aOriginAttributes,
+      bool* aIsSecureURI);
 
   mozilla::ipc::IPCResult RecvAccumulateMixedContentHSTS(
       nsIURI* aURI, const bool& aActive,

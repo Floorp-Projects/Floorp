@@ -16,7 +16,7 @@ function check_ip(s, v, ip) {
   str += "/";
 
   let uri = Services.io.newURI(str);
-  ok(!s.isSecureURI(uri, 0));
+  ok(!s.isSecureURI(uri));
 
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
@@ -24,14 +24,13 @@ function check_ip(s, v, ip) {
     uri,
     "max-age=1000;includeSubdomains",
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     {},
     parsedMaxAge,
     parsedIncludeSubdomains
   );
   ok(
-    !s.isSecureURI(uri, 0),
+    !s.isSecureURI(uri),
     "URI should not be secure if it contains an IP address"
   );
 

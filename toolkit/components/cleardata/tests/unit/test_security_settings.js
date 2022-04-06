@@ -36,7 +36,6 @@ function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
     uri,
     "max-age=1000;",
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     attrs
   );
@@ -85,7 +84,7 @@ function testSecurityInfo({
   }
 
   let uri = Services.io.newURI(`https://${host}`);
-  let isSecure = gSSService.isSecureURI(uri, 0, attrs);
+  let isSecure = gSSService.isSecureURI(uri, attrs);
   Assert.equal(
     isSecure,
     expectedHSTS,

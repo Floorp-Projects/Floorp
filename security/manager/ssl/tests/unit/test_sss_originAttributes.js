@@ -27,16 +27,15 @@ function doTest(secInfo, originAttributes1, originAttributes2, shouldShare) {
     uri,
     header,
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes1
   );
   ok(
-    sss.isSecureURI(uri, 0, originAttributes1),
+    sss.isSecureURI(uri, originAttributes1),
     "URI should be secure given original origin attributes"
   );
   equal(
-    sss.isSecureURI(uri, 0, originAttributes2),
+    sss.isSecureURI(uri, originAttributes2),
     shouldShare,
     "URI should be secure given different origin attributes if and " +
       "only if shouldShare is true"
@@ -44,17 +43,17 @@ function doTest(secInfo, originAttributes1, originAttributes2, shouldShare) {
 
   if (!shouldShare) {
     // Remove originAttributes2 from the storage.
-    sss.resetState(uri, 0, originAttributes2);
+    sss.resetState(uri, originAttributes2);
     ok(
-      sss.isSecureURI(uri, 0, originAttributes1),
+      sss.isSecureURI(uri, originAttributes1),
       "URI should still be secure given original origin attributes"
     );
   }
 
   // Remove originAttributes1 from the storage.
-  sss.resetState(uri, 0, originAttributes1);
+  sss.resetState(uri, originAttributes1);
   ok(
-    !sss.isSecureURI(uri, 0, originAttributes1),
+    !sss.isSecureURI(uri, originAttributes1),
     "URI should not be secure after removeState"
   );
 
@@ -70,12 +69,11 @@ function testInvalidOriginAttributes(secInfo, originAttributes) {
         uri,
         header,
         secInfo,
-        0,
         Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
         originAttributes
       ),
-    () => sss.isSecureURI(uri, 0, originAttributes),
-    () => sss.resetState(uri, 0, originAttributes),
+    () => sss.isSecureURI(uri, originAttributes),
+    () => sss.resetState(uri, originAttributes),
   ];
 
   for (let callback of callbacks) {

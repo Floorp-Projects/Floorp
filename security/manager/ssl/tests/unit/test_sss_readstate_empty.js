@@ -12,22 +12,19 @@ function checkStateRead(aSubject, aTopic, aData) {
   // nonexistent.example.com should never be an HSTS host
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://nonexistent.example.com"),
-      0
+      Services.io.newURI("https://nonexistent.example.com")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains.preloaded.test"),
-      0
+      Services.io.newURI("https://includesubdomains.preloaded.test")
     )
   );
   // notexpired.example.com is an HSTS host in a different test - we
   // want to make sure that test hasn't interfered with this one.
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://notexpired.example.com"),
-      0
+      Services.io.newURI("https://notexpired.example.com")
     )
   );
   do_test_finished();

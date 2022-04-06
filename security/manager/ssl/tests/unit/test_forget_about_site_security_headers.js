@@ -48,16 +48,15 @@ function add_tests() {
       uri,
       GOOD_MAX_AGE,
       secInfo,
-      0,
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
 
-    Assert.ok(sss.isSecureURI(uri, 0), "a.pinning.example.com should be HSTS");
+    Assert.ok(sss.isSecureURI(uri), "a.pinning.example.com should be HSTS");
 
     await ForgetAboutSite.removeDataFromDomain("a.pinning.example.com");
 
     Assert.ok(
-      !sss.isSecureURI(uri, 0),
+      !sss.isSecureURI(uri),
       "a.pinning.example.com should not be HSTS now"
     );
   });
@@ -71,12 +70,11 @@ function add_tests() {
       uri,
       GOOD_MAX_AGE,
       secInfo,
-      0,
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
 
     Assert.ok(
-      sss.isSecureURI(uri, 0),
+      sss.isSecureURI(uri),
       "a.pinning.example.com should be HSTS (subdomain case)"
     );
 
@@ -86,20 +84,19 @@ function add_tests() {
       unrelatedURI,
       GOOD_MAX_AGE,
       secInfo,
-      0,
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
-    Assert.ok(sss.isSecureURI(unrelatedURI, 0), "example.org should be HSTS");
+    Assert.ok(sss.isSecureURI(unrelatedURI), "example.org should be HSTS");
 
     await ForgetAboutSite.removeDataFromDomain("example.com");
 
     Assert.ok(
-      !sss.isSecureURI(uri, 0),
+      !sss.isSecureURI(uri),
       "a.pinning.example.com should not be HSTS now (subdomain case)"
     );
 
     Assert.ok(
-      sss.isSecureURI(unrelatedURI, 0),
+      sss.isSecureURI(unrelatedURI),
       "example.org should still be HSTS"
     );
   });
@@ -124,13 +121,12 @@ function add_tests() {
         uri,
         GOOD_MAX_AGE,
         secInfo,
-        0,
         Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
         originAttributes
       );
 
       Assert.ok(
-        sss.isSecureURI(uri, 0, originAttributes),
+        sss.isSecureURI(uri, originAttributes),
         "a.pinning.example.com should be HSTS (originAttributes case)"
       );
 
@@ -139,12 +135,11 @@ function add_tests() {
         unrelatedURI,
         GOOD_MAX_AGE,
         secInfo,
-        0,
         Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
         originAttributes
       );
       Assert.ok(
-        sss.isSecureURI(unrelatedURI, 0, originAttributes),
+        sss.isSecureURI(unrelatedURI, originAttributes),
         "example.org should be HSTS (originAttributes case)"
       );
     }
@@ -153,13 +148,13 @@ function add_tests() {
 
     for (let originAttributes of originAttributesList) {
       Assert.ok(
-        !sss.isSecureURI(uri, 0, originAttributes),
+        !sss.isSecureURI(uri, originAttributes),
         "a.pinning.example.com should not be HSTS now " +
           "(originAttributes case)"
       );
 
       Assert.ok(
-        sss.isSecureURI(unrelatedURI, 0, originAttributes),
+        sss.isSecureURI(unrelatedURI, originAttributes),
         "example.org should still be HSTS (originAttributes case)"
       );
     }
