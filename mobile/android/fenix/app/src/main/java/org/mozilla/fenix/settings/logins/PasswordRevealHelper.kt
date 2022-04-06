@@ -8,9 +8,9 @@ import android.text.InputType
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 
 fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButton) {
     val context = passwordText.context
@@ -18,7 +18,7 @@ fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButt
     if (passwordText.inputType == InputType.TYPE_TEXT_VARIATION_PASSWORD
         or InputType.TYPE_CLASS_TEXT
     ) {
-        context.components.analytics.metrics.track(Event.ViewLoginPassword)
+        Logins.viewPasswordLogin.record(NoExtras())
         passwordText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
         revealPasswordButton.setImageDrawable(
             AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_hide)

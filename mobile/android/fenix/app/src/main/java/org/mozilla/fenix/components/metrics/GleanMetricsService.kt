@@ -21,7 +21,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
-import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
@@ -127,31 +126,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.MediaPictureInPictureState -> EventWrapper<NoExtraKeys>(
             { MediaState.pictureInPicture.record(it) }
-        )
-        is Event.OpenLogins -> EventWrapper<NoExtraKeys>(
-            { Logins.openLogins.record(it) }
-        )
-        is Event.OpenOneLogin -> EventWrapper<NoExtraKeys>(
-            { Logins.openIndividualLogin.record(it) }
-        )
-        is Event.CopyLogin -> EventWrapper<NoExtraKeys>(
-            { Logins.copyLogin.record(it) }
-        )
-        is Event.ViewLoginPassword -> EventWrapper<NoExtraKeys>(
-            { Logins.viewPasswordLogin.record(it) }
-        )
-        is Event.DeleteLogin -> EventWrapper<NoExtraKeys>(
-            { Logins.deleteSavedLogin.record(it) }
-        )
-        is Event.EditLogin -> EventWrapper<NoExtraKeys>(
-            { Logins.openLoginEditor.record(it) }
-        )
-        is Event.EditLoginSave -> EventWrapper<NoExtraKeys>(
-            { Logins.saveEditedLogin.record(it) }
-        )
-        is Event.SaveLoginsSettingChanged -> EventWrapper(
-            { Logins.saveLoginsSettingChanged.record(it) },
-            { Logins.saveLoginsSettingChangedKeys.valueOf(it) }
         )
         is Event.TopSiteOpenDefault -> EventWrapper<NoExtraKeys>(
             { TopSites.openDefault.record(it) }

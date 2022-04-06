@@ -78,7 +78,6 @@ class SavedLoginsFragment : SecureFragment() {
                 navController = findNavController(),
                 browserNavigator = ::openToBrowserAndLoad,
                 settings = requireContext().settings(),
-                metrics = requireContext().components.analytics.metrics
             )
         savedLoginsStorageController =
             SavedLoginsStorageController(

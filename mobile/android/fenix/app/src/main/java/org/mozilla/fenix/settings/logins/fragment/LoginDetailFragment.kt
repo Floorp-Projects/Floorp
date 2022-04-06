@@ -20,18 +20,18 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentLoginDetailBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.redirectToReAuth
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.simplifiedUrl
@@ -183,7 +183,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
     }
 
     private fun editLogin() {
-        requireComponents.analytics.metrics.track(Event.EditLogin)
+        Logins.openLoginEditor.record(NoExtras())
         val directions =
             LoginDetailFragmentDirections.actionLoginDetailFragmentToEditLoginFragment(
                 login!!
@@ -199,7 +199,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.dialog_delete_positive) { dialog: DialogInterface, _ ->
-                    requireComponents.analytics.metrics.track(Event.DeleteLogin)
+                    Logins.deleteSavedLogin.record(NoExtras())
                     interactor.onDeleteLogin(args.savedLoginId)
                     dialog.dismiss()
                 }
@@ -221,7 +221,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
             val clipboard = view.context.components.clipboardHandler
             clipboard.text = value
             showCopiedSnackbar(view.context.getString(snackbarText))
-            view.context.components.analytics.metrics.track(Event.CopyLogin)
+            Logins.copyLogin.record(NoExtras())
         }
 
         private fun showCopiedSnackbar(copiedItem: String) {

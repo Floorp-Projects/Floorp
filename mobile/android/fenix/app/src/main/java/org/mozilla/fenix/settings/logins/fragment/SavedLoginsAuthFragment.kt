@@ -24,9 +24,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.feature.autofill.preference.AutofillPreference
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -223,7 +224,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
      * Called when authentication succeeds.
      */
     private fun navigateToSavedLoginsFragment() {
-        context?.components?.analytics?.metrics?.track(Event.OpenLogins)
+        Logins.openLogins.record(NoExtras())
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
         findNavController().navigate(directions)

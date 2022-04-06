@@ -4726,6 +4726,7 @@ logins:
       A user changed their setting for asking to save logins
     extra_keys:
       setting:
+        type: string
         description: |
           The new setting for saving logins the user selected. Either
           `ask_to_save` or `never_save`

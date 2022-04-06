@@ -11,7 +11,6 @@ import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TopSites
@@ -47,13 +46,6 @@ sealed class Event {
     object TopSiteContilePrivacy : Event()
     object GoogleTopSiteRemoved : Event()
     object BaiduTopSiteRemoved : Event()
-    object OpenLogins : Event()
-    object OpenOneLogin : Event()
-    object CopyLogin : Event()
-    object DeleteLogin : Event()
-    object EditLogin : Event()
-    object EditLoginSave : Event()
-    object ViewLoginPassword : Event()
     object PocketTopSiteClicked : Event()
     object PocketTopSiteRemoved : Event()
     object PocketHomeRecsShown : Event()
@@ -188,13 +180,6 @@ sealed class Event {
     data class AddonOpenSetting(val addonId: String) : Event() {
         override val extras: Map<Addons.openAddonSettingKeys, String>?
             get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
-    }
-
-    data class SaveLoginsSettingChanged(val setting: Setting) : Event() {
-        enum class Setting { NEVER_SAVE, ASK_TO_SAVE }
-
-        override val extras: Map<Logins.saveLoginsSettingChangedKeys, String>?
-            get() = hashMapOf(Logins.saveLoginsSettingChangedKeys.setting to setting.name)
     }
 
     data class PerformedSearch(val eventSource: EventSource) : Event() {
