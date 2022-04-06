@@ -376,33 +376,29 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   }
 #if defined(MOZ_WIDGET_COCOA)
   else if (inAtom == nsGkAtoms::DirectoryService_SystemDirectory) {
-    rv = GetOSXFolderType(kClassicDomain, kSystemFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_SystemDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_UserLibDirectory) {
-    rv = GetOSXFolderType(kUserDomain, kDomainLibraryFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_UserLibDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::Home) {
-    rv = GetOSXFolderType(kUserDomain, kDomainTopLevelFolderType,
-                          getter_AddRefs(localFile));
+    rv =
+        GetSpecialSystemDirectory(Mac_HomeDirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_DefaultDownloadDirectory) {
-    rv = GetOSXFolderType(kUserDomain, kDownloadsFolderType,
-                          getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) {
-      rv = GetOSXFolderType(kUserDomain, kDesktopFolderType,
-                            getter_AddRefs(localFile));
-    }
+    rv = GetSpecialSystemDirectory(Mac_DefaultDownloadDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
-    rv = GetOSXFolderType(kUserDomain, kDesktopFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_UserDesktopDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_LocalApplicationsDirectory) {
-    rv = GetOSXFolderType(kLocalDomain, kApplicationsFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_LocalApplicationsDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_UserPreferencesDirectory) {
-    rv = GetOSXFolderType(kUserDomain, kPreferencesFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_UserPreferencesDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_PictureDocumentsDirectory) {
-    rv = GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType,
-                          getter_AddRefs(localFile));
+    rv = GetSpecialSystemDirectory(Mac_PictureDocumentsDirectory,
+                                   getter_AddRefs(localFile));
   }
 #elif defined(XP_WIN)
   else if (inAtom == nsGkAtoms::DirectoryService_SystemDirectory) {

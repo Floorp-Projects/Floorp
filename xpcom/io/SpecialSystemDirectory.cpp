@@ -465,7 +465,36 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #else
       break;
 #endif
-#if defined(XP_WIN)
+#if defined(MOZ_WIDGET_COCOA)
+    case Mac_SystemDirectory: {
+      return GetOSXFolderType(kClassicDomain, kSystemFolderType, aFile);
+    }
+    case Mac_UserLibDirectory: {
+      return GetOSXFolderType(kUserDomain, kDomainLibraryFolderType, aFile);
+    }
+    case Mac_HomeDirectory: {
+      return GetOSXFolderType(kUserDomain, kDomainTopLevelFolderType, aFile);
+    }
+    case Mac_DefaultDownloadDirectory: {
+      nsresult rv = GetOSXFolderType(kUserDomain, kDownloadsFolderType, aFile);
+      if (NS_FAILED(rv)) {
+        return GetOSXFolderType(kUserDomain, kDesktopFolderType, aFile);
+      }
+      return NS_OK;
+    }
+    case Mac_UserDesktopDirectory: {
+      return GetOSXFolderType(kUserDomain, kDesktopFolderType, aFile);
+    }
+    case Mac_LocalApplicationsDirectory: {
+      return GetOSXFolderType(kLocalDomain, kApplicationsFolderType, aFile);
+    }
+    case Mac_UserPreferencesDirectory: {
+      return GetOSXFolderType(kUserDomain, kPreferencesFolderType, aFile);
+    }
+    case Mac_PictureDocumentsDirectory: {
+      return GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType, aFile);
+    }
+#elif defined(XP_WIN)
     case Win_SystemDirectory: {
       int32_t len = ::GetSystemDirectoryW(path, MAX_PATH);
 

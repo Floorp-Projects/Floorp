@@ -21,6 +21,15 @@ enum SystemDirectories {
   //   supported getting...
   OS_CurrentWorkingDirectory = 4,
 
+  Mac_SystemDirectory = 101,
+  Mac_UserLibDirectory = 102,
+  Mac_HomeDirectory = 103,
+  Mac_DefaultDownloadDirectory = 104,
+  Mac_UserDesktopDirectory = 105,
+  Mac_LocalApplicationsDirectory = 106,
+  Mac_UserPreferencesDirectory = 107,
+  Mac_PictureDocumentsDirectory = 108,
+
   Win_SystemDirectory = 201,
   Win_WindowsDirectory = 202,
   Win_HomeDirectory = 203,
