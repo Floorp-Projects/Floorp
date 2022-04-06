@@ -164,6 +164,23 @@ void test_large() {
   assert_compare_mem_stats(after_once, after_many);
 }
 
+void test_too_large() {
+  bool callback_has_run = false;
+  auto const callback = [](void* arg) { *((bool*)arg) = true; };
+
+  const size_t too_large = (size_t(-1));
+  auto const ret =
+      ::RunOnTemporaryStack(callback, &callback_has_run, too_large);
+  if (SUCCEEDED(ret)) {
+    ::fprintf(stderr, "Unexpectedly reported success in test_too_large");
+    failed = true;
+  }
+  if (callback_has_run) {
+    ::fprintf(stderr, "Unexpectedly ran callback in test_too_large");
+    failed = true;
+  }
+}
+
 // Test that the program exits correctly (rather than by falling off the end of
 // a fiber procedure).
 struct confirm_normal_exit {
@@ -269,6 +286,7 @@ int main(int, char**) {
 
   test_small();
   test_large();
+  test_too_large();
 
   if (failed) {
     ::printf("%s\n", "failed (see above)");
