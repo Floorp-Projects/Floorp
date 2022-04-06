@@ -284,7 +284,7 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.androidx_arch_core_testing
     testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
-
+    testImplementation "org.mozilla.components:support-test-libstate:${AndroidComponents.VERSION}"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
