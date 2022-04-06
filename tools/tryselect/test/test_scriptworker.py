@@ -27,7 +27,7 @@ def test_release(run_mach, capfd):
         {
             "parameters": {
                 "app_version": "\d+\.\d+",
-                "build_number": 1,
+                "build_number": \d+,
     """
         ).lstrip(),
         re.MULTILINE,
