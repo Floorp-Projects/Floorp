@@ -22,11 +22,11 @@
 #include "nsMargin.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
+#include "nsAtom.h"
 #include "mozilla/AtomArray.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/MemoryReporting.h"
 
-class nsAtom;
 class nsIPrincipal;
 class nsIURI;
 class nsStyledElement;
