@@ -14,23 +14,26 @@ StyleGuideOverlay.prototype = {
     ReactDOM.render(
       <div>
         <h3>JSX Components:</h3>
-        <h4 className="stp_styleguide_h4">Button</h4>
+        <h4 className="stp_styleguide_h4">Buttons</h4>
+        <h5 className="stp_styleguide_h5">text</h5>
         <Button style="text" url="https://example.org" source="styleguide">
           Text Button
         </Button>
-        <br />
+        <h5 className="stp_styleguide_h5">primary</h5>
         <Button style="primary" url="https://example.org" source="styleguide">
           Primary Button
         </Button>
-        <br />
+        <h5 className="stp_styleguide_h5">secondary</h5>
         <Button style="secondary" url="https://example.org" source="styleguide">
           Secondary Button
         </Button>
+        <h5 className="stp_styleguide_h5">primary wide</h5>
         <span className="stp_button_wide">
           <Button style="primary" url="https://example.org" source="styleguide">
             Primary Wide Button
           </Button>
         </span>
+        <h5 className="stp_styleguide_h5">secondary wide</h5>
         <span className="stp_button_wide">
           <Button
             style="secondary"

@@ -10,7 +10,7 @@
   }
 
   .stp_article_list_link {
-    &:hover {
+    &:hover, &:focus {
       text-decoration: none;
       background-color: #ECECEE;
 
