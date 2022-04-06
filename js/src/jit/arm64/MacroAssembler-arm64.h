@@ -1585,14 +1585,31 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
 
   void loadConstantDouble(double d, FloatRegister dest) {
-    // Note, for -0.0 this will turn into a pc-relative load from memory, not a
-    // `fmov + fneg` sequence.  The former is believed to be better, as gcc,
-    // clang, and vixl all choose it.
-    Fmov(ARMFPRegister(dest, 64), d);
+    ARMFPRegister r(dest, 64);
+    if (d == 0.0) {
+      // Clang11 does movi for 0 and movi+fneg for -0, and this seems like a
+      // good implementation-independent strategy as it avoids any gpr->fpr
+      // moves or memory traffic.
+      Movi(r, 0);
+      if (std::signbit(d)) {
+        Fneg(r, r);
+      }
+    } else {
+      Fmov(r, d);
+    }
   }
   void loadConstantFloat32(float f, FloatRegister dest) {
-    // See comment in loadConstantDouble.
-    Fmov(ARMFPRegister(dest, 32), f);
+    ARMFPRegister r(dest, 32);
+    if (f == 0.0) {
+      // See comments above.  There's not a movi variant for a single register,
+      // so clear the double.
+      Movi(ARMFPRegister(dest, 64), 0);
+      if (std::signbit(f)) {
+        Fneg(r, r);
+      }
+    } else {
+      Fmov(r, f);
+    }
   }
 
   void cmpTag(Register tag, ImmTag ref) {

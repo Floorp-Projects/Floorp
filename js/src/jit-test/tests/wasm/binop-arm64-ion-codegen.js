@@ -298,7 +298,7 @@ codegenTestARM64_adhoc(
        (func (export "f") (param $a f64) (param $b f64) (param $c f64) (param $d f64) (result f64)
          (select (local.get $b) (local.get $d) (f64.lt (f64.const 0) (local.get $c)))))`,
     'f',
-    `9e6703e0  fmov    d0, xzr
+    `2f00e400  movi    d0, #0x0
      1e622000  fcmp    d0, d2
      1e633c20  fcsel   d0, d1, d3, lo`)
 
