@@ -62,8 +62,10 @@ static const int access = SandboxBroker::MAY_ACCESS;
 static const int deny = SandboxBroker::FORCE_DENY;
 }  // namespace
 
-static void AddMesaPaths(SandboxBroker::Policy* aPolicy) {
+static void AddDriPaths(SandboxBroker::Policy* aPolicy) {
   // Bug 1401666: Mesa driver loader part 2: Mesa <= 12 using libudev
+  // Used by libdrm, which is used by Mesa, and
+  // Intel(R) Media Driver for VAAPI.
   if (auto dir = opendir("/dev/dri")) {
     while (auto entry = readdir(dir)) {
       if (entry->d_name[0] != '.') {
@@ -93,16 +95,7 @@ static void AddMesaPaths(SandboxBroker::Policy* aPolicy) {
                 *term = 0;
               }
 
-              constexpr const char* kMesaAttrSuffixes[] = {
-                  "config",    "device",           "revision",
-                  "subsystem", "subsystem_device", "subsystem_vendor",
-                  "uevent",    "vendor",
-              };
-              for (const auto& attrSuffix : kMesaAttrSuffixes) {
-                nsPrintfCString attrPath("%s/%s", realSysPath.get(),
-                                         attrSuffix);
-                aPolicy->AddPath(rdonly, attrPath.get());
-              }
+              aPolicy->AddFilePrefix(rdonly, realSysPath.get(), "");
               // Allowing stat-ing and readlink-ing the parent dirs
               nsPrintfCString basePath("%s/", realSysPath.get());
               aPolicy->AddAncestors(basePath.get(), rdonly);
@@ -380,7 +373,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   policy->AddDir(rdonly, "/var/cache/fontconfig");
 
   if (!headless) {
-    AddMesaPaths(policy);
+    AddDriPaths(policy);
   }
   AddLdconfigPaths(policy);
   AddLdLibraryEnvPaths(policy);
@@ -847,7 +840,7 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
 
   // VA-API needs DRI and GPU detection
   policy->AddDir(rdwr, "/dev/dri");
-  AddMesaPaths(policy.get());
+  AddDriPaths(policy.get());
 
   // FFmpeg and GPU drivers may need general-case library loading
   AddLdconfigPaths(policy.get());
