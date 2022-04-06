@@ -13,96 +13,9 @@ with Files("**"):
     SCHEDULES.exclusive = ["gtest"]
 
 if CONFIG["ENABLE_TESTS"]:
-    gtest_exports = [
+    EXPORTS.gtest += [
         "benchmark/BlackBox.h",
-        "gtest/include/gtest/gtest-death-test.h",
-        "gtest/include/gtest/gtest-message.h",
-        "gtest/include/gtest/gtest-param-test.h",
-        "gtest/include/gtest/gtest-printers.h",
-        "gtest/include/gtest/gtest-spi.h",
-        "gtest/include/gtest/gtest-test-part.h",
-        "gtest/include/gtest/gtest-typed-test.h",
-        "gtest/include/gtest/gtest.h",
-        "gtest/include/gtest/gtest_pred_impl.h",
-        "gtest/include/gtest/gtest_prod.h",
         "mozilla/MozGTestBench.h",
     ]
-    EXPORTS.gtest += gtest_exports
 
-    # webrtc.org unit tests use this include path
-    EXPORTS.testing.gtest.include.gtest += gtest_exports
-
-    # GTest internal are exposed in gtest.h. See comment in gtest.h
-    EXPORTS.gtest.internal += [
-        "gtest/include/gtest/internal/gtest-death-test-internal.h",
-        "gtest/include/gtest/internal/gtest-filepath.h",
-        "gtest/include/gtest/internal/gtest-internal.h",
-        "gtest/include/gtest/internal/gtest-linked_ptr.h",
-        "gtest/include/gtest/internal/gtest-param-util-generated.h",
-        "gtest/include/gtest/internal/gtest-param-util.h",
-        "gtest/include/gtest/internal/gtest-port-arch.h",
-        "gtest/include/gtest/internal/gtest-port.h",
-        "gtest/include/gtest/internal/gtest-string.h",
-        "gtest/include/gtest/internal/gtest-tuple.h",
-        "gtest/include/gtest/internal/gtest-type-util.h",
-    ]
-
-    EXPORTS.gtest.internal.custom += [
-        "gtest/include/gtest/internal/custom/gtest-port.h",
-        "gtest/include/gtest/internal/custom/gtest-printers.h",
-    ]
-
-    gmock_exports = [
-        "gmock/include/gmock/gmock-actions.h",
-        "gmock/include/gmock/gmock-cardinalities.h",
-        "gmock/include/gmock/gmock-generated-actions.h",
-        "gmock/include/gmock/gmock-generated-function-mockers.h",
-        "gmock/include/gmock/gmock-generated-matchers.h",
-        "gmock/include/gmock/gmock-generated-nice-strict.h",
-        "gmock/include/gmock/gmock-matchers.h",
-        "gmock/include/gmock/gmock-more-actions.h",
-        "gmock/include/gmock/gmock-more-matchers.h",
-        "gmock/include/gmock/gmock-spec-builders.h",
-        "gmock/include/gmock/gmock.h",
-    ]
-    EXPORTS.gmock += gmock_exports
-
-    # webrtc.org unit tests use this include path
-    EXPORTS.testing.gmock.include.gmock += gmock_exports
-
-    # gmock also includes internal interfaces in it's public header
-    EXPORTS.gmock.internal += [
-        "gmock/include/gmock/internal/gmock-generated-internal-utils.h",
-        "gmock/include/gmock/internal/gmock-internal-utils.h",
-        "gmock/include/gmock/internal/gmock-port.h",
-    ]
-
-    EXPORTS.gmock.internal.custom += [
-        "gmock/include/gmock/internal/custom/gmock-generated-actions.h",
-        "gmock/include/gmock/internal/custom/gmock-matchers.h",
-        "gmock/include/gmock/internal/custom/gmock-port.h",
-    ]
-
-    SOURCES += [
-        "gmock/src/gmock-all.cc",
-        "gtest/src/gtest-all.cc",
-    ]
-
-    Library("gtest")
-
-    LOCAL_INCLUDES += [
-        "gmock",
-        "gmock/include",
-        "gtest",
-        "gtest/include",
-    ]
-
-    if CONFIG["OS_ARCH"] == "WINNT":
-        LOCAL_INCLUDES += [
-            "/security/sandbox/chromium",
-        ]
-        DEFINES["UNICODE"] = True
-
-    DIRS += ["benchmark", "mozilla"]
-
-    FINAL_LIBRARY = "xul-gtest"
+    DIRS += ["benchmark", "mozilla", "../../third_party/googletest"]
