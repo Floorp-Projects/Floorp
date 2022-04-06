@@ -252,7 +252,8 @@ void SandboxBroker::Policy::AddFilePrefix(int aPerms, const char* aDir,
     return;
   }
   while ((de = readdir(dirp))) {
-    if (strncmp(de->d_name, aPrefix, prefixLen) == 0) {
+    if (strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0 &&
+        strncmp(de->d_name, aPrefix, prefixLen) == 0) {
       nsAutoCString subPath;
       subPath.Assign(aDir);
       subPath.Append('/');
