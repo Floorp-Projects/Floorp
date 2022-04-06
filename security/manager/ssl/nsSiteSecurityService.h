@@ -123,36 +123,34 @@ class nsSiteSecurityService : public nsISiteSecurityService,
 
  private:
   nsresult SetHSTSState(const char* aHost, int64_t maxage,
-                        bool includeSubdomains, uint32_t flags,
+                        bool includeSubdomains,
                         SecurityPropertyState aHSTSState,
                         SecurityPropertySource aSource,
                         const OriginAttributes& aOriginAttributes);
   nsresult ProcessHeaderInternal(nsIURI* aSourceURI, const nsCString& aHeader,
                                  nsITransportSecurityInfo* aSecInfo,
-                                 uint32_t aFlags,
                                  SecurityPropertySource aSource,
                                  const OriginAttributes& aOriginAttributes,
                                  uint64_t* aMaxAge, bool* aIncludeSubdomains,
                                  uint32_t* aFailureResult);
   nsresult ProcessSTSHeader(nsIURI* aSourceURI, const nsCString& aHeader,
-                            uint32_t flags, SecurityPropertySource aSource,
+                            SecurityPropertySource aSource,
                             const OriginAttributes& aOriginAttributes,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
-  nsresult MarkHostAsNotHSTS(const nsAutoCString& aHost, uint32_t aFlags,
-                             bool aIsPreload,
+  nsresult MarkHostAsNotHSTS(const nsAutoCString& aHost, bool aIsPreload,
                              const OriginAttributes& aOriginAttributes);
-  nsresult ResetStateInternal(nsIURI* aURI, uint32_t aFlags,
+  nsresult ResetStateInternal(nsIURI* aURI,
                               const OriginAttributes& aOriginAttributes);
   bool HostHasHSTSEntry(const nsAutoCString& aHost,
-                        bool aRequireIncludeSubdomains, uint32_t aFlags,
+                        bool aRequireIncludeSubdomains,
                         const OriginAttributes& aOriginAttributes,
                         bool* aResult, bool* aCached,
                         SecurityPropertySource* aSource);
   bool GetPreloadStatus(
       const nsACString& aHost,
       /*optional out*/ bool* aIncludeSubdomains = nullptr) const;
-  nsresult IsSecureHost(const nsACString& aHost, uint32_t aFlags,
+  nsresult IsSecureHost(const nsACString& aHost,
                         const OriginAttributes& aOriginAttributes,
                         bool* aCached, SecurityPropertySource* aSource,
                         bool* aResult);
