@@ -11157,7 +11157,7 @@
 # Print via the parent process. This is only used when e10s is enabled.
 - name: print.print_via_parent
   type: RelaxedAtomicBool
-  value: @IS_NOT_ANDROID@
+  value: true
   mirror: always
 
 # Whether we allow the print progress dialog to show up.
