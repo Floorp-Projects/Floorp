@@ -1,5 +1,7 @@
 const NS_OS_TEMP_DIR = "TmpD";
 
+const CWD = do_get_cwd();
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var hiddenUnixFile;
