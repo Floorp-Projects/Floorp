@@ -116,10 +116,10 @@ nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
   // ffmpeg doesn't currently support streams that use resize.
   // Therefore, for safety, we should turn it off until it does.
   config->rc_resize_allowed = 0;
-  // Allows 10% under target bitrate to compensate for prior overshoot
-  config->rc_undershoot_pct = 200;
-  // Allows 1.5% over target bitrate to compensate for prior undershoot
-  config->rc_overshoot_pct = 200;
+  // Allows 100% under target bitrate to compensate for prior overshoot
+  config->rc_undershoot_pct = 100;
+  // Allows 15% over target bitrate to compensate for prior undershoot
+  config->rc_overshoot_pct = 15;
   // Tells the decoding application to buffer 500ms before beginning playback
   config->rc_buf_initial_sz = 500;
   // The decoding application will try to keep 600ms of buffer during playback
