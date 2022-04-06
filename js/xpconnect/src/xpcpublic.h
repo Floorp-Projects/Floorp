@@ -44,7 +44,6 @@ class JSObject;
 class JSString;
 class JSTracer;
 class nsGlobalWindowInner;
-class nsIAddonInterposition;
 class nsIGlobalObject;
 class nsIHandleReportCallback;
 class nsIPrincipal;
@@ -335,8 +334,6 @@ class XPCStringConvert {
 
   XPCStringConvert() = delete;
 };
-
-class nsIAddonInterposition;
 
 namespace xpc {
 
