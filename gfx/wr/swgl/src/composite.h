@@ -435,6 +435,10 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
       IntRect{srcX, srcY, srcX + srcWidth, srcY + srcHeight} - srctex.offset;
   IntRect dstReq =
       IntRect{dstX, dstY, dstX + dstWidth, dstY + dstHeight} - dsttex.offset;
+  if (srcReq.is_empty() || dstReq.is_empty()) {
+    return;
+  }
+
   // Compute clip rect as relative to the dstReq, as that's the same coords
   // as used for the sampling bounds.
   IntRect clipRect = {clipX - dstX, clipY - dstY, clipX - dstX + clipWidth,
@@ -1230,6 +1234,10 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
       IntRect{srcX, srcY, srcX + srcWidth, srcY + srcHeight} - ytex.offset;
   IntRect dstReq =
       IntRect{dstX, dstY, dstX + dstWidth, dstY + dstHeight} - dsttex.offset;
+  if (srcReq.is_empty() || dstReq.is_empty()) {
+    return;
+  }
+
   // Compute clip rect as relative to the dstReq, as that's the same coords
   // as used for the sampling bounds.
   IntRect clipRect = {clipX - dstX, clipY - dstY, clipX - dstX + clipWidth,

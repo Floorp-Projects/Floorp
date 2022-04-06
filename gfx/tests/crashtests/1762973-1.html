@@ -1,0 +1,29 @@
+<style>
+* { clip-path: polygon(0px 0px, 1px 61px, 1px 0px); }
+</style>
+<script>
+window.requestIdleCallback(() => {
+  document.documentElement.style.display='none'
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.style.display=''
+  setTimeout(() => { window.location.reload(true) }, 500) // helps reproduction
+})
+function go() {
+    var x = document.defaultView.getSelection()
+    window.stop()
+    x.collapse(d)
+    document.execCommand("removeFormat", false)
+    x.collapse(a)
+}
+function eh() {
+    d.setAttributeNode(document.createAttribute("contenteditable"))
+    c.src = "data:audio/mpeg;base64,/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV////////////////////////////////////////////AAAAAExhdmM1Ny4zOAAAAAAAAAAAAAAAACQAAAAAAAAAAAGwU/hwzwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAMkI7huAhMDGQAndv+H5jfIAPmPzGBGeTAZNN7yjsnqd6Fny79M+o4UifnMu/TlDiIP5Q5l9Z/Kdv6VY0gE3JIAAwE/+MYxAgMYJr6WBhGIivjMy/CEK+zM39VVXjMArKgq6DQdrBV0THlqBp0ShrBp8qGsTPw7lXZFVZZY6GytZZYGChgYIGZaiJI/+MYxBEMUJnAABmMYUigMQLIE1yVpphA1UQMRVVVV000iVu000VVVX///6aaVUxBTUUzLjk5LjVVVVVVVVVVVVVVVVVVVVVV"
+    b.appendChild(a)
+}
+</script>
+<body onload=go()>
+<dialog id="a" open="true"></dialog>
+<details id="b" style="writing-mode: vertical-rl" open="true" ontoggle="eh()">
+<summary style="position: fixed"></summary>
+<embed id="c"></embed>
+<ol id="d"></ol>
