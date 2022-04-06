@@ -40,7 +40,7 @@
 #endif
 
 #ifdef USE_ALLOCA
-# ifdef _WIN32
+# ifdef WIN32
 #  include <malloc.h>
 # else
 #  ifdef HAVE_ALLOCA_H
@@ -102,7 +102,7 @@
 
 #define VARDECL(type, var) type *var
 
-# ifdef _WIN32
+# ifdef WIN32
 #  define ALLOC(var, size, type) var = ((type*)_alloca(sizeof(type)*(size)))
 # else
 #  define ALLOC(var, size, type) var = ((type*)alloca(sizeof(type)*(size)))

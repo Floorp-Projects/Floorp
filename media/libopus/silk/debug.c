@@ -30,12 +30,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "debug.h"
-
-#if SILK_DEBUG || SILK_TIC_TOC
 #include "SigProc_FIX.h"
-#endif
 
 #if SILK_TIC_TOC
+
+#ifdef _WIN32
 
 #if (defined(_WIN32) || defined(_WINCE))
 #include <windows.h>    /* timer */
@@ -43,7 +42,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/time.h>
 #endif
 
-#ifdef _WIN32
 unsigned long silk_GetHighResolutionTime(void) /* O  time in usec*/
 {
     /* Returns a time counter in microsec   */
@@ -67,7 +65,7 @@ unsigned long GetHighResolutionTime(void) /* O  time in usec*/
 int           silk_Timer_nTimers = 0;
 int           silk_Timer_depth_ctr = 0;
 char          silk_Timer_tags[silk_NUM_TIMERS_MAX][silk_NUM_TIMERS_MAX_TAG_LEN];
-#ifdef _WIN32
+#ifdef WIN32
 LARGE_INTEGER silk_Timer_start[silk_NUM_TIMERS_MAX];
 #else
 unsigned long silk_Timer_start[silk_NUM_TIMERS_MAX];
@@ -78,7 +76,7 @@ opus_int64     silk_Timer_sum[silk_NUM_TIMERS_MAX];
 opus_int64     silk_Timer_max[silk_NUM_TIMERS_MAX];
 opus_int64     silk_Timer_depth[silk_NUM_TIMERS_MAX];
 
-#ifdef _WIN32
+#ifdef WIN32
 void silk_TimerSave(char *file_name)
 {
     if( silk_Timer_nTimers > 0 )
