@@ -916,9 +916,9 @@ void NS_TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest);
  */
 nsresult NS_ShouldSecureUpgrade(
     nsIURI* aURI, nsILoadInfo* aLoadInfo, nsIPrincipal* aChannelResultPrincipal,
-    bool aPrivateBrowsing, bool aAllowSTS,
-    const mozilla::OriginAttributes& aOriginAttributes, bool& aShouldUpgrade,
-    std::function<void(bool, nsresult)>&& aResultCallback, bool& aWillCallback);
+    bool aAllowSTS, const mozilla::OriginAttributes& aOriginAttributes,
+    bool& aShouldUpgrade, std::function<void(bool, nsresult)>&& aResultCallback,
+    bool& aWillCallback);
 
 /**
  * Returns an https URI for channels that need to go through secure upgrades.

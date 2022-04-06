@@ -43,7 +43,6 @@ add_task(async function run_test() {
     Services.io.newURI("http://example.com"),
     header,
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
   );
   await TestUtils.topicObserved(

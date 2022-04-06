@@ -1194,7 +1194,7 @@ const HSTSCleaner = {
       if (Services.eTLD.hasRootDomain(hostname, aHost)) {
         // This uri is used as a key to reset the state.
         let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, 0, entry.originAttributes);
+        sss.resetState(uri, entry.originAttributes);
       }
     }
   },
@@ -1217,7 +1217,7 @@ const HSTSCleaner = {
       .forEach(({ hostname, originAttributes }) => {
         // This uri is used as a key to reset the state.
         let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, 0, originAttributes);
+        sss.resetState(uri, originAttributes);
       });
   },
 

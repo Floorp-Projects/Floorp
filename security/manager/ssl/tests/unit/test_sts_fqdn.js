@@ -11,10 +11,10 @@ function run_test() {
   let uri = Services.io.newURI("https://example.com");
   let uri1 = Services.io.newURI("https://example.com.");
   let uri2 = Services.io.newURI("https://example.com..");
-  ok(!SSService.isSecureURI(uri, 0));
-  ok(!SSService.isSecureURI(uri1, 0));
+  ok(!SSService.isSecureURI(uri));
+  ok(!SSService.isSecureURI(uri1));
   // These cases are only relevant as long as bug 1118522 hasn't been fixed.
-  ok(!SSService.isSecureURI(uri2, 0));
+  ok(!SSService.isSecureURI(uri2));
 
   let secInfo = Cc[
     "@mozilla.org/security/transportsecurityinfo;1"
@@ -23,17 +23,16 @@ function run_test() {
     uri,
     "max-age=1000;includeSubdomains",
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
   );
-  ok(SSService.isSecureURI(uri, 0));
-  ok(SSService.isSecureURI(uri1, 0));
-  ok(SSService.isSecureURI(uri2, 0));
+  ok(SSService.isSecureURI(uri));
+  ok(SSService.isSecureURI(uri1));
+  ok(SSService.isSecureURI(uri2));
 
-  SSService.resetState(uri, 0);
-  ok(!SSService.isSecureURI(uri, 0));
-  ok(!SSService.isSecureURI(uri1, 0));
-  ok(!SSService.isSecureURI(uri2, 0));
+  SSService.resetState(uri);
+  ok(!SSService.isSecureURI(uri));
+  ok(!SSService.isSecureURI(uri1));
+  ok(!SSService.isSecureURI(uri2));
 
   // Somehow creating this malformed URI succeeds - we need to handle it
   // gracefully.
@@ -41,7 +40,7 @@ function run_test() {
   equal(uri.host, "..");
   throws(
     () => {
-      SSService.isSecureURI(uri, 0);
+      SSService.isSecureURI(uri);
     },
     /NS_ERROR_UNEXPECTED/,
     "Malformed URI should be rejected"

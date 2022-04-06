@@ -557,6 +557,8 @@ var NetworkHelper = {
    * @param object securityInfo
    *        The securityInfo object of a request. If null channel is assumed
    *        to be insecure.
+   * @param object originAttributes
+   *        The OriginAttributes of the request.
    * @param object httpActivity
    *        The httpActivity object for the request with at least members
    *        { private, hostname }.
@@ -588,6 +590,7 @@ var NetworkHelper = {
    */
   parseSecurityInfo: async function(
     securityInfo,
+    originAttributes,
     httpActivity,
     decodedCertificateCache
   ) {
@@ -701,20 +704,13 @@ var NetworkHelper = {
           "@mozilla.org/security/publickeypinningservice;1"
         ].getService(Ci.nsIPublicKeyPinningService);
 
-        // SiteSecurityService uses different storage if the channel is
-        // private. Thus we must give isSecureURI correct flags or we
-        // might get incorrect results.
-        const flags = httpActivity.private
-          ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE
-          : 0;
-
         if (!uri) {
           // isSecureURI only cares about the host, not the scheme.
           const host = httpActivity.hostname;
           uri = Services.io.newURI("https://" + host);
         }
 
-        info.hsts = sss.isSecureURI(uri, flags);
+        info.hsts = sss.isSecureURI(uri, originAttributes);
         info.hpkp = pkps.hostHasPins(uri);
       } else {
         DevToolsUtils.reportException(
