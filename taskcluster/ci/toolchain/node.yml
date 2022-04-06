@@ -33,6 +33,15 @@ linux64-node-12:
         fetch:
             - nodejs-12-linux64
 
+linux64-node-16:
+    treeherder:
+        symbol: TL(node-16)
+    run:
+        toolchain-alias: linux64-node-16
+    fetches:
+        fetch:
+            - nodejs-16-linux64
+
 macosx64-node-10:
     treeherder:
         symbol: TM(node-10)
@@ -52,6 +61,16 @@ macosx64-node-12:
     fetches:
         fetch:
             - nodejs-12-macosx64
+
+macosx64-node-16:
+    treeherder:
+        symbol: TM(node-16)
+    run:
+        toolchain-alias:
+            - macosx64-node-16
+    fetches:
+        fetch:
+            - nodejs-16-macosx64
 
 macosx64-aarch64-node-16:
     treeherder:
@@ -81,6 +100,15 @@ win64-node-12:
         fetch:
             - nodejs-12-win64
 
+win64-node-16:
+    treeherder:
+        symbol: TW64(node-16)
+    run:
+        toolchain-alias: win64-node-16
+    fetches:
+        fetch:
+            - nodejs-16-win64
+
 win32-node-10:
     treeherder:
         symbol: TW32(node-10)
@@ -100,3 +128,14 @@ win32-node-12:
     fetches:
         fetch:
             - nodejs-12-win32
+
+win32-node-16:
+    treeherder:
+        symbol: TW32(node-16)
+    run:
+        toolchain-alias:
+            - win32-node-16
+            - win64-aarch64-node-16
+    fetches:
+        fetch:
+            - nodejs-16-win32
