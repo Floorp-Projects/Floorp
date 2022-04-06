@@ -47,7 +47,8 @@ if (window.googletag?.apiReady === undefined) {
       const f = document.createElement("iframe");
       f.id = eid;
       f.srcdoc = "<body></body>";
-      f.style = "unset: all; position: absolute; z-index: -1; border: 0";
+      f.style =
+        "position:absolute; width:0; height:0; left:0; right:0; z-index:-1; border:0";
       node.appendChild(f);
     }
   };
