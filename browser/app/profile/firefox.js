@@ -1199,14 +1199,6 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 // just save on Accept, once the project is complete.
 pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
 
-pref("dom.ipc.plugins.flash.disable-protected-mode", false);
-
-// Feature-disable the protected-mode auto-flip
-pref("browser.flash-protected-mode-flip.enable", false);
-
-// Whether we've already flipped protected mode automatically
-pref("browser.flash-protected-mode-flip.done", false);
-
 pref("dom.ipc.shims.enabledWarnings", false);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
