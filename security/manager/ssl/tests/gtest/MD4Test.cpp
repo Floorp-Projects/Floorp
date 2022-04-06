@@ -58,5 +58,5 @@ TEST_P(psm_MD4, RFC1320TestValues) {
       << "MD4 hashes aren't equal for input: '" << params.data << "'";
 }
 
-INSTANTIATE_TEST_CASE_P(psm_MD4, psm_MD4,
-                        testing::ValuesIn(RFC1320_TEST_PARAMS));
+INSTANTIATE_TEST_SUITE_P(psm_MD4, psm_MD4,
+                         testing::ValuesIn(RFC1320_TEST_PARAMS));

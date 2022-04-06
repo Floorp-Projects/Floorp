@@ -191,7 +191,7 @@ TEST_P(TestWithParam_CString_ArrayBuffer_Pair, Ctor_EncodedBinary) {
 static const uint8_t zeroLengthBinaryEncodedBuffer[] = {Key::eBinary};
 static const uint8_t nonZeroLengthBinaryEncodedBuffer[] = {Key::eBinary,
                                                            'a' + 1, 'b' + 1};
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_IndexedDB_Key, TestWithParam_CString_ArrayBuffer_Pair,
     ::testing::Values(
         std::make_pair(BufferAsCString(zeroLengthBinaryEncodedBuffer), ""_ns),
@@ -210,7 +210,7 @@ static const uint8_t zeroLengthStringEncodedBuffer[] = {Key::eString};
 static const uint8_t nonZeroLengthStringEncodedBuffer[] = {Key::eString,
                                                            'a' + 1, 'b' + 1};
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_IndexedDB_Key, TestWithParam_CString_String_Pair,
     ::testing::Values(
         std::make_pair(BufferAsCString(zeroLengthStringEncodedBuffer), u""_ns),
@@ -227,11 +227,11 @@ TEST_P(TestWithParam_LiteralString, SetFromString) {
   EXPECT_EQ(GetParam(), key.ToString());
 }
 
-INSTANTIATE_TEST_CASE_P(DOM_IndexedDB_Key, TestWithParam_LiteralString,
-                        ::testing::Values(u""_ns, u"abc"_ns, u"\u007f"_ns,
-                                          u"\u0080"_ns, u"\u1fff"_ns,
-                                          u"\u7fff"_ns, u"\u8000"_ns,
-                                          u"\uffff"_ns));
+INSTANTIATE_TEST_SUITE_P(DOM_IndexedDB_Key, TestWithParam_LiteralString,
+                         ::testing::Values(u""_ns, u"abc"_ns, u"\u007f"_ns,
+                                           u"\u0080"_ns, u"\u1fff"_ns,
+                                           u"\u7fff"_ns, u"\u8000"_ns,
+                                           u"\uffff"_ns));
 
 static JS::Value CreateArrayBufferValue(JSContext* const aContext,
                                         const size_t aSize, char* const aData) {
@@ -322,7 +322,7 @@ TEST_P(TestWithParam_ArrayBufferArray, SetFromJSVal) {
 }
 
 const uint8_t element2[] = "foo";
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_IndexedDB_Key, TestWithParam_ArrayBufferArray,
     testing::Values(std::vector<nsCString>{}, std::vector<nsCString>{""_ns},
                     std::vector<nsCString>{""_ns, BufferAsCString(element2)}));
@@ -370,7 +370,7 @@ TEST_P(TestWithParam_StringArray, SetFromJSVal) {
       });
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_IndexedDB_Key, TestWithParam_StringArray,
     testing::Values(std::vector<nsString>{u""_ns, u"abc\u0080\u1fff"_ns},
                     std::vector<nsString>{u"abc\u0080\u1fff"_ns,

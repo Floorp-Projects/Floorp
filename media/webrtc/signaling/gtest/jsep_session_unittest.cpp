@@ -3021,7 +3021,7 @@ TEST_P(JsepSessionTest, RenegotiationAnswererInactive) {
   ASSERT_EQ(types.size(), mSessionOff->GetTransceivers().size());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Variants, JsepSessionTest,
     ::testing::Values("audio", "video", "datachannel", "audio,video",
                       "video,audio", "audio,datachannel", "video,datachannel",
