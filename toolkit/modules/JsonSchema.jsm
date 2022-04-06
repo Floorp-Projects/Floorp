@@ -54,14 +54,16 @@ class Validator {
    * Create a new validator.
    *
    * @param {object} schema The schema to validate with.
-   * @param {string} draft  The draft to validate against. Should
-   *                        be one of "4", "6", "7", "2019-09", or "2020-12".
+   * @param {object} options  Options for the validator.
+   * @param {string} options.draft  The draft to validate against. Should be one
+   *                                of "4", "6", "7", "2019-09", or "2020-12".
    *
-   *                        If the |$schema| key is present in the |schema|, it
-   *                        will be used to auto-detect the correct version.
-   *                        Otherwise, 2019-09 will be used.
-   * @param {boolean} shortCircuit  Whether or not the validator should return
-   *                                after a single error occurs.
+   *                                If the |$schema| key is present in the
+   *                                |schema|, it will be used to auto-detect the
+   *                                correct version.  Otherwise, 2019-09 will be
+   *                                used.
+   * @param {boolean} options.shortCircuit  Whether or not the validator should
+   *                                        return after a single error occurs.
    */
   constructor(
     schema,
@@ -171,4 +173,10 @@ function detectSchemaDraft(schema, defaultDraft = "2019-09") {
   }
 }
 
-const EXPORTED_SYMBOLS = ["Validator", "validate", "sandbox"];
+const JsonSchema = {
+  Validator,
+  validate,
+  detectSchemaDraft,
+};
+
+const EXPORTED_SYMBOLS = ["JsonSchema"];
