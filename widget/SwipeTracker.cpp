@@ -21,7 +21,6 @@
 // These values were tweaked to make the physics feel similar to the native
 // swipe.
 static const double kSpringForce = 250.0;
-static const double kWholePagePixelSize = 550.0;
 
 namespace mozilla {
 
@@ -117,7 +116,8 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
   }
 
   double delta = -aEvent.mPanDisplacement.x /
-                 mWidget.GetDefaultScaleInternal() / kWholePagePixelSize;
+                 mWidget.GetDefaultScaleInternal() /
+                 StaticPrefs::widget_swipe_whole_page_pixel_size();
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, aEvent.mTimeStamp);
 
@@ -164,7 +164,8 @@ void SwipeTracker::WillRefresh(mozilla::TimeStamp aTime) {
   mAxis.Simulate(now - mLastAnimationFrameTime);
   mLastAnimationFrameTime = now;
 
-  bool isFinished = mAxis.IsFinished(1.0 / kWholePagePixelSize);
+  bool isFinished =
+      mAxis.IsFinished(1.0 / StaticPrefs::widget_swipe_whole_page_pixel_size());
   mGestureAmount = (isFinished ? mAxis.GetDestination() : mAxis.GetPosition());
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, now);
 
