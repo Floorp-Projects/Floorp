@@ -53,9 +53,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-});
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
@@ -122,11 +119,7 @@ function applyWrapper(pipChild, originatingVideo) {
 
   // gSiteOverrides is a list of tuples where the first element is the MatchPattern
   // for a supported site and the second is the actual overrides object for it.
-  // TODO: Remove NIGHTLY_BUILD check (see Bug 1751793).
-  let wrapperPath =
-    AppConstants.NIGHTLY_BUILD && overrides
-      ? overrides[1].videoWrapperScriptPath
-      : null;
+  let wrapperPath = overrides ? overrides[1].videoWrapperScriptPath : null;
   return new PictureInPictureChildVideoWrapper(
     wrapperPath,
     originatingVideo,
