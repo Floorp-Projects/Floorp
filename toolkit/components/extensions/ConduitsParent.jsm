@@ -182,7 +182,7 @@ const Hub = {
   fillInAddress(address, actor) {
     address.actor = actor;
     address.verified = this.verifyEnv(address);
-    if (actor instanceof JSWindowActorParent) {
+    if (JSWindowActorParent.isInstance(actor)) {
       address.frameId = WebNavigationFrames.getFrameId(actor.browsingContext);
       address.url = actor.manager.documentURI?.spec;
     } else {

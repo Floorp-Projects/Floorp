@@ -124,7 +124,7 @@ class ProfileAgeImpl {
       );
     } catch (e) {
       if (
-        !(e instanceof DOMException) ||
+        !DOMException.isInstance(e) ||
         e.name !== "AbortError" ||
         e.message !== "IOUtils: Shutting down and refusing additional I/O tasks"
       ) {

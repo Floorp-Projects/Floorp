@@ -119,7 +119,7 @@ class FindBarChild extends JSWindowActorChild {
   shouldFastFind(elt) {
     if (elt) {
       let win = elt.ownerGlobal;
-      if (elt instanceof win.HTMLInputElement && elt.mozIsTextField(false)) {
+      if (win.HTMLInputElement.isInstance(elt) && elt.mozIsTextField(false)) {
         return false;
       }
 
@@ -128,15 +128,15 @@ class FindBarChild extends JSWindowActorChild {
       }
 
       if (
-        elt instanceof win.HTMLTextAreaElement ||
-        elt instanceof win.HTMLSelectElement ||
-        elt instanceof win.HTMLObjectElement ||
-        elt instanceof win.HTMLEmbedElement
+        win.HTMLTextAreaElement.isInstance(elt) ||
+        win.HTMLSelectElement.isInstance(elt) ||
+        win.HTMLObjectElement.isInstance(elt) ||
+        win.HTMLEmbedElement.isInstance(elt)
       ) {
         return false;
       }
 
-      if (elt instanceof win.HTMLIFrameElement && elt.mozbrowser) {
+      if (win.HTMLIFrameElement.isInstance(elt) && elt.mozbrowser) {
         // If we're targeting a mozbrowser iframe, it should be allowed to
         // handle FastFind itself.
         return false;
