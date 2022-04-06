@@ -90,7 +90,7 @@ function isBrowsingContextPartOfContext(
   //
   // Such project would be about applying "EFT" to the browser toolbox and non-content documents
   if (
-    browsingContext instanceof CanonicalBrowsingContext &&
+    CanonicalBrowsingContext.isInstance(browsingContext) &&
     !browsingContext.isContent
   ) {
     return false;
@@ -99,7 +99,7 @@ function isBrowsingContextPartOfContext(
   if (!windowGlobal) {
     // When we are in the parent process, WindowGlobal can be retrieved from the BrowsingContext,
     // while in the content process, the callsites have to pass it manually as an argument
-    if (browsingContext instanceof CanonicalBrowsingContext) {
+    if (CanonicalBrowsingContext.isInstance(browsingContext)) {
       windowGlobal = browsingContext.currentWindowGlobal;
     } else if (!windowGlobal && !acceptNoWindowGlobal) {
       throw new Error(

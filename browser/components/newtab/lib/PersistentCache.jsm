@@ -65,6 +65,8 @@ this.PersistentCache = class PersistentCache {
           data = await IOUtils.readJSON(filepath);
         } catch (error) {
           if (
+            // isInstance() is not available in node unit test. It should be safe to use instanceof as it's directly from IOUtils.
+            // eslint-disable-next-line mozilla/use-isInstance
             !(error instanceof DOMException) ||
             error.name !== "NotFoundError"
           ) {

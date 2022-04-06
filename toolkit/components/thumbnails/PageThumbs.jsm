@@ -746,7 +746,7 @@ var PageThumbsStorage = {
     return function onError(err) {
       if (
         !aNoOverwrite ||
-        !(err instanceof DOMException) ||
+        !DOMException.isInstance(err) ||
         err.name !== "TypeMismatchError"
       ) {
         throw err;

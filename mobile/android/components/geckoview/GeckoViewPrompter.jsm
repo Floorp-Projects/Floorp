@@ -24,7 +24,7 @@ class GeckoViewPrompter {
       .slice(1, -1); // Discard surrounding braces
 
     if (aParent) {
-      if (aParent instanceof Window) {
+      if (Window.isInstance(aParent)) {
         this._domWin = aParent;
       } else if (aParent.window) {
         this._domWin = aParent.window;

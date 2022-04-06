@@ -468,7 +468,7 @@ this.FormAutofillUtils = {
     if (!element) {
       return false;
     }
-    if (element instanceof HTMLInputElement) {
+    if (HTMLInputElement.isInstance(element)) {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
       if (!ELIGIBLE_INPUT_TYPES.includes(element.type)) {
         return false;
@@ -477,7 +477,7 @@ this.FormAutofillUtils = {
       if (!this.isFieldVisible(element)) {
         return false;
       }
-    } else if (!(element instanceof HTMLSelectElement)) {
+    } else if (!HTMLSelectElement.isInstance(element)) {
       return false;
     }
 

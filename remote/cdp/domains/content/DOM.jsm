@@ -84,7 +84,7 @@ class DOM extends ContentProcessDomain {
     }
 
     let context = this.docShell.browsingContext;
-    if (unsafeObj instanceof HTMLIFrameElement) {
+    if (HTMLIFrameElement.isInstance(unsafeObj)) {
       context = unsafeObj.contentWindow.docShell.browsingContext;
     }
 

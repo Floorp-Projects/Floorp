@@ -1703,7 +1703,7 @@ this.XPIDatabase = {
       logger.warn("Failed to save XPI database", error);
       this._saveError = error;
 
-      if (!(error instanceof DOMException) || error.name !== "AbortError") {
+      if (!DOMException.isInstance(error) || error.name !== "AbortError") {
         throw error;
       }
     }
@@ -1913,7 +1913,7 @@ this.XPIDatabase = {
         await this.maybeIdleDispatch();
         await this.parseDB(json, true);
       } catch (error) {
-        if (error instanceof DOMException && error.name === "NotFoundError") {
+        if (DOMException.isInstance(error) && error.name === "NotFoundError") {
           if (Services.prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
             this._recordStartupError("dbMissing");
           }
