@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <winerror.h>
 #include <cstdint>
 
 // Run `func`, called with `param`, on a separate and possibly larger stack.
@@ -12,6 +13,9 @@
 // will be allocated only if it's needed, and even then only a page at a time,
 // so it's probably better to overestimate than underestimate.)
 //
+// Returns S_OK on success. Otherwise, returns some FAILED HRESULT, and `func`
+// is not executed.
+//
 // https://docs.microsoft.com/en-us/windows/win32/procthread/thread-stack-size
-void RunOnTemporaryStack(void (*func)(void*), void* param,
-                         size_t reserved_stack_size);
+HRESULT RunOnTemporaryStack(void (*func)(void*), void* param,
+                            size_t reserved_stack_size);
