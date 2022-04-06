@@ -33,8 +33,6 @@ import exceptions, { initialExceptionsState } from "./exceptions";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
-import { createInitial } from "../utils/resource";
-
 /**
  * Note that this is only used by jest tests.
  *
@@ -45,7 +43,7 @@ export function initialState() {
     sources: initialSourcesState(),
     sourcesContent: initialSourcesContentState(),
     expressions: initialExpressionState(),
-    sourceActors: createInitial(),
+    sourceActors: new Map(),
     tabs: initialTabState(),
     breakpoints: initialBreakpointsState(),
     pendingBreakpoints: {},

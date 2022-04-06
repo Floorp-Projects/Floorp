@@ -362,12 +362,14 @@ export function getBreakableLines(state, sourceId) {
     return state.sources.breakableLines[sourceId];
   }
 
+  const sourceActorIDs = state.sources.actors[sourceId];
+  if (!sourceActorIDs?.length) {
+    return null;
+  }
+
   // We pull generated file breakable lines directly from the source actors
   // so that breakable lines can be added as new source actors on HTML loads.
-  return getBreakableLinesForSourceActors(
-    state.sourceActors,
-    state.sources.actors[sourceId]
-  );
+  return getBreakableLinesForSourceActors(state, sourceActorIDs);
 }
 
 export const getSelectedBreakableLines = createSelector(

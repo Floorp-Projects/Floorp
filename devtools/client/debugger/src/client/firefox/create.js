@@ -64,12 +64,12 @@ async function waitForSourceActorToBeRegisteredInStore(sourceActorId) {
   if (!hasSourceActor(store.getState(), sourceActorId)) {
     await new Promise(resolve => {
       const unsubscribe = store.subscribe(check);
-      let currentState = null;
+      let currentSize = null;
       function check() {
-        const previousState = currentState;
-        currentState = store.getState().sourceActors.values;
+        const previousSize = currentSize;
+        currentSize = store.getState().sourceActors.size;
         // For perf reason, avoid any extra computation if sources did not change
-        if (previousState == currentState) {
+        if (previousSize == currentSize) {
           return;
         }
         if (hasSourceActor(store.getState(), sourceActorId)) {
