@@ -88,7 +88,6 @@ sealed class Event {
             )
     }
     object AddonsOpenInSettings : Event()
-    object VoiceSearchTapped : Event()
     object SearchWidgetInstalled : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()

@@ -37,7 +37,6 @@ import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
@@ -269,10 +268,6 @@ private val Event.wrapper: EventWrapper<*>?
             { Addons.openAddonSetting.record(it) },
             { Addons.openAddonSettingKeys.valueOf(it) }
         )
-        is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
-            { VoiceSearch.tapped.record(it) }
-        )
-
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )
