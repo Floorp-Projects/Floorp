@@ -37,4 +37,17 @@ for (let [write_scope, read_scope] of [['SameProcess', 'DifferentProcessForIndex
   assertEq(caught, true, `${write_scope} clone buffer should not be deserializable as ${read_scope}`);
 }
 
+// Extra data.
+var clone = serialize({foo: 7}, undefined, {scope: 'DifferentProcess'});
+deserialize(clone);
+clone.clonebuffer = clone.clonebuffer + "\0\0\0\0\0\0\0\0";
+var exc = {message: 'no error'};
+try {
+  deserialize(clone);
+} catch (e) {
+  exc = e;
+}
+assertEq(exc.message.includes("bad serialized structured data"), true);
+assertEq(exc.message.includes("extra data"), true);
+
 reportCompare(0, 0, "ok");
