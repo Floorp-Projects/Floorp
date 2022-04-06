@@ -59,6 +59,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/use-chromeutils-import
    eslint-plugin-mozilla/use-default-preference-values
    eslint-plugin-mozilla/use-includes-instead-of-indexOf
+   eslint-plugin-mozilla/use-isInstance
    eslint-plugin-mozilla/use-ownerGlobal
    eslint-plugin-mozilla/use-returnValue
    eslint-plugin-mozilla/use-services
