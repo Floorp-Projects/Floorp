@@ -20,7 +20,6 @@ use crate::resource_cache::CachedImageData;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::gpu_cache::GpuCache;
 use crate::profiler::{self, TransactionProfile};
-use crate::telemetry::Telemetry;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use rayon::ThreadPool;
 use rayon::prelude::*;
@@ -228,7 +227,6 @@ impl GlyphRasterizer {
         profile: &mut TransactionProfile,
     ) {
         profile.start_time(profiler::GLYPH_RESOLVE_TIME);
-        let timer_id = Telemetry::start_rasterize_glyphs_time();
 
         // Work around the borrow checker, since we call flush_glyph_requests below
         let mut pending_glyph_requests = mem::replace(
@@ -316,7 +314,6 @@ impl GlyphRasterizer {
         // we can schedule removing the fonts if needed.
         self.remove_dead_fonts();
 
-        Telemetry::stop_and_accumulate_rasterize_glyphs_time(timer_id);
         profile.end_time(profiler::GLYPH_RESOLVE_TIME);
     }
 }
