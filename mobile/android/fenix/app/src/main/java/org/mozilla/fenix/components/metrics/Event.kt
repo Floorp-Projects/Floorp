@@ -28,9 +28,6 @@ sealed class Event {
 
     object TabSettingsOpened : Event()
 
-    object HaveOpenTabs : Event()
-    object HaveNoOpenTabs : Event()
-
     object ContextMenuCopyTapped : Event()
     object ContextMenuSearchTapped : Event()
     object ContextMenuSelectAllTapped : Event()
