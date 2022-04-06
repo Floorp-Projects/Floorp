@@ -13163,16 +13163,21 @@
 
 - name: widget.swipe.success-threshold
   type: float
-#if defined(XP_WIN)
-  value: 0.5f
-#else
   value: 0.25f
-#endif
   mirror: always
 
 - name: widget.swipe.success-velocity-contribution
   type: float
   value: 0.05f
+  mirror: always
+
+- name: widget.swipe.whole-page-pixel-size
+  type: float
+#if defined(XP_WIN)
+  value: 1100.0f
+#else
+  value: 550.0f
+#endif
   mirror: always
 
 #---------------------------------------------------------------------------
