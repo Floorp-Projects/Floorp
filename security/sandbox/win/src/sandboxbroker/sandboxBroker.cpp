@@ -17,6 +17,7 @@
 #include "mozilla/ImportDir.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
+#include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -236,6 +237,22 @@ static void AddMozLogRulesToPolicy(sandbox::TargetPolicy* aPolicy,
                    sandbox::TargetPolicy::FILES_ALLOW_ANY, logFileName.c_str());
 }
 
+static void AddDeveloperRepoDirToPolicy(sandbox::TargetPolicy* aPolicy) {
+  const wchar_t* developer_repo_dir =
+      _wgetenv(WSTRING("MOZ_DEVELOPER_REPO_DIR"));
+  if (!developer_repo_dir) {
+    return;
+  }
+
+  std::wstring repoPath(developer_repo_dir);
+  std::replace(repoPath.begin(), repoPath.end(), '/', '\\');
+  repoPath.append(WSTRING("\\*"));
+
+  aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                   sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                   repoPath.c_str());
+}
+
 #undef WSTRING
 
 bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
@@ -274,6 +291,10 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
 
   // Enable the child process to write log files when setup
   AddMozLogRulesToPolicy(mPolicy, aEnvironment);
+
+  if (mozilla::IsDevelopmentBuild()) {
+    AddDeveloperRepoDirToPolicy(mPolicy);
+  }
 
   // Create the sandboxed process
   PROCESS_INFORMATION targetInfo = {0};
