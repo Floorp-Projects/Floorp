@@ -66,7 +66,6 @@ struct MonitorConfig {
   int height = 0;
   int scale = 0;
 
- public:
   explicit MonitorConfig(int aId) : id(aId){};
 };
 
@@ -93,7 +92,10 @@ class ScreenGetterWayland : public ScreenGetter {
 
  private:
   void* mRegistry;
-  AutoTArray<MonitorConfig, 4> mMonitors;
+  // We use UniquePtr<> here to ensure that MonitorConfig is heap-allocated
+  // so it's not invalidated by any change to mMonitors that could happen in the
+  // meantime.
+  AutoTArray<UniquePtr<MonitorConfig>, 4> mMonitors;
   AutoTArray<RefPtr<Screen>, 4> mScreenList;
 };
 #endif
