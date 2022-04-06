@@ -139,6 +139,9 @@
 #ifdef XP_WIN
 #  include "HttpWinUtils.h"
 #endif
+#ifdef FUZZING
+#  include "mozilla/StaticPrefs_fuzzing.h"
+#endif
 
 namespace mozilla {
 
