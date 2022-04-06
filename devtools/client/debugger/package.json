@@ -31,6 +31,7 @@
     "react-dom": "16.8.6",
     "react-redux": "^5.0.7",
     "react-transition-group": "^2.2.1",
+    "reselect": "4.1.5",
     "wasmparser": "^3.1.1"
   },
   "private": true,

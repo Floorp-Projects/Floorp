@@ -8,7 +8,6 @@ import Frames from "../index.js";
 // eslint-disable-next-line
 import { formatCallStackFrames } from "../../../../selectors/getCallStackFrames";
 import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
-import { createInitial, insertResources } from "../../../../utils/resource";
 
 function render(overrides = {}) {
   const defaultProps = {
@@ -204,7 +203,10 @@ describe("Frames", () => {
         source2: [],
       };
 
-      const sources = insertResources(createInitial(), [source1, source2]);
+      const sources = new Map([
+        [source1.id, source1],
+        [source2.id, source2],
+      ]);
 
       const processedFrames = formatCallStackFrames(
         frames,

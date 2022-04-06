@@ -8,7 +8,6 @@ import { initialThreadsState } from "../threads";
 import updateSourceActors from "../source-actors";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource, mockcx, makeMockState } from "../../utils/test-mockup";
-import { getResourceIds } from "../../utils/resource";
 
 const extensionSource = {
   ...makeMockSource(),
@@ -68,7 +67,7 @@ describe("sources reducer", () => {
       cx: mockcx,
       sources: [makeMockSource()],
     });
-    expect(getResourceIds(state.sources)).toHaveLength(1);
+    expect(state.sources.size).toBe(1);
   });
 });
 
