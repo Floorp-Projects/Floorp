@@ -93,8 +93,6 @@ static OPUS_INLINE opus_uint32 opus_cpu_capabilities(void){
 
 #elif defined(__linux__)
 /* Linux based */
-#include <stdio.h>
-
 opus_uint32 opus_cpu_capabilities(void)
 {
   opus_uint32 flags = 0;

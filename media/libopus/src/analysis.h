@@ -74,7 +74,6 @@ typedef struct {
    int read_pos;
    int read_subframe;
    float hp_ener_accum;
-   int initialized;
    float rnn_state[MAX_NEURONS];
    opus_val32 downmix_state[3];
    AnalysisInfo info[DETECT_SIZE];
