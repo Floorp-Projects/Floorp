@@ -287,13 +287,16 @@ class _ExperimentManager {
       active: true,
       enrollmentId: NormandyUtils.generateUuid(),
       experimentType,
-      isRollout,
       source,
       userFacingName,
       userFacingDescription,
       lastSeen: new Date().toJSON(),
       featureIds,
     };
+
+    if (typeof isRollout !== "undefined") {
+      experiment.isRollout = isRollout;
+    }
 
     // Tag this as a forced enrollment. This prevents all unenrolling unless
     // manually triggered from about:studies
