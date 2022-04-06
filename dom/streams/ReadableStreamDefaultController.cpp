@@ -491,7 +491,7 @@ void SetUpReadableStreamDefaultController(
   aController->SetAlgorithms(aAlgorithms);
 
   // Step 8.
-  aStream->SetController(aController);
+  aStream->SetController(*aController);
 
   // Step 9. Default algorithm returns undefined. See Step 2 of
   // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
