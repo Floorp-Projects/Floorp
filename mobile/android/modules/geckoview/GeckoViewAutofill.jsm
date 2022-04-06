@@ -57,7 +57,7 @@ class GeckoViewAutofill {
 
     const window = aElement.ownerGlobal;
     const bounds = aElement.getBoundingClientRect();
-    const isInputElement = aElement instanceof window.HTMLInputElement;
+    const isInputElement = window.HTMLInputElement.isInstance(aElement);
 
     info = {
       isInputElement,
@@ -238,7 +238,7 @@ class GeckoViewAutofill {
           const value = responses[uuid] || "";
 
           if (
-            element instanceof window.HTMLInputElement &&
+            window.HTMLInputElement.isInstance(element) &&
             !element.disabled &&
             element.parentElement
           ) {
