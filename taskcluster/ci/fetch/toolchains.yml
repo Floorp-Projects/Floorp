@@ -501,6 +501,16 @@ nodejs-12-linux64:
         strip-components: 1
         add-prefix: node/
 
+nodejs-16-linux64:
+    description: nodejs 16 for x64 linux
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-linux-x64.tar.xz
+        sha256: 1736446bb102e19942addce29f6a12b157ca71f38b9159d0446f51ba69618b8d
+        size: 22206588
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
 
 nodejs-10-macosx64:
     description: nodejs 10 for x64 macOS
@@ -520,6 +530,17 @@ nodejs-12-macosx64:
         url: https://nodejs.org/dist/v12.22.1/node-v12.22.1-darwin-x64.tar.xz
         sha256: de5e317580732530961d83b0fb9b2c370d222bd0c5a1b331900e9ddc0fdfe086
         size: 13670384
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
+nodejs-16-macosx64:
+    description: nodejs 16 for x64 macOS
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-darwin-x64.tar.xz
+        sha256: 66ecffa48b98cf1ca4d038b42b74f05bfc4d31681e2aa43a1ba50919ea23823b
+        size: 20650712
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -557,6 +578,17 @@ nodejs-12-win32:
         strip-components: 1
         add-prefix: node/
 
+nodejs-16-win32:
+    description: nodejs 16 for x86 Windows
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-win-x86.zip
+        sha256: 0600dffb5331b6f49e6ff4fa97770811746e0e2ecaf53de6deaafff277a644b4
+        size: 25092862
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
 nodejs-10-win64:
     description: nodejs 10 for x64 Windows
     fetch:
@@ -579,6 +611,16 @@ nodejs-12-win64:
         strip-components: 1
         add-prefix: node/
 
+nodejs-16-win64:
+    description: nodejs 16 for x64 Windows
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-win-x64.zip
+        sha256: 99c2b01afb8d966fc876ec30ac7dfdbd9da9b17a3daeda92c19ce657ab9bea61
+        size: 26841308
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
 
 gnumake:
     description: GNU make source
