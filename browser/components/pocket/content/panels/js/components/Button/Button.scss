@@ -1,7 +1,11 @@
 .stp_button {
   cursor: pointer;
   display: inline-block;
-  margin: 0;
+  margin: 12px 0;
+
+  &:hover {
+    text-decoration: none;
+  }
 
   &.stp_button_text {
     color: #0060DF;
@@ -9,6 +13,19 @@
     font-style: normal;
     font-weight: 600;
     line-height: 1.27em;
+
+    &:focus {
+      text-decoration: underline;
+    }
+
+    &:hover {
+      color: #0250BB;
+      text-decoration: none;
+    }
+
+    &:active {
+      color: #054096;
+    }
 
     @include theme_dark {
       color: #F0F0F4;
@@ -27,9 +44,28 @@
     line-height: 1.27em;
     padding: 6px 12px;
 
+    &:focus {
+      text-decoration: none;
+      background: #0060DF;
+      outline: 2px solid #0060df;
+      outline-offset: 2px;
+    }
+
+    &:hover {
+      background: #0250BB;
+    }
+
+    &:active {
+      background: #054096;
+    }
+
     @include theme_dark {
       background: #00DDFF;
       color: #15141A;
+
+      &:focus {
+        outline: 2px solid #00DDFF;
+      }
     }
   }
 
@@ -44,9 +80,28 @@
     line-height: 1.27em;
     padding: 6px 12px;
 
+    &:focus {
+      text-decoration: none;
+      background: #F0F0F4;
+      outline: 2px solid #0060df;
+      outline-offset: 2px;
+    }
+
+    &:hover {
+      background: #E0E0E6;
+    }
+
+    &:active {
+      background: #CFCFD8;
+    }
+
     @include theme_dark {
       background: #2B2A33;
       color: #FBFBFE;
+
+      &:focus {
+        outline: 2px solid #00DDFF;
+      }
     }
   }
 }

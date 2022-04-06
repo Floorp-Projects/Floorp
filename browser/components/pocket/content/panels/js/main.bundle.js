@@ -1629,25 +1629,35 @@ StyleGuideOverlay.prototype = {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
     react_dom.render( /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "JSX Components:"), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
-    }, "Button"), /*#__PURE__*/react.createElement(Button_Button, {
+    }, "Buttons"), /*#__PURE__*/react.createElement("h5", {
+      className: "stp_styleguide_h5"
+    }, "text"), /*#__PURE__*/react.createElement(Button_Button, {
       style: "text",
       url: "https://example.org",
       source: "styleguide"
-    }, "Text Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
+    }, "Text Button"), /*#__PURE__*/react.createElement("h5", {
+      className: "stp_styleguide_h5"
+    }, "primary"), /*#__PURE__*/react.createElement(Button_Button, {
       style: "primary",
       url: "https://example.org",
       source: "styleguide"
-    }, "Primary Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
+    }, "Primary Button"), /*#__PURE__*/react.createElement("h5", {
+      className: "stp_styleguide_h5"
+    }, "secondary"), /*#__PURE__*/react.createElement(Button_Button, {
       style: "secondary",
       url: "https://example.org",
       source: "styleguide"
-    }, "Secondary Button"), /*#__PURE__*/react.createElement("span", {
+    }, "Secondary Button"), /*#__PURE__*/react.createElement("h5", {
+      className: "stp_styleguide_h5"
+    }, "primary wide"), /*#__PURE__*/react.createElement("span", {
       className: "stp_button_wide"
     }, /*#__PURE__*/react.createElement(Button_Button, {
       style: "primary",
       url: "https://example.org",
       source: "styleguide"
-    }, "Primary Wide Button")), /*#__PURE__*/react.createElement("span", {
+    }, "Primary Wide Button")), /*#__PURE__*/react.createElement("h5", {
+      className: "stp_styleguide_h5"
+    }, "secondary wide"), /*#__PURE__*/react.createElement("span", {
       className: "stp_button_wide"
     }, /*#__PURE__*/react.createElement(Button_Button, {
       style: "secondary",
