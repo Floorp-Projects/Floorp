@@ -673,6 +673,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozButtonactivetext:
       color = kWindowText;
       break;
+    case ColorID::Buttonshadow:
+    case ColorID::Threedshadow:
     case ColorID::Threedlightshadow:  // --in-content-box-border-color computed
                                       // with kWindowText above
                                       // kWindowBackground.
@@ -695,7 +697,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
                                      // --in-content-item-selected-text
       color = NS_RGB(43, 42, 51);
       break;
-    case ColorID::Buttonshadow:
     case ColorID::Threeddarkshadow:  // Same as Threedlightshadow but with the
                                      // background.
     case ColorID::MozDisabledfield:  // opacity: 0.4 of the face above blended
