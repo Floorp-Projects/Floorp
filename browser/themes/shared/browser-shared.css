@@ -30,6 +30,7 @@
   --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
 
+  --tab-selected-bgimage: var(--tab-selected-non-lwt-bgimage);
   --tabs-navbar-shadow-size: 1px;
 
   --panel-shortcut-color: inherit;
@@ -114,6 +115,7 @@
   --toolbar-bgimage: none;
   --toolbar-color: var(--lwt-text-color, inherit);
 
+  --tab-selected-bgimage: none;
   color: var(--lwt-text-color);
 }
 
