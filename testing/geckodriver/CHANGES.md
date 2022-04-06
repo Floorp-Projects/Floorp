@@ -1,10 +1,9 @@
-Change log
-==========
+<!-- markdownlint-disable MD024 -->
+# Change log
 
 All notable changes to this program are documented in this file.
 
-0.30.0  (2021-09-16, `d372710b98a6`)
-------------------------------------
+## 0.30.0  (2021-09-16, `d372710b98a6`)
 
 ### Security Fixes
 
@@ -85,9 +84,7 @@ All notable changes to this program are documented in this file.
 
   - The test root folder is now removed when geckodriver exists.
 
-
-0.29.1  (2021-04-09, `970ef713fe58`)
--------------------------------------
+## 0.29.1  (2021-04-09, `970ef713fe58`)
 
 ### Known problems
 
@@ -135,9 +132,7 @@ All notable changes to this program are documented in this file.
   anymore unless there is a strong reason. It will be removed in a future
   release.
 
-
-0.29.0  (2021-01-14, `cf6956a5ec8e`)
-------------------------------------
+## 0.29.0  (2021-01-14, `cf6956a5ec8e`)
 
 ### Known problems
 
@@ -176,8 +171,7 @@ All notable changes to this program are documented in this file.
   Note: For this experimental feature the site-isolation support of
   Firefox aka [Fission] will be not available.
 
-0.28.0  (2020-11-03, `c00d2b6acd3f`)
-------------------------------------
+## 0.28.0  (2020-11-03, `c00d2b6acd3f`)
 
 ### Known problems
 
@@ -226,8 +220,7 @@ All notable changes to this program are documented in this file.
 - Since Firefox 72 extension commands for finding an element’s anonymous children
   and querying its attributes are no longer needed, and have been removed.
 
-0.27.0  (2020-07-27, `7b8c4f32cdde`)
-------------------------------------
+## 0.27.0  (2020-07-27, `7b8c4f32cdde`)
 
 ### Security Fixes
 
@@ -291,18 +284,17 @@ All notable changes to this program are documented in this file.
 
 - _Android:_
 
-  * Firefox running on Android devices can now be controlled from a Windows host.
+  - Firefox running on Android devices can now be controlled from a Windows host.
 
-  * Setups with multiple connected Android devices are now supported.
+  - Setups with multiple connected Android devices are now supported.
 
-  * Improved cleanup of configuration files. This prevents crashes if
+  - Improved cleanup of configuration files. This prevents crashes if
     the application is started manually after launching it through
     geckodriver.
 
 - Windows and Linux binaries are again statically linked.
 
-0.26.0  (2019-10-12, `e9783a644016'`)
--------------------------------------
+## 0.26.0  (2019-10-12, `e9783a644016'`)
 
 Note that with this release the minimum recommended Firefox version
 has changed to Firefox ≥60.
@@ -384,9 +376,7 @@ has changed to Firefox ≥60.
   to start a session with a malformed capabilities configuration
   will now return the [`invalid argument`] error consistently.
 
-
-0.25.0 (2019-09-09, `bdb64cf16b68`)
------------------------------------
+## 0.25.0 (2019-09-09, `bdb64cf16b68`)
 
 __Note to Windows users!__
 With this release you must have the [Microsoft Visual Studio redistributable runtime]
@@ -478,9 +468,7 @@ with this particular release that we intend to release a fix for soon.
   `firefox` binary on Linux.  Now it supports different BSD flavours
   as well.
 
-
-0.24.0 (2019-01-28, `917474f3473e`)
------------------------------------
+## 0.24.0 (2019-01-28, `917474f3473e`)
 
 ### Added
 
@@ -520,7 +508,7 @@ with this particular release that we intend to release a fix for soon.
 
   To cross-compile from another host system, you can use this command:
 
-  	% cargo build --target armv7-unknown-linux-gnueabihf
+   % cargo build --target armv7-unknown-linux-gnueabihf
 
 ### Changed
 
@@ -548,9 +536,7 @@ with this particular release that we intend to release a fix for soon.
 - Fixed a regression in the [Take Element Screenshot] to not screenshot
   the viewport, but the requested element.
 
-
-0.23.0 (2018-10-03)
--------------------
+## 0.23.0 (2018-10-03)
 
 This release contains a number of fixes for regressions introduced
 in 0.22.0, where we shipped a significant refactoring to the way
@@ -604,9 +590,7 @@ geckodriver internally dealt with JSON serialisation.
   git repository is now limited to 12 characters, as it is when
   building from an hg checkout.  This ensures reproducible builds.
 
-
-0.22.0 (2018-09-15)
--------------------
+## 0.22.0 (2018-09-15)
 
 This release marks an important milestone on the path towards
 a stable release of geckodriver.  Large portions of geckodriver
@@ -681,17 +665,15 @@ to the standard.
   [Jeremy Lempereur].
 
 - Many documentation improvements, now published on
-  https://firefox-source-docs.mozilla.org/testing/geckodriver/.
+  <https://firefox-source-docs.mozilla.org/testing/geckodriver/>.
 
-
-0.21.0 (2018-06-15)
--------------------
+## 0.21.0 (2018-06-15)
 
 Note that with this release of geckodriver the minimum recommended
 Firefox and Selenium versions have changed:
 
-  - Firefox 57 (and greater)
-  - Selenium 3.11 (and greater)
+- Firefox 57 (and greater)
+- Selenium 3.11 (and greater)
 
 ### Added
 
@@ -753,9 +735,7 @@ Firefox and Selenium versions have changed:
 - When stdout and stderr is redirected by geckodriver, a bug prevented
   the redirections from taking effect.
 
-
-0.20.1 (2018-04-06)
--------------------
+## 0.20.1 (2018-04-06)
 
 ### Fixed
 
@@ -769,9 +749,7 @@ Firefox and Selenium versions have changed:
   The regression should not have caused any functional problems, but
   the termination cause and the exit status are now reported correctly.
 
-
-0.20.0 (2018-03-08)
--------------------
+## 0.20.0 (2018-03-08)
 
 ### Added
 
@@ -815,9 +793,7 @@ Firefox and Selenium versions have changed:
 
 - Improved error messages for malformed capability values.
 
-
-0.19.1 (2017-10-30)
--------------------
+## 0.19.1 (2017-10-30)
 
 ### Changed
 
@@ -837,11 +813,10 @@ Firefox and Selenium versions have changed:
 - Removed obsolete `socksUsername` and `socksPassword` proxy
   configuration keys because neither were picked up or recognised
 
-
-0.19.0 (2017-09-16)
--------------------
+## 0.19.0 (2017-09-16)
 
 Note that with geckodriver 0.19.0 the following versions are recommended:
+
 - Firefox 55.0 (and greater)
 - Selenium 3.5 (and greater)
 
@@ -903,9 +878,7 @@ Note that with geckodriver 0.19.0 the following versions are recommended:
   - `marionette.defaultPrefs.port`
   - `marionette.logging`
 
-
-0.18.0 (2017-07-10)
--------------------
+## 0.18.0 (2017-07-10)
 
 ### Changed
 
@@ -937,9 +910,7 @@ Note that with geckodriver 0.19.0 the following versions are recommended:
 
 - Linux x86 (i686-unknown-linux-musl) builds are fixed
 
-
-0.17.0 (2017-06-09)
--------------------
+## 0.17.0 (2017-06-09)
 
 ### Added
 
@@ -977,9 +948,7 @@ Note that with geckodriver 0.19.0 the following versions are recommended:
 - Use [`SessionNotCreated`] error instead of [`UnknownError`] if there
   is no current session
 
-
-0.16.1 (2017-04-26)
--------------------
+## 0.16.1 (2017-04-26)
 
 ### Fixed
 
@@ -990,9 +959,7 @@ Note that with geckodriver 0.19.0 the following versions are recommended:
 - Session is now ended when closing the last Firefox window (fixes
   [#613](https://github.com/mozilla/geckodriver/issues/613))
 
-
-0.16.0 (2017-04-21)
--------------------
+## 0.16.0 (2017-04-21)
 
 Note that geckodriver v0.16.0 is only compatible with Selenium 3.4
 and greater.
@@ -1078,9 +1045,7 @@ and greater.
 
 - Improved log messages to the HTTPD
 
-
-0.15.0 (2017-03-08)
--------------------
+## 0.15.0 (2017-03-08)
 
 ### Added
 
@@ -1106,9 +1071,7 @@ and greater.
 - Aligned the data structure accepted by the [Set Timeouts] command with
   the WebDriver specification
 
-
-0.14.0 (2017-01-31)
--------------------
+## 0.14.0 (2017-01-31)
 
 ### Changed
 
@@ -1125,9 +1088,7 @@ and greater.
 - HTTPD now returns correct response headers for `Content-Type` and
   `Cache-Control` thanks to [Mike Pennisi]
 
-
-0.13.0 (2017-01-06)
--------------------
+## 0.13.0 (2017-01-06)
 
 ### Changed
 
@@ -1148,9 +1109,7 @@ and greater.
 - Check for single-character key codes in action sequences now counts
   characters instead of bytes
 
-
-0.12.0 (2017-01-03)
--------------------
+## 0.12.0 (2017-01-03)
 
 ### Added
 
@@ -1194,17 +1153,13 @@ and greater.
 
 - Included capabilities example in the [README]
 
-
-0.11.1 (2016-10-10)
--------------------
+## 0.11.1 (2016-10-10)
 
 ### Fixed
 
 - Version number in binary now reflects the release version
 
-
-0.11.0 (2016-10-10)
--------------------
+## 0.11.0 (2016-10-10)
 
 ### Added
 
@@ -1273,9 +1228,7 @@ and greater.
   which means a tab with an upgrade notice is not displayed when launching
   a new Firefox version
 
-
-0.10.0 (2016-08-02)
--------------------
+## 0.10.0 (2016-08-02)
 
 ### Changed
 
@@ -1292,9 +1245,7 @@ and greater.
 
 - Grammar fix in [README]
 
-
-0.9.0 (2016-06-30)
-------------------
+## 0.9.0 (2016-06-30)
 
 ### Added
 
@@ -1326,9 +1277,7 @@ and greater.
 
 - Introduced a changelog (this)
 
-
-0.8.0 (2016-06-07)
-------------------
+## 0.8.0 (2016-06-07)
 
 ### Added
 
@@ -1355,9 +1304,7 @@ and greater.
 
 - FIx typo in error message for parsing errors
 
-
-0.7.1 (2016-04-27)
-------------------
+## 0.7.1 (2016-04-27)
 
 ### Added
 
@@ -1380,9 +1327,7 @@ and greater.
 
 - Squash rustc 1.6 warnings by using `std::thread::sleep(dur: Duration)`
 
-
-0.6.2 (2016-01-20)
-------------------
+## 0.6.2 (2016-01-20)
 
 ### Added
 
@@ -1394,9 +1339,7 @@ and greater.
 
 - Enable CPOWs in Marionette
 
-
-0.6.0 (2016-01-12)
-------------------
+## 0.6.0 (2016-01-12)
 
 ### Added
 
@@ -1412,9 +1355,7 @@ and greater.
 
 - Update dependencies
 
-
-0.5.0 (2015-12-10)
-------------------
+## 0.5.0 (2015-12-10)
 
 ### Changed
 
@@ -1426,17 +1367,13 @@ and greater.
 
 - Update dependencies
 
-
-0.4.2 (2015-10-02)
-------------------
+## 0.4.2 (2015-10-02)
 
 ### Changed
 
 - Skip compiling optional items in hyper
 
-
-0.4.1 (2015-10-02)
-------------------
+## 0.4.1 (2015-10-02)
 
 ### Changed
 
@@ -1444,9 +1381,7 @@ and greater.
 
 - Update dependencies
 
-
-0.4.0 (2015-09-28)
-------------------
+## 0.4.0 (2015-09-28)
 
 ### Added
 
@@ -1476,17 +1411,13 @@ and greater.
 
 - Fix example in documentation from @vladikoff
 
-
-0.3.0 (2015-08-17)
-------------------
+## 0.3.0 (2015-08-17)
 
 ### Added
 
 - Add support for finding elements in subtrees
 
-
-0.2.0 (2015-05-20)
-------------------
+## 0.2.0 (2015-05-20)
 
 ### Added
 
@@ -1522,9 +1453,7 @@ and greater.
 
 - Handle null id for switching to frame more correctly
 
-
-0.1.0 (2015-04-09)
-------------------
+## 0.1.0 (2015-04-09)
 
 ### Added
 
@@ -1572,8 +1501,6 @@ and greater.
 - Fixed build by updating Cargo.lock with new dependencies for building
 
 - Squash compile warnings
-
-
 
 [README]: https://github.com/mozilla/geckodriver/blob/master/README.md
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
