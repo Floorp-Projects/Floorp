@@ -2,31 +2,48 @@
   padding: 0;
 
   .stp_popular_topic {
-    background: #F0F0F4;
-    border-radius: 4px;
     display: inline-block;
-    font-size: 0.77em;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 1.2em;
-    margin-inline-end: 8px;
-    margin-bottom: 8px;
-    padding: 4px 8px;
-
-    @include theme_dark {
-      background: #2B2A33;
-
-    }
 
     .stp_popular_topic_link {
+      display: inline-block;
+      background: #F0F0F4;
+      border-radius: 4px;
+      font-size: 0.77em;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 1.2em;
+      margin-inline-end: 8px;
+      margin-bottom: 8px;
+      padding: 4px 8px;
       color: #000;
 
-      @include theme_dark {
-        color: #FBFBFE;
+      &:focus {
+        text-decoration: none;
+        background: #F0F0F4;
+        outline: 2px solid #0060df;
+        outline-offset: 2px;
+      }
+
+      &:hover {
+        background: #E0E0E6;
+        text-decoration: none;
+      }
+
+      &:active {
+        background: #CFCFD8;
       }
 
       &::after {
         content: " >";
+      }
+
+      @include theme_dark {
+        background: #2B2A33;
+        color: #FBFBFE;
+      
+        &:focus {
+          outline: 2px solid #00DDFF;
+        }
       }
     }
   }

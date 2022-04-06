@@ -38,8 +38,22 @@
     color: #5B5B66;
     font-weight: 400;
 
+    &:hover {
+      color: #3E3E44;
+    }
+    
+    &:focus {
+      color: #3E3E44;
+      outline: 2px solid #0060df;
+      outline-offset: -4px;
+    }
+
     @include theme_dark {
       color: #8F8F9D;
+
+      &:focus {
+        outline: 2px solid #00DDFF;
+      }
     }
   }
 
@@ -62,9 +76,18 @@
     padding: 0 6px;
     border-start-start-radius: 4px;
     border-end-start-radius: 4px;
+
+    &:focus {
+      outline: 2px solid #0060df;
+    }
+
     @include theme_dark {
       background: none;
       color: #FBFBFB;
+
+      &:focus {
+        outline: 2px solid #00DDFF;
+      }
     }
     &:focus {
       border: 1px solid #0060DF;
