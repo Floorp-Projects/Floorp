@@ -113,6 +113,5 @@ object FeatureFlags {
     /**
      * Enables receiving from the messaging framework.
      */
-    @Suppress("MayBeConst")
-    val messagingFeature = false
+    val messagingFeature = Config.channel.isNightlyOrDebug
 }

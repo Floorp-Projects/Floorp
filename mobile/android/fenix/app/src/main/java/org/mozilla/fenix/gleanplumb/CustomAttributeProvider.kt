@@ -26,7 +26,7 @@ object CustomAttributeProvider {
         val now = Calendar.getInstance()
         return JSONObject(
             mapOf(
-                "is_default_browser" to BrowsersCache.all(context).isDefaultBrowser,
+                "is_default_browser_string" to BrowsersCache.all(context).isDefaultBrowser.toString(),
                 "date_string" to formatter.format(now.time)
             )
         )
