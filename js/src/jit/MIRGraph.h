@@ -800,14 +800,15 @@ class MDefinitionIterator {
 };
 
 // Iterates on all resume points, phis, and instructions of a MBasicBlock.
-// Resume points are visited as long as the instruction which holds it is not
-// discarded.
+// Resume points are visited as long as they have not been discarded.
 class MNodeIterator {
  private:
-  // Last instruction which holds a resume point. To handle the entry point
-  // resume point, it is set to the last instruction, assuming that the last
-  // instruction is not discarded before we visit it.
-  MInstruction* last_;
+  // If this is non-null, the resume point that we will visit next (unless
+  // it has been discarded). Initialized to the entry resume point.
+  // Otherwise, resume point of the most recently visited instruction.
+  MResumePoint* resumePoint_;
+
+  mozilla::DebugOnly<MInstruction*> lastInstruction_ = nullptr;
 
   // Definition iterator which is one step ahead when visiting resume points.
   // This is in order to avoid incrementing the iterator while it is settled
@@ -816,35 +817,29 @@ class MNodeIterator {
 
   MBasicBlock* block() const { return defIter_.block_; }
 
-  bool atResumePoint() const { return last_ && !last_->isDiscarded(); }
+  bool atResumePoint() const {
+    MOZ_ASSERT_IF(lastInstruction_ && !lastInstruction_->isDiscarded(),
+                  lastInstruction_->resumePoint() == resumePoint_);
+    return resumePoint_ && !resumePoint_->isDiscarded();
+  }
 
   MNode* getNode() {
-    if (!atResumePoint()) {
-      return *defIter_;
+    if (atResumePoint()) {
+      return resumePoint_;
     }
-
-    // We use the last instruction as a sentinelle to iterate over the entry
-    // resume point of the basic block, before even starting to iterate on
-    // the instruction list.  Otherwise, the last_ corresponds to the
-    // previous instruction.
-    if (last_ != block()->lastIns()) {
-      return last_->resumePoint();
-    }
-    return block()->entryResumePoint();
+    return *defIter_;
   }
 
   void next() {
     if (!atResumePoint()) {
-      if (defIter_->isInstruction() &&
-          defIter_->toInstruction()->resumePoint()) {
-        // In theory, we could but in practice this does not happen.
-        MOZ_ASSERT(*defIter_ != block()->lastIns());
-        last_ = defIter_->toInstruction();
+      if (defIter_->isInstruction()) {
+        resumePoint_ = defIter_->toInstruction()->resumePoint();
+        lastInstruction_ = defIter_->toInstruction();
       }
-
       defIter_++;
     } else {
-      last_ = nullptr;
+      resumePoint_ = nullptr;
+      lastInstruction_ = nullptr;
     }
   }
 
@@ -852,14 +847,8 @@ class MNodeIterator {
 
  public:
   explicit MNodeIterator(MBasicBlock* block)
-      : last_(block->entryResumePoint() ? block->lastIns() : nullptr),
-        defIter_(block) {
+      : resumePoint_(block->entryResumePoint()), defIter_(block) {
     MOZ_ASSERT(bool(block->entryResumePoint()) == atResumePoint());
-
-    // We use the last instruction to check for the entry resume point,
-    // assert that no control instruction has any resume point.  If so, then
-    // we need to handle this case in this iterator.
-    MOZ_ASSERT(!block->lastIns()->resumePoint());
   }
 
   MNodeIterator operator++(int) {
