@@ -18,7 +18,7 @@ display_list_stats = ["api/display_list_stats"]
 serialize_program = ["serde", "webrender_build/serialize_program"]
 no_static_freetype = []
 leak_checks = []
-gecko = ["fog"]
+gecko = []
 sw_compositor = ["swgl"]
 
 [build-dependencies]
@@ -51,8 +51,6 @@ svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = "0.99"
 etagere = "0.2.6"
-glean = "44.0.0"
-fog = { path = "../../../toolkit/components/glean/api", optional = true }
 swgl = { path = "../swgl", optional = true }
 
 [dev-dependencies]
