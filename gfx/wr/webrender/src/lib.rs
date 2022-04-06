@@ -74,6 +74,7 @@ extern crate svg_fmt;
 
 #[macro_use]
 mod profiler;
+mod telemetry;
 
 mod batch;
 mod border;
