@@ -87,6 +87,11 @@ class GeckoViewPrompter {
     return false;
   }
 
+  _dismissUi() {
+    this.prompterActor?.unregisterPrompt(this);
+    this._dispatcher.dispatch("GeckoView:Prompt:Dismiss", { id: this.id });
+  }
+
   accept(aInputText = this.inputText) {
     if (this.callback) {
       let acceptMsg = {};
@@ -106,8 +111,14 @@ class GeckoViewPrompter {
       }
       this.callback(acceptMsg);
       // Notify the UI that this prompt should be hidden.
-      this.dismiss();
+      this._dismissUi();
     }
+  }
+
+  dismiss() {
+    this.callback(null);
+    // Notify the UI that this prompt should be hidden.
+    this._dismissUi();
   }
 
   getPromptType() {
@@ -173,11 +184,6 @@ class GeckoViewPrompter {
     return new Promise(resolve => {
       this.asyncShowPrompt(aMsg, resolve);
     });
-  }
-
-  dismiss() {
-    this._dispatcher.dispatch("GeckoView:Prompt:Dismiss", { id: this.id });
-    this.prompterActor?.unregisterPrompt(this);
   }
 
   asyncShowPrompt(aMsg, aCallback) {
