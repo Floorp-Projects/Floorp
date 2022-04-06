@@ -1,6 +1,6 @@
 [package]
 name = "marionette"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Mozilla"]
 edition = "2018"
 
