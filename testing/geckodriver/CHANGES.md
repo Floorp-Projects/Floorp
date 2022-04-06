@@ -3,6 +3,55 @@
 
 All notable changes to this program are documented in this file.
 
+## 0.31.0  (2022-04-11)
+
+### Known problems
+
+- _macOS 10.15 (Catalina) and later:_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
+
+### Added
+
+- Support for [Get Element Shadow Root]
+
+  Implemented by [David Burns].
+
+  The standardised WebDriver [Get Element Shadow Root] endpoint provides a way
+  to retrieve the Shadow Root of a given web element. This endpoint is
+  supported by geckodriver when using Firefox version ≥96.
+
+- Support for additional hosts and origins
+
+  Users can now specify a list of allowed `Host` and `Origin` headers for
+  incoming requests using the [`--allow-hosts`] and [`--allow-origins`] command
+  line options, respectively. When such a flag is provided, exactly the given
+  values will be permitted.
+
+  By default any request with an `Origin` header is rejected, and only requests
+  containing the bound hostname (specified via `--host`), or an IP address,
+  in the Host header are allowed. These configuration options are
+  designed to support scenarios where geckodriver is running on a different
+  network node to the host e.g. some container based setups.
+
+### Fixed
+
+- Geckodriver lets Marionette itself select a system allocated port, so that
+  it's no longer required to specify a fixed port when using a custom Firefox
+  profile. This is done by reading the `MarionetteActivePort` file of the
+  Firefox profile in-use. This helps to avoid port collisions when multiple
+  Firefox instances are run in parallel.
+
+- It's no longer possible to specify both the `androidPackage` and `binary`
+  capabilities togther within [`moz:firefoxOptions`] because these capabilites
+  are mutually exclusive.
+
 ## 0.30.0  (2021-09-16, `d372710b98a6`)
 
 ### Security Fixes
@@ -1513,6 +1562,8 @@ and greater.
 [Fission]: https://wiki.mozilla.org/Project_Fission
 [Capabilities]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html
 [Flags]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html
+[`--allow-hosts`]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html#code-allow-hosts-var-allow-hosts-var-code
+[`--allow-origins`]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html#code-allow-origins-var-allow-origins-var-code
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
 [macOS notarization]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Notarization.html
 
@@ -1556,6 +1607,7 @@ and greater.
 [Actions]: https://w3c.github.io/webdriver/webdriver-spec.html#actions
 [Delete Session]: https://w3c.github.io/webdriver/webdriver-spec.html#delete-session
 [Element Click]: https://w3c.github.io/webdriver/webdriver-spec.html#element-click
+[Get Element Shadow Root]: https://w3c.github.io/webdriver/#get-element-shadow-root
 [Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#get-timeouts
 [Get Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#get-window-rect
 [insecure certificate]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-insecure-certificate
@@ -1571,6 +1623,7 @@ and greater.
 [WebDriver errors]: https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors
 
 [Bastien Orivel]: https://github.com/Eijebong
+[David Burns]: https://github.com/AutomatedTester
 [Jason Juang]: https://github.com/juangj
 [Jeremy Lempereur]: https://github.com/o0Ignition0o
 [Joshua Bruning]: https://github.com/joshbruning
