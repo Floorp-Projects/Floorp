@@ -36,6 +36,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    funimation: {
+      "https://*.funimation.com/*": {
+        videoWrapperScriptPath: "video-wrappers/funimation.js",
+      },
+    },
+
     instagram: {
       "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
