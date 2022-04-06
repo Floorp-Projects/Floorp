@@ -281,7 +281,8 @@ class TaskController {
   TaskController()
       : mGraphMutex("TaskController::mGraphMutex"),
         mThreadPoolCV(mGraphMutex, "TaskController::mThreadPoolCV"),
-        mMainThreadCV(mGraphMutex, "TaskController::mMainThreadCV") {}
+        mMainThreadCV(mGraphMutex, "TaskController::mMainThreadCV"),
+        mRunOutOfMTTasksCounter(0) {}
 
   static TaskController* Get();
 
@@ -299,6 +300,8 @@ class TaskController {
     mIdleTaskManager = aIdleTaskManager;
   }
   IdleTaskManager* GetIdleTaskManager() { return mIdleTaskManager.get(); }
+
+  uint64_t RunOutOfMTTasksCount() { return mRunOutOfMTTasksCounter; }
 
   // Initialization and shutdown code.
   void SetPerformanceCounterState(
@@ -421,6 +424,9 @@ class TaskController {
   CondVar* mExternalCondVar = nullptr;
   // Idle task manager so we can properly do idle state stuff.
   RefPtr<IdleTaskManager> mIdleTaskManager;
+
+  // How many times the main thread was empty.
+  std::atomic<uint64_t> mRunOutOfMTTasksCounter;
 
   // Our tracking of our performance counter and long task state,
   // shared with nsThread.
