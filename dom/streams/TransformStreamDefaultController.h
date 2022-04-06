@@ -31,7 +31,9 @@ class TransformStreamDefaultController final : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStreamDefaultController)
 
+  MOZ_KNOWN_LIVE TransformStream* Stream();
   void SetStream(TransformStream& aStream);
+  TransformerAlgorithms* Algorithms();
   void SetAlgorithms(TransformerAlgorithms* aTransformerAlgorithms);
 
   explicit TransformStreamDefaultController(nsIGlobalObject* aGlobal);
