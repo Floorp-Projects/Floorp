@@ -69,8 +69,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
               const QueuingStrategy& aWritableStrategy,
               const QueuingStrategy& aReadableStrategy, ErrorResult& aRv);
 
-  already_AddRefed<ReadableStream> GetReadable();
-  already_AddRefed<WritableStream> GetWritable();
+  already_AddRefed<ReadableStream> GetReadable(ErrorResult& aRv);
+  already_AddRefed<WritableStream> GetWritable(ErrorResult& aRv);
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
