@@ -2,12 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  getSources,
-  getSelectedSource,
-  getSourceInSources,
-  getBlackBoxRanges,
-} from "./sources";
+import { getSourcesMap, getSelectedSource, getBlackBoxRanges } from "./sources";
 import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";
@@ -19,23 +14,23 @@ function getLocation(frame, isGeneratedSource) {
     : frame.location;
 }
 
-function getSourceForFrame(sources, frame, isGeneratedSource) {
+function getSourceForFrame(sourcesMap, frame, isGeneratedSource) {
   const sourceId = getLocation(frame, isGeneratedSource).sourceId;
-  return getSourceInSources(sources, sourceId);
+  return sourcesMap.get(sourceId);
 }
 
-function appendSource(sources, frame, selectedSource) {
+function appendSource(sourcesMap, frame, selectedSource) {
   const isGeneratedSource = selectedSource && !selectedSource.isOriginal;
   return {
     ...frame,
     location: getLocation(frame, isGeneratedSource),
-    source: getSourceForFrame(sources, frame, isGeneratedSource),
+    source: getSourceForFrame(sourcesMap, frame, isGeneratedSource),
   };
 }
 
 export function formatCallStackFrames(
   frames,
-  sources,
+  sourcesMap,
   selectedSource,
   blackboxedRanges
 ) {
@@ -44,8 +39,8 @@ export function formatCallStackFrames(
   }
 
   const formattedFrames = frames
-    .filter(frame => getSourceForFrame(sources, frame))
-    .map(frame => appendSource(sources, frame, selectedSource))
+    .filter(frame => getSourceForFrame(sourcesMap, frame))
+    .map(frame => appendSource(sourcesMap, frame, selectedSource))
     .filter(frame => !isFrameBlackBoxed(frame, frame.source, blackboxedRanges));
 
   return annotateFrames(formattedFrames);
@@ -54,7 +49,7 @@ export function formatCallStackFrames(
 // eslint-disable-next-line
 export const getCallStackFrames = (createSelector)(
   getCurrentThreadFrames,
-  getSources,
+  getSourcesMap,
   getSelectedSource,
   getBlackBoxRanges,
   formatCallStackFrames
