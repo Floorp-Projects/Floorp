@@ -570,7 +570,7 @@ class FirefoxColors(
         textOnColorPrimary = other.textOnColorPrimary
         textOnColorSecondary = other.textOnColorSecondary
         textActionPrimary = other.textActionPrimary
-        textActionSecondary = other.textSecondary
+        textActionSecondary = other.textActionSecondary
         textActionTertiary = other.textActionTertiary
         textActionTertiaryActive = other.textActionTertiaryActive
         iconPrimary = other.iconPrimary
