@@ -3362,18 +3362,6 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
 
   allObjs.clear();
 
-  // For fuzzing, it is convenient to allow extra data at the end
-  // of the input buffer so that more possible inputs are considered
-  // valid.
-#ifndef FUZZING
-  if (!in.tell().done()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA,
-                              "extra data after end");
-    return false;
-  }
-#endif
-
   JSRuntime* rt = context()->runtime();
   rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_BYTES,
                    static_cast<uint32_t>(std::min(nbytes, size_t(MAX_UINT32))));
