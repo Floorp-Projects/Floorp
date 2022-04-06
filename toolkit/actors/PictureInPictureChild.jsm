@@ -73,6 +73,8 @@ const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
 const TOGGLE_VISIBILITY_THRESHOLD_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.visibility-threshold";
+const TEXT_TRACK_FONT_SIZE =
+  "media.videocontrols.picture-in-picture.display-text-tracks.size";
 
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
@@ -1263,24 +1265,28 @@ class PictureInPictureChild extends JSWindowActorChild {
   observerFunction = null;
 
   observe(subject, topic, data) {
-    if (
-      topic != "nsPref:changed" ||
-      data !==
-        "media.videocontrols.picture-in-picture.display-text-tracks.enabled"
-    ) {
+    if (topic != "nsPref:changed") {
       return;
     }
 
-    const originatingVideo = this.getWeakVideo();
-    let isTextTrackPrefEnabled = Services.prefs.getBoolPref(
-      "media.videocontrols.picture-in-picture.display-text-tracks.enabled"
-    );
+    switch (data) {
+      case "media.videocontrols.picture-in-picture.display-text-tracks.enabled": {
+        const originatingVideo = this.getWeakVideo();
+        let isTextTrackPrefEnabled = Services.prefs.getBoolPref(
+          "media.videocontrols.picture-in-picture.display-text-tracks.enabled"
+        );
 
-    // Enable or disable text track support
-    if (isTextTrackPrefEnabled) {
-      this.setupTextTracks(originatingVideo);
-    } else {
-      this.removeTextTracks(originatingVideo);
+        // Enable or disable text track support
+        if (isTextTrackPrefEnabled) {
+          this.setupTextTracks(originatingVideo);
+        } else {
+          this.removeTextTracks(originatingVideo);
+        }
+        break;
+      }
+      case TEXT_TRACK_FONT_SIZE:
+        this.setTextTrackFontSize();
+        break;
     }
   }
 
@@ -1750,6 +1756,21 @@ class PictureInPictureChild extends JSWindowActorChild {
     }
   }
 
+  setTextTrackFontSize() {
+    const fontSize = Services.prefs.getStringPref(
+      TEXT_TRACK_FONT_SIZE,
+      "medium"
+    );
+    const root = this.document.querySelector(":root");
+    if (fontSize === "small") {
+      root.style.setProperty("--font-scale", "0.03");
+    } else if (fontSize === "large") {
+      root.style.setProperty("--font-scale", "0.09");
+    } else {
+      root.style.setProperty("--font-scale", "0.06");
+    }
+  }
+
   /**
    * Keeps an eye on the originating video's document. If it ever
    * goes away, this will cause the Picture-in-Picture window for any
@@ -1763,6 +1784,8 @@ class PictureInPictureChild extends JSWindowActorChild {
       "media.videocontrols.picture-in-picture.display-text-tracks.enabled",
       this.observerFunction
     );
+
+    Services.prefs.addObserver(TEXT_TRACK_FONT_SIZE, this.observerFunction);
 
     let originatingWindow = originatingVideo.ownerGlobal;
     if (originatingWindow) {
@@ -1907,6 +1930,8 @@ class PictureInPictureChild extends JSWindowActorChild {
     // Load text tracks stylesheet
     let textTracksStyleSheet = this.createTextTracksStyleSheet();
     doc.head.appendChild(textTracksStyleSheet);
+
+    this.setTextTrackFontSize();
 
     originatingVideo.cloneElementVisually(playerVideo);
 
