@@ -1536,7 +1536,7 @@ TEST_P(StringPairParameterized, AnonymizedOriginString) {
   EXPECT_STREQ(anonymized.get(), expectedAnonymized);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     QuotaCommon, StringPairParameterized,
     ::testing::Values(
         // XXX Do we really want to anonymize about: origins?
