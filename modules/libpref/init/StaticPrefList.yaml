@@ -8943,7 +8943,7 @@
 
   # Whether DD should consider WMF-disabled a WMF failure, useful for testing.
 -   name: media.decoder-doctor.wmf-disabled-is-failure
-    type: bool
+    type: RelaxedAtomicBool
     value: false
     mirror: always
 
