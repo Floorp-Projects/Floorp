@@ -7,17 +7,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { JsonSchema } = ChromeUtils.import(
+  "resource://gre/modules/JsonSchema.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
   "SpecialMessageActions",
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Ajv",
-  "resource://testing-common/ajv-6.12.6.js"
 );
 
 XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
@@ -28,7 +25,7 @@ XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
   if (!schema) {
     throw new Error("Failed to load SpecialMessageActionSchemas");
   }
-  return schema.definitions.SpecialMessageActionSchemas;
+  return schema;
 });
 
 const EXAMPLE_URL = "https://example.com/";
@@ -40,12 +37,19 @@ const SMATestUtils = {
    */
   async validateAction(action) {
     const schema = await fetchSMASchema;
-    const ajv = new Ajv({ async: "co*" });
-    const validator = ajv.compile(schema);
-    if (!validator(action)) {
-      throw new Error(`Action with type ${action.type} was not valid.`);
+    const result = JsonSchema.validate(action, schema);
+    if (result.errors.length) {
+      throw new Error(
+        `Action with type ${
+          action.type
+        } was not valid. Errors: ${JSON.stringify(result.errors, undefined, 2)}`
+      );
     }
-    ok(!validator.errors, `should be a valid action of type ${action.type}`);
+    is(
+      result.errors.length,
+      0,
+      `Should be a valid action of type ${action.type}`
+    );
   },
 
   /**
