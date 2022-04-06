@@ -199,8 +199,8 @@ TEST_P(BTSignedTreeHeadTest, BTSignedTreeHeadSimpleTest) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(BTSignedTreeHeadTest, BTSignedTreeHeadTest,
-                        testing::ValuesIn(BT_SIGNED_TREE_HEAD_TEST_PARAMS));
+INSTANTIATE_TEST_SUITE_P(BTSignedTreeHeadTest, BTSignedTreeHeadTest,
+                         testing::ValuesIn(BT_SIGNED_TREE_HEAD_TEST_PARAMS));
 
 TEST_F(BTSignedTreeHeadTest, BTSignedTreeHeadTamperedSignatureTest) {
   Buffer subjectPublicKeyInfoBuffer(HexToBytes(ValidSTH::kSPKIHex));

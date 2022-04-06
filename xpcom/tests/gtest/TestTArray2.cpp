@@ -485,7 +485,7 @@ TEST(TArray, test_move_array)
 template <typename TypeParam>
 class TArray_MoveOnlyTest : public ::testing::Test {};
 
-TYPED_TEST_CASE_P(TArray_MoveOnlyTest);
+TYPED_TEST_SUITE_P(TArray_MoveOnlyTest);
 
 static constexpr size_t kMoveOnlyTestArrayLength = 4;
 
@@ -639,7 +639,7 @@ TYPED_TEST_P(TArray_MoveOnlyTest,
   ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
 }
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_SUITE_P(
     TArray_MoveOnlyTest, nsTArray_MoveConstruct, nsTArray_MoveAssign,
     nsTArray_MoveReAssign, nsTArray_to_FallibleTArray_MoveConstruct,
     nsTArray_to_FallibleTArray_MoveAssign,
@@ -656,8 +656,8 @@ REGISTER_TYPED_TEST_CASE_P(
 using BothMoveOnlyTypes =
     ::testing::Types<MoveOnly_RelocateUsingMemutils,
                      MoveOnly_RelocateUsingMoveConstructor>;
-INSTANTIATE_TYPED_TEST_CASE_P(InstantiationOf, TArray_MoveOnlyTest,
-                              BothMoveOnlyTypes);
+INSTANTIATE_TYPED_TEST_SUITE_P(InstantiationOf, TArray_MoveOnlyTest,
+                               BothMoveOnlyTypes);
 
 //----
 

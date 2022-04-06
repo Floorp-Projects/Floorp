@@ -3391,9 +3391,9 @@ TEST_P(NewSdpTest, NewSctpportSdpParse) {
   ParseSdp(kNewSctpportOfferDraft21, false);
 }
 
-INSTANTIATE_TEST_CASE_P(RoundTripSerialize, NewSdpTest,
-                        ::testing::Combine(::testing::Bool(),
-                                           ::testing::Bool()));
+INSTANTIATE_TEST_SUITE_P(RoundTripSerialize, NewSdpTest,
+                         ::testing::Combine(::testing::Bool(),
+                                            ::testing::Bool()));
 
 const std::string kCandidateInSessionSDP =
     "v=0" CRLF "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF

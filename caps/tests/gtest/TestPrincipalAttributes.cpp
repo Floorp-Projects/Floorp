@@ -35,5 +35,5 @@ static const PrincipalAttributesParam kAttributes[] = {
     {nsAutoCString("https://[::1]"), true},
 };
 
-INSTANTIATE_TEST_CASE_P(TestPrincipalAttributes, PrincipalAttributesTest,
-                        ::testing::ValuesIn(kAttributes));
+INSTANTIATE_TEST_SUITE_P(TestPrincipalAttributes, PrincipalAttributesTest,
+                         ::testing::ValuesIn(kAttributes));
