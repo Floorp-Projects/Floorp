@@ -20,6 +20,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
@@ -389,9 +393,9 @@ class AddonInternal {
         return false;
       }
 
-      if (!installFrom.host.endsWith(source.host)) {
+      if (ThirdPartyUtil.isThirdPartyURI(source, installFrom)) {
         logger.warn(
-          `Addon ${this.id} Installation not allowed, "${installFrom.spec}" is not a subdomain of the Addon install_origins`
+          `Addon ${this.id} Installation not allowed, installFrom "${installFrom.spec}" is third party to the Addon install_origins`
         );
         return false;
       }
