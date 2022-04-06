@@ -48,17 +48,26 @@ Cu.evalInSandbox(
  */
 class Validator {
   #inner;
+  #draft;
 
   /**
    * Create a new validator.
    *
    * @param {object} schema The schema to validate with.
    * @param {string} draft  The draft to validate against. Should
-   *                        be one of "4", "7", "2019-09".
+   *                        be one of "4", "6", "7", "2019-09", or "2020-12".
+   *
+   *                        If the |$schema| key is present in the |schema|, it
+   *                        will be used to auto-detect the correct version.
+   *                        Otherwise, 2019-09 will be used.
    * @param {boolean} shortCircuit  Whether or not the validator should return
    *                                after a single error occurs.
    */
-  constructor(schema, draft = "2019-09", shortCircuit = true) {
+  constructor(
+    schema,
+    { draft = detectSchemaDraft(schema), shortCircuit = true } = {}
+  ) {
+    this.#draft = draft;
     this.#inner = Cu.waiveXrays(
       new sandbox.Validator(Cu.cloneInto(schema, sandbox), draft, shortCircuit)
     );
@@ -84,6 +93,14 @@ class Validator {
    *                     provide an |$id| field.
    */
   addSchema(schema, id) {
+    const draft = detectSchemaDraft(schema, undefined);
+    if (draft && this.#draft != draft) {
+      Cu.reportError(
+        `Adding a draft "${draft}" schema to a draft "${
+          this.#draft
+        }" validator.`
+      );
+    }
     this.#inner.addSchema(Cu.cloneInto(schema, sandbox), id);
   }
 }
@@ -96,7 +113,11 @@ class Validator {
  * @param {object} schema  The JSON schema to validate against.
  * @param {object} options  Options for the validator.
  * @param {string} options.draft  The draft to validate against. Should
- *                                be one of "4", "7", "2019-09".
+ *                                be one of "4", "6", "7", "2019-09", or "2020-12".
+ *
+ *                               If the |$schema| key is present in the |schema|, it
+ *                               will be used to auto-detect the correct version.
+ *                               Otherwise, 2019-09 will be used.
  * @param {boolean} options.shortCircuit  Whether or not the validator should
  *                                        return after a single error occurs.
  *
@@ -106,7 +127,7 @@ class Validator {
 function validate(
   instance,
   schema,
-  { draft = "2019-09", shortCircuit = true } = {}
+  { draft = detectSchemaDraft(schema), shortCircuit = true } = {}
 ) {
   const clonedSchema = Cu.cloneInto(schema, sandbox);
 
@@ -117,6 +138,37 @@ function validate(
     sandbox.dereference(clonedSchema),
     shortCircuit
   );
+}
+
+function detectSchemaDraft(schema, defaultDraft = "2019-09") {
+  const { $schema } = schema;
+
+  if (typeof $schema === "undefined") {
+    return defaultDraft;
+  }
+
+  switch ($schema) {
+    case "http://json-schema.org/draft-04/schema#":
+      return "4";
+
+    case "http://json-schema.org/draft-06/schema#":
+      return "6";
+
+    case "http://json-schema.org/draft-07/schema#":
+      return "7";
+
+    case "https://json-schema.org/draft/2019-09/schema":
+      return "2019-09";
+
+    case "https://json-schema.org/draft/2020-12/schema":
+      return "2020-12";
+
+    default:
+      Cu.reportError(
+        `Unexpected $schema "${$schema}", defaulting to ${defaultDraft}.`
+      );
+      return defaultDraft;
+  }
 }
 
 const EXPORTED_SYMBOLS = ["Validator", "validate", "sandbox"];
