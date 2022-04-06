@@ -61,7 +61,7 @@ class Parser:
 
         if self.tu.name in Parser.parsed:
             priorTU = Parser.parsed[self.tu.name].tu
-            if priorTU.filename != filename:
+            if os.path.normcase(priorTU.filename) != os.path.normcase(filename):
                 _error(
                     Loc(filename),
                     "Trying to load `%s' from a file when we'd already seen it in file `%s'"
