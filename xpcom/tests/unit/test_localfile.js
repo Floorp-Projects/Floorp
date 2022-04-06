@@ -9,7 +9,16 @@ const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
 var LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
-add_task(function test_toplevel_parent_is_null() {
+function run_test() {
+  test_toplevel_parent_is_null();
+  test_normalize_crash_if_media_missing();
+  test_file_modification_time();
+  test_directory_modification_time();
+  test_diskSpaceAvailable();
+  test_diskCapacity();
+}
+
+function test_toplevel_parent_is_null() {
   try {
     var lf = new LocalFile("C:\\");
 
@@ -22,9 +31,9 @@ add_task(function test_toplevel_parent_is_null() {
     // not Windows
     Assert.equal(e.result, Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
   }
-});
+}
 
-add_task(function test_normalize_crash_if_media_missing() {
+function test_normalize_crash_if_media_missing() {
   const a = "a".charCodeAt(0);
   const z = "z".charCodeAt(0);
   for (var i = a; i <= z; ++i) {
@@ -32,10 +41,10 @@ add_task(function test_normalize_crash_if_media_missing() {
       LocalFile(String.fromCharCode(i) + ":.\\test").normalize();
     } catch (e) {}
   }
-});
+}
 
 // Tests that changing a file's modification time is possible
-add_task(function test_file_modification_time() {
+function test_file_modification_time() {
   var file = do_get_profile();
   file.append("testfile");
 
@@ -72,10 +81,10 @@ add_task(function test_file_modification_time() {
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
 
   file.remove(true);
-});
+}
 
 // Tests that changing a directory's modification time is possible
-add_task(function test_directory_modification_time() {
+function test_directory_modification_time() {
   var dir = do_get_profile();
   dir.append("testdir");
 
@@ -106,9 +115,9 @@ add_task(function test_directory_modification_time() {
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
 
   dir.remove(true);
-});
+}
 
-add_task(function test_diskSpaceAvailable() {
+function test_diskSpaceAvailable() {
   let file = do_get_profile();
   file.QueryInterface(Ci.nsIFile);
 
@@ -125,9 +134,9 @@ add_task(function test_diskSpaceAvailable() {
   Assert.ok(bytes > 0);
 
   file.remove(true);
-});
+}
 
-add_task(function test_diskCapacity() {
+function test_diskCapacity() {
   let file = do_get_profile();
   file.QueryInterface(Ci.nsIFile);
 
@@ -145,9 +154,9 @@ add_task(function test_diskCapacity() {
   Assert.ok(startBytes === endBytes);
 
   file.remove(true);
-});
+}
 
-add_task(function test_file_creation_time() {
+function test_file_creation_time() {
   const file = do_get_profile();
   file.append("testfile");
 
@@ -182,4 +191,4 @@ add_task(function test_file_creation_time() {
   Assert.ok(creationTime === file.creationTime);
 
   file.remove(true);
-});
+}
