@@ -60,14 +60,13 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Slot Getter/Setters:
  public:
-  MOZ_KNOWN_LIVE ReadableStreamController* Controller() { return mController; }
+  ReadableStreamController* Controller() { return mController; }
   ReadableStreamDefaultController* DefaultController() {
     MOZ_ASSERT(mController && mController->IsDefault());
     return mController->AsDefault();
   }
-  void SetController(ReadableStreamController& aController) {
-    MOZ_ASSERT(!mController);
-    mController = &aController;
+  void SetController(ReadableStreamController* aController) {
+    mController = aController;
   }
 
   bool Disturbed() const { return mDisturbed; }
@@ -138,7 +137,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Internal Slots:
  private:
-  MOZ_KNOWN_LIVE RefPtr<ReadableStreamController> mController;
+  RefPtr<ReadableStreamController> mController;
   bool mDisturbed = false;
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
