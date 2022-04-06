@@ -660,6 +660,8 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
     mIdleTaskManager->State().ForgetPendingTaskGuarantee();
 
     if (mMainThreadTasks.empty()) {
+      ++mRunOutOfMTTasksCounter;
+
       // XXX the IdlePeriodState API demands we have a MutexAutoUnlock for it.
       // Otherwise we could perhaps just do this after we exit the locked block,
       // by pushing the lock down into this method.  Though it's not clear that
