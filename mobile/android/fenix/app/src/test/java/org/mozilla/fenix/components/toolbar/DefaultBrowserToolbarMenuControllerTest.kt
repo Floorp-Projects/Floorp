@@ -503,7 +503,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         every { topSitesUseCase.addPinnedSites } returns addPinnedSiteUseCase
         every {
             swipeRefreshLayout.context.getString(R.string.snackbar_added_to_shortcuts)
-        } returns "Added to shorcuts!"
+        } returns "Added to shortcuts!"
 
         val controller = createController(scope = this, store = browserStore)
         assertFalse(Events.browserMenuAction.testHasValue())
@@ -516,7 +516,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         assertEquals("add_to_top_sites", snapshot.single().extra?.getValue("item"))
 
         verify { addPinnedSiteUseCase.invoke(selectedTab.content.title, selectedTab.content.url) }
-        verify { snackbar.setText("Added to shorcuts!") }
+        verify { snackbar.setText("Added to shortcuts!") }
     }
 
     @Test
