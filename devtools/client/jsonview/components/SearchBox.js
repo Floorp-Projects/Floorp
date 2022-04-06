@@ -9,7 +9,7 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-  const { input } = dom;
+  const { input, div, button } = dom;
 
   // For smooth incremental searching (in case the user is typing quickly).
   const searchDelay = 250;
@@ -22,6 +22,7 @@ define(function(require, exports, module) {
     static get propTypes() {
       return {
         actions: PropTypes.object,
+        value: PropTypes.toString,
       };
     }
 
@@ -29,9 +30,18 @@ define(function(require, exports, module) {
       super(props);
       this.onSearch = this.onSearch.bind(this);
       this.doSearch = this.doSearch.bind(this);
+      this.onClearButtonClick = this.onClearButtonClick.bind(this);
+      this.onKeyDown = this.onKeyDown.bind(this);
+
+      this.state = {
+        value: props.value || "",
+      };
     }
 
     onSearch(event) {
+      this.setState({
+        value: event.target.value,
+      });
       const searchBox = event.target;
       const win = searchBox.ownerDocument.defaultView;
 
@@ -47,12 +57,43 @@ define(function(require, exports, module) {
       this.props.actions.onSearch(searchBox.value);
     }
 
+    onClearButtonClick() {
+      this.setState({ value: "" });
+      this.props.actions.onSearch("");
+      if (this._searchBoxRef) {
+        this._searchBoxRef.focus();
+      }
+    }
+
+    onKeyDown(e) {
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          this.onClearButtonClick();
+          break;
+      }
+    }
+
     render() {
-      return input({
-        className: "searchBox devtools-filterinput",
-        placeholder: JSONView.Locale["jsonViewer.filterJSON"],
-        onChange: this.onSearch,
-      });
+      const { value } = this.state;
+      return div(
+        { className: "devtools-searchbox" },
+        input({
+          className: "searchBox devtools-filterinput",
+          placeholder: JSONView.Locale["jsonViewer.filterJSON"],
+          onChange: this.onSearch,
+          onKeyDown: this.onKeyDown,
+          value,
+          ref: c => {
+            this._searchBoxRef = c;
+          },
+        }),
+        button({
+          className: "devtools-searchinput-clear",
+          hidden: !value,
+          onClick: this.onClearButtonClick,
+        })
+      );
     }
   }
 
