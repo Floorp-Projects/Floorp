@@ -90,7 +90,12 @@
 
       add_task(async function test_browser_color_scheme_dynamic_system() {
         for (let dark of [true, false]) {
-          await SpecialPowers.pushPrefEnv({ set: [["ui.systemUsesDarkTheme", dark ? 1 : 0]] });
+          await SpecialPowers.pushPrefEnv({
+            set: [
+              ["browser.theme.toolbar-theme", 2],
+              ["ui.systemUsesDarkTheme", dark ? 1 : 0],
+            ]
+          });
           await tick();
           await testElement("dynamic-test", dark ? "dark" : "light");
           await SpecialPowers.popPrefEnv();
