@@ -1242,8 +1242,8 @@ async function test_contentscript_storage(storageType) {
 }
 
 async function test_storage_change_event_page(areaName) {
-  async function testFn() {
-    function background(areaName) {
+  async function testOnChanged(targetIsStorageArea) {
+    function backgroundTestStorageTopNamespace(areaName) {
       browser.storage.onChanged.addListener((changes, area) => {
         browser.test.assertEq(area, areaName, "Expected areaName");
         browser.test.assertEq(
@@ -1253,6 +1253,26 @@ async function test_storage_change_event_page(areaName) {
         );
         browser.test.sendMessage("onChanged_was_fired");
       });
+    }
+    function backgroundTestStorageAreaNamespace(areaName) {
+      browser.storage[areaName].onChanged.addListener((changes, ...args) => {
+        browser.test.assertEq(args.length, 0, "no more args after changes");
+        browser.test.assertEq(
+          JSON.stringify(changes),
+          `{"storageKey":{"newValue":"newStorageValue"}}`,
+          `Expected changes via ${areaName}.onChanged event`
+        );
+        browser.test.sendMessage("onChanged_was_fired");
+      });
+    }
+    let background, onChangedName;
+    if (targetIsStorageArea) {
+      // Test storage.local.onChanged / storage.sync.onChanged.
+      background = backgroundTestStorageAreaNamespace;
+      onChangedName = `${areaName}.onChanged`;
+    } else {
+      background = backgroundTestStorageTopNamespace;
+      onChangedName = "onChanged";
     }
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
@@ -1275,12 +1295,12 @@ async function test_storage_change_event_page(areaName) {
       },
     });
     await extension.startup();
-    assertPersistentListeners(extension, "storage", "onChanged", {
+    assertPersistentListeners(extension, "storage", onChangedName, {
       primed: false,
     });
 
     await extension.terminateBackground();
-    assertPersistentListeners(extension, "storage", "onChanged", {
+    assertPersistentListeners(extension, "storage", onChangedName, {
       primed: true,
     });
 
@@ -1292,10 +1312,18 @@ async function test_storage_change_event_page(areaName) {
     await contentPage.close();
     await extension.awaitMessage("onChanged_was_fired");
 
-    assertPersistentListeners(extension, "storage", "onChanged", {
+    assertPersistentListeners(extension, "storage", onChangedName, {
       primed: false,
     });
     await extension.unload();
+  }
+
+  async function testFn() {
+    // Test browser.storage.onChanged.addListener
+    await testOnChanged(/* targetIsStorageArea */ false);
+    // Test browser.storage.local.onChanged.addListener
+    // and browser.storage.sync.onChanged.addListener, depending on areaName.
+    await testOnChanged(/* targetIsStorageArea */ true);
   }
 
   return runWithPrefs([["extensions.eventPages.enabled", true]], testFn);

@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 var { ExtensionError } = ExtensionUtils;
+var { ignoreEvent } = ExtensionCommon;
 
 XPCOMUtils.defineLazyGetter(this, "extensionStorageSync", () => {
   // TODO bug 1637465: Remove Kinto-based implementation.
@@ -80,6 +81,30 @@ this.storage = class extends ExtensionAPIPersistent {
           unregisterLocal();
           unregisterSync();
         },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    "local.onChanged"({ fire }) {
+      let unregister = this.registerLocalChangedListener(changes => {
+        // |changes| is already serialized. Send the raw value, so that it can
+        // be deserialized by the onChanged handler in child/ext-storage.js.
+        fire.raw(changes);
+      });
+      return {
+        unregister,
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    "sync.onChanged"({ fire }) {
+      let unregister = this.registerSyncChangedListener(changes => {
+        fire.async(changes);
+      });
+      return {
+        unregister,
         convert(_fire) {
           fire = _fire;
         },
@@ -213,6 +238,12 @@ this.storage = class extends ExtensionAPIPersistent {
               return ExtensionStorageIDB.selectBackend(context);
             },
           },
+          onChanged: new EventManager({
+            context,
+            module: "storage",
+            event: "local.onChanged",
+            extensionApi: this,
+          }).api(),
         },
 
         sync: {
@@ -236,6 +267,12 @@ this.storage = class extends ExtensionAPIPersistent {
             enforceNoTemporaryAddon(extension.id);
             return extensionStorageSync.getBytesInUse(extension, keys, context);
           },
+          onChanged: new EventManager({
+            context,
+            module: "storage",
+            event: "sync.onChanged",
+            extensionApi: this,
+          }).api(),
         },
 
         managed: {
@@ -256,6 +293,8 @@ this.storage = class extends ExtensionAPIPersistent {
             }
             return ExtensionStorage._filterProperties(data, keys);
           },
+          // managed storage is currently initialized once.
+          onChanged: ignoreEvent(context, "storage.managed.onChanged"),
         },
 
         onChanged: new EventManager({
