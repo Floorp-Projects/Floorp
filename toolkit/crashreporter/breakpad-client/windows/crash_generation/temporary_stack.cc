@@ -29,8 +29,8 @@ struct Fiberizer {
 // N.B.: This function takes shameless advantage of the fact that its only
 // caller is running a void(*)(void *) already, and so it doesn't need to do any
 // marshalling of multiple arguments, nor of a return value.
-void RunOnTemporaryStack(void (*func)(void*), void* param,
-                         size_t reserved_stack_size) {
+HRESULT RunOnTemporaryStack(void (*func)(void*), void* param,
+                            size_t reserved_stack_size) {
   Fiberizer fiberizer_;
 
   struct Args {
@@ -69,7 +69,10 @@ void RunOnTemporaryStack(void (*func)(void*), void* param,
   // https://docs.microsoft.com/en-us/windows/win32/procthread/thread-stack-size
   LPVOID const alt_fiber = ::CreateFiberEx(
       0, reserved_stack_size, FIBER_FLAG_FLOAT_SWITCH, &_::adaptor, &args);
-  assert(alt_fiber);
+  if (!alt_fiber) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
   ::SwitchToFiber(alt_fiber);
   ::DeleteFiber(alt_fiber);
+  return S_OK;
 }

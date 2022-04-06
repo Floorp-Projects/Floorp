@@ -839,9 +839,17 @@ void CALLBACK CrashGenerationServer::OnDumpRequest(void* context, BOOLEAN) {
     ResetEvent(client_info->dump_requested_handle());
   };
 
-  // Run this function on a separate stack, to hopefully handle an observed
-  // high frequency of stack overflows here. (See bug 1758654 for details.)
-  RunOnTemporaryStack(impl, context, 16 * 1024 * 1024);
+  // Attempt to run this function on a separate stack, to hopefully handle an
+  // observed high frequency of stack overflows here. (See bug 1758654 for
+  // details.)
+  HRESULT const ret = RunOnTemporaryStack(impl, context, 16 * 1024 * 1024);
+  if (FAILED(ret)) {
+    // This means either that there wasn't enough available memory to allocate
+    // the start of a new stack, or there wasn't enough address space to reserve
+    // for the entirety of a new stack. Either way, this probably won't work --
+    // but it's worth a shot:
+    impl(context);
+  }
 }
 
 // static
