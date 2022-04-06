@@ -118,7 +118,7 @@ NS_IMETHODIMP
 ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
                              int32_t aHeight, nsIScreen** aOutScreen) {
 #if defined(MOZ_WAYLAND) && defined(MOZ_LOGGING)
-  static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
+  static bool inWayland = GdkIsWaylandDisplay();
   if (inWayland) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("Getting screen in wayland, primary display will be returned."));
