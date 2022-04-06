@@ -294,14 +294,15 @@ void ScreenGetterWayland::Init() {
 }
 
 MonitorConfig* ScreenGetterWayland::AddMonitorConfig(int aId) {
-  mMonitors.EmplaceBack(aId);
   LOG_SCREEN(("Add Monitor ID %d num %d", aId, (int)(mMonitors.Length() - 1)));
-  return &(mMonitors[mMonitors.Length() - 1]);
+  UniquePtr<MonitorConfig> monitor = MakeUnique<MonitorConfig>(aId);
+  mMonitors.AppendElement(std::move(monitor));
+  return mMonitors.LastElement().get();
 }
 
 bool ScreenGetterWayland::RemoveMonitorConfig(int aId) {
   for (unsigned int i = 0; i < mMonitors.Length(); i++) {
-    if (mMonitors[i].id == aId) {
+    if (mMonitors[i]->id == aId) {
       LOG_SCREEN(("Remove Monitor ID %d num %d", aId, i));
       mMonitors.RemoveElementAt(i);
       return true;
@@ -327,22 +328,23 @@ static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
 }
 
 already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
-  MonitorConfig monitor = mMonitors[aMonitor];
+  MonitorConfig* monitor = mMonitors[aMonitor].get();
 
   // On GNOME/Mutter we use results from wl_output directly
-  LayoutDeviceIntRect rect(monitor.x, monitor.y, monitor.width, monitor.height);
+  LayoutDeviceIntRect rect(monitor->x, monitor->y, monitor->width,
+                           monitor->height);
 
   uint32_t pixelDepth = GetGTKPixelDepth();
 
   // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(1.0);
-  contentsScale.scale = monitor.scale;
+  contentsScale.scale = monitor->scale;
 
-  CSSToLayoutDeviceScale defaultCssScale(monitor.scale *
+  CSSToLayoutDeviceScale defaultCssScale(monitor->scale *
                                          gfxPlatformGtk::GetFontScaleFactor());
 
   float dpi = 96.0f;
-  gint heightMM = monitor.height_mm;
+  gint heightMM = monitor->height_mm;
   if (heightMM > 0) {
     dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
   }
@@ -362,6 +364,7 @@ void ScreenGetterWayland::RefreshScreens() {
 
   mScreenList.Clear();
   const gint numScreens = mMonitors.Length();
+  LOG_SCREEN(("Wayland reports %d screens", numScreens));
   for (gint i = 0; i < numScreens; i++) {
     RefPtr<Screen> screen = MakeScreenWayland(i);
     mScreenList.AppendElement(screen);
@@ -404,9 +407,9 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
   for (unsigned int i = 0; i < mMonitors.Length(); i++) {
     // Although Gtk/Mutter is very creative in reporting various screens sizes
     // we can rely on Gtk work area start position to match wl_output.
-    if (mMonitors[i].x == workArea.x && mMonitors[i].y == workArea.y) {
-      LOG_SCREEN((" monitor %d values %d %d -> %d x %d", i, mMonitors[i].x,
-                  mMonitors[i].y, mMonitors[i].width, mMonitors[i].height));
+    if (mMonitors[i]->x == workArea.x && mMonitors[i]->y == workArea.y) {
+      LOG_SCREEN((" monitor %d values %d %d -> %d x %d", i, mMonitors[i]->x,
+                  mMonitors[i]->y, mMonitors[i]->width, mMonitors[i]->height));
       return i;
     }
   }
