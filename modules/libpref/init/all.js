@@ -2426,9 +2426,6 @@ pref("plugins.favorfallback.rules", "");
   #endif
 #endif
 
-pref("dom.ipc.plugins.flash.disable-protected-mode", false);
-
-pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
 pref("dom.ipc.plugins.reportCrashURL", true);
 
 // Force the accelerated direct path for a subset of Flash wmode values

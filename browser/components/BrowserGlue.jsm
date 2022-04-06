@@ -1074,9 +1074,6 @@ BrowserGlue.prototype = {
           );
         }
         break;
-      case "flash-plugin-hang":
-        this._handleFlashHang();
-        break;
       case "xpi-signature-changed":
         let disabledAddons = JSON.parse(data).disabled;
         let addons = await AddonManager.getAddonsByIDs(disabledAddons);
@@ -1131,7 +1128,6 @@ BrowserGlue.prototype = {
       "keyword-search",
       "browser-search-engine-modified",
       "restart-in-safe-mode",
-      "flash-plugin-hang",
       "xpi-signature-changed",
       "sync-ui-state:update",
       "handlersvc-store-initialized",
@@ -1144,7 +1140,6 @@ BrowserGlue.prototype = {
     ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
     ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
 
-    this._flashHangCount = 0;
     this._firstWindowReady = new Promise(
       resolve => (this._firstWindowLoaded = resolve)
     );
@@ -4562,65 +4557,6 @@ BrowserGlue.prototype = {
       true,
       null,
       clickCallback
-    );
-  },
-
-  _handleFlashHang() {
-    ++this._flashHangCount;
-    if (this._flashHangCount < 2) {
-      return;
-    }
-    // protected mode only applies to win32
-    if (Services.appinfo.XPCOMABI != "x86-msvc") {
-      return;
-    }
-
-    if (
-      Services.prefs.getBoolPref("dom.ipc.plugins.flash.disable-protected-mode")
-    ) {
-      return;
-    }
-    if (
-      !Services.prefs.getBoolPref("browser.flash-protected-mode-flip.enable")
-    ) {
-      return;
-    }
-    if (Services.prefs.getBoolPref("browser.flash-protected-mode-flip.done")) {
-      return;
-    }
-    Services.prefs.setBoolPref(
-      "dom.ipc.plugins.flash.disable-protected-mode",
-      true
-    );
-    Services.prefs.setBoolPref("browser.flash-protected-mode-flip.done", true);
-
-    let win = BrowserWindowTracker.getTopWindow();
-    if (!win) {
-      return;
-    }
-    let productName = gBrandBundle.GetStringFromName("brandShortName");
-    let message = win.gNavigatorBundle.getFormattedString("flashHang.message", [
-      productName,
-    ]);
-    let buttons = [
-      {
-        label: win.gNavigatorBundle.getString("flashHang.helpButton.label"),
-        accessKey: win.gNavigatorBundle.getString(
-          "flashHang.helpButton.accesskey"
-        ),
-        link:
-          "https://support.mozilla.org/kb/flash-protected-mode-autodisabled",
-      },
-    ];
-
-    // XXXndeakin is this notification still relevant?
-    win.gNotificationBox.appendNotification(
-      "flash-hang",
-      {
-        label: message,
-        priority: win.gNotificationBox.PRIORITY_INFO_MEDIUM,
-      },
-      buttons
     );
   },
 
