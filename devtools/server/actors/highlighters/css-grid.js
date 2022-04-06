@@ -1888,7 +1888,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const container = this.getElement("area-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "bottom",
-      hideIfOffscreen: true,
     });
   }
 
@@ -1919,7 +1918,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const container = this.getElement("cell-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "top",
-      hideIfOffscreen: true,
     });
   }
 

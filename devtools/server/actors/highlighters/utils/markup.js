@@ -767,9 +767,6 @@ function waitForContentLoaded(iframeOrWindow) {
  * @param  {String} options.position
  *         Force the infobar to be displayed either on "top" or "bottom". Any other value
  *         will be ingnored.
- * @param  {Boolean} options.hideIfOffscreen
- *         If set to `true`, hides the infobar if it's offscreen, instead of automatically
- *         reposition it.
  */
 function moveInfobar(container, bounds, win, options = {}) {
   const zoom = getCurrentZoom(win);
@@ -842,10 +839,7 @@ function moveInfobar(container, bounds, win, options = {}) {
     top -= pageYOffset;
   }
 
-  if (isOverlapTheNode && options.hideIfOffscreen) {
-    container.setAttribute("hidden", "true");
-    return;
-  } else if (isOverlapTheNode) {
+  if (isOverlapTheNode) {
     left = Math.min(Math.max(leftBoundary, left - pageXOffset), rightBoundary);
 
     position = "fixed";
