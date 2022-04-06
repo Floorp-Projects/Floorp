@@ -37,6 +37,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CommonUtils: "resource://services-common/utils.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Logger: "resource://tps/logger.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -990,8 +991,12 @@ var TPS = {
   // Default ping validator that always says the ping passes. This should be
   // overridden unless the `testing.tps.skipPingValidation` pref is true.
   pingValidator(ping) {
-    Logger.logInfo("Not validating ping -- disabled by pref");
-    return true;
+    return {
+      validate() {
+        Logger.logInfo("Not validating ping -- disabled by pref");
+        return { valid: true, errors: [] };
+      },
+    };
   },
 
   // Attempt to load the sync_ping_schema.json and initialize `this.pingValidator`
@@ -1017,19 +1022,10 @@ var TPS = {
       let schema = JSON.parse(gTextDecoder.decode(bytes));
       Logger.logInfo("Successfully loaded schema");
 
-      // Importing resource://testing-common/* isn't possible from within TPS,
-      // so we load Ajv manually.
-      let ajvFile = this._getFileRelativeToSourceRoot(
-        testFile,
-        "testing/modules/ajv-6.12.6.js"
-      );
-      let ajvURL = fileProtocolHandler.getURLSpecFromActualFile(ajvFile);
-      let { Ajv } = ChromeUtils.import(ajvURL);
-      let ajv = new Ajv({ async: "co*" });
-      this.pingValidator = ajv.compile(schema);
+      this.pingValidator = new JsonSchema.validator(schema);
     } catch (e) {
       this.DumpError(
-        `Failed to load ping schema and AJV relative to "${testFile}".`,
+        `Failed to load ping schema relative to "${testFile}".`,
         e
       );
     }
@@ -1207,11 +1203,12 @@ var TPS = {
         // fail validation).
         return;
       }
-      if (!this.pingValidator(record)) {
+      const result = this.pingValidator.validate(record);
+      if (!result.valid) {
         // Note that we already logged the record.
         this.DumpError(
           "Sync ping validation failed with errors: " +
-            JSON.stringify(this.pingValidator.errors)
+            JSON.stringify(result.errors)
         );
       }
     };
