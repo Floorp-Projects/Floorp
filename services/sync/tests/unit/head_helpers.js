@@ -92,9 +92,10 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
-  let { Ajv } = ChromeUtils.import("resource://testing-common/ajv-6.12.6.js");
-  let ajv = new Ajv({ async: "co*" });
-  return ajv.compile(SyncPingSchema);
+  const { JsonSchema } = ChromeUtils.import(
+    "resource://gre/modules/JsonSchema.jsm"
+  );
+  return new JsonSchema.validator(SyncPingSchema);
 });
 
 // This is needed for loadAddonTestFunctions().
