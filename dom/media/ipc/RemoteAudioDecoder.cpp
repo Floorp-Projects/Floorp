@@ -10,11 +10,14 @@
 #include "RemoteDecoderManagerChild.h"
 #include "RemoteDecoderManagerParent.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
 RemoteAudioDecoderChild::RemoteAudioDecoderChild()
-    : RemoteDecoderChild(RemoteDecodeIn::RddProcess) {}
+    : RemoteDecoderChild(StaticPrefs::media_utility_process_enabled()
+                             ? RemoteDecodeIn::UtilityProcess
+                             : RemoteDecodeIn::RddProcess) {}
 
 MediaResult RemoteAudioDecoderChild::ProcessOutput(
     DecodedOutputIPDL&& aDecodedData) {

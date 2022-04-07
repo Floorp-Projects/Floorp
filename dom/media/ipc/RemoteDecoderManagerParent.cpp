@@ -15,6 +15,7 @@
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
 #include "mozilla/RDDParent.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -117,6 +118,7 @@ PDMFactory& RemoteDecoderManagerParent::EnsurePDMFactory() {
 bool RemoteDecoderManagerParent::CreateForContent(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD ||
+             XRE_GetProcessType() == GeckoProcessType_Utility ||
              XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -159,17 +161,21 @@ RemoteDecoderManagerParent::RemoteDecoderManagerParent(
     nsISerialEventTarget* aThread)
     : mThread(aThread) {
   MOZ_COUNT_CTOR(RemoteDecoderManagerParent);
-  auto& registrar = XRE_IsGPUProcess()
-                        ? GPUParent::GetSingleton()->AsyncShutdownService()
-                        : RDDParent::GetSingleton()->AsyncShutdownService();
+  auto& registrar =
+      XRE_IsGPUProcess() ? GPUParent::GetSingleton()->AsyncShutdownService()
+      : XRE_IsUtilityProcess()
+          ? UtilityProcessChild::GetSingleton()->AsyncShutdownService()
+          : RDDParent::GetSingleton()->AsyncShutdownService();
   registrar.Register(this);
 }
 
 RemoteDecoderManagerParent::~RemoteDecoderManagerParent() {
   MOZ_COUNT_DTOR(RemoteDecoderManagerParent);
-  auto& registrar = XRE_IsGPUProcess()
-                        ? GPUParent::GetSingleton()->AsyncShutdownService()
-                        : RDDParent::GetSingleton()->AsyncShutdownService();
+  auto& registrar =
+      XRE_IsGPUProcess() ? GPUParent::GetSingleton()->AsyncShutdownService()
+      : XRE_IsUtilityProcess()
+          ? UtilityProcessChild::GetSingleton()->AsyncShutdownService()
+          : RDDParent::GetSingleton()->AsyncShutdownService();
   registrar.Deregister(this);
 }
 
