@@ -34,3 +34,9 @@ def test_page_cross_origin_frame(inline, test_page_cross_origin):
 @pytest.fixture
 def test_page_same_origin_frame(inline, test_page):
     return inline(f"<iframe src='{test_page}'></iframe>")
+
+
+@pytest.fixture
+async def top_context(bidi_session):
+    contexts = await bidi_session.browsing_context.get_tree()
+    return contexts[0]
