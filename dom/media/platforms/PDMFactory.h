@@ -83,7 +83,8 @@ class PDMFactory final {
 
   static MediaCodecsSupported Supported(bool aForceRefresh = false);
   static bool SupportsMimeType(const nsACString& aMimeType,
-                               const MediaCodecsSupported& aSupported);
+                               const MediaCodecsSupported& aSupported,
+                               RemoteDecodeIn aLocation);
 
   static bool AllDecodersAreRemote();
 
@@ -94,6 +95,7 @@ class PDMFactory final {
   void CreateNullPDM();
   void CreateGpuPDMs();
   void CreateRddPDMs();
+  void CreateUtilityPDMs();
   void CreateContentPDMs();
   void CreateDefaultPDMs();
 

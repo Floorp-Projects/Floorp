@@ -82,10 +82,37 @@ static bool IsAvailableInRdd(DecoderType type) {
   }
 }
 
+static bool IsAvailableInUtility(DecoderType type) {
+  switch (type) {
+    case DecoderType::Opus:
+      return StaticPrefs::media_utility_opus_enabled();
+    case DecoderType::Vorbis:
+#if defined(__MINGW32__)
+      // If this is a MinGW build we need to force AgnosticDecoderModule to
+      // handle the decision to support Vorbis decoding (instead of
+      // Utility/RemoteDecoderModule) because of Bug 1597408 (Vorbis decoding on
+      // Utility causing sandboxing failure on MinGW-clang).  Typically this
+      // would be dealt with using defines in StaticPrefList.yaml, but we
+      // must handle it here because of Bug 1598426 (the __MINGW32__ define
+      // isn't supported in StaticPrefList.yaml).
+      return false;
+#else
+      return StaticPrefs::media_utility_vorbis_enabled();
+#endif
+    case DecoderType::Wave:
+      return StaticPrefs::media_utility_wav_enabled();
+    case DecoderType::Theora:  // Video codecs, dont take care of them
+    case DecoderType::VPX:
+    default:
+      return false;
+  }
+}
+
 // Checks if decoder is available in the current process
 static bool IsAvailable(DecoderType type) {
-  return XRE_IsRDDProcess() ? IsAvailableInRdd(type)
-                            : IsAvailableInDefault(type);
+  return XRE_IsRDDProcess()       ? IsAvailableInRdd(type)
+         : XRE_IsUtilityProcess() ? IsAvailableInUtility(type)
+                                  : IsAvailableInDefault(type);
 }
 
 bool AgnosticDecoderModule::SupportsMimeType(

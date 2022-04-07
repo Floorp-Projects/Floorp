@@ -1015,6 +1015,8 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // various reasons (e.g., to decide whether to emit ANSI/VT
         // color codes when logging to stderr).  glibc uses TCGETS and
         // musl uses TIOCGWINSZ.
+        //
+        // This is required by ffmpeg
         return If(AnyOf(request == TCGETS, request == TIOCGWINSZ),
                   Error(ENOTTY))
             .Else(SandboxPolicyBase::EvaluateSyscall(sysno));
@@ -2007,7 +2009,7 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetSocketProcessSandboxPolicy(
       new SocketProcessSandboxPolicy(aMaybeBroker));
 }
 
-class UtilitySandboxPolicy final : public SandboxPolicyCommon {
+class UtilitySandboxPolicy : public SandboxPolicyCommon {
  public:
   explicit UtilitySandboxPolicy(SandboxBrokerClient* aBroker)
       : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
@@ -2027,15 +2029,7 @@ class UtilitySandboxPolicy final : public SandboxPolicyCommon {
     switch (sysno) {
       case __NR_getrusage:
         return Allow();
-      case __NR_ioctl: {
-        Arg<unsigned long> request(1);
-        // ffmpeg, and anything else that calls isatty(), will be told
-        // that nothing is a typewriter:
-        return If(request == TCGETS, Error(ENOTTY)).Else(InvalidSyscall());
-      }
-      case __NR_prctl: {
-        return Allow();
-      }
+
       // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
@@ -2047,6 +2041,37 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetUtilitySandboxPolicy(
     SandboxBrokerClient* aMaybeBroker) {
   return UniquePtr<sandbox::bpf_dsl::Policy>(
       new UtilitySandboxPolicy(aMaybeBroker));
+}
+
+class UtilityAudioDecoderSandboxPolicy final : public UtilitySandboxPolicy {
+ public:
+  explicit UtilityAudioDecoderSandboxPolicy(SandboxBrokerClient* aBroker)
+      : UtilitySandboxPolicy(aBroker) {}
+
+  ResultExpr EvaluateSyscall(int sysno) const override {
+    switch (sysno) {
+      // Required by FFmpeg
+      case __NR_get_mempolicy: {
+        return Allow();
+      }
+
+      // Required by libnuma for FFmpeg
+      case __NR_sched_getaffinity: {
+        Arg<pid_t> pid(0);
+        return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
+      }
+
+      // Pass through the common policy.
+      default:
+        return UtilitySandboxPolicy::EvaluateSyscall(sysno);
+    }
+  }
+};
+
+UniquePtr<sandbox::bpf_dsl::Policy> GetUtilityAudioDecoderSandboxPolicy(
+    SandboxBrokerClient* aMaybeBroker) {
+  return UniquePtr<sandbox::bpf_dsl::Policy>(
+      new UtilityAudioDecoderSandboxPolicy(aMaybeBroker));
 }
 
 }  // namespace mozilla

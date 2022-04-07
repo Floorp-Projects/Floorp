@@ -12,6 +12,7 @@
 #include "ChildProfilerController.h"
 
 #include "mozilla/PRemoteDecoderManagerParent.h"
+#include "mozilla/ipc/AsyncBlockers.h"
 
 namespace mozilla::ipc {
 
@@ -56,6 +57,8 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvStartUtilityAudioDecoderService(
       Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
 
+  AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -70,6 +73,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
  private:
   RefPtr<ChildProfilerController> mProfilerController;
   RefPtr<UtilityAudioDecoderParent> mUtilityAudioDecoderInstance{};
+  AsyncBlockers mShutdownBlockers;
 };
 
 }  // namespace mozilla::ipc

@@ -1271,8 +1271,12 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
       result,
       "SetJobLevel should never fail with these arguments, what happened?");
 
+  auto lockdownLevel = sandbox::USER_LOCKDOWN;
+  if (aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING) {
+    lockdownLevel = sandbox::USER_LIMITED;
+  }
   result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_LOCKDOWN);
+                                  lockdownLevel);
   SANDBOX_ENSURE_SUCCESS(
       result,
       "SetTokenLevel should never fail with these arguments, what happened?");
@@ -1353,6 +1357,7 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
 
   switch (aSandbox) {
     case mozilla::ipc::SandboxingKind::GENERIC_UTILITY:
+    case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING:
       // Nothing specific to perform yet?
       break;
 

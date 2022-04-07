@@ -8871,6 +8871,68 @@
   value: 100
   mirror: always
 
+# This pref is here to control whether we want to perform audio decoding by
+# using the IPC actor within the Utility process rather than the RDD process.
+# When it is set to true, then the utility process will take precedence over RDD
+# to perform audio decoding.
+- name: media.utility-process.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+#ifdef MOZ_FFMPEG
+- name: media.utility-ffmpeg.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+#endif
+
+#ifdef MOZ_FFVPX
+- name: media.utility-ffvpx.enabled
+  type: RelaxedAtomicBool
+#if defined(XP_WIN)
+  value: true
+#elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_OPENBSD)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+#endif
+
+#ifdef MOZ_WMF
+- name: media.utility-wmf.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+#endif
+
+#ifdef MOZ_APPLEMEDIA
+- name: media.utility-applemedia.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+#endif
+
+- name: media.utility-vorbis.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: media.utility-wav.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: media.utility-opus.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #ifdef ANDROID
   # Enable the MediaCodec PlatformDecoderModule by default.
 -   name: media.android-media-codec.enabled
