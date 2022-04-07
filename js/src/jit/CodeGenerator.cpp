@@ -9958,10 +9958,9 @@ void CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir) {
   }
 
   Register objreg =
-      masm.extractObject(value, ToTempUnboxRegister(lir->temp1()));
+      masm.extractObject(value, ToTempUnboxRegister(lir->temp0()));
   branchTestObjectEmulatesUndefined(objreg, nullOrLikeUndefined,
-                                    notNullOrLikeUndefined,
-                                    ToRegister(lir->temp0()), ool);
+                                    notNullOrLikeUndefined, output, ool);
   // fall through
 
   Label done;
