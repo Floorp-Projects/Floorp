@@ -41,6 +41,7 @@ class SettingsTest {
         }
     }
 
+    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6835")
     @SmokeTest
     @Test
     fun verifyPrivacySettingsMenuTest() {
