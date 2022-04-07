@@ -770,7 +770,7 @@
   result_type: WordSized
   operands:
     input: BoxedValue
-  num_temps: 3
+  num_temps: 2
   mir_op: Not
 
 - name: BitNotI
