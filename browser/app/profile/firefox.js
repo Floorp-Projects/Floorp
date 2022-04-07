@@ -429,6 +429,14 @@ pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
 // suggestions.
 pref("browser.urlbar.quicksuggest.allowPositionInSuggestions", true);
 
+// Whether non-sponsored quick suggest results are subject to impression
+// frequency caps.
+pref("browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled", false);
+
+// Whether sponsored quick suggest results are subject to impression frequency
+// caps.
+pref("browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled", false);
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);
