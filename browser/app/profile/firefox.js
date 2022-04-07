@@ -2709,3 +2709,8 @@ pref("browser.snapshots.score.InNavigation", 3);
 pref("browser.snapshots.score.IsOverlappingVisit", 3);
 pref("browser.snapshots.score.IsUserPersisted", 1);
 pref("browser.snapshots.score.IsUsedRemoved", -10);
+
+// Expiration days for snapshots.
+pref("browser.places.snapshots.expiration.days", 210);
+// For user managed snapshots we use more than a year, to support yearly tasks.
+pref("browser.places.snapshots.expiration.userManaged.days", 420);
