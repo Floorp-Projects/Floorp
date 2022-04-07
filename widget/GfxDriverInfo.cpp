@@ -313,6 +313,33 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0155);
       APPEND_DEVICE(0x0157);
       break;
+    case DeviceFamily::IntelSkylake:
+      APPEND_DEVICE(0x1902);
+      APPEND_DEVICE(0x1906);
+      APPEND_DEVICE(0x190a);
+      APPEND_DEVICE(0x190B);
+      APPEND_DEVICE(0x190e);
+      APPEND_DEVICE(0x1912);
+      APPEND_DEVICE(0x1913);
+      APPEND_DEVICE(0x1915);
+      APPEND_DEVICE(0x1916);
+      APPEND_DEVICE(0x1917);
+      APPEND_DEVICE(0x191a);
+      APPEND_DEVICE(0x191b);
+      APPEND_DEVICE(0x191d);
+      APPEND_DEVICE(0x191e);
+      APPEND_DEVICE(0x1921);
+      APPEND_DEVICE(0x1923);
+      APPEND_DEVICE(0x1926);
+      APPEND_DEVICE(0x1927);
+      APPEND_DEVICE(0x192a);
+      APPEND_DEVICE(0x192b);
+      APPEND_DEVICE(0x192d);
+      APPEND_DEVICE(0x1932);
+      APPEND_DEVICE(0x193a);
+      APPEND_DEVICE(0x193b);
+      APPEND_DEVICE(0x193d);
+      break;
     case DeviceFamily::IntelHD520:
       APPEND_DEVICE(0x1916);
       break;
@@ -942,6 +969,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelHaswell:
     case DeviceFamily::IntelSandyBridge:
     case DeviceFamily::IntelGen7Baytrail:
+    case DeviceFamily::IntelSkylake:
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelRolloutWebRender:

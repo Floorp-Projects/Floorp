@@ -1851,6 +1851,33 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #endif
 
     ////////////////////////////////////
+    // FEATURE_HW_DECODED_VIDEO_NO_COPY
+
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
+        OperatingSystem::Windows10, DeviceFamily::IntelSkylake,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(20, 19, 15, 4285), V(20, 19, 15, 4380), "FEATURE_FAILURE_BUG_1763280",
+        "Intel driver 20.19.15.*");
+
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
+        OperatingSystem::Windows10, DeviceFamily::IntelSkylake,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(10, 18, 15, 4256), V(10, 18, 15, 4293), "FEATURE_FAILURE_BUG_1763280",
+        "Intel driver 10.18.15.*");
+
+    ////////////////////////////////////
+    // FEATURE_HW_DECODED_VIDEO_NO_COPY - ALLOWLIST
+#ifdef NIGHTLY_BUILD
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows, DeviceFamily::IntelAll,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_INTEL");
+#endif
+
+    ////////////////////////////////////
     // FEATURE_WEBRENDER
     // Block 8.56.1.15/16
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::AtiAll,

@@ -184,6 +184,7 @@ enum class DeviceFamily : uint8_t {
   IntelHaswell,
   IntelSandyBridge,
   IntelGen7Baytrail,
+  IntelSkylake,
   IntelHD520,
   IntelMobileHDGraphics,
   NvidiaBlockD3D9Layers,
