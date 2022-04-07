@@ -368,7 +368,6 @@
     <ID>UndocumentedPublicClass:Event.kt$Event$SearchWidgetVoiceSearchPressed : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$SearchWithAds : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$SendTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SetDefaultBrowserToolbarMenuClicked : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ShareBookmark : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ShowAllBookmarks : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ShowAllRecentTabs : Event</ID>
