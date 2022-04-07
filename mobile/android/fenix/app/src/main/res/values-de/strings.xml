@@ -44,7 +44,7 @@
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Kürzlich gespeicherte Lesezeichen</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Alle anzeigen</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Alle anzeigen</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle gespeicherten Lesezeichen anzeigen</string>
@@ -183,8 +183,6 @@
     <string name="browser_menu_add_to_homescreen">Zum Startbildschirm hinzufügen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installieren</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Synchronisierte Tabs</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Neu synchronisieren</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -218,8 +216,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Bearbeiten</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Startbildschirm anpassen</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Startbildschirm anpassen</string>
     <!-- Browser Toolbar -->
@@ -1117,7 +1113,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Lesezeichen gespeichert!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Zu wichtigen Seiten hinzugefügt!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Zu wichtigen Seiten hinzugefügt!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Zu Verknüpfungen hinzugefügt!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privater Tab geschlossen</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1711,9 +1709,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Soll dieses Lesezeichen wirklich gelöscht werden?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Zu wichtigen Seiten hinzufügen</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Zu wichtigen Seiten hinzufügen</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Von wichtigen Seiten entfernen</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Von wichtigen Seiten entfernen</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Zu Verknüpfungen hinzufügen</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Aus Verknüpfungen entfernen</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verifiziert von: %1$s</string>
@@ -1788,21 +1790,24 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Obergrenze für wichtige Seiten erreicht</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Obergrenze für wichtige Seiten erreicht</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Obergrenze für Verknüpfungen erreicht</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Entfernen Sie eine der wichtigen Seiten, um eine neue hinzuzufügen. Tippen und halten Sie die Seite und wählen Sie „Entfernen“.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Entfernen Sie eine der wichtigen Seiten, um eine neue hinzuzufügen. Tippen und halten Sie die Seite und wählen Sie „Entfernen“.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Entfernen Sie eine der Verknüpfungen, um eine neue hinzuzufügen. Tippen und halten Sie die Seite und wählen Sie „Entfernen“.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, verstanden</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Meistbesuchte wichtige Seiten</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Verknüpfungen</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Name</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Name der meistbesuchten Seite</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Name der meistbesuchten Seite</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Name der Verknüpfung</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

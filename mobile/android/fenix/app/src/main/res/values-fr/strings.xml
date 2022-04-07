@@ -42,9 +42,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Marque-pages récents</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Marque-pages récemment enregistrés</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Marque-pages récemment enregistrés</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Tout afficher</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Tout afficher</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Afficher tous les marque-pages enregistrés</string>
 
@@ -180,8 +180,6 @@
     <string name="browser_menu_add_to_homescreen">Ajouter à l’écran d’accueil</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installer</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Onglets synchronisés</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Resynchroniser</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -215,8 +213,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Modifier</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Personnaliser l’accueil</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personnaliser la page d’accueil</string>
     <!-- Browser Toolbar -->
@@ -333,6 +329,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Si autorisé, les onglets privés seront également visibles lorsque plusieurs applications sont ouvertes</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ajouter un raccourci pour la navigation privée</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Mode HTTPS uniquement</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Essayer de se connecter automatiquement aux sites en utilisant le protocole de chiffrement HTTPS pour une sécurité accrue.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Activé</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Désactivé</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">En savoir plus</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Activer dans tous les onglets</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Activer uniquement dans les onglets privés</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Site sécurisé non disponible</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Très probablement, le site web ne prend tout simplement pas en charge HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Il est cependant aussi possible qu’il s’agisse d’une attaque. Si vous poursuiviez vers ce site web, vous ne devriez saisir aucune donnée sensible. Si vous continuez, le mode HTTPS uniquement sera désactivé temporairement pour ce site.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilité</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1093,7 +1109,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Marque-pages enregistrés !</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ajouté aux sites principaux !</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ajouté aux sites principaux !</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Ajouté aux raccourcis !</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Onglet privé fermé</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1649,17 +1667,17 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="search_delete_search_engine_success_message">%s : suppression effectuée</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Bienvenue dans un tout nouveau %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Bienvenue dans un tout nouveau %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Un navigateur entièrement repensé vous attend, avec des performances et des fonctionnalités améliorées pour vous aider à faire plus en ligne.\n\nVeuillez patienter pendant que nous mettons à jour %s :</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Un navigateur entièrement repensé vous attend, avec des performances et des fonctionnalités améliorées pour vous aider à faire plus en ligne.\n\nVeuillez patienter pendant que nous mettons à jour %s :</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Mise à jour de %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Mise à jour de %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Démarrer %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Démarrer %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migration terminée</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migration terminée</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Mots de passe</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Mots de passe</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Pour l’autoriser :</string>
@@ -1689,9 +1707,13 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Voulez-vous vraiment supprimer ce marque-page ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Ajouter aux sites principaux</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Ajouter aux sites principaux</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Retirer des sites principaux</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Retirer des sites principaux</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Ajouter aux raccourcis</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Supprimer des raccourcis</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Vérifié par : %1$s</string>
@@ -1766,21 +1788,24 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Nombre maximal de sites atteint</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Nombre maximal de sites atteint</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Nombre maximal de raccourcis atteint</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Pour ajouter un nouveau raccourci, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">J’ai compris</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Les sites les plus visités</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Raccourcis</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nom</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Nom du site principal</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nom du site principal</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Nom du raccourci</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1859,4 +1884,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="pocket_stories_feature_caption">Membre de la famille Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">En savoir plus</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Activez la télémétrie pour envoyer des données.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Ouvrir les paramètres</string>
 </resources>

@@ -42,7 +42,7 @@
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Хатбаракҳои нигоҳдошташудаи охирин</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Ҳамаро намоиш додан</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Ҳамаро намоиш додан</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Намоиш додани ҳамаи хатбаракҳои нигоҳдошташуда</string>
 
@@ -182,8 +182,6 @@
     <string name="browser_menu_add_to_homescreen">Илова кардан ба экрани асосӣ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Насб кардан</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Варақаҳои ҳамоҳангшуда</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Аз нав ҳамоҳанг кардан</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -215,8 +213,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Таҳрир кардан</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Танзимоти асосӣ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Танзимоти саҳифаи асосӣ</string>
     <!-- Browser Toolbar -->
@@ -1089,7 +1085,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Хатбаракҳо нигоҳ дошта шуданд!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ба сомонаҳои беҳтарин илова карда шуд!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ба сомонаҳои беҳтарин илова карда шуд!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Ба миёнбурҳо илова карда шуд!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Варақаи хусусӣ пӯшида шуд</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1682,9 +1680,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин хатбаракро нест намоед?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Илова кардан ба сомонаҳои беҳтарин</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Илова кардан ба сомонаҳои беҳтарин</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Тоза кардан аз сомонаҳои беҳтарин</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Тоза кардан аз сомонаҳои беҳтарин</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Илова кардан ба миёнбурҳо</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Тоза кардан аз миёнбурҳо</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Тасдиқ аз ҷониби: %1$s</string>
@@ -1760,21 +1762,24 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Ба ҳудуди шумораи сомонаҳои беҳтарин расид</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Ба ҳудуди шумораи сомонаҳои беҳтарин расид</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Ба ҳудуди шумораи миёнбурҳо расид</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Барои илова кардани сомонаи роиҷи нав, сомонаи дигареро тоза намоед. Сомонаро ламс карда, доред ва &quot;Тоза кардан&quot;-ро интихоб намоед.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Барои илова кардани сомонаи роиҷи нав, сомонаи дигареро тоза намоед. Сомонаро ламс карда, доред ва &quot;Тоза кардан&quot;-ро интихоб намоед.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Барои илова кардани миёнбури нав, миёнбури дигареро тоза намоед. Миёнбурро ламс карда, доред ва «Тоза кардан»-ро интихоб намоед.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Хуб, фаҳмидам</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Сомонаҳои дидашудаи роиҷ</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Миёнбурҳо</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Ном</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Номи сомонаи беҳтарин</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Номи сомонаи беҳтарин</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Номи миёнбур</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ХУБ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

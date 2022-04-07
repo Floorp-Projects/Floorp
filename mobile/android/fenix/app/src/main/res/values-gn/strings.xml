@@ -41,9 +41,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Techaukaha ramoguáva</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Techaukaha oñeñongaturamóva</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Techaukaha oñeñongaturamóva</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Techaukapaite</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Techaukapaite</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Ehechaukapaite techaukaha ñongatupyre</string>
 
@@ -182,8 +182,6 @@
     <string name="browser_menu_add_to_homescreen">Embojuaju mba’erechaha ñepyrũgua</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Mohenda</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Tendayke mbojuehepyre</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Mbojuajujey</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -215,8 +213,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Mbosako’i</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Emboava moñepyrũ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Emboava kuatiarogue ñepyrũgua</string>
     <!-- Browser Toolbar -->
@@ -333,6 +329,20 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembipuru’i ijurujáva</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">HTTPS ayvúpe añoite</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Hendy</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Mboguepyre</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Kuaave</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Embojuruja opaite tendayképe</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Embojuruja tendayke ñemiguápe</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Tenda rekorosã oñembotýva</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Jeikekuaaha</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1085,7 +1095,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">¡Techaukaha ñongatupyre!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">¡Ojuajúma tenda iporãvévare!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">¡Ojuajúma tenda iporãvévare!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">¡Ojuajúva mbopya’eháre!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Tendayke ñemigua mbotypyre</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1648,17 +1660,17 @@
     <string name="search_delete_search_engine_success_message">Mboguete %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Eg̃uahẽporãite peteĩ %s ipyahuetévape</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Eg̃uahẽporãite peteĩ %s ipyahuetévape</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Nera’arõ kundahára ipyahuetéva, oikóva ha hembiapoite porãvéva ne pytyvõ hag̃ua emba’apove hag̃ua ñandutípe.\n\nEha’arõ hekopyahu aja %s nde</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Nera’arõ kundahára ipyahuetéva, oikóva ha hembiapoite porãvéva ne pytyvõ hag̃ua emba’apove hag̃ua ñandutípe.\n\nEha’arõ hekopyahu aja %s nde</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Hekopyahuhína %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Hekopyahuhína %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Ñepyrũ %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Ñepyrũ %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Ovapaitéma</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Ovapaitéma</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Ñe’ẽñemi</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Emoneĩ hag̃ua:</string>
@@ -1690,9 +1702,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">¿Añetehápe emboguese ko techaukaha?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Embojuaju tenda iporãvéva</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Embojuaju tenda iporãvéva</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Emboguete tenda ojepuruvévagui</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Emboguete tenda ojepuruvévagui</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Ojuajúva mbopya’eháre</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Emboguete mbopya’ehágui</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Ohechapyréma: %1$s</string>
@@ -1769,21 +1785,22 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Ehupytýma hu’ã tenda mba’guasúvape g̃uarã</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Ehupytýma hu’ã tenda mba’guasúvape g̃uarã</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Emohu’ãma mbopya’ehápe g̃uarã</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Embojuaju hag̃ua tenda pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Embojuaju hag̃ua tenda pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Tendakuéra ojeikeveha</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Jeike pya’eha</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Téra</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Tenda guasu réra</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Tenda guasu réra</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Mbopya’eha réra</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Moneĩ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1861,4 +1878,9 @@
     <string name="pocket_stories_feature_caption">Firefox reheguaite. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Kuaave</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Embojuruja telemetry emondo hag̃ua mba’ekuaarã.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Eho ñembohekópe</string>
 </resources>
