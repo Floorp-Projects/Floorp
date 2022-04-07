@@ -45,6 +45,11 @@ private class BecomingNoisyReceiver(private val controller: MediaSession.Control
             controller?.pause()
         }
     }
+    @VisibleForTesting
+    fun deviceIsBecomingNoisy(context: Context) {
+        val becomingNoisyIntent = Intent(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+        onReceive(context, becomingNoisyIntent)
+    }
 }
 
 /**
@@ -211,5 +216,10 @@ internal class MediaSessionServiceDelegate(
     internal fun shutdown() {
         mediaSession.release()
         service.stopSelf()
+    }
+
+    @VisibleForTesting
+    internal fun deviceBecomingNoisy(context: Context) {
+        noisyAudioStreamReceiver?.deviceIsBecomingNoisy(context)
     }
 }

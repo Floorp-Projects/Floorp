@@ -351,4 +351,30 @@ class MediaSessionServiceDelegateTest {
         verify(service, never()).stopSelf()
         verify(delegate).destroy()
     }
+
+    @Test
+    fun `when device is becoming noisy, playback is paused`() {
+        val controller: MediaSession.Controller = mock()
+
+        val initialState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    mediaSessionState = MediaSessionState(controller, playbackState = MediaSession.PlaybackState.PLAYING)
+                )
+            )
+        )
+        val store = BrowserStore(initialState)
+        val service: AbstractMediaSessionService = mock()
+        val delegate = spy(MediaSessionServiceDelegate(testContext, service, store))
+
+        delegate.onCreate()
+
+        verify(service, never()).stopSelf()
+        verify(delegate, never()).shutdown()
+
+        delegate.deviceBecomingNoisy(testContext)
+
+        verify(controller).pause()
+    }
 }
