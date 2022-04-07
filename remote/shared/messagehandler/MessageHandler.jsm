@@ -141,6 +141,12 @@ class MessageHandler extends EventEmitter {
       isProtocolEvent,
       sessionId: this.sessionId,
     });
+
+    // Internal events should also be emitted using their original event name
+    // for ease of use.
+    if (!isProtocolEvent) {
+      this.emit(name, data);
+    }
   }
 
   /**
