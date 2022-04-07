@@ -232,22 +232,29 @@ void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     mProfilerController = nullptr;
   }
 
-#  if defined(XP_WIN)
-  {
-    RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->DisableFull();
-  }
+  // Wait until all RemoteDecoderManagerParent have closed.
+  //
+  // FIXME: Should move from using AsyncBlockers to proper
+  // nsIAsyncShutdownService once it is not JS, see bug 1760855
+  mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
+      ->Then(GetCurrentSerialEventTarget(), __func__, [&]() {
+#  ifdef XP_WIN
+        {
+          RefPtr<DllServices> dllSvc(DllServices::Get());
+          dllSvc->DisableFull();
+        }
 #  endif  // defined(XP_WIN)
 
-  {
-    StaticMutexAutoLock lock(sUtilityProcessChildMutex);
-    if (sUtilityProcessChild) {
-      sUtilityProcessChild = nullptr;
-    }
-  }
+        {
+          StaticMutexAutoLock lock(sUtilityProcessChildMutex);
+          if (sUtilityProcessChild) {
+            sUtilityProcessChild = nullptr;
+          }
+        }
 
-  ipc::CrashReporterClient::DestroySingleton();
-  XRE_ShutdownChildProcess();
+        ipc::CrashReporterClient::DestroySingleton();
+        XRE_ShutdownChildProcess();
+      });
 #endif    // NS_FREE_PERMANENT_DATA
 }
 

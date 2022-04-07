@@ -114,7 +114,10 @@ class RemoteDecoderManagerChild final
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static void OpenForGPUProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+  static void OpenForUtilityProcess(
+      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
+  static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
   // The location for decoding, Rdd or Gpu process.

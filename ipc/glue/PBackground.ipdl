@@ -288,6 +288,9 @@ parent:
   async EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
+  async EnsureUtilityProcessAndCreateBridge()
+      returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
+
   async PWebSocketConnection(uint32_t aListenerId);
 
   async PLockManager(ContentPrincipalInfo aPrincipalInfo, nsID aClientId);

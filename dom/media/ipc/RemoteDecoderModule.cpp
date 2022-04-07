@@ -50,7 +50,9 @@ bool RemoteDecoderModule::Supports(
       RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Sandbox %s decoder %s requested type",
-           mLocation == RemoteDecodeIn::GpuProcess ? "GPU" : "RDD",
+           mLocation == RemoteDecodeIn::GpuProcess
+               ? "GPU"
+               : (mLocation == RemoteDecodeIn::RddProcess ? "RDD" : "Utility"),
            supports ? "supports" : "rejects"));
   return supports;
 }

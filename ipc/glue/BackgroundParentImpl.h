@@ -405,6 +405,9 @@ class BackgroundParentImpl : public PBackgroundParent,
   mozilla::ipc::IPCResult RecvEnsureRDDProcessAndCreateBridge(
       EnsureRDDProcessAndCreateBridgeResolver&& aResolver) override;
 
+  mozilla::ipc::IPCResult RecvEnsureUtilityProcessAndCreateBridge(
+      EnsureUtilityProcessAndCreateBridgeResolver&& aResolver) override;
+
   bool DeallocPEndpointForReportParent(
       PEndpointForReportParent* aActor) override;
 

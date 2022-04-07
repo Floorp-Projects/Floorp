@@ -284,10 +284,18 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   std::string userCacheDir;
 
   if (aInfo.type == MacSandboxType_Utility) {
+    profile = const_cast<char*>(SandboxPolicyUtility);
+
     switch (aInfo.utilityKind) {
       case ipc::SandboxingKind::GENERIC_UTILITY:
-        profile = const_cast<char*>(SandboxPolicyUtility);
+        // Nothing to do here specifically
         break;
+
+      case ipc::SandboxingKind::UTILITY_AUDIO_DECODING: {
+        profile.append(SandboxPolicyUtilityAudioDecoderAddend);
+        params.push_back("MAC_OS_VERSION");
+        params.push_back(combinedVersion.c_str());
+      } break;
 
       default:
         MOZ_ASSERT(false, "Invalid SandboxingKind");
