@@ -13,7 +13,7 @@ async function setupRegions(home, current) {
 }
 
 add_task(async function test_focus_promo_in_allowed_region() {
-  await ASRouter._resetMessageState();
+  ASRouter.resetMessageState();
 
   const allowedRegion = "ES"; // Spain
   setupRegions(allowedRegion, allowedRegion);
@@ -31,7 +31,7 @@ add_task(async function test_focus_promo_in_allowed_region() {
 });
 
 add_task(async function test_focus_promo_in_disallowed_region() {
-  await ASRouter._resetMessageState();
+  ASRouter.resetMessageState();
 
   const disallowedRegion = "CN"; // China
   setupRegions(disallowedRegion);
