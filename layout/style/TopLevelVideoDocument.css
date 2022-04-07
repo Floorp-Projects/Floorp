@@ -8,7 +8,7 @@
   are top level (e.g. not iframes).
 */
 
-body {
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
