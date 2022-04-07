@@ -122,15 +122,6 @@ void CSSMozDocumentRule::GetConditionText(nsACString& aConditionText) {
   Servo_MozDocumentRule_GetConditionText(mRawRule, &aConditionText);
 }
 
-void CSSMozDocumentRule::SetConditionText(const nsACString& aConditionText,
-                                          ErrorResult& aRv) {
-  if (IsReadOnly()) {
-    return;
-  }
-
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
 /* virtual */
 void CSSMozDocumentRule::GetCssText(nsACString& aCssText) const {
   Servo_MozDocumentRule_GetCssText(mRawRule, &aCssText);
