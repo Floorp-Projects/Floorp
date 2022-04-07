@@ -178,10 +178,6 @@ add_task(async function test_aboutwelcome_with_title_styles() {
       "font-weight": "276",
       "font-size": "36px",
       animation: "50s linear 0s infinite normal none running shine",
-    },
-    // Unexpected styles:
-    {
-      color: "rgb(21, 20, 26)",
     }
   );
 });
