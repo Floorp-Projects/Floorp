@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-//! A [`@layer`][layer] rule.
+//! A [`@layer`][layer] urle.
 //!
 //! [layer]: https://drafts.csswg.org/css-cascade-5/#layering
 
