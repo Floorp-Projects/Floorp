@@ -306,18 +306,24 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   }
 
   // Process each element of mPubKeyCredParams using the following steps, to
-  // produce a new sequence coseAlgos.
+  // produce a new sequence of coseAlgos.
   nsTArray<CoseAlg> coseAlgos;
-  for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
-    // If current.type does not contain a PublicKeyCredentialType
-    // supported by this implementation, then stop processing current and move
-    // on to the next element in mPubKeyCredParams.
-    if (aOptions.mPubKeyCredParams[a].mType !=
-        PublicKeyCredentialType::Public_key) {
-      continue;
-    }
+  // If pubKeyCredParams is empty, append ES256 and RS256
+  if (aOptions.mPubKeyCredParams.IsEmpty()) {
+    coseAlgos.AppendElement(static_cast<long>(CoseAlgorithmIdentifier::ES256));
+    coseAlgos.AppendElement(static_cast<long>(CoseAlgorithmIdentifier::RS256));
+  } else {
+    for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
+      // If current.type does not contain a PublicKeyCredentialType
+      // supported by this implementation, then stop processing current and move
+      // on to the next element in mPubKeyCredParams.
+      if (aOptions.mPubKeyCredParams[a].mType !=
+          PublicKeyCredentialType::Public_key) {
+        continue;
+      }
 
-    coseAlgos.AppendElement(aOptions.mPubKeyCredParams[a].mAlg);
+      coseAlgos.AppendElement(aOptions.mPubKeyCredParams[a].mAlg);
+    }
   }
 
   // If there are algorithms specified, but none are Public_key algorithms,
