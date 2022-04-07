@@ -12,14 +12,18 @@ import io.mockk.verify
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.components
@@ -28,6 +32,9 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TopSiteItemViewHolderTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var binding: TopSiteItemBinding
     private lateinit var interactor: TopSiteInteractor
@@ -126,21 +133,34 @@ class TopSiteItemViewHolderTest {
             createdAt = 3
         )
         val position = 0
+        assertFalse(TopSites.contileImpression.testHasValue())
+
+        var topSiteImpressionSubmitted = false
+        Pings.topsitesImpression.testBeforeNextSubmit {
+            assertTrue(TopSites.contileTileId.testHasValue())
+            assertEquals(3, TopSites.contileTileId.testGetValue())
+
+            assertTrue(TopSites.contileAdvertiser.testHasValue())
+            assertEquals("mozilla", TopSites.contileAdvertiser.testGetValue())
+
+            assertTrue(TopSites.contileReportingUrl.testHasValue())
+            assertEquals(topSite.impressionUrl, TopSites.contileReportingUrl.testGetValue())
+
+            topSiteImpressionSubmitted = true
+        }
 
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).submitTopSitesImpressionPing(topSite, position)
 
-        verify {
-            metrics.track(
-                Event.TopSiteContileImpression(
-                    position = position + 1,
-                    source = Event.TopSiteContileImpression.Source.NEWTAB
-                )
-            )
+        assertTrue(TopSites.contileImpression.testHasValue())
 
-            TopSites.contileTileId.set(3)
-            TopSites.contileAdvertiser.set("mozilla")
-            TopSites.contileReportingUrl.set(topSite.impressionUrl)
-            Pings.topsitesImpression.submit()
-        }
+        val event = TopSites.contileImpression.testGetValue()
+
+        assertEquals(1, event.size)
+        assertEquals("top_sites", event[0].category)
+        assertEquals("contile_impression", event[0].name)
+        assertEquals("1", event[0].extra!!["position"])
+        assertEquals("newtab", event[0].extra!!["source"])
+
+        assertTrue(topSiteImpressionSubmitted)
     }
 }

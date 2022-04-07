@@ -10,10 +10,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import mozilla.components.feature.top.sites.TopSite
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTopSitesPagerBinding
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
@@ -31,9 +30,9 @@ class TopSitePagerViewHolder(
     private val topSitesPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             if (currentPage != position) {
-                pageIndicator.context.components.analytics.metrics.track(
-                    Event.TopSiteSwipeCarousel(
-                        position
+                TopSites.swipeCarousel.record(
+                    TopSites.SwipeCarouselExtra(
+                        position.toString()
                     )
                 )
             }

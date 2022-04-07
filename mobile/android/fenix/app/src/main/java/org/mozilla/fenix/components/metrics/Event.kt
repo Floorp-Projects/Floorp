@@ -5,15 +5,12 @@
 package org.mozilla.fenix.components.metrics
 
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.SearchTerms
-import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.ext.name
 import java.util.Locale
 
 sealed class Event {
@@ -31,20 +28,6 @@ sealed class Event {
     object MediaStopState : Event()
     object MediaFullscreenState : Event()
     object MediaPictureInPictureState : Event()
-    object TopSiteOpenDefault : Event()
-    object TopSiteOpenGoogle : Event()
-    object TopSiteOpenBaidu : Event()
-    object TopSiteOpenFrecent : Event()
-    object TopSiteOpenPinned : Event()
-    object TopSiteOpenProvided : Event()
-    object TopSiteOpenInNewTab : Event()
-    object TopSiteOpenInPrivateTab : Event()
-    object TopSiteOpenContileInPrivateTab : Event()
-    object TopSiteRemoved : Event()
-    object TopSiteContileSettings : Event()
-    object TopSiteContilePrivacy : Event()
-    object GoogleTopSiteRemoved : Event()
-    object BaiduTopSiteRemoved : Event()
     object PocketTopSiteClicked : Event()
     object PocketTopSiteRemoved : Event()
     object PocketHomeRecsShown : Event()
@@ -152,24 +135,6 @@ sealed class Event {
     object CreditCardManagementCardTapped : Event()
 
     // Interaction events with extras
-
-    data class TopSiteSwipeCarousel(val page: Int) : Event() {
-        override val extras: Map<TopSites.swipeCarouselKeys, String>?
-            get() = hashMapOf(TopSites.swipeCarouselKeys.page to page.toString())
-    }
-
-    data class TopSiteLongPress(val topSite: TopSite) : Event() {
-        override val extras: Map<TopSites.longPressKeys, String>?
-            get() = hashMapOf(TopSites.longPressKeys.type to topSite.name())
-    }
-
-    data class TopSiteContileImpression(val position: Int, val source: Source) : Event() {
-        enum class Source { NEWTAB }
-    }
-
-    data class TopSiteContileClick(val position: Int, val source: Source) : Event() {
-        enum class Source { NEWTAB }
-    }
 
     data class AddonsOpenInToolbarMenu(val addonId: String) : Event() {
         override val extras: Map<Addons.openAddonInToolbarMenuKeys, String>?

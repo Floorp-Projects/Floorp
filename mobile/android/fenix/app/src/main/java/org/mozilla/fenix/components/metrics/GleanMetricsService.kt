@@ -33,7 +33,6 @@ import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tabs
-import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
@@ -125,76 +124,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.MediaPictureInPictureState -> EventWrapper<NoExtraKeys>(
             { MediaState.pictureInPicture.record(it) }
-        )
-        is Event.TopSiteOpenDefault -> EventWrapper<NoExtraKeys>(
-            { TopSites.openDefault.record(it) }
-        )
-        is Event.TopSiteOpenGoogle -> EventWrapper<NoExtraKeys>(
-            { TopSites.openGoogleSearchAttribution.record(it) }
-        )
-        is Event.TopSiteOpenBaidu -> EventWrapper<NoExtraKeys>(
-            { TopSites.openBaiduSearchAttribution.record(it) }
-        )
-        is Event.TopSiteOpenFrecent -> EventWrapper<NoExtraKeys>(
-            { TopSites.openFrecency.record(it) }
-        )
-        is Event.TopSiteOpenPinned -> EventWrapper<NoExtraKeys>(
-            { TopSites.openPinned.record(it) }
-        )
-        is Event.TopSiteOpenProvided -> EventWrapper<NoExtraKeys>(
-            { TopSites.openContileTopSite.record(it) }
-        )
-        is Event.TopSiteOpenInNewTab -> EventWrapper<NoExtraKeys>(
-            { TopSites.openInNewTab.record(it) }
-        )
-        is Event.TopSiteOpenInPrivateTab -> EventWrapper<NoExtraKeys>(
-            { TopSites.openInPrivateTab.record(it) }
-        )
-        is Event.TopSiteOpenContileInPrivateTab -> EventWrapper<NoExtraKeys>(
-            { TopSites.openContileInPrivateTab.record(it) }
-        )
-        is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
-            { TopSites.remove.record(it) }
-        )
-        is Event.TopSiteContileSettings -> EventWrapper<NoExtraKeys>(
-            { TopSites.contileSettings.record(it) }
-        )
-        is Event.TopSiteContilePrivacy -> EventWrapper<NoExtraKeys>(
-            { TopSites.contileSponsorsAndPrivacy.record(it) }
-        )
-        is Event.GoogleTopSiteRemoved -> EventWrapper<NoExtraKeys>(
-            { TopSites.googleTopSiteRemoved.record(it) }
-        )
-        is Event.BaiduTopSiteRemoved -> EventWrapper<NoExtraKeys>(
-            { TopSites.baiduTopSiteRemoved.record(it) }
-        )
-        is Event.TopSiteLongPress -> EventWrapper(
-            { TopSites.longPress.record(it) },
-            { TopSites.longPressKeys.valueOf(it) }
-        )
-        is Event.TopSiteSwipeCarousel -> EventWrapper(
-            { TopSites.swipeCarousel.record(it) },
-            { TopSites.swipeCarouselKeys.valueOf(it) }
-        )
-        is Event.TopSiteContileImpression -> EventWrapper<NoExtraKeys>(
-            {
-                TopSites.contileImpression.record(
-                    TopSites.ContileImpressionExtra(
-                        position = this.position,
-                        source = this.source.name.lowercase()
-                    )
-                )
-            }
-        )
-        is Event.TopSiteContileClick -> EventWrapper<NoExtraKeys>(
-            {
-                TopSites.contileClick.record(
-                    TopSites.ContileClickExtra(
-                        position = this.position,
-                        source = this.source.name.lowercase()
-                    )
-                )
-            }
         )
         is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
             { Pocket.pocketTopSiteClicked.record(it) }

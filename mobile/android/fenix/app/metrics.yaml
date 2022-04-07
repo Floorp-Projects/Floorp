@@ -4953,6 +4953,7 @@ top_sites:
       A user swiped to change the page of the top sites carousel
     extra_keys:
       page:
+        type: string
         description: |
           The page number the carousel is now on
     bugs:
@@ -4978,6 +4979,7 @@ top_sites:
       A user long pressed on a top site
     extra_keys:
       type:
+        type: string
         description: |
           The type of top site. Options are: "FRECENCY", "DEFAULT",
           "PINNED", or "PROVIDED"

@@ -315,13 +315,11 @@ class DefaultSessionControlController(
     }
 
     override fun handleOpenInPrivateTabClicked(topSite: TopSite) {
-        metrics.track(
-            if (topSite is TopSite.Provided) {
-                Event.TopSiteOpenContileInPrivateTab
-            } else {
-                Event.TopSiteOpenInPrivateTab
-            }
-        )
+        if (topSite is TopSite.Provided) {
+            TopSites.openContileInPrivateTab.record(NoExtras())
+        } else {
+            TopSites.openInPrivateTab.record(NoExtras())
+        }
         with(activity) {
             browsingModeManager.mode = BrowsingMode.Private
             openToBrowserAndLoad(
@@ -376,11 +374,11 @@ class DefaultSessionControlController(
     }
 
     override fun handleRemoveTopSiteClicked(topSite: TopSite) {
-        metrics.track(Event.TopSiteRemoved)
+        TopSites.remove.record(NoExtras())
         when (topSite.url) {
             SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteRemoved)
-            SupportUtils.GOOGLE_URL -> metrics.track(Event.GoogleTopSiteRemoved)
-            SupportUtils.BAIDU_URL -> metrics.track(Event.BaiduTopSiteRemoved)
+            SupportUtils.GOOGLE_URL -> TopSites.googleTopSiteRemoved.record(NoExtras())
+            SupportUtils.BAIDU_URL -> TopSites.baiduTopSiteRemoved.record(NoExtras())
         }
 
         viewLifecycleScope.launch(Dispatchers.IO) {
@@ -401,22 +399,20 @@ class DefaultSessionControlController(
     override fun handleSelectTopSite(topSite: TopSite, position: Int) {
         dismissSearchDialogIfDisplayed()
 
-        metrics.track(Event.TopSiteOpenInNewTab)
+        TopSites.openInNewTab.record(NoExtras())
 
-        metrics.track(
-            when (topSite) {
-                is TopSite.Default -> Event.TopSiteOpenDefault
-                is TopSite.Frecent -> Event.TopSiteOpenFrecent
-                is TopSite.Pinned -> Event.TopSiteOpenPinned
-                is TopSite.Provided -> Event.TopSiteOpenProvided.also {
-                    submitTopSitesImpressionPing(topSite, position)
-                }
+        when (topSite) {
+            is TopSite.Default -> TopSites.openDefault.record(NoExtras())
+            is TopSite.Frecent -> TopSites.openFrecency.record(NoExtras())
+            is TopSite.Pinned -> TopSites.openPinned.record(NoExtras())
+            is TopSite.Provided -> TopSites.openContileTopSite.record(NoExtras()).also {
+                submitTopSitesImpressionPing(topSite, position)
             }
-        )
+        }
 
         when (topSite.url) {
-            SupportUtils.GOOGLE_URL -> metrics.track(Event.TopSiteOpenGoogle)
-            SupportUtils.BAIDU_URL -> metrics.track(Event.TopSiteOpenBaidu)
+            SupportUtils.GOOGLE_URL -> TopSites.openGoogleSearchAttribution.record(NoExtras())
+            SupportUtils.BAIDU_URL -> TopSites.openBaiduSearchAttribution.record(NoExtras())
             SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteClicked)
         }
 
@@ -446,10 +442,10 @@ class DefaultSessionControlController(
 
     @VisibleForTesting
     internal fun submitTopSitesImpressionPing(topSite: TopSite.Provided, position: Int) {
-        metrics.track(
-            Event.TopSiteContileClick(
+        TopSites.contileClick.record(
+            TopSites.ContileClickExtra(
                 position = position + 1,
-                source = Event.TopSiteContileClick.Source.NEWTAB
+                source = "newtab"
             )
         )
 
@@ -460,7 +456,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleTopSiteSettingsClicked() {
-        metrics.track(Event.TopSiteContileSettings)
+        TopSites.contileSettings.record(NoExtras())
         navController.nav(
             R.id.homeFragment,
             HomeFragmentDirections.actionGlobalHomeSettingsFragment()
@@ -468,7 +464,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleSponsorPrivacyClicked() {
-        metrics.track(Event.TopSiteContilePrivacy)
+        TopSites.contileSponsorsAndPrivacy.record(NoExtras())
         activity.openToBrowserAndLoad(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
             newTab = true,

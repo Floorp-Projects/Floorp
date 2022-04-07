@@ -21,11 +21,11 @@ import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.bitmapForUrl
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
+import org.mozilla.fenix.ext.name
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.view.ViewHolder
@@ -41,7 +41,7 @@ class TopSiteItemViewHolder(
     init {
         binding.topSiteItem.setOnLongClickListener {
             interactor.onTopSiteMenuOpened()
-            it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite))
+            TopSites.longPress.record(TopSites.LongPressExtra(topSite.name()))
 
             val topSiteMenu = TopSiteItemMenu(
                 context = view.context,
@@ -127,10 +127,10 @@ class TopSiteItemViewHolder(
 
     @VisibleForTesting
     internal fun submitTopSitesImpressionPing(topSite: TopSite.Provided, position: Int) {
-        itemView.context.components.analytics.metrics.track(
-            Event.TopSiteContileImpression(
+        TopSites.contileImpression.record(
+            TopSites.ContileImpressionExtra(
                 position = position + 1,
-                source = Event.TopSiteContileImpression.Source.NEWTAB
+                source = "newtab"
             )
         )
 
