@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm",
@@ -19,14 +21,32 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
+  ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.jsm",
+  WindowGlobalMessageHandler:
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.WEBDRIVER_BIDI)
 );
+
+/**
+ * @typedef {string} WaitCondition
+ **/
+
+/**
+ * Wait conditions supported by WebDriver BiDi for navigation.
+ *
+ * @enum {WaitCondition}
+ */
+const WaitCondition = {
+  None: "none",
+  Interactive: "interactive",
+  Complete: "complete",
+};
 
 class BrowsingContextModule extends Module {
   #contextListener;
@@ -170,6 +190,174 @@ class BrowsingContextModule extends Module {
     });
 
     return { contexts: contextsInfo };
+  }
+
+  /**
+   * An object that holds the WebDriver Bidi navigation information.
+   *
+   * @typedef BrowsingContextNavigateResult
+   *
+   * @property {String} navigation
+   *     Unique id for this navigation.
+   * @property {String} url
+   *     The requested or reached URL.
+   */
+
+  /**
+   * Navigate the given context to the provided url, with the provided wait condition.
+   *
+   * @param {Object=} options
+   * @param {string} context
+   *     Id of the browsing context to navigate.
+   * @param {string} url
+   *     Url for the navigation.
+   * @param {WaitCondition=} wait
+   *     Wait condition for the navigation, one of "none", "interactive", "complete".
+   *
+   * @returns {BrowsingContextNavigateResult}
+   *     Navigation result.
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context for contextId cannot be found.
+   */
+  async navigate(options = {}) {
+    const { context: contextId, url, wait = WaitCondition.None } = options;
+
+    assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    assert.string(url, `Expected "url" to be string, got ${url}`);
+
+    const waitConditions = Object.values(WaitCondition);
+    if (!waitConditions.includes(wait)) {
+      throw new error.InvalidArgumentError(
+        `Expected "wait" to be one of ${waitConditions}, got ${wait}`
+      );
+    }
+
+    const context = this.#getBrowsingContext(contextId);
+
+    // webProgress will be stable even if the context navigates, retrieve it
+    // immediately before doing any asynchronous call.
+    const webProgress = context.webProgress;
+
+    const base = await this.messageHandler.handleCommand({
+      moduleName: "browsingContext",
+      commandName: "_getBaseURL",
+      destination: {
+        type: WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+    });
+
+    let targetURI;
+    try {
+      const baseURI = Services.io.newURI(base);
+      targetURI = Services.io.newURI(url, null, baseURI);
+    } catch (e) {
+      throw new error.InvalidArgumentError(
+        `Expected "url" to be a valid URL (${e.message})`
+      );
+    }
+
+    return this.#awaitNavigation(webProgress, targetURI, {
+      wait,
+    });
+  }
+
+  /**
+   * Start and await a navigation on the provided BrowsingContext. Returns a
+   * promise which resolves when the navigation is done according to the provided
+   * navigation strategy.
+   *
+   * @param {WebProgress} webProgress
+   *     The WebProgress instance to observe for this navigation.
+   * @param {nsIURI} targetURI
+   *     The URI to navigate to.
+   * @param {Object} options
+   * @param {WaitCondition} options.wait
+   *     The WaitCondition to use to wait for the navigation.
+   */
+  async #awaitNavigation(webProgress, targetURI, options) {
+    const { wait } = options;
+
+    const context = webProgress.browsingContext;
+    const browserId = context.browserId;
+
+    const resolveWhenStarted = wait === WaitCondition.None;
+    const listener = new ProgressListener(webProgress, {
+      resolveWhenStarted,
+      // In case the webprogress is already navigating, always wait for an
+      // explicit start flag.
+      waitForExplicitStart: true,
+    });
+
+    const onDOMContentLoadedEvent = (evtName, wrappedEvt) => {
+      if (webProgress.browsingContext.id !== wrappedEvt.contextId) {
+        // Ignore load events for unrelated browsing contexts.
+        return;
+      }
+
+      if (wrappedEvt.readyState === "interactive") {
+        listener.stop();
+      }
+    };
+
+    const contextDescriptor = {
+      type: ContextDescriptorType.TopBrowsingContext,
+      id: browserId,
+    };
+
+    // Monitor DOMContentLoaded for the Interactive wait condition, to resolve
+    // as soon as the document becomes interactive.
+    if (wait === WaitCondition.Interactive) {
+      await this.messageHandler.eventsDispatcher.on(
+        "browsingContext.DOMContentLoaded",
+        contextDescriptor,
+        onDOMContentLoadedEvent
+      );
+    }
+
+    const navigated = listener.start();
+    navigated.finally(async () => {
+      if (listener.isStarted) {
+        listener.stop();
+      }
+
+      if (wait === WaitCondition.Interactive) {
+        await this.messageHandler.eventsDispatcher.off(
+          "browsingContext.DOMContentLoaded",
+          contextDescriptor,
+          onDOMContentLoadedEvent
+        );
+      }
+    });
+
+    context.loadURI(targetURI.spec, {
+      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      hasValidUserGestureActivation: true,
+    });
+    await navigated;
+
+    let url;
+    if (wait === WaitCondition.None) {
+      // If wait condition is None, the navigation resolved before the current
+      // context has navigated.
+      url = listener.targetURI.spec;
+    } else {
+      url = listener.currentURI.spec;
+    }
+
+    return {
+      // TODO: The navigation id should be a real id mapped to the navigation.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
+      navigation: null,
+      url,
+    };
   }
 
   /**
