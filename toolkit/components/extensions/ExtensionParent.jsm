@@ -1875,6 +1875,7 @@ StartupCache = {
     "other",
     "permissions",
     "schemas",
+    "menus",
   ]),
 
   _ensureDirectoryPromise: null,
@@ -1956,6 +1957,7 @@ StartupCache = {
       this.locales.delete(id),
       this.manifests.delete(id),
       this.permissions.delete(id),
+      this.menus.delete(id),
     ]).catch(e => {
       // Ignore the error. It happens when we try to flush the add-on
       // data after the AddonManager has flushed the entire startup cache.
