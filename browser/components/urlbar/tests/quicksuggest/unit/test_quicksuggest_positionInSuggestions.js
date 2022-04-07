@@ -11,8 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
   UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.jsm",
 });
