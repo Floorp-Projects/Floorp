@@ -959,7 +959,7 @@ set_define("MOZ_TELEMETRY_ON_BY_DEFAULT", True, when=telemetry_on_by_default)
 
 # gpsd support
 # ==============================================================
-option("--enable-gpsd", env="MOZ_GPSD", help="Enable gpsd support")
+system_lib_option("--enable-gpsd", env="MOZ_GPSD", help="Enable gpsd support")
 
 
 @depends("--enable-gpsd")
