@@ -2966,7 +2966,7 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
             bitmap = java::sdk::Bitmap::CreateBitmap(
                 destDataSurface->GetSize().width,
                 destDataSurface->GetSize().height,
-                java::sdk::Config::ARGB_8888());
+                java::sdk::Bitmap::Config::ARGB_8888());
             bitmap->CopyPixelsFromBuffer(pixels);
           }
           compositor->SetPointerIcon(type, bitmap, hotspotX, hotspotY);

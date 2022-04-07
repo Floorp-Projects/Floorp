@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
-);
-
 const COM_TEST_PAGE = "https://example.com/document-builder.sjs?html=COM";
 const FRAME_TEST_PAGE = createTestMarkupWithFrames();
 
@@ -80,7 +76,7 @@ function sendBroadcastForTopBrowsingContext(
     {},
     {
       type: ContextDescriptorType.TopBrowsingContext,
-      id: TabManager.getBrowserIdForBrowsingContext(topBrowsingContext),
+      id: topBrowsingContext.browserId,
     },
     rootMessageHandler
   );

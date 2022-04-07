@@ -139,10 +139,9 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
 
 void FunctionBox::initFromLazyFunction(const ScriptStencilExtra& extra,
                                        ScopeContext& scopeContext,
-                                       FunctionFlags flags,
                                        FunctionSyntaxKind kind) {
   initFromScriptStencilExtra(extra);
-  initStandaloneOrLazy(scopeContext, flags, kind);
+  initStandaloneOrLazy(scopeContext, kind);
 }
 
 void FunctionBox::initFromScriptStencilExtra(const ScriptStencilExtra& extra) {
@@ -151,7 +150,6 @@ void FunctionBox::initFromScriptStencilExtra(const ScriptStencilExtra& extra) {
 }
 
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
-                                                FunctionFlags flags,
                                                 FunctionSyntaxKind kind) {
   SharedContext* sc = enclosing->sc();
 
@@ -160,7 +158,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   setHasModuleGoal(sc->hasModuleGoal());
 
   // Arrow functions don't have their own `this` binding.
-  if (flags.isArrow()) {
+  if (flags_.isArrow()) {
     allowNewTarget_ = sc->allowNewTarget();
     allowSuperProperty_ = sc->allowSuperProperty();
     allowSuperCall_ = sc->allowSuperCall();
@@ -181,7 +179,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     }
 
     allowNewTarget_ = true;
-    allowSuperProperty_ = flags.allowSuperProperty();
+    allowSuperProperty_ = flags_.allowSuperProperty();
 
     if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
       setDerivedClassConstructor();
@@ -224,16 +222,15 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 }
 
 void FunctionBox::initStandalone(ScopeContext& scopeContext,
-                                 FunctionFlags flags, FunctionSyntaxKind kind) {
-  initStandaloneOrLazy(scopeContext, flags, kind);
+                                 FunctionSyntaxKind kind) {
+  initStandaloneOrLazy(scopeContext, kind);
 
   isStandalone = true;
 }
 
 void FunctionBox::initStandaloneOrLazy(ScopeContext& scopeContext,
-                                       FunctionFlags flags,
                                        FunctionSyntaxKind kind) {
-  if (flags.isArrow()) {
+  if (flags_.isArrow()) {
     allowNewTarget_ = scopeContext.allowNewTarget;
     allowSuperProperty_ = scopeContext.allowSuperProperty;
     allowSuperCall_ = scopeContext.allowSuperCall;
@@ -241,7 +238,7 @@ void FunctionBox::initStandaloneOrLazy(ScopeContext& scopeContext,
     thisBinding_ = scopeContext.thisBinding;
   } else {
     allowNewTarget_ = true;
-    allowSuperProperty_ = flags.allowSuperProperty();
+    allowSuperProperty_ = flags_.allowSuperProperty();
 
     if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
       setDerivedClassConstructor();

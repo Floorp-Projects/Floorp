@@ -133,17 +133,17 @@ void MediaDrmJavaCallbacksSupport::OnSessionError(
 // dom::MediaKeyStatus::Released and dom::MediaKeyStatus::Output_downscaled.
 // Should keep tracking for this if it will be changed in the future.
 static dom::MediaKeyStatus MediaDrmKeyStatusToMediaKeyStatus(int aStatusCode) {
-  using mozilla::java::sdk::KeyStatus;
+  using mozilla::java::sdk::MediaDrm;
   switch (aStatusCode) {
-    case KeyStatus::STATUS_USABLE:
+    case MediaDrm::KeyStatus::STATUS_USABLE:
       return dom::MediaKeyStatus::Usable;
-    case KeyStatus::STATUS_EXPIRED:
+    case MediaDrm::KeyStatus::STATUS_EXPIRED:
       return dom::MediaKeyStatus::Expired;
-    case KeyStatus::STATUS_OUTPUT_NOT_ALLOWED:
+    case MediaDrm::KeyStatus::STATUS_OUTPUT_NOT_ALLOWED:
       return dom::MediaKeyStatus::Output_restricted;
-    case KeyStatus::STATUS_INTERNAL_ERROR:
+    case MediaDrm::KeyStatus::STATUS_INTERNAL_ERROR:
       return dom::MediaKeyStatus::Internal_error;
-    case KeyStatus::STATUS_PENDING:
+    case MediaDrm::KeyStatus::STATUS_PENDING:
       return dom::MediaKeyStatus::Status_pending;
     default:
       return dom::MediaKeyStatus::Internal_error;

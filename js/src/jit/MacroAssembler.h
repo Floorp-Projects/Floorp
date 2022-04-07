@@ -1645,6 +1645,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadFunctionName(Register func, Register output, ImmGCPtr emptyString,
                         Label* slowPath);
 
+  void assertFunctionIsExtended(Register func);
+
   inline void branchFunctionKind(Condition cond,
                                  FunctionFlags::FunctionKind kind, Register fun,
                                  Register scratch, Label* label);

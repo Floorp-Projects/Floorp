@@ -2693,17 +2693,45 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
   }
 
-  // XXX relax limitation to Windows 8.1
-  if (StaticPrefs::media_wmf_no_copy_nv12_textures() && IsWin10OrLater() &&
-      hasHardware) {
+  bool useHwVideoNoCopy = false;
+  if (StaticPrefs::media_wmf_no_copy_nv12_textures_AtStartup()) {
+    // XXX relax limitation to Windows 8.1
+    if (IsWin10OrLater() && hasHardware) {
+      useHwVideoNoCopy = true;
+    }
+
+    if (useHwVideoNoCopy &&
+        !StaticPrefs::
+            media_wmf_no_copy_nv12_textures_force_enabled_AtStartup()) {
+      nsCString failureId;
+      int32_t status;
+      const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      if (NS_FAILED(gfxInfo->GetFeatureStatus(
+              nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_NO_COPY, failureId,
+              &status))) {
+        FeatureState& feature =
+            gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
+        feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
+                                 "gfxInfo is broken",
+                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
+        useHwVideoNoCopy = false;
+      } else {
+        if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
+          FeatureState& feature =
+              gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
+          feature.DisableByDefault(FeatureStatus::Blocked,
+                                   "Blocklisted by gfxInfo", failureId);
+          useHwVideoNoCopy = false;
+        }
+      }
+    }
+  }
+
+  if (useHwVideoNoCopy) {
     FeatureState& feature =
         gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_NO_COPY);
     feature.EnableByDefault();
     gfxVars::SetHwDecodedVideoNoCopy(true);
-  } else {
-    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
-    feature.DisableByDefault(FeatureStatus::Disabled, "Disabled by default",
-                             "FEATURE_NO_COPY_DISABLED"_ns);
   }
 
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {

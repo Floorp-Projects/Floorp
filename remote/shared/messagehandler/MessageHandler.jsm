@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
+  EventsDispatcher:
+    "chrome://remote/content/shared/messagehandler/EventsDispatcher.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   ModuleCache: "chrome://remote/content/shared/messagehandler/ModuleCache.jsm",
 });
@@ -92,10 +94,15 @@ class MessageHandler extends EventEmitter {
     this._sessionId = sessionId;
     this._context = context;
     this._contextId = this.constructor.getIdFromContext(context);
+    this._eventsDispatcher = new EventsDispatcher(this);
   }
 
   get contextId() {
     return this._contextId;
+  }
+
+  get eventsDispatcher() {
+    return this._eventsDispatcher;
   }
 
   get name() {
@@ -110,6 +117,7 @@ class MessageHandler extends EventEmitter {
     logger.trace(
       `MessageHandler ${this.constructor.type} for session ${this.sessionId} is being destroyed`
     );
+    this._eventsDispatcher.destroy();
     this._moduleCache.destroy();
 
     // At least the MessageHandlerRegistry will be expecting this event in order
@@ -141,6 +149,12 @@ class MessageHandler extends EventEmitter {
       isProtocolEvent,
       sessionId: this.sessionId,
     });
+
+    // Internal events should also be emitted using their original event name
+    // for ease of use.
+    if (!isProtocolEvent) {
+      this.emit(name, data);
+    }
   }
 
   /**
