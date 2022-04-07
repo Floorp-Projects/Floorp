@@ -55,7 +55,6 @@ def load_commands():
                     "parse_known": props.get("parse_known", False),
                     "help": props.get("help"),
                     "virtualenv": props.get("virtualenv", True),
-                    "install": props.get("install", []),
                     "requirements": [os.path.join(base_dir, item)
                                      for item in props.get("requirements", [])]
                 }
@@ -63,7 +62,7 @@ def load_commands():
                 rv[command]["conditional_requirements"] = load_conditional_requirements(
                     props, base_dir)
 
-                if rv[command]["install"] or rv[command]["requirements"] or rv[command]["conditional_requirements"]:
+                if rv[command]["requirements"] or rv[command]["conditional_requirements"]:
                     assert rv[command]["virtualenv"]
     return rv
 
@@ -149,8 +148,6 @@ def setup_virtualenv(path, skip_venv_setup, props):
     venv = virtualenv.Virtualenv(path, should_skip_setup)
     if not should_skip_setup:
         venv.start()
-        for name in props["install"]:
-            venv.install(name)
         for path in props["requirements"]:
             venv.install_requirements(path)
     return venv
