@@ -775,6 +775,21 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsSpecificObject(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadDynamicSlot(ValOperandId resultId,
+                                                ObjOperandId objId,
+                                                uint32_t slotOffset) {
+  size_t slotIndex = int32StubField(slotOffset);
+  MDefinition* obj = getOperand(objId);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* load = MLoadDynamicSlot::New(alloc(), slots, slotIndex);
+  add(load);
+
+  return defineOperand(resultId, load);
+}
+
 bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsNotObject(
     ObjOperandId objId, uint32_t slotOffset) {
   size_t slotIndex = int32StubField(slotOffset);

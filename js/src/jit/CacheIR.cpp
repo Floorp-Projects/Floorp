@@ -4783,8 +4783,6 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
     return AttachDecision::NoAction;
   }
 
-  JSObject* prototypeObject = &fun->getSlot(slot).toObject();
-
   // Abstract Objects
   ValOperandId lhs(writer.setInputOperandId(0));
   ValOperandId rhs(writer.setInputOperandId(1));
@@ -4801,11 +4799,10 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
     TestMatchingHolder(writer, hasInstanceHolder, holderId);
   }
 
-  // Load prototypeObject into the cache -- consumed twice in the IC
-  ObjOperandId protoId = writer.loadObject(prototypeObject);
-  // Ensure that rhs[slot] == prototypeObject.
-  writer.guardDynamicSlotIsSpecificObject(rhsId, protoId,
-                                          slot - fun->numFixedSlots());
+  // Load the .prototype value and ensure it's an object.
+  ValOperandId protoValId =
+      writer.loadDynamicSlot(rhsId, slot - fun->numFixedSlots());
+  ObjOperandId protoId = writer.guardToObject(protoValId);
 
   // Needn't guard LHS is object, because the actual stub can handle that
   // and correctly return false.
