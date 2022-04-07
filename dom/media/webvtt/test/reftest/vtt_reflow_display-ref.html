@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="stylesheet" href="vtt_reflow_display.css">
+<body>
+<div class="video-player">
+  <div class="video-layer">
+    <video id="v1" autoplay controls></video>
+  </div>
+</div>
+<script>
+/**
+ * Simply play and pause a video without any cues.
+ */
+async function testDisplayCueDuringFrequentReflowRef() {
+  const video = document.getElementById("v1");
+  video.src = "white.webm";
+  video.onplay = _ => {
+    video.onplay = null;
+    video.pause();
+    document.documentElement.removeAttribute('class');
+  }
+};
+
+window.addEventListener("MozReftestInvalidate",
+                        testDisplayCueDuringFrequentReflowRef);
+</script>
+</body>
+</html>
