@@ -282,6 +282,9 @@ const PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
 const SUB_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
   "http://abc.example.com"
 );
+const THIRDPARTY_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
+  "http://fake-example.com"
+);
 const PRINCIPAL_ORG = ssm.createContentPrincipalFromOrigin(
   "http://example.org"
 );
@@ -464,6 +467,18 @@ const TESTS = [
     expectTelemetry: {
       step: "completed",
       addon_id: "sitepermission@example.com",
+      install_origins: "1",
+    },
+  },
+  {
+    name: "Install sitepermission from thirdparty domain should fail",
+    xpiUrl: "http://example.com/addons/sitepermission.xpi",
+    installPrincipal: THIRDPARTY_PRINCIPAL_COM,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "sitepermission@example.com",
+      error: "ERROR_INVALID_DOMAIN",
       install_origins: "1",
     },
   },
