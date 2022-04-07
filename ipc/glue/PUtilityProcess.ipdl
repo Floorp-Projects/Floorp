@@ -7,6 +7,7 @@ include MemoryReportTypes;
 include PrefsTypes;
 
 include protocol PProfiler;
+include protocol PUtilityAudioDecoder;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -22,7 +23,7 @@ namespace ipc {
 
 // This protocol allows the UI process to talk to the Utility process. There is
 // one instance of this protocol, with the UtilityProcessParent living on the main thread
-// of the Utility process and the UtilityProcessChild living on the main thread of the UI
+// of the main process and the UtilityProcessChild living on the main thread of the Utility
 // process.
 [NeedsOtherPid] protocol PUtilityProcess
 {
@@ -60,6 +61,8 @@ child:
   // Asks the Utility process to trigger test-only instrumentation.
   // The unused returned value is to have a promise we can await.
   async TestTriggerMetrics() returns (bool unused);
+
+  async StartUtilityAudioDecoderService(Endpoint<PUtilityAudioDecoderParent> aEndpoint);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);

@@ -198,6 +198,7 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   UniquePtr<SandboxBroker::Policy> policy;
   switch (mSandbox) {
     case SandboxingKind::GENERIC_UTILITY:
+    case SandboxingKind::UTILITY_AUDIO_DECODING:  // TODO: NEW POLICY?
       policy = SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(
           GetActor()->OtherPid());
       break;

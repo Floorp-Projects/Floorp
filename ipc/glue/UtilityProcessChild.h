@@ -7,8 +7,11 @@
 #define _include_ipc_glue_UtilityProcessChild_h_
 #include "mozilla/ipc/PUtilityProcessChild.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
+#include "mozilla/ipc/UtilityAudioDecoderParent.h"
 #include "mozilla/UniquePtr.h"
 #include "ChildProfilerController.h"
+
+#include "mozilla/PRemoteDecoderManagerParent.h"
 
 namespace mozilla::ipc {
 
@@ -33,6 +36,10 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
+  mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
+      const bool& aAllowHardwareDecoding);
+
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
 
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
@@ -45,6 +52,9 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 
   mozilla::ipc::IPCResult RecvTestTriggerMetrics(
       TestTriggerMetricsResolver&& aResolve);
+
+  mozilla::ipc::IPCResult RecvStartUtilityAudioDecoderService(
+      Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -59,6 +69,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 
  private:
   RefPtr<ChildProfilerController> mProfilerController;
+  RefPtr<UtilityAudioDecoderParent> mUtilityAudioDecoderInstance{};
 };
 
 }  // namespace mozilla::ipc

@@ -11,6 +11,8 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"  // for LaunchUtilityProcess
 #include "mozilla/ipc/UtilityProcessParent.h"
+#include "mozilla/ipc/UtilityAudioDecoderChild.h"
+#include "mozilla/ipc/UtilityAudioDecoderParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
@@ -203,6 +205,83 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
       });
 
   return p->mLaunchPromise;
+}
+
+RefPtr<UtilityProcessManager::AudioDecodingPromise>
+UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
+  RefPtr<UtilityProcessManager> self = this;
+  return LaunchProcess(SandboxingKind::UTILITY_AUDIO_DECODING)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self, aOtherProcess]() {
+            RefPtr<UtilityProcessParent> utilityParent =
+                self->GetProcessParent(SandboxingKind::UTILITY_AUDIO_DECODING);
+
+            RefPtr<UtilityAudioDecoderChild> uadc =
+                UtilityAudioDecoderChild::GetSingleton();
+            if (!uadc) {
+              MOZ_ASSERT(false, "UtilityAudioDecoderChild singleton failure");
+              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                           __func__);
+            }
+
+            if (!uadc->CanSend()) {
+              NS_WARNING(
+                  "UtilityProcessManager::StartAudioDecoding: "
+                  "!uadc->CanSend()");
+
+              Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
+              Endpoint<PUtilityAudioDecoderParent> utilityAudioDecoderParentEnd;
+              nsresult rv = PUtilityAudioDecoder::CreateEndpoints(
+                  utilityParent->OtherPid(), base::GetCurrentProcId(),
+                  &utilityAudioDecoderParentEnd, &utilityAudioDecoderChildEnd);
+
+              if (NS_FAILED(rv)) {
+                MOZ_ASSERT(false, "PUtilityAudioDecoder endpoints failure");
+                return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                             __func__);
+              }
+
+              if (!utilityParent->SendStartUtilityAudioDecoderService(
+                      std::move(utilityAudioDecoderParentEnd))) {
+                MOZ_ASSERT(false, "StartUtilityAudioDecoder service failure");
+                return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                             __func__);
+              }
+
+              uadc->Bind(std::move(utilityAudioDecoderChildEnd));
+            }
+
+            MOZ_DIAGNOSTIC_ASSERT(uadc->CanSend(),
+                                  "IPC established for UtilityAudioDecoder");
+
+            Endpoint<PRemoteDecoderManagerChild> childPipe;
+            Endpoint<PRemoteDecoderManagerParent> parentPipe;
+
+            nsresult rv = PRemoteDecoderManager::CreateEndpoints(
+                utilityParent->OtherPid(), aOtherProcess, &parentPipe,
+                &childPipe);
+            if (NS_FAILED(rv)) {
+              MOZ_ASSERT(false, "Could not create content remote decoder");
+              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                           __func__);
+            }
+
+            if (!uadc->SendNewContentRemoteDecoderManager(
+                    std::move(parentPipe))) {
+              MOZ_ASSERT(false, "SendNewContentRemoteDecoderManager failure");
+              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                           __func__);
+            }
+
+            return AudioDecodingPromise::CreateAndResolve(std::move(childPipe),
+                                                          __func__);
+          },
+          [](nsresult aError) {
+            MOZ_ASSERT_UNREACHABLE(
+                "PUtilityAudioDecoder: failure when starting actor");
+            return AudioDecodingPromise::CreateAndReject(aError, __func__);
+          });
 }
 
 bool UtilityProcessManager::IsProcessLaunching(SandboxingKind aSandbox) {

@@ -11,6 +11,8 @@
 #include "nsIObserver.h"
 #include "nsTArray.h"
 
+#include "mozilla/PRemoteDecoderManagerChild.h"
+
 namespace mozilla {
 
 class MemoryReportingProcess;
@@ -26,6 +28,9 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   friend class UtilityProcessParent;
 
  public:
+  using AudioDecodingPromise =
+      MozPromise<Endpoint<PRemoteDecoderManagerChild>, nsresult, true>;
+
   static void Initialize();
   static void Shutdown();
 
@@ -35,6 +40,9 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   // Launch a new Utility process asynchronously
   RefPtr<GenericNonExclusivePromise> LaunchProcess(SandboxingKind aSandbox);
+
+  RefPtr<AudioDecodingPromise> StartAudioDecoding(
+      base::ProcessId aOtherProcess);
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 

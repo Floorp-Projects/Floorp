@@ -201,6 +201,18 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTriggerMetrics(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+UtilityProcessChild::RecvStartUtilityAudioDecoderService(
+    Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
+  mUtilityAudioDecoderInstance = new UtilityAudioDecoderParent();
+  if (!mUtilityAudioDecoderInstance) {
+    return IPC_FAIL(this, "Failing to create UtilityAudioDecoderParent");
+  }
+
+  mUtilityAudioDecoderInstance->Start(std::move(aEndpoint));
+  return IPC_OK();
+}
+
 void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down Utility process early due to a crash!");

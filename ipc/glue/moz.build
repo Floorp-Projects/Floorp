@@ -66,6 +66,8 @@ EXPORTS.mozilla.ipc += [
     "TaskFactory.h",
     "TransportSecurityInfoUtils.h",
     "URIUtils.h",
+    "UtilityAudioDecoderChild.h",
+    "UtilityAudioDecoderParent.h",
     "UtilityProcessChild.h",
     "UtilityProcessHost.h",
     "UtilityProcessImpl.h",
@@ -190,6 +192,8 @@ UNIFIED_SOURCES += [
     "StringUtil.cpp",
     "TransportSecurityInfoUtils.cpp",
     "URIUtils.cpp",
+    "UtilityAudioDecoderChild.cpp",
+    "UtilityAudioDecoderParent.cpp",
     "UtilityProcessChild.cpp",
     "UtilityProcessHost.cpp",
     "UtilityProcessImpl.cpp",
@@ -242,6 +246,7 @@ IPDL_SOURCES = [
     "PIdleScheduler.ipdl",
     "PParentToChildStream.ipdl",
     "ProtocolTypes.ipdlh",
+    "PUtilityAudioDecoder.ipdl",
     "URIParams.ipdlh",
 ]
 
