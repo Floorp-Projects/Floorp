@@ -349,7 +349,9 @@ def test_add_test_manifest(
             for test in mock_runner.tests:
                 assert test["filepath"].endswith(test["expected"] + ".py")
         else:
-            pytest.raises(IOError, "mock_runner.add_test(manifest_with_tests.filepath)")
+            with pytest.raises(IOError):
+                mock_runner.add_test(manifest_with_tests.filepath)
+
     assert manifest_with_tests.manifest_class().read.called
     assert manifest_with_tests.manifest_class().active_tests.called
 
