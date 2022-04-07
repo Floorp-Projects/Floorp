@@ -73,14 +73,24 @@ for (let [useGrouping, expected] of [
   [true, "always"],
 
   ["min2", "min2"],
+
+  // Unsupported values fallback to "auto"
+  ["true", "auto"],
+  ["false", "auto"],
+  ["none", "auto"],
+  ["yes", "auto"],
+  ["no", "auto"],
+  [{}, "auto"],
+  [123, "auto"],
+  [123n, "auto"],
 ]) {
   let nf = new Intl.NumberFormat("en", {useGrouping});
   assertEq(nf.resolvedOptions().useGrouping , expected);
 }
 
-// Invalid values.
-for (let useGrouping of ["true", "false", "none", "yes", "no"]){
-  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", {useGrouping}), RangeError);
+// Throws a TypeError if ToString fails.
+for (let useGrouping of [Object.create(null), Symbol()]) {
+  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", {useGrouping}), TypeError);
 }
 
 if (typeof reportCompare === "function")
