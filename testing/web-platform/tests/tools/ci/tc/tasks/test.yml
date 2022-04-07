@@ -104,6 +104,8 @@ components:
 
   browser-chrome: {}
 
+  browser-chromium: {}
+
   browser-servo: {}
 
   tox-python3_6:
@@ -167,7 +169,7 @@ tasks:
                 - trigger-push
             - vars:
                 # Chromium ToT
-                browser: chrome
+                browser: chromium
                 channel: nightly
               use:
                 - trigger-daily
@@ -255,7 +257,7 @@ tasks:
                 - trigger-push
             - vars:
                 # Chromium ToT
-                browser: chrome
+                browser: chromium
                 channel: nightly
               use:
                 - trigger-daily
