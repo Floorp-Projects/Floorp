@@ -4,8 +4,14 @@ use crate::vk::enums::*;
 pub type GeometryFlagsNV = GeometryFlagsKHR;
 pub type GeometryInstanceFlagsNV = GeometryInstanceFlagsKHR;
 pub type BuildAccelerationStructureFlagsNV = BuildAccelerationStructureFlagsKHR;
+pub type PrivateDataSlotCreateFlagsEXT = PrivateDataSlotCreateFlags;
 pub type DescriptorUpdateTemplateCreateFlagsKHR = DescriptorUpdateTemplateCreateFlags;
+pub type PipelineCreationFeedbackFlagsEXT = PipelineCreationFeedbackFlags;
 pub type SemaphoreWaitFlagsKHR = SemaphoreWaitFlags;
+pub type AccessFlags2KHR = AccessFlags2;
+pub type PipelineStageFlags2KHR = PipelineStageFlags2;
+pub type FormatFeatureFlags2KHR = FormatFeatureFlags2;
+pub type RenderingFlagsKHR = RenderingFlags;
 pub type PeerMemoryFeatureFlagsKHR = PeerMemoryFeatureFlags;
 pub type MemoryAllocateFlagsKHR = MemoryAllocateFlags;
 pub type CommandPoolTrimFlagsKHR = CommandPoolTrimFlags;
@@ -19,10 +25,14 @@ pub type ExternalFenceFeatureFlagsKHR = ExternalFenceFeatureFlags;
 pub type FenceImportFlagsKHR = FenceImportFlags;
 pub type DescriptorBindingFlagsEXT = DescriptorBindingFlags;
 pub type ResolveModeFlagsKHR = ResolveModeFlags;
+pub type ToolPurposeFlagsEXT = ToolPurposeFlags;
+pub type SubmitFlagsKHR = SubmitFlags;
 pub type DescriptorUpdateTemplateKHR = DescriptorUpdateTemplate;
 pub type SamplerYcbcrConversionKHR = SamplerYcbcrConversion;
+pub type PrivateDataSlotEXT = PrivateDataSlot;
 pub type DescriptorUpdateTemplateTypeKHR = DescriptorUpdateTemplateType;
 pub type PointClippingBehaviorKHR = PointClippingBehavior;
+pub type QueueGlobalPriorityEXT = QueueGlobalPriorityKHR;
 pub type SemaphoreTypeKHR = SemaphoreType;
 pub type CopyAccelerationStructureModeNV = CopyAccelerationStructureModeKHR;
 pub type AccelerationStructureTypeNV = AccelerationStructureTypeKHR;
@@ -35,6 +45,9 @@ pub type ChromaLocationKHR = ChromaLocation;
 pub type SamplerReductionModeEXT = SamplerReductionMode;
 pub type ShaderFloatControlsIndependenceKHR = ShaderFloatControlsIndependence;
 pub type DriverIdKHR = DriverId;
+pub type DevicePrivateDataCreateInfoEXT = DevicePrivateDataCreateInfo;
+pub type PrivateDataSlotCreateInfoEXT = PrivateDataSlotCreateInfo;
+pub type PhysicalDevicePrivateDataFeaturesEXT = PhysicalDevicePrivateDataFeatures;
 pub type PhysicalDeviceFeatures2KHR = PhysicalDeviceFeatures2;
 pub type PhysicalDeviceProperties2KHR = PhysicalDeviceProperties2;
 pub type FormatProperties2KHR = FormatProperties2;
@@ -86,8 +99,10 @@ pub type PhysicalDevice16BitStorageFeaturesKHR = PhysicalDevice16BitStorageFeatu
 pub type PhysicalDeviceShaderSubgroupExtendedTypesFeaturesKHR =
     PhysicalDeviceShaderSubgroupExtendedTypesFeatures;
 pub type BufferMemoryRequirementsInfo2KHR = BufferMemoryRequirementsInfo2;
+pub type DeviceBufferMemoryRequirementsKHR = DeviceBufferMemoryRequirements;
 pub type ImageMemoryRequirementsInfo2KHR = ImageMemoryRequirementsInfo2;
 pub type ImageSparseMemoryRequirementsInfo2KHR = ImageSparseMemoryRequirementsInfo2;
+pub type DeviceImageMemoryRequirementsKHR = DeviceImageMemoryRequirements;
 pub type MemoryRequirements2KHR = MemoryRequirements2;
 pub type SparseImageMemoryRequirements2KHR = SparseImageMemoryRequirements2;
 pub type PhysicalDevicePointClippingPropertiesKHR = PhysicalDevicePointClippingProperties;
@@ -107,14 +122,24 @@ pub type SamplerYcbcrConversionImageFormatPropertiesKHR =
 pub type PhysicalDeviceSamplerFilterMinmaxPropertiesEXT =
     PhysicalDeviceSamplerFilterMinmaxProperties;
 pub type SamplerReductionModeCreateInfoEXT = SamplerReductionModeCreateInfo;
+pub type PhysicalDeviceInlineUniformBlockFeaturesEXT = PhysicalDeviceInlineUniformBlockFeatures;
+pub type PhysicalDeviceInlineUniformBlockPropertiesEXT = PhysicalDeviceInlineUniformBlockProperties;
+pub type WriteDescriptorSetInlineUniformBlockEXT = WriteDescriptorSetInlineUniformBlock;
+pub type DescriptorPoolInlineUniformBlockCreateInfoEXT = DescriptorPoolInlineUniformBlockCreateInfo;
 pub type ImageFormatListCreateInfoKHR = ImageFormatListCreateInfo;
 pub type PhysicalDeviceMaintenance3PropertiesKHR = PhysicalDeviceMaintenance3Properties;
+pub type PhysicalDeviceMaintenance4FeaturesKHR = PhysicalDeviceMaintenance4Features;
+pub type PhysicalDeviceMaintenance4PropertiesKHR = PhysicalDeviceMaintenance4Properties;
 pub type DescriptorSetLayoutSupportKHR = DescriptorSetLayoutSupport;
 pub type PhysicalDeviceShaderDrawParameterFeatures = PhysicalDeviceShaderDrawParametersFeatures;
 pub type PhysicalDeviceShaderFloat16Int8FeaturesKHR = PhysicalDeviceShaderFloat16Int8Features;
 pub type PhysicalDeviceFloat16Int8FeaturesKHR = PhysicalDeviceShaderFloat16Int8Features;
 pub type PhysicalDeviceFloatControlsPropertiesKHR = PhysicalDeviceFloatControlsProperties;
 pub type PhysicalDeviceHostQueryResetFeaturesEXT = PhysicalDeviceHostQueryResetFeatures;
+pub type DeviceQueueGlobalPriorityCreateInfoEXT = DeviceQueueGlobalPriorityCreateInfoKHR;
+pub type PhysicalDeviceGlobalPriorityQueryFeaturesEXT =
+    PhysicalDeviceGlobalPriorityQueryFeaturesKHR;
+pub type QueueFamilyGlobalPriorityPropertiesEXT = QueueFamilyGlobalPriorityPropertiesKHR;
 pub type PhysicalDeviceDescriptorIndexingFeaturesEXT = PhysicalDeviceDescriptorIndexingFeatures;
 pub type PhysicalDeviceDescriptorIndexingPropertiesEXT = PhysicalDeviceDescriptorIndexingProperties;
 pub type DescriptorSetLayoutBindingFlagsCreateInfoEXT = DescriptorSetLayoutBindingFlagsCreateInfo;
@@ -154,14 +179,64 @@ pub type PhysicalDeviceImagelessFramebufferFeaturesKHR = PhysicalDeviceImageless
 pub type FramebufferAttachmentsCreateInfoKHR = FramebufferAttachmentsCreateInfo;
 pub type FramebufferAttachmentImageInfoKHR = FramebufferAttachmentImageInfo;
 pub type RenderPassAttachmentBeginInfoKHR = RenderPassAttachmentBeginInfo;
+pub type PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT =
+    PhysicalDeviceTextureCompressionASTCHDRFeatures;
+pub type PipelineCreationFeedbackEXT = PipelineCreationFeedback;
+pub type PipelineCreationFeedbackCreateInfoEXT = PipelineCreationFeedbackCreateInfo;
 pub type QueryPoolCreateInfoINTEL = QueryPoolPerformanceQueryCreateInfoINTEL;
 pub type PhysicalDeviceSeparateDepthStencilLayoutsFeaturesKHR =
     PhysicalDeviceSeparateDepthStencilLayoutsFeatures;
 pub type AttachmentReferenceStencilLayoutKHR = AttachmentReferenceStencilLayout;
 pub type AttachmentDescriptionStencilLayoutKHR = AttachmentDescriptionStencilLayout;
+pub type PhysicalDeviceShaderDemoteToHelperInvocationFeaturesEXT =
+    PhysicalDeviceShaderDemoteToHelperInvocationFeatures;
+pub type PhysicalDeviceTexelBufferAlignmentPropertiesEXT =
+    PhysicalDeviceTexelBufferAlignmentProperties;
+pub type PhysicalDeviceSubgroupSizeControlFeaturesEXT = PhysicalDeviceSubgroupSizeControlFeatures;
+pub type PhysicalDeviceSubgroupSizeControlPropertiesEXT =
+    PhysicalDeviceSubgroupSizeControlProperties;
+pub type PipelineShaderStageRequiredSubgroupSizeCreateInfoEXT =
+    PipelineShaderStageRequiredSubgroupSizeCreateInfo;
 pub type MemoryOpaqueCaptureAddressAllocateInfoKHR = MemoryOpaqueCaptureAddressAllocateInfo;
 pub type DeviceMemoryOpaqueCaptureAddressInfoKHR = DeviceMemoryOpaqueCaptureAddressInfo;
+pub type PhysicalDevicePipelineCreationCacheControlFeaturesEXT =
+    PhysicalDevicePipelineCreationCacheControlFeatures;
+pub type PhysicalDeviceToolPropertiesEXT = PhysicalDeviceToolProperties;
 pub type AabbPositionsNV = AabbPositionsKHR;
 pub type TransformMatrixNV = TransformMatrixKHR;
 pub type AccelerationStructureInstanceNV = AccelerationStructureInstanceKHR;
+pub type PhysicalDeviceZeroInitializeWorkgroupMemoryFeaturesKHR =
+    PhysicalDeviceZeroInitializeWorkgroupMemoryFeatures;
+pub type PhysicalDeviceImageRobustnessFeaturesEXT = PhysicalDeviceImageRobustnessFeatures;
+pub type BufferCopy2KHR = BufferCopy2;
+pub type ImageCopy2KHR = ImageCopy2;
+pub type ImageBlit2KHR = ImageBlit2;
+pub type BufferImageCopy2KHR = BufferImageCopy2;
+pub type ImageResolve2KHR = ImageResolve2;
+pub type CopyBufferInfo2KHR = CopyBufferInfo2;
+pub type CopyImageInfo2KHR = CopyImageInfo2;
+pub type BlitImageInfo2KHR = BlitImageInfo2;
+pub type CopyBufferToImageInfo2KHR = CopyBufferToImageInfo2;
+pub type CopyImageToBufferInfo2KHR = CopyImageToBufferInfo2;
+pub type ResolveImageInfo2KHR = ResolveImageInfo2;
+pub type PhysicalDeviceShaderTerminateInvocationFeaturesKHR =
+    PhysicalDeviceShaderTerminateInvocationFeatures;
+pub type MemoryBarrier2KHR = MemoryBarrier2;
+pub type ImageMemoryBarrier2KHR = ImageMemoryBarrier2;
+pub type BufferMemoryBarrier2KHR = BufferMemoryBarrier2;
+pub type DependencyInfoKHR = DependencyInfo;
+pub type SemaphoreSubmitInfoKHR = SemaphoreSubmitInfo;
+pub type CommandBufferSubmitInfoKHR = CommandBufferSubmitInfo;
+pub type SubmitInfo2KHR = SubmitInfo2;
+pub type PhysicalDeviceSynchronization2FeaturesKHR = PhysicalDeviceSynchronization2Features;
+pub type PhysicalDeviceShaderIntegerDotProductFeaturesKHR =
+    PhysicalDeviceShaderIntegerDotProductFeatures;
+pub type PhysicalDeviceShaderIntegerDotProductPropertiesKHR =
+    PhysicalDeviceShaderIntegerDotProductProperties;
+pub type FormatProperties3KHR = FormatProperties3;
+pub type PipelineRenderingCreateInfoKHR = PipelineRenderingCreateInfo;
+pub type RenderingInfoKHR = RenderingInfo;
+pub type RenderingAttachmentInfoKHR = RenderingAttachmentInfo;
+pub type PhysicalDeviceDynamicRenderingFeaturesKHR = PhysicalDeviceDynamicRenderingFeatures;
+pub type CommandBufferInheritanceRenderingInfoKHR = CommandBufferInheritanceRenderingInfo;
 pub type AttachmentSampleCountInfoNV = AttachmentSampleCountInfoAMD;

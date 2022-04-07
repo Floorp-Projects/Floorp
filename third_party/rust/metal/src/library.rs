@@ -387,8 +387,10 @@ pub enum MTLLanguageVersion {
     V2_0 = 0x20000,
     V2_1 = 0x20001,
     V2_2 = 0x20002,
-    /// Only available on (macos(11.0), ios(14.0))
+    /// available on macOS 11.0+, iOS 14.0+
     V2_3 = 0x20003,
+    /// available on macOS 12.0+, iOS 15.0+
+    V2_4 = 0x20004,
 }
 
 pub enum MTLFunctionConstantValues {}

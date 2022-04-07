@@ -33,9 +33,9 @@ impl CompilationContext<'_> {
             if ep_info[handle].is_empty() {
                 continue;
             }
-            let register = match var.class {
-                naga::StorageClass::Uniform => super::BindingRegister::UniformBuffers,
-                naga::StorageClass::Storage { .. } => super::BindingRegister::StorageBuffers,
+            let register = match var.space {
+                naga::AddressSpace::Uniform => super::BindingRegister::UniformBuffers,
+                naga::AddressSpace::Storage { .. } => super::BindingRegister::StorageBuffers,
                 _ => continue,
             };
 
@@ -272,30 +272,35 @@ impl super::Device {
             }
         }
 
-        let uniforms = {
-            let count = gl.get_active_uniforms(program);
-            let mut offset = 0;
-            let mut uniforms = Vec::new();
+        let mut uniforms: [super::UniformDesc; super::MAX_PUSH_CONSTANTS] = Default::default();
+        let count = gl.get_active_uniforms(program);
+        let mut offset = 0;
 
-            for uniform in 0..count {
-                let glow::ActiveUniform { size, utype, name } =
-                    gl.get_active_uniform(program, uniform).unwrap();
+        for uniform in 0..count {
+            let glow::ActiveUniform { utype, name, .. } =
+                gl.get_active_uniform(program, uniform).unwrap();
 
-                if let Some(location) = gl.get_uniform_location(program, &name) {
-                    // Sampler2D won't show up in UniformLocation and the only other uniforms
-                    // should be push constants
-                    uniforms.push(super::UniformDesc {
-                        location,
-                        offset,
-                        utype,
-                    });
-
-                    offset += size as u32;
-                }
+            if conv::is_sampler(utype) {
+                continue;
             }
 
-            uniforms.into_boxed_slice()
-        };
+            if let Some(location) = gl.get_uniform_location(program, &name) {
+                if uniforms[offset / 4].location.is_some() {
+                    panic!("Offset already occupied")
+                }
+
+                // `size` will always be 1 so we need to guess the real size from the type
+                let uniform_size = conv::uniform_byte_size(utype);
+
+                uniforms[offset / 4] = super::UniformDesc {
+                    location: Some(location),
+                    size: uniform_size,
+                    utype,
+                };
+
+                offset += uniform_size as usize;
+            }
+        }
 
         Ok(super::PipelineInner {
             program,
@@ -452,7 +457,7 @@ impl crate::Device<super::Api> for super::Device {
                 let ptr = if let Some(ref map_read_allocation) = buffer.data {
                     let mut guard = map_read_allocation.lock().unwrap();
                     let slice = guard.as_mut_slice();
-                    gl.get_buffer_sub_data(buffer.target, 0, slice);
+                    self.shared.get_buffer_sub_data(gl, buffer.target, 0, slice);
                     slice.as_mut_ptr()
                 } else {
                     gl.map_buffer_range(
@@ -473,11 +478,7 @@ impl crate::Device<super::Api> for super::Device {
     }
     unsafe fn unmap_buffer(&self, buffer: &super::Buffer) -> Result<(), crate::DeviceError> {
         if let Some(raw) = buffer.raw {
-            if !self
-                .shared
-                .workarounds
-                .contains(super::Workarounds::EMULATE_BUFFER_MAP)
-            {
+            if buffer.data.is_none() {
                 let gl = &self.shared.context.lock();
                 gl.bind_buffer(buffer.target, Some(raw));
                 gl.unmap_buffer(buffer.target);
@@ -721,7 +722,9 @@ impl crate::Device<super::Api> for super::Device {
 
         if let Some(border_color) = desc.border_color {
             let border = match border_color {
-                wgt::SamplerBorderColor::TransparentBlack => [0.0; 4],
+                wgt::SamplerBorderColor::TransparentBlack | wgt::SamplerBorderColor::Zero => {
+                    [0.0; 4]
+                }
                 wgt::SamplerBorderColor::OpaqueBlack => [0.0, 0.0, 0.0, 1.0],
                 wgt::SamplerBorderColor::OpaqueWhite => [1.0; 4],
             };

@@ -58,6 +58,9 @@ name = "caps"
 name = "argument-buffer"
 
 [[example]]
+name = "bindless"
+
+[[example]]
 name = "circle"
 path = "examples/circle/main.rs"
 

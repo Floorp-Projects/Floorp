@@ -3,6 +3,7 @@ use std::{error::Error, fmt, ops::Range};
 
 /// A source code span, used for error reporting.
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Span {
     start: u32,
     end: u32,
@@ -54,7 +55,7 @@ impl Span {
         }
     }
 
-    /// Check wether `self` was defined or is a default/unknown span
+    /// Check whether `self` was defined or is a default/unknown span
     pub fn is_defined(&self) -> bool {
         *self != Self::default()
     }

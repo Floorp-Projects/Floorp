@@ -204,7 +204,7 @@ bitflags::bitflags! {
         /// write out a timestamp.
         ///
         /// They must be resolved using [`CommandEncoder::resolve_query_sets`] into a buffer,
-        /// then the result must be multiplied by the timestamp period [`Device::get_timestamp_period`]
+        /// then the result must be multiplied by the timestamp period [`Queue::get_timestamp_period`]
         /// to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
         /// time for operations between them to finish.
         ///
@@ -394,7 +394,8 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const PUSH_CONSTANTS = 1 << 26;
-        /// Allows the use of [`AddressMode::ClampToBorder`].
+        /// Allows the use of [`AddressMode::ClampToBorder`] with a border color
+        /// other than [`SamplerBorderColor::Zero`].
         ///
         /// Supported platforms:
         /// - DX12
@@ -415,7 +416,7 @@ bitflags::bitflags! {
         /// - Metal
         ///
         /// This is a native only feature.
-        const POLYGON_MODE_LINE= 1 << 28;
+        const POLYGON_MODE_LINE = 1 << 28;
         /// Allows the user to set [`PolygonMode::Point`] in [`PrimitiveState::polygon_mode`]
         ///
         /// This allows only drawing the vertices of polygons/triangles instead of filled
@@ -551,6 +552,23 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const TEXTURE_FORMAT_16BIT_NORM = 1 << 41;
+        /// Allows the use of [`AddressMode::ClampToBorder`] with a border color
+        /// of [`SamplerBorderColor::Zero`].
+        ///
+        /// Supported platforms:
+        /// - DX12
+        /// - Vulkan
+        /// - Metal
+        /// - DX11
+        /// - OpenGL
+        ///
+        /// This is a native only feature.
+        const ADDRESS_MODE_CLAMP_TO_ZERO = 1 << 42;
+        /// Supported Platforms:
+        /// - Metal
+        ///
+        /// This is a native-only feature.
+        const TEXTURE_COMPRESSION_ASTC_HDR = 1 << 43;
     }
 }
 
@@ -599,7 +617,7 @@ impl Features {
 ///
 /// See also: <https://gpuweb.github.io/gpuweb/#dictdef-gpulimits>
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "trace", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -802,6 +820,76 @@ impl Limits {
             ..self
         }
     }
+
+    /// Compares every limits within self is within the limits given in `allowed`.
+    ///
+    /// If you need detailed information on failures, look at [`Limits::check_limits_with_fail_fn`].
+    pub fn check_limits(&self, allowed: &Self) -> bool {
+        let mut within = true;
+        self.check_limits_with_fail_fn(allowed, true, |_, _, _| within = false);
+        within
+    }
+
+    /// Compares every limits within self is within the limits given in `allowed`.
+    /// For an easy to use binary choice, use [`Limits::check_limits`].
+    ///
+    /// If a value is not within the allowed limit, this function calls the `fail_fn`
+    /// with the:
+    ///  - limit name
+    ///  - self's limit
+    ///  - allowed's limit.
+    ///
+    /// If fatal is true, a single failure bails out the comparison after a single failure.
+    pub fn check_limits_with_fail_fn(
+        &self,
+        allowed: &Self,
+        fatal: bool,
+        mut fail_fn: impl FnMut(&'static str, u32, u32),
+    ) {
+        use std::cmp::Ordering;
+
+        macro_rules! compare {
+            ($name:ident, $ordering:ident) => {
+                match self.$name.cmp(&allowed.$name) {
+                    Ordering::$ordering | Ordering::Equal => (),
+                    _ => {
+                        fail_fn(stringify!($name), self.$name, allowed.$name);
+                        if fatal {
+                            return;
+                        }
+                    }
+                }
+            };
+        }
+
+        compare!(max_texture_dimension_1d, Less);
+        compare!(max_texture_dimension_2d, Less);
+        compare!(max_texture_dimension_3d, Less);
+        compare!(max_texture_array_layers, Less);
+        compare!(max_bind_groups, Less);
+        compare!(max_dynamic_uniform_buffers_per_pipeline_layout, Less);
+        compare!(max_dynamic_storage_buffers_per_pipeline_layout, Less);
+        compare!(max_sampled_textures_per_shader_stage, Less);
+        compare!(max_samplers_per_shader_stage, Less);
+        compare!(max_storage_buffers_per_shader_stage, Less);
+        compare!(max_storage_textures_per_shader_stage, Less);
+        compare!(max_uniform_buffers_per_shader_stage, Less);
+        compare!(max_uniform_buffer_binding_size, Less);
+        compare!(max_storage_buffer_binding_size, Less);
+        compare!(max_vertex_buffers, Less);
+        compare!(max_vertex_attributes, Less);
+        compare!(max_vertex_buffer_array_stride, Less);
+        compare!(max_push_constant_size, Less);
+        compare!(min_uniform_buffer_offset_alignment, Greater);
+        compare!(min_storage_buffer_offset_alignment, Greater);
+        compare!(max_inter_stage_shader_components, Less);
+        compare!(max_compute_workgroup_storage_size, Less);
+        compare!(max_compute_invocations_per_workgroup, Less);
+        compare!(max_compute_workgroup_size_x, Less);
+        compare!(max_compute_workgroup_size_y, Less);
+        compare!(max_compute_workgroup_size_z, Less);
+        compare!(max_compute_workgroups_per_dimension, Less);
+    }
 }
 
 /// Represents the sets of additional limits on an adapter,
@@ -863,39 +951,50 @@ bitflags::bitflags! {
     /// [`DownlevelCapabilities::is_webgpu_compliant()`] function.
     pub struct DownlevelFlags: u32 {
         /// The device supports compiling and using compute shaders.
+        ///
+        /// DX11 on FL10 level hardware, WebGL2, and GLES3.0 devices do not support compute.
         const COMPUTE_SHADERS = 1 << 0;
         /// Supports binding storage buffers and textures to fragment shaders.
         const FRAGMENT_WRITABLE_STORAGE = 1 << 1;
         /// Supports indirect drawing and dispatching.
+        ///
+        /// DX11 on FL10 level hardware, WebGL2, and GLES 3.0 devices do not support indirect.
         const INDIRECT_EXECUTION = 1 << 2;
         /// Supports non-zero `base_vertex` parameter to indexed draw calls.
         const BASE_VERTEX = 1 << 3;
         /// Supports reading from a depth/stencil buffer while using as a read-only depth/stencil
         /// attachment.
+        ///
+        /// The WebGL2 and GLES backends do not support RODS.
         const READ_ONLY_DEPTH_STENCIL = 1 << 4;
-        /// Supports:
-        /// - copy_image_to_image
-        /// - copy_buffer_to_image and copy_image_to_buffer with a buffer without a MAP_* usage
-        const DEVICE_LOCAL_IMAGE_COPIES = 1 << 5;
         /// Supports textures with mipmaps which have a non power of two size.
-        const NON_POWER_OF_TWO_MIPMAPPED_TEXTURES = 1 << 6;
+        const NON_POWER_OF_TWO_MIPMAPPED_TEXTURES = 1 << 5;
         /// Supports textures that are cube arrays.
-        const CUBE_ARRAY_TEXTURES = 1 << 7;
+        const CUBE_ARRAY_TEXTURES = 1 << 6;
         /// Supports comparison samplers.
-        const COMPARISON_SAMPLERS = 1 << 8;
-        /// Supports different blending modes per color target.
-        const INDEPENDENT_BLENDING = 1 << 9;
+        const COMPARISON_SAMPLERS = 1 << 7;
+        /// Supports different blend operations per color attachment.
+        const INDEPENDENT_BLEND = 1 << 8;
         /// Supports storage buffers in vertex shaders.
-        const VERTEX_STORAGE = 1 << 10;
-
+        const VERTEX_STORAGE = 1 << 9;
 
         /// Supports samplers with anisotropic filtering. Note this isn't actually required by
         /// WebGPU, the implementation is allowed to completely ignore aniso clamp. This flag is
         /// here for native backends so they can comunicate to the user of aniso is enabled.
-        const ANISOTROPIC_FILTERING = 1 << 11;
+        ///
+        /// All backends and all devices support anisotropic filtering.
+        const ANISOTROPIC_FILTERING = 1 << 10;
 
         /// Supports storage buffers in fragment shaders.
-        const FRAGMENT_STORAGE = 1 << 12;
+        const FRAGMENT_STORAGE = 1 << 11;
+
+        /// Supports sample-rate shading.
+        const MULTISAMPLED_SHADING = 1 << 12;
+
+        /// Supports copies between depth textures and buffers.
+        ///
+        /// GLES/WebGL don't support this.
+        const DEPTH_TEXTURE_AND_BUFFER_COPIES = 1 << 13;
     }
 }
 
@@ -1467,6 +1566,60 @@ impl TextureFormatInfo {
     }
 }
 
+/// ASTC block dimensions
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub enum AstcBlock {
+    /// 4x4 block compressed texture. 16 bytes per block (8 bit/px).
+    B4x4,
+    /// 5x4 block compressed texture. 16 bytes per block (6.4 bit/px).
+    B5x4,
+    /// 5x5 block compressed texture. 16 bytes per block (5.12 bit/px).
+    B5x5,
+    /// 6x5 block compressed texture. 16 bytes per block (4.27 bit/px).
+    B6x5,
+    /// 6x6 block compressed texture. 16 bytes per block (3.56 bit/px).
+    B6x6,
+    /// 8x5 block compressed texture. 16 bytes per block (3.2 bit/px).
+    B8x5,
+    /// 8x6 block compressed texture. 16 bytes per block (2.67 bit/px).
+    B8x6,
+    /// 8x8 block compressed texture. 16 bytes per block (2 bit/px).
+    B8x8,
+    /// 10x5 block compressed texture. 16 bytes per block (2.56 bit/px).
+    B10x5,
+    /// 10x6 block compressed texture. 16 bytes per block (2.13 bit/px).
+    B10x6,
+    /// 10x8 block compressed texture. 16 bytes per block (1.6 bit/px).
+    B10x8,
+    /// 10x10 block compressed texture. 16 bytes per block (1.28 bit/px).
+    B10x10,
+    /// 12x10 block compressed texture. 16 bytes per block (1.07 bit/px).
+    B12x10,
+    /// 12x12 block compressed texture. 16 bytes per block (0.89 bit/px).
+    B12x12,
+}
+
+/// ASTC RGBA channel
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub enum AstcChannel {
+    /// 8 bit integer RGBA, [0, 255] converted to/from linear-color float [0, 1] in shader.
+    ///
+    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this channel.
+    Unorm,
+    /// 8 bit integer RGBA, Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
+    ///
+    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this channel.
+    UnormSrgb,
+    /// floating-point RGBA, linear-color float can be outside of the [0, 1] range.
+    ///
+    /// [`Features::TEXTURE_COMPRESSION_ASTC_HDR`] must be enabled to use this channel.
+    Hdr,
+}
+
 /// Underlying texture data format.
 ///
 /// If there is a conversion in the format (such as srgb -> linear), The conversion listed is for
@@ -1809,174 +1962,15 @@ pub enum TextureFormat {
     /// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.
     #[cfg_attr(feature = "serde", serde(rename = "eac-rg11snorm"))]
     EacRg11Snorm,
-    /// 4x4 block compressed texture. 16 bytes per block (8 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
+    /// block compressed texture. 16 bytes per block.
     ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-4x4-unorm"))]
-    Astc4x4RgbaUnorm,
-    /// 4x4 block compressed texture. 16 bytes per block (8 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-4x4-unorm-srgb"))]
-    Astc4x4RgbaUnormSrgb,
-    /// 5x4 block compressed texture. 16 bytes per block (6.4 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-5x4-unorm"))]
-    Astc5x4RgbaUnorm,
-    /// 5x4 block compressed texture. 16 bytes per block (6.4 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-5x4-unorm-srgb"))]
-    Astc5x4RgbaUnormSrgb,
-    /// 5x5 block compressed texture. 16 bytes per block (5.12 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-5x5-unorm"))]
-    Astc5x5RgbaUnorm,
-    /// 5x5 block compressed texture. 16 bytes per block (5.12 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-5x5-unorm-srgb"))]
-    Astc5x5RgbaUnormSrgb,
-    /// 6x5 block compressed texture. 16 bytes per block (4.27 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-6x5-unorm"))]
-    Astc6x5RgbaUnorm,
-    /// 6x5 block compressed texture. 16 bytes per block (4.27 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-6x5-unorm-srgb"))]
-    Astc6x5RgbaUnormSrgb,
-    /// 6x6 block compressed texture. 16 bytes per block (3.56 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-6x6-unorm"))]
-    Astc6x6RgbaUnorm,
-    /// 6x6 block compressed texture. 16 bytes per block (3.56 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-6x6-unorm-srgb"))]
-    Astc6x6RgbaUnormSrgb,
-    /// 8x5 block compressed texture. 16 bytes per block (3.2 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x5-unorm"))]
-    Astc8x5RgbaUnorm,
-    /// 8x5 block compressed texture. 16 bytes per block (3.2 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x5-unorm-srgb"))]
-    Astc8x5RgbaUnormSrgb,
-    /// 8x6 block compressed texture. 16 bytes per block (2.67 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x6-unorm"))]
-    Astc8x6RgbaUnorm,
-    /// 8x6 block compressed texture. 16 bytes per block (2.67 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x6-unorm-srgb"))]
-    Astc8x6RgbaUnormSrgb,
-    /// 10x5 block compressed texture. 16 bytes per block (2.56 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x5-unorm"))]
-    Astc10x5RgbaUnorm,
-    /// 10x5 block compressed texture. 16 bytes per block (2.56 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x5-unorm-srgb"))]
-    Astc10x5RgbaUnormSrgb,
-    /// 10x6 block compressed texture. 16 bytes per block (2.13 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x6-unorm"))]
-    Astc10x6RgbaUnorm,
-    /// 10x6 block compressed texture. 16 bytes per block (2.13 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x6-unorm-srgb"))]
-    Astc10x6RgbaUnormSrgb,
-    /// 8x8 block compressed texture. 16 bytes per block (2 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x8-unorm"))]
-    Astc8x8RgbaUnorm,
-    /// 8x8 block compressed texture. 16 bytes per block (2 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-8x8-unorm-srgb"))]
-    Astc8x8RgbaUnormSrgb,
-    /// 10x8 block compressed texture. 16 bytes per block (1.6 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x8-unorm"))]
-    Astc10x8RgbaUnorm,
-    /// 10x8 block compressed texture. 16 bytes per block (1.6 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x8-unorm-srgb"))]
-    Astc10x8RgbaUnormSrgb,
-    /// 10x10 block compressed texture. 16 bytes per block (1.28 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x10-unorm"))]
-    Astc10x10RgbaUnorm,
-    /// 10x10 block compressed texture. 16 bytes per block (1.28 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-10x10-unorm-srgb"))]
-    Astc10x10RgbaUnormSrgb,
-    /// 12x10 block compressed texture. 16 bytes per block (1.07 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-12x10-unorm"))]
-    Astc12x10RgbaUnorm,
-    /// 12x10 block compressed texture. 16 bytes per block (1.07 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-12x10-unorm-srgb"))]
-    Astc12x10RgbaUnormSrgb,
-    /// 12x12 block compressed texture. 16 bytes per block (0.89 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// [0, 255] converted to/from float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-12x12-unorm"))]
-    Astc12x12RgbaUnorm,
-    /// 12x12 block compressed texture. 16 bytes per block (0.89 bit/px). Complex pallet. 8 bit integer RGBA.
-    /// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
-    ///
-    /// [`Features::TEXTURE_COMPRESSION_ASTC_LDR`] must be enabled to use this texture format.
-    #[cfg_attr(feature = "serde", serde(rename = "astc-12x12-unorm-srgb"))]
-    Astc12x12RgbaUnormSrgb,
+    /// Features [`TEXTURE_COMPRESSION_ASTC_LDR`] or [`TEXTURE_COMPRESSION_ASTC_HDR`] must be enabled to use this texture format.
+    Astc {
+        /// compressed block dimensions
+        block: AstcBlock,
+        ///
+        channel: AstcChannel,
+    },
 }
 
 impl TextureFormat {
@@ -1987,6 +1981,7 @@ impl TextureFormat {
         let bc = Features::TEXTURE_COMPRESSION_BC;
         let etc2 = Features::TEXTURE_COMPRESSION_ETC2;
         let astc_ldr = Features::TEXTURE_COMPRESSION_ASTC_LDR;
+        let astc_hdr = Features::TEXTURE_COMPRESSION_ASTC_HDR;
         let norm16bit = Features::TEXTURE_FORMAT_16BIT_NORM;
 
         // Sample Types
@@ -2017,6 +2012,7 @@ impl TextureFormat {
         let all_flags = TextureUsages::all();
 
         // See <https://gpuweb.github.io/gpuweb/#texture-format-caps> for reference
+        #[rustfmt::skip] // lets make a nice table
         let (
             required_features,
             sample_type,
@@ -2028,209 +2024,121 @@ impl TextureFormat {
             components,
         ) = match self {
             // Normal 8 bit textures
-            Self::R8Unorm => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                1,
-                attachment,
-                1,
-            ),
-            Self::R8Snorm => (native, float, linear, msaa, (1, 1), 1, basic, 1),
-            Self::R8Uint => (native, uint, linear, msaa, (1, 1), 1, attachment, 1),
-            Self::R8Sint => (native, sint, linear, msaa, (1, 1), 1, attachment, 1),
+            Self::R8Unorm =>             (   native,   float,    linear, msaa_resolve, (1, 1),  1, attachment, 1),
+            Self::R8Snorm =>             (   native,   float,    linear,         msaa, (1, 1),  1,      basic, 1),
+            Self::R8Uint =>              (   native,    uint,    linear,         msaa, (1, 1),  1, attachment, 1),
+            Self::R8Sint =>              (   native,    sint,    linear,         msaa, (1, 1),  1, attachment, 1),
 
             // Normal 16 bit textures
-            Self::R16Uint => (native, uint, linear, msaa, (1, 1), 2, attachment, 1),
-            Self::R16Sint => (native, sint, linear, msaa, (1, 1), 2, attachment, 1),
-            Self::R16Float => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                2,
-                attachment,
-                1,
-            ),
-            Self::Rg8Unorm => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                2,
-                attachment,
-                2,
-            ),
-            Self::Rg8Snorm => (native, float, linear, msaa, (1, 1), 2, attachment, 2),
-            Self::Rg8Uint => (native, uint, linear, msaa, (1, 1), 2, attachment, 2),
-            Self::Rg8Sint => (native, sint, linear, msaa, (1, 1), 2, basic, 2),
+            Self::R16Uint =>             (   native,    uint,    linear,         msaa, (1, 1),  2, attachment, 1),
+            Self::R16Sint =>             (   native,    sint,    linear,         msaa, (1, 1),  2, attachment, 1),
+            Self::R16Float =>            (   native,   float,    linear, msaa_resolve, (1, 1),  2, attachment, 1),
+            Self::Rg8Unorm =>            (   native,   float,    linear, msaa_resolve, (1, 1),  2, attachment, 2),
+            Self::Rg8Snorm =>            (   native,   float,    linear,         msaa, (1, 1),  2, attachment, 2),
+            Self::Rg8Uint =>             (   native,    uint,    linear,         msaa, (1, 1),  2, attachment, 2),
+            Self::Rg8Sint =>             (   native,    sint,    linear,         msaa, (1, 1),  2,      basic, 2),
 
             // Normal 32 bit textures
-            Self::R32Uint => (native, uint, linear, noaa, (1, 1), 4, all_flags, 1),
-            Self::R32Sint => (native, sint, linear, noaa, (1, 1), 4, all_flags, 1),
-            Self::R32Float => (native, nearest, linear, msaa, (1, 1), 4, all_flags, 1),
-            Self::Rg16Uint => (native, uint, linear, msaa, (1, 1), 4, attachment, 2),
-            Self::Rg16Sint => (native, sint, linear, msaa, (1, 1), 4, attachment, 2),
-            Self::Rg16Float => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                4,
-                attachment,
-                2,
-            ),
-            Self::Rgba8Unorm => (native, float, linear, msaa_resolve, (1, 1), 4, all_flags, 4),
-            Self::Rgba8UnormSrgb => (
-                native,
-                float,
-                corrected,
-                msaa_resolve,
-                (1, 1),
-                4,
-                attachment,
-                4,
-            ),
-            Self::Rgba8Snorm => (native, float, linear, msaa, (1, 1), 4, storage, 4),
-            Self::Rgba8Uint => (native, uint, linear, msaa, (1, 1), 4, all_flags, 4),
-            Self::Rgba8Sint => (native, sint, linear, msaa, (1, 1), 4, all_flags, 4),
-            Self::Bgra8Unorm => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                4,
-                attachment,
-                4,
-            ),
-            Self::Bgra8UnormSrgb => (
-                native,
-                float,
-                corrected,
-                msaa_resolve,
-                (1, 1),
-                4,
-                attachment,
-                4,
-            ),
+            Self::R32Uint =>             (   native,    uint,    linear,         noaa, (1, 1),  4,  all_flags, 1),
+            Self::R32Sint =>             (   native,    sint,    linear,         noaa, (1, 1),  4,  all_flags, 1),
+            Self::R32Float =>            (   native, nearest,    linear,         msaa, (1, 1),  4,  all_flags, 1),
+            Self::Rg16Uint =>            (   native,    uint,    linear,         msaa, (1, 1),  4, attachment, 2),
+            Self::Rg16Sint =>            (   native,    sint,    linear,         msaa, (1, 1),  4, attachment, 2),
+            Self::Rg16Float =>           (   native,   float,    linear, msaa_resolve, (1, 1),  4, attachment, 2),
+            Self::Rgba8Unorm =>          (   native,   float,    linear, msaa_resolve, (1, 1),  4,  all_flags, 4),
+            Self::Rgba8UnormSrgb =>      (   native,   float, corrected, msaa_resolve, (1, 1),  4, attachment, 4),
+            Self::Rgba8Snorm =>          (   native,   float,    linear,         msaa, (1, 1),  4,    storage, 4),
+            Self::Rgba8Uint =>           (   native,    uint,    linear,         msaa, (1, 1),  4,  all_flags, 4),
+            Self::Rgba8Sint =>           (   native,    sint,    linear,         msaa, (1, 1),  4,  all_flags, 4),
+            Self::Bgra8Unorm =>          (   native,   float,    linear, msaa_resolve, (1, 1),  4, attachment, 4),
+            Self::Bgra8UnormSrgb =>      (   native,   float, corrected, msaa_resolve, (1, 1),  4, attachment, 4),
 
             // Packed 32 bit textures
-            Self::Rgb10a2Unorm => (
-                native,
-                float,
-                linear,
-                msaa_resolve,
-                (1, 1),
-                4,
-                attachment,
-                4,
-            ),
-            Self::Rg11b10Float => (native, float, linear, msaa, (1, 1), 4, basic, 3),
+            Self::Rgb10a2Unorm =>        (   native,   float,    linear, msaa_resolve, (1, 1),  4, attachment, 4),
+            Self::Rg11b10Float =>        (   native,   float,    linear,         msaa, (1, 1),  4,      basic, 3),
 
-            // Packed 32 bit textures
-            Self::Rg32Uint => (native, uint, linear, noaa, (1, 1), 8, all_flags, 2),
-            Self::Rg32Sint => (native, sint, linear, noaa, (1, 1), 8, all_flags, 2),
-            Self::Rg32Float => (native, nearest, linear, noaa, (1, 1), 8, all_flags, 2),
-            Self::Rgba16Uint => (native, uint, linear, msaa, (1, 1), 8, all_flags, 4),
-            Self::Rgba16Sint => (native, sint, linear, msaa, (1, 1), 8, all_flags, 4),
-            Self::Rgba16Float => (native, float, linear, msaa_resolve, (1, 1), 8, all_flags, 4),
+            // Packed 32 bit textures  
+            Self::Rg32Uint =>            (   native,    uint,    linear,         noaa, (1, 1),  8,  all_flags, 2),
+            Self::Rg32Sint =>            (   native,    sint,    linear,         noaa, (1, 1),  8,  all_flags, 2),
+            Self::Rg32Float =>           (   native, nearest,    linear,         noaa, (1, 1),  8,  all_flags, 2),
+            Self::Rgba16Uint =>          (   native,    uint,    linear,         msaa, (1, 1),  8,  all_flags, 4),
+            Self::Rgba16Sint =>          (   native,    sint,    linear,         msaa, (1, 1),  8,  all_flags, 4),
+            Self::Rgba16Float =>         (   native,   float,    linear, msaa_resolve, (1, 1),  8,  all_flags, 4),
 
-            // Packed 32 bit textures
-            Self::Rgba32Uint => (native, uint, linear, noaa, (1, 1), 16, all_flags, 4),
-            Self::Rgba32Sint => (native, sint, linear, noaa, (1, 1), 16, all_flags, 4),
-            Self::Rgba32Float => (native, nearest, linear, noaa, (1, 1), 16, all_flags, 4),
+            // Packed 32 bit textures  
+            Self::Rgba32Uint =>          (   native,    uint,    linear,         noaa, (1, 1), 16,  all_flags, 4),
+            Self::Rgba32Sint =>          (   native,    sint,    linear,         noaa, (1, 1), 16,  all_flags, 4),
+            Self::Rgba32Float =>         (   native, nearest,    linear,         noaa, (1, 1), 16,  all_flags, 4),
 
             // Depth-stencil textures
-            Self::Depth32Float => (native, depth, linear, msaa, (1, 1), 4, attachment, 1),
-            Self::Depth24Plus => (native, depth, linear, msaa, (1, 1), 4, attachment, 1),
-            Self::Depth24PlusStencil8 => (native, depth, linear, msaa, (1, 1), 4, attachment, 2),
+            Self::Depth32Float =>        (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 1),
+            Self::Depth24Plus =>         (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 1),
+            Self::Depth24PlusStencil8 => (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
 
-            // Packed uncompressed
-            Self::Rgb9e5Ufloat => (native, float, linear, noaa, (1, 1), 4, basic, 3),
-
-            // BCn compressed textures
-            Self::Bc1RgbaUnorm => (bc, float, linear, noaa, (4, 4), 8, basic, 4),
-            Self::Bc1RgbaUnormSrgb => (bc, float, corrected, noaa, (4, 4), 8, basic, 4),
-            Self::Bc2RgbaUnorm => (bc, float, linear, noaa, (4, 4), 16, basic, 4),
-            Self::Bc2RgbaUnormSrgb => (bc, float, corrected, noaa, (4, 4), 16, basic, 4),
-            Self::Bc3RgbaUnorm => (bc, float, linear, noaa, (4, 4), 16, basic, 4),
-            Self::Bc3RgbaUnormSrgb => (bc, float, corrected, noaa, (4, 4), 16, basic, 4),
-            Self::Bc4RUnorm => (bc, float, linear, noaa, (4, 4), 8, basic, 1),
-            Self::Bc4RSnorm => (bc, float, linear, noaa, (4, 4), 8, basic, 1),
-            Self::Bc5RgUnorm => (bc, float, linear, noaa, (4, 4), 16, basic, 2),
-            Self::Bc5RgSnorm => (bc, float, linear, noaa, (4, 4), 16, basic, 2),
-            Self::Bc6hRgbUfloat => (bc, float, linear, noaa, (4, 4), 16, basic, 3),
-            Self::Bc6hRgbSfloat => (bc, float, linear, noaa, (4, 4), 16, basic, 3),
-            Self::Bc7RgbaUnorm => (bc, float, linear, noaa, (4, 4), 16, basic, 4),
-            Self::Bc7RgbaUnormSrgb => (bc, float, corrected, noaa, (4, 4), 16, basic, 4),
-
-            // ETC compressed textures
-            Self::Etc2Rgb8Unorm => (etc2, float, linear, noaa, (4, 4), 8, basic, 3),
-            Self::Etc2Rgb8UnormSrgb => (etc2, float, corrected, noaa, (4, 4), 8, basic, 3),
-            Self::Etc2Rgb8A1Unorm => (etc2, float, linear, noaa, (4, 4), 8, basic, 4),
-            Self::Etc2Rgb8A1UnormSrgb => (etc2, float, corrected, noaa, (4, 4), 8, basic, 4),
-            Self::Etc2Rgba8Unorm => (etc2, float, linear, noaa, (4, 4), 16, basic, 4),
-            Self::Etc2Rgba8UnormSrgb => (etc2, float, corrected, noaa, (4, 4), 16, basic, 4),
-            Self::EacR11Unorm => (etc2, float, linear, noaa, (4, 4), 8, basic, 1),
-            Self::EacR11Snorm => (etc2, float, linear, noaa, (4, 4), 8, basic, 1),
-            Self::EacRg11Unorm => (etc2, float, linear, noaa, (4, 4), 16, basic, 2),
-            Self::EacRg11Snorm => (etc2, float, linear, noaa, (4, 4), 16, basic, 2),
-
-            // ASTC compressed textures
-            Self::Astc4x4RgbaUnorm => (astc_ldr, float, linear, noaa, (4, 4), 16, basic, 4),
-            Self::Astc4x4RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (4, 4), 16, basic, 4),
-            Self::Astc5x4RgbaUnorm => (astc_ldr, float, linear, noaa, (5, 4), 16, basic, 4),
-            Self::Astc5x4RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (5, 4), 16, basic, 4),
-            Self::Astc5x5RgbaUnorm => (astc_ldr, float, linear, noaa, (5, 5), 16, basic, 4),
-            Self::Astc5x5RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (5, 5), 16, basic, 4),
-            Self::Astc6x5RgbaUnorm => (astc_ldr, float, linear, noaa, (6, 5), 16, basic, 4),
-            Self::Astc6x5RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (6, 5), 16, basic, 4),
-            Self::Astc6x6RgbaUnorm => (astc_ldr, float, linear, noaa, (6, 6), 16, basic, 4),
-            Self::Astc6x6RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (6, 6), 16, basic, 4),
-            Self::Astc8x5RgbaUnorm => (astc_ldr, float, linear, noaa, (8, 5), 16, basic, 4),
-            Self::Astc8x5RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (8, 5), 16, basic, 4),
-            Self::Astc8x6RgbaUnorm => (astc_ldr, float, linear, noaa, (8, 6), 16, basic, 4),
-            Self::Astc8x6RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (8, 6), 16, basic, 4),
-            Self::Astc10x5RgbaUnorm => (astc_ldr, float, linear, noaa, (10, 5), 16, basic, 4),
-            Self::Astc10x5RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (10, 5), 16, basic, 4)
-            }
-            Self::Astc10x6RgbaUnorm => (astc_ldr, float, linear, noaa, (10, 6), 16, basic, 4),
-            Self::Astc10x6RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (10, 6), 16, basic, 4)
-            }
-            Self::Astc8x8RgbaUnorm => (astc_ldr, float, linear, noaa, (8, 8), 16, basic, 4),
-            Self::Astc8x8RgbaUnormSrgb => (astc_ldr, float, corrected, noaa, (8, 8), 16, basic, 4),
-            Self::Astc10x8RgbaUnorm => (astc_ldr, float, linear, noaa, (10, 8), 16, basic, 4),
-            Self::Astc10x8RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (10, 8), 16, basic, 4)
-            }
-            Self::Astc10x10RgbaUnorm => (astc_ldr, float, linear, noaa, (10, 10), 16, basic, 4),
-            Self::Astc10x10RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (10, 10), 16, basic, 4)
-            }
-            Self::Astc12x10RgbaUnorm => (astc_ldr, float, linear, noaa, (12, 10), 16, basic, 4),
-            Self::Astc12x10RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (12, 10), 16, basic, 4)
-            }
-            Self::Astc12x12RgbaUnorm => (astc_ldr, float, linear, noaa, (12, 12), 16, basic, 4),
-            Self::Astc12x12RgbaUnormSrgb => {
-                (astc_ldr, float, corrected, noaa, (12, 12), 16, basic, 4)
-            }
+            // Packed uncompressed  
+            Self::Rgb9e5Ufloat =>        (   native,   float,    linear,         noaa, (1, 1),  4,      basic, 3),
 
             // Optional normalized 16-bit-per-channel formats
-            Self::R16Unorm => (norm16bit, float, linear, msaa, (1, 1), 2, storage, 1),
-            Self::R16Snorm => (norm16bit, float, linear, msaa, (1, 1), 2, storage, 1),
-            Self::Rg16Unorm => (norm16bit, float, linear, msaa, (1, 1), 4, storage, 2),
-            Self::Rg16Snorm => (norm16bit, float, linear, msaa, (1, 1), 4, storage, 2),
-            Self::Rgba16Unorm => (norm16bit, float, linear, msaa, (1, 1), 8, storage, 4),
-            Self::Rgba16Snorm => (norm16bit, float, linear, msaa, (1, 1), 8, storage, 4),
+            Self::R16Unorm =>            (norm16bit,   float,    linear,         msaa, (1, 1),  2,    storage, 1),
+            Self::R16Snorm =>            (norm16bit,   float,    linear,         msaa, (1, 1),  2,    storage, 1),
+            Self::Rg16Unorm =>           (norm16bit,   float,    linear,         msaa, (1, 1),  4,    storage, 2),
+            Self::Rg16Snorm =>           (norm16bit,   float,    linear,         msaa, (1, 1),  4,    storage, 2),
+            Self::Rgba16Unorm =>         (norm16bit,   float,    linear,         msaa, (1, 1),  8,    storage, 4),
+            Self::Rgba16Snorm =>         (norm16bit,   float,    linear,         msaa, (1, 1),  8,    storage, 4),
+
+            // BCn compressed textures
+            Self::Bc1RgbaUnorm =>        (       bc,   float,    linear,         noaa, (4, 4),  8,      basic, 4),
+            Self::Bc1RgbaUnormSrgb =>    (       bc,   float, corrected,         noaa, (4, 4),  8,      basic, 4),
+            Self::Bc2RgbaUnorm =>        (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 4),
+            Self::Bc2RgbaUnormSrgb =>    (       bc,   float, corrected,         noaa, (4, 4), 16,      basic, 4),
+            Self::Bc3RgbaUnorm =>        (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 4),
+            Self::Bc3RgbaUnormSrgb =>    (       bc,   float, corrected,         noaa, (4, 4), 16,      basic, 4),
+            Self::Bc4RUnorm =>           (       bc,   float,    linear,         noaa, (4, 4),  8,      basic, 1),
+            Self::Bc4RSnorm =>           (       bc,   float,    linear,         noaa, (4, 4),  8,      basic, 1),
+            Self::Bc5RgUnorm =>          (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 2),
+            Self::Bc5RgSnorm =>          (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 2),
+            Self::Bc6hRgbUfloat =>       (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 3),
+            Self::Bc6hRgbSfloat =>       (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 3),
+            Self::Bc7RgbaUnorm =>        (       bc,   float,    linear,         noaa, (4, 4), 16,      basic, 4),
+            Self::Bc7RgbaUnormSrgb =>    (       bc,   float, corrected,         noaa, (4, 4), 16,      basic, 4),
+
+            // ETC compressed textures
+            Self::Etc2Rgb8Unorm =>       (     etc2,   float,    linear,         noaa, (4, 4),  8,      basic, 3),
+            Self::Etc2Rgb8UnormSrgb =>   (     etc2,   float, corrected,         noaa, (4, 4),  8,      basic, 3),
+            Self::Etc2Rgb8A1Unorm =>     (     etc2,   float,    linear,         noaa, (4, 4),  8,      basic, 4),
+            Self::Etc2Rgb8A1UnormSrgb => (     etc2,   float, corrected,         noaa, (4, 4),  8,      basic, 4),
+            Self::Etc2Rgba8Unorm =>      (     etc2,   float,    linear,         noaa, (4, 4), 16,      basic, 4),
+            Self::Etc2Rgba8UnormSrgb =>  (     etc2,   float, corrected,         noaa, (4, 4), 16,      basic, 4),
+            Self::EacR11Unorm =>         (     etc2,   float,    linear,         noaa, (4, 4),  8,      basic, 1),
+            Self::EacR11Snorm =>         (     etc2,   float,    linear,         noaa, (4, 4),  8,      basic, 1),
+            Self::EacRg11Unorm =>        (     etc2,   float,    linear,         noaa, (4, 4), 16,      basic, 2),
+            Self::EacRg11Snorm =>        (     etc2,   float,    linear,         noaa, (4, 4), 16,      basic, 2),
+
+            // ASTC compressed textures
+            Self::Astc { block, channel } => {
+                let (feature, color_space) = match channel {
+                    AstcChannel::Hdr => (astc_hdr, linear),
+                    AstcChannel::Unorm => (astc_ldr, linear),
+                    AstcChannel::UnormSrgb => (astc_ldr, corrected),
+                };
+                let dimensions = match block {
+                    AstcBlock::B4x4 => (4, 4),
+                    AstcBlock::B5x4 => (5, 4),
+                    AstcBlock::B5x5 => (5, 5),
+                    AstcBlock::B6x5 => (6, 5),
+                    AstcBlock::B6x6 => (6, 6),
+                    AstcBlock::B8x5 => (8, 5),
+                    AstcBlock::B8x6 => (8, 6),
+                    AstcBlock::B8x8 => (8, 8),
+                    AstcBlock::B10x5 => (10, 5),
+                    AstcBlock::B10x6 => (10, 6),
+                    AstcBlock::B10x8 => (10, 8),
+                    AstcBlock::B10x10 => (10, 10),
+                    AstcBlock::B12x10 => (12, 10),
+                    AstcBlock::B12x12 => (12, 12),
+                };
+                (feature, float, color_space, noaa, dimensions, 16, basic, 4)
+            }
         };
 
         let mut flags = msaa_flags;
@@ -3040,7 +2948,10 @@ fn test_physical_size() {
             depth_or_array_layers: 1
         }
     );
-    let format = TextureFormat::Astc8x5RgbaUnorm; // 8x5 blocks
+    let format = TextureFormat::Astc {
+        block: AstcBlock::B8x5,
+        channel: AstcChannel::Unorm,
+    }; // 8x5 blocks
     assert_eq!(
         Extent3d {
             width: 7,
@@ -3727,6 +3638,13 @@ pub enum SamplerBorderColor {
     OpaqueBlack,
     /// [1, 1, 1, 1]
     OpaqueWhite,
+
+    /// On the Metal backend, this is equivalent to `TransparentBlack` for
+    /// textures that have an alpha component, and equivalent to `OpaqueBlack`
+    /// for textures that do not have an alpha component. On other backends,
+    /// this is equivalent to `TransparentBlack`. Requires
+    /// [`Features::ADDRESS_MODE_CLAMP_TO_ZERO`]. Not supported on the web.
+    Zero,
 }
 
 /// Describes how to create a QuerySet.
@@ -3771,7 +3689,7 @@ pub enum QueryType {
     /// Query returns a 64-bit number indicating the GPU-timestamp
     /// where all previous commands have finished executing.
     ///
-    /// Must be multiplied by [`Device::get_timestamp_period`] to get
+    /// Must be multiplied by [`Queue::get_timestamp_period`] to get
     /// the value in nanoseconds. Absolute values have no meaning,
     /// but timestamps can be subtracted to get the time it takes
     /// for a string of operations to complete.

@@ -9,7 +9,7 @@ fn _consume_str<'a>(input: &'a str, what: &str) -> Option<&'a str> {
 }
 
 fn consume_any(input: &str, what: impl Fn(char) -> bool) -> (&str, &str) {
-    let pos = input.find(|c| !what(c)).unwrap_or_else(|| input.len());
+    let pos = input.find(|c| !what(c)).unwrap_or(input.len());
     input.split_at(pos)
 }
 
@@ -97,9 +97,11 @@ fn consume_number(input: &str) -> (Token, &str) {
     let mut what = |c| {
         match state {
             NumberLexerState {
+                uint_suffix: true, ..
+            } => return false, // Scanning is done once we've reached a type suffix.
+            NumberLexerState {
                 hex,
                 digit_state: NLDigitState::Nothing,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0' => {
@@ -121,7 +123,6 @@ fn consume_number(input: &str) -> (Token, &str) {
             NumberLexerState {
                 hex,
                 digit_state: NLDigitState::LeadingZero,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0' => {
@@ -153,7 +154,6 @@ fn consume_number(input: &str) -> (Token, &str) {
             NumberLexerState {
                 hex,
                 digit_state: NLDigitState::DigitBeforeDot,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -181,7 +181,6 @@ fn consume_number(input: &str) -> (Token, &str) {
             NumberLexerState {
                 hex,
                 digit_state: NLDigitState::OnlyDot,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -196,13 +195,11 @@ fn consume_number(input: &str) -> (Token, &str) {
             NumberLexerState {
                 hex,
                 digit_state: NLDigitState::DigitsThenDot,
-                uint_suffix: false,
                 ..
             }
             | NumberLexerState {
                 hex,
                 digit_state: NLDigitState::DigitAfterDot,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -222,7 +219,6 @@ fn consume_number(input: &str) -> (Token, &str) {
 
             NumberLexerState {
                 digit_state: NLDigitState::Exponent,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -236,12 +232,10 @@ fn consume_number(input: &str) -> (Token, &str) {
 
             NumberLexerState {
                 digit_state: NLDigitState::SignAfterExponent,
-                uint_suffix: false,
                 ..
             }
             | NumberLexerState {
                 digit_state: NLDigitState::DigitAfterExponent,
-                uint_suffix: false,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -249,10 +243,6 @@ fn consume_number(input: &str) -> (Token, &str) {
                 }
                 _ => return false,
             },
-
-            NumberLexerState {
-                uint_suffix: true, ..
-            } => return false, // Scanning is done once we've reached a type suffix.
         }
 
         // No match branch has rejected this yet, so we are still in a number literal
@@ -261,7 +251,7 @@ fn consume_number(input: &str) -> (Token, &str) {
 
     let pos = working_substr
         .find(|c| !what(c))
-        .unwrap_or_else(|| working_substr.len());
+        .unwrap_or(working_substr.len());
     let (value, rest) = input.split_at(pos + minus_offset + hex_offset);
 
     // NOTE: This code can use string slicing,
@@ -286,7 +276,6 @@ fn consume_number(input: &str) -> (Token, &str) {
             } else {
                 NumberType::Sint
             },
-            width: None,
         },
         rest,
     )
@@ -315,7 +304,8 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
                 _ => (Token::Separator(cur), og_chars),
             }
         }
-        '(' | ')' | '{' | '}' => (Token::Paren(cur), chars.as_str()),
+        '@' => (Token::Attribute, chars.as_str()),
+        '(' | ')' | '{' | '}' | '[' | ']' => (Token::Paren(cur), chars.as_str()),
         '<' | '>' => {
             input = chars.as_str();
             let next = chars.next();
@@ -328,14 +318,6 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
                 } else {
                     (Token::ShiftOperation(cur), input)
                 }
-            } else {
-                (Token::Paren(cur), input)
-            }
-        }
-        '[' | ']' => {
-            input = chars.as_str();
-            if chars.next() == Some(cur) {
-                (Token::DoubleParen(cur), chars.as_str())
             } else {
                 (Token::Paren(cur), input)
             }
@@ -356,9 +338,47 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
                 (Token::UnterminatedString, quote_content)
             }
         }
-        '/' if chars.as_str().starts_with('/') => {
-            let _ = chars.position(|c| c == '\n' || c == '\r');
-            (Token::Trivia, chars.as_str())
+        '/' => {
+            input = chars.as_str();
+            match chars.next() {
+                Some('/') => {
+                    let _ = chars.position(|c| c == '\n' || c == '\r');
+                    (Token::Trivia, chars.as_str())
+                }
+                Some('*') => {
+                    input = chars.as_str();
+
+                    let mut depth = 1;
+                    let mut prev = '\0';
+
+                    for c in &mut chars {
+                        match (prev, c) {
+                            ('*', '/') => {
+                                prev = '\0';
+                                depth -= 1;
+                                if depth == 0 {
+                                    break;
+                                }
+                            }
+                            ('/', '*') => {
+                                prev = '\0';
+                                depth += 1;
+                            }
+                            _ => {
+                                prev = c;
+                            }
+                        }
+                    }
+
+                    if depth > 0 {
+                        (Token::UnterminatedBlockComment, input)
+                    } else {
+                        (Token::Trivia, chars.as_str())
+                    }
+                }
+                Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
+                _ => (Token::Operation(cur), input),
+            }
         }
         '-' => {
             let sub_input = chars.as_str();
@@ -369,7 +389,7 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
                 _ => (Token::Operation(cur), sub_input),
             }
         }
-        '+' | '*' | '/' | '%' | '^' => {
+        '+' | '*' | '%' | '^' => {
             input = chars.as_str();
             if chars.next() == Some('=') {
                 (Token::AssignmentOperation(cur), chars.as_str())
@@ -633,7 +653,6 @@ fn test_tokens() {
             Token::Number {
                 value: "92",
                 ty: NumberType::Sint,
-                width: None,
             },
             Token::Word("No"),
         ],
@@ -644,12 +663,10 @@ fn test_tokens() {
             Token::Number {
                 value: "2",
                 ty: NumberType::Uint,
-                width: None,
             },
             Token::Number {
                 value: "3",
                 ty: NumberType::Sint,
-                width: None,
             },
             Token::Word("o"),
         ],
@@ -660,7 +677,6 @@ fn test_tokens() {
             Token::Number {
                 value: "2.4",
                 ty: NumberType::Float,
-                width: None,
             },
             Token::Word("f44po"),
         ],
@@ -673,23 +689,29 @@ fn test_tokens() {
     sub_test("No好", &[Token::Word("No"), Token::Unknown('好')]);
     sub_test("_No", &[Token::Word("_No")]);
     sub_test("\"\u{2}ПЀ\u{0}\"", &[Token::String("\u{2}ПЀ\u{0}")]); // https://github.com/gfx-rs/naga/issues/90
+    sub_test(
+        "*/*/***/*//=/*****//",
+        &[
+            Token::Operation('*'),
+            Token::AssignmentOperation('/'),
+            Token::Operation('/'),
+        ],
+    );
 }
 
 #[test]
 fn test_variable_decl() {
     sub_test(
-        "[[ group(0 )]] var< uniform> texture:   texture_multisampled_2d <f32 >;",
+        "@group(0 ) var< uniform> texture:   texture_multisampled_2d <f32 >;",
         &[
-            Token::DoubleParen('['),
+            Token::Attribute,
             Token::Word("group"),
             Token::Paren('('),
             Token::Number {
                 value: "0",
                 ty: NumberType::Sint,
-                width: None,
             },
             Token::Paren(')'),
-            Token::DoubleParen(']'),
             Token::Word("var"),
             Token::Paren('<'),
             Token::Word("uniform"),

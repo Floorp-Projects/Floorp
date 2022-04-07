@@ -25,6 +25,49 @@ const WRAPPED_ARRAY_FIELD: &str = "inner";
 // Some more general handling of pointers is needed to be implemented here.
 const ATOMIC_REFERENCE: &str = "&";
 
+/// Write the Metal name for a Naga numeric type: scalar, vector, or matrix.
+///
+/// The `sizes` slice determines whether this function writes a
+/// scalar, vector, or matrix type:
+///
+/// - An empty slice produces a scalar type.
+/// - A one-element slice produces a vector type.
+/// - A two element slice `[ROWS COLUMNS]` produces a matrix of the given size.
+fn put_numeric_type(
+    out: &mut impl Write,
+    kind: crate::ScalarKind,
+    sizes: &[crate::VectorSize],
+) -> Result<(), FmtError> {
+    match (kind, sizes) {
+        (kind, &[]) => {
+            write!(out, "{}", kind.to_msl_name())
+        }
+        (kind, &[rows]) => {
+            write!(
+                out,
+                "{}::{}{}",
+                NAMESPACE,
+                kind.to_msl_name(),
+                back::vector_size_str(rows)
+            )
+        }
+        (kind, &[rows, columns]) => {
+            write!(
+                out,
+                "{}::{}{}x{}",
+                NAMESPACE,
+                kind.to_msl_name(),
+                back::vector_size_str(columns),
+                back::vector_size_str(rows)
+            )
+        }
+        (_, _) => Ok(()), // not meaningful
+    }
+}
+
+/// Prefix for cached clamped level-of-detail values for `ImageLoad` expressions.
+const CLAMPED_LOD_LOAD_PREFIX: &str = "clamped_lod_e";
+
 struct TypeContext<'a> {
     handle: Handle<crate::Type>,
     arena: &'a crate::UniqueArena<crate::Type>,
@@ -42,80 +85,42 @@ impl<'a> Display for TypeContext<'a> {
         }
 
         match ty.inner {
-            crate::TypeInner::Scalar { kind, .. } => {
-                match kind {
-                    // work around Metal toolchain bug with `uint` typedef
-                    crate::ScalarKind::Uint => write!(out, "{}::uint", NAMESPACE),
-                    _ => {
-                        let kind_str = kind.to_msl_name();
-                        write!(out, "{}", kind_str)
-                    }
-                }
-            }
+            crate::TypeInner::Scalar { kind, .. } => put_numeric_type(out, kind, &[]),
             crate::TypeInner::Atomic { kind, .. } => {
                 write!(out, "{}::atomic_{}", NAMESPACE, kind.to_msl_name())
             }
-            crate::TypeInner::Vector { size, kind, .. } => {
-                write!(
-                    out,
-                    "{}::{}{}",
-                    NAMESPACE,
-                    kind.to_msl_name(),
-                    back::vector_size_str(size),
-                )
-            }
+            crate::TypeInner::Vector { size, kind, .. } => put_numeric_type(out, kind, &[size]),
             crate::TypeInner::Matrix { columns, rows, .. } => {
-                write!(
-                    out,
-                    "{}::{}{}x{}",
-                    NAMESPACE,
-                    crate::ScalarKind::Float.to_msl_name(),
-                    back::vector_size_str(columns),
-                    back::vector_size_str(rows),
-                )
+                put_numeric_type(out, crate::ScalarKind::Float, &[rows, columns])
             }
-            crate::TypeInner::Pointer { base, class } => {
+            crate::TypeInner::Pointer { base, space } => {
                 let sub = Self {
                     handle: base,
                     first_time: false,
                     ..*self
                 };
-                let class_name = match class.to_msl_name() {
+                let space_name = match space.to_msl_name() {
                     Some(name) => name,
                     None => return Ok(()),
                 };
-                write!(out, "{} {}&", class_name, sub)
+                write!(out, "{} {}&", space_name, sub)
             }
             crate::TypeInner::ValuePointer {
-                size: None,
+                size,
                 kind,
                 width: _,
-                class,
+                space,
             } => {
-                let class_name = match class.to_msl_name() {
-                    Some(name) => name,
+                match space.to_msl_name() {
+                    Some(name) => write!(out, "{} ", name)?,
                     None => return Ok(()),
                 };
-                write!(out, "{} {}&", class_name, kind.to_msl_name(),)
-            }
-            crate::TypeInner::ValuePointer {
-                size: Some(size),
-                kind,
-                width: _,
-                class,
-            } => {
-                let class_name = match class.to_msl_name() {
-                    Some(name) => name,
-                    None => return Ok(()),
+                match size {
+                    Some(rows) => put_numeric_type(out, kind, &[rows])?,
+                    None => put_numeric_type(out, kind, &[])?,
                 };
-                write!(
-                    out,
-                    "{} {}::{}{}&",
-                    class_name,
-                    NAMESPACE,
-                    kind.to_msl_name(),
-                    back::vector_size_str(size),
-                )
+
+                write!(out, "&")
             }
             crate::TypeInner::Array { base, .. } => {
                 let sub = Self {
@@ -213,8 +218,8 @@ impl<'a> TypedGlobalVariable<'a> {
         let var = &self.module.global_variables[self.handle];
         let name = &self.names[&NameKey::GlobalVariable(self.handle)];
 
-        let storage_access = match var.class {
-            crate::StorageClass::Storage { access } => access,
+        let storage_access = match var.space {
+            crate::AddressSpace::Storage { access } => access,
             _ => match self.module.types[var.ty].inner {
                 crate::TypeInner::Image {
                     class: crate::ImageClass::Storage { access, .. },
@@ -231,15 +236,14 @@ impl<'a> TypedGlobalVariable<'a> {
             first_time: false,
         };
 
-        let (space, access, reference) = match var.class.to_msl_name() {
+        let (space, access, reference) = match var.space.to_msl_name() {
             Some(space) if self.reference => {
-                let access = match var.class {
-                    crate::StorageClass::Private | crate::StorageClass::WorkGroup
-                        if !self.usage.contains(valid::GlobalUse::WRITE) =>
-                    {
-                        "const"
-                    }
-                    _ => "",
+                let access = if var.space.needs_access_qualifier()
+                    && !self.usage.contains(valid::GlobalUse::WRITE)
+                {
+                    "const"
+                } else {
+                    ""
                 };
                 (space, access, "&")
             }
@@ -308,6 +312,8 @@ pub struct Writer<W> {
     out: W,
     names: FastHashMap<NameKey, String>,
     named_expressions: crate::NamedExpressions,
+    /// Set of expressions that need to be baked to avoid unnecessary repetition in output
+    need_bake_expressions: back::NeedBakeExpressions,
     namer: proc::Namer,
     #[cfg(test)]
     put_expression_stack_pointers: FastHashSet<*const ()>,
@@ -349,7 +355,7 @@ fn should_pack_struct_member(
     }
 
     let ty_inner = &module.types[member.ty].inner;
-    let last_offset = member.offset + ty_inner.span(&module.constants);
+    let last_offset = member.offset + ty_inner.size(&module.constants);
     let next_offset = match members.get(index + 1) {
         Some(next) => next.offset,
         None => span,
@@ -367,34 +373,55 @@ fn should_pack_struct_member(
 }
 
 fn needs_array_length(ty: Handle<crate::Type>, arena: &crate::UniqueArena<crate::Type>) -> bool {
-    if let crate::TypeInner::Struct { ref members, .. } = arena[ty].inner {
-        if let Some(member) = members.last() {
-            if let crate::TypeInner::Array {
-                size: crate::ArraySize::Dynamic,
-                ..
-            } = arena[member.ty].inner
-            {
-                return true;
+    match arena[ty].inner {
+        crate::TypeInner::Struct { ref members, .. } => {
+            if let Some(member) = members.last() {
+                if let crate::TypeInner::Array {
+                    size: crate::ArraySize::Dynamic,
+                    ..
+                } = arena[member.ty].inner
+                {
+                    return true;
+                }
             }
+            false
         }
+        crate::TypeInner::Array {
+            size: crate::ArraySize::Dynamic,
+            ..
+        } => true,
+        _ => false,
     }
-    false
 }
 
-impl crate::StorageClass {
-    /// Returns true for storage classes, for which the global
-    /// variables are passed in function arguments.
-    /// These arguments need to be passed through any functions
-    /// called from the entry point.
+impl crate::AddressSpace {
+    /// Returns true if global variables in this address space are
+    /// passed in function arguments. These arguments need to be
+    /// passed through any functions called from the entry point.
     fn needs_pass_through(&self) -> bool {
         match *self {
-            crate::StorageClass::Uniform
-            | crate::StorageClass::Storage { .. }
-            | crate::StorageClass::Private
-            | crate::StorageClass::WorkGroup
-            | crate::StorageClass::PushConstant
-            | crate::StorageClass::Handle => true,
-            crate::StorageClass::Function => false,
+            Self::Uniform
+            | Self::Storage { .. }
+            | Self::Private
+            | Self::WorkGroup
+            | Self::PushConstant
+            | Self::Handle => true,
+            Self::Function => false,
+        }
+    }
+
+    /// Returns true if the address space may need a "const" qualifier.
+    fn needs_access_qualifier(&self) -> bool {
+        match *self {
+            //Note: we are ignoring the storage access here, and instead
+            // rely on the actual use of a global by functions. This means we
+            // may end up with "const" even if the binding is read-write,
+            // and that should be OK.
+            Self::Storage { .. } | Self::Private | Self::WorkGroup => true,
+            // These translate to `constant` address space, no need for qualifiers.
+            Self::Uniform | Self::PushConstant => false,
+            // Not applicable.
+            Self::Handle | Self::Function => false,
         }
     }
 
@@ -402,10 +429,7 @@ impl crate::StorageClass {
         match self {
             Self::Handle => None,
             Self::Uniform | Self::PushConstant => Some("constant"),
-            Self::Storage { access } if access.contains(crate::StorageAccess::STORE) => {
-                Some("device")
-            }
-            Self::Storage { .. } => Some("constant"),
+            Self::Storage { .. } => Some("device"),
             Self::Private | Self::Function => Some("thread"),
             Self::WorkGroup => Some("threadgroup"),
         }
@@ -448,6 +472,37 @@ enum FunctionOrigin {
     EntryPoint(proc::EntryPointIndex),
 }
 
+/// A level of detail argument.
+///
+/// When [`BoundsCheckPolicy::Restrict`] applies to an [`ImageLoad`] access, we
+/// save the clamped level of detail in a temporary variable whose name is based
+/// on the handle of the `ImageLoad` expression. But for other policies, we just
+/// use the expression directly.
+///
+/// [`BoundsCheckPolicy::Restrict`]: index::BoundsCheckPolicy::Restrict
+/// [`ImageLoad`]: crate::Expression::ImageLoad
+#[derive(Clone, Copy)]
+enum LevelOfDetail {
+    Direct(Handle<crate::Expression>),
+    Restricted(Handle<crate::Expression>),
+}
+
+/// Values needed to select a particular texel for [`ImageLoad`] and [`ImageStore`].
+///
+/// When this is used in code paths unconcerned with the `Restrict` bounds check
+/// policy, the `LevelOfDetail` enum introduces an unneeded match, since `level`
+/// will always be either `None` or `Some(Direct(_))`. But this turns out not to
+/// be too awkward. If that changes, we can revisit.
+///
+/// [`ImageLoad`]: crate::Expression::ImageLoad
+/// [`ImageStore`]: crate::Statement::ImageStore
+struct TexelAddress {
+    coordinate: Handle<crate::Expression>,
+    array_index: Option<Handle<crate::Expression>>,
+    sample: Option<Handle<crate::Expression>>,
+    level: Option<LevelOfDetail>,
+}
+
 struct ExpressionContext<'a> {
     function: &'a crate::Function,
     origin: FunctionOrigin,
@@ -466,6 +521,21 @@ struct ExpressionContext<'a> {
 impl<'a> ExpressionContext<'a> {
     fn resolve_type(&self, handle: Handle<crate::Expression>) -> &'a crate::TypeInner {
         self.info[handle].ty.inner_with(&self.module.types)
+    }
+
+    /// Return true if calls to `image`'s `read` and `write` methods should supply a level of detail.
+    ///
+    /// Only mipmapped images need to specify a level of detail. Since 1D
+    /// textures cannot have mipmaps, MSL requires that the level argument to
+    /// texture1d queries and accesses must be a constexpr 0. It's easiest
+    /// just to omit the level entirely for 1D textures.
+    fn image_needs_lod(&self, image: Handle<crate::Expression>) -> bool {
+        let image_ty = self.resolve_type(image);
+        if let crate::TypeInner::Image { dim, class, .. } = *image_ty {
+            class.is_mipmapped() && dim != crate::ImageDimension::D1
+        } else {
+            false
+        }
     }
 
     fn choose_bounds_check_policy(
@@ -520,7 +590,8 @@ impl<W: Write> Writer<W> {
         Writer {
             out,
             names: FastHashMap::default(),
-            named_expressions: crate::NamedExpressions::default(),
+            named_expressions: Default::default(),
+            need_bake_expressions: Default::default(),
             namer: proc::Namer::default(),
             #[cfg(test)]
             put_expression_stack_pointers: Default::default(),
@@ -551,17 +622,31 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    fn put_level_of_detail(
+        &mut self,
+        level: LevelOfDetail,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        match level {
+            LevelOfDetail::Direct(expr) => self.put_expression(expr, context, true)?,
+            LevelOfDetail::Restricted(load) => {
+                write!(self.out, "{}{}", CLAMPED_LOD_LOAD_PREFIX, load.index())?
+            }
+        }
+        Ok(())
+    }
+
     fn put_image_query(
         &mut self,
         image: Handle<crate::Expression>,
         query: &str,
-        level: Option<Handle<crate::Expression>>,
+        level: Option<LevelOfDetail>,
         context: &ExpressionContext,
     ) -> BackendResult {
         self.put_expression(image, context, false)?;
         write!(self.out, ".get_{}(", query)?;
-        if let Some(expr) = level {
-            self.put_expression(expr, context, true)?;
+        if let Some(level) = level {
+            self.put_level_of_detail(level, context)?;
         }
         write!(self.out, ")")?;
         Ok(())
@@ -570,7 +655,8 @@ impl<W: Write> Writer<W> {
     fn put_image_size_query(
         &mut self,
         image: Handle<crate::Expression>,
-        level: Option<Handle<crate::Expression>>,
+        level: Option<LevelOfDetail>,
+        kind: crate::ScalarKind,
         context: &ExpressionContext,
     ) -> BackendResult {
         //Note: MSL only has separate width/height/depth queries,
@@ -579,24 +665,31 @@ impl<W: Write> Writer<W> {
             crate::TypeInner::Image { dim, .. } => dim,
             ref other => unreachable!("Unexpected type {:?}", other),
         };
+        let coordinate_type = kind.to_msl_name();
         match dim {
             crate::ImageDimension::D1 => {
-                write!(self.out, "int(")?;
                 // Since 1D textures never have mipmaps, MSL requires that the
                 // `level` argument be a constexpr 0. It's simplest for us just
-                // to omit the level entirely.
-                self.put_image_query(image, "width", None, context)?;
-                write!(self.out, ")")?;
+                // to pass `None` and omit the level entirely.
+                if kind == crate::ScalarKind::Uint {
+                    // No need to construct a vector. No cast needed.
+                    self.put_image_query(image, "width", None, context)?;
+                } else {
+                    // There's no definition for `int` in the `metal` namespace.
+                    write!(self.out, "int(")?;
+                    self.put_image_query(image, "width", None, context)?;
+                    write!(self.out, ")")?;
+                }
             }
             crate::ImageDimension::D2 => {
-                write!(self.out, "int2(")?;
+                write!(self.out, "{}::{}2(", NAMESPACE, coordinate_type)?;
                 self.put_image_query(image, "width", level, context)?;
                 write!(self.out, ", ")?;
                 self.put_image_query(image, "height", level, context)?;
                 write!(self.out, ")")?;
             }
             crate::ImageDimension::D3 => {
-                write!(self.out, "int3(")?;
+                write!(self.out, "{}::{}3(", NAMESPACE, coordinate_type)?;
                 self.put_image_query(image, "width", level, context)?;
                 write!(self.out, ", ")?;
                 self.put_image_query(image, "height", level, context)?;
@@ -605,7 +698,7 @@ impl<W: Write> Writer<W> {
                 write!(self.out, ")")?;
             }
             crate::ImageDimension::Cube => {
-                write!(self.out, "int2(")?;
+                write!(self.out, "{}::{}2(", NAMESPACE, coordinate_type)?;
                 self.put_image_query(image, "width", level, context)?;
                 write!(self.out, ")")?;
             }
@@ -613,18 +706,23 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
-    fn put_storage_image_coordinate(
+    fn put_cast_to_uint_scalar_or_vector(
         &mut self,
         expr: Handle<crate::Expression>,
         context: &ExpressionContext,
     ) -> BackendResult {
         // coordinates in IR are int, but Metal expects uint
-        let size_str = match *context.resolve_type(expr) {
-            crate::TypeInner::Scalar { .. } => "",
-            crate::TypeInner::Vector { size, .. } => back::vector_size_str(size),
+        match *context.resolve_type(expr) {
+            crate::TypeInner::Scalar { .. } => {
+                put_numeric_type(&mut self.out, crate::ScalarKind::Uint, &[])?
+            }
+            crate::TypeInner::Vector { size, .. } => {
+                put_numeric_type(&mut self.out, crate::ScalarKind::Uint, &[size])?
+            }
             _ => return Err(Error::Validation),
         };
-        write!(self.out, "{}::uint{}(", NAMESPACE, size_str)?;
+
+        write!(self.out, "(")?;
         self.put_expression(expr, context, true)?;
         write!(self.out, ")")?;
         Ok(())
@@ -636,13 +734,7 @@ impl<W: Write> Writer<W> {
         level: crate::SampleLevel,
         context: &ExpressionContext,
     ) -> BackendResult {
-        let has_levels = match *context.resolve_type(image) {
-            crate::TypeInner::Image {
-                dim: crate::ImageDimension::D1,
-                ..
-            } => false,
-            _ => true,
-        };
+        let has_levels = context.image_needs_lod(image);
         match level {
             crate::SampleLevel::Auto => {}
             crate::SampleLevel::Zero => {
@@ -672,6 +764,275 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    fn put_image_coordinate_limits(
+        &mut self,
+        image: Handle<crate::Expression>,
+        level: Option<LevelOfDetail>,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        self.put_image_size_query(image, level, crate::ScalarKind::Uint, context)?;
+        write!(self.out, " - 1")?;
+        Ok(())
+    }
+
+    /// General function for writing restricted image indexes.
+    ///
+    /// This is used to produce restricted mip levels, array indices, and sample
+    /// indices for [`ImageLoad`] and [`ImageStore`] accesses under the
+    /// [`Restrict`] bounds check policy.
+    ///
+    /// This function writes an expression of the form:
+    ///
+    /// ```ignore
+    ///
+    ///     metal::min(uint(INDEX), IMAGE.LIMIT_METHOD() - 1)
+    ///
+    /// ```
+    ///
+    /// [`ImageLoad`]: crate::Expression::ImageLoad
+    /// [`ImageStore`]: crate::Statement::ImageStore
+    /// [`Restrict`]: index::BoundsCheckPolicy::Restrict
+    fn put_restricted_scalar_image_index(
+        &mut self,
+        image: Handle<crate::Expression>,
+        index: Handle<crate::Expression>,
+        limit_method: &str,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        write!(self.out, "{}::min(uint(", NAMESPACE)?;
+        self.put_expression(index, context, true)?;
+        write!(self.out, "), ")?;
+        self.put_expression(image, context, false)?;
+        write!(self.out, ".{}() - 1)", limit_method)?;
+        Ok(())
+    }
+
+    fn put_restricted_texel_address(
+        &mut self,
+        image: Handle<crate::Expression>,
+        address: &TexelAddress,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        // Write the coordinate.
+        write!(self.out, "{}::min(", NAMESPACE)?;
+        self.put_cast_to_uint_scalar_or_vector(address.coordinate, context)?;
+        write!(self.out, ", ")?;
+        self.put_image_coordinate_limits(image, address.level, context)?;
+        write!(self.out, ")")?;
+
+        // Write the array index, if present.
+        if let Some(array_index) = address.array_index {
+            write!(self.out, ", ")?;
+            self.put_restricted_scalar_image_index(image, array_index, "get_array_size", context)?;
+        }
+
+        // Write the sample index, if present.
+        if let Some(sample) = address.sample {
+            write!(self.out, ", ")?;
+            self.put_restricted_scalar_image_index(image, sample, "get_num_samples", context)?;
+        }
+
+        // The level of detail should be clamped and cached by
+        // `put_cache_restricted_level`, so we don't need to clamp it here.
+        if let Some(level) = address.level {
+            write!(self.out, ", ")?;
+            self.put_level_of_detail(level, context)?;
+        }
+
+        Ok(())
+    }
+
+    /// Write an expression that is true if the given image access is in bounds.
+    fn put_image_access_bounds_check(
+        &mut self,
+        image: Handle<crate::Expression>,
+        address: &TexelAddress,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        let mut conjunction = "";
+
+        // First, check the level of detail. Only if that is in bounds can we
+        // use it to find the appropriate bounds for the coordinates.
+        let level = if let Some(level) = address.level {
+            write!(self.out, "uint(")?;
+            self.put_level_of_detail(level, context)?;
+            write!(self.out, ") < ")?;
+            self.put_expression(image, context, true)?;
+            write!(self.out, ".get_num_mip_levels()")?;
+            conjunction = " && ";
+            Some(level)
+        } else {
+            None
+        };
+
+        // Check sample index, if present.
+        if let Some(sample) = address.sample {
+            write!(self.out, "uint(")?;
+            self.put_expression(sample, context, true)?;
+            write!(self.out, ") < ")?;
+            self.put_expression(image, context, true)?;
+            write!(self.out, ".get_num_samples()")?;
+            conjunction = " && ";
+        }
+
+        // Check array index, if present.
+        if let Some(array_index) = address.array_index {
+            write!(self.out, "{}uint(", conjunction)?;
+            self.put_expression(array_index, context, true)?;
+            write!(self.out, ") < ")?;
+            self.put_expression(image, context, true)?;
+            write!(self.out, ".get_array_size()")?;
+            conjunction = " && ";
+        }
+
+        // Finally, check if the coordinates are within bounds.
+        let coord_is_vector = match *context.resolve_type(address.coordinate) {
+            crate::TypeInner::Vector { .. } => true,
+            _ => false,
+        };
+        write!(self.out, "{}", conjunction)?;
+        if coord_is_vector {
+            write!(self.out, "{}::all(", NAMESPACE)?;
+        }
+        self.put_cast_to_uint_scalar_or_vector(address.coordinate, context)?;
+        write!(self.out, " < ")?;
+        self.put_image_size_query(image, level, crate::ScalarKind::Uint, context)?;
+        if coord_is_vector {
+            write!(self.out, ")")?;
+        }
+
+        Ok(())
+    }
+
+    fn put_image_load(
+        &mut self,
+        load: Handle<crate::Expression>,
+        image: Handle<crate::Expression>,
+        mut address: TexelAddress,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        match context.policies.image {
+            proc::BoundsCheckPolicy::Restrict => {
+                // Use the cached restricted level of detail, if any. Omit the
+                // level altogether for 1D textures.
+                if address.level.is_some() {
+                    address.level = if context.image_needs_lod(image) {
+                        Some(LevelOfDetail::Restricted(load))
+                    } else {
+                        None
+                    }
+                }
+
+                self.put_expression(image, context, false)?;
+                write!(self.out, ".read(")?;
+                self.put_restricted_texel_address(image, &address, context)?;
+                write!(self.out, ")")?;
+            }
+            proc::BoundsCheckPolicy::ReadZeroSkipWrite => {
+                write!(self.out, "(")?;
+                self.put_image_access_bounds_check(image, &address, context)?;
+                write!(self.out, " ? ")?;
+                self.put_unchecked_image_load(image, &address, context)?;
+                write!(self.out, ": DefaultConstructible())")?;
+            }
+            proc::BoundsCheckPolicy::Unchecked => {
+                self.put_unchecked_image_load(image, &address, context)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn put_unchecked_image_load(
+        &mut self,
+        image: Handle<crate::Expression>,
+        address: &TexelAddress,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        self.put_expression(image, context, false)?;
+        write!(self.out, ".read(")?;
+        // coordinates in IR are int, but Metal expects uint
+        self.put_cast_to_uint_scalar_or_vector(address.coordinate, context)?;
+        if let Some(expr) = address.array_index {
+            write!(self.out, ", ")?;
+            self.put_expression(expr, context, true)?;
+        }
+        if let Some(sample) = address.sample {
+            write!(self.out, ", ")?;
+            self.put_expression(sample, context, true)?;
+        }
+        if let Some(level) = address.level {
+            if context.image_needs_lod(image) {
+                write!(self.out, ", ")?;
+                self.put_level_of_detail(level, context)?;
+            }
+        }
+        write!(self.out, ")")?;
+
+        Ok(())
+    }
+
+    fn put_image_store(
+        &mut self,
+        level: back::Level,
+        image: Handle<crate::Expression>,
+        address: &TexelAddress,
+        value: Handle<crate::Expression>,
+        context: &StatementContext,
+    ) -> BackendResult {
+        match context.expression.policies.image {
+            proc::BoundsCheckPolicy::Restrict => {
+                // We don't have a restricted level value, because we don't
+                // support writes to mipmapped textures.
+                debug_assert!(address.level.is_none());
+
+                write!(self.out, "{}", level)?;
+                self.put_expression(image, &context.expression, false)?;
+                write!(self.out, ".write(")?;
+                self.put_expression(value, &context.expression, true)?;
+                write!(self.out, ", ")?;
+                self.put_restricted_texel_address(image, address, &context.expression)?;
+                writeln!(self.out, ");")?;
+            }
+            proc::BoundsCheckPolicy::ReadZeroSkipWrite => {
+                write!(self.out, "{}if (", level)?;
+                self.put_image_access_bounds_check(image, address, &context.expression)?;
+                writeln!(self.out, ") {{")?;
+                self.put_unchecked_image_store(level.next(), image, address, value, context)?;
+                writeln!(self.out, "{}}}", level)?;
+            }
+            proc::BoundsCheckPolicy::Unchecked => {
+                self.put_unchecked_image_store(level, image, address, value, context)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn put_unchecked_image_store(
+        &mut self,
+        level: back::Level,
+        image: Handle<crate::Expression>,
+        address: &TexelAddress,
+        value: Handle<crate::Expression>,
+        context: &StatementContext,
+    ) -> BackendResult {
+        write!(self.out, "{}", level)?;
+        self.put_expression(image, &context.expression, false)?;
+        write!(self.out, ".write(")?;
+        self.put_expression(value, &context.expression, true)?;
+        write!(self.out, ", ")?;
+        // coordinates in IR are int, but Metal expects uint
+        self.put_cast_to_uint_scalar_or_vector(address.coordinate, &context.expression)?;
+        if let Some(expr) = address.array_index {
+            write!(self.out, ", ")?;
+            self.put_expression(expr, &context.expression, true)?;
+        }
+        writeln!(self.out, ");")?;
+
+        Ok(())
+    }
+
     fn put_compose(
         &mut self,
         ty: Handle<crate::Type>,
@@ -684,25 +1045,11 @@ impl<W: Write> Writer<W> {
                 self.put_call_parameters(components.iter().cloned(), context)?;
             }
             crate::TypeInner::Vector { size, kind, .. } => {
-                write!(
-                    self.out,
-                    "{}::{}{}",
-                    NAMESPACE,
-                    kind.to_msl_name(),
-                    back::vector_size_str(size)
-                )?;
+                put_numeric_type(&mut self.out, kind, &[size])?;
                 self.put_call_parameters(components.iter().cloned(), context)?;
             }
             crate::TypeInner::Matrix { columns, rows, .. } => {
-                let kind = crate::ScalarKind::Float;
-                write!(
-                    self.out,
-                    "{}::{}{}x{}",
-                    NAMESPACE,
-                    kind.to_msl_name(),
-                    back::vector_size_str(columns),
-                    back::vector_size_str(rows)
-                )?;
+                put_numeric_type(&mut self.out, crate::ScalarKind::Float, &[rows, columns])?;
                 self.put_call_parameters(components.iter().cloned(), context)?;
             }
             crate::TypeInner::Array { .. } | crate::TypeInner::Struct { .. } => {
@@ -740,32 +1087,34 @@ impl<W: Write> Writer<W> {
         context: &ExpressionContext,
     ) -> BackendResult {
         let global = &context.module.global_variables[handle];
-        let members = match context.module.types[global.ty].inner {
-            crate::TypeInner::Struct { ref members, .. } => members,
+        let (offset, array_ty) = match context.module.types[global.ty].inner {
+            crate::TypeInner::Struct { ref members, .. } => match members.last() {
+                Some(&crate::StructMember { offset, ty, .. }) => (offset, ty),
+                None => return Err(Error::Validation),
+            },
+            crate::TypeInner::Array {
+                size: crate::ArraySize::Dynamic,
+                ..
+            } => (0, global.ty),
             _ => return Err(Error::Validation),
         };
 
-        let (offset, array_ty) = match members.last() {
-            Some(&crate::StructMember { offset, ty, .. }) => (offset, ty),
-            None => return Err(Error::Validation),
-        };
-
-        let (span, stride) = match context.module.types[array_ty].inner {
+        let (size, stride) = match context.module.types[array_ty].inner {
             crate::TypeInner::Array { base, stride, .. } => (
                 context.module.types[base]
                     .inner
-                    .span(&context.module.constants),
+                    .size(&context.module.constants),
                 stride,
             ),
             _ => return Err(Error::Validation),
         };
 
-        // When the stride length is larger than the span, the final element's stride of
+        // When the stride length is larger than the size, the final element's stride of
         // bytes would have padding following the value. But the buffer size in
         // `buffer_sizes.sizeN` may not include this padding - it only needs to be large
         // enough to hold the actual values' bytes.
         //
-        // So subtract off the span to get a byte size that falls at the start or within
+        // So subtract off the size to get a byte size that falls at the start or within
         // the final element. Then divide by the stride size, to get one less than the
         // length, and then add one. This works even if the buffer size does include the
         // stride padding, since division rounds towards zero (MSL 2.4 §6.1). It will fail
@@ -774,10 +1123,10 @@ impl<W: Write> Writer<W> {
         // prevent that.
         write!(
             self.out,
-            "(_buffer_sizes.size{idx} - {offset} - {span}) / {stride}",
+            "(_buffer_sizes.size{idx} - {offset} - {size}) / {stride}",
             idx = handle.index(),
             offset = offset,
-            span = span,
+            size = size,
             stride = stride,
         )?;
         Ok(())
@@ -790,15 +1139,60 @@ impl<W: Write> Writer<W> {
         value: Handle<crate::Expression>,
         context: &ExpressionContext,
     ) -> BackendResult {
+        // If the pointer we're passing to the atomic operation needs to be conditional
+        // for `ReadZeroSkipWrite`, the condition needs to *surround* the atomic op, and
+        // the pointer operand should be unchecked.
+        let policy = context.choose_bounds_check_policy(pointer);
+        let checked = policy == index::BoundsCheckPolicy::ReadZeroSkipWrite
+            && self.put_bounds_checks(pointer, context, back::Level(0), "")?;
+
+        // If requested and successfully put bounds checks, continue the ternary expression.
+        if checked {
+            write!(self.out, " ? ")?;
+        }
+
         write!(
             self.out,
             "{}::atomic_fetch_{}_explicit({}",
             NAMESPACE, key, ATOMIC_REFERENCE
         )?;
-        self.put_expression(pointer, context, true)?;
+        self.put_access_chain(pointer, policy, context)?;
         write!(self.out, ", ")?;
         self.put_expression(value, context, true)?;
         write!(self.out, ", {}::memory_order_relaxed)", NAMESPACE)?;
+
+        // Finish the ternary expression.
+        if checked {
+            write!(self.out, " : DefaultConstructible()")?;
+        }
+
+        Ok(())
+    }
+
+    /// Emit code for the arithmetic expression of the dot product.
+    ///
+    fn put_dot_product(
+        &mut self,
+        arg: Handle<crate::Expression>,
+        arg1: Handle<crate::Expression>,
+        size: usize,
+    ) -> BackendResult {
+        write!(self.out, "(")?;
+
+        let arg0_name = &self.named_expressions[&arg];
+        let arg1_name = &self.named_expressions[&arg1];
+
+        // This will print an extra '+' at the beginning but that is fine in msl
+        for index in 0..size {
+            let component = back::COMPONENTS[index];
+            write!(
+                self.out,
+                " + {}.{} * {}.{}",
+                arg0_name, component, arg1_name, component
+            )?;
+        }
+
+        write!(self.out, ")")?;
         Ok(())
     }
 
@@ -873,10 +1267,8 @@ impl<W: Write> Writer<W> {
                     crate::TypeInner::Scalar { kind, .. } => kind,
                     _ => return Err(Error::Validation),
                 };
-                let scalar = scalar_kind.to_msl_name();
-                let size = back::vector_size_str(size);
-
-                write!(self.out, "{}::{}{}(", NAMESPACE, scalar, size)?;
+                put_numeric_type(&mut self.out, scalar_kind, &[size])?;
+                write!(self.out, "(")?;
                 self.put_expression(value, context, true)?;
                 write!(self.out, ")")?;
             }
@@ -989,36 +1381,27 @@ impl<W: Write> Writer<W> {
                 image,
                 coordinate,
                 array_index,
-                index,
+                sample,
+                level,
             } => {
-                self.put_expression(image, context, false)?;
-                write!(self.out, ".read(")?;
-                self.put_storage_image_coordinate(coordinate, context)?;
-                if let Some(expr) = array_index {
-                    write!(self.out, ", ")?;
-                    self.put_expression(expr, context, true)?;
-                }
-                if let Some(index) = index {
-                    // Metal requires that the `level` argument to
-                    // `texture1d::read` be a constexpr equal to zero.
-                    if let crate::TypeInner::Image {
-                        dim: crate::ImageDimension::D1,
-                        ..
-                    } = *context.resolve_type(image)
-                    {
-                        // The argument defaults to zero.
-                    } else {
-                        write!(self.out, ", ")?;
-                        self.put_expression(index, context, true)?
-                    }
-                }
-                write!(self.out, ")")?;
+                let address = TexelAddress {
+                    coordinate,
+                    array_index,
+                    sample,
+                    level: level.map(LevelOfDetail::Direct),
+                };
+                self.put_image_load(expr_handle, image, address, context)?;
             }
             //Note: for all the queries, the signed integers are expected,
             // so a conversion is needed.
             crate::Expression::ImageQuery { image, query } => match query {
                 crate::ImageQuery::Size { level } => {
-                    self.put_image_size_query(image, level, context)?;
+                    self.put_image_size_query(
+                        image,
+                        level.map(LevelOfDetail::Direct),
+                        crate::ScalarKind::Sint,
+                        context,
+                    )?;
                 }
                 crate::ImageQuery::NumLevels => {
                     write!(self.out, "int(")?;
@@ -1037,9 +1420,15 @@ impl<W: Write> Writer<W> {
                 }
             },
             crate::Expression::Unary { op, expr } => {
+                use crate::{ScalarKind as Sk, UnaryOperator as Uo};
                 let op_str = match op {
-                    crate::UnaryOperator::Negate => "-",
-                    crate::UnaryOperator::Not => "!",
+                    Uo::Negate => "-",
+                    Uo::Not => match *context.resolve_type(expr) {
+                        crate::TypeInner::Scalar { kind: Sk::Sint, .. } => "~",
+                        crate::TypeInner::Scalar { kind: Sk::Uint, .. } => "~",
+                        crate::TypeInner::Scalar { kind: Sk::Bool, .. } => "!",
+                        _ => return Err(Error::Validation),
+                    },
                 };
                 write!(self.out, "{}", op_str)?;
                 self.put_expression(expr, context, false)?;
@@ -1191,7 +1580,18 @@ impl<W: Write> Writer<W> {
                     Mf::Log2 => "log2",
                     Mf::Pow => "pow",
                     // geometry
-                    Mf::Dot => "dot",
+                    Mf::Dot => match *context.resolve_type(arg) {
+                        crate::TypeInner::Vector {
+                            kind: crate::ScalarKind::Float,
+                            ..
+                        } => "dot",
+                        crate::TypeInner::Vector { size, .. } => {
+                            return self.put_dot_product(arg, arg1.unwrap(), size as usize)
+                        }
+                        _ => unreachable!(
+                            "Correct TypeInner for dot product should be already validated"
+                        ),
+                    },
                     Mf::Outer => return Err(Error::UnsupportedCall(format!("{:?}", fun))),
                     Mf::Cross => "cross",
                     Mf::Distance => "distance",
@@ -1284,7 +1684,6 @@ impl<W: Write> Writer<W> {
                 kind,
                 convert,
             } => {
-                let scalar = kind.to_msl_name();
                 let (src_kind, src_width) = match *context.resolve_type(expr) {
                     crate::TypeInner::Scalar { kind, width }
                     | crate::TypeInner::Vector { kind, width, .. } => (kind, width),
@@ -1303,18 +1702,10 @@ impl<W: Write> Writer<W> {
                 write!(self.out, "{}<", op)?;
                 match *context.resolve_type(expr) {
                     crate::TypeInner::Vector { size, .. } => {
-                        write!(
-                            self.out,
-                            "{}::{}{}",
-                            NAMESPACE,
-                            scalar,
-                            back::vector_size_str(size)
-                        )?;
+                        put_numeric_type(&mut self.out, kind, &[size])?
                     }
-                    _ => {
-                        write!(self.out, "{}", scalar)?;
-                    }
-                }
+                    _ => put_numeric_type(&mut self.out, kind, &[])?,
+                };
                 write!(self.out, ">(")?;
                 self.put_expression(expr, context, true)?;
                 write!(self.out, ")")?;
@@ -1332,6 +1723,7 @@ impl<W: Write> Writer<W> {
                             _ => return Err(Error::Validation),
                         }
                     }
+                    crate::Expression::GlobalVariable(handle) => handle,
                     _ => return Err(Error::Validation),
                 };
 
@@ -1378,7 +1770,7 @@ impl<W: Write> Writer<W> {
     /// The text written is of the form:
     ///
     /// ```ignore
-    /// {level}{prefix}metal::uint(i) < 4 && metal::uint(j) < 10
+    /// {level}{prefix}uint(i) < 4 && uint(j) < 10
     /// ```
     ///
     /// where `{level}` and `{prefix}` are the arguments to this function. For [`Store`]
@@ -1438,7 +1830,7 @@ impl<W: Write> Writer<W> {
                     // Check that the index falls within bounds. Do this with a single
                     // comparison, by casting the index to `uint` first, so that negative
                     // indices become large positive values.
-                    write!(self.out, "{}::uint(", NAMESPACE)?;
+                    write!(self.out, "uint(")?;
                     self.put_index(index, context, true)?;
                     self.out.write_str(") < ")?;
                     match length {
@@ -1491,7 +1883,7 @@ impl<W: Write> Writer<W> {
                 let mut base_ty = context.resolve_type(base);
 
                 // Look through any pointers to see what we're really indexing.
-                if let crate::TypeInner::Pointer { base, class: _ } = *base_ty {
+                if let crate::TypeInner::Pointer { base, space: _ } = *base_ty {
                     base_ty = &context.module.types[base].inner;
                 }
 
@@ -1509,7 +1901,7 @@ impl<W: Write> Writer<W> {
                 let mut base_ty_handle = base_resolution.handle();
 
                 // Look through any pointers to see what we're really indexing.
-                if let crate::TypeInner::Pointer { base, class: _ } = *base_ty {
+                if let crate::TypeInner::Pointer { base, space: _ } = *base_ty {
                     base_ty = &context.module.types[base].inner;
                     base_ty_handle = Some(base);
                 }
@@ -1629,8 +2021,8 @@ impl<W: Write> Writer<W> {
         context: &ExpressionContext,
         is_scoped: bool,
     ) -> BackendResult {
-        // Since access chains never cross storage classes, we can just check the index
-        // bounds check policy once at the top.
+        // Since access chains never cross between address spaces, we can just
+        // check the index bounds check policy once at the top.
         let policy = context.choose_bounds_check_policy(pointer);
         if policy == index::BoundsCheckPolicy::ReadZeroSkipWrite
             && self.put_bounds_checks(
@@ -1700,6 +2092,7 @@ impl<W: Write> Writer<W> {
     ) -> BackendResult {
         match result_struct {
             Some(struct_name) => {
+                let mut has_point_size = false;
                 let result_ty = context.function.result.as_ref().unwrap().ty;
                 match context.module.types[result_ty].inner {
                     crate::TypeInner::Struct { ref members, .. } => {
@@ -1708,20 +2101,24 @@ impl<W: Write> Writer<W> {
                         self.put_expression(expr_handle, context, true)?;
                         writeln!(self.out, ";")?;
                         write!(self.out, "{}return {} {{", level, struct_name)?;
+
                         let mut is_first = true;
+
                         for (index, member) in members.iter().enumerate() {
-                            if !context.pipeline_options.allow_point_size
-                                && member.binding
-                                    == Some(crate::Binding::BuiltIn(crate::BuiltIn::PointSize))
-                            {
-                                continue;
+                            match member.binding {
+                                Some(crate::Binding::BuiltIn(crate::BuiltIn::PointSize)) => {
+                                    has_point_size = true;
+                                    if !context.pipeline_options.allow_point_size {
+                                        continue;
+                                    }
+                                }
+                                Some(crate::Binding::BuiltIn(crate::BuiltIn::CullDistance)) => {
+                                    log::warn!("Ignoring CullDistance built-in");
+                                    continue;
+                                }
+                                _ => {}
                             }
-                            if member.binding
-                                == Some(crate::Binding::BuiltIn(crate::BuiltIn::CullDistance))
-                            {
-                                log::warn!("Ignoring CullDistance BuiltIn");
-                                continue;
-                            }
+
                             let comma = if is_first { "" } else { "," };
                             is_first = false;
                             let name = &self.names[&NameKey::StructMember(result_ty, index as u32)];
@@ -1758,6 +2155,17 @@ impl<W: Write> Writer<W> {
                         self.put_expression(expr_handle, context, true)?;
                     }
                 }
+
+                if let FunctionOrigin::EntryPoint(ep_index) = context.origin {
+                    let stage = context.module.entry_points[ep_index as usize].stage;
+                    if context.pipeline_options.allow_point_size
+                        && stage == crate::ShaderStage::Vertex
+                        && !has_point_size
+                    {
+                        // point size was injected and comes last
+                        write!(self.out, ", 1.0")?;
+                    }
+                }
                 write!(self.out, " }}")?;
             }
             None => {
@@ -1767,6 +2175,59 @@ impl<W: Write> Writer<W> {
         }
         writeln!(self.out, ";")?;
         Ok(())
+    }
+
+    /// Helper method used to find which expressions of a given function require baking
+    ///
+    /// # Notes
+    /// This function overwrites the contents of `self.need_bake_expressions`
+    fn update_expressions_to_bake(
+        &mut self,
+        func: &crate::Function,
+        info: &valid::FunctionInfo,
+        context: &ExpressionContext,
+    ) {
+        use crate::Expression;
+        self.need_bake_expressions.clear();
+        for expr in func.expressions.iter() {
+            // Expressions whose reference count is above the
+            // threshold should always be stored in temporaries.
+            let expr_info = &info[expr.0];
+            let min_ref_count = func.expressions[expr.0].bake_ref_count();
+            if min_ref_count <= expr_info.ref_count {
+                self.need_bake_expressions.insert(expr.0);
+            }
+
+            // WGSL's `dot` function works on any `vecN` type, but Metal's only
+            // works on floating-point vectors, so we emit inline code for
+            // integer vector `dot` calls. But that code uses each argument `N`
+            // times, once for each component (see `put_dot_product`), so to
+            // avoid duplicated evaluation, we must bake integer operands.
+            if let (
+                fun_handle,
+                &Expression::Math {
+                    fun: crate::MathFunction::Dot,
+                    arg,
+                    arg1,
+                    ..
+                },
+            ) = expr
+            {
+                use crate::TypeInner;
+                // check what kind of product this is depending
+                // on the resolve type of the Dot function itself
+                let inner = context.resolve_type(fun_handle);
+                if let TypeInner::Scalar { kind, .. } = *inner {
+                    match kind {
+                        crate::ScalarKind::Sint | crate::ScalarKind::Uint => {
+                            self.need_bake_expressions.insert(arg);
+                            self.need_bake_expressions.insert(arg1.unwrap());
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 
     fn start_baking_expression(
@@ -1786,34 +2247,14 @@ impl<W: Write> Writer<W> {
                 };
                 write!(self.out, "{}", ty_name)?;
             }
-            TypeResolution::Value(crate::TypeInner::Scalar {
-                kind: crate::ScalarKind::Uint,
-                ..
-            }) => {
-                // work around Metal toolchain bug with `uint` typedef
-                write!(self.out, "{}::uint", NAMESPACE)?;
-            }
             TypeResolution::Value(crate::TypeInner::Scalar { kind, .. }) => {
-                write!(self.out, "{}", kind.to_msl_name())?;
+                put_numeric_type(&mut self.out, kind, &[])?;
             }
             TypeResolution::Value(crate::TypeInner::Vector { size, kind, .. }) => {
-                write!(
-                    self.out,
-                    "{}::{}{}",
-                    NAMESPACE,
-                    kind.to_msl_name(),
-                    back::vector_size_str(size)
-                )?;
+                put_numeric_type(&mut self.out, kind, &[size])?;
             }
             TypeResolution::Value(crate::TypeInner::Matrix { columns, rows, .. }) => {
-                write!(
-                    self.out,
-                    "{}::{}{}x{}",
-                    NAMESPACE,
-                    crate::ScalarKind::Float.to_msl_name(),
-                    back::vector_size_str(columns),
-                    back::vector_size_str(rows),
-                )?;
+                put_numeric_type(&mut self.out, crate::ScalarKind::Float, &[rows, columns])?;
             }
             TypeResolution::Value(ref other) => {
                 log::warn!("Type {:?} isn't a known local", other); //TEMP!
@@ -1823,6 +2264,57 @@ impl<W: Write> Writer<W> {
 
         //TODO: figure out the naming scheme that wouldn't collide with user names.
         write!(self.out, " {} = ", name)?;
+
+        Ok(())
+    }
+
+    /// Cache a clamped level of detail value, if necessary.
+    ///
+    /// [`ImageLoad`] accesses covered by [`BoundsCheckPolicy::Restrict`] use a
+    /// properly clamped level of detail value both in the access itself, and
+    /// for fetching the size of the requested MIP level, needed to clamp the
+    /// coordinates. To avoid recomputing this clamped level of detail, we cache
+    /// it in a temporary variable, as part of the [`Emit`] statement covering
+    /// the [`ImageLoad`] expression.
+    ///
+    /// [`ImageLoad`]: crate::Expression::ImageLoad
+    /// [`BoundsCheckPolicy::Restrict`]: index::BoundsCheckPolicy::Restrict
+    /// [`Emit`]: crate::Statement::Emit
+    fn put_cache_restricted_level(
+        &mut self,
+        load: Handle<crate::Expression>,
+        image: Handle<crate::Expression>,
+        mip_level: Option<Handle<crate::Expression>>,
+        indent: back::Level,
+        context: &StatementContext,
+    ) -> BackendResult {
+        // Does this image access actually require (or even permit) a
+        // level-of-detail, and does the policy require us to restrict it?
+        let level_of_detail = match mip_level {
+            Some(level) => level,
+            None => return Ok(()),
+        };
+
+        if context.expression.policies.image != index::BoundsCheckPolicy::Restrict
+            || !context.expression.image_needs_lod(image)
+        {
+            return Ok(());
+        }
+
+        write!(
+            self.out,
+            "{}uint {}{} = ",
+            indent,
+            CLAMPED_LOD_LOAD_PREFIX,
+            load.index(),
+        )?;
+        self.put_restricted_scalar_image_index(
+            image,
+            level_of_detail,
+            "get_num_mip_levels",
+            &context.expression,
+        )?;
+        writeln!(self.out, ";")?;
 
         Ok(())
     }
@@ -1844,11 +2336,24 @@ impl<W: Write> Writer<W> {
             match *statement {
                 crate::Statement::Emit(ref range) => {
                     for handle in range.clone() {
+                        // `ImageLoad` expressions covered by the `Restrict` bounds check policy
+                        // may need to cache a clamped version of their level-of-detail argument.
+                        if let crate::Expression::ImageLoad {
+                            image,
+                            level: mip_level,
+                            ..
+                        } = context.expression.function.expressions[handle]
+                        {
+                            self.put_cache_restricted_level(
+                                handle, image, mip_level, level, context,
+                            )?;
+                        }
+
                         let info = &context.expression.info[handle];
                         let ptr_class = info
                             .ty
                             .inner_with(&context.expression.module.types)
-                            .pointer_class();
+                            .pointer_space();
                         let expr_name = if ptr_class.is_some() {
                             None // don't bake pointer expressions (just yet)
                         } else if let Some(name) =
@@ -1872,12 +2377,7 @@ impl<W: Write> Writer<W> {
                                 if context.expression.guarded_indices.contains(handle.index()) {
                                     true
                                 } else {
-                                    // Expressions whose reference count is above the
-                                    // threshold should always be stored in temporaries.
-                                    let min_ref_count = context.expression.function.expressions
-                                        [handle]
-                                        .bake_ref_count();
-                                    min_ref_count <= info.ref_count
+                                    self.need_bake_expressions.contains(&handle)
                                 };
 
                             if bake {
@@ -2027,17 +2527,13 @@ impl<W: Write> Writer<W> {
                     array_index,
                     value,
                 } => {
-                    write!(self.out, "{}", level)?;
-                    self.put_expression(image, &context.expression, false)?;
-                    write!(self.out, ".write(")?;
-                    self.put_expression(value, &context.expression, true)?;
-                    write!(self.out, ", ")?;
-                    self.put_storage_image_coordinate(coordinate, &context.expression)?;
-                    if let Some(expr) = array_index {
-                        write!(self.out, ", ")?;
-                        self.put_expression(expr, &context.expression, true)?;
-                    }
-                    writeln!(self.out, ");")?;
+                    let address = TexelAddress {
+                        coordinate,
+                        array_index,
+                        sample: None,
+                        level: None,
+                    };
+                    self.put_image_store(level, image, &address, value, context)?
                 }
                 crate::Statement::Call {
                     function,
@@ -2067,7 +2563,7 @@ impl<W: Write> Writer<W> {
                         if fun_info[handle].is_empty() {
                             continue;
                         }
-                        if var.class.needs_pass_through() {
+                        if var.space.needs_pass_through() {
                             let name = &self.names[&NameKey::GlobalVariable(handle)];
                             if separate {
                                 write!(self.out, ", ")?;
@@ -2251,6 +2747,9 @@ impl<W: Write> Writer<W> {
         writeln!(self.out, "#include <metal_stdlib>")?;
         writeln!(self.out, "#include <simd/simd.h>")?;
         writeln!(self.out)?;
+        // Work around Metal bug where `uint` is not available by default
+        writeln!(self.out, "using {}::uint;", NAMESPACE)?;
+        writeln!(self.out)?;
 
         if options
             .bounds_check_policies
@@ -2272,7 +2771,7 @@ impl<W: Write> Writer<W> {
                 writeln!(self.out, "struct _mslBufferSizes {{")?;
 
                 for idx in indices {
-                    writeln!(self.out, "{}{}::uint size{};", back::INDENT, NAMESPACE, idx)?;
+                    writeln!(self.out, "{}uint size{};", back::INDENT, idx)?;
                 }
 
                 writeln!(self.out, "}};")?;
@@ -2379,7 +2878,7 @@ impl<W: Write> Writer<W> {
                             writeln!(self.out, "{}char _pad{}[{}];", back::INDENT, index, pad)?;
                         }
                         let ty_inner = &module.types[member.ty].inner;
-                        last_offset = member.offset + ty_inner.span(&module.constants);
+                        last_offset = member.offset + ty_inner.size(&module.constants);
 
                         let member_name = &self.names[&NameKey::StructMember(handle, index as u32)];
 
@@ -2609,7 +3108,7 @@ impl<W: Write> Writer<W> {
             let mut supports_array_length = false;
             for (handle, var) in module.global_variables.iter() {
                 if !fun_info[handle].is_empty() {
-                    if var.class.needs_pass_through() {
+                    if var.space.needs_pass_through() {
                         pass_through_globals.push(handle);
                     }
                     supports_array_length |= needs_array_length(var.ty, &module.types);
@@ -2722,6 +3221,7 @@ impl<W: Write> Writer<W> {
                 result_struct: None,
             };
             self.named_expressions.clear();
+            self.update_expressions_to_bake(fun, fun_info, &context.expression);
             self.put_block(back::Level(1), &fun.body, &context)?;
             writeln!(self.out, "}}")?;
         }
@@ -2733,13 +3233,19 @@ impl<W: Write> Writer<W> {
             let fun = &ep.function;
             let fun_info = mod_info.get_entry_point(ep_index);
             let mut ep_error = None;
-            let mut supports_array_length = false;
 
             log::trace!(
                 "entry point {:?}, index {:?}",
                 fun.name.as_deref().unwrap_or("(anonymous)"),
                 ep_index
             );
+
+            // Is any global variable used by this entry point dynamically sized?
+            let supports_array_length = module
+                .global_variables
+                .iter()
+                .filter(|&(handle, _)| !fun_info[handle].is_empty())
+                .any(|(_, var)| needs_array_length(var.ty, &module.types));
 
             // skip this entry point if any global bindings are missing,
             // or their types are incompatible.
@@ -2751,10 +3257,9 @@ impl<W: Write> Writer<W> {
                     if let Some(ref br) = var.binding {
                         let good = match options.per_stage_map[ep.stage].resources.get(br) {
                             Some(target) => match module.types[var.ty].inner {
-                                crate::TypeInner::Struct { .. } => target.buffer.is_some(),
                                 crate::TypeInner::Image { .. } => target.texture.is_some(),
                                 crate::TypeInner::Sampler { .. } => target.sampler.is_some(),
-                                _ => false,
+                                _ => target.buffer.is_some(),
                             },
                             None => false,
                         };
@@ -2763,13 +3268,12 @@ impl<W: Write> Writer<W> {
                             break;
                         }
                     }
-                    if var.class == crate::StorageClass::PushConstant {
+                    if var.space == crate::AddressSpace::PushConstant {
                         if let Err(e) = options.resolve_push_constants(ep.stage) {
                             ep_error = Some(e);
                             break;
                         }
                     }
-                    supports_array_length |= needs_array_length(var.ty, &module.types);
                 }
                 if supports_array_length {
                     if let Err(err) = options.resolve_sizes_buffer(ep.stage) {
@@ -2787,9 +3291,6 @@ impl<W: Write> Writer<W> {
 
             writeln!(self.out)?;
 
-            let stage_out_name = format!("{}Output", fun_name);
-            let stage_in_name = format!("{}Input", fun_name);
-
             let (em_str, in_mode, out_mode) = match ep.stage {
                 crate::ShaderStage::Vertex => (
                     "vertex",
@@ -2806,35 +3307,44 @@ impl<W: Write> Writer<W> {
                 }
             };
 
-            let mut argument_members = Vec::new();
+            // List all the Naga `EntryPoint`'s `Function`'s arguments,
+            // flattening structs into their members. In Metal, we will pass
+            // each of these values to the entry point as a separate argument—
+            // except for the varyings, handled next.
+            let mut flattened_arguments = Vec::new();
             for (arg_index, arg) in fun.arguments.iter().enumerate() {
                 match module.types[arg.ty].inner {
                     crate::TypeInner::Struct { ref members, .. } => {
                         for (member_index, member) in members.iter().enumerate() {
-                            argument_members.push((
-                                NameKey::StructMember(arg.ty, member_index as u32),
+                            let member_index = member_index as u32;
+                            flattened_arguments.push((
+                                NameKey::StructMember(arg.ty, member_index),
                                 member.ty,
                                 member.binding.as_ref(),
-                            ))
+                            ));
                         }
                     }
-                    _ => argument_members.push((
+                    _ => flattened_arguments.push((
                         NameKey::EntryPointArgument(ep_index as _, arg_index as u32),
                         arg.ty,
                         arg.binding.as_ref(),
                     )),
                 }
             }
+
+            // Identify the varyings among the argument values, and emit a
+            // struct type named `<fun>Input` to hold them.
+            let stage_in_name = format!("{}Input", fun_name);
             let varyings_member_name = self.namer.call("varyings");
-            let mut varying_count = 0;
-            if !argument_members.is_empty() {
+            let mut has_varyings = false;
+            if !flattened_arguments.is_empty() {
                 writeln!(self.out, "struct {} {{", stage_in_name)?;
-                for &(ref name_key, ty, binding) in argument_members.iter() {
+                for &(ref name_key, ty, binding) in flattened_arguments.iter() {
                     let binding = match binding {
                         Some(ref binding @ &crate::Binding::Location { .. }) => binding,
                         _ => continue,
                     };
-                    varying_count += 1;
+                    has_varyings = true;
                     let name = &self.names[name_key];
                     let ty_name = TypeContext {
                         handle: ty,
@@ -2845,12 +3355,15 @@ impl<W: Write> Writer<W> {
                     };
                     let resolved = options.resolve_local_binding(binding, in_mode)?;
                     write!(self.out, "{}{} {}", back::INDENT, ty_name, name)?;
-                    resolved.try_fmt_decorated(&mut self.out, "")?;
+                    resolved.try_fmt_decorated(&mut self.out)?;
                     writeln!(self.out, ";")?;
                 }
                 writeln!(self.out, "}};")?;
             }
 
+            // Define a struct type named for the return value, if any, named
+            // `<fun>Output`.
+            let stage_out_name = format!("{}Output", fun_name);
             let result_member_name = self.namer.call("member");
             let result_type_name = match fun.result {
                 Some(ref result) => {
@@ -2874,6 +3387,7 @@ impl<W: Write> Writer<W> {
                     }
 
                     writeln!(self.out, "struct {} {{", stage_out_name)?;
+                    let mut has_point_size = false;
                     for (name, ty, binding) in result_members {
                         let ty_name = TypeContext {
                             handle: ty,
@@ -2883,19 +3397,27 @@ impl<W: Write> Writer<W> {
                             first_time: true,
                         };
                         let binding = binding.ok_or(Error::Validation)?;
-                        // Cull Distance is not supported in Metal.
-                        // But we can't return UnsupportedBuiltIn error to user.
-                        // Because otherwise we can't generate msl shader from any glslang SPIR-V shaders.
-                        // glslang generates gl_PerVertex struct with gl_CullDistance builtin inside by default.
-                        if *binding == crate::Binding::BuiltIn(crate::BuiltIn::CullDistance) {
-                            log::warn!("Ignoring CullDistance BuiltIn");
-                            continue;
+
+                        match *binding {
+                            // Point size is only supported in VS of pipelines with
+                            // point primitive topology.
+                            crate::Binding::BuiltIn(crate::BuiltIn::PointSize) => {
+                                has_point_size = true;
+                                if !pipeline_options.allow_point_size {
+                                    continue;
+                                }
+                            }
+                            // Cull Distance is not supported in Metal.
+                            // But we can't return UnsupportedBuiltIn error to user.
+                            // Because otherwise we can't generate msl shader from any glslang SPIR-V shaders.
+                            // glslang generates gl_PerVertex struct with gl_CullDistance builtin inside by default.
+                            crate::Binding::BuiltIn(crate::BuiltIn::CullDistance) => {
+                                log::warn!("Ignoring CullDistance BuiltIn");
+                                continue;
+                            }
+                            _ => {}
                         }
-                        if !pipeline_options.allow_point_size
-                            && *binding == crate::Binding::BuiltIn(crate::BuiltIn::PointSize)
-                        {
-                            continue;
-                        }
+
                         let array_len = match module.types[ty].inner {
                             crate::TypeInner::Array {
                                 size: crate::ArraySize::Constant(handle),
@@ -2905,21 +3427,43 @@ impl<W: Write> Writer<W> {
                         };
                         let resolved = options.resolve_local_binding(binding, out_mode)?;
                         write!(self.out, "{}{} {}", back::INDENT, ty_name, name)?;
-                        resolved.try_fmt_decorated(&mut self.out, "")?;
                         if let Some(array_len) = array_len {
                             write!(self.out, " [{}]", array_len)?;
                         }
-                        writeln!(self.out, ";")?;
+                        write!(self.out, " [[")?;
+                        resolved.try_fmt(&mut self.out)?;
+                        if options.lang_version >= (2, 1)
+                            && *binding == crate::Binding::BuiltIn(crate::BuiltIn::Position)
+                        {
+                            write!(self.out, ", invariant")?;
+                        }
+                        writeln!(self.out, "]];")?;
+                    }
+
+                    if pipeline_options.allow_point_size
+                        && ep.stage == crate::ShaderStage::Vertex
+                        && !has_point_size
+                    {
+                        // inject the point size output last
+                        writeln!(
+                            self.out,
+                            "{}float _point_size [[point_size]];",
+                            back::INDENT
+                        )?;
                     }
                     writeln!(self.out, "}};")?;
                     &stage_out_name
                 }
                 None => "void",
             };
-            writeln!(self.out, "{} {} {}(", em_str, result_type_name, fun_name)?;
 
+            // Write the entry point function's name, and begin its argument list.
+            writeln!(self.out, "{} {} {}(", em_str, result_type_name, fun_name)?;
             let mut is_first_argument = true;
-            if varying_count != 0 {
+
+            // If we have produced a struct holding the `EntryPoint`'s
+            // `Function`'s arguments' varyings, pass that struct first.
+            if has_varyings {
                 writeln!(
                     self.out,
                     "  {} {} [[stage_in]]",
@@ -2927,12 +3471,31 @@ impl<W: Write> Writer<W> {
                 )?;
                 is_first_argument = false;
             }
-            for &(ref name_key, ty, binding) in argument_members.iter() {
+
+            // Then pass the remaining arguments not included in the varyings
+            // struct.
+            //
+            // Since `Namer.reset` wasn't expecting struct members to be
+            // suddenly injected into the normal namespace like this,
+            // `self.names` doesn't keep them distinct from other variables.
+            // Generate fresh names for these arguments, and remember the
+            // mapping.
+            let mut flattened_member_names = FastHashMap::default();
+            for &(ref name_key, ty, binding) in flattened_arguments.iter() {
                 let binding = match binding {
                     Some(ref binding @ &crate::Binding::BuiltIn(..)) => binding,
                     _ => continue,
                 };
-                let name = &self.names[name_key];
+                let name = if let NameKey::StructMember(ty, index) = *name_key {
+                    // We should always insert a fresh entry here, but use
+                    // `or_insert` to get a reference to the `String` we just
+                    // inserted.
+                    flattened_member_names
+                        .entry(NameKey::StructMember(ty, index))
+                        .or_insert_with(|| self.namer.call(&self.names[name_key]))
+                } else {
+                    &self.names[name_key]
+                };
                 let ty_name = TypeContext {
                     handle: ty,
                     arena: &module.types,
@@ -2948,19 +3511,28 @@ impl<W: Write> Writer<W> {
                     ','
                 };
                 write!(self.out, "{} {} {}", separator, ty_name, name)?;
-                resolved.try_fmt_decorated(&mut self.out, "\n")?;
+                resolved.try_fmt_decorated(&mut self.out)?;
+                writeln!(self.out)?;
             }
+
+            // Those global variables used by this entry point and its callees
+            // get passed as arguments. `Private` globals are an exception, they
+            // don't outlive this invocation, so we declare them below as locals
+            // within the entry point.
             for (handle, var) in module.global_variables.iter() {
                 let usage = fun_info[handle];
-                if usage.is_empty() || var.class == crate::StorageClass::Private {
+                if usage.is_empty() || var.space == crate::AddressSpace::Private {
                     continue;
                 }
                 // the resolves have already been checked for `!fake_missing_bindings` case
-                let resolved = match var.class {
-                    crate::StorageClass::PushConstant => {
+                let resolved = match var.space {
+                    crate::AddressSpace::PushConstant => {
                         options.resolve_push_constants(ep.stage).ok()
                     }
-                    crate::StorageClass::WorkGroup => None,
+                    crate::AddressSpace::WorkGroup => None,
+                    crate::AddressSpace::Storage { .. } if options.lang_version < (2, 0) => {
+                        return Err(Error::UnsupportedAddressSpace(var.space))
+                    }
                     _ => options
                         .resolve_resource_binding(ep.stage, var.binding.as_ref().unwrap())
                         .ok(),
@@ -2988,7 +3560,7 @@ impl<W: Write> Writer<W> {
                 write!(self.out, "{} ", separator)?;
                 tyvar.try_fmt(&mut self.out)?;
                 if let Some(resolved) = resolved {
-                    resolved.try_fmt_decorated(&mut self.out, "")?;
+                    resolved.try_fmt_decorated(&mut self.out)?;
                 }
                 if let Some(value) = var.init {
                     let coco = ConstantContext {
@@ -3002,6 +3574,8 @@ impl<W: Write> Writer<W> {
                 writeln!(self.out)?;
             }
 
+            // If this entry uses any variable-length arrays, their sizes are
+            // passed as a final struct-typed argument.
             if supports_array_length {
                 // this is checked earlier
                 let resolved = options.resolve_sizes_buffer(ep.stage).unwrap();
@@ -3015,7 +3589,8 @@ impl<W: Write> Writer<W> {
                     "{} constant _mslBufferSizes& _buffer_sizes",
                     separator,
                 )?;
-                resolved.try_fmt_decorated(&mut self.out, "\n")?;
+                resolved.try_fmt_decorated(&mut self.out)?;
+                writeln!(self.out)?;
             }
 
             // end of the entry point argument list
@@ -3028,7 +3603,7 @@ impl<W: Write> Writer<W> {
                 if usage.is_empty() {
                     continue;
                 }
-                if var.class == crate::StorageClass::Private {
+                if var.space == crate::AddressSpace::Private {
                     let tyvar = TypedGlobalVariable {
                         module,
                         names: &self.names,
@@ -3070,7 +3645,16 @@ impl<W: Write> Writer<W> {
                 }
             }
 
-            // Now refactor the inputs in a way that the rest of the code expects
+            // Now take the arguments that we gathered into structs, and the
+            // structs that we flattened into arguments, and emit local
+            // variables with initializers that put everything back the way the
+            // body code expects.
+            //
+            // If we had to generate fresh names for struct members passed as
+            // arguments, be sure to use those names when rebuilding the struct.
+            //
+            // "Each day, I change some zeros to ones, and some ones to zeros.
+            // The rest, I leave alone."
             for (arg_index, arg) in fun.arguments.iter().enumerate() {
                 let arg_name =
                     &self.names[&NameKey::EntryPointArgument(ep_index as _, arg_index as u32)];
@@ -3085,8 +3669,14 @@ impl<W: Write> Writer<W> {
                             arg_name
                         )?;
                         for (member_index, member) in members.iter().enumerate() {
-                            let name =
-                                &self.names[&NameKey::StructMember(arg.ty, member_index as u32)];
+                            let key = NameKey::StructMember(arg.ty, member_index as u32);
+                            // If it's not in the varying struct, then we should
+                            // have passed it as its own argument and assigned
+                            // it a new name.
+                            let name = match member.binding {
+                                Some(crate::Binding::BuiltIn(_)) => &flattened_member_names[&key],
+                                _ => &self.names[&key],
+                            };
                             if member_index != 0 {
                                 write!(self.out, ", ")?;
                             }
@@ -3153,6 +3743,7 @@ impl<W: Write> Writer<W> {
                 result_struct: Some(&stage_out_name),
             };
             self.named_expressions.clear();
+            self.update_expressions_to_bake(fun, fun_info, &context.expression);
             self.put_block(back::Level(1), &fun.body, &context)?;
             writeln!(self.out, "}}")?;
             if ep_index + 1 != module.entry_points.len() {

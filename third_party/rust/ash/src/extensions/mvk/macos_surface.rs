@@ -20,24 +20,23 @@ impl MacOSSurface {
         Self { handle, fp }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateMacOSSurfaceMVK.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateMacOSSurfaceMVK.html>
     pub unsafe fn create_mac_os_surface(
         &self,
         create_info: &vk::MacOSSurfaceCreateInfoMVK,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        self.fp
-            .create_mac_os_surface_mvk(
-                self.handle,
-                create_info,
-                allocation_callbacks.as_raw_ptr(),
-                &mut surface,
-            )
-            .result_with_success(surface)
+        (self.fp.create_mac_os_surface_mvk)(
+            self.handle,
+            create_info,
+            allocation_callbacks.as_raw_ptr(),
+            &mut surface,
+        )
+        .result_with_success(surface)
     }
 
-    pub fn name() -> &'static CStr {
+    pub const fn name() -> &'static CStr {
         vk::MvkMacosSurfaceFn::name()
     }
 

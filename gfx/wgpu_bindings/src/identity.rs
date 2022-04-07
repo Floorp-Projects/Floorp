@@ -52,7 +52,7 @@ pub struct IdentityRecyclerFactory {
 
 impl wgc::hub::IdentityHandlerFactory<id::AdapterId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::AdapterId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_adapter,
             param: self.param,
@@ -62,7 +62,7 @@ impl wgc::hub::IdentityHandlerFactory<id::AdapterId> for IdentityRecyclerFactory
 }
 impl wgc::hub::IdentityHandlerFactory<id::DeviceId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::DeviceId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_device,
             param: self.param,
@@ -72,7 +72,7 @@ impl wgc::hub::IdentityHandlerFactory<id::DeviceId> for IdentityRecyclerFactory 
 }
 impl wgc::hub::IdentityHandlerFactory<id::PipelineLayoutId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::PipelineLayoutId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_pipeline_layout,
             param: self.param,
@@ -82,7 +82,7 @@ impl wgc::hub::IdentityHandlerFactory<id::PipelineLayoutId> for IdentityRecycler
 }
 impl wgc::hub::IdentityHandlerFactory<id::ShaderModuleId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::ShaderModuleId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_shader_module,
             param: self.param,
@@ -92,7 +92,7 @@ impl wgc::hub::IdentityHandlerFactory<id::ShaderModuleId> for IdentityRecyclerFa
 }
 impl wgc::hub::IdentityHandlerFactory<id::BindGroupLayoutId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::BindGroupLayoutId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_bind_group_layout,
             param: self.param,
@@ -102,7 +102,7 @@ impl wgc::hub::IdentityHandlerFactory<id::BindGroupLayoutId> for IdentityRecycle
 }
 impl wgc::hub::IdentityHandlerFactory<id::BindGroupId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::BindGroupId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_bind_group,
             param: self.param,
@@ -112,7 +112,7 @@ impl wgc::hub::IdentityHandlerFactory<id::BindGroupId> for IdentityRecyclerFacto
 }
 impl wgc::hub::IdentityHandlerFactory<id::CommandBufferId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::CommandBufferId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_command_buffer,
             param: self.param,
@@ -122,7 +122,7 @@ impl wgc::hub::IdentityHandlerFactory<id::CommandBufferId> for IdentityRecyclerF
 }
 impl wgc::hub::IdentityHandlerFactory<id::RenderBundleId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::RenderBundleId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_render_bundle,
             param: self.param,
@@ -132,7 +132,7 @@ impl wgc::hub::IdentityHandlerFactory<id::RenderBundleId> for IdentityRecyclerFa
 }
 impl wgc::hub::IdentityHandlerFactory<id::RenderPipelineId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::RenderPipelineId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_render_pipeline,
             param: self.param,
@@ -142,7 +142,7 @@ impl wgc::hub::IdentityHandlerFactory<id::RenderPipelineId> for IdentityRecycler
 }
 impl wgc::hub::IdentityHandlerFactory<id::ComputePipelineId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::ComputePipelineId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_compute_pipeline,
             param: self.param,
@@ -152,7 +152,7 @@ impl wgc::hub::IdentityHandlerFactory<id::ComputePipelineId> for IdentityRecycle
 }
 impl wgc::hub::IdentityHandlerFactory<id::QuerySetId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::QuerySetId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_query_set,
             param: self.param,
@@ -162,7 +162,7 @@ impl wgc::hub::IdentityHandlerFactory<id::QuerySetId> for IdentityRecyclerFactor
 }
 impl wgc::hub::IdentityHandlerFactory<id::BufferId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::BufferId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_buffer,
             param: self.param,
@@ -172,7 +172,7 @@ impl wgc::hub::IdentityHandlerFactory<id::BufferId> for IdentityRecyclerFactory 
 }
 impl wgc::hub::IdentityHandlerFactory<id::TextureId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::TextureId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_texture,
             param: self.param,
@@ -182,7 +182,7 @@ impl wgc::hub::IdentityHandlerFactory<id::TextureId> for IdentityRecyclerFactory
 }
 impl wgc::hub::IdentityHandlerFactory<id::TextureViewId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::TextureViewId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_texture_view,
             param: self.param,
@@ -192,7 +192,7 @@ impl wgc::hub::IdentityHandlerFactory<id::TextureViewId> for IdentityRecyclerFac
 }
 impl wgc::hub::IdentityHandlerFactory<id::SamplerId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::SamplerId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_sampler,
             param: self.param,
@@ -202,7 +202,7 @@ impl wgc::hub::IdentityHandlerFactory<id::SamplerId> for IdentityRecyclerFactory
 }
 impl wgc::hub::IdentityHandlerFactory<id::SurfaceId> for IdentityRecyclerFactory {
     type Filter = IdentityRecycler<id::SurfaceId>;
-    fn spawn(&self, _min_index: u32) -> Self::Filter {
+    fn spawn(&self) -> Self::Filter {
         IdentityRecycler {
             fun: self.free_surface,
             param: self.param,
