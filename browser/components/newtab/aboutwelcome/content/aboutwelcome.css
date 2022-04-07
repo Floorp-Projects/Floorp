@@ -142,6 +142,17 @@ body[lwt-newtab-brighttext] {
   min-height: 500px;
   overflow: hidden;
 }
+.onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .brand-logo {
+  margin-top: 120px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .brand-logo {
+    background-image: url("chrome://activity-stream/content/data/content/assets/heart.svg") !important;
+  }
+}
+.onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .no-steps {
+  padding-bottom: 12px;
+}
 .onboardingContainer .screen.light-text {
   --in-content-page-color: rgb(251, 251, 254);
   --in-content-primary-button-text-color: rgb(43, 42, 51);
@@ -233,9 +244,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .welcome-text.fancy h1 {
   background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
   background-size: 400% auto;
-  color: #000;
   background-clip: text;
-  -webkit-background-clip: text;
   animation: shine 50s linear infinite;
 }
 @media (prefers-contrast: no-preference) {
