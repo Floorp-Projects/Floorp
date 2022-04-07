@@ -337,35 +337,38 @@ var SessionFileInternal = {
     return result;
   },
 
-  // Initialize SessionWriter.
-  // This should be called _before_ any other methods on SessionWriter (see
-  // `_callWriter()`).
-  _initWriter() {
-    if (this._initialized) {
-      return;
-    }
+  // Initialize SessionWriter and return it as a resolved promise.
+  getWriter() {
+    if (!this._initialized) {
+      if (!this._readOrigin) {
+        return Promise.reject(
+          "SessionFileInternal.getWriter() called too early! Please read the session file from disk first."
+        );
+      }
 
-    if (!this._readOrigin) {
-      throw new Error(
-        "_initWriter called too early! Please read the session file from disk first."
+      this._initialized = true;
+      SessionWriter.init(
+        this._readOrigin,
+        this._usingOldExtension,
+        this.Paths,
+        {
+          maxUpgradeBackups: Services.prefs.getIntPref(
+            PREF_MAX_UPGRADE_BACKUPS,
+            3
+          ),
+          maxSerializeBack: Services.prefs.getIntPref(
+            PREF_MAX_SERIALIZE_BACK,
+            10
+          ),
+          maxSerializeForward: Services.prefs.getIntPref(
+            PREF_MAX_SERIALIZE_FWD,
+            -1
+          ),
+        }
       );
     }
 
-    this._initialized = true;
-    SessionWriter.init(this._readOrigin, this._usingOldExtension, this.Paths, {
-      maxUpgradeBackups: Services.prefs.getIntPref(PREF_MAX_UPGRADE_BACKUPS, 3),
-      maxSerializeBack: Services.prefs.getIntPref(PREF_MAX_SERIALIZE_BACK, 10),
-      maxSerializeForward: Services.prefs.getIntPref(
-        PREF_MAX_SERIALIZE_FWD,
-        -1
-      ),
-    });
-  },
-
-  // Call a method of SessionWriter, making sure that it has been initialized first.
-  _callWriter(method, args = []) {
-    this._initWriter();
-    return SessionWriter[method](...args);
+    return Promise.resolve(SessionWriter);
   },
 
   write(aData) {
@@ -385,7 +388,7 @@ var SessionFileInternal = {
 
     this._attempts++;
     let options = { isFinalWrite, performShutdownCleanup };
-    let promise = this._callWriter("write", [aData, options]);
+    let promise = this.getWriter().then(writer => writer.write(aData, options));
 
     // Wait until the write is done.
     promise = promise.then(
@@ -443,12 +446,12 @@ var SessionFileInternal = {
     });
   },
 
-  wipe() {
-    return this._callWriter("wipe").then(() => {
-      // After a wipe, we need to make sure to re-initialize upon the next read(),
-      // because the state variables as sent to the writer have changed.
-      this._initialized = false;
-    });
+  async wipe() {
+    const writer = await this.getWriter();
+    await writer.wipe();
+    // After a wipe, we need to make sure to re-initialize upon the next read(),
+    // because the state variables as sent to the writer have changed.
+    this._initialized = false;
   },
 
   _recordTelemetry(telemetry) {
