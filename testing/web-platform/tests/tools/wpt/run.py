@@ -8,7 +8,7 @@ from typing import ClassVar, Tuple, Type
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
 
-from . import browser, install, testfiles, virtualenv
+from . import browser, install, testfiles
 from ..serve import serve
 
 logger = None
@@ -838,27 +838,3 @@ def run(venv, **kwargs):
 def run_single(venv, **kwargs):
     from wptrunner import wptrunner
     return wptrunner.start(**kwargs)
-
-
-def main():
-    try:
-        parser = create_parser()
-        args = parser.parse_args()
-
-        venv = virtualenv.Virtualenv(os.path.join(wpt_root, "_venv_%s") % platform.uname()[0])
-        venv.start()
-        venv.install_requirements(os.path.join(wpt_root, "tools", "wptrunner", "requirements.txt"))
-        venv.install("requests")
-
-        return run(venv, vars(args))
-    except WptrunError as e:
-        exit(e)
-
-
-if __name__ == "__main__":
-    import pdb
-    from tools import localpaths  # noqa: F401
-    try:
-        main()  # type: ignore
-    except Exception:
-        pdb.post_mortem()
