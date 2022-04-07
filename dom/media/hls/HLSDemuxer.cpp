@@ -399,7 +399,8 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
 }
 
 CryptoSample HLSTrackDemuxer::ExtractCryptoSample(
-    size_t aSampleSize, java::sdk::CryptoInfo::LocalRef aCryptoInfo) {
+    size_t aSampleSize,
+    java::sdk::MediaCodec::CryptoInfo::LocalRef aCryptoInfo) {
   if (!aCryptoInfo) {
     return CryptoSample{};
   }
@@ -477,7 +478,7 @@ CryptoSample HLSTrackDemuxer::ExtractCryptoSample(
 
 RefPtr<MediaRawData> HLSTrackDemuxer::ConvertToMediaRawData(
     java::GeckoHLSSample::LocalRef aSample) {
-  java::sdk::BufferInfo::LocalRef info = aSample->Info();
+  java::sdk::MediaCodec::BufferInfo::LocalRef info = aSample->Info();
   // Currently extract PTS, Size and Data without Crypto information.
   // Transform java Sample into MediaRawData
   RefPtr<MediaRawData> mrd = new MediaRawData();
@@ -577,7 +578,7 @@ HLSTrackDemuxer::DoSkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
       break;
     }
     if (sample->IsKeyFrame()) {
-      java::sdk::BufferInfo::LocalRef info = sample->Info();
+      java::sdk::MediaCodec::BufferInfo::LocalRef info = sample->Info();
       int64_t presentationTimeUs = 0;
       if (NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs)) &&
           TimeUnit::FromMicroseconds(presentationTimeUs) >= aTimeThreshold) {

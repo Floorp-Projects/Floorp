@@ -1151,7 +1151,7 @@ void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {
   jni::String::LocalRef hardware = java::sdk::Build::HARDWARE();
   aInfo->hardware() = hardware->ToString();
 
-  jni::String::LocalRef release = java::sdk::VERSION::RELEASE();
+  jni::String::LocalRef release = java::sdk::Build::VERSION::RELEASE();
   nsString str(release->ToString());
   int major_version;
   int minor_version;

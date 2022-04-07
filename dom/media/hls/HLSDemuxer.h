@@ -114,8 +114,9 @@ class HLSTrackDemuxer : public MediaTrackDemuxer,
   RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(
       const media::TimeUnit& aTimeThreshold);
 
-  CryptoSample ExtractCryptoSample(size_t aSampleSize,
-                                   java::sdk::CryptoInfo::LocalRef aCryptoInfo);
+  CryptoSample ExtractCryptoSample(
+      size_t aSampleSize,
+      java::sdk::MediaCodec::CryptoInfo::LocalRef aCryptoInfo);
   RefPtr<MediaRawData> ConvertToMediaRawData(
       java::GeckoHLSSample::LocalRef aSample);
 
