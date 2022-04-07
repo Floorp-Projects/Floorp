@@ -2120,6 +2120,24 @@ bool CacheIRCompiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadDynamicSlot(ValOperandId resultId,
+                                          ObjOperandId objId,
+                                          uint32_t slotOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch1(allocator, masm);
+  Register scratch2 = output.scratchReg();
+
+  StubFieldOffset slotIndex(slotOffset, StubField::Type::RawInt32);
+  emitLoadStubField(slotIndex, scratch2);
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
+  masm.loadValue(BaseObjectSlotIndex(scratch1, scratch2), output);
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIsNativeObject(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
