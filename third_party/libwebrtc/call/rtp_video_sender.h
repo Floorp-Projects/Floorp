@@ -172,7 +172,6 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   const FieldTrialBasedConfig field_trials_;
   const bool send_side_bwe_with_overhead_;
   const bool has_packet_feedback_;
-  const bool use_deferred_fec_;
 
   // TODO(holmer): Remove mutex_ once RtpVideoSender runs on the
   // transport task queue.

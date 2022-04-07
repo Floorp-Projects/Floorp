@@ -70,8 +70,6 @@ class RTPSenderVideo {
     // expected to outlive the RTPSenderVideo object they are passed to.
     Clock* clock = nullptr;
     RTPSender* rtp_sender = nullptr;
-    FlexfecSender* flexfec_sender = nullptr;
-    VideoFecGenerator* fec_generator = nullptr;
     // Some FEC data is duplicated here in preparation of moving FEC to
     // the egress stage.
     absl::optional<VideoFecGenerator::FecType> fec_type;
@@ -123,11 +121,11 @@ class RTPSenderVideo {
   void SetVideoStructureUnderLock(
       const FrameDependencyStructure* video_structure);
 
-  uint32_t VideoBitrateSent() const;
-
   // Returns the current packetization overhead rate, in bps. Note that this is
   // the payload overhead, eg the VP8 payload headers, not the RTP headers
   // or extension/
+  // TODO(sprang): Consider moving this to RtpSenderEgress so it's in the same
+  // place as the other rate stats.
   uint32_t PacketizationOverheadBps() const;
 
  protected:
@@ -198,13 +196,10 @@ class RTPSenderVideo {
   Mutex mutex_;
 
   const absl::optional<int> red_payload_type_;
-  VideoFecGenerator* const fec_generator_;
   absl::optional<VideoFecGenerator::FecType> fec_type_;
   const size_t fec_overhead_bytes_;  // Per packet max FEC overhead.
 
   mutable Mutex stats_mutex_;
-  // Bitrate used for video payload and RTP headers.
-  RateStatistics video_bitrate_ RTC_GUARDED_BY(stats_mutex_);
   RateStatistics packetization_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
 
   std::map<int, TemporalLayerStats> frame_stats_by_temporal_layer_

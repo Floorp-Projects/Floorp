@@ -122,13 +122,11 @@ class TestRtpSenderVideo : public RTPSenderVideo {
  public:
   TestRtpSenderVideo(Clock* clock,
                      RTPSender* rtp_sender,
-                     FlexfecSender* flexfec_sender,
                      const WebRtcKeyValueConfig& field_trials)
       : RTPSenderVideo([&] {
           Config config;
           config.clock = clock;
           config.rtp_sender = rtp_sender;
-          config.fec_generator = flexfec_sender;
           config.field_trials = &field_trials;
           return config;
         }()) {}
@@ -185,7 +183,6 @@ class RtpSenderVideoTest : public ::testing::TestWithParam<bool> {
         rtp_sender_video_(
             std::make_unique<TestRtpSenderVideo>(&fake_clock_,
                                                  rtp_module_->RtpSender(),
-                                                 nullptr,
                                                  field_trials_)) {
     rtp_module_->SetSequenceNumber(kSeqNum);
     rtp_module_->SetStartTimestamp(0);
@@ -860,7 +857,7 @@ TEST_P(RtpSenderVideoTest, AbsoluteCaptureTime) {
 TEST_P(RtpSenderVideoTest, AbsoluteCaptureTimeWithCaptureClockOffset) {
   field_trials_.set_include_capture_clock_offset(true);
   rtp_sender_video_ = std::make_unique<TestRtpSenderVideo>(
-      &fake_clock_, rtp_module_->RtpSender(), nullptr, field_trials_);
+      &fake_clock_, rtp_module_->RtpSender(), field_trials_);
 
   constexpr int64_t kAbsoluteCaptureTimestampMs = 12345678;
   uint8_t kFrame[kMaxPacketLength];
