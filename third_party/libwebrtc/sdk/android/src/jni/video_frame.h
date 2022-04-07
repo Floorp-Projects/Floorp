@@ -40,16 +40,6 @@ class AndroidVideoBuffer : public VideoFrameBuffer {
 
   const ScopedJavaGlobalRef<jobject>& video_frame_buffer() const;
 
-  // Crops a region defined by |crop_x|, |crop_y|, |crop_width| and
-  // |crop_height|. Scales it to size |scale_width| x |scale_height|.
-  rtc::scoped_refptr<AndroidVideoBuffer> CropAndScale(JNIEnv* jni,
-                                                      int crop_x,
-                                                      int crop_y,
-                                                      int crop_width,
-                                                      int crop_height,
-                                                      int scale_width,
-                                                      int scale_height);
-
  protected:
   // Should not be called directly. Adopts the Java VideoFrame.Buffer. Use
   // Create() or Adopt() instead for clarity.
