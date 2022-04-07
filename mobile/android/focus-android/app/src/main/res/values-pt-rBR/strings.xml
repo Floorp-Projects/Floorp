@@ -673,7 +673,7 @@
     <string name="preference_category_advanced">Avançado</string>
 
     <!-- Preference for site permissions -->
-    <string name="preference_site_permissions">Permissões do site</string>
+    <string name="preference_site_permissions">Permissões de sites</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Reprodução automática</string>
