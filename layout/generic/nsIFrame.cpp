@@ -6964,6 +6964,20 @@ bool nsIFrame::IsContentHidden() const {
   return IsFrameOfType(nsIFrame::eReplaced) || !StyleDisplay()->IsInlineFlow();
 }
 
+bool nsIFrame::AncestorHidesContent() const {
+  if (!StaticPrefs::layout_css_content_visibility_enabled()) {
+    return false;
+  }
+
+  for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
+    if (cur->IsContentHidden()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
   MOZ_ASSERT_UNREACHABLE("should only be called for text frames");
   return NS_OK;

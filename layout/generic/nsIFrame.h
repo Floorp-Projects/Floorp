@@ -3161,6 +3161,12 @@ class nsIFrame : public nsQueryFrame {
   bool IsContentHidden() const;
 
   /**
+   * Returns true if this frame is entirely hidden due the `content-visibility`
+   * property on an ancestor.
+   */
+  bool AncestorHidesContent() const;
+
+  /**
    * Get the "type" of the frame.
    *
    * @see mozilla::LayoutFrameType
