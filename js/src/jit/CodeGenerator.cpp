@@ -1319,9 +1319,8 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
 // objects are truthy, but we implement the JSCLASS_EMULATES_UNDEFINED class
 // flag to permit objects to look like |undefined| in certain contexts,
 // including in object truthiness testing.)  We check truthiness inline except
-// when we're testing it on a proxy (or if TI guarantees us that the specified
-// object will never emulate |undefined|), in which case out-of-line code will
-// call EmulatesUndefined for a conclusive answer.
+// when we're testing it on a proxy, in which case out-of-line code will call
+// EmulatesUndefined for a conclusive answer.
 class OutOfLineTestObject : public OutOfLineCodeBase<CodeGenerator> {
   Register objreg_;
   Register scratch_;
