@@ -76,10 +76,14 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
 
 bool AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return (aMimeType.EqualsLiteral("audio/mpeg") &&
-          !StaticPrefs::media_ffvpx_mp3_enabled()) ||
-         aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-         MP4Decoder::IsH264(aMimeType) || VPXDecoder::IsVP9(aMimeType);
+  bool supports = (aMimeType.EqualsLiteral("audio/mpeg") &&
+                   !StaticPrefs::media_ffvpx_mp3_enabled()) ||
+                  aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+                  MP4Decoder::IsH264(aMimeType) || VPXDecoder::IsVP9(aMimeType);
+  MOZ_LOG(sPDMLog, LogLevel::Debug,
+          ("Apple decoder %s requested type '%s'",
+           supports ? "supports" : "rejects", aMimeType.BeginReading()));
+  return supports;
 }
 
 bool AppleDecoderModule::Supports(
