@@ -80,7 +80,7 @@ if (rtc_include_tests) {
       "../../api/task_queue:task_queue",
       "../../api/video:encoded_image",
       "../../api/video:video_adaptation",
-      "../../api/video:video_frame_i420",
+      "../../api/video:video_frame",
       "../../api/video_codecs:video_codecs_api",
       "../../call/adaptation:resource_adaptation",
       "../../call/adaptation:resource_adaptation_test_utilities",
