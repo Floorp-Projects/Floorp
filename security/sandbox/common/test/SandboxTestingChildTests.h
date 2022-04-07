@@ -25,6 +25,7 @@
 #    include <sched.h>
 #    include <sys/syscall.h>
 #    include <sys/un.h>
+#    include <linux/mempolicy.h>
 #    include "mozilla/ProcInfo_linux.h"
 #    ifdef MOZ_X11
 #      include "X11/Xlib.h"
@@ -42,6 +43,7 @@
 #  include <spawn.h>
 #  include <CoreFoundation/CoreFoundation.h>
 #  include <CoreGraphics/CoreGraphics.h>
+#  include <AudioToolbox/AudioToolbox.h>
 namespace ApplicationServices {
 #  include <ApplicationServices/ApplicationServices.h>
 }
@@ -53,6 +55,7 @@ namespace ApplicationServices {
 
 #  include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #  include "nsAppDirectoryServiceDefs.h"
+#  include "mozilla/WindowsProcessMitigations.h"
 #endif
 
 constexpr bool kIsDebug =
@@ -232,7 +235,47 @@ void RunMacTestWindowServer(SandboxTestingChild* child,
     CFRelease(windowServerDict);
   }
 }
+
+/*
+ * Test if this process can get access to audio components on macOS.
+ * When |aShouldHaveAccess| is true, the test passes if access is __permitted__.
+ * When |aShouldHaveAccess| is false, the test passes if access is __blocked__.
+ */
+void RunMacTestAudioAPI(SandboxTestingChild* child,
+                        bool aShouldHaveAccess = false) {
+  AudioStreamBasicDescription inputFormat;
+  inputFormat.mFormatID = kAudioFormatMPEG4AAC;
+  inputFormat.mSampleRate = 48000.0;
+  inputFormat.mChannelsPerFrame = 2;
+  inputFormat.mBitsPerChannel = 0;
+  inputFormat.mFormatFlags = 0;
+  inputFormat.mFramesPerPacket = 1024;
+  inputFormat.mBytesPerPacket = 0;
+
+  UInt32 inputFormatSize = sizeof(inputFormat);
+  OSStatus status = AudioFormatGetProperty(
+      kAudioFormatProperty_FormatInfo, 0, NULL, &inputFormatSize, &inputFormat);
+
+  bool gotAudioFormat = (status == 0);
+  bool testPassed = (gotAudioFormat == aShouldHaveAccess);
+  child->SendReportTestResults(
+      "AudioFormatGetProperty"_ns, testPassed,
+      gotAudioFormat ? "got audio format, access is permitted"_ns
+                     : "no audio format, access appears blocked"_ns);
+}
 #endif /* XP_MACOSX */
+
+#ifdef XP_WIN
+void RunWinTestWin32k(SandboxTestingChild* child,
+                      bool aShouldHaveAccess = true) {
+  bool isLockedDown = (IsWin32kLockedDown() == true);
+  bool testPassed = (isLockedDown == aShouldHaveAccess);
+  child->SendReportTestResults(
+      "Win32kLockdown"_ns, testPassed,
+      isLockedDown ? "got lockdown, access is blocked"_ns
+                   : "no lockdown, access appears permitted"_ns);
+}
+#endif  // XP_WIN
 
 void RunTestsContent(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
@@ -386,6 +429,7 @@ void RunTestsContent(SandboxTestingChild* child) {
 #  ifdef XP_MACOSX
   RunMacTestLaunchProcess(child, EPERM);
   RunMacTestWindowServer(child);
+  RunMacTestAudioAPI(child, true);
 #  endif
 
 #elif XP_WIN
@@ -466,6 +510,7 @@ void RunTestsSocket(SandboxTestingChild* child) {
 #elif XP_MACOSX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
+  RunMacTestAudioAPI(child);
 #else   // XP_UNIX
     child->ReportNoTests();
 #endif  // XP_UNIX
@@ -523,8 +568,12 @@ void RunTestsRDD(SandboxTestingChild* child) {
 #  elif XP_MACOSX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
+  RunMacTestAudioAPI(child, true);
 #  endif
 #else  // XP_UNIX
+#  ifdef XP_WIN
+  RunWinTestWin32k(child, false);
+#  endif  // XP_WIN
   child->ReportNoTests();
 #endif
 }
@@ -574,6 +623,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
   RunMacTestLaunchProcess(child);
   /* The Mac GMP process requires access to the window server */
   RunMacTestWindowServer(child, true /* aShouldHaveAccess */);
+  RunMacTestAudioAPI(child);
 #  endif           // XP_MACOSX
 #else              // XP_UNIX
   child->ReportNoTests();
@@ -598,6 +648,7 @@ void RunTestsGenericUtility(SandboxTestingChild* child) {
 #  elif XP_MACOSX  // XP_LINUX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
+  RunMacTestAudioAPI(child);
 #  endif           // XP_MACOSX
 #elif XP_WIN       // XP_UNIX
   child->ErrnoValueTest("write_only"_ns, EACCES, [&] {
@@ -608,9 +659,44 @@ void RunTestsGenericUtility(SandboxTestingChild* child) {
     }
     return -1;
   });
+  RunWinTestWin32k(child);
 #else              // XP_UNIX
     child->ReportNoTests();
 #endif             // XP_MACOSX
+}
+
+void RunTestsUtilityAudioDecoder(SandboxTestingChild* child) {
+  MOZ_ASSERT(child, "No SandboxTestingChild*?");
+
+#ifdef XP_UNIX
+#  ifdef XP_LINUX
+  // getrusage is allowed in Generic Utility and on AudioDecoder
+  struct rusage res;
+  child->ErrnoTest("getrusage"_ns, true, [&] {
+    int rv = getrusage(RUSAGE_SELF, &res);
+    return rv;
+  });
+
+  // get_mempolicy is not allowed in Generic Utility but is on AudioDecoder
+  child->ErrnoTest("get_mempolicy"_ns, true, [&] {
+    int numa_node;
+    int test_val = 0;
+    // <numaif.h> not installed by default, let's call directly the syscall
+    long rv = syscall(SYS_get_mempolicy, &numa_node, NULL, 0, (void*)&test_val,
+                      MPOL_F_NODE | MPOL_F_ADDR);
+    return rv;
+  });
+#  elif XP_MACOSX  // XP_LINUX
+  RunMacTestLaunchProcess(child);
+  RunMacTestWindowServer(child);
+  RunMacTestAudioAPI(child, true);
+#  endif           // XP_MACOSX
+#else              // XP_UNIX
+#  ifdef XP_WIN
+  RunWinTestWin32k(child);
+#  endif  // XP_WIN
+  child->ReportNoTests();
+#endif    // XP_UNIX
 }
 
 }  // namespace mozilla
